@@ -8,17 +8,17 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 * **Step 2.** Install the Python extension for Visual Studio Code.
 * **Step 3.** Open or create a Python file and start coding!
 
-## Set up your environment 
+## Set up your environment
 <!-- use less words -->
 * Select your Python interpreter by clicking on the status bar
 
    <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/InterpreterSelectionZoom.gif width=280 height=100>
-   
-* Configure the debugger through the Debug Activity Bar   
+
+* Configure the debugger through the Debug Activity Bar
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureDebugger.gif width=734 height=413>
 
-* Configure tests by running the ``Configure Tests`` command 
+* Configure tests by running the ``Configure Tests`` command
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureTests.gif width=734 height=413>
 
@@ -52,7 +52,7 @@ Learn more about the rich features of the Python extension:
 * [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
 * [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your code with black, autopep or yapf
 
-* [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes   
+* [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes
 
 * [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest, pytest or nose
 
@@ -67,7 +67,7 @@ Learn more about the rich features of the Python extension:
 
 The extension is available in multiple languages thanks to external
 contributors (if you would like to contribute a translation, see the
-[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fr`, `it`, `ja`, `ko-kr`, `pt-br`, `ru`, `zh-cn`, `zh-tw`
+[pull request which added Italian](https://github.com/Microsoft/vscode-python/pull/1152)): `de`, `en`, `es`, `fr`, `it`, `ja`, `ko-kr`, `pt-br`, `ru`, `tr`, `zh-cn`, `zh-tw`
 
 ## Questions, issues, feature requests, and contributions
 
