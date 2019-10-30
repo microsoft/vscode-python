@@ -10,7 +10,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-// import { CondaExecutionService } from './condaExecutionService';
+import { CondaExecutionService } from './condaExecutionService';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
@@ -43,11 +43,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
         if (options.pythonPath && (await this.condaService.isCondaEnvironment(options.pythonPath))) {
-            //     const condaFile = await this.condaService.getCondaFile();
-            //     const condaEnvironment = await this.condaService.getCondaEnvironment(options.pythonPath);
-            //     if (condaEnvironment) {
-            //         return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
-            //     }
+            const condaFile = await this.condaService.getCondaFile();
+            const condaEnvironment = await this.condaService.getCondaEnvironment(options.pythonPath);
+            if (condaEnvironment) {
+                return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+            }
         }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
