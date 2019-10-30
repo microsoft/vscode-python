@@ -43,7 +43,148 @@ interface IRawFS {
     // node "path"
     join(...filenames: string[]): string;
     normalize(filename: string): string;
+    dirname(filename: string): string;
 }
+
+suite('FileSystem paths', () => {
+    let raw: TypeMoq.IMock<IRawFS>;
+    let path: IFileSystemPath;
+    setup(() => {
+        raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
+        path = new FileSystemPath(
+            false, // isWindows
+            raw.object
+        );
+    });
+    function verifyAll() {
+        raw.verifyAll();
+    }
+
+    suite('join', () => {
+        test('wraps low-level function', () => {
+            const expected = 'x/y/z/spam.py';
+            raw.setup(r => r.join('x', 'y/z', 'spam.py'))
+                .returns(() => expected);
+
+            const result = path.join('x', 'y/z', 'spam.py');
+
+            expect(result).to.equal(expected);
+        });
+    });
+
+    suite('normCase', () => {
+        test('wraps low-level function', () => {
+            const filename = 'x/y/z/spam.py';
+            raw.setup(r => r.normalize(filename))
+                .returns(() => filename);
+            path = new FileSystemPath(
+                false, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(filename);
+            verifyAll();
+        });
+
+        test('path separators get normalized on Windows', () => {
+            const filename = 'X/Y/Z/SPAM.PY';
+            const expected = 'X\\Y\\Z\\SPAM.PY';
+            raw.setup(r => r.normalize(filename))
+                .returns(() => expected);
+            path = new FileSystemPath(
+                true, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(expected);
+            verifyAll();
+        });
+
+        test('path separators stay the same on non-Windows', () => {
+            const filename = 'x\\y\\z\\spam.py';
+            const expected = filename;
+            raw.setup(r => r.normalize(filename))
+                .returns(() => expected);
+            path = new FileSystemPath(
+                false, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(expected);
+            verifyAll();
+        });
+
+        test('on Windows, lower-case is made upper-case', () => {
+            const filename = 'x\\y\\z\\spam.py';
+            const expected = 'X\\Y\\Z\\SPAM.PY';
+            raw.setup(r => r.normalize(filename))
+                .returns(() => filename);
+            path = new FileSystemPath(
+                true, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(expected);
+            verifyAll();
+        });
+
+        test('on Windows, upper-case stays upper-case', () => {
+            const filename = 'X\\Y\\Z\\SPAM.PY';
+            const expected = 'X\\Y\\Z\\SPAM.PY';
+            raw.setup(r => r.normalize(filename))
+                .returns(() => expected);
+            path = new FileSystemPath(
+                true, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(expected);
+            verifyAll();
+        });
+
+        test('on non-Windows, lower-case stays lower-case', () => {
+            const filename = 'x/y/z/spam.py';
+            const expected = 'x/y/z/spam.py';
+            raw.setup(r => r.normalize(filename))
+                .returns(() => filename);
+            path = new FileSystemPath(
+                false, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(expected);
+            verifyAll();
+        });
+
+        test('on non-Windows, upper-case stays upper-case', () => {
+            const filename = 'X/Y/Z/SPAM.PY';
+            const expected = 'X/Y/Z/SPAM.PY';
+            raw.setup(r => r.normalize(filename))
+                .returns(() => expected);
+            path = new FileSystemPath(
+                false, // isWindows
+                raw.object
+            );
+
+            const result = path.normCase(filename);
+
+            expect(result).to.equal(expected);
+            verifyAll();
+        });
+    });
+});
 
 suite('Raw FileSystem', () => {
     let raw: TypeMoq.IMock<IRawFS>;
@@ -51,6 +192,7 @@ suite('Raw FileSystem', () => {
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
         filesystem = new RawFileSystem(
+            raw.object,
             raw.object,
             raw.object
         );
@@ -191,10 +333,6 @@ suite('Raw FileSystem', () => {
     });
 
     suite('listdir', () => {
-        let fspath: TypeMoq.IMock<IFileSystemPath>;
-        setup(() => {
-            fspath = TypeMoq.Mock.ofType<IFileSystemPath>(undefined, TypeMoq.MockBehavior.Strict);
-        });
         function setupStat(filename: string, ft: FileType) {
             const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
             if (ft === FileType.File) {
@@ -243,13 +381,13 @@ suite('Raw FileSystem', () => {
             const stats: TypeMoq.IMock<FileStat>[] = [];
             expected.forEach(([name, ft]) => {
                 const filename = `${dirname}/${name}`;
-                fspath.setup(p => p.join(dirname, name))
+                raw.setup(r => r.join(dirname, name))
                     .returns(() => filename);
                 stats.push(
                     setupStat(filename, ft));
             });
 
-            const entries = await filesystem.listdir(dirname, fspath.object);
+            const entries = await filesystem.listdir(dirname);
 
             expect(entries).to.deep.equal(expected);
             verifyAll();
@@ -262,7 +400,7 @@ suite('Raw FileSystem', () => {
             raw.setup(r => r.readdir(dirname))
                 .returns(() => Promise.resolve(names));
 
-            const entries = await filesystem.listdir(dirname, fspath.object);
+            const entries = await filesystem.listdir(dirname);
 
             expect(entries).to.deep.equal([]);
             verifyAll();
@@ -273,7 +411,7 @@ suite('Raw FileSystem', () => {
             raw.setup(r => r.readdir(dirname))
                 .throws(new Error('file not found'));
 
-            const promise = filesystem.listdir(dirname, fspath.object);
+            const promise = filesystem.listdir(dirname);
 
             await expect(promise).to.eventually.be.rejected;
             verifyAll();
@@ -399,146 +537,6 @@ suite('Raw FileSystem', () => {
             const stream = filesystem.createWriteStream(filename);
 
             expect(stream).to.equal(expected);
-            verifyAll();
-        });
-    });
-});
-
-suite('FileSystem paths', () => {
-    let raw: TypeMoq.IMock<IRawFS>;
-    let path: IFileSystemPath;
-    setup(() => {
-        raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
-        path = new FileSystemPath(
-            false, // isWindows
-            raw.object
-        );
-    });
-    function verifyAll() {
-        raw.verifyAll();
-    }
-
-    suite('join', () => {
-        test('wraps low-level function', () => {
-            const expected = 'x/y/z/spam.py';
-            raw.setup(r => r.join('x', 'y/z', 'spam.py'))
-                .returns(() => expected);
-
-            const result = path.join('x', 'y/z', 'spam.py');
-
-            expect(result).to.equal(expected);
-        });
-    });
-
-    suite('normCase', () => {
-        test('wraps low-level function', () => {
-            const filename = 'x/y/z/spam.py';
-            raw.setup(r => r.normalize(filename))
-                .returns(() => filename);
-            path = new FileSystemPath(
-                false, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(filename);
-            verifyAll();
-        });
-
-        test('path separators get normalized on Windows', () => {
-            const filename = 'X/Y/Z/SPAM.PY';
-            const expected = 'X\\Y\\Z\\SPAM.PY';
-            raw.setup(r => r.normalize(filename))
-                .returns(() => expected);
-            path = new FileSystemPath(
-                true, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(expected);
-            verifyAll();
-        });
-
-        test('path separators stay the same on non-Windows', () => {
-            const filename = 'x\\y\\z\\spam.py';
-            const expected = filename;
-            raw.setup(r => r.normalize(filename))
-                .returns(() => expected);
-            path = new FileSystemPath(
-                false, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(expected);
-            verifyAll();
-        });
-
-        test('on Windows, lower-case is made upper-case', () => {
-            const filename = 'x\\y\\z\\spam.py';
-            const expected = 'X\\Y\\Z\\SPAM.PY';
-            raw.setup(r => r.normalize(filename))
-                .returns(() => filename);
-            path = new FileSystemPath(
-                true, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(expected);
-            verifyAll();
-        });
-
-        test('on Windows, upper-case stays upper-case', () => {
-            const filename = 'X\\Y\\Z\\SPAM.PY';
-            const expected = 'X\\Y\\Z\\SPAM.PY';
-            raw.setup(r => r.normalize(filename))
-                .returns(() => expected);
-            path = new FileSystemPath(
-                true, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(expected);
-            verifyAll();
-        });
-
-        test('on non-Windows, lower-case stays lower-case', () => {
-            const filename = 'x/y/z/spam.py';
-            const expected = 'x/y/z/spam.py';
-            raw.setup(r => r.normalize(filename))
-                .returns(() => filename);
-            path = new FileSystemPath(
-                false, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(expected);
-            verifyAll();
-        });
-
-        test('on non-Windows, upper-case stays upper-case', () => {
-            const filename = 'X/Y/Z/SPAM.PY';
-            const expected = 'X/Y/Z/SPAM.PY';
-            raw.setup(r => r.normalize(filename))
-                .returns(() => expected);
-            path = new FileSystemPath(
-                false, // isWindows
-                raw.object
-            );
-
-            const result = path.normCase(filename);
-
-            expect(result).to.equal(expected);
             verifyAll();
         });
     });
@@ -828,7 +826,7 @@ suite('FileSystem Utils', () => {
                 ['other', FileType.SymbolicLink],
                 ['data.json', FileType.File]
             ];
-            filesystem.setup(f => f.listdir(dirname, TypeMoq.It.isAny()))
+            filesystem.setup(f => f.listdir(dirname))
                 .returns(() => Promise.resolve(files));
             ['w', 'v'].forEach(name => {
                 path.setup(p => p.join(dirname, name))
@@ -846,7 +844,7 @@ suite('FileSystem Utils', () => {
 
         test('empty if the raw call fails', async () => {
             const dirname = 'x/y/z/spam';
-            filesystem.setup(f => f.listdir(dirname, TypeMoq.It.isAny()))
+            filesystem.setup(f => f.listdir(dirname))
                 .throws(new Error('directory not found'));
 
             const entries = await utils.getSubDirectories(dirname);
@@ -868,7 +866,7 @@ suite('FileSystem Utils', () => {
                 ['other', FileType.SymbolicLink],
                 ['data.json', FileType.File]
             ];
-            filesystem.setup(f => f.listdir(dirname, TypeMoq.It.isAny()))
+            filesystem.setup(f => f.listdir(dirname))
                 .returns(() => Promise.resolve(files));
             ['spam.py', 'eggs.py', 'data.json'].forEach(name => {
                 path.setup(p => p.join(dirname, name))
@@ -887,7 +885,7 @@ suite('FileSystem Utils', () => {
 
         test('empty if the raw call fails', async () => {
             const dirname = 'x/y/z/spam';
-            filesystem.setup(f => f.listdir(dirname, TypeMoq.It.isAny()))
+            filesystem.setup(f => f.listdir(dirname))
                 .throws(new Error('directory not found'));
 
             const entries = await utils.getFiles(dirname);

@@ -41,6 +41,13 @@ export type TemporaryDirectory = vscode.Disposable & {
     path: string;
 };
 
+// Eventually we will merge IPathUtils into IFileSystemPath.
+
+export interface IFileSystemPath {
+    join(...filenames: string[]): string;
+    normCase(filename: string): string;
+}
+
 export import FileType = vscode.FileType;
 export type FileStat = fsextra.Stats;
 export type WriteStream = fs.WriteStream;
@@ -61,18 +68,11 @@ export interface IRawFileSystem {
     // directories
     mkdirp(dirname: string): Promise<void>;
     rmtree(dirname: string): Promise<void>;
-    listdir(dirname: string, path: IFileSystemPath): Promise<[string, FileType][]>;
+    listdir(dirname: string): Promise<[string, FileType][]>;
     // not async
     statSync(filename: string): FileStat;
     readTextSync(filename: string): string;
     createWriteStream(filename: string): WriteStream;
-}
-
-// Eventually we will merge IPathUtils into IFileSystemPath.
-
-export interface IFileSystemPath {
-    join(...filenames: string[]): string;
-    normCase(filename: string): string;
 }
 
 export const IFileSystemUtils = Symbol('IFileSystemUtils');

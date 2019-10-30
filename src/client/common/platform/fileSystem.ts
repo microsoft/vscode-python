@@ -35,6 +35,29 @@ function getFileType(stat: FileStat): FileType {
     }
 }
 
+interface INodePath {
+    join(...filenames: string[]): string;
+    normalize(filename: string): string;
+}
+
+// Eventually we will merge PathUtils into FileSystemPath.
+
+export class FileSystemPath implements IFileSystemPath {
+    constructor(
+        private readonly isWindows = (getOSType() === OSType.Windows),
+        private readonly raw: INodePath = fspath
+    ) { }
+
+    public join(...filenames: string[]): string {
+        return this.raw.join(...filenames);
+    }
+
+    public normCase(filename: string): string {
+        filename = this.raw.normalize(filename);
+        return this.isWindows ? filename.toUpperCase() : filename;
+    }
+}
+
 interface IRawFS {
     //tslint:disable-next-line:no-any
     open(filename: string, flags: number, callback: any): void;
@@ -67,11 +90,16 @@ interface IRawFSExtra {
     createWriteStream(dest: string): fsextra.WriteStream;
 }
 
+interface IRawPath {
+    join(...filenames: string[]): string;
+}
+
 // Later we will drop "FileSystem", switching usage to
 // "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
 export class RawFileSystem implements IRawFileSystem {
     constructor(
+        private readonly path: IRawPath = new FileSystemPath(),
         private readonly nodefs: IRawFS = fs,
         private readonly fsExtra: IRawFSExtra = fsextra
     ) { }
@@ -118,11 +146,11 @@ export class RawFileSystem implements IRawFileSystem {
 
     // Once we move to the VS Code API, this method becomes a trivial
     // wrapper and The "path" parameter can go away.
-    public async listdir(dirname: string, path: IFileSystemPath): Promise<[string, FileType][]> {
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
         const names: string[] = await this.fsExtra.readdir(dirname);
         const promises = names
             .map(name => {
-                 const filename = path.join(dirname, name);
+                 const filename = this.path.join(dirname, name);
                  return this.lstat(filename)
                      .then(stat => [name, getFileType(stat)] as [string, FileType])
                      .catch(() => [name, FileType.Unknown] as [string, FileType]);
@@ -180,29 +208,6 @@ export class RawFileSystem implements IRawFileSystem {
 
     public createWriteStream(filename: string): WriteStream {
         return this.nodefs.createWriteStream(filename);
-    }
-}
-
-interface INodePath {
-    join(...filenames: string[]): string;
-    normalize(filename: string): string;
-}
-
-// Eventually we will merge PathUtils into FileSystemPath.
-
-export class FileSystemPath implements IFileSystemPath {
-    constructor(
-        private readonly isWindows = (getOSType() === OSType.Windows),
-        private readonly raw: INodePath = fspath
-    ) { }
-
-    public join(...filenames: string[]): string {
-        return this.raw.join(...filenames);
-    }
-
-    public normCase(filename: string): string {
-        filename = this.raw.normalize(filename);
-        return this.isWindows ? filename.toUpperCase() : filename;
     }
 }
 
@@ -292,7 +297,7 @@ export class FileSystemUtils implements IFileSystemUtils {
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         try {
-            return await this.raw.listdir(dirname, this.path);
+            return await this.raw.listdir(dirname);
         } catch {
             return [];
         }

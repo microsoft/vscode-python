@@ -93,6 +93,103 @@ class FSFixture {
     }
 }
 
+suite('FileSystem paths', () => {
+    let fspath: IFileSystemPath;
+    setup(() => {
+        fspath = new FileSystemPath();
+    });
+
+    suite('join', () => {
+        test('parts get joined by path.sep', () => {
+            const expected = path.join('x', 'y', 'z', 'spam.py');
+
+            const result = fspath.join(
+                'x',
+                path.sep === '\\' ? 'y\\z' : 'y/z',
+                'spam.py'
+            );
+
+            expect(result).to.equal(expected);
+        });
+    });
+
+    suite('normCase', () => {
+        if (path.sep === '\\') { // Windows
+            test('forward-slash is changed to backslash', () => {
+                const filename = 'X/Y/Z/SPAM.PY';
+                const expected = 'X\\Y\\Z\\SPAM.PY';
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('backslash is not changed', () => {
+                const filename = 'X\\Y\\Z\\SPAM.PY';
+                const expected = filename;
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('lower-case is made upper-case', () => {
+                const filename = 'x\\y\\z\\spam.py';
+                const expected = 'X\\Y\\Z\\SPAM.PY';
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('on Windows, upper-case stays upper-case', () => {
+                const filename = 'X\\Y\\Z\\SPAM.PY';
+                const expected = 'X\\Y\\Z\\SPAM.PY';
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+        } else {
+            test('forward-slash is not changed', () => {
+                const filename = 'x/y/z/spam.py';
+                const expected = filename;
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('backslash is not changed', () => {
+                const filename = 'x\\y\\z\\spam.py';
+                const expected = filename;
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('on non-Windows, lower-case stays lower-case', () => {
+                const filename = 'x/y/z/spam.py';
+                const expected = 'x/y/z/spam.py';
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('on non-Windows, upper-case stays upper-case', () => {
+                const filename = 'X/Y/Z/SPAM.PY';
+                const expected = 'X/Y/Z/SPAM.PY';
+
+                const result = fspath.normCase(filename);
+
+                expect(result).to.equal(expected);
+            });
+        }
+    });
+});
+
 suite('Raw FileSystem', () => {
     let filesystem: IRawFileSystem;
     let fix: FSFixture;
@@ -340,11 +437,6 @@ suite('Raw FileSystem', () => {
     });
 
     suite('listdir', () => {
-        let fspath: IFileSystemPath;
-        setup(() => {
-            fspath = new FileSystemPath();
-        });
-
         test('mixed', async () => {
             // Create the target directory and its contents.
             const dirname = await fix.createDirectory('x/y/z');
@@ -374,7 +466,7 @@ suite('Raw FileSystem', () => {
             await fix.createDirectory('x/y/z/w/data');
             await fix.createFile('x/y/z/w/data/v1.json');
 
-            const entries = await filesystem.listdir(dirname, fspath);
+            const entries = await filesystem.listdir(dirname);
 
             expect(entries.sort()).to.deep.equal([
                 ['__init__.py', FileType.File],
@@ -390,13 +482,13 @@ suite('Raw FileSystem', () => {
         test('empty', async () => {
             const dirname = await fix.createDirectory('x/y/z/eggs');
 
-            const entries = await filesystem.listdir(dirname, fspath);
+            const entries = await filesystem.listdir(dirname);
 
             expect(entries).to.deep.equal([]);
         });
 
         test('fails if the directory does not exist', async () => {
-            const promise = filesystem.listdir(DOES_NOT_EXIST, fspath);
+            const promise = filesystem.listdir(DOES_NOT_EXIST);
 
             await expect(promise).to.eventually.be.rejected;
         });
@@ -585,103 +677,6 @@ suite('Raw FileSystem', () => {
                 .then(buffer => buffer.toString());
             expect(actual).to.equal(data);
         });
-    });
-});
-
-suite('FileSystem paths', () => {
-    let fspath: IFileSystemPath;
-    setup(() => {
-        fspath = new FileSystemPath();
-    });
-
-    suite('join', () => {
-        test('parts get joined by path.sep', () => {
-            const expected = path.join('x', 'y', 'z', 'spam.py');
-
-            const result = fspath.join(
-                'x',
-                path.sep === '\\' ? 'y\\z' : 'y/z',
-                'spam.py'
-            );
-
-            expect(result).to.equal(expected);
-        });
-    });
-
-    suite('normCase', () => {
-        if (path.sep === '\\') { // Windows
-            test('forward-slash is changed to backslash', () => {
-                const filename = 'X/Y/Z/SPAM.PY';
-                const expected = 'X\\Y\\Z\\SPAM.PY';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('backslash is not changed', () => {
-                const filename = 'X\\Y\\Z\\SPAM.PY';
-                const expected = filename;
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('lower-case is made upper-case', () => {
-                const filename = 'x\\y\\z\\spam.py';
-                const expected = 'X\\Y\\Z\\SPAM.PY';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('on Windows, upper-case stays upper-case', () => {
-                const filename = 'X\\Y\\Z\\SPAM.PY';
-                const expected = 'X\\Y\\Z\\SPAM.PY';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-        } else {
-            test('forward-slash is not changed', () => {
-                const filename = 'x/y/z/spam.py';
-                const expected = filename;
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('backslash is not changed', () => {
-                const filename = 'x\\y\\z\\spam.py';
-                const expected = filename;
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('on non-Windows, lower-case stays lower-case', () => {
-                const filename = 'x/y/z/spam.py';
-                const expected = 'x/y/z/spam.py';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('on non-Windows, upper-case stays upper-case', () => {
-                const filename = 'X/Y/Z/SPAM.PY';
-                const expected = 'X/Y/Z/SPAM.PY';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-        }
     });
 });
 
