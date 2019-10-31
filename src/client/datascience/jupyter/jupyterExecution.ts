@@ -239,7 +239,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Promise.resolve(undefined);
     }
 
-
     protected async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         return this.commandFinder.findBestCommand(command, cancelToken);
     }

@@ -25,7 +25,6 @@ import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { KernelService } from './kernelService';
 
-
 /**
  * Responsible for starting a notebook.
  * Separate class as theres quite a lot of work involved in starting a notebook.
