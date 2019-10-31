@@ -37,8 +37,7 @@ class FSFixture {
     public async cleanUp() {
         if (this.tempDir) {
             try {
-                await fsextra.remove(this.tempDir.name);
-                //tempDir.removeCallback();
+                this.tempDir.removeCallback();
             } catch {
                 // do nothing
             }
