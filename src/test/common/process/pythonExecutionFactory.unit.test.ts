@@ -23,6 +23,7 @@ import {
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
+import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
@@ -159,6 +160,23 @@ suite('Process - PythonExecutionFactory', () => {
                 }
                 expect(service).instanceOf(PythonExecutionService);
                 assert.equal(createInvoked, false);
+            });
+
+            test('Ensure `create` returns a WindowsStorePythonProcess instance if it\'s a windows store intepreter path', async () => {
+                const pythonPath = 'path/to/python';
+                const pythonSettings = mock(PythonSettings);
+
+                when(processFactory.create(resource)).thenResolve(instance(processService));
+                when(pythonSettings.pythonPath).thenReturn(pythonPath);
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+                when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
+
+                const service = await factory.create({ resource });
+
+                verify(processFactory.create(resource)).once();
+                verify(pythonSettings.pythonPath).once();
+                verify(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).once();
+                expect(service).instanceOf(WindowsStorePythonProcess);
             });
 
             test('Ensure `create` returns a CondaExecutionService instance if getCondaEnvironment() returns a valid object', async () => {
