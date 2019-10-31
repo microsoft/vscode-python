@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
-import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
+import { Disposable } from 'vscode';
 import {
     FileSystemPath, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
@@ -19,12 +19,6 @@ import {
 //tslint:disable-next-line:no-any
 type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 interface IRawFS {
-    // node "fs"
-    //tslint:disable-next-line:no-any
-    open(filename: string, flags: number, callback: any): void;
-    //tslint:disable-next-line:no-any
-    close(fd: number, callback: any): void;
-
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
     readFile(path: string, encoding: string): Promise<string>;
@@ -515,26 +509,6 @@ suite('Raw FileSystem', () => {
         });
     });
 
-    suite('touch', () => {
-        test('open() and closed() are used properly', async () => {
-            const filename = 'x/y/z/spam.py';
-            const fd = 1;
-            const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
-            raw.setup(r => r.open(filename, flags, TypeMoq.It.isAny()))
-                .callback((_f, _fl, cb) => {
-                    cb(undefined, fd);
-                });
-            raw.setup(r => r.close(fd, TypeMoq.It.isAny()))
-                .callback((_fd, cb) => {
-                    cb();
-                });
-
-            await filesystem.touch(filename);
-
-            verifyAll();
-        });
-    });
-
     suite('statSync', () => {
         test('wraps the low-level function', () => {
             const filename = 'x/y/z/spam.py';
@@ -948,10 +922,7 @@ suite('FileSystem Utils', () => {
     suite('isDirReadonly', () => {
         test('is readonly', async () => {
             const dirname = 'x/y/z/spam';
-            const filename = 'x/y/z/spam/___vscpTest___';
-            path.setup(p => p.join(dirname, '___vscpTest___'))
-                .returns(() => filename);
-            filesystem.setup(f => f.touch(filename))
+            tmp.setup(t => t.createFile('___vscpTest___', dirname))
                 .throws(new Error('operation not permitted'));
             filesystem.setup(f => f.stat(dirname))
                 //tslint:disable-next-line:no-any
@@ -964,27 +935,28 @@ suite('FileSystem Utils', () => {
         });
 
         test('is not readonly', async () => {
+            const disposable = TypeMoq.Mock.ofType<Disposable>(undefined, TypeMoq.MockBehavior.Strict);
             const dirname = 'x/y/z/spam';
-            const filename = 'x/y/z/spam/___vscpTest___';
-            path.setup(p => p.join(dirname, '___vscpTest___'))
-                .returns(() => filename);
-            filesystem.setup(f => f.touch(filename))
-                .returns(() => Promise.resolve());
-            filesystem.setup(f => f.rmfile(filename))
-                .returns(() => Promise.resolve());
+            const filename = 'x/y/z/spam/a713Gb___vscpTest___';
+            const tmpFile = {
+                filePath: filename,
+                dispose: () => disposable.object.dispose()
+            };
+            tmp.setup(t => t.createFile('___vscpTest___', dirname))
+                .returns(() => Promise.resolve(tmpFile));
+            disposable.setup(d => d.dispose())
+                .returns(() => { /* do nothing */ });
 
             const isReadonly = await utils.isDirReadonly(dirname);
 
             expect(isReadonly).to.equal(false);
             verifyAll();
+            disposable.verifyAll();
         });
 
-        test('file does not exist', async () => {
+        test('directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
-            const filename = 'x/y/z/spam/___vscpTest___';
-            path.setup(p => p.join(dirname, '___vscpTest___'))
-                .returns(() => filename);
-            filesystem.setup(f => f.touch(filename))
+            tmp.setup(t => t.createFile('___vscpTest___', dirname))
                 .throws(new Error('file not found'));
             filesystem.setup(f => f.stat(dirname))
                 .throws(new Error('file not found'));

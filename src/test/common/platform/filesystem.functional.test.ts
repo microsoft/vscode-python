@@ -5,13 +5,13 @@ import { expect, use } from 'chai';
 import * as fsextra from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
-import * as tmp from 'tmp';
+import * as tmpMod from 'tmp';
 import {
-    FileSystem, FileSystemPath, FileSystemUtils, RawFileSystem
+    FileSystem, FileSystemPath, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
 import {
     FileType,
-    IFileSystemPath, IFileSystemUtils, IRawFileSystem,
+    IFileSystemPath, IFileSystemUtils, IRawFileSystem, ITempFileSystem,
     TemporaryFile
 } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -31,7 +31,7 @@ async function ensureDoesNotExist(filename: string) {
 }
 
 class FSFixture {
-    public tempDir: tmp.SynchrounousResult | undefined;
+    public tempDir: tmpMod.SynchrounousResult | undefined;
     public sockServer: net.Server | undefined;
 
     public async cleanUp() {
@@ -53,7 +53,7 @@ class FSFixture {
 
     public async resolve(relname: string, mkdirs = true): Promise<string> {
         if (!this.tempDir) {
-            this.tempDir = tmp.dirSync({ prefix: 'pyvsc-fs-tests-' });
+            this.tempDir = tmpMod.dirSync({ prefix: 'pyvsc-fs-tests-' });
         }
         relname = path.normalize(relname);
         const filename = path.join(this.tempDir.name, relname);
@@ -92,6 +92,33 @@ class FSFixture {
         return filename;
     }
 }
+
+suite('Temporary files', () => {
+    let tmp: ITempFileSystem;
+    setup(() => {
+        tmp = new TempFileSystem();
+    });
+
+    suite('createFile', () => {
+        test('TemporaryFile is populated properly', async () => {
+            const expected: TemporaryFile = {
+                filePath: '/tmp/xyz.tmp',
+                dispose: (() => undefined)
+            };
+
+            const tempfile = await tmp.createFile('.tmp');
+            tempfile.dispose();
+
+            expect(tempfile.filePath).to.deep.equal(expected);
+        });
+
+        test('fails if the target temp directory does not exist', async () => {
+            const promise = tmp.createFile('.tmp', DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+});
 
 suite('FileSystem paths', () => {
     let fspath: IFileSystemPath;
@@ -541,26 +568,6 @@ suite('Raw FileSystem', () => {
             await ensureDoesNotExist(path.dirname(dest));
 
             const promise = filesystem.copyFile(src, dest);
-
-            await expect(promise).to.eventually.be.rejected;
-        });
-    });
-
-    suite('touch', () => {
-        test('open() and closed() are used properly', async () => {
-            const filename = await fix.resolve('spam.py');
-            await ensureDoesNotExist(filename);
-
-            await filesystem.touch(filename);
-
-            await fsextra.stat(filename); // This should not fail.
-        });
-
-        test('fails if the target parent directory does not exist', async () => {
-            const filename = await fix.resolve('x/spam.py', false);
-            await ensureDoesNotExist(path.dirname(filename));
-
-            const promise = filesystem.touch(filename);
 
             await expect(promise).to.eventually.be.rejected;
         });

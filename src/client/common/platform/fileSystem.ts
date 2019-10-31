@@ -70,9 +70,10 @@ export class TempFileSystem {
         private readonly raw: IRawTmp = tmpMod
     ) { }
 
-    public async createFile(suffix: string): Promise<TemporaryFile> {
+    public async createFile(suffix?: string, dir?: string): Promise<TemporaryFile> {
         const options = {
-            postfix: suffix
+            postfix: suffix,
+            dir: dir
         };
         // We could use util.promisify() here.
         return new Promise<TemporaryFile>((resolve, reject) => {
@@ -90,10 +91,6 @@ export class TempFileSystem {
 }
 
 interface IRawFS {
-    //tslint:disable-next-line:no-any
-    open(filename: string, flags: number, callback: any): void;
-    //tslint:disable-next-line:no-any
-    close(fd: number, callback: any): void;
     //tslint:disable-next-line:no-any
     unlink(filename: string, callback: any): void;
 
@@ -203,24 +200,6 @@ export class RawFileSystem implements IRawFileSystem {
             });
         rs.pipe(ws);
         return deferred.promise;
-    }
-
-    //****************************
-    // fs
-
-    public async touch(filename: string): Promise<void> {
-        const flags = fs.constants.O_CREAT | fs.constants.O_RDWR;
-        const raw = this.nodefs;
-        return new Promise<void>((resolve, reject) => {
-            raw.open(filename, flags, (error: string, fd: number) => {
-                if (error) {
-                    return reject(error);
-                }
-                raw.close(fd, () => {
-                    return resolve();
-                });
-            });
-        });
     }
 
     //****************************
@@ -343,15 +322,14 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
-        // Alternative: use tmp.file().
-        const filename = this.path.join(dirname, '___vscpTest___');
+        let tmpFile: TemporaryFile;
         try {
-            await this.raw.touch(filename);
+            tmpFile = await this.tmp.createFile('___vscpTest___', dirname);
         } catch {
             await this.raw.stat(dirname); // fails if does not exist
             return true;
         }
-        await this.raw.rmfile(filename);
+        tmpFile.dispose();
         return false;
     }
 

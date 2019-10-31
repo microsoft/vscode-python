@@ -41,7 +41,7 @@ export type TemporaryDirectory = vscode.Disposable & {
     path: string;
 };
 export interface ITempFileSystem {
-    createFile(suffix?: string): Promise<TemporaryFile>;
+    createFile(suffix?: string, dir?: string): Promise<TemporaryFile>;
 }
 
 // Eventually we will merge IPathUtils into IFileSystemPath.
@@ -65,7 +65,6 @@ export interface IRawFileSystem {
     // files
     readText(filename: string): Promise<string>;
     writeText(filename: string, data: {}): Promise<void>;
-    touch(filename: string): Promise<void>;
     copyFile(src: string, dest: string): Promise<void>;
     rmfile(filename: string): Promise<void>;
     // directories
