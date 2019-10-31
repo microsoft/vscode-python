@@ -36,12 +36,9 @@ class FSFixture {
 
     public async cleanUp() {
         if (this.tempDir) {
-            try {
-                this.tempDir.removeCallback();
-            } catch {
-                // do nothing
-            }
+            const tempDir = this.tempDir;
             this.tempDir = undefined;
+            tempDir.removeCallback();
         }
         if (this.sockServer) {
             const srv = this.sockServer;
@@ -52,7 +49,10 @@ class FSFixture {
 
     public async resolve(relname: string, mkdirs = true): Promise<string> {
         if (!this.tempDir) {
-            this.tempDir = tmpMod.dirSync({ prefix: 'pyvsc-fs-tests-' });
+            this.tempDir = tmpMod.dirSync({
+                prefix: 'pyvsc-fs-tests-',
+                unsafeCleanup: true
+            });
         }
         relname = path.normalize(relname);
         const filename = path.join(this.tempDir.name, relname);
