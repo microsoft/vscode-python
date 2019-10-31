@@ -401,6 +401,9 @@ export class MainStateController implements IMessageHandler {
         const newList = this.pendingState.cellVMs.map(cellVM => {
             return immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
         });
+        newList.forEach(cellVM => {
+            cellVM.cell.data.execution_count = null;
+        });
         this.setState({
             cellVMs: newList
         });
