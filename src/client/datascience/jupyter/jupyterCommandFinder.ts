@@ -51,7 +51,7 @@ type ProgressNotification = Progress<{ message?: string | undefined; increment?:
 export class JupyterCommandFinder {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
-    private readonly commands = new Map<JupyterCommands, IFindCommandResult>();
+    private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
     constructor(
         private readonly interpreterService: IInterpreterService,
         private readonly executionFactory: IPythonExecutionFactory,
@@ -100,13 +100,10 @@ export class JupyterCommandFinder {
 
         // Only log telemetry if not already found (meaning the first time)
         const timer = new StopWatch();
-        try {
-            const result = await this.findBestCommandImpl(command, cancelToken);
-            this.commands.set(command, result);
-            return result;
-        } finally {
-            sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command });
-        }
+        const promise = this.findBestCommandImpl(command, cancelToken)
+            .finally(() => sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command }));
+        this.commands.set(command, promise);
+        return promise;
     }
 
     /**
