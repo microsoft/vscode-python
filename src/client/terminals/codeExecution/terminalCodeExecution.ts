@@ -74,7 +74,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
                 };
             }
 
-            if (condaEnvironment.path) {
+            if (condaEnvironment.path.length > 0) {
                 return {
                     command: condaFile,
                     args: ['run', '-p', condaEnvironment.path, 'python', ...launchArgs, ...args]

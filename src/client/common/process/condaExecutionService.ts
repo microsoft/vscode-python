@@ -24,7 +24,7 @@ export class CondaExecutionService extends PythonExecutionService {
                 args: ['run', '-n', this.condaEnvironment.name, 'python', ...args]
             };
         }
-        if (this.condaEnvironment.path) {
+        if (this.condaEnvironment.path.length > 0) {
             return {
                 command: this.condaFile,
                 args: ['run', '-p', this.condaEnvironment.path, 'python', ...args]
