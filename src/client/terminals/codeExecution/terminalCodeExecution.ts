@@ -67,7 +67,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         if (condaEnvironment) {
             const condaFile = await this.condaService.getCondaFile();
 
-            if (condaEnvironment.name) {
+            if (condaEnvironment.name !== '') {
                 return {
                     command: condaFile,
                     args: ['run', '-n', condaEnvironment.name, 'python', ...launchArgs, ...args]
@@ -90,8 +90,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         };
     }
 
-    public async getExecuteFileArgs(resource?: Uri, replArgs: string[] = []): Promise<IPythonExecutableInfo> {
-        return this.getExecutableInfo(resource, replArgs);
+    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<IPythonExecutableInfo> {
+        return this.getExecutableInfo(resource, executeArgs);
     }
     private getTerminalService(resource?: Uri): ITerminalService {
         if (!this._terminalService) {

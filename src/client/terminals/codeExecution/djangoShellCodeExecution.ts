@@ -32,12 +32,9 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
 
-    public async getExecuteFileArgs(resource?: Uri, replArgs: string[] = []): Promise<{ command: string; args: string[] }> {
-        const { command } = await this.getExecutableInfo(resource);
-        const pythonSettings = this.configurationService.getSettings(resource);
-        const args = pythonSettings.terminal.launchArgs.slice().concat(replArgs);
-
-        return { command, args };
+    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<{ command: string; args: string[] }> {
+        const { command, args } = await super.getExecutableInfo(resource);
+        return { command, args: args.concat(executeArgs) };
     }
 
     public async getExecutableInfo(resource?: Uri): Promise<{ command: string; args: string[] }> {

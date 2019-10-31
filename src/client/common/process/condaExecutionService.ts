@@ -18,7 +18,7 @@ export class CondaExecutionService extends PythonExecutionService {
     }
 
     protected getExecutableInfo(command: string, args: string[]): IPythonExecutableInfo {
-        if (this.condaEnvironment.name) {
+        if (this.condaEnvironment.name !== '') {
             return {
                 command: this.condaFile,
                 args: ['run', '-n', this.condaEnvironment.name, 'python', ...args]
