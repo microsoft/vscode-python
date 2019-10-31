@@ -67,12 +67,10 @@ suite('Interpreters from Windows Registry (unit)', () => {
             }
         }
         for (const [dirname, exists] of dirs) {
-            if (!seen.includes(dirname)) {
-                fs
-                    .setup(s => s.pathExists(path.join(dirname, 'python.exe')))
-                    .returns(() => Promise.resolve(exists));
-                seen.push(dirname);
-            }
+            fs
+                .setup(s => s.pathExists(path.join(dirname, 'python.exe')))
+                .returns(() => Promise.resolve(exists));
+            seen.push(dirname);
         }
     }
     test('Must return an empty list (x86)', async () => {
