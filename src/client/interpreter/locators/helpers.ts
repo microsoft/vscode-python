@@ -16,7 +16,7 @@ export async function lookForInterpretersInDirectory(
     const files = await (
         fs.getFiles(pathToCheck)
             .catch(err => {
-                traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
+                traceError('Python Extension (lookForInterpretersInDirectory.fs.getFiles):', err);
                 return [] as string[];
             })
     );
