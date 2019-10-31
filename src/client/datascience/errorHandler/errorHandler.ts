@@ -7,6 +7,8 @@ import { IInstallationChannelManager } from '../../common/installer/types';
 import { ILogger, Product } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { IDataScienceErrorHandler } from '../types';
@@ -20,6 +22,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
 
     public async handleError(err: Error): Promise<void> {
         if (err instanceof JupyterInstallError) {
+            sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
             const response = await this.applicationShell.showInformationMessage(
                 err.message,
                 localize.DataScience.jupyterInstall(),
@@ -33,6 +36,7 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                     const product = ProductNames.get(Product.jupyter);
 
                     if (installer && product) {
+                        sendTelemetryEvent(Telemetry.UserInstalledJupyter);
                         installer.installModule(product)
                             .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     } else if (installers[0] && product) {
@@ -40,6 +44,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                             .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     }
                 }
+            } else if (response === localize.DataScience.notebookCheckForImportNo()) {
+                sendTelemetryEvent(Telemetry.UserDidNotInstallJupyter);
             } else if (response === err.actionTitle) {
                 // This is a special error that shows a link to open for more help
                 this.applicationShell.openUrl(err.action);

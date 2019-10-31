@@ -1425,13 +1425,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.ScrolledToCell]: never | undefined;
-    [Telemetry.CellCount]: { count: number} ;
+    [Telemetry.CellCount]: { count: number };
     [Telemetry.Save]: never | undefined;
-    [Telemetry.AutoSaveEnabled]: {enabled: boolean};
+    [Telemetry.AutoSaveEnabled]: { enabled: boolean };
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
+    [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
+    [Telemetry.UserInstalledJupyter]: never | undefined;
+    [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
