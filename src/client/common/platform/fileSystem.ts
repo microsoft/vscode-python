@@ -9,13 +9,14 @@ import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
 import { injectable } from 'inversify';
 import * as fspath from 'path';
-import * as tmp from 'tmp';
+import * as tmpMod from 'tmp';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
     IFileSystem, IFileSystemPath, IFileSystemUtils, IRawFileSystem,
+    ITempFileSystem,
     TemporaryFile, WriteStream
 } from './types';
 
@@ -55,6 +56,36 @@ export class FileSystemPath implements IFileSystemPath {
     public normCase(filename: string): string {
         filename = this.raw.normalize(filename);
         return this.isWindows ? filename.toUpperCase() : filename;
+    }
+}
+
+//tslint:disable-next-line:no-any
+type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
+interface IRawTmp {
+    file(options: tmpMod.Options, cb: TempCallback): void;
+}
+
+export class TempFileSystem {
+    constructor(
+        private readonly raw: IRawTmp = tmpMod
+    ) { }
+
+    public async createFile(suffix: string): Promise<TemporaryFile> {
+        const options = {
+            postfix: suffix
+        };
+        // We could use util.promisify() here.
+        return new Promise<TemporaryFile>((resolve, reject) => {
+            this.raw.file(options, (err, tmpFile, _fd, cleanupCallback) => {
+                if (err) {
+                    return reject(err);
+                }
+                resolve({
+                    filePath: tmpFile,
+                    dispose: cleanupCallback
+                });
+            });
+        });
     }
 }
 
@@ -219,18 +250,16 @@ function getHashString(data: string): string {
 }
 
 type GlobCallback = (err: Error | null, matches: string[]) => void;
-//tslint:disable-next-line:no-any
-type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 
 @injectable()
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
         public readonly raw: IRawFileSystem = new RawFileSystem(),
         public readonly path: IFileSystemPath = new FileSystemPath(),
+        public readonly tmp: ITempFileSystem = new TempFileSystem(),
         private readonly getHash = getHashString,
         // tslint:disable-next-line:no-unnecessary-callback-wrapper
-        private readonly globFile = ((pat: string, cb: GlobCallback) => glob(pat, cb)),
-        private readonly makeTempFile = ((s: string, cb: TempCallback) => tmp.file({ postfix: s }, cb))
+        private readonly globFile = ((pat: string, cb: GlobCallback) => glob(pat, cb))
     ) { }
 
     //****************************
@@ -343,21 +372,6 @@ export class FileSystemUtils implements IFileSystemUtils {
             });
         });
     }
-
-    public async createTemporaryFile(suffix: string): Promise<TemporaryFile> {
-        // We could use util.promisify() here.
-        return new Promise<TemporaryFile>((resolve, reject) => {
-            this.makeTempFile(suffix, (err, tmpFile, _, cleanupCallback) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve({
-                    filePath: tmpFile,
-                    dispose: cleanupCallback
-                });
-            });
-        });
-    }
 }
 
 // more aliases (to cause less churn)
@@ -409,5 +423,9 @@ export class FileSystem extends FileSystemUtils implements IFileSystem {
 
     public createWriteStream(filename: string): WriteStream {
         return this.raw.createWriteStream(filename);
+    }
+
+    public async createTemporaryFile(suffix: string): Promise<TemporaryFile> {
+        return this.tmp.createFile(suffix);
     }
 }

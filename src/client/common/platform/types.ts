@@ -40,6 +40,9 @@ export type TemporaryFile = vscode.Disposable & {
 export type TemporaryDirectory = vscode.Disposable & {
     path: string;
 };
+export interface ITempFileSystem {
+    createFile(suffix?: string): Promise<TemporaryFile>;
+}
 
 // Eventually we will merge IPathUtils into IFileSystemPath.
 
@@ -92,7 +95,6 @@ export interface IFileSystemUtils {
     isDirReadonly(dirname: string): Promise<boolean>;
     getFileHash(filename: string): Promise<string>;
     search(globPattern: string): Promise<string[]>;
-    createTemporaryFile(suffix: string): Promise<TemporaryFile>;
     // helpers (non-async)
     arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
     pathExistsSync(filename: string): boolean;
@@ -106,6 +108,7 @@ export interface IFileSystem extends IFileSystemUtils {
     writeFile(filename: string, data: {}): Promise<void>;
     chmod(filename: string, mode: string): Promise<void>;
     copyFile(src: string, dest: string): Promise<void>;
+    createTemporaryFile(suffix: string): Promise<TemporaryFile>;
     // non-async
     fileExistsSync(filename: string): boolean;
     readFileSync(filename: string): string;

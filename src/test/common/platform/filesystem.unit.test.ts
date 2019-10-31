@@ -6,16 +6,18 @@ import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
 import {
-    FileSystemPath, FileSystemUtils, RawFileSystem
+    FileSystemPath, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
 import {
     FileStat, FileType,
-    IFileSystemPath, IFileSystemUtils, IRawFileSystem,
+    IFileSystemPath, IFileSystemUtils, IRawFileSystem, ITempFileSystem,
     TemporaryFile, WriteStream
 } from '../../../client/common/platform/types';
 
 // tslint:disable:max-func-body-length chai-vague-errors
 
+//tslint:disable-next-line:no-any
+type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 interface IRawFS {
     // node "fs"
     //tslint:disable-next-line:no-any
@@ -44,7 +46,55 @@ interface IRawFS {
     join(...filenames: string[]): string;
     normalize(filename: string): string;
     dirname(filename: string): string;
+
+    // "tmp"
+    file(options: { }, cb: TempCallback): void;
 }
+
+suite('Temporary files', () => {
+    let raw: TypeMoq.IMock<IRawFS>;
+    let tmp: ITempFileSystem;
+    setup(() => {
+        raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
+        tmp = new TempFileSystem(
+            raw.object
+        );
+    });
+    function verifyAll() {
+        raw.verifyAll();
+    }
+
+    suite('createFile', () => {
+        test('TemporaryFile is populated properly', async () => {
+            const expected: TemporaryFile = {
+                filePath: '/tmp/xyz.tmp',
+                dispose: (() => undefined)
+            };
+            raw.setup(r => r.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+                .callback((_s, cb) => {
+                    cb(undefined, expected.filePath, undefined, expected.dispose);
+                });
+
+            const tempfile = await tmp.createFile('.tmp');
+
+            expect(tempfile).to.deep.equal(expected);
+            verifyAll();
+        });
+
+        test('failure', async () => {
+            const err = new Error('something went wrong');
+            raw.setup(r => r.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+                .callback((_s, cb) => {
+                    cb(err);
+                });
+
+            const promise = tmp.createFile('.tmp');
+
+            await expect(promise).to.eventually.be.rejected;
+            verifyAll();
+        });
+    });
+});
 
 suite('FileSystem paths', () => {
     let raw: TypeMoq.IMock<IRawFS>;
@@ -545,27 +595,27 @@ suite('Raw FileSystem', () => {
 interface IDeps {
     getHashString(data: string): string;
     glob(pattern: string, cb: (err: Error | null, matches: string[]) => void): void;
-    //tslint:disable-next-line:no-any
-    mktemp(suffix: string, callback: ((err: any, path: string, fd: number, cleanupCallback: () => void) => void)): void;
 }
 
 suite('FileSystem Utils', () => {
     let stat: TypeMoq.IMock<FileStat>;
     let filesystem: TypeMoq.IMock<IRawFileSystem>;
     let path: TypeMoq.IMock<IFileSystemPath>;
+    let tmp: TypeMoq.IMock<ITempFileSystem>;
     let deps: TypeMoq.IMock<IDeps>;
     let utils: IFileSystemUtils;
     setup(() => {
         stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
         filesystem = TypeMoq.Mock.ofType<IRawFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         path = TypeMoq.Mock.ofType<IFileSystemPath>(undefined, TypeMoq.MockBehavior.Strict);
+        tmp = TypeMoq.Mock.ofType<ITempFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         deps = TypeMoq.Mock.ofType<IDeps>(undefined, TypeMoq.MockBehavior.Strict);
         utils = new FileSystemUtils(
             filesystem.object,
             path.object,
+            tmp.object,
             ((data: string) => deps.object.getHashString(data)),
-            ((p, cb) => deps.object.glob(p, cb)),
-            ((s, cb) => deps.object.mktemp(s, cb))
+            ((p, cb) => deps.object.glob(p, cb))
         );
 
         // This is necessary because passing "stat.object" to
@@ -1031,37 +1081,6 @@ suite('FileSystem Utils', () => {
                 });
 
             const promise = utils.search(pattern);
-
-            await expect(promise).to.eventually.be.rejected;
-            verifyAll();
-        });
-    });
-
-    suite('createTemporaryFile', () => {
-        test('TemporaryFile is populated properly', async () => {
-            const expected: TemporaryFile = {
-                filePath: '/tmp/xyz.tmp',
-                dispose: (() => undefined)
-            };
-            deps.setup(d => d.mktemp('.tmp', TypeMoq.It.isAny()))
-                .callback((_s, cb) => {
-                    cb(undefined, expected.filePath, undefined, expected.dispose);
-                });
-
-            const tempfile = await utils.createTemporaryFile('.tmp');
-
-            expect(tempfile).to.deep.equal(expected);
-            verifyAll();
-        });
-
-        test('failure', async () => {
-            const err = new Error('something went wrong');
-            deps.setup(d => d.mktemp('.tmp', TypeMoq.It.isAny()))
-                .callback((_s, cb) => {
-                    cb(err);
-                });
-
-            const promise = utils.createTemporaryFile('.tmp');
 
             await expect(promise).to.eventually.be.rejected;
             verifyAll();

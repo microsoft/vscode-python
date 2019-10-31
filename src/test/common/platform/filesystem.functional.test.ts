@@ -1025,42 +1025,6 @@ suite('FileSystem Utils', () => {
             expect(files).to.deep.equal([]);
         });
     });
-
-    suite('createTemporaryFile', () => {
-        test('TemporaryFile is populated properly', async () => {
-            const tempfile = await utils.createTemporaryFile('.tmp');
-
-            await fsextra.stat(tempfile.filePath); // This should not fail.
-            tempfile.dispose();
-            expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, tempfile.filePath);
-        });
-
-        test('Ensure creating a temporary file results in a unique temp file path', async () => {
-            const tempfile1 = await utils.createTemporaryFile('.tmp');
-            const tempfile2 = await utils.createTemporaryFile('.tmp');
-
-            tempfile1.dispose();
-            tempfile2.dispose();
-            expect(tempfile1.filePath).to.not.equal(tempfile2.filePath);
-        });
-
-        test('Ensure writing to a temp file is supported via file stream', async () => {
-            const data = '...';
-            const tempfile = await utils.createTemporaryFile('.tmp');
-            const stream = utils.raw.createWriteStream(tempfile.filePath);
-
-            stream.write(data, 'utf8');
-
-            const actual = await fsextra.readFile(tempfile.filePath, 'utf8');
-            expect(actual).to.equal(data);
-        });
-
-        test('Ensure chmod works against a temporary file', async () => {
-            const tempfile = await utils.createTemporaryFile('.tmp');
-
-            await fsextra.chmod(tempfile.filePath, '7777'); // This should not fail.
-        });
-    });
 });
 
 suite('FileSystem - legacy aliases', () => {
@@ -1201,5 +1165,48 @@ suite('FileSystem - legacy aliases', () => {
         const hash = await filesystem.getFileHash(__filename);
 
         expect(hash).to.be.length.greaterThan(0);
+    });
+
+    suite('createTemporaryFile', () => {
+        test('TemporaryFile is populated properly', async () => {
+            const filesystem = new FileSystem();
+
+            const tempfile = await filesystem.createTemporaryFile('.tmp');
+
+            await fsextra.stat(tempfile.filePath); // This should not fail.
+            tempfile.dispose();
+            expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, tempfile.filePath);
+        });
+
+        test('Ensure creating a temporary file results in a unique temp file path', async () => {
+            const filesystem = new FileSystem();
+
+            const tempfile1 = await filesystem.createTemporaryFile('.tmp');
+            const tempfile2 = await filesystem.createTemporaryFile('.tmp');
+
+            tempfile1.dispose();
+            tempfile2.dispose();
+            expect(tempfile1.filePath).to.not.equal(tempfile2.filePath);
+        });
+
+        test('Ensure writing to a temp file is supported via file stream', async () => {
+            const filesystem = new FileSystem();
+            const tempfile = await filesystem.createTemporaryFile('.tmp');
+            const stream = filesystem.raw.createWriteStream(tempfile.filePath);
+            const data = '...';
+
+            stream.write(data, 'utf8');
+
+            const actual = await fsextra.readFile(tempfile.filePath, 'utf8');
+            expect(actual).to.equal(data);
+        });
+
+        test('Ensure chmod works against a temporary file', async () => {
+            const filesystem = new FileSystem();
+
+            const tempfile = await filesystem.createTemporaryFile('.tmp');
+
+            await fsextra.chmod(tempfile.filePath, '7777'); // This should not fail.
+        });
     });
 });
