@@ -63,11 +63,11 @@ suite('Debugging - Session Logging', () => {
         public type: string;
         public id: number;
         public format: string;
-        public variables?: { [key: string]: string } | undefined;
-        public sendTelemetry?: boolean | undefined;
-        public showUser?: boolean | undefined;
-        public url?: string | undefined;
-        public urlLabel?: string | undefined;
+        public variables?: { [key: string]: string };
+        public sendTelemetry?: boolean;
+        public showUser?: boolean;
+        public url?: string;
+        public urlLabel?: string;
         constructor(id: number, seq: number, type: string) {
             this.id = id;
             this.format = 'json';
@@ -117,12 +117,12 @@ suite('Debugging - Session Logging', () => {
 
             logger.onDidSendMessage!(message);
             const sentLog = logs.pop();
-            assert.ok(sentLog!.includes('Client --> Adapter'));
+            assert.ok(sentLog!.includes('Client <-- Adapter'));
             assert.ok(sentLog!.includes('test-message'));
 
             logger.onWillReceiveMessage!(message);
             const receivedLog = logs.pop();
-            assert.ok(receivedLog!.includes('Client <-- Adapter'));
+            assert.ok(receivedLog!.includes('Client --> Adapter'));
             assert.ok(receivedLog!.includes('test-message'));
 
             logger.onWillStopSession!();

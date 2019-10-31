@@ -13,13 +13,11 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 class DebugSessionLoggingTracker implements DebugAdapterTracker {
-    private readonly session: DebugSession;
     private readonly enabled: boolean = false;
     private stream: fs.WriteStream | undefined;
     private timer = new StopWatch();
 
-    constructor(session: DebugSession, fileSystem: IFileSystem) {
-        this.session = session;
+    constructor(private readonly session: DebugSession, fileSystem: IFileSystem) {
         this.enabled = this.session.configuration.logToFile as boolean;
         if (this.enabled) {
             const fileName = `debugger.vscode_${this.session.id}.log`;
@@ -33,15 +31,15 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
     }
 
     public onWillReceiveMessage(message: DebugProtocol.Message) {
-        this.log(`Client <-- Adapter:\n${this.stringify(message)}\n`);
-    }
-
-    public onDidSendMessage(message: DebugProtocol.Message) {
         this.log(`Client --> Adapter:\n${this.stringify(message)}\n`);
     }
 
+    public onDidSendMessage(message: DebugProtocol.Message) {
+        this.log(`Client <-- Adapter:\n${this.stringify(message)}\n`);
+    }
+
     public onWillStopSession() {
-        this.log(`Stopping Session\n`);
+        this.log('Stopping Session\n');
     }
 
     public onError(error: Error) {
@@ -65,10 +63,7 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
 
 @injectable()
 export class DebugSessionLoggingFactory implements DebugAdapterTrackerFactory {
-    constructor(
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem
-    ) {
-    }
+    constructor(@inject(IFileSystem) private readonly fileSystem: IFileSystem) { }
 
     public createDebugAdapterTracker(session: DebugSession): ProviderResult<DebugAdapterTracker> {
         return new DebugSessionLoggingTracker(session, this.fileSystem);
