@@ -216,6 +216,8 @@ suite('Terminal - Code Execution', () => {
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
                 const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
                 terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
+                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.never());
             }
 
             test('Ensure python file execution script is sent to terminal on windows', async () => {
@@ -278,6 +280,8 @@ suite('Terminal - Code Execution', () => {
                 expect(replCommandArgs).not.to.be.an('undefined', 'Command args is undefined');
                 expect(replCommandArgs.command).to.be.equal(expectedPythonPath, 'Incorrect python path');
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect arguments');
+                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
+                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.never());
             }
 
             test('Ensure fully qualified python path is escaped when building repl args on Windows', async () => {
@@ -331,6 +335,8 @@ suite('Terminal - Code Execution', () => {
                 expect(replCommandArgs).not.to.be.an('undefined', 'Conda command args are undefined');
                 expect(replCommandArgs.command).to.be.equal('conda', 'Incorrect conda path');
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect conda arguments');
+                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
+                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.once());
             }
 
             test('Ensure conda args with env name are returned when building repl args with a conda env with a name', async () => {
