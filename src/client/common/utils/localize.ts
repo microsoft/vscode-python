@@ -61,7 +61,7 @@ export namespace Experiments {
 export namespace Interpreters {
     export const loading = localize('Interpreters.LoadingInterpreters', 'Loading Python Interpreters');
     export const refreshing = localize('Interpreters.RefreshingInterpreters', 'Refreshing Python Interpreters');
-    export const condaInheritEnvMessage = localize('Interpreters.condaInheritEnvMessage', 'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we suggest the \"terminal.integrated.inheritEnv\" setting to be changed to false. Would you like to update this setting?');
+    export const condaInheritEnvMessage = localize('Interpreters.condaInheritEnvMessage', 'We noticed you\'re using a conda environment. If you are experiencing issues with this environment in the integrated terminal, we recommend that you let the Python extension change \"terminal.integrated.inheritEnv\" to false in your user settings.');
     export const environmentPromptMessage = localize('Interpreters.environmentPromptMessage', 'We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?');
     export const selectInterpreterTip = localize('Interpreters.selectInterpreterTip', 'Tip: you can change the Python interpreter used by the Python extension by clicking on the Python version in the status bar');
 }
@@ -149,7 +149,7 @@ export namespace DataScience {
     export const runAllCellsLensCommandTitle = localize('python.command.python.datascience.runallcells.title', 'Run all cells');
     export const runAllCellsAboveLensCommandTitle = localize('python.command.python.datascience.runallcellsabove.title', 'Run above');
     export const runCellAndAllBelowLensCommandTitle = localize('python.command.python.datascience.runcellandallbelow.title', 'Run Below');
-    export const importChangeDirectoryComment = localize('DataScience.importChangeDirectoryComment', '#%% Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting');
+    export const importChangeDirectoryComment = localize('DataScience.importChangeDirectoryComment', '{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting');
     export const exportChangeDirectoryComment = localize('DataScience.exportChangeDirectoryComment', '# Change directory to VSCode workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting');
 
     export const restartKernelMessage = localize('DataScience.restartKernelMessage', 'Do you want to restart the Jupter kernel? All variables will be lost.');
@@ -263,7 +263,7 @@ export namespace DataScience {
     export const jupyterDebuggerInstallPtvsdNo = localize('DataScience.jupyterDebuggerInstallPtvsdNo', 'No');
     export const cellStopOnErrorFormatMessage = localize('DataScience.cellStopOnErrorFormatMessage', '{0} cells were canceled due to an error in the previous cell.');
     export const scrollToCellTitleFormatMessage = localize('DataScience.scrollToCellTitleFormatMessage', 'Go to [{0}]');
-    export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "#%%"\n# To add a new markdown cell, type "#%% [markdown]"\n');
+    export const instructionComments = localize('DataScience.instructionComments', '# To add a new cell, type "{0}"\n# To add a new markdown cell, type "{0} [markdown]"\n');
     export const invalidNotebookFileError = localize('DataScience.invalidNotebookFileError', 'Notebook is not in the correct format. Check the file for correct json.');
     export const invalidNotebookFileErrorFormat = localize('DataScience.invalidNotebookFileError', '{0} is not a valid notebook file. Check the file for correct json.');
     export const nativeEditorTitle = localize('DataScience.nativeEditorTitle', 'Notebook Editor');
@@ -291,6 +291,9 @@ export namespace DataScience {
     export const convertingToPythonFile = localize('DataScience.convertingToPythonFile', 'Converting ipynb to python file');
     export const noInterpreter = localize('DataScience.noInterpreter', 'No python selected');
     export const notebookNotFound = localize('DataScience.notebookNotFound', 'python -m jupyter notebook --version is not running');
+    export const findJupyterCommandProgress = localize('DataScience.findJupyterCommandProgress', 'Active interpreter does not support {0}. Searching for the best available interpreter.');
+    export const findJupyterCommandProgressCheckInterpreter = localize('DataScience.findJupyterCommandProgressCheckInterpreter', 'Checking {0}.');
+    export const findJupyterCommandProgressSearchCurrentPath = localize('DataScience.findJupyterCommandProgressSearchCurrentPath', 'Searching current path.');
 }
 
 export namespace DebugConfigStrings {

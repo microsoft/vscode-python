@@ -233,10 +233,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                 }
             }
         } else {
-            this.dataScienceErrorHandler.handleError(
+            await this.dataScienceErrorHandler.handleError(
                 new JupyterInstallError(
                     localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink())).ignoreErrors();
+                    localize.DataScience.pythonInteractiveHelpLink()));
         }
     }
 
@@ -351,7 +351,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     private waitForStatus<T>(promise: () => Promise<T>, format: string, file?: string, canceled?: () => void, interactiveWindow?: IInteractiveBase): Promise<T> {
         const message = file ? format.format(file) : format;
-        return this.statusProvider.waitWithStatus(promise, message, undefined, canceled, interactiveWindow);
+        return this.statusProvider.waitWithStatus(promise, message, true, undefined, canceled, interactiveWindow);
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'command' }, false)

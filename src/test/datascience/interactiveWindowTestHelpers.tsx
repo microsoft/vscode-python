@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 
+import { Uri } from 'vscode';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -46,7 +47,7 @@ export async function addCode(ioc: DataScienceIocContainer, wrapper: ReactWrappe
     // 5) Status finished
     return getInteractiveCellResults(wrapper, expectedRenderCount, async () => {
         const history = await getOrCreateInteractiveWindow(ioc);
-        const success = await history.addCode(code, 'foo.py', 2);
+        const success = await history.addCode(code, Uri.file('foo.py').fsPath, 2);
         if (expectError) {
             assert.equal(success, false, `${code} did not produce an error`);
         }

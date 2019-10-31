@@ -8,10 +8,13 @@ $ # You could instead just download this and dump into the working directory (mu
 $ # npm run package # see notes above.
 
 
-$ npm run compile-smoke
-$ npm run smokeTest # Use the `-- --tags=@wip` argument to run specific tests.
-$ npm run smokeTest -- --help # for more information (see src/smoke/src/cli.ts)
-$ npm run smokeTest:report # To generate report (output is './vscode test/reports/report.html')
+$ npm run compile
+$ node ./out/index download # Download VS Code (check cli args for options to download VS Code insiders)
+$ node ./out/index install  # Install the extensions into VS Code (ensure the file `ms-python-insiders.vsix` exists in the root directory)
+$ node ./out/index test     # Launches the tests
+$ node ./out/index --help   # for more information
+$ node ./out/index <command> --help   # for more information
+
 ```
 
 ## Overview
@@ -37,7 +40,7 @@ Here are the steps involved in running the tests:
     * All user settings, etc will be in a separate directory (see `user` folder).
     * VSC will not have any extensions. We are in control of what extensions are installed (see `.vscode test/extensions` folder).
 * Automate VSC UI
-    * Use the VS Code smoke test API to automate the UI.
+    * Use Puppeteer to automate the UI.
     * The [BDD](https://en.wikipedia.org/wiki/Behavior-driven_development) tests are written and executed using [cucumberjs](https://github.com/cucumber/cucumber-js).
 * Workspace folder/files
     * Each [feature](https://docs.cucumber.io/gherkin/reference/#feature) can have its own set of files in the form of a github repo.
@@ -58,8 +61,9 @@ Here are the steps involved in running the tests:
 
 * 100% of the code is written in `nodejs`.
 * The tests are written using [cucumberjs](https://github.com/cucumber/cucumber-js).
-* VS Code [smoke tests API](https://github.com/microsoft/vscode/tree/master/test/smoke) is used to automate VS Code.
+* Puppeteer is used to drive the VS Code UI.
 * `GitHub` repos are used to provide the files to be used for testing in a workspace folder.
+    * This needs to be replaced with local source (has been done for some, not others).
 * reports (`cucumber format`) are converted into HTML using an `npm` script [cucumber-html-reporter](https://www.npmjs.com/package/cucumber-html-reporter).
 * Test result reports are generated using `junit` format, for Azure Devops.
 
@@ -113,15 +117,7 @@ Here are the steps involved in running the tests:
 ## Miscellaneous
 
 * For debugging follow these steps:
-    * Run the npm command `smokeTest:debug`
-    * Then attach the debugger using the debug configuration `Attach to Smoke Tests`.
-    * What about regular debugging?
-        * It has been observed that the instance of VSC launched for smoke tests just falls over when debugging from within VSC.
-        * Solution: Launch code in debug mode and attach (yes this works).
-        * Not entirely sure why it works, or why it doesn't work.
-        * Got a solution, hence not investing much more time time trying to identify why debugging is failing.
-* In order to pass custom arguments to `cucumberjs`, refer to the `CLI` (pass `cucumber` specific args after `--` in `npm run smokeTest`).
-    * E.g. `npm run smokeTest -- --tags=@wip --more-cucumberjs-args`
+    * Use the debug configuration `UI Tests`.
 * Remember, the automated UI interactions can be faster than normal user interactions.
     * E.g. just because we started debugging (using command `Debug: Start Debugging`), that doesn't mean the debug panel will open immediately. User interactions are slower compared to code execution.
     * Solution, always wait for the UI elements to be available/active. E.g. when you open a file, check whether the corresponding elements are visible.
@@ -130,19 +126,10 @@ Here are the steps involved in running the tests:
 
 ## Code Overview
 * Tests are written in nodejs. Why?
-    * Short answer - We're using the VS Code Smoke test infrastructure.
+    * Short answer - We're using Puppeteer (managed by the Chrome team).
     * Previously we wrote tests using `selenium`. However a week after the tests were running, VSC released a new version. This new version of VSC had a version of Electron + Chromium that didn't have a compatible version of `chrome driver`.
     * The chrome `chrome driver` is used by `selenium` to drive the tests. Also using `selenium` we had tonnes of issues.
     * Solution - Use the same technique used by VS Code to drive their UI Tests.
-* Code borrowed from VS Code ([src/smoke/vscode](https://github.com/microsoft/vscode-python/tree/master/src/smoke/vscode)).
-    * Short answer - We're using the VS Code Smoke test infrastructure (this is where that code resides).
-    * The code in [src/smoke/vscode](https://github.com/microsoft/vscode-python/tree/master/src/smoke/vscode) code has been borrowed from [VS Code Smoke tests](https://github.com/microsoft/vscode/tree/master/test/smoke).
-    * This contains the code required to launch VS Code and drive some tests.
-    * Rather than picking and choosing some files, we've copied the entire source folder.
-    * This makes it easy to update this code with later versions of changes from upstream VS Code.
-    * We could optionally package this into a seperate `npm package` and pull it in for testing purposes, however that adds the overhead of maintaining an `npm package`.
-    * There's also the option of creating a seprate repo and publishign this code into a internal package repository (`GitHub` or `Azure Pipelines`).
-    * To be discussed
 * Bootstrap extension ([src/smoke/bootstrap](https://github.com/microsoft/vscode-python/tree/master/src/smoke/bootstrap))
     * Short answer - Used to update the `settings.json` and detect loading of `Python Extension`.
     * When updating settings in VSC, do not alter the settings files directly. VSC could take a while to detect file changes and load the settings.

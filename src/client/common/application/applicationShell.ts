@@ -5,11 +5,14 @@
 // tslint:disable:no-var-requires no-any unified-signatures
 
 import { injectable } from 'inversify';
-import { CancellationToken, Disposable, env, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, TreeView, TreeViewOptions, Uri, window, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import { CancellationToken, Disposable, env, Event, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, TreeView, TreeViewOptions, Uri, window, WindowState, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
 import { IApplicationShell } from './types';
 
 @injectable()
 export class ApplicationShell implements IApplicationShell {
+    public get onDidChangeWindowState(): Event<WindowState> {
+        return window.onDidChangeWindowState;
+    }
     public showInformationMessage(message: string, ...items: string[]): Thenable<string>;
     public showInformationMessage(message: string, options: MessageOptions, ...items: string[]): Thenable<string>;
     public showInformationMessage<T extends MessageItem>(message: string, ...items: T[]): Thenable<T>;
@@ -81,5 +84,4 @@ export class ApplicationShell implements IApplicationShell {
     public createOutputChannel(name: string): OutputChannel {
         return window.createOutputChannel(name);
     }
-
 }

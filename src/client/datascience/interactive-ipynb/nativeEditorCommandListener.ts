@@ -32,6 +32,30 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells()));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunSelectedCell, () => this.runSelectedCell()));
+        this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow()));
+    }
+
+    private runAllCells() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runAllCells();
+        }
+    }
+
+    private runSelectedCell() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.runSelectedCell();
+        }
+    }
+
+    private addCellBelow() {
+        const activeEditor = this.provider.activeEditor;
+        if (activeEditor) {
+            activeEditor.addCellBelow();
+        }
     }
 
     private undoCells() {
@@ -77,7 +101,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 // Then take the contents and load it.
                 await this.provider.open(file, contents);
             } catch (e) {
-                this.dataScienceErrorHandler.handleError(e).ignoreErrors();
+                return this.dataScienceErrorHandler.handleError(e);
             }
         }
     }

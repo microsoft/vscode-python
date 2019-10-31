@@ -6,6 +6,7 @@ import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceInfo } from '../../common/logger';
+import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
     IConnection,
@@ -27,7 +28,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     private serverSettings: ServerConnection.ISettings | undefined;
 
     constructor(
-        private jupyterPasswordConnect: IJupyterPasswordConnect
+        private jupyterPasswordConnect: IJupyterPasswordConnect,
+        private config: IConfigurationService
     ) {
     }
 
@@ -108,7 +110,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // Agent is allowed to be set on this object, but ts doesn't like it on RequestInit, so any
         // tslint:disable-next-line:no-any
         let requestInit: any = { cache: 'no-store', credentials: 'same-origin' };
-        let requiresWebSocket = false;
         let cookieString;
         let allowUnauthorized;
 
@@ -120,7 +121,6 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 cookieString = this.getSessionCookieString(pwSettings);
                 const requestHeaders = { Cookie: cookieString, 'X-XSRFToken': pwSettings.xsrfCookie };
                 requestInit = { ...requestInit, headers: requestHeaders };
-                requiresWebSocket = true;
             } else if (pwSettings && pwSettings.emptyPassword) {
                 serverSettings = { ...serverSettings, token: connInfo.token };
             } else {
@@ -136,20 +136,14 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         if (connInfo.baseUrl.startsWith('https') && connInfo.allowUnauthorized) {
             const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
             requestInit = { ...requestInit, agent: requestAgent };
-            requiresWebSocket = true;
             allowUnauthorized = true;
         }
 
-        serverSettings = { ...serverSettings, init: requestInit };
-
-        // Only replace the websocket if we need to so we keep our normal local attach clean
-        if (requiresWebSocket) {
-            // This replaces the WebSocket constructor in jupyter lab services with our own implementation
-            // See _createSocket here:
-            // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
-            // tslint:disable-next-line:no-any
-            serverSettings = { ...serverSettings, WebSocket: createJupyterWebSocket(cookieString, allowUnauthorized) as any };
-        }
+        // This replaces the WebSocket constructor in jupyter lab services with our own implementation
+        // See _createSocket here:
+        // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
+        // tslint:disable-next-line:no-any
+        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any };
 
         return ServerConnection.makeSettings(serverSettings);
     }

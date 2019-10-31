@@ -14,7 +14,8 @@ import * as localize from '../../common/utils/localize';
 import { Common } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString } from '../common';
+import { concatMultilineStringInput } from '../common';
+import { Identifiers } from '../constants';
 import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
 
 /**
@@ -59,7 +60,7 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
                 // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
                 const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineString(vscCell.data.source));
+                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
 
                 // Convert IVscCell to IGatherCell
                 const cell = convertVscToGatherCell(cloneCell) as LogCell;
@@ -79,9 +80,13 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
         if (cell === undefined) {
             return '';
         }
+
+        // Get the default cell marker as we need to replace #%% with it.
+        const defaultCellMarker = this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+
         // Call internal slice method
         const slices = this._executionSlicer.sliceAllExecutions(cell);
-        const program = slices[0].cellSlices.reduce(concat, '');
+        const program = slices.length > 0 ? slices[0].cellSlices.reduce(concat, '').replace(/#%%/g, defaultCellMarker) : '';
 
         // Add a comment at the top of the file explaining what gather does
         const descriptor = '# This file contains the minimal amount of code required to produce the code cell you gathered.\n';

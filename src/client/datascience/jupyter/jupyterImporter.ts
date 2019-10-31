@@ -6,6 +6,7 @@ import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import '../../common/extensions';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
@@ -20,16 +21,16 @@ import { InvalidNotebookFileError } from './invalidNotebookFileError';
 export class JupyterImporter implements INotebookImporter {
     public isDisposed: boolean = false;
     // Template that changes markdown cells to have # %% [markdown] in the comments
-    private readonly nbconvertTemplate =
+    private readonly nbconvertTemplateFormat =
         // tslint:disable-next-line:no-multiline-string
         `{%- extends 'null.tpl' -%}
 {% block codecell %}
-#%%
+{0}
 {{ super() }}
 {% endblock codecell %}
 {% block in_prompt %}{% endblock in_prompt %}
 {% block input %}{{ cell.source | ipython2python }}{% endblock input %}
-{% block markdowncell scoped %}#%% [markdown]
+{% block markdowncell scoped %}{0} [markdown]
 {{ cell.source | comment_lines }}
 {% endblock markdowncell %}`;
 
@@ -46,19 +47,20 @@ export class JupyterImporter implements INotebookImporter {
         this.templatePromise = this.createTemplateFile();
     }
 
-    public async importFromFile(file: string): Promise<string> {
+    public async importFromFile(contentsFile: string, originalFile?: string): Promise<string> {
         const template = await this.templatePromise;
 
         // If the user has requested it, add a cd command to the imported file so that relative paths still work
         const settings = this.configuration.getSettings();
         let directoryChange: string | undefined;
         if (settings.datascience.changeDirOnImportExport) {
-            directoryChange = await this.calculateDirectoryChange(file);
+            // If an original file is passed in, then use that for calculating the directory change as contents might be an invalid location
+            directoryChange = await this.calculateDirectoryChange(originalFile ? originalFile : contentsFile);
         }
 
         // Use the jupyter nbconvert functionality to turn the notebook into a python file
         if (await this.jupyterExecution.isImportSupported()) {
-            let fileOutput: string = await this.jupyterExecution.importNotebook(file, template);
+            let fileOutput: string = await this.jupyterExecution.importNotebook(contentsFile, template);
             if (fileOutput.includes('get_ipython()')) {
                 fileOutput = this.addIPythonImport(fileOutput);
             }
@@ -116,16 +118,20 @@ export class JupyterImporter implements INotebookImporter {
     }
 
     private addInstructionComments = (pythonOutput: string): string => {
-        const comments = localize.DataScience.instructionComments();
+        const comments = localize.DataScience.instructionComments().format(this.defaultCellMarker);
         return comments.concat(pythonOutput);
     }
 
+    private get defaultCellMarker(): string {
+        return this.configuration.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
+    }
+
     private addIPythonImport = (pythonOutput: string): string => {
-        return CodeSnippits.ImportIPython.concat(pythonOutput);
+        return CodeSnippits.ImportIPython.format(this.defaultCellMarker, pythonOutput);
     }
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.importChangeDirectoryComment(), CodeSnippits.ChangeDirectoryCommentIdentifier, directoryChange);
+        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.importChangeDirectoryComment().format(this.defaultCellMarker), CodeSnippits.ChangeDirectoryCommentIdentifier, directoryChange);
         return newCode.concat(pythonOutput);
     }
 
@@ -173,7 +179,7 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await fs.appendFile(file.filePath, this.nbconvertTemplate);
+                await fs.appendFile(file.filePath, this.nbconvertTemplateFormat.format(this.defaultCellMarker));
 
                 // Now we should have a template that will convert
                 return file.filePath;

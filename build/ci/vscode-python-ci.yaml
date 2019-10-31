@@ -265,8 +265,7 @@ stages:
 
 
 - stage: Smoke
-  dependsOn:
-  - Build
+  dependsOn: []
   jobs:
   - job: 'Smoke'
     dependsOn: []

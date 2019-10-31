@@ -38,10 +38,10 @@ export interface IDataScienceCommandListener {
 
 // Connection information for talking to a jupyter notebook process
 export interface IConnection extends Disposable {
-    baseUrl: string;
-    token: string;
-    hostName: string;
-    localLaunch: boolean;
+    readonly baseUrl: string;
+    readonly token: string;
+    readonly hostName: string;
+    readonly localLaunch: boolean;
     localProcExitCode: number | undefined;
     disconnected: Event<number>;
     allowUnauthorized?: boolean;
@@ -135,6 +135,7 @@ export interface IJupyterExecution extends IAsyncDisposable {
     getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined>;
     getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined>;
     getNotebookError(): Promise<string>;
+    refreshCommands(): Promise<void>;
 }
 
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
@@ -185,7 +186,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(file: string): Promise<string>;
+    importFromFile(contentsFile: string, originalFile?: string): Promise<string>; // originalFile is the base file if file is a temp file / location
     importCellsFromFile(file: string): Promise<ICell[]>;
     importCells(json: string): Promise<ICell[]>;
 }
@@ -250,10 +251,22 @@ export interface INotebookEditor extends IInteractiveBase {
     closed: Event<INotebookEditor>;
     executed: Event<INotebookEditor>;
     modified: Event<INotebookEditor>;
+    saved: Event<INotebookEditor>;
+    /**
+     * Is this notebook representing an untitled file which has never been saved yet.
+     */
+    readonly isUntitled: boolean;
+    /**
+     * `true` if there are unpersisted changes.
+     */
+    readonly isDirty: boolean;
     readonly file: Uri;
     readonly visible: boolean;
     readonly active: boolean;
     load(contents: string, file: Uri): Promise<void>;
+    runAllCells(): void;
+    runSelectedCell(): void;
+    addCellBelow(): void;
 }
 
 export const IInteractiveWindowListener = Symbol('IInteractiveWindowListener');
@@ -337,7 +350,6 @@ export interface ICell {
     file: string;
     line: number;
     state: CellState;
-    type: 'preview' | 'execute';
     data: nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell | IMessageCell;
     extraLines?: number[];
 }
@@ -346,7 +358,7 @@ export interface IInteractiveWindowInfo {
     cellCount: number;
     undoCount: number;
     redoCount: number;
-    visibleCells: ICell[];
+    selectedCell: string | undefined;
 }
 
 export interface IMessageCell extends nbformat.IBaseCell {
@@ -371,10 +383,10 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(message: string, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Disposable;
+    set(message: string, showInWebView: boolean, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, showInWebView: boolean, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Promise<T>;
 }
 
 export interface IJupyterCommand {
@@ -390,10 +402,22 @@ export interface IJupyterCommandFactory {
 }
 
 // Config settings we pass to our react code
+export type FileSettings = {
+    autoSaveDelay: number;
+    autoSave: 'afterDelay' | 'off' | 'onFocusChange' | 'onWindowChange';
+};
+
 export interface IDataScienceExtraSettings extends IDataScienceSettings {
     extraSettings: {
-        editorCursor: string;
-        editorCursorBlink: string;
+        editor: {
+            cursor: string;
+            cursorBlink: string;
+            fontLigatures: boolean;
+            autoClosingBrackets: string;
+            autoClosingQuotes: string;
+            autoSurround: string;
+            autoIndent: boolean;
+        };
         fontSize: number;
         fontFamily: string;
         theme: string;

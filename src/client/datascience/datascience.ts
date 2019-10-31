@@ -20,7 +20,7 @@ import {
     IExtensionContext,
     IPythonExtensionBanner
 } from '../common/types';
-import { debounceAsync } from '../common/utils/decorators';
+import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -74,6 +74,7 @@ export class DataScience implements IDataScience {
 
         // Send telemetry for all of our settings
         this.sendSettingsTelemetry().ignoreErrors();
+        this.sendStartupTelemetry();
     }
 
     public async dispose() {
@@ -509,6 +510,11 @@ export class DataScience implements IDataScience {
         } catch (err) {
             traceError(err);
         }
+    }
+    @swallowExceptions('Error in sending DS Startup telemetry')
+    private sendStartupTelemetry(){
+        const filesConfig = this.workspace.getConfiguration('files');
+        sendTelemetryEvent(Telemetry.AutoSaveEnabled, undefined, {enabled: filesConfig.get('autoSave', 'off') !== 'off'});
     }
 
     private async createNewNotebook(): Promise<void> {

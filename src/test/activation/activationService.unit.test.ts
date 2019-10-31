@@ -380,7 +380,7 @@ suite('Activation - ActivationService', () => {
                     resource: Resource
                 ) {
                     activator
-                        .setup(a => a.activate(resource))
+                        .setup(a => a.activate(TypeMoq.It.isValue(resource)))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
                     lsNotSupportedDiagnosticService

@@ -16,7 +16,6 @@ import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
-import { waitForUpdate } from './reactHelpers';
 import { runDoubleTest, waitForMessage } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -79,7 +78,7 @@ suite('DataScience Interactive Window variable explorer tests', () => {
                 createdNotebook = true;
                 expectedRenderCount += 1;
             }
-            await addCell(wrapper, code, true, expectedRenderCount);
+            await addCell(wrapper, ioc, code, true);
             await variablesUpdated;
             return wrapper;
         }
@@ -94,7 +93,7 @@ value = 'hello world'`;
         openVariableExplorer(wrapper);
 
         await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true, 4);
+        await addCodeImpartial(wrapper, basicCode, true);
 
         // We should show a string and show an int, the modules should be hidden
         let targetVariables: IJupyterVariable[] = [
@@ -108,7 +107,7 @@ value = 'hello world'`;
         ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
 
         // Add another string and check our vars, strings should be hidden
-        await addCodeImpartial(wrapper, basicCode2, true, 4);
+        await addCodeImpartial(wrapper, basicCode2, true);
 
         targetVariables = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false}
@@ -131,7 +130,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add another variable and check it
-        await addCodeImpartial(wrapper, basicCode, true, 4);
+        await addCodeImpartial(wrapper, basicCode, true);
 
         targetVariables = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
@@ -141,7 +140,7 @@ value = 'hello world'`;
         verifyVariables(wrapper, targetVariables);
 
         // Add a second variable and check it
-        await addCodeImpartial(wrapper, basicCode2, true, 4);
+        await addCodeImpartial(wrapper, basicCode2, true);
 
         targetVariables = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
@@ -149,35 +148,6 @@ value = 'hello world'`;
             {name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
             // tslint:disable-next-line:quotemark
             {name: 'value2', value: "'hello world 2'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
-
-    runDoubleTest('Variable explorer - Loading', async (wrapper) => {
-        const basicCode: string = `value = 'hello world'`;
-
-        openVariableExplorer(wrapper);
-
-        await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, false, 4);
-
-        // Here we are only going to wait for two renders instead of the needed three
-        // a should have the value updated, but value should still be loading
-        await waitForUpdate(wrapper, VariableExplorer, 2);
-
-        let targetVariables: IJupyterVariable[] = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'value', value: 'Loading...', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
-
-        // Now wait for one more update and then check the variables, we should have loaded the value var
-        await waitForUpdate(wrapper, VariableExplorer, 1);
-
-        targetVariables = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
         ];
         verifyVariables(wrapper, targetVariables);
     }, () => { return ioc; });
@@ -191,7 +161,7 @@ myDict = {'a': 1}`;
         openVariableExplorer(wrapper);
 
         await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true, 4);
+        await addCodeImpartial(wrapper, basicCode, true);
 
         const targetVariables: IJupyterVariable[] = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
@@ -219,7 +189,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
         openVariableExplorer(wrapper);
 
         await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true, 4);
+        await addCodeImpartial(wrapper, basicCode, true);
 
         const targetVariables: IJupyterVariable[] = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
@@ -251,7 +221,7 @@ strc = 'c'`;
         openVariableExplorer(wrapper);
 
         await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true, 4);
+        await addCodeImpartial(wrapper, basicCode, true);
 
         let targetVariables: IJupyterVariable[] = [
             {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},

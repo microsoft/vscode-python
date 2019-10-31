@@ -14,10 +14,11 @@ export interface IVsCodeApi {
     getState() : any;
 }
 
-export interface IMessageHandler {
-    // tslint:disable-next-line:no-any
-    handleMessage(type: string, payload?: any) : boolean;
-}
+    export interface IMessageHandler {
+        // tslint:disable-next-line:no-any
+        handleMessage(type: string, payload?: any) : boolean;
+        dispose?(): void;
+    }
 
 // This special function talks to vscode from a web panel
 export declare function acquireVsCodeApi(): IVsCodeApi;
@@ -66,7 +67,7 @@ export class PostOffice implements IDisposable {
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-            this.vscodeApi = acquireVsCodeApi();
+            this.vscodeApi = acquireVsCodeApi(); // NOSONAR
         }
         if (!this.registered) {
             this.registered = true;

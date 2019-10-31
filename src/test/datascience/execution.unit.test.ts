@@ -8,13 +8,13 @@ import * as os from 'os';
 import * as path from 'path';
 import { Observable } from 'rxjs/Observable';
 import { SemVer } from 'semver';
-import { anyString, anything, instance, match, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, match, mock, reset, verify, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
-
-import { IWorkspaceService } from '../../client/common/application/types';
+import { CancellationToken, CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
+import { ApplicationShell } from '../../client/common/application/applicationShell';
+import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
@@ -32,6 +32,7 @@ import {
     Output
 } from '../../client/common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { Identifiers } from '../../client/datascience/constants';
@@ -54,7 +55,7 @@ import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locato
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { getOSType, OSType } from '../common';
-import { noop } from '../core';
+import { noop, sleep } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 
@@ -205,6 +206,7 @@ suite('Jupyter Execution', async () => {
     const executionFactory = mock(PythonExecutionFactory);
     const liveShare = mock(LiveShareApi);
     const configService = mock(ConfigurationService);
+    const application = mock(ApplicationShell);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
     const activationHelper = mock(EnvironmentActivationService);
@@ -566,8 +568,14 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
         when(serviceContainer.get<ILogger>(ILogger)).thenReturn(instance(logger));
         when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
+        when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(application));
         when(configService.getSettings()).thenReturn(pythonSettings);
         when(workspaceService.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
+        when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
+            return new Promise((resolve, reject) => {
+                cb({report: noop}, new CancellationTokenSource().token).then(resolve).catch(reject);
+            });
+        });
 
         // Setup default settings
         pythonSettings.datascience = {
@@ -715,6 +723,69 @@ suite('Jupyter Execution', async () => {
         configChangeEvent.fire(evt);
         await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
     }).timeout(10000);
+
+    test('Display progress message', async () => {
+        const execution = createExecution(missingNotebookPython);
+        await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
+        const usableInterpreter = await execution.getUsableJupyterPython();
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
+        if (usableInterpreter) { // Linter
+            assert.notEqual(usableInterpreter.path, missingNotebookPython.path);
+            assert.notEqual(usableInterpreter.version!.major, missingNotebookPython.version!.major, 'Found interpreter should not match on major');
+        }
+        // Force config change and ask again
+        pythonSettings.datascience.searchForJupyter = false;
+        const evt = {
+            affectsConfiguration(_m: string): boolean {
+                return true;
+            }
+        };
+        configChangeEvent.fire(evt);
+        await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
+        verify(application.withProgress(anything(), anything())).atLeast(1);
+    }).timeout(10000);
+
+    test('Progress message should not be displayed for more than 1s when interpreter search completes quickly', async () => {
+        const execution = createExecution(missingNotebookPython);
+        const progressCancellation = new CancellationTokenSource();
+        reset(application);
+        when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
+            return new Promise((resolve, reject) => {
+                cb({report: noop}, progressCancellation.token).then(resolve).catch(reject);
+            });
+        });
+
+        // Now interpreters = fast discovery (less time for display of progress).
+        when(interpreterService.getInterpreters()).thenReturn(Promise.resolve([]));
+
+        // The call to isNotebookSupported should not timeout in 1 seconds.
+        const isNotebookSupported = execution.isNotebookSupported();
+        await assert.eventually.notEqual(Promise.race([isNotebookSupported, sleep(1000).then(() => 'timeout')]), 'timeout');
+        verify(application.withProgress(anything(), anything())).atLeast(1);
+    }).timeout(10_000);
+
+    test('Cancel progress message if interpreter search takes too long', async () => {
+        const execution = createExecution(missingNotebookPython);
+        const progressCancellation = new CancellationTokenSource();
+        reset(application);
+        when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
+            return new Promise((resolve, reject) => {
+                cb({report: noop}, progressCancellation.token).then(resolve).catch(reject);
+            });
+        });
+
+        const slowInterpreterDiscovery = createDeferred<PythonInterpreter[]>();
+        when(interpreterService.getInterpreters()).thenReturn(slowInterpreterDiscovery.promise);
+
+        // The call to interpreterService.getInterpreters shoud not complete, it is very slow.
+        const isNotebookSupported = execution.isNotebookSupported();
+        await assert.eventually.equal(Promise.race([isNotebookSupported, sleep(5000).then(() => 'timeout')]), 'timeout');
+
+        // Once we cancel the progress message, the promise should resolve almost immediately.
+        progressCancellation.cancel();
+        await assert.eventually.notEqual(Promise.race([isNotebookSupported, sleep(500).then(() => 'timeout')]), 'timeout');
+        verify(application.withProgress(anything(), anything())).atLeast(1);
+    }).timeout(20_000);
 
     test('Kernelspec is deleted on exit', async () => {
         const execution = createExecution(missingKernelPython);

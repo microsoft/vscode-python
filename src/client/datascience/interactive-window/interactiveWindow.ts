@@ -118,7 +118,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public addMessage(message: string): Promise<void> {
-        this.addMessageImpl(message, 'execute');
+        this.addMessageImpl(message);
         return Promise.resolve();
     }
 
@@ -141,11 +141,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
 
         switch (message) {
             case InteractiveWindowMessages.Export:
-                this.dispatchMessage(message, payload, this.export);
+                this.handleMessage(message, payload, this.export);
                 break;
 
             case InteractiveWindowMessages.ReturnAllCells:
-                this.dispatchMessage(message, payload, this.handleReturnAllCells);
+                this.handleMessage(message, payload, this.handleReturnAllCells);
                 break;
 
             default:
@@ -156,7 +156,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     public async debugCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
         let saved = true;
         // Make sure the file is saved before debugging
-        const doc = this.documentManager.textDocuments.find(d => d.fileName === file);
+        const doc = this.documentManager.textDocuments.find(d => this.fileSystem.arePathsSame(d.fileName, file));
         if (doc && doc.isUntitled) {
             // Before we start, get the list of documents
             const beforeSave = [...this.documentManager.textDocuments];
@@ -235,12 +235,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             interactiveContext.set(!this.isDisposed).catch();
             const interactiveCellsContext = new ContextKey(EditorContexts.HaveInteractiveCells, this.commandManager);
             const redoableContext = new ContextKey(EditorContexts.HaveRedoableCells, this.commandManager);
+            const hasCellSelectedContext = new ContextKey(EditorContexts.HaveCellSelected, this.commandManager);
             if (info) {
                 interactiveCellsContext.set(info.cellCount > 0).catch();
                 redoableContext.set(info.redoCount > 0).catch();
+                hasCellSelectedContext.set(info.selectedCell ? true : false).catch();
             } else {
                 interactiveCellsContext.set(false).catch();
                 redoableContext.set(false).catch();
+                hasCellSelectedContext.set(false).catch();
             }
         }
     }

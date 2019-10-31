@@ -35,6 +35,9 @@ export namespace Commands {
     export const NotebookEditorRemoveAllCells = 'python.datascience.notebookeditor.removeallcells';
     export const NotebookEditorInterruptKernel = 'python.datascience.notebookeditor.interruptkernel';
     export const NotebookEditorRestartKernel = 'python.datascience.notebookeditor.restartkernel';
+    export const NotebookEditorRunAllCells = 'python.datascience.notebookeditor.runallcells';
+    export const NotebookEditorRunSelectedCell = 'python.datascience.notebookeditor.runselectedcell';
+    export const NotebookEditorAddCellBelow = 'python.datascience.notebookeditor.addcellbelow';
     export const ExpandAllCells = 'python.datascience.expandallcells';
     export const CollapseAllCells = 'python.datascience.collapseallcells';
     export const ExportOutputAsNotebook = 'python.datascience.exportoutputasnotebook';
@@ -71,6 +74,7 @@ export namespace EditorContexts {
     export const HaveNativeCells = 'python.datascience.havenativecells';
     export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
     export const HaveNative = 'python.datascience.havenative';
+    export const HaveCellSelected = 'python.datascience.havecellselected';
 }
 
 export namespace RegExpValues {
@@ -120,6 +124,15 @@ export enum Telemetry {
     ExportNotebook = 'DATASCIENCE.EXPORT_NOTEBOOK',
     Undo = 'DATASCIENCE.UNDO',
     Redo = 'DATASCIENCE.REDO',
+    /**
+     * Saving a notebook
+     */
+    Save = 'DATASCIENCE.SAVE',
+    CellCount = 'DATASCIENCE.CELL_COUNT',
+    /**
+     * Whether auto save feature in VS Code is enabled or not.
+     */
+    AutoSaveEnabled = 'DATASCIENCE.AUTO_SAVE_ENABLED',
     ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
@@ -188,7 +201,11 @@ export enum Telemetry {
     NotebookWorkspaceCount = 'DATASCIENCE.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
     NotebookRunCount = 'DATASCIENCE.NATIVE.NOTEBOOK_RUN_COUNT',
     NotebookOpenCount = 'DATASCIENCE.NATIVE.NOTEBOOK_OPEN_COUNT',
-    NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME'
+    NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
+    SessionIdleTimeout = 'DATASCIENCE.JUPYTER_IDLE_TIMEOUT',
+    JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
+    UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
+    UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -205,6 +222,7 @@ export enum NativeKeyboardCommandTelemetry {
     MoveCellDown = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_DOWN',
     MoveCellUp = 'DATASCIENCE.NATIVE.KEYBOARD.MOVE_CELL_UP',
     Run = 'DATASCIENCE.NATIVE.KEYBOARD.RUN',
+    Save = 'DATASCIENCE.NATIVE.KEYBOARD.SAVE',
     RunAbove = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ABOVE',
     RunAll = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_ALL',
     RunAndAdd = 'DATASCIENCE.NATIVE.KEYBOARD.RUN_AND_ADD',
@@ -243,6 +261,7 @@ export enum NativeMouseCommandTelemetry {
     RunAndAdd = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_ADD',
     RunAndMove = 'DATASCIENCE.NATIVE.MOUSE.RUN_AND_MOVE',
     RunBelow = 'DATASCIENCE.NATIVE.MOUSE.RUN_BELOW',
+    Save = 'DATASCIENCE.NATIVE.MOUSE.SAVE',
     ToggleLineNumbers = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_LINE_NUMBERS',
     ToggleOutput = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_OUTPUT',
     ToggleVariableExplorer = 'DATASCIENCE.NATIVE.MOUSE.TOGGLE_VARIABLE_EXPLORER',
@@ -277,12 +296,13 @@ export namespace Identifiers {
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';
     export const InteractiveWindowIdentity = 'history://EC155B3B-DC18-49DC-9E99-9A948AA2F27B';
     export const InteractiveWindowIdentityScheme = 'history';
+    export const DefaultCodeCellMarker = '# %%';
 }
 
 export namespace CodeSnippits {
     export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
-    export const ImportIPython = '#%%\nfrom IPython import get_ipython\n\n';
+    export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
 }

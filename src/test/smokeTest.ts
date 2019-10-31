@@ -38,7 +38,7 @@ class TestRunner {
     private async launchTest(customEnvVars: Record<string, {}>) {
         console.log('Launc tests in test runner');
         await new Promise((resolve, reject) => {
-            const env: Record<string, {}> = {
+            const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'smoke.test',
                 IS_SMOKE_TEST: 'true',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests'),

@@ -9,11 +9,12 @@ import { injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import { Readable, Writable } from 'stream';
+import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken, CancellationTokenSource } from 'vscode-jsonrpc';
-
+import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../client/common/application/types';
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -22,7 +23,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
@@ -168,7 +169,7 @@ suite('DataScience notebook tests', () => {
         } else if (cellType === 'markdown') {
             assert.equal(cells[0].data.cell_type, cellType, `${index}: Wrong type of cell returned`);
             const cell = cells[0].data as nbformat.IMarkdownCell;
-            const outputSource = concatMultilineString(cell.source);
+            const outputSource = concatMultilineStringInput(cell.source);
             verifyValue(outputSource);
         } else if (cellType === 'error') {
             const cell = cells[0].data as nbformat.ICodeCell;
@@ -199,8 +200,8 @@ suite('DataScience notebook tests', () => {
         });
     }
 
-    function runTest(name: string, func: () => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
-        test(name, async () => {
+    function runTest(name: string, func: (_this: Mocha.Context) => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
+        test(name, async function () {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
@@ -209,7 +210,8 @@ suite('DataScience notebook tests', () => {
             processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
-                return func();
+                // tslint:disable-next-line: no-invalid-this
+                return func(this);
             } else {
                 // tslint:disable-next-line:no-console
                 console.log(`Skipping test ${name}, no jupyter installed.`);
@@ -635,7 +637,7 @@ suite('DataScience notebook tests', () => {
         let finishedBefore = false;
         const finishedPromise = createDeferred();
         let error;
-        const observable = notebook!.executeObservable(code, 'foo.py', 0, uuid(), false);
+        const observable = notebook!.executeObservable(code, Uri.file('foo.py').fsPath, 0, uuid(), false);
         observable.subscribe(c => {
             if (c.length > 0 && c[0].state === CellState.error) {
                 finishedBefore = !interrupted;
@@ -788,7 +790,7 @@ df.head()`,
                 mimeType: 'text/plain',
                 cellType: 'markdown',
                 result: '#HEADER',
-                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+                verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
             },
             {
                 markdownRegEx: '\\s*#\\s*<markdowncell>',
@@ -798,7 +800,7 @@ df.head()`,
                 mimeType: 'text/plain',
                 cellType: 'markdown',
                 result: '#HEADER',
-                verifyValue: (d) => assert.equal(d, '#HEADER', 'Markdown incorrect')
+                verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
             },
             {
                 // Test relative directories too.
@@ -977,6 +979,9 @@ plt.show()`,
             }
             return this;
         }
+        public off(_event: string | symbol, _listener: (...args: any[]) => void): this {
+            throw new Error('Method not implemented.');
+        }
         public once(_event: any, _listener: any): this {
             throw new Error('Method not implemented.');
         }
@@ -1038,7 +1043,7 @@ plt.show()`,
         @injectable()
         class Logger implements INotebookExecutionLogger {
             public async preExecute(cell: ICell, _silent: boolean): Promise<void> {
-                cellInputs.push(concatMultilineString(cell.data.source));
+                cellInputs.push(concatMultilineStringInput(cell.data.source));
             }
             public async postExecute(cell: ICell, _silent: boolean): Promise<void> {
                 outputs.push(extractDataOutput(cell));
@@ -1062,6 +1067,14 @@ plt.show()`,
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
+            const application = mock(ApplicationShell);
+            when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
+                return new Promise((resolve, reject) => {
+                    cb({ report: noop }, new CancellationTokenSource().token).then(resolve).catch(reject);
+                });
+            });
+            ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
+
             // Change notebook command to fail with some goofy output
             const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
             const service = await factory.create({ pythonPath: ioc.workingInterpreter.path });
@@ -1091,6 +1104,29 @@ plt.show()`,
             }
 
             assert.ok(threw, 'No exception thrown during notebook creation');
+        }
+    });
+
+    // tslint:disable-next-line: no-function-expression
+    runTest('Notebook launch retry', async function (_this: Mocha.Context) {
+        // Skipping for now. Renable to test idle timeouts
+        _this.skip();
+        ioc.getSettings().datascience.jupyterLaunchRetries = 1;
+        ioc.getSettings().datascience.jupyterLaunchTimeout = 10000;
+        //         ioc.getSettings().datascience.runStartupCommands = '%config Application.log_level="DEBUG"';
+        //         const log = `import logging
+        // logger = logging.getLogger()
+        // fhandler = logging.FileHandler(filename='D:\\Training\\mylog.log', mode='a')
+        // formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+        // fhandler.setFormatter(formatter)
+        // logger.addHandler(fhandler)
+        // logger.setLevel(logging.DEBUG)`;
+        for (let i = 0; i < 100; i += 1) {
+            const notebook = await createNotebook(true, false);
+            assert.ok(notebook, 'did not create notebook');
+            await notebook!.dispose();
+            const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
+            await exec.dispose();
         }
     });
 });

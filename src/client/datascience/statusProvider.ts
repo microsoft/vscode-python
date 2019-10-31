@@ -55,9 +55,9 @@ export class StatusProvider implements IStatusProvider {
 
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) { }
 
-    public set(message: string, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Disposable {
+    public set(message: string, showInWebView: boolean, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Disposable {
         // Start our progress
-        this.incrementCount(panel);
+        this.incrementCount(showInWebView, panel);
 
         // Create a StatusItem that will return our promise
         const statusItem = new StatusItem(message, () => this.decrementCount(panel), timeout);
@@ -82,9 +82,9 @@ export class StatusProvider implements IStatusProvider {
         return statusItem;
     }
 
-    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Promise<T> {
+    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, showInWebView: boolean, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Promise<T> {
         // Create a status item and wait for our promise to either finish or reject
-        const status = this.set(message, timeout, cancel, panel);
+        const status = this.set(message, showInWebView, timeout, cancel, panel);
         let result: T;
         try {
             result = await promise();
@@ -94,9 +94,9 @@ export class StatusProvider implements IStatusProvider {
         return result;
     }
 
-    private incrementCount = (panel?: IInteractiveBase) => {
+    private incrementCount = (showInWebView: boolean, panel?: IInteractiveBase) => {
         if (this.statusCount === 0) {
-            if (panel) {
+            if (panel && showInWebView) {
                 panel.startProgress();
             }
         }

@@ -42,7 +42,7 @@ export class SocketServer extends EventEmitter implements ISocketServer {
             def.reject(msg);
         });
         this.socketServer!.listen({ port, host }, () => {
-            def.resolve(this.socketServer!.address().port);
+            def.resolve((this.socketServer!.address() as net.AddressInfo).port);
         });
 
         return def.promise;

@@ -93,8 +93,7 @@ stages:
       - template: templates/test_phases.yml
 
 - stage: Smoke
-  dependsOn:
-  - Build
+  dependsOn: []
   jobs:
   - job: 'Smoke'
     dependsOn: []

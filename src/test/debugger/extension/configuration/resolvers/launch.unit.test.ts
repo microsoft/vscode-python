@@ -20,6 +20,7 @@ import { IDebugEnvironmentVariablesService } from '../../../../../client/debugge
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
+import { getOSType } from '../../../../common';
 import { getInfoPerOS, setUpOSMocks } from './common';
 
 getInfoPerOS().forEach(([osName, osType, path]) => {
@@ -379,30 +380,60 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 remoteRoot: '.'
             }]);
         });
-        test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async () => {
+        test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function () {
+            if (getOSType() !== OSType.Windows || osType !== OSType.Windows){
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
             const workspaceFolder = createMoqWorkspaceFolder(path.join('C:', 'Debug', 'Python_Path'));
             setupActiveEditor('spam.py', PYTHON_LANGUAGE);
             const defaultWorkspace = path.join('usr', 'desktop');
             setupWorkspaces([defaultWorkspace]);
-            const localRoot = path.join(workspaceFolder.uri.fsPath, 'app');
+            const localRoot = Uri.file(path.join(workspaceFolder.uri.fsPath, 'app')).fsPath;
 
             const debugConfig = await debugProvider.resolveDebugConfiguration!(
                 workspaceFolder,
                 {
                     request: 'launch',
                     pathMappings: [{
-                        localRoot: localRoot,
+                        localRoot,
                         remoteRoot: '/app/'
                     }]
                 } as any as DebugConfiguration
             );
 
             const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
-            const expected = osType === OSType.Windows
-                ? `c${localRoot.substring(1)}`
-                : localRoot;
+            const expected = Uri.file(`c${localRoot.substring(1)}`).fsPath;
             expect(pathMappings).to.deep.equal([{
                 localRoot: expected,
+                remoteRoot: '/app/'
+            }]);
+        });
+        test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function () {
+            if (getOSType() === OSType.Windows || osType === OSType.Windows){
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
+            }
+            const workspaceFolder = createMoqWorkspaceFolder(path.join('USR', 'Debug', 'Python_Path'));
+            setupActiveEditor('spam.py', PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+            const localRoot = Uri.file(path.join(workspaceFolder.uri.fsPath, 'app')).fsPath;
+
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(
+                workspaceFolder,
+                {
+                    request: 'launch',
+                    pathMappings: [{
+                        localRoot,
+                        remoteRoot: '/app/'
+                    }]
+                } as any as DebugConfiguration
+            );
+
+            const pathMappings = (debugConfig as LaunchRequestArguments).pathMappings;
+            expect(pathMappings).to.deep.equal([{
+                localRoot,
                 remoteRoot: '/app/'
             }]);
         });

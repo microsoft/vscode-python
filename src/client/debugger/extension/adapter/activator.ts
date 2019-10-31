@@ -22,6 +22,8 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
     public async activate(): Promise<void> {
         if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
             this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.factory));
+        } else {
+            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterDescriptorFactory.control);
         }
     }
 }

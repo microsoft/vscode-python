@@ -7,12 +7,12 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
-import { concatMultilineString } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../../client/datascience/common';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { Code } from './code';
 import { InputHistory } from './inputHistory';
-import { ICellViewModel, IFont } from './mainState';
+import { CursorPos, ICellViewModel, IFont } from './mainState';
 import { Markdown } from './markdown';
 
 // tslint:disable-next-line: no-require-importss
@@ -26,7 +26,6 @@ interface ICellInputProps {
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
     editorMeasureClassName?: string;
-    focusedCell?: string;
     showLineNumbers?: boolean;
     font: IFont;
     onCodeChange(changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string): void;
@@ -56,20 +55,20 @@ export class CellInput extends React.Component<ICellInputProps> {
     }
 
     public componentDidUpdate(prevProps: ICellInputProps) {
-        if (this.props.focusedCell === this.props.cellVM.cell.id && prevProps.focusedCell !== this.props.focusedCell) {
-            this.giveFocus();
+        if (this.props.cellVM.focused && !prevProps.cellVM.focused) {
+            this.giveFocus(CursorPos.Current);
         }
     }
 
-    public giveFocus() {
+    public giveFocus(cursorPos: CursorPos) {
         // This depends upon what type of cell we are.
         if (this.props.cellVM.cell.data.cell_type === 'code') {
             if (this.codeRef.current) {
-                this.codeRef.current.giveFocus();
+                this.codeRef.current.giveFocus(cursorPos);
             }
         } else {
             if (this.markdownRef.current) {
-                this.markdownRef.current.giveFocus();
+                this.markdownRef.current.giveFocus(cursorPos);
             }
             this.setState({ showingMarkdownEditor: true });
         }
@@ -140,7 +139,7 @@ export class CellInput extends React.Component<ICellInputProps> {
 
     private renderMarkdownInputs = () => {
         if (this.shouldRenderMarkdownEditor()) {
-            const source = concatMultilineString(this.getMarkdownCell().source);
+            const source = concatMultilineStringInput(this.getMarkdownCell().source);
             return (
                 <div className='cell-input'>
                     <Markdown

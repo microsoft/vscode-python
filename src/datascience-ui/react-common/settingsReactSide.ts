@@ -28,7 +28,7 @@ export function updateSettings(jsonSettingsString: string) {
 function load() {
     // tslint:disable-next-line:no-typeof-undefined
     if (typeof getInitialSettings !== 'undefined') {
-        loadedSettings = <IDataScienceExtraSettings>getInitialSettings();
+        loadedSettings = <IDataScienceExtraSettings>getInitialSettings(); // NOSONAR
     } else {
         // Default settings for tests
         loadedSettings = {
@@ -54,8 +54,15 @@ function load() {
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             enablePlotViewer: true,
             extraSettings: {
-                editorCursor: 'line',
-                editorCursorBlink: 'blink',
+                editor: {
+                    cursor: 'line',
+                    cursorBlink: 'blink',
+                    autoClosingBrackets: 'languageDefined',
+                    autoClosingQuotes: 'languageDefined',
+                    autoSurround: 'languageDefined',
+                    autoIndent: false,
+                    fontLigatures: false
+                },
                 fontSize: 14,
                 fontFamily: 'Consolas, \'Courier New\', monospace',
                 theme: 'Default Dark+'

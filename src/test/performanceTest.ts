@@ -99,7 +99,7 @@ class TestRunner {
 
     private async  launchTest(customEnvVars: Record<string, {}>) {
         await new Promise((resolve, reject) => {
-            const env: Record<string, {}> = {
+            const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'perf.test',
                 CODE_TESTS_WORKSPACE: path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance'),
                 ...process.env,

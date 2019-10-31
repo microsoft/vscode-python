@@ -1001,7 +1001,7 @@ export interface IEventNamePropertyMapping {
         /**
          * The startup value of the language server setting
          */
-        startup?: boolean;
+        lsStartup?: boolean;
         /**
          * Used to track switch between LS and Jedi. Carries the final state after the switch.
          */
@@ -1425,9 +1425,16 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.ScrolledToCell]: never | undefined;
+    [Telemetry.CellCount]: { count: number };
+    [Telemetry.Save]: never | undefined;
+    [Telemetry.AutoSaveEnabled]: { enabled: boolean };
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
+    [Telemetry.SessionIdleTimeout]: never | undefined;
+    [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
+    [Telemetry.UserInstalledJupyter]: never | undefined;
+    [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;
@@ -1462,6 +1469,7 @@ export interface IEventNamePropertyMapping {
     [NativeKeyboardCommandTelemetry.RunAndAdd]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunAndMove]: never | undefined;
     [NativeKeyboardCommandTelemetry.RunBelow]: never | undefined;
+    [NativeKeyboardCommandTelemetry.Save]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleOutput]: never | undefined;
     [NativeKeyboardCommandTelemetry.ToggleVariableExplorer]: never | undefined;
@@ -1485,6 +1493,7 @@ export interface IEventNamePropertyMapping {
     [NativeMouseCommandTelemetry.RunAndAdd]: never | undefined;
     [NativeMouseCommandTelemetry.RunAndMove]: never | undefined;
     [NativeMouseCommandTelemetry.RunBelow]: never | undefined;
+    [NativeMouseCommandTelemetry.Save]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleLineNumbers]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleOutput]: never | undefined;
     [NativeMouseCommandTelemetry.ToggleVariableExplorer]: never | undefined;

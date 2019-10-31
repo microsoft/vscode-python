@@ -18,7 +18,7 @@ import { IServiceContainer, IServiceManager } from '../client/ioc/types';
 import {
     EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST
 } from './constants';
-import { noop, sleep } from './core';
+import { noop } from './core';
 
 const StreamZip = require('node-stream-zip');
 
@@ -410,27 +410,31 @@ export async function unzip(zipFile: string, targetFolder: string): Promise<void
         });
     });
 }
-
+/**
+ * Wait for a condition to be fulfilled within a timeout.
+ *
+ * @export
+ * @param {() => Promise<boolean>} condition
+ * @param {number} timeoutMs
+ * @param {string} errorMessage
+ * @returns {Promise<void>}
+ */
 export async function waitForCondition(condition: () => Promise<boolean>, timeoutMs: number, errorMessage: string): Promise<void> {
     return new Promise<void>(async (resolve, reject) => {
-        let completed = false;
         const timeout = setTimeout(() => {
-            if (!completed) {
-                reject(new Error(errorMessage));
-            }
-            completed = true;
+            clearTimeout(timeout);
+            // tslint:disable-next-line: no-use-before-declare
+            clearTimeout(timer);
+            reject(new Error(errorMessage));
         }, timeoutMs);
-        for (let i = 0; i < timeoutMs / 1000; i += 1) {
-            if (await condition()) {
-                clearTimeout(timeout);
-                resolve();
+        const timer = setInterval(async () => {
+            if (!await condition().catch(() => false)) {
                 return;
             }
-            await sleep(500);
-            if (completed) {
-                return;
-            }
-        }
+            clearTimeout(timeout);
+            clearTimeout(timer);
+            resolve();
+        }, 10);
     });
 }
 

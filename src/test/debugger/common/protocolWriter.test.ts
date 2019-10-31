@@ -14,7 +14,7 @@ suite('Debugging - Protocol Writer', () => {
         const throughOutStream = new Transform({
             transform: (chunk, _encoding, callback) => {
                 dataWritten += (chunk as Buffer).toString('utf8');
-                callback(null, chunk);
+                callback(undefined, chunk);
             }
         });
 

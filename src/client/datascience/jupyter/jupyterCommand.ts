@@ -53,7 +53,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         return launcher.exec(this.exe, newArgs, newOptions);
     }
 
-    private fixupEnv(_env: NodeJS.ProcessEnv) : Promise<NodeJS.ProcessEnv | undefined> {
+    private fixupEnv(_env?: NodeJS.ProcessEnv) : Promise<NodeJS.ProcessEnv | undefined> {
         if (this.activationHelper) {
             return this.activationHelper.getActivatedEnvironmentVariables(undefined);
         }

@@ -13,7 +13,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineString } from '../common';
+import { concatMultilineStringInput } from '../common';
 import { CodeSnippits, Identifiers } from '../constants';
 import { CellState, ICell, IJupyterExecution, INotebookExporter } from '../types';
 
@@ -89,8 +89,7 @@ export class JupyterExporter implements INotebookExporter {
                 id: uuid(),
                 file: Identifiers.EmptyFileName,
                 line: 0,
-                state: CellState.finished,
-                type: 'execute'
+                state: CellState.finished
             };
 
             return [cell, ...cells];
@@ -121,7 +120,7 @@ export class JupyterExporter implements INotebookExporter {
     private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
         let directoryChange: string | undefined;
-        const haveChangeAlready = cells.find(c => concatMultilineString(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier));
+        const haveChangeAlready = cells.find(c => concatMultilineStringInput(c.data.source).includes(CodeSnippits.ChangeDirectoryCommentIdentifier));
         if (!haveChangeAlready) {
             const notebookFilePath = path.dirname(notebookFile);
             // First see if we have a workspace open, this only works if we have a workspace root to be relative to
@@ -165,7 +164,7 @@ export class JupyterExporter implements INotebookExporter {
     }
 
     private pruneSource = (source: nbformat.MultilineString, cellMatcher: CellMatcher): nbformat.MultilineString => {
-
+        // Remove the comments on the top if there.
         if (Array.isArray(source) && source.length > 0) {
             if (cellMatcher.isCell(source[0])) {
                 return source.slice(1);

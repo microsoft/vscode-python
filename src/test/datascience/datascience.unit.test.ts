@@ -42,13 +42,13 @@ suite('Data Science Tests', () => {
 
         assert.equal(expandWorkingDir(undefined, 'bar/foo.baz', inst), 'bar');
         assert.equal(expandWorkingDir(undefined, 'bar/bip/foo.baz', inst), 'bar/bip');
-        assert.equal(expandWorkingDir('${file}', 'bar/bip/foo.baz', inst), 'bar/bip/foo.baz');
-        assert.equal(expandWorkingDir('${fileDirname}', 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandWorkingDir('${file}', 'bar/bip/foo.baz', inst), Uri.file('bar/bip/foo.baz').fsPath);
+        assert.equal(expandWorkingDir('${fileDirname}', 'bar/bip/foo.baz', inst), Uri.file('bar/bip').fsPath);
         assert.equal(expandWorkingDir('${relativeFile}', 'test/xyz/bip/foo.baz', inst), relativeFilePath);
         assert.equal(expandWorkingDir('${relativeFileDirname}', 'test/xyz/bip/foo.baz', inst), relativeFileDir);
-        assert.equal(expandWorkingDir('${cwd}', 'test/xyz/bip/foo.baz', inst), 'test/bar');
-        assert.equal(expandWorkingDir('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), 'test/bar');
-        assert.equal(expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst), 'test/bar-bar/bip/foo.baz');
+        assert.equal(expandWorkingDir('${cwd}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
+        assert.equal(expandWorkingDir('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
+        assert.equal(expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst), `${Uri.file('test/bar').fsPath}-${Uri.file('bar/bip/foo.baz').fsPath}`);
     });
 
     test('input history', async () => {

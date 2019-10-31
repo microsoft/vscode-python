@@ -25,6 +25,7 @@ import { DotNetIntellisenseProvider } from './interactive-common/intellisense/do
 import { JediIntellisenseProvider } from './interactive-common/intellisense/jediIntellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
+import { AutoSaveService } from './interactive-ipynb/autoSaveService';
 import { NativeEditor } from './interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from './interactive-ipynb/nativeEditorCommandListener';
 import { NativeEditorProvider } from './interactive-ipynb/nativeEditorProvider';
@@ -123,6 +124,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(ShowPlotListener));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(DebugListener));
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(GatherListener));
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, wrapType(AutoSaveService));
     serviceManager.addSingleton<IPlotViewerProvider>(IPlotViewerProvider, wrapType(PlotViewerProvider));
     serviceManager.add<IPlotViewer>(IPlotViewer, wrapType(PlotViewer));
     serviceManager.addSingleton<IJupyterDebugger>(IJupyterDebugger, wrapType(JupyterDebugger));
