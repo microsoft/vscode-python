@@ -25,7 +25,9 @@ suite('Terminal - Django Shell Code Execution', () => {
     let platform: TypeMoq.IMock<IPlatformService>;
     let settings: TypeMoq.IMock<IPythonSettings>;
     let disposables: Disposable[] = [];
+    let condaService: TypeMoq.IMock<ICondaService>;
     setup(() => {
+        condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
         const terminalFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
         terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
         terminalService = TypeMoq.Mock.ofType<ITerminalService>();
@@ -42,7 +44,6 @@ suite('Terminal - Django Shell Code Execution', () => {
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        const condaService = TypeMoq.Mock.ofType<ICondaService>();
         executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object, condaService.object, platform.object, commandManager.object, fileSystem.object, disposables);
 
         terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
@@ -65,6 +66,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         platform.setup(p => p.isWindows).returns(() => isWindows);
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
+        condaService.setup(c => c.getCondaEnvironment(pythonPath)).returns(() => Promise.resolve(undefined));
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
         expect(replCommandArgs).not.to.be.an('undefined', 'Command args is undefined');
@@ -156,5 +158,38 @@ suite('Terminal - Django Shell Code Execution', () => {
         const expectedTerminalArgs = terminalArgs.concat(path.join(workspaceUri.fsPath, 'manage.py').fileToCommandArgument(), 'shell');
 
         await testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
+    });
+
+    async function testReplCondaCommandArguments(pythonPath: string, terminalArgs: string[], condaEnv: { name: string; path: string }, resource?: Uri) {
+        settings.setup(s => s.pythonPath).returns(() => pythonPath);
+        terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
+        condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
+        condaService.setup(c => c.getCondaEnvironment(pythonPath)).returns(() => Promise.resolve(condaEnv));
+
+        const hasEnvName = condaEnv.name !== '';
+        const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
+        const expectedTerminalArgs = [...condaArgs, ...terminalArgs, 'manage.py', 'shell'];
+
+        const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
+
+        expect(replCommandArgs).not.to.be.an('undefined', 'Conda command args are undefined');
+        expect(replCommandArgs.command).to.be.equal('conda', 'Incorrect conda path');
+        expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect conda arguments');
+    }
+
+    test('Ensure conda args including env name are passed when using a conda environment with a name', async () => {
+        const pythonPath = 'c:/program files/python/python.exe';
+        const condaPath = { name: 'foo-env', path: 'path/to/foo-env' };
+        const terminalArgs = ['-a', 'b', '-c'];
+
+        await testReplCondaCommandArguments(pythonPath, terminalArgs, condaPath);
+    });
+
+    test('Ensure conda args including env path are passed when using a conda environment with an empty name', async () => {
+        const pythonPath = 'c:/program files/python/python.exe';
+        const condaPath = { name: '', path: 'path/to/foo-env' };
+        const terminalArgs = ['-a', 'b', '-c'];
+
+        await testReplCondaCommandArguments(pythonPath, terminalArgs, condaPath);
     });
 });
