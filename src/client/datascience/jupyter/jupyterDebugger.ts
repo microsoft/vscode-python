@@ -269,7 +269,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     private async getKernelPythonVersion(notebook: INotebook): Promise<Version | undefined> {
-        const execResults = await this.executeSilently(notebook, 'import sys\r\n;print(sys.version)');
+        const execResults = await this.executeSilently(notebook, 'import sys;print(sys.version)');
         return this.parseVersionInfo(execResults, 'pythonVersionInfo');
     }
 
