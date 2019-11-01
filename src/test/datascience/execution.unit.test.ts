@@ -41,10 +41,10 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import {
     ICell,
     IConnection,
-    IGatherExecution,
     IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
+    INotebookExecutionLogger,
     INotebookServer,
     INotebookServerLaunchInfo,
     InterruptResult
@@ -104,7 +104,7 @@ class MockJupyterNotebook implements INotebook {
         noop();
     }
 
-    public addGatherSupport(_gather: IGatherExecution): void {
+    public addLogger(_logger: INotebookExecutionLogger): void {
         noop();
     }
 

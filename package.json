@@ -1695,7 +1695,7 @@
                 "python.dataScience.enableGather": {
                     "type": "boolean",
                     "default": true,
-                    "description": "Enable code gather. For a gathered cell, it and all the code cells it depends on will be exported to a new notebook.",
+                    "description": "Enable code gather for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {

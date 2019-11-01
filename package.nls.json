@@ -379,6 +379,6 @@
     "DataScience.findJupyterCommandProgress" : "Active interpreter does not support {0}. Searching for the best available interpreter.",
     "DataScience.findJupyterCommandProgressCheckInterpreter": "Checking {0}.",
     "DataScience.findJupyterCommandProgressSearchCurrentPath": "Searching current path.",
-    "DataScience.gatheredScriptDescription": "# This file contains the minimal amount of code required to produce the code cell gathered.\n",
-    "DataScience.gatheredNotebookDescriptionInMarkdown": "## This notebook was generated for a gathered cell."
+    "DataScience.gatheredScriptDescription": "# This file contains only the code required to produce the results of the gathered cell.\n",
+    "DataScience.gatheredNotebookDescriptionInMarkdown": "### Gathered Notebook\nThis notebook contains only the code required to produce the last results of the gathered cell."
 }
