@@ -24,7 +24,6 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
-import { StopWatch } from '../../common/utils/stopWatch';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 }

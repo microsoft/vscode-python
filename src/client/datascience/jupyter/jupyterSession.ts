@@ -174,19 +174,18 @@ export class JupyterSession implements IJupyterSession {
 
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
+            traceInfo(`Waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
+
             // This function seems to cause CI builds to timeout randomly on
             // different tests. Waiting for status to go idle doesn't seem to work and
             // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
             const startTime = Date.now();
-            session.statusChanged.connect(status => {
-                console.log(`Status Changed ${session.kernel.id}, ${status}`);
-            });
             while (session &&
                 session.kernel &&
                 session.kernel.status !== 'idle' &&
                 (Date.now() - startTime < timeout)) {
-                    await sleep(100);
-                }
+                await sleep(100);
+            }
 
             traceInfo(`Finished waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
 

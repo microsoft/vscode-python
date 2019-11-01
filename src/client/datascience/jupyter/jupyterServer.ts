@@ -23,7 +23,6 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
-import { StopWatch } from '../../common/utils/stopWatch';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -50,7 +49,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        const stopWatch = new StopWatch();
         traceInfo(`Connecting server ${this.id} kernelSpec ${launchInfo.kernelSpec ? launchInfo.kernelSpec.name : 'unknown'}`);
 
         // Save our launch info
