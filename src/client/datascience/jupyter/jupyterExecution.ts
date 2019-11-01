@@ -185,12 +185,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
                                 throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
                             } else {
-                                sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                                throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
                             }
                         } else {
-                            throw err;
+                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
+                            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
                         }
+                    } else {
+                        throw err;
                     }
                 }
             }
@@ -308,15 +310,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
-        const stopWatch = new StopWatch();
-        try {
-            // First we find a way to start a notebook server
-            const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
-            this.checkNotebookCommand(notebookCommand);
-            return await this.notebookStarter.start(useDefaultConfig, cancelToken);
-        } finally {
-            console.error(`Start Notebook Server ${stopWatch.elapsedTime}`);
-        }
+        // First we find a way to start a notebook server
+        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
+        this.checkNotebookCommand(notebookCommand);
+        return this.notebookStarter.start(useDefaultConfig, cancelToken);
     }
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
