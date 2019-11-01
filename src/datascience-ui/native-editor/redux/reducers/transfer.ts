@@ -3,7 +3,7 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../../interactive-common/mainState';
-import { ISendCommandAction, IShowDataViewerAction } from '../actions';
+import { ISendCommandAction, IShowDataViewerAction, IShowPlotAction, IOpenLinkAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Transfer {
@@ -28,6 +28,16 @@ export namespace Transfer {
 
     export function sendCommand(arg: NativeEditorReducerArg<ISendCommandAction>): IMainState {
         arg.postMessage(InteractiveWindowMessages.NativeCommand, { command: arg.payload.command, source: arg.payload.commandType })
+        return arg.prevState;
+    }
+
+    export function showPlot(arg: NativeEditorReducerArg<IShowPlotAction>): IMainState {
+        arg.postMessage(InteractiveWindowMessages.NativeCommand, arg.payload.imageHtml);
+        return arg.prevState;
+    }
+
+    export function openLink(arg: NativeEditorReducerArg<IOpenLinkAction>): IMainState {
+        arg.postMessage(InteractiveWindowMessages.OpenLink, arg.payload.uri.toString());
         return arg.prevState;
     }
 }

@@ -4,12 +4,12 @@
 import './nativeEditor.less';
 
 import * as React from 'react';
+import { connect } from 'react-redux';
 
-import { noop } from '../../client/common/utils/misc';
 import { OSType } from '../../client/common/utils/platform';
-import { NativeCommandType, IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
-import { CursorPos, ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -19,30 +19,23 @@ import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
 import { AddCellLine } from './addCellLine';
-import { NativeCell } from './nativeCell';
+import { getConnectedNativeCell } from './nativeCell';
 import { actionCreators } from './redux/actions';
-import { connect } from 'react-redux';
-import { concatMultilineStringInput } from '../../client/datascience/common';
-
-// See the discussion here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
-// tslint:disable: react-this-binding-issue
-// tslint:disable-next-line:no-require-imports no-var-requires
-const debounce = require('lodash/debounce') as typeof import('lodash/debounce');
 
 type INativeEditorProps = IMainState & typeof actionCreators;
 
 function mapStateToProps(state: IMainState): IMainState {
     return state;
 }
+
+const ConnectedNativeCell = getConnectedNativeCell();
+
 class NativeEditor extends React.Component<INativeEditorProps> {
     private renderCount: number = 0;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
-    private debounceUpdateVisibleCells = debounce(this.updateVisibleCells.bind(this), 100);
-    private cellRefs: Map<string, React.RefObject<NativeCell>> = new Map<string, React.RefObject<NativeCell>>();
     private cellContainerRefs: Map<string, React.RefObject<HTMLDivElement>> = new Map<string, React.RefObject<HTMLDivElement>>();
-    private initialVisibilityUpdate: boolean = false;
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -88,7 +81,7 @@ class NativeEditor extends React.Component<INativeEditorProps> {
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
-                <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
+                <main id='main-panel-content' ref={this.contentPanelScrollRef}>
                     {addCellLine}
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
@@ -200,46 +193,6 @@ class NativeEditor extends React.Component<INativeEditorProps> {
        };
     }
 
-    private onContentScroll = (_event: React.UIEvent<HTMLDivElement>) => {
-        if (this.contentPanelScrollRef.current) {
-            this.debounceUpdateVisibleCells();
-        }
-    }
-
-    private updateVisibleCells()  {
-        if (this.contentPanelScrollRef.current && this.cellContainerRefs.size !== 0) {
-            const visibleTop = this.contentPanelScrollRef.current.offsetTop + this.contentPanelScrollRef.current.scrollTop;
-            const visibleBottom = visibleTop + this.contentPanelScrollRef.current.clientHeight;
-            const cellVMs = [...this.props.cellVMs];
-
-            // Go through the cell divs and find the ones that are suddenly visible
-            let makeChange = false;
-            for (let i = 0; i < cellVMs.length; i += 1) {
-                const cellVM = cellVMs[i];
-                if (cellVM.useQuickEdit && this.cellRefs.has(cellVM.cell.id)) {
-                    const ref = this.cellContainerRefs.get(cellVM.cell.id);
-                    if (ref && ref.current) {
-                        const top = ref.current.offsetTop;
-                        const bottom = top + ref.current.offsetHeight;
-                        if (top > visibleBottom) {
-                            break;
-                        } else if (bottom < visibleTop) {
-                            continue;
-                        } else {
-                            cellVMs[i] = {...cellVM, useQuickEdit: false };
-                            makeChange = true;
-                        }
-                    }
-                }
-            }
-
-            // update our state so that newly visible items appear
-            if (makeChange) {
-                this.setState({cellVMs});
-            }
-        }
-    }
-
     private mainKeyDown = (event: KeyboardEvent) => {
         // Handler for key down presses in the main panel
         switch (event.key) {
@@ -291,14 +244,13 @@ class NativeEditor extends React.Component<INativeEditorProps> {
     // }
 
     private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
-        const cellRef : React.RefObject<NativeCell> = React.createRef<NativeCell>();
         const containerRef = React.createRef<HTMLDivElement>();
-        this.cellRefs.set(cellVM.cell.id, cellRef);
         this.cellContainerRefs.set(cellVM.cell.id, containerRef);
         const addNewCell = () => {
             this.props.insertBelow(cellVM.cell.id);
             this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
         };
+        const firstLine = index === 0;
         const lastLine = index === this.props.cellVMs.length - 1 ?
             <AddCellLine
                 includePlus={true}
@@ -306,17 +258,10 @@ class NativeEditor extends React.Component<INativeEditorProps> {
                 className='add-cell-line-cell'
                 click={addNewCell} /> : null;
 
-        // Special case, see if our initial load is finally complete.
-        if (this.props.loadTotal && this.cellRefs.size >= this.props.loadTotal && !this.initialVisibilityUpdate) {
-            // We are finally at the point where we have rendered all visible cells. Try fixing up their visible state
-            this.initialVisibilityUpdate = true;
-            this.debounceUpdateVisibleCells();
-        }
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                 <ErrorBoundary>
-                    <NativeCell
-                        ref={cellRef}
+                    <ConnectedNativeCell
                         role='listitem'
                         maxTextSize={getSettings().maxOutputSize}
                         autoFocus={false}
@@ -325,10 +270,11 @@ class NativeEditor extends React.Component<INativeEditorProps> {
                         baseTheme={this.props.baseTheme}
                         codeTheme={this.props.codeTheme}
                         monacoTheme={this.props.monacoTheme}
-                        focusCell={this.props.focusCell}
-                        selectCell={this.props.selectCell}
                         lastCell={lastLine !== null}
+                        firstCell={firstLine}
                         font={this.props.font}
+                        allowUndo={this.props.undoStack.length > 0}
+                        editorOptions={this.props.editorOptions}
                     />
                 </ErrorBoundary>
                 {lastLine}

@@ -52,7 +52,7 @@ export type IMainState = {
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
     knownDark: boolean;
-    editorOptions?: monacoEditor.editor.IEditorOptions;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
     variablesVisible: boolean;
     variables: IJupyterVariable[];

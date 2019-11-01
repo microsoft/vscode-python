@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import { connect } from 'react-redux';
 
 import { OSType } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
@@ -25,8 +26,9 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { getSettings } from '../react-common/settingsReactSide';
 import { AddCellLine } from './addCellLine';
+import { actionCreators } from './redux/actions';
 
-interface INativeCellProps {
+interface INativeCellBaseProps {
     role?: string;
     cellVM: ICellViewModel;
     baseTheme: string;
@@ -39,38 +41,16 @@ interface INativeCellProps {
     firstCell: boolean;
     font: IFont;
     allowUndo: boolean;
-    editorOptions?: monacoEditor.editor.IEditorOptions;
-    moveCellUp(cellId: string): void;
-    moveCellDown(cellId: string): void;
-    arrowUp(cellId: string): void;
-    arrowDown(cellId: string): void;
-    focusCell(cellId: string, cursorPos: CursorPos): void;
-    unfocusCell(cellId: string, code: string): void;
-    selectCell(cellId: string): void;
-    selectNextCell(cellId: string): void;
-    save(): void;
-    sendCommand(command: NativeCommandType, commandType: 'mouse' | 'keyboard'): void;
-    changeCellType(cellId: string): void;
-    toggleLineNumbers(cellId: string): void;
-    toggleOutput(cellId: string): void;
-    insertAbove(cellId: string): void;
-    insertBelow(cellId: string): void;
-    deleteCell(cellId: string): void;
-    executeCell(cellId: string, code: string): void;
-    executeAbove(cellId: string): void;
-    executeCellAndBelow(cellId: string, code: string): void;
-    undo(): void;
-    showPlot(imageHtml: string): void;
-    openLink(uri: monacoEditor.Uri): void;
-    editCell(cellId: string, changes: monacoEditor.editor.IModelContentChange[]): void;
+    editorOptions: monacoEditor.editor.IEditorOptions;
 }
 
+type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
+
 // tslint:disable: react-this-binding-issue
-export class NativeCell extends React.Component<INativeCellProps> {
+class NativeCell extends React.Component<INativeCellProps> {
     private inputRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private lastKeyPressed: string | undefined;
-    private pendingFocusLoss?: () => void;
 
     constructor(prop: INativeCellProps) {
         super(prop);
@@ -264,14 +244,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
             case 'y':
                 if (!this.isFocused() && this.isSelected()) {
                     e.stopPropagation();
-                    this.props.changeCellType(cellId);
+                    this.props.changeCellType(cellId, this.getCurrentCode());
                     this.props.sendCommand(NativeCommandType.ChangeToCode, 'keyboard');
                 }
                 break;
             case 'm':
                 if (!this.isFocused() && this.isSelected()) {
                     e.stopPropagation();
-                    this.props.changeCellType(cellId);
+                    this.props.changeCellType(cellId, this.getCurrentCode());
                     this.props.sendCommand(NativeCommandType.ChangeToMarkdown, 'keyboard');
                 }
                 break;
@@ -492,6 +472,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return null;
     }
 
+    private getCurrentCode(): string {
+        const contents = this.inputRef.current ? this.inputRef.current.getContents() : undefined;
+        return contents || '';
+    }
+
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const deleteCell = () => {
@@ -504,8 +489,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         };
         const runBelow = () => {
             if (this.inputRef.current) {
-                const contents = this.inputRef.current.getContents();
-                this.props.executeCellAndBelow(cellId, contents || '');
+                this.props.executeCellAndBelow(cellId, this.getCurrentCode());
                 this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
             }
         };
@@ -517,7 +501,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const otherCellTypeCommand = otherCellType === 'markdown' ? NativeCommandType.ChangeToMarkdown : NativeCommandType.ChangeToCode;
         const otherCellImage = otherCellType === 'markdown' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
         const switchCellType = () => {
-            this.props.changeCellType(cellId);
+            this.props.changeCellType(cellId, this.getCurrentCode());
             this.props.sendCommand(otherCellTypeCommand, 'mouse');
         };
 
@@ -668,4 +652,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         return <div className={classes}></div>;
     }
+}
+
+// Main export, return a redux connected editor
+export function getConnectedNativeCell() {
+    return connect(
+        null,
+        actionCreators,
+        null,
+        { withRef: true }
+    )(NativeCell);
 }

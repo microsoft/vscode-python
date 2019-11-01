@@ -48,7 +48,9 @@ export enum NativeEditorActionTypes {
     UNDO = 'action.undo',
     ARROW_UP = 'action.arrow_up',
     ARROW_DOWN = 'action.arrow_down',
-    EDIT_CELL = 'action.edit_cell'
+    EDIT_CELL = 'action.edit_cell',
+    OPEN_LINK = 'action.open_link',
+    SHOW_PLOT = 'action.show_plot'
 }
 
 export interface ICellAction {
@@ -82,6 +84,14 @@ export interface ISendCommandAction {
 export interface IChangeCellTypeAction {
     cellId: string;
     currentCode: string;
+}
+
+export interface IOpenLinkAction {
+    uri: monacoEditor.Uri;
+}
+
+export interface IShowPlotAction {
+    imageHtml: string;
 }
 
 type NativeEditorAction = Action<NativeEditorActionTypes>;
@@ -118,5 +128,7 @@ export const actionCreators = {
     undo: (): NativeEditorAction => ({ type: NativeEditorActionTypes.UNDO }),
     arrowUp: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.ARROW_UP, cellId }),
     arrowDown: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.ARROW_DOWN, cellId }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): NativeEditorAction & IEditCellAction => ({ type: NativeEditorActionTypes.EDIT_CELL, cellId, changes })
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): NativeEditorAction & IEditCellAction => ({ type: NativeEditorActionTypes.EDIT_CELL, cellId, changes }),
+    openLink: (uri: monacoEditor.Uri): NativeEditorAction & IOpenLinkAction => ({ type: NativeEditorActionTypes.OPEN_LINK, uri }),
+    showPlot: (imageHtml: string): NativeEditorAction & IShowPlotAction => ({ type: NativeEditorActionTypes.SHOW_PLOT, imageHtml })
 };

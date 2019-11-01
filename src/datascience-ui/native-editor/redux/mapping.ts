@@ -5,6 +5,7 @@ import { InteractiveWindowMessages } from '../../../client/datascience/interacti
 import { ICell } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
+import { IShowPlotAction, IOpenLinkAction } from './actions';
 import {
     ICellAction,
     ICellAndCursorAction,
@@ -53,9 +54,13 @@ export class INativeEditorActionMapping {
     public [NativeEditorActionTypes.ARROW_DOWN]: NativeEditorReducerFunc<ICellAction>;
     public [NativeEditorActionTypes.CHANGE_CELL_TYPE]: NativeEditorReducerFunc<IChangeCellTypeAction>;
     public [NativeEditorActionTypes.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
+    public [NativeEditorActionTypes.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;
+    public [NativeEditorActionTypes.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
 
     // Messages from the extension
     public [InteractiveWindowMessages.StartCell]: NativeEditorReducerFunc<ICell>;
     public [InteractiveWindowMessages.FinishCell]: NativeEditorReducerFunc<ICell>;
     public [InteractiveWindowMessages.UpdateCell]: NativeEditorReducerFunc<ICell>;
+    public [InteractiveWindowMessages.NotebookDirty]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.NotebookClean]: NativeEditorReducerFunc<never | undefined>;
 }

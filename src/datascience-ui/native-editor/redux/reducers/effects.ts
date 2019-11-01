@@ -120,4 +120,18 @@ export namespace Effects {
 
         return arg.prevState;
     }
+
+    export function notebookDirty(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            dirty: true
+        };
+    }
+
+    export function notebookClean(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            dirty: false
+        };
+    }
 }

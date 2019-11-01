@@ -46,11 +46,15 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.ARROW_UP]: Movement.arrowUp,
     [NativeEditorActionTypes.ARROW_DOWN]: Movement.arrowDown,
     [NativeEditorActionTypes.EDIT_CELL]: Execution.editCell,
+    [NativeEditorActionTypes.SHOW_PLOT]: Transfer.showPlot,
+    [NativeEditorActionTypes.OPEN_LINK]: Transfer.openLink,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
     [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
+    [InteractiveWindowMessages.NotebookDirty]: Effects.notebookDirty,
+    [InteractiveWindowMessages.NotebookClean]: Effects.notebookClean,
     // [InteractiveWindowMessages.GotoCodeCell]: Helpers.defaultReducer,
     // [InteractiveWindowMessages.CopyCodeCell]: Helpers.defaultReducer,
     // [InteractiveWindowMessages.RestartKernel]: Helpers.defaultReducer,
