@@ -23,6 +23,7 @@ import {
     INotebookServer,
     INotebookServerLaunchInfo
 } from '../types';
+import { StopWatch } from '../../common/utils/stopWatch';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -49,6 +50,7 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
+        const stopWatch = new StopWatch();
         traceInfo(`Connecting server ${this.id} kernelSpec ${launchInfo.kernelSpec ? launchInfo.kernelSpec.name : 'unknown'}`);
 
         // Save our launch info
@@ -68,17 +70,19 @@ export class JupyterServerBase implements INotebookServer {
 
         // Create our session manager
         this.sessionManager = await this.sessionManagerFactory.create(launchInfo.connectionInfo);
-
+        console.error(`JupyterServer = sessionManagerFactory.create ${stopWatch.elapsedTime}`);
         // Try creating a session just to ensure we're connected. Callers of this function check to make sure jupyter
         // is running and connectable.
         let session: IJupyterSession | undefined;
         session = await this.sessionManager.startNew(launchInfo.kernelSpec, cancelToken);
+        console.error(`JupyterServer = sessionManager.startNew ${stopWatch.elapsedTime}`);
         const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.
         await session.waitForIdle(idleTimeout);
-
+        console.error(`JupyterServer = sessionManager.waitForIdle ${stopWatch.elapsedTime}`);
         // If that works, save this session for the next notebook to use
         this.savedSession = session;
+        console.error(`JupyterServer.connect ${stopWatch.elapsedTime}`);
     }
 
     public createNotebook(resource: Uri, cancelToken?: CancellationToken): Promise<INotebook> {

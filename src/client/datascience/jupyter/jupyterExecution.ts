@@ -13,6 +13,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/pr
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -130,71 +131,77 @@ export class JupyterExecutionBase implements IJupyterExecution {
     public connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
-            let result: INotebookServer | undefined;
-            let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined } | undefined;
-            traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
-            const interpreter = await this.interpreterService.getActiveInterpreter();
+            const stopWatch = new StopWatch();
+            try {
+                let result: INotebookServer | undefined;
+                let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined } | undefined;
+                traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
+                const interpreter = await this.interpreterService.getActiveInterpreter();
 
-            // Try to connect to our jupyter process. Check our setting for the number of tries
-            let tryCount = 0;
-            const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
-            while (tryCount < maxTries) {
-                try {
-                    // Start or connect to the process
-                    startInfo = await this.startOrConnect(options, cancelToken);
+                // Try to connect to our jupyter process. Check our setting for the number of tries
+                let tryCount = 0;
+                const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
+                while (tryCount < maxTries) {
+                    try {
+                        // Start or connect to the process
+                        startInfo = await this.startOrConnect(options, cancelToken);
+                        console.error(`startOrConnect in connectToNotebookServer ${stopWatch.elapsedTime}`);
+                        // Create a server that we will then attempt to connect to.
+                        result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
-                    // Create a server that we will then attempt to connect to.
-                    result = this.serviceContainer.get<INotebookServer>(INotebookServer);
+                        // Populate the launch info that we are starting our server with
+                        const launchInfo: INotebookServerLaunchInfo = {
+                            connectionInfo: startInfo.connection,
+                            currentInterpreter: interpreter,
+                            kernelSpec: startInfo.kernelSpec,
+                            workingDir: options ? options.workingDir : undefined,
+                            uri: options ? options.uri : undefined,
+                            purpose: options ? options.purpose : uuid(),
+                            enableDebugging: options ? options.enableDebugging : false
+                        };
 
-                    // Populate the launch info that we are starting our server with
-                    const launchInfo: INotebookServerLaunchInfo = {
-                        connectionInfo: startInfo.connection,
-                        currentInterpreter: interpreter,
-                        kernelSpec: startInfo.kernelSpec,
-                        workingDir: options ? options.workingDir : undefined,
-                        uri: options ? options.uri : undefined,
-                        purpose: options ? options.purpose : uuid(),
-                        enableDebugging: options ? options.enableDebugging : false
-                    };
+                        traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
+                        await result.connect(launchInfo, cancelToken);
+                        console.error(`result.connect in connectToNotebookServer ${stopWatch.elapsedTime}`);
+                        traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
 
-                    traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
-                    await result.connect(launchInfo, cancelToken);
-                    traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
+                        sendTelemetryEvent(launchInfo.uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
+                        return result;
+                    } catch (err) {
+                        // Cleanup after ourselves. server may be running partially.
+                        if (result) {
+                            traceInfo('Killing server because of error');
+                            await result.dispose();
+                        }
+                        if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
+                            // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
+                            // ourselves and propagate the failure outwards.
+                            traceInfo('Retry because of wait for idle problem.');
+                            sendTelemetryEvent(Telemetry.SessionIdleTimeout);
+                            tryCount += 1;
+                        } else if (startInfo) {
+                            // Something else went wrong
+                            if (options && options.uri) {
+                                sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
 
-                    sendTelemetryEvent(launchInfo.uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
-                    return result;
-                } catch (err) {
-                    // Cleanup after ourselves. server may be running partially.
-                    if (result) {
-                        traceInfo('Killing server because of error');
-                        await result.dispose();
-                    }
-                    if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
-                        // Special case. This sometimes happens where jupyter doesn't ever connect. Cleanup after
-                        // ourselves and propagate the failure outwards.
-                        traceInfo('Retry because of wait for idle problem.');
-                        sendTelemetryEvent(Telemetry.SessionIdleTimeout);
-                        tryCount += 1;
-                    } else if (startInfo) {
-                        // Something else went wrong
-                        if (options && options.uri) {
-                            sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
-
-                            // Check for the self signed certs error specifically
-                            if (err.message.indexOf('reason: self signed certificate') >= 0) {
-                                sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                                throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
+                                // Check for the self signed certs error specifically
+                                if (err.message.indexOf('reason: self signed certificate') >= 0) {
+                                    sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
+                                    throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
+                                } else {
+                                    throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                                }
                             } else {
-                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                                sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
+                                throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
                             }
                         } else {
-                            sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
+                            throw err;
                         }
-                    } else {
-                        throw err;
                     }
                 }
+            } finally {
+                console.error(`Connect to notebook server ${stopWatch.elapsedTime}`);
             }
         }, cancelToken);
     }
@@ -310,10 +317,15 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
-        // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
-        this.checkNotebookCommand(notebookCommand);
-        return this.notebookStarter.start(useDefaultConfig, cancelToken);
+        const stopWatch = new StopWatch();
+        try {
+            // First we find a way to start a notebook server
+            const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
+            this.checkNotebookCommand(notebookCommand);
+            return await this.notebookStarter.start(useDefaultConfig, cancelToken);
+        } finally {
+            console.error(`Start Notebook Server ${stopWatch.elapsedTime}`);
+        }
     }
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
