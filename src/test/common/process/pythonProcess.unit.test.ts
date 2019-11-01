@@ -6,19 +6,21 @@ import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { IProcessService } from '../../../client/common/process/types';
+import { IProcessService, StdErrError } from '../../../client/common/process/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 
+// tslint:disable-next-line: max-func-body-length
 suite('PythonExecutableService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
     let executionService: PythonExecutionService;
     const pythonPath = 'path/to/python';
 
     setup(() => {
         processService = TypeMoq.Mock.ofType<IProcessService>(undefined, TypeMoq.MockBehavior.Strict);
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
-        const fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
 
         serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
 
@@ -85,4 +87,68 @@ suite('PythonExecutableService', () => {
 
         expect(result).to.equal(undefined, 'getInterpreterInfo() should return undefined because of bad json.');
     });
+
+    test('getExecutablePath should return pythonPath if pythonPath is a file', async () => {
+        fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(true));
+
+        const result = await executionService.getExecutablePath();
+
+        expect(result).to.equal(pythonPath, 'getExecutablePath() sbould return pythonPath if it\'s a file');
+    });
+
+    test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
+        const executablePath = 'path/to/dummy/executable';
+        fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
+        processService
+            .setup(p => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }))
+            .returns(() => Promise.resolve({ stdout: executablePath }));
+
+        const result = await executionService.getExecutablePath();
+
+        expect(result).to.equal(executablePath, 'getExecutablePath() sbould not return pythonPath if it\'s not a file');
+    });
+
+    test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {
+        const stderr = 'bar';
+        fileSystem.setup(f => f.fileExists(pythonPath)).returns(() => Promise.resolve(false));
+        processService.setup(p => p.exec(pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true })).returns(() => Promise.reject(new StdErrError(stderr)));
+
+        const result = executionService.getExecutablePath();
+
+        expect(result).to.eventually.be.rejectedWith(stderr);
+    });
+
+    test('isModuleInstalled should call processService.exec()', async () => {
+        const moduleInstalled = 'foo';
+        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleInstalled}`], { throwOnStdErr: true })).returns(() => Promise.resolve({ stdout: '' }));
+
+        await executionService.isModuleInstalled(moduleInstalled);
+
+        processService.verify(async p => p.exec(pythonPath, ['-c', `import ${moduleInstalled}`], { throwOnStdErr: true }), TypeMoq.Times.once());
+    });
+
+    test('isModuleInstalled should return true when processService.exec() succeeds', async () => {
+        const moduleInstalled = 'foo';
+        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleInstalled}`], { throwOnStdErr: true })).returns(() => Promise.resolve({ stdout: '' }));
+
+        const result = await executionService.isModuleInstalled(moduleInstalled);
+
+        expect(result).to.equal(true, 'isModuleInstalled() should return true if the module exists');
+    });
+
+    test('isModuleInstalled should return false when processService.exec() throws', async () => {
+        const moduleInstalled = 'foo';
+        processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleInstalled}`], { throwOnStdErr: true })).returns(() => Promise.reject(new StdErrError('bar')));
+
+        const result = await executionService.isModuleInstalled(moduleInstalled);
+
+        expect(result).to.equal(false, 'isModuleInstalled() should return false if the module does not exist');
+    });
+
+    /**
+     * execobservable
+     * execmoduleobservable
+     * exec
+     * execmodule
+     */
 });
