@@ -478,20 +478,13 @@ type CacheInfo = {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public async findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
-        const stopWatch = new StopWatch();
-        let result: IFindCommandResult;
-        try {
-            if (command === JupyterCommands.KernelSpecCommand) {
-            result = await this.findBestKernelSpecCommand(token);
-            } else if (command === JupyterCommands.NotebookCommand) {
-                result = await this.findBestNotebookCommand(token);
-            } else {
-                result = await super.findBestCommand(command, token);
-            }
-        } finally {
-            console.error(`Finding command ${command} completed in ${stopWatch.elapsedTime}, with status of ${result!.status}`);
+        if (command === JupyterCommands.KernelSpecCommand) {
+            return this.findBestKernelSpecCommand(token);
+        } else if (command === JupyterCommands.NotebookCommand) {
+            return this.findBestNotebookCommand(token);
+        } else {
+            return super.findBestCommand(command, token);
         }
-        return result;
     }
     private async findBestKernelSpecCommand(token?: CancellationToken): Promise<IFindCommandResult> {
         if (this.kernelCmd){

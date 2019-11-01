@@ -83,14 +83,9 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        const stopWatch = new StopWatch();
-        try {
-            this.launchInfo = launchInfo;
-            const server = await this.serverFactory.get();
-            return await server.connect(launchInfo, cancelToken);
-        } finally {
-            console.error(`JupyterServerFactory.connect ${stopWatch.elapsedTime}`);
-        }
+        this.launchInfo = launchInfo;
+        const server = await this.serverFactory.get();
+        return server.connect(launchInfo, cancelToken);
     }
 
     public async createNotebook(resource: Uri): Promise<INotebook> {
