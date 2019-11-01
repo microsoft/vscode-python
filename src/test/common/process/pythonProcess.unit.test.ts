@@ -25,7 +25,7 @@ suite('PythonExecutableService', () => {
         executionService = new PythonExecutionService(serviceContainer.object, processService.object, pythonPath);
     });
 
-    test('getInterpreterInfo should return an object if the python path is valid', async () => {
+    test('getInterpreterInformation should return an object if the python path is valid', async () => {
         const json = {
             versionInfo: [3, 7, 5, 'candidate'],
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
@@ -47,7 +47,7 @@ suite('PythonExecutableService', () => {
         expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation().');
     });
 
-    test('getInterpreterInfo should return an object with the architecture value set to x86 if json.is64bit is not 64bit', async () => {
+    test('getInterpreterInformation should return an object with the architecture value set to x86 if json.is64bit is not 64bit', async () => {
         const json = {
             versionInfo: [3, 7, 5, 'candidate'],
             sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
@@ -69,7 +69,7 @@ suite('PythonExecutableService', () => {
         expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation() for x86b architecture.');
     });
 
-    test('getInterpreterInfo should error out if interpreterInfo.py times out', async () => {
+    test('getInterpreterInformation should error out if interpreterInfo.py times out', async () => {
         // tslint:disable-next-line: no-any
         processService.setup(p => p.exec(pythonPath, TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined as any));
 
@@ -78,7 +78,7 @@ suite('PythonExecutableService', () => {
         expect(result).to.equal(undefined, 'getInterpreterInfo() should return undefined because interpreterInfo timed out.');
     });
 
-    test('getInterpreterInfo should return undefined if the json value returned by interpreterInfo.py is not valid', async () => {
+    test('getInterpreterInformation should return undefined if the json value returned by interpreterInfo.py is not valid', async () => {
         processService.setup(p => p.exec(pythonPath, TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'bad json' }));
 
         const result = await executionService.getInterpreterInformation();
