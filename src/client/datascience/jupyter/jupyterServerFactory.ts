@@ -24,6 +24,7 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
+import { StopWatch } from '../../common/utils/stopWatch';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 }
@@ -82,9 +83,14 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
     }
 
     public async connect(launchInfo: INotebookServerLaunchInfo, cancelToken?: CancellationToken): Promise<void> {
-        this.launchInfo = launchInfo;
-        const server = await this.serverFactory.get();
-        return server.connect(launchInfo, cancelToken);
+        const stopWatch = new StopWatch();
+        try {
+            this.launchInfo = launchInfo;
+            const server = await this.serverFactory.get();
+            return await server.connect(launchInfo, cancelToken);
+        } finally {
+            console.error(`JupyterServerFactory.connect ${stopWatch.elapsedTime}`);
+        }
     }
 
     public async createNotebook(resource: Uri): Promise<INotebook> {
