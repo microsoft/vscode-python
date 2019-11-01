@@ -5,9 +5,10 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { NativeEditorActionTypes } from '../actions';
 import { INativeEditorActionMapping } from '../mapping';
 import { Creation } from './creation';
+import { Effects } from './effects';
 import { Execution } from './execution';
-import { Focus } from './focus';
 import { Kernel } from './kernel';
+import { Movement } from './movement';
 import { Transfer } from './transfer';
 import { Variables } from './variables';
 
@@ -17,10 +18,13 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.INSERT_ABOVE]: Creation.insertAbove,
     [NativeEditorActionTypes.INSERT_ABOVE_FIRST]: Creation.insertAboveFirst,
     [NativeEditorActionTypes.INSERT_BELOW]: Creation.insertBelow,
-    [NativeEditorActionTypes.FOCUS_CELL]: Focus.focusCell,
+    [NativeEditorActionTypes.FOCUS_CELL]: Effects.focusCell,
+    [NativeEditorActionTypes.UNFOCUS_CELL]: Effects.unfocusCell,
     [NativeEditorActionTypes.ADD_NEW_CELL]: Creation.addNewCell,
     [NativeEditorActionTypes.EXECUTE_CELL]: Execution.executeCell,
     [NativeEditorActionTypes.EXECUTE_ALL_CELLS]: Execution.executeAllCells,
+    [NativeEditorActionTypes.EXECUTE_ABOVE]: Execution.executeAbove,
+    [NativeEditorActionTypes.EXECUTE_CELL_AND_BELOW]: Execution.executeCellAndBelow,
     [NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER]: Variables.toggleVariableExplorer,
     [NativeEditorActionTypes.REFRESH_VARIABLES]: Variables.refreshVariables,
     [NativeEditorActionTypes.RESTART_KERNEL]: Kernel.restartKernel,
@@ -30,7 +34,18 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.SAVE]: Transfer.save,
     [NativeEditorActionTypes.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [NativeEditorActionTypes.SEND_COMMAND]: Transfer.sendCommand,
-    [NativeEditorActionTypes.SELECT_CELL]: Focus.selectCell,
+    [NativeEditorActionTypes.SELECT_CELL]: Effects.selectCell,
+    [NativeEditorActionTypes.SELECT_NEXT_CELL]: Effects.selectNextCell,
+    [NativeEditorActionTypes.MOVE_CELL_UP]: Movement.moveCellUp,
+    [NativeEditorActionTypes.MOVE_CELL_DOWN]: Movement.moveCellDown,
+    [NativeEditorActionTypes.DELETE_CELL]: Creation.deleteCell,
+    [NativeEditorActionTypes.TOGGLE_LINE_NUMBERS]: Effects.toggleLineNumbers,
+    [NativeEditorActionTypes.TOGGLE_OUTPUT]: Effects.toggleOutput,
+    [NativeEditorActionTypes.CHANGE_CELL_TYPE]: Execution.changeCellType,
+    [NativeEditorActionTypes.UNDO]: Execution.undo,
+    [NativeEditorActionTypes.ARROW_UP]: Movement.arrowUp,
+    [NativeEditorActionTypes.ARROW_DOWN]: Movement.arrowDown,
+    [NativeEditorActionTypes.EDIT_CELL]: Execution.editCell,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,

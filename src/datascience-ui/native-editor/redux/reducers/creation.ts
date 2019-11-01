@@ -3,10 +3,12 @@
 'use strict';
 import * as uuid from 'uuid/v4';
 
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell } from '../../../../client/datascience/types';
 import {
     createCellVM,
     createEmptyCell,
+    CursorPos,
     extractInputText,
     ICellViewModel,
     IMainState
@@ -15,6 +17,7 @@ import { arePathsSame } from '../../../react-common/arePathsSame';
 import { getSettings } from '../../../react-common/settingsReactSide';
 import { actionCreators, ICellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
+import { Helpers } from './helpers';
 import { Variables } from './variables';
 
 export namespace Creation {
@@ -59,7 +62,7 @@ export namespace Creation {
 
             // Live share has been disabled for now, see https://github.com/microsoft/vscode-python/issues/7972
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            // if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
+            // if (concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
 
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
@@ -167,6 +170,65 @@ export namespace Creation {
 
     export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
         return updateOrAdd(arg);
+    }
+
+    export function deleteCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const cells = arg.prevState.cellVMs;
+        if (cells.length === 1 && cells[0].cell.id === arg.payload.cellId) {
+            // Special case, if this is the last cell, don't delete it, just clear it's output and input
+            const newVM: ICellViewModel = {
+                cell: createEmptyCell(arg.payload.cellId, null),
+                editable: true,
+                inputBlockOpen: true,
+                inputBlockShow: true,
+                inputBlockText: '',
+                inputBlockCollapseNeeded: false,
+                selected: cells[0].selected,
+                focused: cells[0].focused,
+                cursorPos: CursorPos.Current
+            };
+
+            // Send messages to other side to indicate the new add
+            arg.postMessage(InteractiveWindowMessages.DeleteCell);
+            arg.postMessage(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId });
+            arg.postMessage(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined });
+
+            return {
+                ...arg.prevState,
+                cellVMs: [newVM]
+            };
+        } else if (arg.payload.cellId) {
+            // Otherwise just a straight delete
+            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+            if (index >= 0) {
+                arg.postMessage(InteractiveWindowMessages.DeleteCell);
+                arg.postMessage(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId });
+
+                // Recompute select/focus if this item has either
+                let newSelection = arg.prevState.selectedCellId;
+                let newFocused = arg.prevState.focusedCellId;
+                const newVMs = [...arg.prevState.cellVMs.filter(c => c.cell.id !== arg.payload.cellId)];
+                const nextOrPrev = index === arg.prevState.cellVMs.length - 1 ? index - 1 : index;
+                if (arg.prevState.selectedCellId === arg.payload.cellId || arg.prevState.focusedCellId === arg.payload.cellId) {
+                    if (nextOrPrev >= 0) {
+                        newVMs[nextOrPrev] = { ...newVMs[nextOrPrev], selected: true, focused: arg.prevState.focusedCellId === arg.payload.cellId };
+                        newSelection = newVMs[nextOrPrev].cell.id;
+                        newFocused = newVMs[nextOrPrev].focused ? newVMs[nextOrPrev].cell.id : undefined;
+                    }
+                }
+
+                return {
+                    ...arg.prevState,
+                    cellVMs: newVMs,
+                    selectedCellId: newSelection,
+                    focusedCellId: newFocused,
+                    undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
+                    skipNextScroll: true
+                };
+            }
+        }
+
+        return arg.prevState;
     }
 
 }

@@ -7,8 +7,10 @@ import { IMainState } from '../../interactive-common/mainState';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 import {
     ICellAction,
-    IExecuteAction,
-    IExecuteAllAction,
+    ICellAndCursorAction,
+    IChangeCellTypeAction,
+    ICodeAction,
+    IEditCellAction,
     IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
@@ -23,10 +25,13 @@ export class INativeEditorActionMapping {
     public [NativeEditorActionTypes.INSERT_ABOVE]: NativeEditorReducerFunc<ICellAction>;
     public [NativeEditorActionTypes.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction>;
     public [NativeEditorActionTypes.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.FOCUS_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.FOCUS_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
+    public [NativeEditorActionTypes.UNFOCUS_CELL]: NativeEditorReducerFunc<ICodeAction>;
     public [NativeEditorActionTypes.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.EXECUTE_CELL]: NativeEditorReducerFunc<IExecuteAction>;
-    public [NativeEditorActionTypes.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<IExecuteAllAction>;
+    public [NativeEditorActionTypes.EXECUTE_CELL]: NativeEditorReducerFunc<ICodeAction>;
+    public [NativeEditorActionTypes.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.EXECUTE_ABOVE]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.EXECUTE_CELL_AND_BELOW]: NativeEditorReducerFunc<ICodeAction>;
     public [NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER]: NativeEditorReducerFunc<never | undefined>;
     public [NativeEditorActionTypes.REFRESH_VARIABLES]: NativeEditorReducerFunc<IRefreshVariablesAction>;
     public [NativeEditorActionTypes.RESTART_KERNEL]: NativeEditorReducerFunc<never | undefined>;
@@ -34,9 +39,20 @@ export class INativeEditorActionMapping {
     public [NativeEditorActionTypes.CLEAR_ALL_OUTPUTS]: NativeEditorReducerFunc<never | undefined>;
     public [NativeEditorActionTypes.EXPORT]: NativeEditorReducerFunc<never | undefined>;
     public [NativeEditorActionTypes.SAVE]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.UNDO]: NativeEditorReducerFunc<never | undefined>;
     public [NativeEditorActionTypes.SHOW_DATA_VIEWER]: NativeEditorReducerFunc<IShowDataViewerAction>;
     public [NativeEditorActionTypes.SEND_COMMAND]: NativeEditorReducerFunc<ISendCommandAction>;
-    public [NativeEditorActionTypes.SELECT_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.SELECT_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
+    public [NativeEditorActionTypes.SELECT_NEXT_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.MOVE_CELL_UP]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.MOVE_CELL_DOWN]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.TOGGLE_LINE_NUMBERS]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.TOGGLE_OUTPUT]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.DELETE_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.ARROW_UP]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.ARROW_DOWN]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.CHANGE_CELL_TYPE]: NativeEditorReducerFunc<IChangeCellTypeAction>;
+    public [NativeEditorActionTypes.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
 
     // Messages from the extension
     public [InteractiveWindowMessages.StartCell]: NativeEditorReducerFunc<ICell>;

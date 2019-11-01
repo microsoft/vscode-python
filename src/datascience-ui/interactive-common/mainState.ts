@@ -12,9 +12,12 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
-import { noop } from '../../test/core';
-import { InputHistory } from './inputHistory';
-import { PostOffice } from '../react-common/postOffice';
+
+export enum CursorPos {
+    Top,
+    Bottom,
+    Current
+}
 
 export interface ICellViewModel {
     cell: ICell;
@@ -29,12 +32,7 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
-}
-
-export enum CursorPos {
-    Top,
-    Bottom,
-    Current
+    cursorPos: CursorPos;
 }
 
 export type IMainState = {
@@ -157,7 +155,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
         selected: false,
-        focused: false
+        focused: false,
+        cursorPos: CursorPos.Current
     };
 }
 
@@ -199,7 +198,8 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockText: inputText,
         inputBlockCollapseNeeded: (inputLinesCount > 1),
         selected: false,
-        focused: false
+        focused: false,
+        cursorPos: CursorPos.Current
     };
 }
 

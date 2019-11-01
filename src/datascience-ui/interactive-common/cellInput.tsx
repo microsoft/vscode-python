@@ -14,6 +14,7 @@ import { Code } from './code';
 import { InputHistory } from './inputHistory';
 import { CursorPos, ICellViewModel, IFont } from './mainState';
 import { Markdown } from './markdown';
+import { isUndefined } from '../../client/common/utils/sysTypes';
 
 // tslint:disable-next-line: no-require-importss
 interface ICellInputProps {
@@ -77,6 +78,14 @@ export class CellInput extends React.Component<ICellInputProps> {
     // Public for testing
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
+    }
+
+    public getContents(): string | undefined {
+        if (this.codeRef.current) {
+            return this.codeRef.current.getContents();
+        } else if (this.markdownRef.current) {
+            return this.markdownRef.current.getContents();
+        }
     }
 
     private isCodeCell = () => {

@@ -77,6 +77,13 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         }
     }
 
+    public getContents() : string {
+        if (this.state.model) {
+            return this.state.model.getValue().replace(/\r/g, '');
+        }
+        return '';
+    }
+
     private renderQuickEditor = (): JSX.Element => {
         const readOnly = this.props.readOnly;
         return (
@@ -243,12 +250,5 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             e.stopPropagation();
             e.preventDefault();
         }
-    }
-
-    private getContents() : string {
-        if (this.state.model) {
-            return this.state.model.getValue().replace(/\r/g, '');
-        }
-        return '';
     }
 }

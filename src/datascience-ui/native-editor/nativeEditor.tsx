@@ -96,28 +96,6 @@ class NativeEditor extends React.Component<INativeEditorProps> {
         );
     }
 
-    private moveSelectionToExisting = (cellId: string, focusCode: boolean, cursorPos: CursorPos) => {
-        // Cell should already exist in the UI
-        if (this.contentPanelRef) {
-            this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
-            this.focusCell(cellId, focusCode ? true : false, cursorPos);
-        }
-    }
-
-    private selectCell = (id: string, focusCode: boolean, cursorPos: CursorPos) => {
-        // Check to see that this cell already exists in our window (it's part of the rendered state)
-        const cells = this.props.cellVMs.map(c => c.cell).filter(c => c.data.cell_type !== 'messages');
-        if (cells.find(c => c.id === id)) {
-            // Force selection change right now as we don't need the cell to exist
-            // to make it selected (otherwise we'll get a flash)
-            this.stateController.selectCell(id, focusCode ? id : undefined);
-        }
-
-        // Then wait to give it actual input focus. The cell may not exist yet so we can't just
-        // force focus immediately.
-        setTimeout(() => this.moveSelectionToExisting(id, focusCode, cursorPos), 1);
-    }
-
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
         const addCell = () => {
@@ -126,8 +104,7 @@ class NativeEditor extends React.Component<INativeEditorProps> {
         };
         const runAll = () => {
             // Run all cells currently available.
-            const codes = this.props.cellVMs.map(c => concatMultilineStringInput(c.cell.data.source));
-            this.props.executeAllCells(codes);
+            this.props.executeAllCells();
             this.props.sendCommand(NativeCommandType.RunAll, 'mouse');
         };
         const save = () => {
