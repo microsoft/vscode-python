@@ -161,7 +161,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     {this.renderCollapseBar(true)}
                     {this.renderControls()}
                     {this.renderInput()}
-                    {this.renderMiddleToolbar()}
                 </div>
                 {this.renderAddDivider(true)}
                 <div className='cell-row-container'>
@@ -629,26 +628,29 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderInput = () => {
         if (this.shouldRenderInput()) {
             return (
-                <CellInput
-                    cellVM={this.props.cellVM}
-                    editorOptions={this.props.stateController.getState().editorOptions}
-                    history={undefined}
-                    autoFocus={this.props.autoFocus}
-                    codeTheme={this.props.codeTheme}
-                    onCodeChange={this.props.stateController.codeChange}
-                    onCodeCreated={this.props.stateController.editableCodeCreated}
-                    testMode={this.props.testMode ? true : false}
-                    showWatermark={false}
-                    ref={this.inputRef}
-                    monacoTheme={this.props.monacoTheme}
-                    openLink={this.props.stateController.openLink}
-                    editorMeasureClassName={undefined}
-                    focused={this.isCodeCell() ? this.onCodeFocused : this.onMarkdownFocused}
-                    unfocused={this.isCodeCell() ? this.onCodeUnfocused : this.onMarkdownUnfocused}
-                    keyDown={this.keyDownInput}
-                    showLineNumbers={this.props.cellVM.showLineNumbers}
-                    font={this.props.font}
-                />
+                <div>
+                    <CellInput
+                        cellVM={this.props.cellVM}
+                        editorOptions={this.props.stateController.getState().editorOptions}
+                        history={undefined}
+                        autoFocus={this.props.autoFocus}
+                        codeTheme={this.props.codeTheme}
+                        onCodeChange={this.props.stateController.codeChange}
+                        onCodeCreated={this.props.stateController.editableCodeCreated}
+                        testMode={this.props.testMode ? true : false}
+                        showWatermark={false}
+                        ref={this.inputRef}
+                        monacoTheme={this.props.monacoTheme}
+                        openLink={this.props.stateController.openLink}
+                        editorMeasureClassName={undefined}
+                        focused={this.isCodeCell() ? this.onCodeFocused : this.onMarkdownFocused}
+                        unfocused={this.isCodeCell() ? this.onCodeUnfocused : this.onMarkdownUnfocused}
+                        keyDown={this.keyDownInput}
+                        showLineNumbers={this.props.cellVM.showLineNumbers}
+                        font={this.props.font}
+                    />
+                    {this.renderMiddleToolbar()}
+                </div>
             );
         }
         return null;
