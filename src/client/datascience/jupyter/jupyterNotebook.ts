@@ -668,6 +668,7 @@ export class JupyterNotebookBase implements INotebook {
 
                     // Listen to messages.
                     request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
+                        console.error(`msg.header.msg_type = ${msg.header.msg_type}`);
                         try {
                             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
                                 this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
