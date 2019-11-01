@@ -2,12 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { IExtensionSingleActivationService } from '../activation/types';
-import { noop } from '../common/utils/misc';
-import { StopWatch } from '../common/utils/stopWatch';
-import { ClassType, IServiceManager } from '../ioc/types';
-import { sendTelemetryEvent } from '../telemetry';
+import { IServiceManager } from '../ioc/types';
 import { CodeCssGenerator } from './codeCssGenerator';
-import { Telemetry } from './constants';
 import { DataViewer } from './data-viewing/dataViewer';
 import { DataViewerProvider } from './data-viewing/dataViewerProvider';
 import { DataScience } from './datascience';

@@ -16,7 +16,7 @@ import { CellState, ICell as IVscCell, IGatherExecution } from '../types';
  */
 @injectable()
 export class GatherExecution implements IGatherExecution {
-    private _executionSlicer: ExecutionLogSlicer;
+    private _executionSlicer: ExecutionLogSlicer<ICell>;
     private dataflowAnalyzer: DataflowAnalyzer;
     private _enabled: boolean;
 
