@@ -18,6 +18,7 @@ import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterprete
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
+import { injectable, unmanaged, inject } from 'inversify';
 
 export enum ModuleExistsStatus {
     NotFound,
