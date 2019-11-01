@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { CancellationToken, DebugAdapterDescriptorFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugAdapterDescriptorFactory, DebugAdapterTrackerFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
 import { RemoteDebugOptions } from '../debugAdapter/types';
 import { DebugConfigurationArguments } from '../types';
@@ -44,3 +44,7 @@ export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFa
 }
 
 export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: string };
+
+export const IDebugSessionLoggingFactory = Symbol('IDebugSessionLoggingFactory');
+
+export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory { }

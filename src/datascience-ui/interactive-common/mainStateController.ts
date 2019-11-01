@@ -399,7 +399,8 @@ export class MainStateController implements IMessageHandler {
 
     public clearAllOutputs = () => {
         const newList = this.pendingState.cellVMs.map(cellVM => {
-            return immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
+            const updatedVm = immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
+            return immutable.removeIn(updatedVm, ['cell', 'data', 'execution_count']);
         });
         this.setState({
             cellVMs: newList
@@ -913,7 +914,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     // tslint:disable:no-any
-    private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
+    protected computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
         if (intellisenseOptions && extraSettings) {

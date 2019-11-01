@@ -306,4 +306,17 @@ export class NativeEditorStateController extends MainStateController {
             }
         }
     }
+
+    /**
+     * Custom editor settings for Native editor.
+     *
+     * @protected
+     * @returns
+     * @memberof NativeEditorStateController
+     */
+    protected computeEditorOptions() {
+        const options = super.computeEditorOptions();
+        options.lineDecorationsWidth = 5;
+        return options;
+    }
 }

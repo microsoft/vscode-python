@@ -251,6 +251,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
             switch (mimeType) {
                 case 'text/plain':
+                case 'text/html':
                     return {
                         mimeType,
                         data: concatMultilineStringOutput(data as nbformat.MultilineString),
