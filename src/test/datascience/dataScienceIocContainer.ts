@@ -41,6 +41,7 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
@@ -83,6 +84,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
+    IExperimentsManager,
     IExtensions,
     ILogger,
     IPathUtils,
@@ -412,6 +414,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+
+        // Disable experiments.
+        const experimentManager = mock(ExperimentsManager);
+        when(experimentManager.inExperiment(anything())).thenReturn(false);
+        when(experimentManager.activate()).thenResolve();
+        this.serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, instance(experimentManager));
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {

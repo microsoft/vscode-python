@@ -45,7 +45,7 @@ export namespace LanguageService {
     export const lsFailedToExtract = localize('LanguageService.lsFailedToExtract', 'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
     export const downloadFailedOutputMessage = localize('LanguageService.downloadFailedOutputMessage', 'Language server download failed.');
     export const extractionFailedOutputMessage = localize('LanguageService.extractionFailedOutputMessage', 'Language server extraction failed.');
-    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'Language server dowload complete.');
+    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'Language server download complete.');
     export const extractionDoneOutputMessage = localize('LanguageService.extractionDoneOutputMessage', 'done.');
     export const reloadVSCodeIfSeachPathHasChanged = localize('LanguageService.reloadVSCodeIfSeachPathHasChanged', 'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.');
 

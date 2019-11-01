@@ -30,16 +30,16 @@
         "max": 20
     },
     {
-        "name": "DebugAdapterFactory - control",
+        "name": "DebugAdapterFactoryInsiders - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 0
+        "max": 50
     },
     {
-        "name": "DebugAdapterFactory - experiment",
+        "name": "DebugAdapterFactoryInsiders - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
+        "min": 50,
+        "max": 100
     },
     {
         "name": "PtvsdWheels37 - control",

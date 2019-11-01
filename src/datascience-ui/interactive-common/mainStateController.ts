@@ -399,7 +399,8 @@ export class MainStateController implements IMessageHandler {
 
     public clearAllOutputs = () => {
         const newList = this.pendingState.cellVMs.map(cellVM => {
-            return immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
+            const updatedVm = immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
+            return immutable.removeIn(updatedVm, ['cell', 'data', 'execution_count']);
         });
         this.setState({
             cellVMs: newList
@@ -913,7 +914,7 @@ export class MainStateController implements IMessageHandler {
     }
 
     // tslint:disable:no-any
-    private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
+    protected computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
         if (intellisenseOptions && extraSettings) {
@@ -1170,24 +1171,19 @@ export class MainStateController implements IMessageHandler {
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
             // if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
 
-            // If cell state changes, then update just the state and the cell data (excluding source).
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
-            if (this.pendingState.cellVMs[index].cell.state !== cell.state) {
-                newVMs[index] = {
-                    ...newVMs[index],
-                    cell: {
-                        ...newVMs[index].cell,
-                        state: cell.state,
-                        data: {
-                            ...cell.data,
-                            source: newVMs[index].cell.data.source
-                        }
+            newVMs[index] = {
+                ...newVMs[index],
+                cell: {
+                    ...newVMs[index].cell,
+                    state: cell.state,
+                    data: {
+                        ...cell.data,
+                        source: newVMs[index].cell.data.source
                     }
-                };
-            } else {
-                newVMs[index] = { ...newVMs[index], cell: cell };
-            }
+                }
+            };
 
             this.setState({
                 cellVMs: newVMs,

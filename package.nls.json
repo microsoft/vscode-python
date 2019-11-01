@@ -273,7 +273,7 @@
     "Common.openOutputPanel": "Show output",
     "LanguageService.downloadFailedOutputMessage": "Language server download failed",
     "LanguageService.extractionFailedOutputMessage": "Language server extraction failed",
-    "LanguageService.extractionCompletedOutputMessage": "Language server dowload complete",
+    "LanguageService.extractionCompletedOutputMessage": "Language server download complete",
     "LanguageService.extractionDoneOutputMessage": "done",
     "LanguageService.reloadVSCodeIfSeachPathHasChanged": "Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly",
     "DataScience.variableExplorerNameColumn": "Name",
