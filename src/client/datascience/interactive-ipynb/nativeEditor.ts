@@ -28,7 +28,6 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { generateCellsFromString } from '../cellFactory';
 import { concatMultilineStringInput, splitMultilineString } from '../common';
 import {
     EditorContexts,
@@ -220,9 +219,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     public onMessage(message: string, payload: any) {
         super.onMessage(message, payload);
         switch (message) {
-            case InteractiveWindowMessages.GatherCodeRequest:
-                this.handleMessage(message, payload, this.gatherCode);
-                break;
             case InteractiveWindowMessages.ReExecuteCell:
                 this.executedEvent.fire(this);
                 break;
@@ -723,39 +719,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             this.visibleCells[first] = this.visibleCells[second];
             this.visibleCells[second] = temp;
             return this.setDirty();
-        }
-    }
-
-    private gatherCode(payload: ICell): void {
-        this.gatherCodeInternal(payload).catch(err => {
-            this.applicationShell.showErrorMessage(err);
-        });
-    }
-
-    private gatherCodeInternal = async (cell: ICell) => {
-        const nb = this.getNotebook();
-        if (nb) {
-            const slicedProgram = nb.gatherCode(cell);
-            if (slicedProgram) {
-                let cells: ICell[] = [{
-                    id: uuid(),
-                    file: '',
-                    line: 0,
-                    state: 0,
-                    data: {
-                        cell_type: 'markdown',
-                        source: localize.DataScience.gatheredNotebookDescriptionInMarkdown(),
-                        metadata: {}
-                    }
-                }];
-
-                // Create new notebook with the returned program and open it.
-                cells = cells.concat(generateCellsFromString(slicedProgram));
-
-                const notebook = await this.jupyterExporter.translateToNotebook(cells);
-                const contents = JSON.stringify(notebook);
-                await this.ipynbProvider.createNew(contents);
-            }
         }
     }
 

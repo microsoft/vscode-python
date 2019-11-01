@@ -1089,7 +1089,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (this.notebook) {
-            this.postMessage(InteractiveWindowMessages.ConnectedToNotebook, this.notebook).ignoreErrors();
+            const uri: Uri = await this.getNotebookIdentity();
+            this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri).ignoreErrors();
         }
 
         traceInfo('Connected to jupyter server.');

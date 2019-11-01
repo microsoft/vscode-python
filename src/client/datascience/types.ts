@@ -98,9 +98,7 @@ export interface INotebook extends IAsyncDisposable {
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
-    addGatherSupport(gather: IGatherExecution): void;
-    gatherCode(cell: ICell): string | undefined;
-    resetGatherLog(): void;
+    addLogger(logger: INotebookExecutionLogger): void;
 }
 
 export interface INotebookServerOptions {
@@ -121,6 +119,7 @@ export interface INotebookExecutionLogger {
 export const IGatherExecution = Symbol('IGatherExecution');
 export interface IGatherExecution {
     enabled: boolean;
+    logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
     resetLog(): void;
 }

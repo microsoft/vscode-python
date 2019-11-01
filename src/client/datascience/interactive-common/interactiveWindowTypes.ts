@@ -3,8 +3,9 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
+import { Uri } from 'vscode';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
-import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse, INotebook } from '../types';
+import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
 export namespace InteractiveWindowMessages {
     export const StartCell = 'start_cell';
@@ -12,7 +13,7 @@ export namespace InteractiveWindowMessages {
     export const UpdateCell = 'update_cell';
     export const GotoCodeCell = 'gotocell_code';
     export const CopyCodeCell = 'copycell_code';
-    export const ConnectedToNotebook = 'connected_to_notebook';
+    export const NotebookExecutionActivated = 'notebook_execution_activated';
     export const RestartKernel = 'restart_kernel';
     export const Export = 'export_to_ipynb';
     export const GetAllCells = 'get_all_cells';
@@ -272,7 +273,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateCell]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
-    public [InteractiveWindowMessages.ConnectedToNotebook]: INotebook | undefined;
+    public [InteractiveWindowMessages.NotebookExecutionActivated]: Uri;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;

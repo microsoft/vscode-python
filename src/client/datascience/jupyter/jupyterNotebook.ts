@@ -25,11 +25,9 @@ import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
-import { GatherExecution } from '../gather/gather';
 import {
     CellState,
     ICell,
-    IGatherExecution,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
@@ -140,7 +138,6 @@ export class JupyterNotebookBase implements INotebook {
     private sessionStartTime: number;
     private pendingCellSubscriptions: CellSubscriber[] = [];
     private ranInitialSetup = false;
-    private gather: IGatherExecution | undefined;
     private _resource: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
@@ -258,21 +255,8 @@ export class JupyterNotebookBase implements INotebook {
         return this.updateWorkingDirectory(file);
     }
 
-    public addGatherSupport(g: GatherExecution) {
-        this.loggers.push(g);
-        this.gather = g;
-    }
-
-    public gatherCode(c: ICell): string | undefined {
-        if (this.gather) {
-            return this.gather.gatherCode(c);
-        }
-    }
-
-    public resetGatherLog() {
-        if (this.gather) {
-            this.gather.resetLog();
-        }
+    public addLogger(logger: INotebookExecutionLogger) {
+        this.loggers.push(logger);
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {

@@ -14,7 +14,7 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, IGatherExecution, INotebook, INotebookCompletion, INotebookServer, InterruptResult } from '../../types';
+import { ICell, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -100,7 +100,7 @@ export class GuestJupyterNotebook
         return Promise.resolve();
     }
 
-    public addGatherSupport(_gather: IGatherExecution): void {
+    public addLogger(_logger: INotebookExecutionLogger): void {
         noop();
     }
 

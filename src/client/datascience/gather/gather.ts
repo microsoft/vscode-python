@@ -2,25 +2,20 @@ import { CellSlice, DataflowAnalyzer, ExecutionLogSlicer } from '@msrvida/python
 import { Cell as IGatherCell } from '@msrvida/python-program-analysis/dist/es5/cell';
 
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 // tslint:disable-next-line: no-duplicate-imports
 import { Common } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { CellMatcher } from '../cellMatcher';
-import { concatMultilineStringInput } from '../common';
 import { Identifiers } from '../constants';
-import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
+import { CellState, ICell as IVscCell, IGatherExecution } from '../types';
 
 /**
  * An adapter class to wrap the code gathering functionality from [microsoft/python-program-analysis](https://www.npmjs.com/package/@msrvida/python-program-analysis).
  */
 @injectable()
-export class GatherExecution implements IGatherExecution, INotebookExecutionLogger {
+export class GatherExecution implements IGatherExecution {
     private _executionSlicer: ExecutionLogSlicer;
     private dataflowAnalyzer: DataflowAnalyzer;
     private _enabled: boolean;
@@ -42,30 +37,11 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
         traceInfo('Gathering tools have been activated');
     }
+    public logExecution(vscCell: IVscCell): void {
+        const gatherCell = convertVscToGatherCell(vscCell);
 
-    public async preExecute(_vscCell: IVscCell, _silent: boolean): Promise<void> {
-        // This function is just implemented here for compliance with the INotebookExecutionLogger interface
-        noop();
-    }
-
-    public async postExecute(vscCell: IVscCell, _silent: boolean): Promise<void> {
-        if (this._enabled) {
-            // Don't log if vscCell.data.source is an empty string or if it was
-            // silently executed. Original Jupyter extension also does this.
-            if (vscCell.data.source !== '' && !_silent) {
-                // First make a copy of this cell, as we are going to modify it
-                const cloneCell: IVscCell = cloneDeep(vscCell);
-
-                // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
-                const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
-
-                // Convert IVscCell to IGatherCell
-                const cell = convertVscToGatherCell(cloneCell) as IGatherCell;
-
-                // Call internal logging method
-                this._executionSlicer.logExecution(cell);
-            }
+        if (gatherCell) {
+            this._executionSlicer.logExecution(gatherCell);
         }
     }
 
