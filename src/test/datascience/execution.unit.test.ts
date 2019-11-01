@@ -20,6 +20,7 @@ import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
+import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
@@ -36,6 +37,8 @@ import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { Identifiers } from '../../client/datascience/constants';
+import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     ICell,
@@ -48,6 +51,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../../client/datascience/types';
+import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
@@ -214,6 +218,7 @@ suite('Jupyter Execution', async () => {
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
     const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
+    const activationHelper = mock(EnvironmentActivationService);
     const serviceContainer = mock(ServiceContainer);
     const workspaceService = mock(WorkspaceService);
     const disposableRegistry = new DisposableRegistry();
@@ -629,20 +634,44 @@ suite('Jupyter Execution', async () => {
         const serviceManager = mock(ServiceManager);
 
         const mockSessionManager = new MockJupyterManagerFactory(instance(serviceManager));
-
+        const commandFactory = new JupyterCommandFactory(
+            instance(executionFactory),
+            instance(activationHelper),
+            instance(processServiceFactory),
+            instance(interpreterService));
+        const persistentSateFactory = mock(PersistentStateFactory);
+        const persistentState = mock(PersistentState);
+        when(persistentSateFactory.createGlobalPersistentState(anything())).thenReturn(instance(persistentState));
+        when(persistentSateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(persistentState));
+        when(persistentSateFactory.createWorkspacePersistentState(anything())).thenReturn(instance(persistentState));
+        when(persistentSateFactory.createWorkspacePersistentState(anything(), anything())).thenReturn(instance(persistentState));
+        const commandFinder = new JupyterCommandFinder(
+            instance(interpreterService),
+            instance(executionFactory),
+            instance(configService),
+            instance(knownSearchPaths),
+            disposableRegistry,
+            instance(fileSystem),
+            instance(logger),
+            instance(processServiceFactory),
+            commandFactory,
+            instance(workspaceService),
+            instance(application),
+            instance(persistentSateFactory));
+        when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(instance(commandFinder));
         return new JupyterExecutionFactory(
             instance(liveShare),
             instance(executionFactory),
             instance(interpreterService),
             instance(processServiceFactory),
-            instance(knownSearchPaths),
             instance(logger),
             disposableRegistry,
             disposableRegistry,
             instance(fileSystem),
             mockSessionManager,
             instance(workspaceService),
-            instance(configService));
+            instance(configService),
+            instance(serviceContainer));
     }
 
     test('Working notebook and commands found', async () => {
