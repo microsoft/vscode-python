@@ -267,7 +267,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
                     const svg = mimeBundle['image/svg+xml'];
                     const png = mimeBundle['image/png'];
-                    const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
+                    const buttonTheme = (this && this.props.themeMatplotlibPlots) ? this.props.baseTheme : 'vscode-light';
                     let doubleClick: () => void = noop;
                     if (svg && png) {
                         // Save the svg in the extra button.
@@ -300,7 +300,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         renderWithScrollbars,
                         extraButton,
                         doubleClick,
-                        outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                        outputSpanClassName: (this && this.props.themeMatplotlibPlots) ? undefined : 'cell-output-plot-background'
                     };
 
                 default:
@@ -353,7 +353,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const buffer: JSX.Element[] = [];
         const transformedList = outputs.map(this.transformOutput);
 
-        transformedList.forEach(transformed => {
+        transformedList.forEach((transformed, index) => {
             let mimetype = transformed.mimeType;
 
             // If that worked, use the transform
@@ -367,7 +367,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 // If we are not theming plots then wrap them in a white span
                 if (transformed.outputSpanClassName) {
                     buffer.push(
-                        <div role='group' onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
                             <span className={transformed.outputSpanClassName}>
                                 {transformed.extraButton}
                                 <Transform data={transformed.data} />
@@ -376,7 +376,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     );
                 } else {
                     buffer.push(
-                        <div role='group' onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
                             {transformed.extraButton}
                             <Transform data={transformed.data} />
                         </div>
@@ -390,7 +390,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     mimetype = 'unknown';
                 }
                 const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
-                buffer.push(<div>{str}</div>);
+                buffer.push(<div key={index}>{str}</div>);
             }
         });
 
@@ -404,6 +404,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             style.maxHeight = `${this.props.maxTextSize}px`;
         }
 
-        return <div style={style}>{buffer}</div>;
+        return <div key={0} style={style}>{buffer}</div>;
     }
 }
