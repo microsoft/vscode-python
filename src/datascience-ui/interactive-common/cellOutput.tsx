@@ -267,7 +267,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
                     const svg = mimeBundle['image/svg+xml'];
                     const png = mimeBundle['image/png'];
-                    const buttonTheme = (this && this.props.themeMatplotlibPlots) ? this.props.baseTheme : 'vscode-light';
+                    const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
                     let doubleClick: () => void = noop;
                     if (svg && png) {
                         // Save the svg in the extra button.
@@ -300,7 +300,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         renderWithScrollbars,
                         extraButton,
                         doubleClick,
-                        outputSpanClassName: (this && this.props.themeMatplotlibPlots) ? undefined : 'cell-output-plot-background'
+                        outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
                     };
 
                 default:
@@ -351,7 +351,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     private renderOutput = (outputs: nbformat.IOutput[]): JSX.Element => {
         const buffer: JSX.Element[] = [];
-        const transformedList = outputs.map(this.transformOutput);
+        const transformedList = outputs.map(this.transformOutput.bind(this));
 
         transformedList.forEach((transformed, index) => {
             let mimetype = transformed.mimeType;
