@@ -1,0 +1,45 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+'use strict';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ICell } from '../../../client/datascience/types';
+import { IMainState } from '../../interactive-common/mainState';
+import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
+import {
+    ICellAction,
+    IExecuteAction,
+    IExecuteAllAction,
+    IRefreshVariablesAction,
+    ISendCommandAction,
+    IShowDataViewerAction,
+    NativeEditorActionTypes
+} from './actions';
+
+type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, NativeEditorActionTypes, T>;
+
+export type NativeEditorReducerArg<T = never | undefined> = ReducerArg<IMainState, NativeEditorActionTypes, T>;
+
+export class INativeEditorActionMapping {
+    public [NativeEditorActionTypes.INSERT_ABOVE]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.FOCUS_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.EXECUTE_CELL]: NativeEditorReducerFunc<IExecuteAction>;
+    public [NativeEditorActionTypes.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<IExecuteAllAction>;
+    public [NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.REFRESH_VARIABLES]: NativeEditorReducerFunc<IRefreshVariablesAction>;
+    public [NativeEditorActionTypes.RESTART_KERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.INTERRUPT_KERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.CLEAR_ALL_OUTPUTS]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.EXPORT]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.SAVE]: NativeEditorReducerFunc<never | undefined>;
+    public [NativeEditorActionTypes.SHOW_DATA_VIEWER]: NativeEditorReducerFunc<IShowDataViewerAction>;
+    public [NativeEditorActionTypes.SEND_COMMAND]: NativeEditorReducerFunc<ISendCommandAction>;
+    public [NativeEditorActionTypes.SELECT_CELL]: NativeEditorReducerFunc<ICellAction>;
+
+    // Messages from the extension
+    public [InteractiveWindowMessages.StartCell]: NativeEditorReducerFunc<ICell>;
+    public [InteractiveWindowMessages.FinishCell]: NativeEditorReducerFunc<ICell>;
+    public [InteractiveWindowMessages.UpdateCell]: NativeEditorReducerFunc<ICell>;
+}

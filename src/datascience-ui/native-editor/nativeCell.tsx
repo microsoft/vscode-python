@@ -34,12 +34,9 @@ interface INativeCellProps {
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
-    stateController: NativeEditorStateController;
     monacoTheme: string | undefined;
     lastCell: boolean;
     font: IFont;
-    focusCell(cellId: string, focusCode: boolean, cursorPos: CursorPos): void;
-    selectCell(cellId: string, focusCode: boolean, cursorPos: CursorPos): void;
 }
 
 // tslint:disable: react-this-binding-issue

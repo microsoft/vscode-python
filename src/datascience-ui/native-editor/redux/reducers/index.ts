@@ -1,14 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
-import { INativeEditorActionMapping, NativeEditorActionTypes } from '../actions';
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { NativeEditorActionTypes } from '../actions';
+import { INativeEditorActionMapping } from '../mapping';
 import { Creation } from './creation';
 import { Execution } from './execution';
 import { Focus } from './focus';
+import { Kernel } from './kernel';
+import { Transfer } from './transfer';
 import { Variables } from './variables';
-import { Helpers } from './helpers';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 
 // The list of reducers. 1 per message/action.
 export const reducerMap: INativeEditorActionMapping = {
@@ -22,6 +23,14 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.EXECUTE_ALL_CELLS]: Execution.executeAllCells,
     [NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER]: Variables.toggleVariableExplorer,
     [NativeEditorActionTypes.REFRESH_VARIABLES]: Variables.refreshVariables,
+    [NativeEditorActionTypes.RESTART_KERNEL]: Kernel.restartKernel,
+    [NativeEditorActionTypes.INTERRUPT_KERNEL]: Kernel.interruptKernel,
+    [NativeEditorActionTypes.CLEAR_ALL_OUTPUTS]: Execution.clearAllOutputs,
+    [NativeEditorActionTypes.EXPORT]: Transfer.exportCells,
+    [NativeEditorActionTypes.SAVE]: Transfer.save,
+    [NativeEditorActionTypes.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
+    [NativeEditorActionTypes.SEND_COMMAND]: Transfer.sendCommand,
+    [NativeEditorActionTypes.SELECT_CELL]: Focus.selectCell,
 
     // Messages from the webview (some are ignored)
     [InteractiveWindowMessages.StartCell]: Creation.startCell,

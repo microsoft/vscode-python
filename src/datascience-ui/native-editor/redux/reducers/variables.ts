@@ -4,27 +4,27 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../../interactive-common/mainState';
 import { IRefreshVariablesAction } from '../actions';
-import { Helpers } from './helpers';
+import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Variables {
 
-    export function refreshVariables(prevState: IMainState, payload: IRefreshVariablesAction): IMainState {
-        Helpers.postMessage(prevState, InteractiveWindowMessages.GetVariablesRequest,
-            payload.newExecutionCount === undefined ? prevState.currentExecutionCount : payload.newExecutionCount);
-        return prevState;
+    export function refreshVariables(arg: NativeEditorReducerArg<IRefreshVariablesAction>): IMainState {
+        arg.postMessage(InteractiveWindowMessages.GetVariablesRequest,
+            arg.payload.newExecutionCount === undefined ? arg.prevState.currentExecutionCount : arg.payload.newExecutionCount);
+        return arg.prevState;
     }
 
-    export function toggleVariableExplorer(prevState: IMainState): IMainState {
+    export function toggleVariableExplorer(arg: NativeEditorReducerArg): IMainState {
         const newState: IMainState = {
-            ...prevState,
-            variablesVisible: !prevState.variablesVisible
+            ...arg.prevState,
+            variablesVisible: !arg.prevState.variablesVisible
         };
 
-        Helpers.postMessage(newState, InteractiveWindowMessages.VariableExplorerToggle, newState.variablesVisible);
+        arg.postMessage(InteractiveWindowMessages.VariableExplorerToggle, newState.variablesVisible);
 
         // If going visible for the first time, refresh our variables
         if (newState.variablesVisible) {
-            return refreshVariables(newState, { newExecutionCount: undefined });
+            return refreshVariables({ ...arg, payload: { newExecutionCount: undefined } });
         } else {
             return newState;
         }

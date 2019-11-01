@@ -11,9 +11,10 @@ import {
     ICellViewModel,
     IMainState
 } from '../../../interactive-common/mainState';
-import { getSettings } from '../../../react-common/settingsReactSide';
-import { actionCreators, QueueAnotherFunc, ICellAction } from '../actions';
 import { arePathsSame } from '../../../react-common/arePathsSame';
+import { getSettings } from '../../../react-common/settingsReactSide';
+import { actionCreators, ICellAction } from '../actions';
+import { NativeEditorReducerArg } from '../mapping';
 import { Variables } from './variables';
 
 export namespace Creation {
@@ -32,21 +33,21 @@ export namespace Creation {
         return cellVM;
     }
 
-    function updateOrAdd(prevState: IMainState, cell: ICell): IMainState {
+    function updateOrAdd(arg: NativeEditorReducerArg<ICell>): IMainState {
         // First compute new execution count.
-        const newExecutionCount = cell.data.execution_count ?
-            Math.max(prevState.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
-            prevState.currentExecutionCount;
-        if (newExecutionCount !== prevState.currentExecutionCount && prevState.variablesVisible) {
+        const newExecutionCount = arg.payload.data.execution_count ?
+            Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10)) :
+            arg.prevState.currentExecutionCount;
+        if (newExecutionCount !== arg.prevState.currentExecutionCount && arg.prevState.variablesVisible) {
             // We also need to update our variable explorer when the execution count changes
             // Use the ref here to maintain var explorer independence
-            Variables.refreshVariables(prevState, { newExecutionCount });
+            Variables.refreshVariables({ ...arg, payload: { newExecutionCount } });
         }
 
-        const index = prevState.cellVMs.findIndex((c: ICellViewModel) => {
-            return c.cell.id === cell.id &&
-                c.cell.line === cell.line &&
-                arePathsSame(c.cell.file, cell.file);
+        const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
+            return c.cell.id === arg.payload.id &&
+                c.cell.line === arg.payload.line &&
+                arePathsSame(c.cell.file, arg.payload.file);
         });
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.
@@ -54,56 +55,51 @@ export namespace Creation {
 
             // Have to make a copy of the cell VM array or
             // we won't actually update.
-            const newVMs = [...prevState.cellVMs];
+            const newVMs = [...arg.prevState.cellVMs];
 
             // Live share has been disabled for now, see https://github.com/microsoft/vscode-python/issues/7972
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
             // if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
 
-            // If cell state changes, then update just the state and the cell data (excluding source).
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
-            if (prevState.cellVMs[index].cell.state !== cell.state) {
-                newVMs[index] = {
-                    ...newVMs[index],
-                    cell: {
-                        ...newVMs[index].cell,
-                        state: cell.state,
-                        data: {
-                            ...cell.data,
-                            source: newVMs[index].cell.data.source
-                        }
+            newVMs[index] = {
+                ...newVMs[index],
+                cell: {
+                    ...newVMs[index].cell,
+                    state: arg.payload.state,
+                    data: {
+                        ...arg.payload.data,
+                        source: newVMs[index].cell.data.source
                     }
-                };
-            } else {
-                newVMs[index] = { ...newVMs[index], cell: cell };
-            }
+                }
+            };
 
             return {
-                ...prevState,
+                ...arg.prevState,
                 cellVMs: newVMs,
                 currentExecutionCount: newExecutionCount
             };
         } else {
             // This is an entirely new cell (it may have started out as finished)
-            const newVM = prepareCellVM(cell);
+            const newVM = prepareCellVM(arg.payload);
             const newVMs = [
-                ...prevState.cellVMs,
+                ...arg.prevState.cellVMs,
                 newVM];
             return {
-                ...prevState,
+                ...arg.prevState,
                 cellVMs: newVMs,
                 currentExecutionCount: newExecutionCount
             };
         }
     }
 
-    export function insertAbove(prevState: IMainState, payload: ICellAction, queueAnother: QueueAnotherFunc): IMainState {
+    export function insertAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const newVM = prepareCellVM(createEmptyCell(uuid(), null));
-        const newList = [...prevState.cellVMs];
+        const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        const position = prevState.cellVMs.findIndex(c => c.cell.id === payload.cellId);
+        const position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (position >= 0) {
             newList.splice(position, 0, newVM);
         } else {
@@ -111,24 +107,24 @@ export namespace Creation {
         }
 
         const result = {
-            ...prevState,
+            ...arg.prevState,
             cellVMs: newList
         };
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
-            queueAnother(actionCreators.focusCell(newVM.cell.id));
+            arg.queueAnother(actionCreators.focusCell(newVM.cell.id));
         });
 
         return result;
     }
 
-    export function insertBelow(prevState: IMainState, payload: ICellAction, queueAnother: QueueAnotherFunc): IMainState {
+    export function insertBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const newVM = prepareCellVM(createEmptyCell(uuid(), null));
-        const newList = [...prevState.cellVMs];
+        const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        const position = prevState.cellVMs.findIndex(c => c.cell.id === payload.cellId);
+        const position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (position >= 0) {
             newList.splice(position + 1, 0, newVM);
         } else {
@@ -136,41 +132,41 @@ export namespace Creation {
         }
 
         const result = {
-            ...prevState,
+            ...arg.prevState,
             cellVMs: newList
         };
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
-            queueAnother(actionCreators.focusCell(newVM.cell.id));
+            arg.queueAnother(actionCreators.focusCell(newVM.cell.id));
         });
 
         return result;
     }
 
-    export function insertAboveFirst(prevState: IMainState, queueAnother: QueueAnotherFunc): IMainState {
+    export function insertAboveFirst(arg: NativeEditorReducerArg): IMainState {
         // Get the first cell id
-        const firstCellId = prevState.cellVMs.length > 0 ? prevState.cellVMs[0].cell.id : undefined;
+        const firstCellId = arg.prevState.cellVMs.length > 0 ? arg.prevState.cellVMs[0].cell.id : undefined;
 
         // Do what an insertAbove does
-        return insertAbove(prevState, { cellId: firstCellId }, queueAnother);
+        return insertAbove({ ...arg, payload: { cellId: firstCellId } });
     }
 
-    export function addNewCell(prevState: IMainState, queueAnother: QueueAnotherFunc): IMainState {
+    export function addNewCell(arg: NativeEditorReducerArg): IMainState {
         // Do the same thing that an insertBelow does using the currently selected cell.
-        return insertBelow(prevState, { cellId: prevState.selectedCellId }, queueAnother);
+        return insertBelow({ ...arg, payload: { cellId: arg.prevState.selectedCellId } });
     }
 
-    export function startCell(prevState: IMainState, cell: ICell): IMainState {
-        return updateOrAdd(prevState, cell);
+    export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
+        return updateOrAdd(arg);
     }
 
-    export function updateCell(prevState: IMainState, cell: ICell): IMainState {
-        return updateOrAdd(prevState, cell);
+    export function updateCell(arg: NativeEditorReducerArg<ICell>): IMainState {
+        return updateOrAdd(arg);
     }
 
-    export function finishCell(prevState: IMainState, cell: ICell): IMainState {
-        return updateOrAdd(prevState, cell);
+    export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
+        return updateOrAdd(arg);
     }
 
 }

@@ -4,16 +4,17 @@
 
 import { IMainState } from '../../../interactive-common/mainState';
 import { ICellAction } from '../actions';
+import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Focus {
-    export function focusCell(prevState: IMainState, payload: ICellAction): IMainState {
-        const newVMs = [...prevState.cellVMs];
+    export function focusCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const newVMs = [...arg.prevState.cellVMs];
 
         // Focus one cell and unfocus another. Focus should always gain selection too.
-        const addFocusIndex = prevState.cellVMs.findIndex(c => c.cell.id === payload.cellId);
-        let removeFocusIndex = prevState.cellVMs.findIndex(c => c.cell.id === prevState.focusedCellId);
+        const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        let removeFocusIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.focusedCellId);
         if (removeFocusIndex < 0) {
-            removeFocusIndex = prevState.cellVMs.findIndex(c => c.cell.id === prevState.selectedCellId);
+            removeFocusIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
         }
         if (addFocusIndex >= 0) {
             newVMs[addFocusIndex] = { ...newVMs[addFocusIndex], focused: true, selected: true };
@@ -22,25 +23,49 @@ export namespace Focus {
             newVMs[removeFocusIndex] = { ...newVMs[removeFocusIndex], focused: false, selected: false };
         }
         return {
-            ...prevState,
+            ...arg.prevState,
             cellVMs: newVMs,
-            focusedCellId: payload.cellId,
-            selectedCellId: payload.cellId
+            focusedCellId: arg.payload.cellId,
+            selectedCellId: arg.payload.cellId
         };
     }
 
-    export function unfocusCell(prevState: IMainState): IMainState {
-        const newVMs = [...prevState.cellVMs];
+    export function unfocusCell(arg: NativeEditorReducerArg): IMainState {
+        const newVMs = [...arg.prevState.cellVMs];
 
         // Unfocus the currently focused cell.
-        const removeFocusIndex = prevState.cellVMs.findIndex(c => c.cell.id === prevState.focusedCellId);
+        const removeFocusIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.focusedCellId);
         if (removeFocusIndex >= 0) {
             newVMs[removeFocusIndex] = { ...newVMs[removeFocusIndex], focused: false };
         }
         return {
-            ...prevState,
+            ...arg.prevState,
             cellVMs: newVMs,
             focusedCellId: undefined
+        };
+    }
+
+    export function selectCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const newVMs = [...arg.prevState.cellVMs];
+
+        // Select one cell and unselect another.
+        const addIndex = newVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        const removeIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
+        if (addIndex >= 0) {
+            newVMs[addIndex] = {
+                ...newVMs[addIndex],
+                focused: arg.prevState.focusedCellId !== undefined && arg.prevState.focusedCellId === arg.prevState.selectedCellId,
+                selected: true
+            };
+        }
+        if (removeIndex >= 0) {
+            newVMs[removeIndex] = { ...newVMs[removeIndex], focused: false, selected: false };
+        }
+        return {
+            ...arg.prevState,
+            cellVMs: newVMs,
+            focusedCellId: arg.prevState.focusedCellId !== undefined ? arg.payload.cellId : undefined,
+            selectedCellId: arg.payload.cellId
         };
     }
 }

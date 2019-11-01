@@ -69,7 +69,7 @@ export type IMainState = {
     loadTotal?: number;
     skipDefault?: boolean;
     testMode?: boolean;
-    sendMessage<M, T extends keyof M>(type: T, payload?: M[T]): void;
+    codeTheme: string;
 };
 
 export interface IFont {
@@ -91,16 +91,15 @@ const darkStyle = `
 `;
 
 // This function generates test state when running under a browser instead of inside of
-export function generateTestState(inputBlockToggled: (id: string) => void, filePath: string = '', editable: boolean = false): IMainState {
+export function generateTestState(filePath: string = '', editable: boolean = false): IMainState {
     return {
-        cellVMs: generateVMs(inputBlockToggled, filePath, editable),
+        cellVMs: generateVMs(filePath, editable),
         editCellVM: createEditableCellVM(1),
         busy: false,
         skipNextScroll: false,
         undoStack: [],
         redoStack: [],
         submittedText: false,
-        history: new InputHistory(),
         rootStyle: darkStyle,
         tokenizerLoaded: true,
         editorOptions: {},
@@ -127,7 +126,8 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         font: {
             size: 14,
             family: 'Consolas, \'Courier New\', monospace'
-        }
+        },
+        codeTheme: 'Foo'
     };
 }
 
@@ -156,7 +156,6 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         inputBlockShow: true,
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
-        inputBlockToggled: noop,
         selected: false,
         focused: false
     };
@@ -204,10 +203,10 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
     };
 }
 
-function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, editable: boolean): ICellViewModel[] {
+function generateVMs(filePath: string, editable: boolean): ICellViewModel[] {
     const cells = generateCells(filePath, 10);
     return cells.map((cell: ICell) => {
-        const vm = createCellVM(cell, undefined, inputBlockToggled, editable);
+        const vm = createCellVM(cell, undefined, editable);
         vm.useQuickEdit = false;
         return vm;
     });

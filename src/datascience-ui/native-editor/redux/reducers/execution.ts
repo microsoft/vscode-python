@@ -8,7 +8,7 @@ import { CellState, ICell } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { getSettings } from '../../../react-common/settingsReactSide';
 import { IExecuteAction, IExecuteAllAction } from '../actions';
-import { Helpers } from './helpers';
+import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Execution {
     function modifyStateForCellExecute(prevState: IMainState, index: number, code: string | undefined): IMainState {
@@ -36,35 +36,44 @@ export namespace Execution {
         return prevState;
     }
 
-    export function executeCell(prevState: IMainState, payload: IExecuteAction): IMainState {
-        const index = prevState.cellVMs.findIndex(c => c.cell.id === payload.cellId);
+    export function executeCell(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
 
         // Generate a new state based on the cell type.
-        const newState = modifyStateForCellExecute(prevState, index, payload.code);
+        const newState = modifyStateForCellExecute(arg.prevState, index, arg.payload.code);
 
         // Post a message to the other side to reexecute
-        if (payload.cellId && payload.code) {
-            Helpers.postMessage(newState, InteractiveWindowMessages.ReExecuteCell, { code: payload.code, id: payload.cellId });
+        if (arg.payload.cellId && arg.payload.code) {
+            arg.postMessage(InteractiveWindowMessages.ReExecuteCell, { code: arg.payload.code, id: arg.payload.cellId });
         }
 
-        return prevState;
+        return newState;
     }
 
-    export function executeAllCells(prevState: IMainState, payload: IExecuteAllAction): IMainState {
+    export function executeAllCells(arg: NativeEditorReducerArg<IExecuteAllAction>): IMainState {
         // Go through all cells and reexecute them. We only want a single state update though.
-        if (payload.codes && payload.codes.length) {
-            const result = payload.codes.reduce<IMainState>((p, c, i) => modifyStateForCellExecute(p, i, c), prevState);
+        if (arg.payload.codes && arg.payload.codes.length) {
+            const result = arg.payload.codes.reduce<IMainState>((p, c, i) => modifyStateForCellExecute(p, i, c), arg.prevState);
 
             // However we want to send a message for each
             result.cellVMs.filter(c => c.cell.data.cell_type === 'code').forEach(
-                vm => Helpers.postMessage(
-                    result,
+                vm => arg.postMessage(
                     InteractiveWindowMessages.ReExecuteCell,
                     { code: concatMultilineStringInput(vm.cell.data.source), id: vm.cell.id }));
 
             return result;
         }
 
-        return prevState;
+        return arg.prevState;
+    }
+
+    export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
+        const newList = arg.prevState.cellVMs.map(cellVM => {
+            return { ...cellVM, cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } } };
+        });
+        return {
+            ...arg.prevState,
+            cellVMs: newList
+        };
     }
 }

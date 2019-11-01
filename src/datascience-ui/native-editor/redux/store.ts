@@ -3,14 +3,16 @@
 'use strict';
 import { Reducer } from 'redux';
 
+import { Identifiers } from '../../../client/datascience/constants';
+import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
-import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
+import { combineReducers, createAsyncStore, PostMessageFunc, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getSettings } from '../../react-common/settingsReactSide';
-import { INativeEditorActionMapping } from './actions';
+import { INativeEditorActionMapping } from './mapping';
 import { reducerMap } from './reducers';
 
-function generateDefaultState(skipDefault: boolean, baseTheme: string, postOffice: PostOffice): IMainState {
+function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainState {
     return {
         // tslint:disable-next-line: no-typeof-undefined
         skipDefault,
@@ -35,17 +37,25 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string, postOffic
             size: 14,
             family: 'Consolas, \'Courier New\', monospace'
         },
-        sendMessage: postOffice.sendMessage.bind(postOffice)
+        codeTheme: Identifiers.GeneratedThemeName
     };
 }
 
 function generateRootReducer(skipDefault: boolean, baseTheme: string, postOffice: PostOffice):
     Reducer<IMainState, QueuableAction<INativeEditorActionMapping>> {
     // First create our default state.
-    const defaultState = generateDefaultState(skipDefault, baseTheme, postOffice);
+    const defaultState = generateDefaultState(skipDefault, baseTheme);
+
+    // Extract out a post message function
+    const postMessage: PostMessageFunc<IInteractiveWindowMapping> = (type, payload) => {
+        setTimeout(() => postOffice.sendMessage<IInteractiveWindowMapping>(type, payload));
+    };
 
     // Then combine that with our map of state change message to reducer
-    return combineReducers<IMainState, INativeEditorActionMapping>(defaultState, reducerMap);
+    return combineReducers<IMainState, INativeEditorActionMapping>(
+        defaultState,
+        postMessage,
+        reducerMap);
 }
 
 export function createStore(skipDefault: boolean, baseTheme: string) {

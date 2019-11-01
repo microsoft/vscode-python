@@ -3,6 +3,7 @@
 'use strict';
 import { Action, AnyAction, applyMiddleware, createStore, Middleware, Reducer } from 'redux';
 import { logger } from 'redux-logger';
+import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 // tslint:disable-next-line: interface-name
 interface TypedAnyAction<T> extends Action<T> {
@@ -10,22 +11,41 @@ interface TypedAnyAction<T> extends Action<T> {
     // tslint:disable-next-line: no-any
     [extraProps: string]: any;
 }
+export type QueueAnotherFunc<T> = (nextAction: Action<T>) => void;
+export type QueuableAction<M> = TypedAnyAction<keyof M> & { queueAction: QueueAnotherFunc<keyof M> };
+export type PostMessageFunc<M, T extends keyof M = keyof M> = (type: T, payload?: M[keyof M]) => void;
+export type ReducerArg<S, AT, T> = T extends null | undefined ?
+    {
+        prevState: S;
+        postMessage: PostMessageFunc<IInteractiveWindowMapping>;
+        queueAnother: QueueAnotherFunc<AT>;
+    } :
+    {
+        prevState: S;
+        postMessage: PostMessageFunc<IInteractiveWindowMapping>;
+        queueAnother: QueueAnotherFunc<AT>;
+        payload: T;
+    };
 
-export type QueuableAction<M> = TypedAnyAction<keyof M> & { queueAction(nextAction: TypedAnyAction<keyof M>): void };
+export type ReducerFunc<S, AT, T> = (args: ReducerArg<S, AT, T>) => S;
 
-// combineReducers should take in something that is both an action and an action type to func key map
-export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, QueuableAction<M>> {
+/**
+ * CombineReducers takes in a map of action.type to func and creates a reducer that will call the appropriate function for
+ * each action
+ * @param defaultState - original state to use for the store
+ * @param postMessage - function passed in to use to post messages back to the extension
+ * @param map - map of action type to func to call
+ */
+export function combineReducers<S, M>(defaultState: S, postMessage: PostMessageFunc<IInteractiveWindowMapping>, map: M): Reducer<S, QueuableAction<M>> {
     return (currentState: S = defaultState, action: QueuableAction<M>) => {
         const func = map[action.type];
         if (typeof func === 'function') {
-            // Call the function with assumed arguments. Not sure how to get it to
-            // pick up the type from the map at compile time. However we know that
-            // if there are only two arguments, don't pass the action.
-            if (func.length === 2) {
-                return func(currentState, action.queueAction);
-            } else {
-                return func(currentState, action, action.queueAction);
-            }
+            // Call the reducer, giving it
+            // - current state
+            // - function to potentially post stuff to the other side
+            // - queue function to dispatch again
+            // - payload containing the data from the action
+            return func({ prevState: currentState, postMessage, queueAnother: action.queueAction, payload: action });
         } else {
             return currentState;
         }
