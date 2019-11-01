@@ -12,7 +12,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { noop } from '../../core';
 
 // tslint:disable-next-line: max-func-body-length
-suite('PythonExecutableService', () => {
+suite('PythonExecutionService', () => {
     let processService: TypeMoq.IMock<IProcessService>;
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let executionService: PythonExecutionService;
