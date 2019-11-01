@@ -1,7 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
@@ -10,6 +11,8 @@ import { IProcessService, StdErrError } from '../../../client/common/process/typ
 import { Architecture } from '../../../client/common/utils/platform';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { noop } from '../../core';
+
+use(chaiAsPromised);
 
 // tslint:disable-next-line: max-func-body-length
 suite('PythonExecutableService', () => {
@@ -217,11 +220,11 @@ suite('PythonExecutableService', () => {
         const moduleName = 'foo';
         const expectedArgs = ['-m', moduleName, ...args];
         const options = {};
-        processService.setup(p => p.exec(pythonPath, expectedArgs, options)).returns(() => Promise.resolve({ stdout: 'bar', stderr: `No module named ${moduleName}` }));
+        processService.setup(p => p.exec(pythonPath, expectedArgs, options)).returns(() => Promise.resolve({ stdout: 'bar', stderr: `Error: No module named ${moduleName}` }));
         processService.setup(p => p.exec(pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })).returns(() => Promise.reject(new StdErrError('not installed')));
 
         const result = executionService.execModule(moduleName, args, options);
 
-        expect(result).to.eventually.be.rejectedWith(`Module ${moduleName} not installed`);
+        expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
     });
 });
