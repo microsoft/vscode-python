@@ -351,9 +351,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     private renderOutput = (outputs: nbformat.IOutput[]): JSX.Element => {
         const buffer: JSX.Element[] = [];
-        const transformedList = outputs.map(this.transformOutput);
+        const transformedList = outputs.map(this.transformOutput.bind(this));
 
-        transformedList.forEach(transformed => {
+        transformedList.forEach((transformed, index) => {
             let mimetype = transformed.mimeType;
 
             // If that worked, use the transform
@@ -367,7 +367,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 // If we are not theming plots then wrap them in a white span
                 if (transformed.outputSpanClassName) {
                     buffer.push(
-                        <div role='group' onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
                             <span className={transformed.outputSpanClassName}>
                                 {transformed.extraButton}
                                 <Transform data={transformed.data} />
@@ -376,7 +376,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     );
                 } else {
                     buffer.push(
-                        <div role='group' onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
                             {transformed.extraButton}
                             <Transform data={transformed.data} />
                         </div>
@@ -390,7 +390,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     mimetype = 'unknown';
                 }
                 const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
-                buffer.push(<div>{str}</div>);
+                buffer.push(<div key={index}>{str}</div>);
             }
         });
 
@@ -404,6 +404,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             style.maxHeight = `${this.props.maxTextSize}px`;
         }
 
-        return <div style={style}>{buffer}</div>;
+        return <div key={0} style={style}>{buffer}</div>;
     }
 }
