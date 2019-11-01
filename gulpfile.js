@@ -266,7 +266,7 @@ gulp.task('installPtvsdWheels', async () => {
         });
     if (!success) {
         console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
     }
 });
 
@@ -283,7 +283,7 @@ gulp.task('installOldPtvsd', async () => {
         });
     if (!success) {
         console.info("Failed to install PTVSD using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
     }
 });
 

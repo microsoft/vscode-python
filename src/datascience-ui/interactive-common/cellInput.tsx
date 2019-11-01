@@ -12,7 +12,7 @@ import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { Code } from './code';
 import { InputHistory } from './inputHistory';
-import { ICellViewModel, IFont } from './mainState';
+import { CursorPos, ICellViewModel, IFont } from './mainState';
 import { Markdown } from './markdown';
 
 // tslint:disable-next-line: no-require-importss
@@ -56,19 +56,19 @@ export class CellInput extends React.Component<ICellInputProps> {
 
     public componentDidUpdate(prevProps: ICellInputProps) {
         if (this.props.cellVM.focused && !prevProps.cellVM.focused) {
-            this.giveFocus();
+            this.giveFocus(CursorPos.Current);
         }
     }
 
-    public giveFocus() {
+    public giveFocus(cursorPos: CursorPos) {
         // This depends upon what type of cell we are.
         if (this.props.cellVM.cell.data.cell_type === 'code') {
             if (this.codeRef.current) {
-                this.codeRef.current.giveFocus();
+                this.codeRef.current.giveFocus(cursorPos);
             }
         } else {
             if (this.markdownRef.current) {
-                this.markdownRef.current.giveFocus();
+                this.markdownRef.current.giveFocus(cursorPos);
             }
             this.setState({ showingMarkdownEditor: true });
         }

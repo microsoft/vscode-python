@@ -31,6 +31,12 @@ export interface ICellViewModel {
     inputBlockToggled(id: string): void;
 }
 
+export enum CursorPos {
+    Top,
+    Bottom,
+    Current
+}
+
 export interface IMainState {
     cellVMs: ICellViewModel[];
     editCellVM: ICellViewModel | undefined;
@@ -43,8 +49,8 @@ export interface IMainState {
     rootStyle?: string;
     rootCss?: string;
     font: IFont;
-    theme?: string;
-    forceDark?: boolean;
+    vscodeThemeName?: string;
+    baseTheme: string;
     monacoTheme?: string;
     tokenizerLoaded?: boolean;
     knownDark: boolean;
@@ -86,7 +92,7 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
     return {
         cellVMs: generateVMs(inputBlockToggled, filePath, editable),
         editCellVM: createEditableCellVM(1),
-        busy: true,
+        busy: false,
         skipNextScroll: false,
         undoStack: [],
         redoStack: [],
@@ -97,6 +103,7 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         editorOptions: {},
         currentExecutionCount: 0,
         knownDark: false,
+        baseTheme: 'vscode-light',
         variablesVisible: false,
         variables: [
             {

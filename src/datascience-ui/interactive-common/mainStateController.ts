@@ -47,7 +47,7 @@ export interface IMainStateControllerProps {
     hasEdit: boolean;
     skipDefault: boolean;
     testMode: boolean;
-    expectingDark: boolean;
+    baseTheme: string;
     defaultEditable: boolean;
     enableGather: boolean;
     setState(state: {}, callback: () => void): void;
@@ -83,6 +83,7 @@ export class MainStateController implements IMessageHandler {
             pendingVariableCount: 0,
             debugging: false,
             knownDark: false,
+            baseTheme: 'vscode-light',
             variablesVisible: false,
             editCellVM: this.props.hasEdit ? createEditableCellVM(1) : undefined,
             enableGather: this.props.enableGather,
@@ -125,8 +126,8 @@ export class MainStateController implements IMessageHandler {
 
         // Get our monaco theme and css if not running a test, because these make everything async too
         if (!this.props.testMode) {
-            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
-            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.baseTheme !== 'vscode-light' });
+            this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.baseTheme !== 'vscode-light' });
         }
     }
 
@@ -398,7 +399,8 @@ export class MainStateController implements IMessageHandler {
 
     public clearAllOutputs = () => {
         const newList = this.pendingState.cellVMs.map(cellVM => {
-            return immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
+            const updatedVm = immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
+            return immutable.removeIn(updatedVm, ['cell', 'data', 'execution_count']);
         });
         this.setState({
             cellVMs: newList
@@ -532,6 +534,11 @@ export class MainStateController implements IMessageHandler {
             // Save the whole thing in our state.
             this.setState({ selectedCellId: cellId, focusedCellId: cellId, cellVMs: newVMs });
         }
+
+        // Send out a message that we received a focus change
+        if (this.props.testMode && cellId) {
+            this.sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId });
+        }
     }
 
     public selectCell = (cellId: string, focusedCellId?: string) => {
@@ -559,7 +566,11 @@ export class MainStateController implements IMessageHandler {
         const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0 && this.pendingState.cellVMs[index].cell.data.cell_type !== newType) {
             const cellVMs = [...this.pendingState.cellVMs];
-            cellVMs[index] = immutable.updateIn(this.pendingState.cellVMs[index], ['cell', 'data', 'cell_type'], () => newType);
+            const current = this.pendingState.cellVMs[index];
+            const newSource = current.focused ? this.getMonacoEditorContents(cellId) : current.cell.data.source;
+            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.executing, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
+            // tslint:disable-next-line: no-any
+            cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
             this.setState({ cellVMs });
             if (newType === 'code') {
                 this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: cellVMs[index].cell, index, code: concatMultilineStringInput(cellVMs[index].cell.data.source), codeCellAboveId: this.firstCodeCellAbove(cellId) });
@@ -636,7 +647,7 @@ export class MainStateController implements IMessageHandler {
             if (index >= 0) {
                 // Update our input cell to be in progress again and clear outputs
                 const newVMs = [...this.pendingState.cellVMs];
-                newVMs[index] = { ...inputCell, cell: { ...inputCell.cell, state: CellState.executing, data: { ...inputCell.cell.data, outputs: [] } } };
+                newVMs[index] = { ...inputCell, cell: { ...inputCell.cell, state: CellState.executing, data: { ...inputCell.cell.data, source: code, outputs: [] } } };
                 this.setState({
                     cellVMs: newVMs
                 });
@@ -713,14 +724,28 @@ export class MainStateController implements IMessageHandler {
     }
 
     public renderUpdate(newState: {}) {
-        const oldCount = this.renderedState.pendingVariableCount;
-
         // This method should be called during the render stage of anything
         // using this state Controller. That's because after shouldComponentUpdate
         // render is next and at this point the state has been set.
         // See https://reactjs.org/docs/react-component.html
         // Otherwise we set the state in the callback during setState and this can be
         // too late for any render code to use the stateController.
+
+        const oldCount = this.renderedState.pendingVariableCount;
+
+        // If the new state includes a finished cell that wasn't finished before, and we're in test
+        // mode, send another message. We use this to determine when rendering is 'finished' for a cell.
+        if (this.props.testMode && 'cellVMs' in newState) {
+            const renderedFinished = this.pendingState.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
+            const previousFinished = this.renderedState.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
+            if (renderedFinished.length > previousFinished.length) {
+                const diff = renderedFinished.filter(r => previousFinished.indexOf(r) < 0);
+                // Send async so happens after the render is actually finished.
+                setTimeout(() => this.sendMessage(InteractiveWindowMessages.RenderComplete, { ids: diff }), 1);
+            }
+        }
+
+        // Update the actual rendered state (it should be used by rendering)
         this.renderedState = { ...this.renderedState, ...newState };
 
         // If the new state includes any cellVM changes, send an update to the other side
@@ -732,6 +757,7 @@ export class MainStateController implements IMessageHandler {
         if (this.renderedState.pendingVariableCount === 0 && oldCount !== 0) {
             setTimeout(() => this.sendMessage(InteractiveWindowMessages.VariablesComplete), 1);
         }
+
     }
 
     public getState(): IMainState {
@@ -783,6 +809,20 @@ export class MainStateController implements IMessageHandler {
         }
 
         return cellVM;
+    }
+
+    protected getMonacoEditorContents(cellId: string): string | undefined {
+        const index = this.findCellIndex(cellId);
+        if (index >= 0) {
+            // Get the model for the monaco editor
+            const monacoId = this.getMonacoId(cellId);
+            if (monacoId) {
+                const model = monacoEditor.editor.getModels().find(m => m.id === monacoId);
+                if (model) {
+                    return model.getValue().replace(/\r/g, '');
+                }
+            }
+        }
     }
 
     protected onCodeLostFocus(_cellId: string) {
@@ -873,7 +913,8 @@ export class MainStateController implements IMessageHandler {
         return undefined;
     }
 
-    private computeEditorOptions(): monacoEditor.editor.IEditorOptions {
+    // tslint:disable:no-any
+    protected computeEditorOptions(): monacoEditor.editor.IEditorOptions {
         const intellisenseOptions = getSettings().intellisenseOptions;
         const extraSettings = getSettings().extraSettings;
         if (intellisenseOptions && extraSettings) {
@@ -895,8 +936,13 @@ export class MainStateController implements IMessageHandler {
                 parameterHints: {
                     enabled: intellisenseOptions.parameterHintsEnabled
                 },
-                cursorStyle: extraSettings.editorCursor,
-                cursorBlinking: extraSettings.editorCursorBlink
+                cursorStyle: extraSettings.editor.cursor,
+                cursorBlinking: extraSettings.editor.cursorBlink,
+                autoClosingBrackets: extraSettings.editor.autoClosingBrackets as any,
+                autoClosingQuotes: extraSettings.editor.autoClosingQuotes as any,
+                autoIndent: extraSettings.editor.autoIndent as any,
+                autoSurround: extraSettings.editor.autoSurround as any,
+                fontLigatures: extraSettings.editor.fontLigatures
             };
         }
 
@@ -949,7 +995,7 @@ export class MainStateController implements IMessageHandler {
         if (!this.props.testMode) {
             this.setState(
                 {
-                    forceDark: newDark
+                    baseTheme: newDark ? 'vscode-dark' : 'vscode-light'
                 }
             );
         }
@@ -984,7 +1030,7 @@ export class MainStateController implements IMessageHandler {
             // Update theme if necessary
             const newSettings = JSON.parse(payload as string);
             const dsSettings = newSettings as IDataScienceExtraSettings;
-            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.pendingState.theme) {
+            if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.pendingState.vscodeThemeName) {
                 // User changed the current theme. Rerender
                 this.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
                 this.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.computeKnownDark() });
@@ -1115,24 +1161,19 @@ export class MainStateController implements IMessageHandler {
             // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
             // if (concatMultilineStringInput(this.pendingState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
 
-            // If cell state changes, then update just the state and the cell data (excluding source).
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
-            if (this.pendingState.cellVMs[index].cell.state !== cell.state) {
-                newVMs[index] = {
-                    ...newVMs[index],
-                    cell: {
-                        ...newVMs[index].cell,
-                        state: cell.state,
-                        data: {
-                            ...cell.data,
-                            source: newVMs[index].cell.data.source
-                        }
+            newVMs[index] = {
+                ...newVMs[index],
+                cell: {
+                    ...newVMs[index].cell,
+                    state: cell.state,
+                    data: {
+                        ...cell.data,
+                        source: newVMs[index].cell.data.source
                     }
-                };
-            } else {
-                newVMs[index] = { ...newVMs[index], cell: cell };
-            }
+                }
+            };
 
             this.setState({
                 cellVMs: newVMs,
@@ -1305,7 +1346,7 @@ export class MainStateController implements IMessageHandler {
                     size: fontSize,
                     family: fontFamily
                 },
-                theme: response.theme,
+                vscodeThemeName: response.theme,
                 knownDark: computedKnownDark
             });
         }

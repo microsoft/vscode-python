@@ -346,7 +346,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
         if (this.notebook && !this.restartingKernel) {
-            const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus(), undefined, undefined, this);
+            const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus(), true, undefined, undefined, this);
 
             const settings = this.configuration.getSettings();
             const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
@@ -463,7 +463,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         // Start a status item
-        const status = this.setStatus(localize.DataScience.executingCode());
+        const status = this.setStatus(localize.DataScience.executingCode(), false);
 
         // Transmit this submission to all other listeners (in a live share session)
         if (!id) {
@@ -662,8 +662,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    protected setStatus = (message: string): Disposable => {
-        const result = this.statusProvider.set(message, undefined, undefined, this);
+    protected setStatus = (message: string, showInWebView: boolean): Disposable => {
+        const result = this.statusProvider.set(message, showInWebView, undefined, undefined, this);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
     }
@@ -718,6 +718,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // updates their install and we just fail again because the load promise is the same.
             await this.closeBecauseOfFailure(exc);
 
+            // Also reset the load promise. Otherwise we just keep hitting the same error.
+            this.loadPromise = undefined;
+
+            // Also tell jupyter execution to reset its search. Otherwise we've just cached
+            // the failure there too
+            await this.jupyterExecution.refreshCommands();
+
+            // Finally throw the exception so the user can do something about it.
             throw exc;
         }
     }
@@ -725,7 +733,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async startServerImpl(): Promise<void> {
         // Status depends upon if we're about to connect to existing server or not.
         const status = (await this.jupyterExecution.getServer(await this.getNotebookOptions())) ?
-            this.setStatus(localize.DataScience.connectingToJupyter()) : this.setStatus(localize.DataScience.startingJupyter());
+            this.setStatus(localize.DataScience.connectingToJupyter(), true) : this.setStatus(localize.DataScience.startingJupyter(), true);
 
         // Check to see if we support ipykernel or not
         try {
@@ -891,7 +899,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.finishOutstandingCells();
 
         // Set our status
-        const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), undefined, undefined, this);
+        const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), true, undefined, undefined, this);
 
         try {
             if (this.notebook) {
@@ -943,7 +951,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async reloadWithNew(): Promise<void> {
-        const status = this.setStatus(localize.DataScience.startingJupyter());
+        const status = this.setStatus(localize.DataScience.startingJupyter(), true);
         try {
             // Not the same as reload, we need to actually wait for the server.
             await this.stopServer();

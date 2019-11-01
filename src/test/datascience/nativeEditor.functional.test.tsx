@@ -13,7 +13,8 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { IFileSystem } from '../../client/common/platform/types';
+import { createDeferred } from '../../client/common/utils/async';
 import { createTemporaryFile } from '../../client/common/utils/fs';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
@@ -37,6 +38,7 @@ import {
     addCell,
     closeNotebook,
     createNewEditor,
+    focusCell,
     getNativeCellResults,
     mountNativeWebView,
     openEditor,
@@ -52,11 +54,16 @@ import {
     escapePath,
     findButton,
     getLastOutputCell,
+    getNativeFocusedEditor,
+    getOutputCell,
+    injectCode,
     isCellFocused,
     isCellSelected,
     srcDirectory,
+    typeCode,
     verifyCellIndex,
     verifyHtmlOnCell,
+    waitForMessage,
     waitForMessageResponse
 } from './testHelpers';
 
@@ -113,9 +120,9 @@ suite('DataScience Native Editor', () => {
             await createNewEditor(ioc);
 
             // Add a cell into the UI and wait for it to render
-            await addCell(wrapper, 'a=1\na');
+            await addCell(wrapper, ioc, 'a=1\na');
 
-            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', CellPosition.Last);
+            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
         }, () => { return ioc; });
 
         runMountedTest('Mime Types', async (wrapper) => {
@@ -159,16 +166,16 @@ for _ in range(50):
                 return Promise.resolve({ result: result, haveMore: loops > 0 });
             });
 
-            await addCell(wrapper, badPanda, true);
+            await addCell(wrapper, ioc, badPanda, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-            await addCell(wrapper, goodPanda, true);
+            await addCell(wrapper, ioc, goodPanda, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
-            await addCell(wrapper, matPlotLib, true, 6);
+            await addCell(wrapper, ioc, matPlotLib, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-            await addCell(wrapper, spinningCursor, true, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 50));
+            await addCell(wrapper, ioc, spinningCursor, true);
             verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
         }, () => { return ioc; });
 
@@ -190,7 +197,7 @@ for _ in range(50):
             await createNewEditor(ioc);
 
             // Get a cell into the list
-            await addCell(wrapper, 'a=1\na');
+            await addCell(wrapper, ioc, 'a=1\na');
 
             // find the buttons on the cell itself
             let cell = getLastOutputCell(wrapper, 'NativeCell');
@@ -237,7 +244,7 @@ for _ in range(50):
 
             // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
             await createNewEditor(ioc);
-            await addCell(wrapper, 'a=1\na');
+            await addCell(wrapper, ioc, 'a=1\na');
 
             // Export should cause exportCalled to change to true
             const exportButton = findButton(wrapper, NativeEditor, 6);
@@ -270,6 +277,9 @@ for _ in range(50):
         }, () => { return ioc; });
 
         runMountedTest('Startup and shutdown', async (wrapper) => {
+            // Stub the `stat` method to return a dummy value.
+            sinon.stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat').resolves({mtime: 0} as any);
+
             addMockData(ioc, 'b=2\nb', 2);
             addMockData(ioc, 'c=3\nc', 3);
 
@@ -309,10 +319,14 @@ for _ in range(50):
         );
 
         test('Failure', async () => {
+            let fail = true;
             // Make a dummy class that will fail during launch
             class FailedProcess extends JupyterExecutionFactory {
                 public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
-                    return Promise.resolve(undefined);
+                    if (fail) {
+                        return Promise.resolve(undefined);
+                    }
+                    return super.getUsableJupyterPython();
                 }
             }
             ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
@@ -320,10 +334,23 @@ for _ in range(50):
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountNativeWebView(ioc);
             await createNewEditor(ioc);
-            await addCell(wrapper, 'a=1\na', true, 2);
+            await addCell(wrapper, ioc, 'a=1\na', true);
 
             // Cell should not have the output
-            verifyHtmlOnCell(wrapper, 'NativeCell', 'Jupyter cannot be started', CellPosition.Last);
+            verifyHtmlOnCell(wrapper, 'NativeCell', 'Jupyter cannot be started', 1);
+
+            // Fix failure and try again
+            fail = false;
+            const cell = getOutputCell(wrapper, 'NativeCell', 1);
+            assert.ok(cell, 'Cannot find the first cell');
+            const imageButtons = cell!.find(ImageButton);
+            assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+            const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
+            assert.equal(runButton.length, 1, 'No run button found');
+            const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
+            runButton.simulate('click');
+            await update;
+            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 1);
         });
     });
 
@@ -429,7 +456,7 @@ for _ in range(50):
  "nbformat_minor": 2
 }`;
         const addedJSON = JSON.parse(baseFile);
-        addedJSON.cells.splice(0, 0, {
+        addedJSON.cells.splice(3, 0, {
             cell_type: 'code',
             execution_count: null,
             metadata: {},
@@ -540,12 +567,20 @@ for _ in range(50):
         });
 
         suite('Keyboard Shortcuts', () => {
+            const originalPlatform = window.navigator.platform;
+            Object.defineProperty(window.navigator, 'platform', ((value: string) => {
+                return {
+                    get: () => value,
+                    set: (v: string) => value = v
+                };
+            })(originalPlatform));
             setup(async function() {
+                (window.navigator as any).platform = originalPlatform;
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
             });
-
+            teardown(() => (window.navigator as any).platform = originalPlatform);
             test('Traverse cells by using ArrowUp and ArrowDown, k and j', async () => {
                 const keyCodesAndPositions = [
                     // When we press arrow down in the first cell, then second cell gets selected.
@@ -720,6 +755,32 @@ for _ in range(50):
                 assert.equal(wrapper.find('NativeCell').length, 4);
             });
 
+            test('Auto brackets work', async () => {
+                // Initially 3 cells.
+                assert.equal(wrapper.find('NativeCell').length, 3);
+
+                // Give focus
+                const update = waitForUpdate(wrapper, NativeEditor, 1);
+                clickCell(1);
+                simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
+                await update;
+
+                // The first cell should be focused.
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
+
+                // Type in something with brackets
+                await addCell(wrapper, ioc, '', false);
+                const editorEnzyme = getNativeFocusedEditor(wrapper);
+                typeCode(editorEnzyme, 'a(');
+
+                // Verify cell content
+                const reactEditor = editorEnzyme!.instance() as MonacoEditor;
+                const editor = reactEditor.state.editor;
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'a()', 'Text does not have brackets');
+                }
+            });
+
             test('Pressing \'d\' on a selected cell twice deletes the cell', async () => {
                 // Initially 3 cells.
                 assert.equal(wrapper.find('NativeCell').length, 3);
@@ -841,6 +902,14 @@ for _ in range(50):
                     0
                 );
 
+                // Force focus so we can change the text. Use special method
+                // because we can't key down on the editor
+                await focusCell(ioc, wrapper, 1);
+
+                // Change the markdown
+                let editor = getNativeFocusedEditor(wrapper);
+                injectCode(editor, 'foo');
+
                 // Switch back to code mode.
                 // At this moment, there's no cell input element, hence send key strokes to the wrapper.
                 const wrapperElement = wrapper
@@ -858,6 +927,11 @@ for _ in range(50):
                         .find(MonacoEditor).length,
                     1
                 );
+
+                // Confirm editor still has the same text
+                editor = getNativeFocusedEditor(wrapper);
+                const monacoEditor = editor!.instance() as MonacoEditor;
+                assert.equal('foo', monacoEditor.state.editor!.getValue(), 'Changing cell type lost input');
             });
 
             test('Test undo using the key \'z\'', async () => {
@@ -895,10 +969,11 @@ for _ in range(50):
                 }
             });
 
-            test('Test save using the key \'s\'', async () => {
+            test('Test save using the key \'ctrl+s\' on Windows', async () => {
+                (window.navigator as any).platform = 'Win';
                 clickCell(0);
 
-                await addCell(wrapper, 'a=1\na', true);
+                await addCell(wrapper, ioc, 'a=1\na', true);
 
                 const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
                 const editor = notebookProvider.editors[0];
@@ -908,9 +983,66 @@ for _ in range(50):
 
                 simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
 
-                await waitForPromise(savedPromise.promise, 1_000);
+                await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
 
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+
+            test('Test save using the key \'ctrl+s\' on Mac', async () => {
+                (window.navigator as any).platform = 'Mac';
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
+
+                await expect(waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout')).to.eventually.be.rejected;
+                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
+            });
+
+            test('Test save using the key \'cmd+s\' on a Mac', async () => {
+                (window.navigator as any).platform = 'Mac';
+
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
+
+                await waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout');
+
+                assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
+            });
+            test('Test save using the key \'cmd+s\' on a Windows', async () => {
+                (window.navigator as any).platform = 'Win';
+
+                clickCell(0);
+
+                await addCell(wrapper, ioc, 'a=1\na', true);
+
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                editor.saved(() => savedPromise.resolve());
+
+                // CMD+s won't work on Windows.
+                simulateKeyPressOnCell(1, { code: 's', metaKey: true });
+
+                await expect(waitForCondition(() => savedPromise.promise.then(() => true).catch(() => false), 1_000, 'Timedout')).to.eventually.be.rejected;
+                assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
             });
         });
 
@@ -983,10 +1115,7 @@ for _ in range(50):
              */
             async function modifyNotebook() {
                 // (Add a cell into the UI and wait for it to render)
-                clickCell(0);
-                const update = waitForUpdate(wrapper, NativeEditor, 2);
-                simulateKeyPressOnCell(0, { code: 'a' });
-                await update;
+                await addCell(wrapper, ioc, 'a', false);
             }
 
             test('Auto save notebook every 1s', async () => {

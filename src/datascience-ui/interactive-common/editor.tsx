@@ -8,7 +8,7 @@ import { noop } from '../../client/common/utils/misc';
 import { IKeyboardEvent } from '../react-common/event';
 import { MonacoEditor } from '../react-common/monacoEditor';
 import { InputHistory } from './inputHistory';
-import { IFont } from './mainState';
+import { CursorPos, IFont } from './mainState';
 
 // tslint:disable-next-line: import-name
 export interface IEditorProps {
@@ -37,7 +37,6 @@ export interface IEditorProps {
 interface IEditorState {
     editor: monacoEditor.editor.IStandaloneCodeEditor | undefined;
     model: monacoEditor.editor.ITextModel | null;
-    visibleLineCount: number;
     forceMonaco: boolean;
 }
 
@@ -48,7 +47,7 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
 
     constructor(prop: IEditorProps) {
         super(prop);
-        this.state = {editor: undefined, model: null, visibleLineCount: 0, forceMonaco: false};
+        this.state = {editor: undefined, model: null, forceMonaco: false};
     }
 
     public componentWillUnmount = () => {
@@ -65,10 +64,16 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         );
     }
 
-    public giveFocus() {
-        const readOnly = this.props.testMode || this.props.readOnly;
+    public giveFocus(cursorPos: CursorPos) {
+        const readOnly = this.props.readOnly;
         if (this.state.editor && !readOnly) {
             this.state.editor.focus();
+        }
+        if (this.state.editor && cursorPos !== CursorPos.Current) {
+            const current = this.state.editor.getPosition();
+            const lineNumber = cursorPos === CursorPos.Top ? 1 : this.state.editor.getModel()!.getLineCount();
+            const column = current && current.lineNumber === lineNumber ? current.column : 1;
+            this.state.editor.setPosition({ lineNumber, column });
         }
     }
 
@@ -102,9 +107,6 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             lineNumbers: this.props.showLineNumbers ? 'on' : 'off',
             renderLineHighlight: 'none',
             highlightActiveIndentGuide: false,
-            autoIndent: true,
-            autoClosingBrackets: 'never',
-            autoClosingQuotes: 'never',
             renderIndentGuides: false,
             overviewRulerBorder: false,
             overviewRulerLanes: 0,
@@ -133,7 +135,6 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
                 options={options}
                 openLink={this.props.openLink}
                 ref={this.monacoRef}
-                lineCountChanged={this.visibleCountChanged}
             />
         );
     }
@@ -146,10 +147,6 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
     private onAreaEnter = (_event: React.MouseEvent<HTMLTextAreaElement, MouseEvent>) => {
         // Force switch to monaco
         this.setState({forceMonaco: true});
-    }
-
-    private visibleCountChanged = (newCount: number) => {
-        this.setState({visibleLineCount: newCount});
     }
 
     private editorDidMount = (editor: monacoEditor.editor.IStandaloneCodeEditor) => {
@@ -185,12 +182,15 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         }
     }
 
+    // tslint:disable-next-line: cyclomatic-complexity
     private onKeyDown = (e: monacoEditor.IKeyboardEvent) => {
         if (this.state.editor && this.state.model && this.monacoRef && this.monacoRef.current) {
-            const isSuggesting = this.monacoRef.current.isSuggesting();
             const cursor = this.state.editor.getPosition();
-            const isFirstLine = cursor !== null && cursor.lineNumber === 1;
-            const isLastLine = cursor !== null && cursor.lineNumber === this.state.model!.getLineCount();
+            const currentLine = this.monacoRef.current.getCurrentVisibleLine();
+            const visibleLineCount = this.monacoRef.current.getVisibleLineCount();
+            const isSuggesting = this.monacoRef.current.isSuggesting();
+            const isFirstLine = currentLine === 0;
+            const isLastLine = currentLine === visibleLineCount - 1;
             const isDirty = this.state.model!.getVersionId() > this.lastCleanVersionId;
 
             // See if we need to use the history or not

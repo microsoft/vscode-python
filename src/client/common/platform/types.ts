@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
-import { Disposable } from 'vscode';
+import { Disposable, FileStat } from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
@@ -38,6 +38,7 @@ export type TemporaryDirectory = { path: string } & Disposable;
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     directorySeparatorChar: string;
+    stat(filePath: string): Promise<FileStat>;
     objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
     fileExists(path: string): Promise<boolean>;
     fileExistsSync(path: string): boolean;

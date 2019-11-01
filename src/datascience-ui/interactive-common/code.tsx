@@ -8,7 +8,7 @@ import { InputHistory } from '../interactive-common/inputHistory';
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { Editor } from './editor';
-import { IFont } from './mainState';
+import { CursorPos, IFont } from './mainState';
 
 export interface ICodeProps {
     autoFocus: boolean;
@@ -79,15 +79,15 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         );
     }
 
-    public giveFocus() {
+    public giveFocus(cursorPos: CursorPos) {
         if (this.editorRef && this.editorRef.current) {
-            this.editorRef.current.giveFocus();
+            this.editorRef.current.giveFocus(cursorPos);
         }
     }
     private clickWatermark = (ev: React.MouseEvent<HTMLDivElement>) => {
         ev.stopPropagation();
         // Give focus to the editor
-        this.giveFocus();
+        this.giveFocus(CursorPos.Current);
     }
 
     private getWatermarkString = () : string => {

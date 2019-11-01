@@ -410,11 +410,13 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async setMatplotLibStyle(useDark: boolean): Promise<void> {
-        // Reset the matplotlib style based on if dark or not.
-        await this.executeSilently(useDark ?
-            'matplotlib.style.use(\'dark_background\')' :
-            `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
-
+        const settings = this.configService.getSettings().datascience;
+        if (settings.themeMatplotlibPlots && !settings.ignoreVscodeTheme) {
+            // Reset the matplotlib style based on if dark or not.
+            await this.executeSilently(useDark ?
+                'matplotlib.style.use(\'dark_background\')' :
+                `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
+        }
     }
 
     public async getCompletion(cellCode: string, offsetInCode: number, cancelToken?: CancellationToken): Promise<INotebookCompletion> {
