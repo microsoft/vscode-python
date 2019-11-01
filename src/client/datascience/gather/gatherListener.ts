@@ -1,7 +1,9 @@
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
-import { Event, EventEmitter, Uri } from 'vscode';
-import { IApplicationShell } from '../../common/application/types';
+import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
+import { IApplicationShell, IDocumentManager } from '../../common/application/types';
+import { PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -23,8 +25,9 @@ export class GatherListener implements IInteractiveWindowListener {
         @inject(INotebookEditorProvider) private ipynbProvider: INotebookEditorProvider,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
-        @inject(IConfigurationService) private configService: IConfigurationService
-
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IFileSystem) private fileSystem: IFileSystem
     ) {
         this.gatherLogger = new GatherLogger(this.gather, this.configService);
     }
@@ -92,6 +95,15 @@ export class GatherListener implements IInteractiveWindowListener {
 
     private gatherCodeInternal = async (cell: ICell) => {
         const slicedProgram = this.gather.gatherCode(cell);
+
+        if (this.configService.getSettings().datascience.gatherToScript) {
+            await this.showFile(slicedProgram, cell.file);
+        } else {
+            await this.showNotebook(slicedProgram);
+        }
+    }
+
+    private async showNotebook(slicedProgram: string) {
         if (slicedProgram) {
             let cells: ICell[] = [{
                 id: uuid(),
@@ -112,5 +124,34 @@ export class GatherListener implements IInteractiveWindowListener {
             const contents = JSON.stringify(notebook);
             await this.ipynbProvider.createNew(contents);
         }
+    }
+
+    private async showFile(slicedProgram: string, filename: string) {
+        // Don't want to open the gathered code on top of the interactive window
+        let viewColumn: ViewColumn | undefined;
+        const fileNameMatch = this.documentManager.visibleTextEditors.filter(textEditor => this.fileSystem.arePathsSame(textEditor.document.fileName, filename));
+        const definedVisibleEditors = this.documentManager.visibleTextEditors.filter(textEditor => textEditor.viewColumn !== undefined);
+        if (this.documentManager.visibleTextEditors.length > 0 && fileNameMatch.length > 0) {
+            // Original file is visible
+            viewColumn = fileNameMatch[0].viewColumn;
+        } else if (this.documentManager.visibleTextEditors.length > 0 && definedVisibleEditors.length > 0) {
+            // There is a visible text editor, just not the original file. Make sure viewColumn isn't undefined
+            viewColumn = definedVisibleEditors[0].viewColumn;
+        } else {
+            // Only one panel open and interactive window is occupying it, or original file is open but hidden
+            viewColumn = ViewColumn.Beside;
+        }
+
+        // Create a new open editor with the returned program in the right panel
+        const doc = await this.documentManager.openTextDocument({
+            content: slicedProgram,
+            language: PYTHON_LANGUAGE
+        });
+        const editor = await this.documentManager.showTextDocument(doc, viewColumn);
+
+        // Edit the document so that it is dirty (add a space at the end)
+        editor.edit((editBuilder) => {
+            editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
+        });
     }
 }

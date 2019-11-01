@@ -1698,6 +1698,12 @@
                     "description": "Enable code gather for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
                     "scope": "resource"
                 },
+                "python.dataScience.gatherToScript": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Gather code to a python script rather than a notebook.",
+                    "scope": "resource"
+                },
                 "python.dataScience.codeLenses": {
                     "type": "string",
                     "default": "python.datascience.runcell,  python.datascience.runallcellsabove, python.datascience.debugcell",
