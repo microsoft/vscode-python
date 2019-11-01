@@ -36,7 +36,6 @@ import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { Identifiers } from '../../client/datascience/constants';
-import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import {
     ICell,
@@ -49,7 +48,6 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../../client/datascience/types';
-import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
@@ -214,7 +212,6 @@ suite('Jupyter Execution', async () => {
     const application = mock(ApplicationShell);
     const processServiceFactory = mock(ProcessServiceFactory);
     const knownSearchPaths = mock(KnownSearchPathsForInterpreters);
-    const activationHelper = mock(EnvironmentActivationService);
     const logger = mock(Logger);
     const fileSystem = mock(FileSystem);
     const serviceContainer = mock(ServiceContainer);
@@ -645,13 +642,7 @@ suite('Jupyter Execution', async () => {
             instance(fileSystem),
             mockSessionManager,
             instance(workspaceService),
-            instance(configService),
-            new JupyterCommandFactory(
-                instance(executionFactory),
-                instance(activationHelper),
-                instance(processServiceFactory),
-                instance(interpreterService)),
-            instance(serviceContainer));
+            instance(configService));
     }
 
     test('Working notebook and commands found', async () => {

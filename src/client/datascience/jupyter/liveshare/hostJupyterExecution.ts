@@ -11,12 +11,11 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
-    IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManagerFactory,
     INotebookServer,
@@ -39,7 +38,6 @@ export class HostJupyterExecution
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
-        knownSearchPaths: IKnownSearchPathsForInterpreters,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
@@ -47,14 +45,12 @@ export class HostJupyterExecution
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        commandFactory: IJupyterCommandFactory,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
             executionFactory,
             interpreterService,
             processServiceFactory,
-            knownSearchPaths,
             logger,
             disposableRegistry,
             asyncRegistry,
@@ -62,7 +58,6 @@ export class HostJupyterExecution
             sessionManager,
             workspace,
             configService,
-            commandFactory,
             serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys, interpreterService);
     }

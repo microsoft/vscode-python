@@ -4,19 +4,20 @@
 'use strict';
 
 import * as path from 'path';
-import { CancellationToken, Progress, ProgressLocation, ProgressOptions } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
+import { injectable, unmanaged, inject } from 'inversify';
 
 export enum ModuleExistsStatus {
     NotFound,
@@ -48,22 +49,23 @@ function isCommandFinderCancelled(command: JupyterCommands, token?: Cancellation
 
 type ProgressNotification = Progress<{ message?: string | undefined; increment?: number | undefined }>;
 
-export class JupyterCommandFinder {
+@injectable()
+export class JupyterCommandFinderImpl {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
     private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
     constructor(
-        private readonly interpreterService: IInterpreterService,
-        private readonly executionFactory: IPythonExecutionFactory,
-        private readonly configuration: IConfigurationService,
-        private readonly knownSearchPaths: IKnownSearchPathsForInterpreters,
-        disposableRegistry: IDisposableRegistry,
-        private readonly fileSystem: IFileSystem,
-        private readonly logger: ILogger,
-        private readonly processServiceFactory: IProcessServiceFactory,
-        private readonly commandFactory: IJupyterCommandFactory,
-        workspace: IWorkspaceService,
-        private readonly appShell: IApplicationShell
+        @unmanaged() protected readonly interpreterService: IInterpreterService,
+        @unmanaged() private readonly executionFactory: IPythonExecutionFactory,
+        @unmanaged() private readonly configuration: IConfigurationService,
+        @unmanaged() private readonly knownSearchPaths: IKnownSearchPathsForInterpreters,
+        @unmanaged() disposableRegistry: IDisposableRegistry,
+        @unmanaged() protected readonly fileSystem: IFileSystem,
+        @unmanaged() private readonly logger: ILogger,
+        @unmanaged() private readonly processServiceFactory: IProcessServiceFactory,
+        @unmanaged() private readonly commandFactory: IJupyterCommandFactory,
+        @unmanaged() protected readonly workspace: IWorkspaceService,
+        @unmanaged() private readonly appShell: IApplicationShell
     ) {
         this.processServicePromise = this.processServiceFactory.create();
         disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.commands.clear()));
@@ -132,7 +134,7 @@ export class JupyterCommandFinder {
         this.commands.clear();
     }
 
-    private async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+    protected async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let findResult: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound,
             error: localize.DataScience.noInterpreter()
@@ -404,5 +406,203 @@ export class JupyterCommandFinder {
             this.logger.logWarning(err);
             return false;
         }
+    }
+}
+
+type CacheInfo = {
+    /**
+     * Cache store (across VSC sessions).
+     *
+     * @type {IPersistentState<string | undefined>}
+     */
+    state: IPersistentState<string | undefined>;
+    /**
+     * State information in current VS Code session.
+     * Faster than checking VSC Session.
+     * Updating VSC cache takes a while, in the interim this property will contain the information.
+     *
+     * @type {IFindCommandResult}
+     */
+    sessionState?: IFindCommandResult;
+    /**
+     * Whether we have checked the cache store.
+     * If checked, then use the value in `sessionState`.
+     * Its possible that value is empty, meaning nothing could be found.
+     *
+     * @type {boolean}
+     */
+    checked?: boolean;
+};
+
+
+/**
+ * Decorates the `JupyterCommanFinderImpl` with ability to cache the results.
+ *
+ * @export
+ * @class CachedCommandFinder
+ * @extends {JupyterCommandFinderImpl}
+ */
+@injectable()
+ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
+    private readonly workspaceJupyterInterpreter: CacheInfo;
+    private readonly globalJupyterInterpreter: CacheInfo;
+    private kernelCmd?: IFindCommandResult;
+    constructor(
+        @inject(IInterpreterService) interpreterService: IInterpreterService,
+        @inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory,
+        @inject(IConfigurationService) configuration: IConfigurationService,
+        @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(ILogger) logger: ILogger,
+        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
+        @inject(IJupyterCommandFactory) commandFactory: IJupyterCommandFactory,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory
+    ) {
+        super(interpreterService, executionFactory,
+            configuration, knownSearchPaths,
+            disposableRegistry, fileSystem,
+            logger, processServiceFactory,
+            commandFactory, workspace,
+            appShell);
+
+        // Cache stores to keep track of jupyter interpreters found.
+        const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>('DS-VSC-JupyterInterpreter');
+        const globalState = persistentStateFactory.createGlobalPersistentState<string>('DS-VSC-JupyterInterpreter');
+        this.workspaceJupyterInterpreter = {state: workspaceState };
+        this.globalJupyterInterpreter = {state: globalState };
+    }
+    private get cacheStore(): CacheInfo {
+        return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
+    }
+    public async findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
+        const stopWatch = new StopWatch();
+        let result: IFindCommandResult;
+        try {
+            if (command === JupyterCommands.KernelSpecCommand) {
+            result = await this.findBestKernelSpecCommand(token);
+            } else if (command === JupyterCommands.NotebookCommand) {
+                result = await this.findBestNotebookCommand(token);
+            } else {
+                result = await super.findBestCommand(command, token);
+            }
+        } finally {
+            console.error(`Finding command ${command} completed in ${stopWatch.elapsedTime}, with status of ${result!.status}`);
+        }
+        return result;
+    }
+    private async findBestKernelSpecCommand(token?: CancellationToken): Promise<IFindCommandResult> {
+        if (this.kernelCmd){
+            return this.kernelCmd;
+        }
+        const command = JupyterCommands.KernelSpecCommand;
+        // Kernel spec should be from the same jupyter interpreter.
+        const notebookCmd = await this.findBestNotebookCommand(token);
+        if (notebookCmd.status !== ModuleExistsStatus.NotFound && notebookCmd.command){
+            const notebookInterpreter = await notebookCmd.command.interpreter();
+            if (notebookInterpreter){
+                const kernelCmd = await super.findInterpreterCommand(command, notebookInterpreter, token);
+                if (kernelCmd.command && kernelCmd.status !== ModuleExistsStatus.NotFound){
+                    this.kernelCmd = kernelCmd;
+                    return kernelCmd;
+                }
+            }
+        }
+
+        return this.kernelCmd = await super.findBestCommand(command, token);
+    }
+    private async findBestNotebookCommand(token?: CancellationToken): Promise<IFindCommandResult> {
+        const command = JupyterCommands.NotebookCommand;
+        // Searching takes a while.
+        // Lets search our cache for the command.
+        // But lets also search. Its possible searching is faster than getting from cache (unlikely)
+        // However, its more likely for cache to return nothing. Which would mean we'd need to search.
+        // Lets try to do both together. If we get a successful hit from the cache, then we can cancel the search & vice-versa.
+
+        const cancellationTokenSource = new CancellationTokenSource();
+        const wrappedToken = wrapCancellationTokens(token, cancellationTokenSource.token);
+        const searchPromise = super.findBestCommand(command, wrappedToken).then(cmd => ({cmd, source: 'search'}));
+        const cachePromise = this.getCachedNotebookInterpreter(wrappedToken).then(cmd => ({cmd, source: 'cache'}));
+
+        // Take which ever comes first.
+        // Searching cache will certainly be faster, use that.
+        const result = await Promise.race([searchPromise, cachePromise]);
+        if (result.source === 'cache' && result.cmd){
+            // No need to search any more, cancel it as the cache came back earlier.
+            cancellationTokenSource.cancel();
+            return result.cmd;
+        }
+
+        // Ok, now its possible cache came back empty, in which case we need to search.
+        // Or its possible find came back first, in which case we need to resolve the search promise.
+        // I.e. we need to wait for search to complete.
+        const searchResult = await searchPromise;
+        // No need to search cache any more, cancel it.
+        // And update the cache store with what ever we got from the find.
+        cancellationTokenSource.cancel();
+        await this.updateCacheWithInterpreter(searchResult.cmd);
+        return searchResult.cmd;
+    }
+    private async updateCacheWithInterpreter(result?: IFindCommandResult, cancelToken?: CancellationToken): Promise<void> {
+        if (!result){
+            // Ensure we remove this so others don't try using this.
+            // Possible we don't have any interpeter, or the one
+            // that was available has been uninstalled.
+            await this.cacheStore.state.updateValue(undefined);
+            return;
+        }
+
+        if (!result.command) {
+            throw new Error('Jupyter Command is undefined');
+        }
+
+        // Cache for current session.
+        this.cacheStore.sessionState = result;
+        this.cacheStore.checked = true;
+
+        // Cache for other VS Code sessions.
+        // i.e. make it available when new VS Code instance is opened.
+        const interpreter = await result.command.interpreter();
+        if (!interpreter || (cancelToken && cancelToken.isCancellationRequested)){
+            return;
+        }
+        await this.cacheStore.state.updateValue(interpreter ? interpreter.path : undefined);
+    }
+    private async getCachedNotebookInterpreter(cancelToken: CancellationToken): Promise<IFindCommandResult | undefined>{
+        // We have already checked in current session.
+        if (this.cacheStore.checked){
+            return this.cacheStore.sessionState;
+        }
+        // Nohting cached from another VSC session.
+        if (!this.cacheStore.state.value){
+            return;
+        }
+        const result = await this.getNotebookCommand(this.cacheStore.state.value, cancelToken);
+        if (!result || !result.command){
+            this.cacheStore.checked = true;
+            return;
+        }
+
+        await this.updateCacheWithInterpreter(result, cancelToken);
+    }
+
+    private async getNotebookCommand(pythonPath: string, cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
+        if (!(await this.fileSystem.fileExists(pythonPath))){
+            return;
+        }
+        if (cancelToken.isCancellationRequested){
+            return;
+        }
+        const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
+        if (!interpreterInfo){
+            return;
+        }
+        if (cancelToken.isCancellationRequested){
+            return;
+        }
+        const result = await this.findInterpreterCommand(JupyterCommands.NotebookCommand, interpreterInfo, cancelToken);
+        return result.status === ModuleExistsStatus.NotFound ? undefined : result;
     }
 }

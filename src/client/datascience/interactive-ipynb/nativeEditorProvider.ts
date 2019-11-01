@@ -12,8 +12,9 @@ import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDis
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { Identifiers, Settings, Telemetry, JupyterCommands } from '../constants';
 import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../types';
+import { JupyterCommandFinder } from '../jupyter/jupyterCommandFinder';
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
@@ -32,7 +33,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(JupyterCommandFinder) private readonly commandFinder: JupyterCommandFinder
 
     ) {
         asyncRegistry.push(this);
@@ -85,6 +87,8 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
     }
 
     public async open(file: Uri, contents: string): Promise<INotebookEditor> {
+        this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand).ignoreErrors();
+        this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).ignoreErrors();
         // See if this file is open or not already
         let editor = this.activeEditors.get(file.fsPath);
         if (!editor) {
