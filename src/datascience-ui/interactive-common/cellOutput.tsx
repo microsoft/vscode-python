@@ -345,7 +345,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     // tslint:disable-next-line: max-func-body-length
     private renderOutputs(outputs: nbformat.IOutput[]): JSX.Element[] {
-        // return outputs.map(this.renderOutput);
         return [this.renderOutput(outputs)];
     }
 
