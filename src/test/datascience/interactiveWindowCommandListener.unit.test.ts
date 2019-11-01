@@ -80,8 +80,6 @@ suite('Interactive window command listener', async () => {
     const server = createTypeMoq<INotebookServer>('jupyter server');
     let lastFileContents: any;
 
-    setup(createCommandListener);
-
     teardown(() => {
         documentManager.activeTextEditor = undefined;
         lastFileContents = undefined;
@@ -216,15 +214,18 @@ suite('Interactive window command listener', async () => {
     }
 
     test('Import', async () => {
+        createCommandListener();
         when(applicationShell.showOpenDialog(argThat(o => o.openLabel && o.openLabel.includes('Import')))).thenReturn(Promise.resolve([Uri.file('foo')]));
         await commandManager.executeCommand(Commands.ImportNotebook, undefined, undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Import File', async () => {
+        createCommandListener();
         await commandManager.executeCommand(Commands.ImportNotebook, Uri.file('bar.ipynb'), undefined);
         assert.ok(documentManager.activeTextEditor, 'Imported file was not opened');
     });
     test('Export File', async () => {
+        createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
@@ -238,6 +239,7 @@ suite('Interactive window command listener', async () => {
         verify(applicationShell.showInformationMessage(anything(), localize.DataScience.exportOpenQuestion1(), localize.DataScience.exportOpenQuestion())).once();
     });
     test('Export File and output', async () => {
+        createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
@@ -258,11 +260,13 @@ suite('Interactive window command listener', async () => {
         verify(applicationShell.showInformationMessage(anything(), localize.DataScience.exportOpenQuestion1(), localize.DataScience.exportOpenQuestion())).once();
     });
     test('Export skipped on no file', async () => {
+        createCommandListener();
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
         await commandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('bar.ipynb'));
         assert.notExists(lastFileContents, 'Export file was written to');
     });
     test('Export happens on no file', async () => {
+        createCommandListener();
         const doc = await documentManager.openTextDocument('bar.ipynb');
         await documentManager.showTextDocument(doc);
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
