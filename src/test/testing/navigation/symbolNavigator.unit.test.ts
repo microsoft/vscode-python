@@ -35,6 +35,11 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .setup(service => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(async () => proc)
             .verifiable(typemoq.Times.never());
+        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
+        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
+        // in this case factory below returns a promise that is a mock of python service
+        // so we need to mock the `then` on the service.
+        pythonService.setup((x: any) => x.then).returns(() => undefined);
 
         pythonExecFactory
             .setup(factory => factory.create(typemoq.It.isAny()))
@@ -63,6 +68,11 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .setup(service => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
             .returns(async () => proc)
             .verifiable(typemoq.Times.once());
+        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
+        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
+        // in this case factory below returns a promise that is a mock of python service
+        // so we need to mock the `then` on the service.
+        pythonService.setup((x: any) => x.then).returns(() => undefined);
 
         pythonExecFactory
             .setup(factory => factory.create(typemoq.It.isAny()))
@@ -95,6 +105,11 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
             .returns(async () => proc)
             .verifiable(typemoq.Times.once());
+        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
+        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
+        // in this case factory below returns a promise that is a mock of python service
+        // so we need to mock the `then` on the service.
+        pythonService.setup((x: any) => x.then).returns(() => undefined);
 
         pythonExecFactory
             .setup(factory => factory.create(typemoq.It.isAny()))
@@ -152,6 +167,11 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isValue({ throwOnStdErr: true, token })))
             .returns(async () => proc)
             .verifiable(typemoq.Times.once());
+        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
+        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
+        // in this case factory below returns a promise that is a mock of python service
+        // so we need to mock the `then` on the service.
+        pythonService.setup((x: any) => x.then).returns(() => undefined);
 
         pythonExecFactory
             .setup(factory => factory.create(typemoq.It.isAny()))
