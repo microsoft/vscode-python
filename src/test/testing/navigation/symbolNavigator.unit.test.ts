@@ -22,29 +22,22 @@ suite('Unit Tests - Navigation Command Handler', () => {
     setup(() => {
         pythonService = typemoq.Mock.ofType<IPythonExecutionService>();
         pythonExecFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
-        doc = typemoq.Mock.ofType<TextDocument>();
-        token = new CancellationTokenSource().token;
-    });
-    test('Ensure no symbols are returned when file has not been saved', async () => {
-        const proc: ExecutionResult<string> = { stdout: '' };
-        doc.setup(d => d.isUntitled)
-            .returns(() => true)
-            .verifiable(typemoq.Times.once());
 
-        pythonService
-            .setup(service => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(async () => proc)
-            .verifiable(typemoq.Times.never());
         // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
         // A solution is to mock the `then` on the mock that the `Promise` resolves to.
         // in this case factory below returns a promise that is a mock of python service
         // so we need to mock the `then` on the service.
         pythonService.setup((x: any) => x.then).returns(() => undefined);
 
-        pythonExecFactory
-            .setup(factory => factory.create(typemoq.It.isAny()))
-            .returns(async () => pythonService.object)
-            .verifiable(typemoq.Times.never());
+        pythonExecFactory.setup(factory => factory.create(typemoq.It.isAny())).returns(async () => pythonService.object);
+
+        doc = typemoq.Mock.ofType<TextDocument>();
+        token = new CancellationTokenSource().token;
+    });
+    test('Ensure no symbols are returned when file has not been saved', async () => {
+        doc.setup(d => d.isUntitled)
+            .returns(() => true)
+            .verifiable(typemoq.Times.once());
 
         symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = await symbolProvider.provideDocumentSymbols(doc.object, token);
@@ -53,7 +46,6 @@ suite('Unit Tests - Navigation Command Handler', () => {
         doc.verifyAll();
     });
     test('Ensure no symbols are returned when there are errors in running the code', async () => {
-        const proc: ExecutionResult<string> = { stdout: '' };
         doc.setup(d => d.isUntitled)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
@@ -66,18 +58,9 @@ suite('Unit Tests - Navigation Command Handler', () => {
 
         pythonService
             .setup(service => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
-            .returns(async () => proc)
-            .verifiable(typemoq.Times.once());
-        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
-        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
-        // in this case factory below returns a promise that is a mock of python service
-        // so we need to mock the `then` on the service.
-        pythonService.setup((x: any) => x.then).returns(() => undefined);
-
-        pythonExecFactory
-            .setup(factory => factory.create(typemoq.It.isAny()))
-            .returns(async () => pythonService.object)
-            .verifiable(typemoq.Times.once());
+            .returns(async () => {
+                return { stdout: '' };
+            });
 
         symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = await symbolProvider.provideDocumentSymbols(doc.object, token);
@@ -105,22 +88,13 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
             .returns(async () => proc)
             .verifiable(typemoq.Times.once());
-        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
-        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
-        // in this case factory below returns a promise that is a mock of python service
-        // so we need to mock the `then` on the service.
-        pythonService.setup((x: any) => x.then).returns(() => undefined);
-
-        pythonExecFactory
-            .setup(factory => factory.create(typemoq.It.isAny()))
-            .returns(async () => pythonService.object)
-            .verifiable(typemoq.Times.once());
 
         symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = await symbolProvider.provideDocumentSymbols(doc.object, token);
 
         expect(symbols).to.be.lengthOf(0);
         doc.verifyAll();
+        pythonService.verifyAll();
     });
     test('Ensure symbols are returned', async () => {
         const docUri = Uri.file(__filename);
@@ -164,18 +138,8 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .verifiable(typemoq.Times.atLeastOnce());
 
         pythonService
-            .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isValue({ throwOnStdErr: true, token })))
+            .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
             .returns(async () => proc)
-            .verifiable(typemoq.Times.once());
-        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
-        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
-        // in this case factory below returns a promise that is a mock of python service
-        // so we need to mock the `then` on the service.
-        pythonService.setup((x: any) => x.then).returns(() => undefined);
-
-        pythonExecFactory
-            .setup(factory => factory.create(typemoq.It.isAny()))
-            .returns(async () => pythonService.object)
             .verifiable(typemoq.Times.once());
 
         symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
@@ -183,6 +147,7 @@ suite('Unit Tests - Navigation Command Handler', () => {
 
         expect(symbols).to.be.lengthOf(3);
         doc.verifyAll();
+        pythonService.verifyAll();
         expect(symbols[0].kind).to.be.equal(SymbolKind.Class);
         expect(symbols[0].name).to.be.equal('one');
         expect(symbols[0].location.range).to.be.deep.equal(new Range(1, 2, 3, 4));
