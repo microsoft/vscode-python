@@ -133,7 +133,7 @@ suite('DataScience code gathering unit tests', () => {
         for (const c of codeCells) {
             await gatherLogger.postExecute(c, false);
             count += 1;
-            assert.equal(gatherExecution.executionSlicer._executionLog.length, count);
+            assert.equal(gatherExecution.executionSlicer.executionLog.length, count);
         }
     });
 
