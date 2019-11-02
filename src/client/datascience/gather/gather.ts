@@ -62,7 +62,7 @@ export class GatherExecution implements IGatherExecution {
         const defaultCellMarker = this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
 
         // Call internal slice method
-        const slices = this._executionSlicer.sliceAllExecutions(gatherCell);
+        const slices = this._executionSlicer.sliceAllExecutions(gatherCell.persistentId);
         const program = slices.length > 0 ? slices[0].cellSlices.reduce(concat, '').replace(/#%%/g, defaultCellMarker) : '';
 
         // Add a comment at the top of the file explaining what gather does
