@@ -164,7 +164,7 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
 }
 
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IDataScienceSettings): CellRange[] {
-    if (!document.getText()) {
+    if (document.lineCount === 0) {
         return [];
     } else {
         const lines: string[] = document.getText().splitLines({ trim: false, removeEmptyEntries: false });
