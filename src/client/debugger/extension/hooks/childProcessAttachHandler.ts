@@ -4,10 +4,11 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugSessionCustomEvent } from 'vscode';
+import { DebugConfiguration, DebugSessionCustomEvent } from 'vscode';
 import { swallowExceptions } from '../../../common/utils/decorators';
+import { AttachRequestArguments } from '../../types';
 import { PTVSDEvents } from './constants';
-import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventHandlers } from './types';
+import { IChildProcessAttachService, IDebugSessionEventHandlers } from './types';
 
 /**
  * This class is responsible for automatically attaching the debugger to any
@@ -18,14 +19,14 @@ import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventH
  */
 @injectable()
 export class ChildProcessAttachEventHandler implements IDebugSessionEventHandlers {
-    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) { }
+    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) {}
 
     @swallowExceptions('Handle child process launch')
     public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
         if (!event || event.event !== PTVSDEvents.ChildProcessLaunched) {
             return;
         }
-        const data = event.body! as ChildProcessLaunchData;
+        const data = event.body! as (AttachRequestArguments & DebugConfiguration);
         await this.childProcessAttachService.attach(data, event.session);
     }
 }

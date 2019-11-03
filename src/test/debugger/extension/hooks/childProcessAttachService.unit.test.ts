@@ -13,7 +13,6 @@ import { ApplicationShell } from '../../../../client/common/application/applicat
 import { DebugService } from '../../../../client/common/application/debugService';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { ChildProcessAttachService } from '../../../../client/debugger/extension/hooks/childProcessAttachService';
-import { ChildProcessLaunchData } from '../../../../client/debugger/extension/hooks/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../../client/debugger/types';
 
 suite('Debug - Attach to Child Process', () => {
@@ -22,22 +21,13 @@ suite('Debug - Attach to Child Process', () => {
         const debugService = mock(DebugService);
         const workspaceService = mock(WorkspaceService);
         const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-        const args: LaunchRequestArguments | AttachRequestArguments = {
+        const data: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
-            name: ''
-        };
-        const data: ChildProcessLaunchData = {
-            rootProcessId: 1,
-            parentProcessId: 1,
+            name: '',
+            host: '127.0.0.1',
             port: 1234,
-            processId: 2,
-            rootStartRequest: {
-                seq: 1,
-                type: 'python',
-                arguments: args,
-                command: 'request'
-            }
+            subProcessId: 2345
         };
         const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
@@ -51,22 +41,13 @@ suite('Debug - Attach to Child Process', () => {
         const debugService = mock(DebugService);
         const workspaceService = mock(WorkspaceService);
         const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-        const args: LaunchRequestArguments | AttachRequestArguments = {
+        const data: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
-            name: ''
-        };
-        const data: ChildProcessLaunchData = {
-            rootProcessId: 1,
-            parentProcessId: 1,
+            name: '',
+            host: '127.0.0.1',
             port: 1234,
-            processId: 2,
-            rootStartRequest: {
-                seq: 1,
-                type: 'python',
-                arguments: args,
-                command: 'request'
-            }
+            subProcessId: 2345
         };
 
         const session: any = {};
@@ -89,23 +70,13 @@ suite('Debug - Attach to Child Process', () => {
         const wkspace1: WorkspaceFolder = { name: '0', index: 0, uri: Uri.file('0') };
         const wkspace2: WorkspaceFolder = { name: '2', index: 2, uri: Uri.file('2') };
 
-        const args: LaunchRequestArguments | AttachRequestArguments = {
+        const data: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
             name: '',
-            workspaceFolder: rightWorkspaceFolder.uri.fsPath
-        };
-        const data: ChildProcessLaunchData = {
-            rootProcessId: 1,
-            parentProcessId: 1,
+            host: '127.0.0.1',
             port: 1234,
-            processId: 2,
-            rootStartRequest: {
-                seq: 1,
-                type: 'python',
-                arguments: args,
-                command: 'request'
-            }
+            subProcessId: 2345
         };
 
         const session: any = {};
@@ -124,27 +95,16 @@ suite('Debug - Attach to Child Process', () => {
         const debugService = mock(DebugService);
         const workspaceService = mock(WorkspaceService);
         const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-        const rightWorkspaceFolder: WorkspaceFolder = { name: '1', index: 1, uri: Uri.file('a') };
         const wkspace1: WorkspaceFolder = { name: '0', index: 0, uri: Uri.file('0') };
         const wkspace2: WorkspaceFolder = { name: '2', index: 2, uri: Uri.file('2') };
 
-        const args: LaunchRequestArguments | AttachRequestArguments = {
+        const data: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
             name: '',
-            workspaceFolder: rightWorkspaceFolder.uri.fsPath
-        };
-        const data: ChildProcessLaunchData = {
-            rootProcessId: 1,
-            parentProcessId: 1,
+            host: '127.0.0.1',
             port: 1234,
-            processId: 2,
-            rootStartRequest: {
-                seq: 1,
-                type: 'python',
-                arguments: args,
-                command: 'request'
-            }
+            subProcessId: 2345
         };
 
         const session: any = {};
@@ -164,25 +124,16 @@ suite('Debug - Attach to Child Process', () => {
         const workspaceService = mock(WorkspaceService);
         const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
 
-        const args: LaunchRequestArguments | AttachRequestArguments = {
+        const data: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
-            name: ''
-        };
-        const data: ChildProcessLaunchData = {
-            rootProcessId: 1,
-            parentProcessId: 1,
+            name: '',
+            host: '127.0.0.1',
             port: 1234,
-            processId: 2,
-            rootStartRequest: {
-                seq: 1,
-                type: 'python',
-                arguments: args,
-                command: 'request'
-            }
+            subProcessId: 2345
         };
 
-        const debugConfig = JSON.parse(JSON.stringify(args));
+        const debugConfig = JSON.parse(JSON.stringify(data));
         debugConfig.host = 'localhost';
         debugConfig.port = data.port;
         debugConfig.name = `Child Process ${data.processId}`;
@@ -207,27 +158,17 @@ suite('Debug - Attach to Child Process', () => {
         const workspaceService = mock(WorkspaceService);
         const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
 
-        const args: AttachRequestArguments = {
-            request: 'attach',
+        const data: LaunchRequestArguments | AttachRequestArguments = {
+            request: 'launch',
             type: 'python',
             name: '',
-            host: '123.123.123.123'
-        };
-        const data: ChildProcessLaunchData = {
-            rootProcessId: 1,
-            parentProcessId: 1,
+            host: '127.0.0.1',
             port: 1234,
-            processId: 2,
-            rootStartRequest: {
-                seq: 1,
-                type: 'python',
-                arguments: args,
-                command: 'request'
-            }
+            subProcessId: 2345
         };
 
-        const debugConfig = JSON.parse(JSON.stringify(args));
-        debugConfig.host = args.host!;
+        const debugConfig = JSON.parse(JSON.stringify(data));
+        debugConfig.host = data.host!;
         debugConfig.port = data.port;
         debugConfig.name = `Child Process ${data.processId}`;
         debugConfig.request = 'attach';
@@ -255,7 +196,9 @@ suite('Debug - Attach to Child Process', () => {
             request: 'launch',
             type: 'python',
             name: '',
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);
@@ -274,7 +217,9 @@ suite('Debug - Attach to Child Process', () => {
             type: 'python',
             name: '',
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: '',
+            pythonPath: '',
+            args: [],
+            envFile: '',
             pathMappings: pathMappings
         };
 
@@ -294,7 +239,9 @@ suite('Debug - Attach to Child Process', () => {
             type: 'python',
             name: '',
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);
@@ -314,7 +261,9 @@ suite('Debug - Attach to Child Process', () => {
             name: '',
             cwd: path.join('hello', 'world'),
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);
@@ -335,7 +284,9 @@ suite('Debug - Attach to Child Process', () => {
             // tslint:disable-next-line: no-invalid-template-strings
             cwd: path.join('${workspaceFolder}', 'hello', 'world'),
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);

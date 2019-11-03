@@ -49,6 +49,8 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     // localRoot and remoteRoot are deprecated (replaced by pathMappings).
     localRoot?: string;
     remoteRoot?: string;
+    processId?: number;
+    subProcessId?: number;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
@@ -67,6 +69,7 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     env?: Record<string, string | undefined>;
     envFile: string;
     console?: ConsoleType;
+    debugAdapterPath?: string;
 }
 // tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {
@@ -79,7 +82,7 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
 }
 
 // tslint:disable-next-line:interface-name
-export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
+export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments {}
 
 export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
 

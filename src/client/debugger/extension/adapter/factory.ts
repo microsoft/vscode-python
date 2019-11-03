@@ -7,53 +7,33 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugAdapterServer, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
-import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
 
-export const ptvsdPathStorageKey = 'PTVSD_PATH_STORAGE_KEY';
-
 @injectable()
 export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFactory {
-    constructor(
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) { }
-    public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
+    constructor(@inject(IInterpreterService) private readonly interpreterService: IInterpreterService, @inject(IApplicationShell) private readonly appShell: IApplicationShell) {}
+    public async createDebugAdapterDescriptor(session: DebugSession, _executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
 
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            if (configuration.request === 'attach') {
-                const port = configuration.port ? configuration.port : 0;
-                if (port === 0) {
-                    throw new Error('Port must be specified for request type attach');
-                }
-                return new DebugAdapterServer(port, configuration.host);
-            } else {
-                const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-                if (await this.useNewPtvsd(pythonPath)) {
-                    // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
-                    const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                    const ptvsdPathToUse = this.getPtvsdPath();
-                    return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
-                }
+        if (configuration.request === 'attach') {
+            const port = configuration.port ? configuration.port : 0;
+            if (port === 0) {
+                throw new Error('Port must be specified for request type attach');
             }
+            return new DebugAdapterServer(port, configuration.host);
         } else {
-            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
-        }
+            const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+            // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+            const ptvsdPathToUse = configuration.debugAdapterPath ? configuration.debugAdapterPath : path.join(this.getPtvsdPath(), 'adapter');
 
-        // Use the Node debug adapter (and ptvsd_launcher.py)
-        if (executable) {
-            return executable;
+            return new DebugAdapterExecutable(pythonPath, [ptvsdPathToUse, ...logArgs]);
         }
-        // Unlikely scenario.
-        throw new Error('Debug Adapter Executable not provided');
     }
 
     /**
