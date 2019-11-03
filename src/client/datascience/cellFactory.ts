@@ -124,7 +124,7 @@ function generateCellRangesFromStringArray(lines: string[], settings?: IDataScie
             const result = matcher.exec(lines[index]);
             if (result !== undefined) {
                 cells.push({
-                    range: new Range(index + 1, 0, endCellIndex, lines[endCellIndex].length),
+                    range: new Range(index, 0, endCellIndex, lines[endCellIndex].length),
                     title: result,
                     cell_type: matcher.getCellType(lines[index])
                 });
