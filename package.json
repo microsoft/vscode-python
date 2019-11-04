@@ -1526,13 +1526,6 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
-                    "deprecationMessage": "This setting has been deprecated in favor of 'remoteJupyterServerURI'.",
-                    "scope": "resource"
-                },
-                "python.dataScience.remoteJupyterServerURI": {
-                    "type": "string",
-                    "default": "local",
                     "description": "When a Notebook Editor or Interactive Window session is started, create the kernel on the specified Jupyter server. Select 'local' to create a new Jupyter server on this local machine.",
                     "scope": "resource"
                 },

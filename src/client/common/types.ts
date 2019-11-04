@@ -358,7 +358,6 @@ export interface IDataScienceSettings {
     defaultCellMarker?: string;
     verboseLogging?: boolean;
     themeMatplotlibPlots?: boolean;
-    remoteJupyterServerURI?: string;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

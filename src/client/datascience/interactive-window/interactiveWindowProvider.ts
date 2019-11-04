@@ -80,7 +80,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
         // Find the settings that we are going to launch our server with
         const settings = this.configService.getSettings();
-        let serverURI: string | undefined = settings.datascience.remoteJupyterServerURI;
+        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting

@@ -115,7 +115,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
         const settings = this.configuration.getSettings();
-        let serverURI: string | undefined = settings.datascience.remoteJupyterServerURI;
+        let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
