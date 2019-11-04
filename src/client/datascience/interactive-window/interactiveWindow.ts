@@ -258,7 +258,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // To be used if/when changing workflows related to startup of jupyter.
         if (!this.trackedJupyterStart){
             this.trackedJupyterStart = true;
-            const store = this.stateFactory.createWorkspacePersistentState('INTERACTIVE_WINDOW_USED', false);
+            const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
         }
         return super.startServer();
