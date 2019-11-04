@@ -250,6 +250,9 @@ def _get_location(item, testroot, relfile, #*,
     # over item.location in this function.
 
     srcfile, lineno, fullname = item.location
+    if lineno is None:
+        # Happens in doctests and tests imported from other modules
+        lineno = -1  # i.e. "unknown"
     if _matches_relfile(srcfile, testroot, relfile):
         srcfile = relfile
     else:
@@ -271,8 +274,6 @@ def _get_location(item, testroot, relfile, #*,
                     # function to be in relfile.  So here we ignore any
                     # other file and just say "somewhere in relfile".
                     lineno = None
-            if lineno is None:
-                lineno = -1  # i.e. "unknown"
         elif _matches_relfile(srcfile, testroot, relfile):
             srcfile = relfile
         # Otherwise we just return the info from item.location as-is.
