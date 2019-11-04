@@ -178,7 +178,7 @@ export class NotebookStarter implements Disposable {
     }
 
     /**
-     * Adds the `--ip` and `--alow-root` arguments when in docker.
+     * Adds the `--ip` and `--allow-root` arguments when in docker.
      *
      * @private
      * @param {string[]} args
