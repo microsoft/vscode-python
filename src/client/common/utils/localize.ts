@@ -295,7 +295,7 @@ export namespace DataScience {
     export const findJupyterCommandProgressCheckInterpreter = localize('DataScience.findJupyterCommandProgressCheckInterpreter', 'Checking {0}.');
     export const findJupyterCommandProgressSearchCurrentPath = localize('DataScience.findJupyterCommandProgressSearchCurrentPath', 'Searching current path.');
     export const gatheredScriptDescription = localize('DataScience.gatheredScriptDescription', '# This file contains the minimal amount of code required to produce the code cell gathered.\n');
-    export const gatheredNotebookDescriptionInMarkdown = localize('DataScience.gatheredNotebookDescriptionInMarkdown', '## This notebook was generated for a gathered cell.');
+    export const gatheredNotebookDescriptionInMarkdown = localize('DataScience.gatheredNotebookDescriptionInMarkdown', '## This notebook was generated for a cell gathered from {0}.');
 }
 
 export namespace DebugConfigStrings {

@@ -380,5 +380,5 @@
     "DataScience.findJupyterCommandProgressCheckInterpreter": "Checking {0}.",
     "DataScience.findJupyterCommandProgressSearchCurrentPath": "Searching current path.",
     "DataScience.gatheredScriptDescription": "# This file contains only the code required to produce the results of the gathered cell.\n",
-    "DataScience.gatheredNotebookDescriptionInMarkdown": "### Gathered Notebook\nThis notebook contains only the code required to produce the same results as the gathered cell."
+    "DataScience.gatheredNotebookDescriptionInMarkdown": "# Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell."
 }
