@@ -33,6 +33,7 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
     }
 
     public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<{ command: string; args: string[] }> {
+        // We need the executable info but not the 'manage.py shell' args
         const { command, args } = await super.getExecutableInfo(resource);
         return { command, args: args.concat(executeArgs) };
     }
