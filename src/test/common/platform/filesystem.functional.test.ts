@@ -94,7 +94,7 @@ class FSFixture {
     }
 }
 
-suite('Temporary files', () => {
+suite('FileSystem - Temporary files', () => {
     let tmp: ITempFileSystem;
     setup(() => {
         tmp = new TempFileSystem();
@@ -102,15 +102,12 @@ suite('Temporary files', () => {
 
     suite('createFile', () => {
         test('TemporaryFile is populated properly', async () => {
-            const expected: TemporaryFile = {
-                filePath: '/tmp/xyz.tmp',
-                dispose: (() => undefined)
-            };
-
             const tempfile = await tmp.createFile('.tmp');
+            await fsextra.stat(tempfile.filePath); // This should not fail.
             tempfile.dispose();
 
-            expect(tempfile.filePath).to.deep.equal(expected);
+            await ensureDoesNotExist(tempfile.filePath);
+            expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, `bad suffix on ${tempfile.filePath}`);
         });
 
         test('fails if the target temp directory does not exist', async () => {

@@ -45,7 +45,7 @@ interface IRawFS {
     file(options: { }, cb: TempCallback): void;
 }
 
-suite('Temporary files', () => {
+suite('FileSystem - Temporary files', () => {
     let raw: TypeMoq.IMock<IRawFS>;
     let tmp: ITempFileSystem;
     setup(() => {
