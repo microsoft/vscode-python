@@ -119,14 +119,6 @@ class MockJupyterNotebook implements INotebook {
     public async dispose(): Promise<void> {
         return Promise.resolve();
     }
-
-    public gatherCode(_c: ICell): string | undefined {
-        return undefined;
-    }
-
-    public resetGatherLog(): void {
-        return;
-    }
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length

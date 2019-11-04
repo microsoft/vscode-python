@@ -55,14 +55,6 @@ export class GuestJupyterNotebook
         return Promise.resolve();
     }
 
-    public gatherCode(_c: ICell): string | undefined {
-        return undefined;
-    }
-
-    public resetGatherLog(): void {
-        return;
-    }
-
     public clear(_id: string): void {
         // We don't do anything as we don't cache results in this class.
         noop();
