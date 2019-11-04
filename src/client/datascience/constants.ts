@@ -204,6 +204,7 @@ export enum Telemetry {
     NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
     SessionIdleTimeout = 'DATASCIENCE.JUPYTER_IDLE_TIMEOUT',
     JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
+    JupyterInstalledInActiveInterpreter = 'DATASCIENCE.JUPYTER_INSTALLED_IN_ACTIVE_INTERPRETER',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER'
 }

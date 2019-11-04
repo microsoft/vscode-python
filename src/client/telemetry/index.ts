@@ -1433,6 +1433,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
+    [Telemetry.JupyterInstalledInActiveInterpreter]: { yes: boolean };
     [Telemetry.UserInstalledJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;

@@ -221,6 +221,9 @@ export class JupyterCommandFinder {
             // Save our error information. This should propagate out as the error information for the command
             firstError = found.error;
         }
+        if (command === JupyterCommands.NotebookCommand){
+            sendTelemetryEvent(Telemetry.JupyterInstalledInActiveInterpreter, undefined, {yes : found.status !== ModuleExistsStatus.NotFound});
+        }
 
         // Display a progress message when searching, as this could take a while.
         if (found.status === ModuleExistsStatus.NotFound && this.supportsSearchingForCommands()) {
