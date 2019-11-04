@@ -25,6 +25,7 @@ import {
     IInteractiveBase,
     IInteractiveWindowProvider,
     IJupyterExecution,
+    INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
     INotebookServer,
@@ -45,7 +46,8 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IStatusProvider) private statusProvider: IStatusProvider,
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
-        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
+        @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider
     ) {
     }
 
@@ -159,7 +161,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         saveLabel: localize.DataScience.exportDialogTitle(),
                         filters: filtersObject
                     });
-
                     await this.waitForStatus(async () => {
                         if (uri) {
                             let directoryChange;
@@ -172,16 +173,19 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                             await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
                         }
                     }, localize.DataScience.exportingFormat(), file);
-
                     // When all done, show a notice that it completed.
-                    const openQuestion = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
                     if (uri && uri.fsPath) {
-                        this.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), openQuestion).then((str: string | undefined) => {
-                            if (str === openQuestion) {
-                                // If the user wants to, open the notebook they just generated.
-                                this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
-                            }
-                        });
+                        const openQuestion1 = localize.DataScience.exportOpenQuestion1();
+                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
+                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
+                        const selection = await this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(uri.fsPath), ...questions);
+                        if (selection === openQuestion1) {
+                            await this.ipynbProvider.open(uri, await this.fileSystem.readFile(uri.fsPath));
+                        }
+                        if (selection === openQuestion2) {
+                            // If the user wants to, open the notebook they just generated.
+                            this.jupyterExecution.spawnNotebook(uri.fsPath).ignoreErrors();
+                        }
                     }
                 }
             }
@@ -220,13 +224,17 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         });
 
                         // When all done, show a notice that it completed.
-                        const openQuestion = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
-                        this.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), openQuestion).then((str: string | undefined) => {
-                            if (str === openQuestion && output) {
-                                // If the user wants to, open the notebook they just generated.
-                                this.jupyterExecution.spawnNotebook(output).ignoreErrors();
-                            }
-                        });
+                        const openQuestion1 = localize.DataScience.exportOpenQuestion1();
+                        const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
+                        const questions = [openQuestion1, ...(openQuestion2 ? [openQuestion2] : [])];
+                        const selection = await this.applicationShell.showInformationMessage(localize.DataScience.exportDialogComplete().format(output), ...questions);
+                        if (selection === openQuestion1) {
+                            await this.ipynbProvider.open(Uri.file(output), await this.fileSystem.readFile(output));
+                        }
+                        if (selection === openQuestion2) {
+                            // If the user wants to, open the notebook they just generated.
+                            this.jupyterExecution.spawnNotebook(output).ignoreErrors();
+                        }
 
                         return Uri.file(output);
                     }
