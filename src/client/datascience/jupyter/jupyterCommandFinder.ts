@@ -446,7 +446,6 @@ type CacheInfo = {
  export class JupyterCommandFinder extends JupyterCommandFinderImpl {
     private readonly workspaceJupyterInterpreter: CacheInfo;
     private readonly globalJupyterInterpreter: CacheInfo;
-    private kernelCmd?: IFindCommandResult;
     constructor(
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory,
@@ -478,7 +477,7 @@ type CacheInfo = {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public async findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
-if (command === JupyterCommands.NotebookCommand) {
+        if (command === JupyterCommands.NotebookCommand) {
             return this.findBestNotebookCommand(token);
         } else {
             return super.findBestCommand(command, token);
