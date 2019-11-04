@@ -14,7 +14,6 @@ import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IServiceContainer } from '../../ioc/types';
