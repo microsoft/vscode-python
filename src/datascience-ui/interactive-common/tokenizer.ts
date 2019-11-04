@@ -60,23 +60,22 @@ export function registerMonacoLanguage() {
 
 // tslint:disable: no-any
 export async function initializeTokenizer(
-        getOnigasm: () => Promise<ArrayBuffer>,
-        getTmlanguageJSON: () => Promise<string>,
-        loadingFinished: (e?: any) => void): Promise<void> {
+    onigasm: ArrayBuffer,
+    tmlanguageJSON: string,
+    loadingFinished: (e?: any) => void): Promise<void> {
     try {
         // Register the language first
         registerMonacoLanguage();
 
         // Load the web assembly
-        const blob = await getOnigasm();
-        await loadWASM(blob);
+        await loadWASM(onigasm);
 
         // Setup our registry of different
         const registry = new Registry({
             getGrammarDefinition: async (_scopeName) => {
                 return {
                     format: 'json',
-                    content: await getTmlanguageJSON()
+                    content: tmlanguageJSON
                 };
             }
         });

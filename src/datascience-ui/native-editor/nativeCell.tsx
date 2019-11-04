@@ -24,7 +24,6 @@ import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
-import { getSettings } from '../react-common/settingsReactSide';
 import { AddCellLine } from './addCellLine';
 import { actionCreators } from './redux/actions';
 
@@ -42,6 +41,7 @@ interface INativeCellBaseProps {
     font: IFont;
     allowUndo: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
+    themeMatplotlibPlots: boolean | undefined;
 }
 
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
@@ -594,7 +594,7 @@ class NativeCell extends React.Component<INativeCellProps> {
 
 
     private renderOutput = (): JSX.Element | null => {
-        const themeMatplotlibPlots = getSettings().themeMatplotlibPlots ? true : false;
+        const themeMatplotlibPlots = this.props.themeMatplotlibPlots ? true : false;
         if (this.shouldRenderOutput()) {
             return (
                 <CellOutput

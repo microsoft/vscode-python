@@ -17,7 +17,6 @@ import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
-import { getSettings } from '../react-common/settingsReactSide';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
 import { actionCreators } from './redux/actions';
@@ -263,7 +262,7 @@ class NativeEditor extends React.Component<INativeEditorProps> {
                 <ErrorBoundary>
                     <ConnectedNativeCell
                         role='listitem'
-                        maxTextSize={getSettings().maxOutputSize}
+                        maxTextSize={this.props.settings.maxOutputSize}
                         autoFocus={false}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
@@ -275,6 +274,7 @@ class NativeEditor extends React.Component<INativeEditorProps> {
                         font={this.props.font}
                         allowUndo={this.props.undoStack.length > 0}
                         editorOptions={this.props.editorOptions}
+                        themeMatplotlibPlots={this.props.settings.themeMatplotlibPlots}
                     />
                 </ErrorBoundary>
                 {lastLine}

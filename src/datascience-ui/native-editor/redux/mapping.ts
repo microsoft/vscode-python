@@ -82,9 +82,7 @@ export class INativeEditorActionMapping {
     public [InteractiveWindowMessages.Activate]: NativeEditorReducerFunc<never | undefined>;
     public [InteractiveWindowMessages.GetVariablesResponse]: NativeEditorReducerFunc<IJupyterVariablesResponse>;
     public [InteractiveWindowMessages.GetVariableValueResponse]: NativeEditorReducerFunc<IJupyterVariable>;
-    public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: NativeEditorReducerFunc<Buffer>;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: NativeEditorReducerFunc<string>;
     public [InteractiveWindowMessages.RestartKernel]: NativeEditorReducerFunc<never | undefined>;
     public [CssMessages.GetCssResponse]: NativeEditorReducerFunc<IGetCssResponse>;
-    public [CssMessages.GetMonacoThemeResponse]: NativeEditorReducerFunc<IGetMonacoThemeRequest>;
+    public [InteractiveWindowMessages.MonacoReady]: NativeEditorReducerFunc<never | undefined>;
 }

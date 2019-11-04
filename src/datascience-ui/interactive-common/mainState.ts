@@ -43,7 +43,6 @@ export type IMainState = {
     undoStack: ICellViewModel[][];
     redoStack: ICellViewModel[][];
     submittedText: boolean;
-    //history: InputHistory;
     rootStyle?: string;
     rootCss?: string;
     font: IFont;
@@ -69,6 +68,8 @@ export type IMainState = {
     testMode?: boolean;
     codeTheme: string;
     settings: IDataScienceExtraSettings;
+    activateCount: number;
+    monacoReady: boolean;
 };
 
 export interface IFont {

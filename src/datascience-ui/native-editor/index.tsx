@@ -20,7 +20,8 @@ const baseTheme = detectBaseTheme();
 const store = createStore(
     // tslint:disable-next-line: no-typeof-undefined
     typeof acquireVsCodeApi !== 'undefined',
-    baseTheme);
+    baseTheme,
+    false);
 
 // Wire up a connected react control for our NativeEditor
 const ConnectedNativeEditor = getConnectedNativeEditor();

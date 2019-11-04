@@ -7,7 +7,7 @@ import { IDataScienceExtraSettings } from '../../client/datascience/types';
 
 // The WebPanel constructed by the extension should inject a getInitialSettings function into
 // the script. This should return a dictionary of key value pairs for settings
-// tslint:disable-next-line:no-any
+// tslint:disable:no-any
 export declare function getInitialSettings(): any;
 
 export function loadDefaultSettings() {
@@ -16,6 +16,7 @@ export function loadDefaultSettings() {
         return <IDataScienceExtraSettings>getInitialSettings(); // NOSONAR
     } else {
         // Default settings for tests
+        // tslint:disable-next-line: no-unnecessary-local-variable
         const result: IDataScienceExtraSettings = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
@@ -75,9 +76,9 @@ export function loadDefaultSettings() {
     }
 }
 
-export function computeEditorOptions(): monacoEditor.editor.IEditorOptions {
-    const intellisenseOptions = getSettings().intellisenseOptions;
-    const extraSettings = getSettings().extraSettings;
+export function computeEditorOptions(settings: IDataScienceExtraSettings): monacoEditor.editor.IEditorOptions {
+    const intellisenseOptions = settings.intellisenseOptions;
+    const extraSettings = settings.extraSettings;
     if (intellisenseOptions && extraSettings) {
         return {
             quickSuggestions: {

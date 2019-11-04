@@ -3,8 +3,9 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { CssMessages, IGetCssRequest, IGetCssResponse } from '../messages';
+import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
+import { IGetMonacoThemeResponse } from '../monacoMessages';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',
@@ -79,6 +80,7 @@ export enum InteractiveWindowMessages {
     NotebookAddCellBelow = 'notebook_add_cell_below',
     RenderComplete = 'finished_rendering_cells',
     FocusedCellEditor = 'focused_cell_editor',
+    MonacoReady = 'monaco_ready'
 }
 
 export enum NativeCommandType {
@@ -300,6 +302,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
+    public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
+    public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
     public [InteractiveWindowMessages.ProvideCompletionItemsRequest]: IProvideCompletionItemsRequest;
     public [InteractiveWindowMessages.CancelCompletionItemsRequest]: ICancelIntellisenseRequest;
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: IProvideCompletionItemsResponse;
@@ -338,4 +342,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
     public [InteractiveWindowMessages.RenderComplete]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.MonacoReady]: never | undefined;
 }

@@ -10,7 +10,6 @@ import {
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { PostMessageFunc } from '../../../react-common/reduxUtils';
-import { getSettings } from '../../../react-common/settingsReactSide';
 import { ICellAction, IChangeCellTypeAction, ICodeAction, IEditCellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 import { Helpers } from './helpers';
@@ -22,7 +21,7 @@ export namespace Execution {
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
             // noop if the submitted code is just a cell marker
-            const matcher = new CellMatcher(getSettings());
+            const matcher = new CellMatcher(prevState.settings);
             if (code && matcher.stripFirstMarker(code[pos]).length > 0) {
                 if (orig.cell.data.cell_type === 'code') {
                     // Update our input cell to be in progress again and clear outputs

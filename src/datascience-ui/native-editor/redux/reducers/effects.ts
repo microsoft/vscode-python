@@ -4,8 +4,19 @@
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { ICellAction, ICellAndCursorAction, ICodeAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
+import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
+import { computeEditorOptions } from '../../../react-common/settingsReactSide';
+import { CssMessages, IGetCssResponse } from '../../../../client/datascience/messages';
+import { detectBaseTheme } from '../../../react-common/themeDetector';
 
 export namespace Effects {
+
+    function computeKnownDark(settings: IDataScienceExtraSettings): boolean {
+        const ignore = settings.ignoreVscodeTheme ? true : false;
+        const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
+        return baseTheme !== 'vscode-light';
+    }
+
     export function focusCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
         const newVMs = [...arg.prevState.cellVMs];
 
@@ -151,6 +162,82 @@ export namespace Effects {
 
     export function updateSettings(arg: NativeEditorReducerArg<string>): IMainState {
         // String arg should be the IDataScienceExtraSettings
+        const newSettingsJSON = JSON.parse(arg.payload);
+        const newSettings = <IDataScienceExtraSettings>newSettingsJSON;
+        const newEditorOptions = computeEditorOptions(newSettings);
+        const newFontFamily = newSettings.extraSettings ? newSettings.extraSettings.fontFamily : arg.prevState.font.family;
+        const newFontSize = newSettings.extraSettings ? newSettings.extraSettings.fontSize : arg.prevState.font.size;
 
+        // Ask for new theme data if necessary
+        if (newSettings && newSettings.extraSettings && newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName) {
+            const knownDark = computeKnownDark(newSettings);
+            // User changed the current theme. Rerender
+            arg.postMessage(CssMessages.GetCssRequest, { isDark: knownDark });
+            arg.postMessage(CssMessages.GetMonacoThemeRequest, { isDark: knownDark });
+        }
+
+        return {
+            ...arg.prevState,
+            settings: newSettings,
+            editorOptions: newEditorOptions,
+            font: {
+                size: newFontSize,
+                family: newFontFamily
+            }
+        };
+    }
+
+    export function activate(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            activateCount: arg.prevState.activateCount + 1
+        };
+    }
+
+    export function handleCss(arg: NativeEditorReducerArg<IGetCssResponse>): IMainState {
+        // Recompute our known dark value from the class name in the body
+        // VS code should update this dynamically when the theme changes
+        const computedKnownDark = computeKnownDark(arg.prevState.settings);
+
+        // We also get this in our response, but computing is more reliable
+        // than searching for it.
+        const newBaseTheme = (arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode) ?
+            computeKnownDark ? 'vscode-dark' : 'vscode-light' : arg.prevState.baseTheme;
+
+        let fontSize: number = 14;
+        let fontFamily: string = 'Consolas, \'Courier New\', monospace';
+        const sizeSetting = '--code-font-size: ';
+        const familySetting = '--code-font-family: ';
+        const fontSizeIndex = arg.payload.css.indexOf(sizeSetting);
+        const fontFamilyIndex = arg.payload.css.indexOf(familySetting);
+
+        if (fontSizeIndex > -1) {
+            const fontSizeEndIndex = arg.payload.css.indexOf('px;', fontSizeIndex + sizeSetting.length);
+            fontSize = parseInt(arg.payload.css.substring(fontSizeIndex + sizeSetting.length, fontSizeEndIndex), 10);
+        }
+
+        if (fontFamilyIndex > -1) {
+            const fontFamilyEndIndex = arg.payload.css.indexOf(';', fontFamilyIndex + familySetting.length);
+            fontFamily = arg.payload.css.substring(fontFamilyIndex + familySetting.length, fontFamilyEndIndex);
+        }
+
+        return {
+            ...arg.prevState,
+            rootCss: arg.payload.css,
+            font: {
+                size: fontSize,
+                family: fontFamily
+            },
+            vscodeThemeName: arg.payload.theme,
+            knownDark: computedKnownDark,
+            baseTheme: newBaseTheme
+        };
+    }
+
+    export function monacoReady(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            monacoReady: true
+        };
     }
 }

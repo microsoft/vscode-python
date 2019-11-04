@@ -11,14 +11,17 @@ import { combineReducers, createAsyncStore, PostMessageFunc, QueuableAction } fr
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { INativeEditorActionMapping } from './mapping';
 import { reducerMap } from './reducers';
+import * as Redux from 'redux';
+import { generateMonacoReducer, IMonacoState } from '../../react-common/redux/reducers/monaco';
 
 function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainState {
+    const defaultSettings = loadDefaultSettings();
     return {
         // tslint:disable-next-line: no-typeof-undefined
         skipDefault,
         testMode: false,
-        baseTheme: loadDefaultSettings().ignoreVscodeTheme ? 'vscode-light' : baseTheme,
-        editorOptions: computeEditorOptions(),
+        baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
+        editorOptions: computeEditorOptions(defaultSettings),
         cellVMs: [],
         busy: true,
         undoStack: [],
@@ -38,11 +41,13 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainSta
             family: 'Consolas, \'Courier New\', monospace'
         },
         codeTheme: Identifiers.GeneratedThemeName,
-        settings: loadDefaultSettings()
+        settings: defaultSettings,
+        activateCount: 0,
+        monacoReady: false
     };
 }
 
-function generateRootReducer(skipDefault: boolean, baseTheme: string, postOffice: PostOffice):
+function generateReactReducer(skipDefault: boolean, baseTheme: string, postOffice: PostOffice):
     Reducer<IMainState, QueuableAction<INativeEditorActionMapping>> {
     // First create our default state.
     const defaultState = generateDefaultState(skipDefault, baseTheme);
@@ -59,14 +64,26 @@ function generateRootReducer(skipDefault: boolean, baseTheme: string, postOffice
         reducerMap);
 }
 
-export function createStore(skipDefault: boolean, baseTheme: string) {
+export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
     const postOffice = new PostOffice();
 
+    // Create reducer for the main react UI
+    const reactReducer = generateReactReducer(skipDefault, baseTheme, postOffice);
+
+    // Create another reducer for handling monaco state
+    const monacoReducer = generateMonacoReducer(testMode, postOffice);
+
+    // Combine these together
+    const rootReducer = Redux.combineReducers({
+        react: reactReducer,
+        monaco: monacoReducer
+    });
+
     // Send this into the root reducer
-    const store = createAsyncStore<IMainState, QueuableAction<INativeEditorActionMapping>>(
-        generateRootReducer(skipDefault, baseTheme, postOffice));
+    const store = createAsyncStore<{ react: IMainState, monaco: IMonacoState }, Redux.AnyAction>(
+        rootReducer);
 
     // Make all messages from the post office dispatch to the store.
     postOffice.addHandler({

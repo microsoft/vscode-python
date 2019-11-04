@@ -7,7 +7,7 @@ import { INativeEditorActionMapping } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
 import { Execution } from './execution';
-import { Kernel, restartKernel } from './kernel';
+import { Kernel } from './kernel';
 import { Movement } from './movement';
 import { Transfer } from './transfer';
 import { Variables } from './variables';
@@ -70,9 +70,7 @@ export const reducerMap: INativeEditorActionMapping = {
     [InteractiveWindowMessages.Activate]: Effects.activate,
     [InteractiveWindowMessages.GetVariablesResponse]: Variables.handleVariablesResponse,
     [InteractiveWindowMessages.GetVariableValueResponse]: Variables.handleVariableResponse,
-    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Monaco.loadOnigasm,
-    [InteractiveWindowMessages.LoadTmLanguageResponse]: Monaco.loadLanguage,
-    [InteractiveWindowMessages.RestartKernel]: Execution.restartKernel,
+    [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
     [CssMessages.GetCssResponse]: Effects.handleCss,
-    [CssMessages.GetMonacoThemeResponse]: Monaco.loadTheme,
+    [InteractiveWindowMessages.MonacoReady]: Effects.monacoReady
 }

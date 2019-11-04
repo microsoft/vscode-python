@@ -4,7 +4,7 @@
 import * as uuid from 'uuid/v4';
 
 import { InteractiveWindowMessages, ILoadAllCells } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell } from '../../../../client/datascience/types';
+import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import {
     createCellVM,
     createEmptyCell,
@@ -14,21 +14,20 @@ import {
     IMainState
 } from '../../../interactive-common/mainState';
 import { arePathsSame } from '../../../react-common/arePathsSame';
-import { getSettings } from '../../../react-common/settingsReactSide';
 import { actionCreators, ICellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 import { Helpers } from './helpers';
 import { Variables } from './variables';
 
 export namespace Creation {
-    function prepareCellVM(cell: ICell): ICellViewModel {
-        const cellVM: ICellViewModel = createCellVM(cell, getSettings(), true);
+    function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
+        const cellVM: ICellViewModel = createCellVM(cell, settings, true);
 
         // Set initial cell visibility and collapse
         cellVM.editable = true;
 
         // Always have the cell input text open
-        const newText = extractInputText(cellVM.cell, getSettings());
+        const newText = extractInputText(cellVM.cell, settings);
 
         cellVM.inputBlockOpen = true;
         cellVM.inputBlockText = newText;
@@ -85,7 +84,7 @@ export namespace Creation {
             };
         } else {
             // This is an entirely new cell (it may have started out as finished)
-            const newVM = prepareCellVM(arg.payload);
+            const newVM = prepareCellVM(arg.payload, arg.prevState.settings);
             const newVMs = [
                 ...arg.prevState.cellVMs,
                 newVM];
@@ -98,7 +97,7 @@ export namespace Creation {
     }
 
     export function insertAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(uuid(), null));
+        const newVM = prepareCellVM(createEmptyCell(uuid(), null), arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -123,7 +122,7 @@ export namespace Creation {
     }
 
     export function insertBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(uuid(), null));
+        const newVM = prepareCellVM(createEmptyCell(uuid(), null), arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -261,7 +260,7 @@ export namespace Creation {
     }
 
     export function loadAllCells(arg: NativeEditorReducerArg<ILoadAllCells>): IMainState {
-        const vms = arg.payload.cells.map(prepareCellVM);
+        const vms = arg.payload.cells.map(c => prepareCellVM(c, arg.prevState.settings));
         return {
             ...arg.prevState,
             busy: false,
