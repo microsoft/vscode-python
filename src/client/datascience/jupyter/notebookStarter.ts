@@ -115,57 +115,51 @@ export class NotebookStarter implements Disposable {
     }
 
     private async generateArguments(useDefaultConfig: boolean, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]>{
-        const mainArgs: string [] = ['--no-browser'];
 
-        // Create extra args based on if we have a config or not
-        const extraArgs: string[] = [];
+
+        // Parallelize as much as possible.
+        const promisedArgs: Promise<string>[] = [];
+        promisedArgs.push(Promise.resolve('--no-browser'));
+        promisedArgs.push(this.getNotebookDirArgument(tempDirPromise));
+        if (useDefaultConfig) {
+            promisedArgs.push(this.getConfigArgument(tempDirPromise));
+        }
+        // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
+        promisedArgs.push(Promise.resolve('--NotebookApp.iopub_data_rate_limit=10000000000.0'));
+
+        const [args, dockerArgs] = await Promise.all([Promise.all(promisedArgs), this.getDockerArguments()]);
 
         // Check for the debug environment variable being set. Setting this
         // causes Jupyter to output a lot more information about what it's doing
         // under the covers and can be used to investigate problems with Jupyter.
-        if (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) {
-            extraArgs.push('--debug');
-        }
-
-        // Modify the data rate limit if starting locally. The default prevents large dataframes from being returned.
-        extraArgs.push('--NotebookApp.iopub_data_rate_limit=10000000000.0');
-
-        // Parallelize as much as possible.
-        const promises = [this.addNotebookDirArgument(mainArgs, tempDirPromise), this.addDockerArguments(extraArgs)];
-        if (useDefaultConfig) {
-            promises.push(this.addConfigArgument(extraArgs, tempDirPromise));
-        }
-
-        await Promise.all(promises);
+        const debugArgs = (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) ? ['--debug'] : [];
 
         // Use this temp file and config file to generate a list of args for our command
-        return [...mainArgs, ...extraArgs];
+        return [...args, ...dockerArgs, ...debugArgs];
     }
 
     /**
-     * Adds the `--notebook-dir` argument.
+     * Gets the `--notebook-dir` argument.
      *
      * @private
-     * @param {string[]} args
      * @param {Promise<TemporaryDirectory>} tempDirectory
      * @returns {Promise<void>}
      * @memberof NotebookStarter
      */
-    private async addNotebookDirArgument(args: string[], tempDirectory: Promise<TemporaryDirectory>): Promise<void> {
+    private async getNotebookDirArgument(tempDirectory: Promise<TemporaryDirectory>): Promise<string> {
         const tempDir = await tempDirectory;
-        args.push(`--notebook-dir=${tempDir.path}`);
+        return `--notebook-dir=${tempDir.path}`;
     }
 
     /**
-     * Adds the `--config` argument.
+     * Gets the `--config` argument.
      *
      * @private
-     * @param {string[]} args
      * @param {Promise<TemporaryDirectory>} tempDirectory
      * @returns {Promise<void>}
      * @memberof NotebookStarter
      */
-    private async addConfigArgument(args: string[], tempDirectory: Promise<TemporaryDirectory>): Promise<void> {
+    private async getConfigArgument(tempDirectory: Promise<TemporaryDirectory>): Promise<string> {
         const tempDir = await tempDirectory;
         // In the temp dir, create an empty config python file. This is the same
         // as starting jupyter with all of the defaults.
@@ -174,40 +168,40 @@ export class NotebookStarter implements Disposable {
         traceInfo(`Generating custom default config at ${configFile}`);
 
         // Create extra args based on if we have a config or not
-        args.push(`--config=${configFile}`);
+        return `--config=${configFile}`;
     }
 
     /**
      * Adds the `--ip` and `--allow-root` arguments when in docker.
      *
      * @private
-     * @param {string[]} args
      * @param {Promise<TemporaryDirectory>} tempDirectory
-     * @returns {Promise<void>}
+     * @returns {Promise<string[]>}
      * @memberof NotebookStarter
      */
-    private async addDockerArguments(args: string[]): Promise<void> {
+    private async getDockerArguments(): Promise<string[]> {
+        const args: string[] = [];
         // Check for a docker situation.
         try {
             const cgroup = await this.fileSystem.readFile('/proc/self/cgroup').catch(() => '');
             if (!cgroup.includes('docker')) {
-                return;
+                return args;
             }
             // We definitely need an ip address.
             args.push('--ip');
             args.push('127.0.0.1');
 
             // Now see if we need --allow-root.
-            await new Promise(resolve => {
+            return new Promise(resolve => {
                 cp.exec('id', { encoding: 'utf-8' }, (_, stdout: string | Buffer) => {
                     if (stdout && stdout.toString().includes('(root)')) {
                         args.push('--allow-root');
                     }
-                    resolve();
+                    resolve([]);
                 });
             });
         } catch {
-            noop();
+            return args;
         }
     }
     private async generateTempDir(): Promise<TemporaryDirectory> {
