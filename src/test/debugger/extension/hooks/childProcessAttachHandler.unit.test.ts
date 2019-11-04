@@ -12,6 +12,12 @@ import { ChildProcessAttachService } from '../../../../client/debugger/extension
 import { PTVSDEvents } from '../../../../client/debugger/extension/hooks/constants';
 
 suite('Debug - Child Process', () => {
+    test('Do not attach if the event is undefined', async () => {
+        const attachService = mock(ChildProcessAttachService);
+        const handler = new ChildProcessAttachEventHandler(instance(attachService));
+        await handler.handleCustomEvent(undefined as any);
+        verify(attachService.attach(anything(), anything())).never();
+    });
     test('Do not attach to child process if event is invalid', async () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
@@ -20,7 +26,7 @@ suite('Debug - Child Process', () => {
         await handler.handleCustomEvent({ event: 'abc', body, session });
         verify(attachService.attach(body, session)).never();
     });
-    test('Do not attach to child process if event is invalid', async () => {
+    test('Do not attach to child process if ptvsd_subprocess event is invalid', async () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
         const body: any = {};
@@ -28,10 +34,13 @@ suite('Debug - Child Process', () => {
         await handler.handleCustomEvent({ event: PTVSDEvents.ChildProcessLaunched, body, session });
         verify(attachService.attach(body, session)).once();
     });
-    test('Exceptions are not bubbled up if data is invalid', async () => {
+    test('Do not attach to child process if ptvsd_attach event is invalid', async () => {
         const attachService = mock(ChildProcessAttachService);
         const handler = new ChildProcessAttachEventHandler(instance(attachService));
-        await handler.handleCustomEvent(undefined as any);
+        const body: any = {};
+        const session: any = {};
+        await handler.handleCustomEvent({ event: PTVSDEvents.AttachToSubprocess, body, session });
+        verify(attachService.attach(body, session)).once();
     });
     test('Exceptions are not bubbled up if exceptions are thrown', async () => {
         const attachService = mock(ChildProcessAttachService);
