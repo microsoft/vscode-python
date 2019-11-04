@@ -22,19 +22,21 @@ import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IDisposableRegistry, IPythonSettings } from '../../../../client/common/types';
 import { DebugAdapterActivator } from '../../../../client/debugger/extension/adapter/activator';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
-import { IDebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/types';
+import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
+import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../../../../client/debugger/extension/types';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { EventName } from '../../../../client/telemetry/constants';
 import { noop } from '../../../core';
 import { MockOutputChannel } from '../../../mockClasses';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Debugging - Adapter Factory Registration', () => {
+suite('Debugging - Adapter Factory and logger Registration', () => {
     const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
     let activator: IExtensionSingleActivationService;
     let debugService: IDebugService;
-    let factory: IDebugAdapterDescriptorFactory;
+    let descriptorFactory: IDebugAdapterDescriptorFactory;
+    let loggingFactory: IDebugSessionLoggingFactory;
     let disposableRegistry: IDisposableRegistry;
     let experimentsManager: ExperimentsManager;
     let spiedInstance: ExperimentsManager;
@@ -80,9 +82,10 @@ suite('Debugging - Adapter Factory Registration', () => {
         spiedInstance = spy(experimentsManager);
 
         debugService = mock(DebugService);
-        factory = mock(DebugAdapterDescriptorFactory);
+        descriptorFactory = mock(DebugAdapterDescriptorFactory);
+        loggingFactory = mock(DebugSessionLoggingFactory);
         disposableRegistry = [];
-        activator = new DebugAdapterActivator(instance(debugService), instance(factory), disposableRegistry, experimentsManager);
+        activator = new DebugAdapterActivator(instance(debugService), instance(descriptorFactory), instance(loggingFactory), disposableRegistry, experimentsManager);
     });
 
     teardown(() => {
@@ -100,17 +103,19 @@ suite('Debugging - Adapter Factory Registration', () => {
 
         await activator.activate();
 
-        verify(debugService.registerDebugAdapterDescriptorFactory('python', instance(factory))).once();
+        verify(debugService.registerDebugAdapterTrackerFactory('python', instance(loggingFactory))).once();
+        verify(debugService.registerDebugAdapterDescriptorFactory('python', instance(descriptorFactory))).once();
     });
 
     test('Register a disposable item if inside the DA experiment', async () => {
         when(spiedInstance.inExperiment(DebugAdapterExperiment.experiment)).thenReturn(true);
         const disposable = { dispose: noop };
+        when(debugService.registerDebugAdapterTrackerFactory(anything(), anything())).thenReturn(disposable);
         when(debugService.registerDebugAdapterDescriptorFactory(anything(), anything())).thenReturn(disposable);
 
         await activator.activate();
 
-        assert.deepEqual(disposableRegistry, [disposable]);
+        assert.deepEqual(disposableRegistry, [disposable, disposable]);
     });
 
     test('Send experiment group telemetry if inside the DA experiment', async () => {
@@ -127,7 +132,8 @@ suite('Debugging - Adapter Factory Registration', () => {
 
         await activator.activate();
 
-        verify(debugService.registerDebugAdapterDescriptorFactory('python', instance(factory))).never();
+        verify(debugService.registerDebugAdapterTrackerFactory('python', instance(loggingFactory))).never();
+        verify(debugService.registerDebugAdapterDescriptorFactory('python', instance(descriptorFactory))).never();
     });
 
     test('Don\'t register a disposable item if not inside the DA experiment', async () => {

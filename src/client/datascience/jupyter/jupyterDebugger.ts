@@ -8,9 +8,10 @@ import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ICommandManager, IDebugService, IWorkspaceService } from '../../common/application/types';
+import { DebugAdapterDescriptorFactory } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
-import { IConfigurationService } from '../../common/types';
+import { IConfigurationService, IExperimentsManager, Version } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -32,15 +33,9 @@ import { ILiveShareHasRole } from './liveshare/types';
 
 const pythonShellCommand = `_sysexec = sys.executable\r\n_quoted_sysexec = '"' + _sysexec + '"'\r\n!{_quoted_sysexec}`;
 
-interface IPtvsdVersion {
-    major: number;
-    minor: number;
-    revision: string;
-}
-
 @injectable()
 export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
-    private requiredPtvsdVersion: IPtvsdVersion = { major: 4, minor: 3, revision: '' };
+    private requiredPtvsdVersion: Version = { major: 4, minor: 3, patch: 0, build: [], prerelease: [], raw: '' };
     private configs: Map<string, DebugConfiguration> = new Map<string, DebugConfiguration>();
     constructor(
         @inject(IApplicationShell) private appShell: IApplicationShell,
@@ -48,7 +43,8 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IPlatformService) private platform: IPlatformService,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) {
     }
 
@@ -176,7 +172,31 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return result;
     }
 
-    private calculatePtvsdPathList(notebook: INotebook): string | undefined {
+    /**
+     * Gets the path to PTVSD.
+     * Temporary hack to check if python >= 3.7 and if experiments is enabled, then use new debugger, else old.
+     * (temporary to hardcode and use these in here).
+     * The old debugger will soon go away into oblivion...
+     * @private
+     * @param {INotebook} notebook
+     * @returns {Promise<string>}
+     * @memberof JupyterDebugger
+     */
+    private async getPtvsdPath(notebook: INotebook): Promise<string> {
+        const oldPtvsd = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
+        if (!this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)){
+            return oldPtvsd;
+        }
+        const pythonVersion = await this.getKernelPythonVersion(notebook);
+        // The new debug adapter is only supported in 3.7
+        // Code can be found here (src/client/debugger/extension/adapter/factory.ts).
+        if (!pythonVersion || pythonVersion.major < 3 || pythonVersion.minor < 7){
+            return oldPtvsd;
+        }
+
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+    }
+    private async calculatePtvsdPathList(notebook: INotebook): Promise<string | undefined> {
         const extraPaths: string[] = [];
 
         // Add the settings path first as it takes precedence over the ptvsd extension path
@@ -185,7 +205,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // Escape windows path chars so they end up in the source escaped
         if (settingsPath) {
             if (this.platform.isWindows) {
-                settingsPath = settingsPath.replace('\\', '\\\\');
+                settingsPath = settingsPath.replace(/\\/g, '\\\\');
             }
 
             extraPaths.push(settingsPath);
@@ -197,9 +217,9 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         // this path.
         const connectionInfo = notebook.server.getConnectionInfo();
         if (connectionInfo && connectionInfo.localLaunch) {
-            let localPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+            let localPath = await this.getPtvsdPath(notebook);
             if (this.platform.isWindows) {
-                localPath = localPath.replace('\\', '\\\\');
+                localPath = localPath.replace(/\\/g, '\\\\');
             }
             extraPaths.push(localPath);
         }
@@ -221,7 +241,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
 
     // Append our local ptvsd path and ptvsd settings path to sys.path
     private async appendPtvsdPaths(notebook: INotebook): Promise<void> {
-        const ptvsdPathList = this.calculatePtvsdPathList(notebook);
+        const ptvsdPathList = await this.calculatePtvsdPathList(notebook);
 
         if (ptvsdPathList && ptvsdPathList.length > 0) {
             const result = await this.executeSilently(notebook, `import sys\r\nsys.path.extend([${ptvsdPathList}])\r\nsys.path`);
@@ -248,11 +268,16 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         return notebook.execute(code, Identifiers.EmptyFileName, 0, uuid(), undefined, true);
     }
 
-    private async ptvsdCheck(notebook: INotebook): Promise<IPtvsdVersion | undefined> {
+    private async getKernelPythonVersion(notebook: INotebook): Promise<Version | undefined> {
+        const execResults = await this.executeSilently(notebook, 'import sys;print(sys.version)');
+        return this.parseVersionInfo(execResults, 'pythonVersionInfo');
+    }
+
+    private async ptvsdCheck(notebook: INotebook): Promise<Version | undefined> {
         // We don't want to actually import ptvsd to check version so run !python instead. If we import an old version it's hard to get rid of on
         // an upgrade needed scenario
         // tslint:disable-next-line:no-multiline-string
-        const ptvsdPathList = this.calculatePtvsdPathList(notebook);
+        const ptvsdPathList = await this.calculatePtvsdPathList(notebook);
 
         let code;
         if (ptvsdPathList) {
@@ -262,12 +287,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         }
 
         const ptvsdVersionResults = await this.executeSilently(notebook, code);
-        return this.parsePtvsdVersionInfo(ptvsdVersionResults);
+        return this.parseVersionInfo(ptvsdVersionResults, 'parsePtvsdVersionInfo');
     }
 
-    private parsePtvsdVersionInfo(cells: ICell[]): IPtvsdVersion | undefined {
+    private parseVersionInfo(cells: ICell[], purpose: 'parsePtvsdVersionInfo' | 'pythonVersionInfo'): Version | undefined {
         if (cells.length < 1 || cells[0].state !== CellState.finished) {
-            this.traceCellResults('parsePtvsdVersionInfo', cells);
+            this.traceCellResults(purpose, cells);
             return undefined;
         }
 
@@ -281,19 +306,22 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             const packageVersionMatch = packageVersionRegex.exec(outputString);
 
             if (packageVersionMatch) {
+                const major = parseInt(packageVersionMatch[1], 10);
+                const minor = parseInt(packageVersionMatch[2], 10);
+                const patch = parseInt(packageVersionMatch[3], 10);
                 return {
-                    major: parseInt(packageVersionMatch[1], 10), minor: parseInt(packageVersionMatch[2], 10), revision: packageVersionMatch[3]
+                    major, minor, patch, build: [], prerelease: [], raw: `${major}.${minor}.${patch}`
                 };
             }
         }
 
-        this.traceCellResults('parsingPtvsdVersionInfo', cells);
+        this.traceCellResults(purpose, cells);
 
         return undefined;
     }
 
     // Check to see if the we have the required version of ptvsd to support debugging
-    private ptvsdMeetsRequirement(version: IPtvsdVersion): boolean {
+    private ptvsdMeetsRequirement(version: Version): boolean {
         if (version.major > this.requiredPtvsdVersion.major) {
             return true;
         } else if (version.major === this.requiredPtvsdVersion.major && version.minor >= this.requiredPtvsdVersion.minor) {
@@ -304,7 +332,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     }
 
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
-    private async promptToInstallPtvsd(notebook: INotebook, oldVersion: IPtvsdVersion | undefined): Promise<void> {
+    private async promptToInstallPtvsd(notebook: INotebook, oldVersion: Version | undefined): Promise<void> {
         const promptMessage = oldVersion ? localize.DataScience.jupyterDebuggerInstallPtvsdUpdate() : localize.DataScience.jupyterDebuggerInstallPtvsdNew();
         const result = await this.appShell.showInformationMessage(promptMessage, localize.DataScience.jupyterDebuggerInstallPtvsdYes(), localize.DataScience.jupyterDebuggerInstallPtvsdNo());
 
