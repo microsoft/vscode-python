@@ -382,23 +382,25 @@ suite('Raw FileSystem', () => {
             if (ft === FileType.File) {
                 stat.setup(s => s.isFile())
                     .returns(() => true);
+            } else if (ft === FileType.Directory) {
+                stat.setup(s => s.isFile())
+                    .returns(() => false);
+                stat.setup(s => s.isDirectory())
+                    .returns(() => true);
+            } else if (ft === FileType.SymbolicLink) {
+                stat.setup(s => s.isFile())
+                    .returns(() => false);
+                stat.setup(s => s.isDirectory())
+                    .returns(() => false);
+                stat.setup(s => s.isSymbolicLink())
+                    .returns(() => true);
             } else {
                 stat.setup(s => s.isFile())
                     .returns(() => false);
-                if (ft === FileType.Directory) {
-                    stat.setup(s => s.isDirectory())
-                        .returns(() => true);
-                } else {
-                    stat.setup(s => s.isDirectory())
-                        .returns(() => false);
-                    if (ft === FileType.SymbolicLink) {
-                        stat.setup(s => s.isSymbolicLink())
-                            .returns(() => true);
-                    } else {
-                        stat.setup(s => s.isSymbolicLink())
-                            .returns(() => false);
-                    }
-                }
+                stat.setup(s => s.isDirectory())
+                    .returns(() => false);
+                stat.setup(s => s.isSymbolicLink())
+                    .returns(() => false);
             }
             // This is necessary because passing "stat.object" to
             // Promise.resolve() triggers the lookup.
