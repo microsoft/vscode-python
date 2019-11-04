@@ -478,33 +478,11 @@ type CacheInfo = {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public async findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
-        if (command === JupyterCommands.KernelSpecCommand) {
-            return this.findBestKernelSpecCommand(token);
-        } else if (command === JupyterCommands.NotebookCommand) {
+if (command === JupyterCommands.NotebookCommand) {
             return this.findBestNotebookCommand(token);
         } else {
             return super.findBestCommand(command, token);
         }
-    }
-    private async findBestKernelSpecCommand(token?: CancellationToken): Promise<IFindCommandResult> {
-        if (this.kernelCmd){
-            return this.kernelCmd;
-        }
-        const command = JupyterCommands.KernelSpecCommand;
-        // Kernel spec should be from the same jupyter interpreter.
-        const notebookCmd = await this.findBestNotebookCommand(token);
-        if (notebookCmd.status !== ModuleExistsStatus.NotFound && notebookCmd.command){
-            const notebookInterpreter = await notebookCmd.command.interpreter();
-            if (notebookInterpreter){
-                const kernelCmd = await super.findInterpreterCommand(command, notebookInterpreter, token);
-                if (kernelCmd.command && kernelCmd.status !== ModuleExistsStatus.NotFound){
-                    this.kernelCmd = kernelCmd;
-                    return kernelCmd;
-                }
-            }
-        }
-
-        return this.kernelCmd = await super.findBestCommand(command, token);
     }
     private async findBestNotebookCommand(token?: CancellationToken): Promise<IFindCommandResult> {
         const command = JupyterCommands.NotebookCommand;
