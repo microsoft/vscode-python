@@ -64,7 +64,7 @@ suite('Temporary files', () => {
                 filePath: '/tmp/xyz.tmp',
                 dispose: (() => undefined)
             };
-            raw.setup(r => r.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+            raw.setup(r => r.file({ postfix: '.tmp', dir: undefined }, TypeMoq.It.isAny()))
                 .callback((_s, cb) => {
                     cb(undefined, expected.filePath, undefined, expected.dispose);
                 });
@@ -77,7 +77,7 @@ suite('Temporary files', () => {
 
         test('failure', async () => {
             const err = new Error('something went wrong');
-            raw.setup(r => r.file({ postfix: '.tmp' }, TypeMoq.It.isAny()))
+            raw.setup(r => r.file({ postfix: '.tmp', dir: undefined }, TypeMoq.It.isAny()))
                 .callback((_s, cb) => {
                     cb(err);
                 });
