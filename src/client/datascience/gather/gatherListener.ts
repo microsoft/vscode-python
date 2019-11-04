@@ -17,6 +17,7 @@ export class GatherListener implements IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
     private gatherLogger: GatherLogger;
+    private notebookUri: Uri = Uri.parse('');
 
     constructor(
         @inject(IGatherExecution) private gather: IGatherExecution,
@@ -72,6 +73,8 @@ export class GatherListener implements IInteractiveWindowListener {
     }
 
     private async setLogger(notebookUri: Uri) {
+        this.notebookUri = notebookUri;
+
         // First get the active server
         const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
 
@@ -99,11 +102,11 @@ export class GatherListener implements IInteractiveWindowListener {
         if (this.configService.getSettings().datascience.gatherToScript) {
             await this.showFile(slicedProgram, cell.file);
         } else {
-            await this.showNotebook(slicedProgram, cell.file);
+            await this.showNotebook(slicedProgram);
         }
     }
 
-    private async showNotebook(slicedProgram: string, fromFile: string) {
+    private async showNotebook(slicedProgram: string) {
         if (slicedProgram) {
             let cells: ICell[] = [{
                 id: uuid(),
@@ -112,7 +115,7 @@ export class GatherListener implements IInteractiveWindowListener {
                 state: 0,
                 data: {
                     cell_type: 'markdown',
-                    source: localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(fromFile),
+                    source: localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(this.notebookUri.fsPath),
                     metadata: {}
                 }
             }];
