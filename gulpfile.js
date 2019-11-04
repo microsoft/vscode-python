@@ -231,6 +231,20 @@ gulp.task('verifyBundle', async () => {
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
+async function installPythonPackage(packageName, targetDir = './pythonFiles/lib/python') {
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', targetDir, '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(packageName))
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install Python Libs using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args.concat(packageName)).catch(ex => console.error("Failed to install Python Libs using 'python'", ex));
+    }
+}
+
 gulp.task('installPythonRequirements', async () => {
     const requirements = fs
         .readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8')
@@ -238,20 +252,11 @@ gulp.task('installPythonRequirements', async () => {
         .map(item => item.trim())
         .filter(item => item.length > 0);
     const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
-    await Promise.all(
-        requirements.map(async requirement => {
-            const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(requirement))
-                .then(() => true)
-                .catch(ex => {
-                    console.error("Failed to install Python Libs using 'python3'", ex);
-                    return false;
-                });
-            if (!success) {
-                console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-                await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install Python Libs using 'python'", ex));
-            }
-        })
-    );
+    await Promise.all(requirements.map(async requirement => installPythonPackage(requirement)));
+});
+
+gulp.task('installPythonJSONRpcPackagesForPython2', async () => {
+    await installPythonPackage('futures==3.3.0', './pythonFiles/lib/python2');
 });
 
 // Install new PTVSD wheels for python 3.7
@@ -287,7 +292,7 @@ gulp.task('installOldPtvsd', async () => {
     }
 });
 
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installPtvsdWheels'));
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installPtvsdWheels', 'installPythonJSONRpcPackagesForPython2'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
