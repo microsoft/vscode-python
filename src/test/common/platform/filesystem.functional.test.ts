@@ -22,6 +22,8 @@ use(assertArrays);
 
 // tslint:disable:max-func-body-length chai-vague-errors
 
+const WINDOWS = /^win/.test(process.platform);
+
 const DOES_NOT_EXIST = 'this file does not exist';
 
 async function ensureDoesNotExist(filename: string) {
@@ -140,79 +142,41 @@ suite('FileSystem paths', () => {
     });
 
     suite('normCase', () => {
-        if (path.sep === '\\') { // Windows
-            test('forward-slash is changed to backslash', () => {
-                const filename = 'X/Y/Z/SPAM.PY';
-                const expected = 'X\\Y\\Z\\SPAM.PY';
+        test('forward-slash', () => {
+            const filename = 'X/Y/Z/SPAM.PY';
+            const expected = WINDOWS ? 'X\\Y\\Z\\SPAM.PY' : filename;
 
-                const result = fspath.normCase(filename);
+            const result = fspath.normCase(filename);
 
-                expect(result).to.equal(expected);
-            });
+            expect(result).to.equal(expected);
+        });
 
-            test('backslash is not changed', () => {
-                const filename = 'X\\Y\\Z\\SPAM.PY';
-                const expected = filename;
+        test('backslash is not changed', () => {
+            const filename = 'X\\Y\\Z\\SPAM.PY';
+            const expected = filename;
 
-                const result = fspath.normCase(filename);
+            const result = fspath.normCase(filename);
 
-                expect(result).to.equal(expected);
-            });
+            expect(result).to.equal(expected);
+        });
 
-            test('lower-case is made upper-case', () => {
-                const filename = 'x\\y\\z\\spam.py';
-                const expected = 'X\\Y\\Z\\SPAM.PY';
+        test('lower-case', () => {
+            const filename = 'x\\y\\z\\spam.py';
+            const expected = WINDOWS ? 'X\\Y\\Z\\SPAM.PY' : filename;
 
-                const result = fspath.normCase(filename);
+            const result = fspath.normCase(filename);
 
-                expect(result).to.equal(expected);
-            });
+            expect(result).to.equal(expected);
+        });
 
-            test('on Windows, upper-case stays upper-case', () => {
-                const filename = 'X\\Y\\Z\\SPAM.PY';
-                const expected = 'X\\Y\\Z\\SPAM.PY';
+        test('upper-case stays upper-case', () => {
+            const filename = 'X\\Y\\Z\\SPAM.PY';
+            const expected = 'X\\Y\\Z\\SPAM.PY';
 
-                const result = fspath.normCase(filename);
+            const result = fspath.normCase(filename);
 
-                expect(result).to.equal(expected);
-            });
-        } else {
-            test('forward-slash is not changed', () => {
-                const filename = 'x/y/z/spam.py';
-                const expected = filename;
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('backslash is not changed', () => {
-                const filename = 'x\\y\\z\\spam.py';
-                const expected = filename;
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('on non-Windows, lower-case stays lower-case', () => {
-                const filename = 'x/y/z/spam.py';
-                const expected = 'x/y/z/spam.py';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('on non-Windows, upper-case stays upper-case', () => {
-                const filename = 'X/Y/Z/SPAM.PY';
-                const expected = 'X/Y/Z/SPAM.PY';
-
-                const result = fspath.normCase(filename);
-
-                expect(result).to.equal(expected);
-            });
-        }
+            expect(result).to.equal(expected);
+        });
     });
 });
 
@@ -346,13 +310,17 @@ suite('Raw FileSystem', () => {
         });
     });
 
-    suite('chmod', () => {
+    suite('chmod (non-Windows)', () => {
+        suiteSetup(function () {
+            // On Windows, chmod won't have any effect on the file itself.
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+        });
+
         async function checkMode(filename: string, expected: number) {
             const stat = await fsextra.stat(filename);
-            if (/^win/.test(process.platform)) {
-                // On Windows, chmod won't have any effect on the file itself.
-                return;
-            }
             expect(stat.mode & 0o777).to.equal(expected);
         }
 
@@ -715,43 +683,25 @@ suite('FileSystem Utils', () => {
             expect(result).to.equal(false);
         });
 
-        if (path.sep === '\\') {
-            test('equal with different separators', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x\\y\\z\\spam.py';
+        test('with different separators', () => {
+            const file1 = 'x/y/z/spam.py';
+            const file2 = 'x\\y\\z\\spam.py';
+            const expected = WINDOWS;
 
-                const result = utils.arePathsSame(file1, file2);
+            const result = utils.arePathsSame(file1, file2);
 
-                expect(result).to.equal(true);
-            });
+            expect(result).to.equal(expected);
+        });
 
-            test('equal with different case', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x/Y/z/Spam.py';
+        test('with different case', () => {
+            const file1 = 'x/y/z/spam.py';
+            const file2 = 'x/Y/z/Spam.py';
+            const expected = WINDOWS;
 
-                const result = utils.arePathsSame(file1, file2);
+            const result = utils.arePathsSame(file1, file2);
 
-                expect(result).to.equal(true);
-            });
-        } else {
-            test('not equal with different separators', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x\\y\\z\\spam.py';
-
-                const result = utils.arePathsSame(file1, file2);
-
-                expect(result).to.equal(false);
-            });
-
-            test('not equal with different case', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x/Y/z/Spam.py';
-
-                const result = utils.arePathsSame(file1, file2);
-
-                expect(result).to.equal(false);
-            });
-        }
+            expect(result).to.equal(expected);
+        });
     });
 
     suite('pathExists', () => {
@@ -920,7 +870,14 @@ suite('FileSystem Utils', () => {
     });
 
     suite('isDirReadonly', () => {
-        if (!/^win/.test(process.platform)) {
+        suite('non-Windows', () => {
+            suiteSetup(function () {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+            });
+
             // On Windows, chmod won't have any effect on the file itself.
             test('is readonly', async () => {
                 const dirname = await fix.createDirectory('x/y/z/spam');
@@ -930,7 +887,7 @@ suite('FileSystem Utils', () => {
 
                 expect(isReadonly).to.equal(true);
             });
-        }
+        });
 
         test('is not readonly', async () => {
             const dirname = await fix.createDirectory('x/y/z/spam');
@@ -1063,40 +1020,28 @@ suite('FileSystem - legacy aliases', () => {
         await expect(readPromise).to.be.rejectedWith();
     });
 
-    suite('Case sensitivity', () => {
+    test('Case sensitivity', () => {
         const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
         const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
         const path3 = 'c:\\USERS\\Peter Smith\\my documents\\test.exe';
+        const filesystem = new FileSystem();
 
-        test('Case sensitivity is ignored when comparing file names on windows', () => {
-            const isWindows = true;
-            const filesystem = new FileSystem(isWindows);
+        const same12 = filesystem.arePathsSame(path1, path2);
+        const same11 = filesystem.arePathsSame(path1, path1);
+        const same22 = filesystem.arePathsSame(path2, path2);
+        const same13 = filesystem.arePathsSame(path1, path3);
 
-            const same12 = filesystem.arePathsSame(path1, path2);
-            const same11 = filesystem.arePathsSame(path1, path1);
-            const same22 = filesystem.arePathsSame(path2, path2);
-            const same13 = filesystem.arePathsSame(path1, path3);
-
+        if (WINDOWS) {
             expect(same12).to.be.equal(true, 'file paths do not match (windows)');
             expect(same11).to.be.equal(true, '1. file paths do not match');
             expect(same22).to.be.equal(true, '2. file paths do not match');
             expect(same13).to.be.equal(false, '2. file paths do not match');
-        });
-
-        test('Case sensitivity is not ignored when comparing file names on non-Windows', () => {
-            const isWindows = false;
-            const filesystem = new FileSystem(isWindows);
-
-            const same12 = filesystem.arePathsSame(path1, path2);
-            const same11 = filesystem.arePathsSame(path1, path1);
-            const same22 = filesystem.arePathsSame(path2, path2);
-            const same13 = filesystem.arePathsSame(path1, path3);
-
+        } else {
             expect(same12).to.be.equal(false, 'file match (non windows)');
             expect(same11).to.be.equal(true, '1. file paths do not match');
             expect(same22).to.be.equal(true, '2. file paths do not match');
             expect(same13).to.be.equal(false, '2. file paths do not match');
-        });
+        }
     });
 
     test('Check existence of files synchronously', async () => {
