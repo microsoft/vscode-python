@@ -576,7 +576,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const gatherDisabled =  this.props.cellVM.cell.data.execution_count === null ||
                                 this.props.cellVM.hasBeenRun === null ||
                                 this.props.cellVM.hasBeenRun === false ||
-                                this.isCodeCell() === false ||
+                                this.isMarkdownCell() ||
                                 getSettings().enableGather === false;
         const canRunAbove = this.props.stateController.canRunAbove(cellId);
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
