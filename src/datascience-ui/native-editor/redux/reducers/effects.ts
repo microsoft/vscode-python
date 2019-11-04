@@ -8,6 +8,8 @@ import { IDataScienceExtraSettings } from '../../../../client/datascience/types'
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { CssMessages, IGetCssResponse } from '../../../../client/datascience/messages';
 import { detectBaseTheme } from '../../../react-common/themeDetector';
+import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
+import { Identifiers } from '../../../../client/datascience/constants';
 
 export namespace Effects {
 
@@ -238,6 +240,13 @@ export namespace Effects {
         return {
             ...arg.prevState,
             monacoReady: true
+        };
+    }
+
+    export function monacoThemeChange(arg: NativeEditorReducerArg<IGetMonacoThemeResponse>): IMainState {
+        return {
+            ...arg.prevState,
+            monacoTheme: Identifiers.GeneratedThemeName
         };
     }
 }

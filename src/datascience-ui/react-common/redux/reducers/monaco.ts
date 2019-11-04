@@ -1,13 +1,19 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages, IInteractiveWindowMapping } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { QueuableAction, PostMessageFunc, combineReducers, ReducerFunc, ReducerArg } from '../../reduxUtils';
-import { PostOffice } from '../../postOffice';
-import { Reducer } from 'redux';
+import { Reducer, Action } from 'redux';
+
+import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { initializeTokenizer } from '../../../interactive-common/tokenizer';
+import { PostOffice } from '../../postOffice';
+import { combineReducers, PostMessageFunc, QueuableAction, ReducerArg, ReducerFunc } from '../../reduxUtils';
+import { Identifiers } from '../../../../client/datascience/constants';
 
 export interface IMonacoState {
     onigasmData: Buffer | undefined;
@@ -19,44 +25,48 @@ type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, InteractiveWindowMessages,
 
 type MonacoReducerArg<T = never | undefined> = ReducerArg<IMonacoState, InteractiveWindowMessages, T>;
 
-namespace Reducers {
-
-    function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
-        if (arg.prevState.tmLanguageData) {
-            // Monaco is ready. Initialize the tokenizer
-            initializeTokenizer(arg.payload, arg.prevState.tmLanguageData, () => arg.postMessage(InteractiveWindowMessages.MonacoReady)).ignoreErrors();
-        }
-
-        return {
-            ...arg.prevState,
-            onigasmData: arg.payload
-        };
+function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
+    if (arg.prevState.tmLanguageData) {
+        // Monaco is ready. Initialize the tokenizer
+        initializeTokenizer(arg.payload, arg.prevState.tmLanguageData, () => arg.queueAnother({ type: InteractiveWindowMessages.MonacoReady })).ignoreErrors();
     }
 
-    function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoState {
-        if (arg.prevState.tmLanguageData) {
-            // Monaco is ready. Initialize the tokenizer
-            initializeTokenizer(arg.payload, arg.prevState.tmLanguageData, () => arg.postMessage(InteractiveWindowMessages.MonacoReady)).ignoreErrors();
-        }
-
-        return {
-            ...arg.prevState,
-            onigasmData: arg.payload
-        };
-    }
+    return {
+        ...arg.prevState,
+        onigasmData: arg.payload
+    };
 }
 
+function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoState {
+    if (arg.prevState.onigasmData) {
+        // Monaco is ready. Initialize the tokenizer
+        initializeTokenizer(arg.prevState.onigasmData, arg.payload, () => arg.queueAnother({ type: InteractiveWindowMessages.MonacoReady })).ignoreErrors();
+    }
 
+    return {
+        ...arg.prevState,
+        tmLanguageData: arg.payload
+    };
+}
+
+function handleThemeResponse(arg: MonacoReducerArg<IGetMonacoThemeResponse>): IMonacoState {
+    // Tell monaco we have a new theme. THis is like a state update for monaco
+    monacoEditor.editor.defineTheme(Identifiers.GeneratedThemeName, arg.payload.theme);
+    return arg.prevState;
+}
+
+// Create a mapping between message and reducer type
 class IMonacoActionMapping {
     public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: MonacoReducerFunc<Buffer>;
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: MonacoReducerFunc<string>;
     public [CssMessages.GetMonacoThemeResponse]: MonacoReducerFunc<IGetMonacoThemeResponse>;
 }
 
+// Create the map between message type and the actual function to call to update state
 const reducerMap: IMonacoActionMapping = {
-    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: Reducers.handleLoadOnigasmResponse,
-    [InteractiveWindowMessages.LoadTmLanguageResponse]: Reducers.handleLoadTmLanguageResponse,
-    [CssMessages.GetMonacoThemeResponse]: Reducers.handleThemeResponse
+    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: handleLoadOnigasmResponse,
+    [InteractiveWindowMessages.LoadTmLanguageResponse]: handleLoadTmLanguageResponse,
+    [CssMessages.GetMonacoThemeResponse]: handleThemeResponse
 };
 
 

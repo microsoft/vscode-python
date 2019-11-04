@@ -12,6 +12,7 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IJupyterVariable, IMessageCell, IDataScienceExtraSettings } from '../../client/datascience/types';
+import { loadDefaultSettings } from '../react-common/settingsReactSide';
 
 export enum CursorPos {
     Top,
@@ -92,6 +93,7 @@ const darkStyle = `
 
 // This function generates test state when running under a browser instead of inside of
 export function generateTestState(filePath: string = '', editable: boolean = false): IMainState {
+    const defaultSettings = loadDefaultSettings();
     return {
         cellVMs: generateVMs(filePath, editable),
         editCellVM: createEditableCellVM(1),
@@ -127,7 +129,10 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
             size: 14,
             family: 'Consolas, \'Courier New\', monospace'
         },
-        codeTheme: 'Foo'
+        codeTheme: 'Foo',
+        settings: defaultSettings,
+        activateCount: 0,
+        monacoReady: true
     };
 }
 

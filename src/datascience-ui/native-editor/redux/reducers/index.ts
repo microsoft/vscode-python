@@ -72,5 +72,6 @@ export const reducerMap: INativeEditorActionMapping = {
     [InteractiveWindowMessages.GetVariableValueResponse]: Variables.handleVariableResponse,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
     [CssMessages.GetCssResponse]: Effects.handleCss,
-    [InteractiveWindowMessages.MonacoReady]: Effects.monacoReady
+    [InteractiveWindowMessages.MonacoReady]: Effects.monacoReady,
+    [CssMessages.GetMonacoThemeResponse]: Effects.monacoThemeChange,
 }

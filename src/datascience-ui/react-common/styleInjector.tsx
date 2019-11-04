@@ -8,14 +8,14 @@ import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datas
 import { IGetMonacoThemeResponse } from '../../client/datascience/monacoMessages';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
-import { getSettings } from './settingsReactSide';
 import { detectBaseTheme } from './themeDetector';
+import { Identifiers } from '../../client/datascience/constants';
 
 export interface IStyleInjectorProps {
     expectingDark: boolean;
     postOffice: PostOffice;
+    settings: IDataScienceExtraSettings;
     darkChanged?(newDark: boolean): void;
-    monacoThemeChanged?(theme: string): void;
     onReady?(): void;
 }
 
@@ -115,12 +115,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         if (response && response.theme) {
 
             // Tell monaco we have a new theme. THis is like a state update for monaco
-            monacoEditor.editor.defineTheme('interactiveWindow', response.theme);
-
-            // Tell the main panel we have a theme now
-            if (this.props.monacoThemeChanged) {
-                this.props.monacoThemeChanged('interactiveWindow');
-            }
+            monacoEditor.editor.defineTheme(Identifiers.GeneratedThemeName, response.theme);
         }
     }
 
@@ -138,7 +133,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     }
 
     private computeKnownDark() : boolean {
-        const ignore = getSettings && getSettings().ignoreVscodeTheme ? true : false;
+        const ignore = this.props.settings.ignoreVscodeTheme ? true : false;
         const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
         return baseTheme !== 'vscode-light';
     }

@@ -5,7 +5,8 @@ import {
     ILoadAllCells,
     InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CssMessages, IGetCssResponse, IGetMonacoThemeRequest } from '../../../client/datascience/messages';
+import { CssMessages, IGetCssResponse } from '../../../client/datascience/messages';
+import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
@@ -85,4 +86,5 @@ export class INativeEditorActionMapping {
     public [InteractiveWindowMessages.RestartKernel]: NativeEditorReducerFunc<never | undefined>;
     public [CssMessages.GetCssResponse]: NativeEditorReducerFunc<IGetCssResponse>;
     public [InteractiveWindowMessages.MonacoReady]: NativeEditorReducerFunc<never | undefined>;
+    public [CssMessages.GetMonacoThemeResponse]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
 }
