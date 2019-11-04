@@ -250,6 +250,7 @@ suite('Python Settings', async () => {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
+            remoteJupyterServerURI: 'local',
             // tslint:disable-next-line: no-invalid-template-strings
             notebookFileRoot: '${FileDirname}',
             changeDirOnImportExport: true,

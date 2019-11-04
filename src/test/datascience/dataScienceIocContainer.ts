@@ -444,6 +444,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
+            remoteJupyterServerURI: 'local',
             notebookFileRoot: 'WORKSPACE',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,

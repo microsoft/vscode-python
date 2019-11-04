@@ -125,6 +125,7 @@ suite('Interactive window command listener', async () => {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: '',
+            remoteJupyterServerURI: '',
             changeDirOnImportExport: true,
             notebookFileRoot: 'WORKSPACE',
             useDefaultConfigForJupyter: true,

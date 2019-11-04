@@ -250,7 +250,7 @@ suite('DataScience Debugger tests', () => {
 
             const connString = await connectionFound.promise;
             const uri = connString as string;
-            ioc.getSettings().datascience.jupyterServerURI = uri;
+            ioc.getSettings().datascience.remoteJupyterServerURI = uri;
 
             // Debug with this setting should use the server URI
             await debugCell('#%%\nprint("bar")', undefined, undefined, true);
