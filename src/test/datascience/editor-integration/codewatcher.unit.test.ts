@@ -359,7 +359,7 @@ testing1
 testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
 
-        document.setup(doc => doc.getText()).returns(() => inputText).verifiable(TypeMoq.Times.exactly(2));
+        document.setup(doc => doc.getText()).returns(() => inputText).verifiable(TypeMoq.Times.exactly(1));
 
         codeWatcher.setDocument(document.object);
 

@@ -108,71 +108,89 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
 }
 
 // CellRange is used as the basis for creating new ICells. We only use it in this file.
-class CellRange {
-    public range: Range;
-    public title: string;
-    public cell_type: string;
-
-    constructor(r: Range, t: string, ct: string) {
-        this.range = r;
-        this.title = t;
-        this.cell_type = ct;
-    }
-}
-
-function generateCellRangesFromStringArray(lines: string[], settings?: IDataScienceSettings): CellRange[] {
-    const matcher = new CellMatcher(settings);
-    const cells: CellRange[] = [];
-
-    for (let index = 0; index < lines.length; index += 1) {
-        if (matcher.isCell(lines[index])) {
-
-            // We have a cell, find the next cell
-            let endCellIndex = index + 1;
-            while (endCellIndex < lines.length && !matcher.isCell(lines[endCellIndex])) {
-                endCellIndex += 1;
-            }
-            endCellIndex -= 1; // Get last line of cell.
-
-            const result = matcher.exec(lines[index]);
-            if (result !== undefined) {
-                cells.push(new CellRange(
-                    new Range(index, 0, endCellIndex, lines[endCellIndex].length),
-                    result,
-                    matcher.getCellType(lines[index])
-                )
-                );
-            }
-            index = endCellIndex;
-        }
-    }
-
-    return cells;
+interface ICellRange {
+    range: Range;
+    title: string;
+    cell_type: string;
 }
 
 export function generateCellsFromString(source: string, settings?: IDataScienceSettings): ICell[] {
     const lines: string[] = source.splitLines({ trim: false, removeEmptyEntries: false });
 
-    // Get our ranges. They'll determine our cells
-    const ranges = generateCellRangesFromStringArray(lines, settings);
+    // Find all the lines that start a cell
+    const matcher = new CellMatcher(settings);
+    const starts: { startLine: number; title: string; code: string; cell_type: string }[] = [];
+    let currentCode: string | undefined;
+    for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (matcher.isCell(line)) {
+            if (starts.length > 0 && currentCode) {
+                const previousCell = starts[starts.length - 1];
+                previousCell.code = currentCode;
+            }
+            const results = matcher.exec(line);
+            if (results !== undefined) {
+                starts.push({
+                    startLine: index + 1,
+                    title: results,
+                    cell_type: matcher.getCellType(line),
+                    code: ''
+                });
+            }
+            currentCode = undefined;
+        }
+        currentCode = currentCode ? `${currentCode}\n${line}` : line;
+    }
+
+    if (starts.length >= 1 && currentCode) {
+        const previousCell = starts[starts.length - 1];
+        previousCell.code = currentCode;
+    }
 
     // For each one, get its text and turn it into a cell
-    return Array.prototype.concat(...ranges.map(cr => {
-        const code = lines.slice(cr.range.start.line, cr.range.end.line).join('\n');
-        return generateCells(settings, code, '', cr.range.start.line, false, uuid());
+    return Array.prototype.concat(...starts.map(s => {
+        return generateCells(settings, s.code, '', s.startLine, false, uuid());
     }));
 }
 
-export function generateCellRangesFromDocument(document: TextDocument, settings?: IDataScienceSettings): CellRange[] {
-    if (document.lineCount === 0) {
-        return [];
-    } else {
-        const lines: string[] = document.getText().splitLines({ trim: false, removeEmptyEntries: false });
-        return generateCellRangesFromStringArray(lines, settings);
+export function generateCellRangesFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICellRange[] {
+    // Implmentation of getCells here based on Don's Jupyter extension work
+    const matcher = new CellMatcher(settings);
+    const cells: { range: Range; title: string; cell_type: string }[] = [];
+    for (let index = 0; index < document.lineCount; index += 1) {
+        const line = document.lineAt(index);
+        if (matcher.isCell(line.text)) {
+            if (cells.length > 0) {
+                const previousCell = cells[cells.length - 1];
+                previousCell.range = new Range(previousCell.range.start, document.lineAt(index - 1).range.end);
+            }
+
+            const results = matcher.exec(line.text);
+            if (results !== undefined) {
+                cells.push({
+                    range: line.range,
+                    title: results,
+                    cell_type: matcher.getCellType(line.text)
+                });
+            }
+        }
     }
 
+    if (cells.length >= 1) {
+        const line = document.lineAt(document.lineCount - 1);
+        const previousCell = cells[cells.length - 1];
+        previousCell.range = new Range(previousCell.range.start, line.range.end);
+    }
+
+    return cells;
 }
 
 export function generateCellsFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICell[] {
-    return generateCellsFromString(document.getText(), settings);
+    const ranges = generateCellRangesFromDocument(document, settings);
+
+    // For each one, get its text and turn it into a cell
+    return Array.prototype.concat(...ranges.map(cr => {
+        const code = document.getText(cr.range);
+        return generateCells(settings, code, '', cr.range.start.line, false, uuid());
+    }));
 }
