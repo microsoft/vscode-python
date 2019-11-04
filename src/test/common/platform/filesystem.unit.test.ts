@@ -673,7 +673,7 @@ suite('FileSystem Utils', () => {
     });
 
     suite('pathExists', () => {
-        test('file missing (any})', async () => {
+        test('file missing (any)', async () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.stat(filename))
                 .throws(new Error('file not found'));

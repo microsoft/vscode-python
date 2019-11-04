@@ -705,7 +705,7 @@ suite('FileSystem Utils', () => {
     });
 
     suite('pathExists', () => {
-        test('file missing (any})', async () => {
+        test('file missing (any)', async () => {
             const exists = await utils.pathExists(DOES_NOT_EXIST);
 
             expect(exists).to.equal(false);
