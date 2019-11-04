@@ -156,7 +156,7 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICellRange[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
     const matcher = new CellMatcher(settings);
-    const cells: { range: Range; title: string; cell_type: string }[] = [];
+    const cells: ICellRange[] = [];
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
         if (matcher.isCell(line.text)) {
