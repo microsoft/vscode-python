@@ -202,7 +202,7 @@ for _ in range(50):
             // find the buttons on the cell itself
             let cell = getLastOutputCell(wrapper, 'NativeCell');
             let ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 8, 'Cell buttons not found');
             let deleteButton = ImageButtons.at(6);
 
             // Make sure delete works
@@ -216,7 +216,7 @@ for _ in range(50):
             // least one cell in the file.
             cell = getLastOutputCell(wrapper, 'NativeCell');
             ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
+            assert.equal(ImageButtons.length, 8, 'Cell buttons not found');
             deleteButton = ImageButtons.at(6);
 
             afterDelete = await getNativeCellResults(wrapper, 1, async () => {
@@ -344,7 +344,7 @@ for _ in range(50):
             const cell = getOutputCell(wrapper, 'NativeCell', 1);
             assert.ok(cell, 'Cannot find the first cell');
             const imageButtons = cell!.find(ImageButton);
-            assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+            assert.equal(imageButtons.length, 8, 'Cell buttons not found');
             const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
             assert.equal(runButton.length, 1, 'No run button found');
             const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
