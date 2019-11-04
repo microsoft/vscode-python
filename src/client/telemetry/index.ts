@@ -13,7 +13,7 @@ import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID 
 import { traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
+import { JupyterCommands, NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -1433,7 +1433,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
-    [Telemetry.JupyterInstalledInActiveInterpreter]: { yes: boolean };
+    [Telemetry.JupyterCommandSearch]: { where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere'; command: JupyterCommands };
     [Telemetry.UserInstalledJupyter]: never | undefined;
     [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
