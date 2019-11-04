@@ -10,28 +10,13 @@ import { IDataScienceExtraSettings } from '../../client/datascience/types';
 // tslint:disable-next-line:no-any
 export declare function getInitialSettings(): any;
 
-let loadedSettings: IDataScienceExtraSettings;
-
-export function getSettings(): IDataScienceExtraSettings {
-    if (loadedSettings === undefined) {
-        load();
-    }
-
-    return loadedSettings;
-}
-
-export function updateSettings(jsonSettingsString: string) {
-    const newSettings = JSON.parse(jsonSettingsString);
-    loadedSettings = <IDataScienceExtraSettings>newSettings;
-}
-
-function load() {
+export function loadDefaultSettings() {
     // tslint:disable-next-line:no-typeof-undefined
     if (typeof getInitialSettings !== 'undefined') {
-        loadedSettings = <IDataScienceExtraSettings>getInitialSettings(); // NOSONAR
+        return <IDataScienceExtraSettings>getInitialSettings(); // NOSONAR
     } else {
         // Default settings for tests
-        loadedSettings = {
+        const result: IDataScienceExtraSettings = {
             allowImportFromNotebook: true,
             jupyterLaunchTimeout: 10,
             jupyterLaunchRetries: 3,
@@ -85,6 +70,8 @@ function load() {
             runStartupCommands: '',
             debugJustMyCode: true
         };
+
+        return result;
     }
 }
 

@@ -1,20 +1,25 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICell } from '../../../client/datascience/types';
+import {
+    ILoadAllCells,
+    InteractiveWindowMessages
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CssMessages, IGetCssResponse, IGetMonacoThemeRequest } from '../../../client/datascience/messages';
+import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
-import { IShowPlotAction, IOpenLinkAction } from './actions';
 import {
     ICellAction,
     ICellAndCursorAction,
     IChangeCellTypeAction,
     ICodeAction,
     IEditCellAction,
+    IOpenLinkAction,
     IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
+    IShowPlotAction,
     NativeEditorActionTypes
 } from './actions';
 
@@ -63,4 +68,23 @@ export class INativeEditorActionMapping {
     public [InteractiveWindowMessages.UpdateCell]: NativeEditorReducerFunc<ICell>;
     public [InteractiveWindowMessages.NotebookDirty]: NativeEditorReducerFunc<never | undefined>;
     public [InteractiveWindowMessages.NotebookClean]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.LoadAllCells]: NativeEditorReducerFunc<ILoadAllCells>;
+    public [InteractiveWindowMessages.NotebookRunAllCells]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.NotebookRunSelectedCell]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.NotebookAddCellBelow]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.DoSave]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.DeleteAllCells]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.Undo]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.Redo]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.StartProgress]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.StopProgress]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.UpdateSettings]: NativeEditorReducerFunc<string>;
+    public [InteractiveWindowMessages.Activate]: NativeEditorReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.GetVariablesResponse]: NativeEditorReducerFunc<IJupyterVariablesResponse>;
+    public [InteractiveWindowMessages.GetVariableValueResponse]: NativeEditorReducerFunc<IJupyterVariable>;
+    public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: NativeEditorReducerFunc<Buffer>;
+    public [InteractiveWindowMessages.LoadTmLanguageResponse]: NativeEditorReducerFunc<string>;
+    public [InteractiveWindowMessages.RestartKernel]: NativeEditorReducerFunc<never | undefined>;
+    public [CssMessages.GetCssResponse]: NativeEditorReducerFunc<IGetCssResponse>;
+    public [CssMessages.GetMonacoThemeResponse]: NativeEditorReducerFunc<IGetMonacoThemeRequest>;
 }

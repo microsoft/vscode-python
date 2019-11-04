@@ -79,6 +79,16 @@ export namespace Execution {
         return arg.prevState;
     }
 
+    export function executeSelectedCell(arg: NativeEditorReducerArg): IMainState {
+        // This is the same thing as executing the selected cell
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
+        if (arg.prevState.selectedCellId && index >= 0) {
+            return executeCell({ ...arg, payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source) } });
+        }
+
+        return arg.prevState;
+    }
+
     export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
         const newList = arg.prevState.cellVMs.map(cellVM => {
             return { ...cellVM, cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } } };
@@ -128,6 +138,25 @@ export namespace Execution {
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
             arg.postMessage(InteractiveWindowMessages.Undo);
+            return {
+                ...arg.prevState,
+                cellVMs: cells,
+                undoStack: undoStack,
+                redoStack: redoStack,
+                skipNextScroll: true
+            };
+        }
+
+        return arg.prevState;
+    }
+
+    export function redo(arg: NativeEditorReducerArg): IMainState {
+        if (arg.prevState.redoStack.length > 0) {
+            // Pop one off of our redo stack and update our undo
+            const cells = arg.prevState.redoStack[arg.prevState.undoStack.length - 1];
+            const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
+            const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
+            arg.postMessage(InteractiveWindowMessages.Redo);
             return {
                 ...arg.prevState,
                 cellVMs: cells,

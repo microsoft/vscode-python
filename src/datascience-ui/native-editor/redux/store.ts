@@ -8,7 +8,7 @@ import { IInteractiveWindowMapping } from '../../../client/datascience/interacti
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createAsyncStore, PostMessageFunc, QueuableAction } from '../../react-common/reduxUtils';
-import { computeEditorOptions, getSettings } from '../../react-common/settingsReactSide';
+import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { INativeEditorActionMapping } from './mapping';
 import { reducerMap } from './reducers';
 
@@ -17,7 +17,7 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainSta
         // tslint:disable-next-line: no-typeof-undefined
         skipDefault,
         testMode: false,
-        baseTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : baseTheme,
+        baseTheme: loadDefaultSettings().ignoreVscodeTheme ? 'vscode-light' : baseTheme,
         editorOptions: computeEditorOptions(),
         cellVMs: [],
         busy: true,
@@ -37,7 +37,8 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainSta
             size: 14,
             family: 'Consolas, \'Courier New\', monospace'
         },
-        codeTheme: Identifiers.GeneratedThemeName
+        codeTheme: Identifiers.GeneratedThemeName,
+        settings: loadDefaultSettings()
     };
 }
 

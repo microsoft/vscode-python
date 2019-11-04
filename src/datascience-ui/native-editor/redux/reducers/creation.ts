@@ -3,7 +3,7 @@
 'use strict';
 import * as uuid from 'uuid/v4';
 
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, ILoadAllCells } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell } from '../../../../client/datascience/types';
 import {
     createCellVM,
@@ -172,6 +172,34 @@ export namespace Creation {
         return updateOrAdd(arg);
     }
 
+    export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {
+        // Send messages to other side to indicate the deletes
+        arg.postMessage(InteractiveWindowMessages.DeleteAllCells);
+
+        // Just leave one single blank empty cell
+        const newVM: ICellViewModel = {
+            cell: createEmptyCell(uuid(), null),
+            editable: true,
+            inputBlockOpen: true,
+            inputBlockShow: true,
+            inputBlockText: '',
+            inputBlockCollapseNeeded: false,
+            selected: false,
+            focused: false,
+            cursorPos: CursorPos.Current
+        };
+
+        arg.postMessage(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined });
+
+        return {
+            ...arg.prevState,
+            cellVMs: [newVM],
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
+            selectedCellId: undefined,
+            focusedCellId: undefined
+        };
+    }
+
     export function deleteCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const cells = arg.prevState.cellVMs;
         if (cells.length === 1 && cells[0].cell.id === arg.payload.cellId) {
@@ -195,6 +223,7 @@ export namespace Creation {
 
             return {
                 ...arg.prevState,
+                undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
                 cellVMs: [newVM]
             };
         } else if (arg.payload.cellId) {
@@ -229,6 +258,17 @@ export namespace Creation {
         }
 
         return arg.prevState;
+    }
+
+    export function loadAllCells(arg: NativeEditorReducerArg<ILoadAllCells>): IMainState {
+        const vms = arg.payload.cells.map(prepareCellVM);
+        return {
+            ...arg.prevState,
+            busy: false,
+            loadTotal: arg.payload.cells.length,
+            undoStack: [],
+            cellVMs: vms
+        };
     }
 
 }

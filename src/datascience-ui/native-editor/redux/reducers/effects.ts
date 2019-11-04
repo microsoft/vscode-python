@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IMainState, CursorPos } from '../../../interactive-common/mainState';
+import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { ICellAction, ICellAndCursorAction, ICodeAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
@@ -133,5 +133,24 @@ export namespace Effects {
             ...arg.prevState,
             dirty: false
         };
+    }
+
+    export function startProgress(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            busy: true
+        };
+    }
+
+    export function stopProgress(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            busy: false
+        };
+    }
+
+    export function updateSettings(arg: NativeEditorReducerArg<string>): IMainState {
+        // String arg should be the IDataScienceExtraSettings
+
     }
 }

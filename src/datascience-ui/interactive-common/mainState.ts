@@ -11,7 +11,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
+import { CellState, ICell, IJupyterVariable, IMessageCell, IDataScienceExtraSettings } from '../../client/datascience/types';
 
 export enum CursorPos {
     Top,
@@ -68,6 +68,7 @@ export type IMainState = {
     skipDefault?: boolean;
     testMode?: boolean;
     codeTheme: string;
+    settings: IDataScienceExtraSettings;
 };
 
 export interface IFont {
