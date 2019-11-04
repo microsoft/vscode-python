@@ -53,6 +53,28 @@ suite('PythonExecutionService', () => {
         expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation().');
     });
 
+    test('getInterpreterInformation should return an object if the version info contains less than 4 items', async () => {
+        const json = {
+            versionInfo: [3, 7, 5],
+            sysPrefix: '/path/of/sysprefix/versions/3.7.5rc1',
+            version: '3.7.5rc1 (default, Oct 18 2019, 14:48:48) \n[Clang 11.0.0 (clang-1100.0.33.8)]',
+            is64Bit: true
+        };
+
+        processService.setup(p => p.exec(pythonPath, TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: JSON.stringify(json) }));
+
+        const result = await executionService.getInterpreterInformation();
+        const expectedResult = {
+            architecture: Architecture.x64,
+            path: pythonPath,
+            version: new SemVer('3.7.5'),
+            sysPrefix: json.sysPrefix,
+            sysVersion: undefined
+        };
+
+        expect(result).to.deep.equal(expectedResult, 'Incorrect value returned by getInterpreterInformation() with truncated versionInfo.');
+    });
+
     test('getInterpreterInformation should return an object with the architecture value set to x86 if json.is64bit is not 64bit', async () => {
         const json = {
             versionInfo: [3, 7, 5, 'candidate'],
