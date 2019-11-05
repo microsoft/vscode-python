@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { CssMessages } from '../../../../client/datascience/messages';
+import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
-import { computeEditorOptions } from '../../../react-common/settingsReactSide';
-import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { CssMessages } from '../../../../client/datascience/messages';
-import { createPostableAction } from '../../../interactive-common/redux/postOffice';
-import { ICellAction } from '../../../interactive-common/redux/reducers/types';
 
 export namespace Effects {
 

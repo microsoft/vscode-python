@@ -7,7 +7,7 @@ import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessa
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
+import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 import {
     ICellAndCursorAction,

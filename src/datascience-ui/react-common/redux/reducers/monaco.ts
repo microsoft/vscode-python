@@ -64,7 +64,6 @@ const reducerMap: IMonacoActionMapping = {
     [IncomingMessageActions.GETMONACOTHEMERESPONSE]: handleThemeResponse
 };
 
-
 export function generateMonacoReducer(testMode: boolean):
     Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
     // First create our default state.

@@ -102,7 +102,7 @@ class NativeEditor extends React.Component<INativeEditorProps> {
         const save = () => {
             this.props.save();
             this.props.sendCommand(NativeCommandType.Save, 'mouse');
-        }
+        };
         const toggleVariableExplorer = () => {
             this.props.toggleVariableExplorer();
             this.props.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');

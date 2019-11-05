@@ -331,7 +331,6 @@ export interface IDataScienceSettings {
     allowLiveShare?: boolean;
     errorBackgroundColor: string;
     ignoreVscodeTheme?: boolean;
-    showJupyterVariableExplorer?: boolean;
     variableExplorerExclude?: string;
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;

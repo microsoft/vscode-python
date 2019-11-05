@@ -262,7 +262,6 @@ suite('Python Settings', async () => {
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
-            showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '',
             markdownRegularExpression: '',

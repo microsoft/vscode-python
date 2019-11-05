@@ -4,8 +4,8 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
-import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 import { IGetMonacoThemeResponse } from '../monacoMessages';
+import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',

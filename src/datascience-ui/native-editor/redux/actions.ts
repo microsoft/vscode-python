@@ -6,7 +6,7 @@ import { Action } from 'redux';
 
 import { IShowDataViewer, NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CursorPos } from '../../interactive-common/mainState';
-import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
+import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
 
 /**
  * How to add a new state change:

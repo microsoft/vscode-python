@@ -8,9 +8,9 @@ import { CellState } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction, IEditCellAction } from '../../../interactive-common/redux/reducers/types';
+import { ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
-import { IChangeCellTypeAction, ICodeAction, NativeEditorActionTypes } from '../actions';
+import { IChangeCellTypeAction, NativeEditorActionTypes } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Execution {
@@ -44,7 +44,7 @@ export namespace Execution {
     export function executeAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index > 0) {
-            const codes = arg.prevState.cellVMs.filter((c, i) => i < index).map(c => concatMultilineStringInput(c.cell.data.source));
+            const codes = arg.prevState.cellVMs.filter((_c, i) => i < index).map(c => concatMultilineStringInput(c.cell.data.source));
             return executeRange(arg.prevState, 0, index - 1, codes, arg.queueAction);
         }
         return arg.prevState;
@@ -61,7 +61,7 @@ export namespace Execution {
     export function executeCellAndBelow(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0) {
-            const codes = arg.prevState.cellVMs.filter((c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
+            const codes = arg.prevState.cellVMs.filter((_c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
             return executeRange(arg.prevState, index, index, [...arg.payload.code, ...codes], arg.queueAction);
         }
         return arg.prevState;

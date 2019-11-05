@@ -235,7 +235,8 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
                             isLastLine,
                             isDirty,
                             isSuggesting,
-                            contents: this.getContents()
+                            contents: this.getContents(),
+                            clear: this.clear
                         },
                         stopPropagation: () => e.stopPropagation(),
                         preventDefault: () => e.preventDefault()
@@ -249,6 +250,12 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             // Shift enter was hit
             e.stopPropagation();
             e.preventDefault();
+        }
+    }
+
+    private clear = () => {
+        if (this.state.editor) {
+            this.state.editor.setValue('');
         }
     }
 }

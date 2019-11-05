@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CssMessages } from '../../../../client/datascience/messages';
+import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
+import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { Variables } from '../../../interactive-common/redux/reducers/variables';
@@ -12,8 +12,6 @@ import { Creation } from './creation';
 import { Effects } from './effects';
 import { Execution } from './execution';
 import { Movement } from './movement';
-import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
-import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 
 // The list of reducers. 1 per message/action.
 export const reducerMap: INativeEditorActionMapping = {
@@ -76,5 +74,5 @@ export const reducerMap: INativeEditorActionMapping = {
     [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
     [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
     [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,
-    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange,
-}
+    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange
+};

@@ -7,7 +7,7 @@ import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessa
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
+import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 import { InteractiveActionTypes, IOpenLinkAction, IShowDataViewerAction, IShowPlotAction } from './actions';
 
@@ -34,6 +34,9 @@ export class IInteractiveActionMapping {
     public [InteractiveActionTypes.GATHER_CELL]: InteractiveReducerFunc<ICellAction>;
     public [InteractiveActionTypes.EDIT_CELL]: InteractiveReducerFunc<IEditCellAction>;
     public [InteractiveActionTypes.SUBMIT_INPUT]: InteractiveReducerFunc<ICodeAction>;
+    public [InteractiveActionTypes.DELETE_ALL_CELLS]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveActionTypes.EXPAND_ALL]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveActionTypes.COLLAPSE_ALL]: InteractiveReducerFunc<never | undefined>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: InteractiveReducerFunc<ICell>;

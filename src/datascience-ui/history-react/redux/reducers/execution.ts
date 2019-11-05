@@ -3,18 +3,18 @@
 'use strict';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import * as uuid from 'uuid/v4';
 
 import { CellMatcher } from '../../../../client/datascience/cellMatcher';
+import { generateMarkdownFromCodeLines } from '../../../../client/datascience/common';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState, createCellVM } from '../../../interactive-common/mainState';
+import { CellState } from '../../../../client/datascience/types';
+import { createCellVM, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';
-import { CellState } from '../../../../client/datascience/types';
-import { generateMarkdownFromCodeLines } from '../../../../client/datascience/common';
 import { Creation } from './creation';
-import * as uuid from 'uuid/v4';
 
 export namespace Execution {
 

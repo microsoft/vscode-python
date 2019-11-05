@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
+import { connect } from 'react-redux';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, IDataScienceExtraSettings } from '../../client/datascience/types';
@@ -18,12 +19,11 @@ import { InformationMessages } from '../interactive-common/informationMessages';
 import { InputHistory } from '../interactive-common/inputHistory';
 import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
-import { getLocString } from '../react-common/locReactSide';
-import { ImageButton } from '../react-common/imageButton';
 import { Image, ImageName } from '../react-common/image';
+import { ImageButton } from '../react-common/imageButton';
+import { getLocString } from '../react-common/locReactSide';
 import { actionCreators } from './redux/actions';
 
-// tslint:disable-next-line: no-require-imports
 interface IInteractiveCellBaseProps {
     role?: string;
     cellVM: ICellViewModel;
@@ -32,7 +32,6 @@ interface IInteractiveCellBaseProps {
     testMode?: boolean;
     autoFocus: boolean;
     maxTextSize?: number;
-    history: InputHistory | undefined;
     showWatermark: boolean;
     monacoTheme: string | undefined;
     editorOptions?: monacoEditor.editor.IEditorOptions;
@@ -45,7 +44,7 @@ interface IInteractiveCellBaseProps {
 type IInteractiveCellProps = IInteractiveCellBaseProps & typeof actionCreators;
 
 // tslint:disable: react-this-binding-issue
-export class InteractiveCell extends React.Component<IInteractiveCellProps> {
+class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private codeRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private inputHistory: InputHistory | undefined;
@@ -228,7 +227,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 <CellInput
                     cellVM={this.props.cellVM}
                     editorOptions={this.props.editorOptions}
-                    history={this.props.history}
+                    history={this.inputHistory}
                     autoFocus={this.props.autoFocus}
                     codeTheme={this.props.codeTheme}
                     onCodeChange={this.onCodeChange}
@@ -339,4 +338,14 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             }
         }
     }
+}
+
+// Main export, return a redux connected editor
+export function getConnectedInteractiveCell() {
+    return connect(
+        null,
+        actionCreators,
+        null,
+        { withRef: true }
+    )(InteractiveCell);
 }

@@ -1,19 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
+import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
+import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
+import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
+import { Variables } from '../../../interactive-common/redux/reducers/variables';
 import { InteractiveActionTypes } from '../actions';
 import { IInteractiveActionMapping } from '../mapping';
-import { CssMessages } from '../../../../client/datascience/messages';
-import { Variables } from '../../../interactive-common/redux/reducers/variables';
 import { Creation } from './creation';
-import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
-import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
-import { Execution } from './execution';
-import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Effects } from './effects';
-import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
-
-
+import { Execution } from './execution';
 
 // The list of reducers. 1 per message/action.
 export const reducerMap: IInteractiveActionMapping = {
@@ -36,6 +33,9 @@ export const reducerMap: IInteractiveActionMapping = {
     [InteractiveActionTypes.GATHER_CELL]: Transfer.gather,
     [InteractiveActionTypes.EDIT_CELL]: Transfer.editCell,
     [InteractiveActionTypes.SUBMIT_INPUT]: Execution.submitInput,
+    [InteractiveActionTypes.DELETE_ALL_CELLS]: Creation.deleteAllCells,
+    [InteractiveActionTypes.EXPAND_ALL]: Effects.expandAll,
+    [InteractiveActionTypes.COLLAPSE_ALL]: Effects.collapseAll,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,
@@ -58,5 +58,4 @@ export const reducerMap: IInteractiveActionMapping = {
     [IncomingMessageActions.STARTDEBUGGING]: Execution.startDebugging,
     [IncomingMessageActions.STOPDEBUGGING]: Execution.stopDebugging,
     [IncomingMessageActions.SCROLLTOCELL]: Effects.scrollToCell
-
-}
+};

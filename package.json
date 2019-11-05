@@ -1599,6 +1599,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show the variable explorer in the Python Interactive window.",
+                    "deprecationMessage": "This setting no longer applies. It is ignored.",
                     "scope": "resource"
                 },
                 "python.dataScience.variableExplorerExclude": {

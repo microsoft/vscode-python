@@ -1,26 +1,26 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import './mainPanel.css';
 
-//import copy from 'copy-to-clipboard';
 import * as React from 'react';
 import { Tool, Value } from 'react-svg-pan-zoom';
 import * as uuid from 'uuid/v4';
 
 import { createDeferred } from '../../client/common/utils/async';
 import { RegExpValues } from '../../client/datascience/constants';
+import { SharedMessages } from '../../client/datascience/messages';
 import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience/plotting/types';
+import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
-import { getSettings } from '../react-common/settingsReactSide';
+import { loadDefaultSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
-
-// Our css has to come after in order to override body styles
-import './mainPanel.css';
 import { TestSvg } from './testSvg';
 import { Toolbar } from './toolbar';
 
+// Our css has to come after in order to override body styles
 export interface IMainPanelProps {
     skipDefault?: boolean;
     baseTheme: string;
@@ -42,6 +42,7 @@ interface IMainPanelState {
     currentImage: number;
     tool: Tool;
     forceDark?: boolean;
+    settings: IDataScienceExtraSettings;
 }
 
 const PanKeyboardSize = 10;
@@ -63,7 +64,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const values = images.map(_i => undefined);
         const ids = images.map(_i => uuid());
 
-        this.state = {images, thumbnails, sizes, values, ids, tool: 'pan', currentImage: images.length > 0 ? 0 : -1};
+        this.state = {images, thumbnails, sizes, values, ids, tool: 'pan', currentImage: images.length > 0 ? 0 : -1, settings: loadDefaultSettings()};
     }
 
     public componentWillMount() {
@@ -90,6 +91,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             <div className='main-panel' role='group' ref={this.container}>
                 <StyleInjector
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
+                    settings={this.state.settings}
                     darkChanged={this.darkChanged}
                     postOffice={this.postOffice} />
                 {this.renderToolbar(baseTheme)}
@@ -106,11 +108,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.addPlot(payload);
                 break;
 
+            case SharedMessages.UpdateSettings:
+                this.updateSettings(payload);
+                break;
+
             default:
                 break;
         }
 
         return false;
+    }
+
+    private updateSettings(content: string) {
+        const newSettingsJSON = JSON.parse(content);
+        const newSettings = newSettingsJSON as IDataScienceExtraSettings;
+        this.setState({
+            settings: newSettings
+        });
     }
 
     private darkChanged = (newDark: boolean) => {
@@ -127,7 +141,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private computeBaseTheme() : string {
         // If we're ignoring, always light
-        if (getSettings && getSettings().ignoreVscodeTheme) {
+        if (this.state.settings.ignoreVscodeTheme) {
             return 'vscode-light';
         }
 
@@ -208,7 +222,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private renderThumbnails(_baseTheme: string) {
         return (
-            <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked} themeMatplotlibBackground={getSettings().themeMatplotlibPlots ? true : false}/>
+            <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked} themeMatplotlibBackground={this.state.settings.themeMatplotlibPlots ? true : false}/>
         );
     }
 
@@ -237,7 +251,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             return (
                 <SvgViewer
                     baseTheme={baseTheme}
-                    themeMatplotlibPlots={getSettings().themeMatplotlibPlots ? true : false}
+                    themeMatplotlibPlots={this.state.settings.themeMatplotlibPlots ? true : false}
                     svg={currentPlot}
                     id={currentId}
                     size={currentSize}

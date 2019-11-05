@@ -4,12 +4,12 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
+import { Identifiers } from '../../client/datascience/constants';
 import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../client/datascience/monacoMessages';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
 import { detectBaseTheme } from './themeDetector';
-import { Identifiers } from '../../client/datascience/constants';
 
 export interface IStyleInjectorProps {
     expectingDark: boolean;

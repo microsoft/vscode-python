@@ -4,12 +4,12 @@
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { computeEditorOptions } from '../../../react-common/settingsReactSide';
-import { ICellAndCursorAction, ICodeAction } from '../actions';
-import { NativeEditorReducerArg } from '../mapping';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
-import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
+import { computeEditorOptions } from '../../../react-common/settingsReactSide';
+import { ICellAndCursorAction } from '../actions';
+import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Effects {
 

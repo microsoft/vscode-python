@@ -2,10 +2,15 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState, extractInputText } from '../../mainState';
-import { ISendCommandAction, IShowDataViewerAction, IShowPlotAction, IOpenLinkAction } from '../../../native-editor/redux/actions';
-import { CommonReducerArg, ICellAction, IEditCellAction } from './types';
+import {
+    IOpenLinkAction,
+    ISendCommandAction,
+    IShowDataViewerAction,
+    IShowPlotAction
+} from '../../../native-editor/redux/actions';
+import { extractInputText, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
+import { CommonReducerArg, ICellAction, IEditCellAction } from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {

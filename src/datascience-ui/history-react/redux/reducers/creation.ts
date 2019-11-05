@@ -4,10 +4,10 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
-import { InteractiveReducerArg } from '../mapping';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { InteractiveReducerArg } from '../mapping';
 
 export namespace Creation {
 

@@ -8,7 +8,7 @@ import {
     IRefreshVariablesRequest,
     IShowDataViewer
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
+import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
 
 /**
  * How to add a new state change:
@@ -29,6 +29,7 @@ export enum InteractiveActionTypes {
     SAVE = 'action.save',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     DELETE_CELL = 'action.delete_cell',
+    DELETE_ALL_CELLS = 'action.delete_all_cells',
     UNDO = 'action.undo',
     REDO = 'action.redo',
     OPEN_LINK = 'action.open_link',
@@ -41,7 +42,9 @@ export enum InteractiveActionTypes {
     CLICK_CELL = 'action.click_cell',
     DOUBLE_CLICK_CELL = 'action.double_click_cell',
     EDIT_CELL = 'action.edit_cell',
-    SUBMIT_INPUT = 'action.submit_input'
+    SUBMIT_INPUT = 'action.submit_input',
+    EXPAND_ALL = 'action.expand_all',
+    COLLAPSE_ALL = 'action.collapse_all'
 }
 
 export interface IShowDataViewerAction extends IShowDataViewer {
@@ -62,8 +65,10 @@ export const actionCreators = {
     refreshVariables: (newExecutionCount?: number): InteractiveAction & IRefreshVariablesRequest => ({ type: InteractiveActionTypes.REFRESH_VARIABLES, newExecutionCount }),
     restartKernel: (): InteractiveAction => ({ type: InteractiveActionTypes.RESTART_KERNEL }),
     interruptKernel: (): InteractiveAction => ({ type: InteractiveActionTypes.INTERRUPT_KERNEL }),
+    deleteAllCells: (): InteractiveAction => ({ type: InteractiveActionTypes.DELETE_ALL_CELLS }),
     deleteCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.DELETE_CELL, cellId }),
     undo: (): InteractiveAction => ({ type: InteractiveActionTypes.UNDO }),
+    redo: (): InteractiveAction => ({ type: InteractiveActionTypes.REDO }),
     openLink: (uri: monacoEditor.Uri): InteractiveAction & IOpenLinkAction => ({ type: InteractiveActionTypes.OPEN_LINK, uri }),
     showPlot: (imageHtml: string): InteractiveAction & IShowPlotAction => ({ type: InteractiveActionTypes.SHOW_PLOT, imageHtml }),
     toggleInputBlock: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.TOGGLE_INPUT_BLOCK, cellId }),
@@ -73,5 +78,10 @@ export const actionCreators = {
     clickCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.CLICK_CELL, cellId }),
     doubleClickCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.DOUBLE_CLICK_CELL, cellId }),
     editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): InteractiveAction & IEditCellAction => ({ type: InteractiveActionTypes.EDIT_CELL, cellId, changes }),
-    submitInput: (code: string, cellId: string): InteractiveAction & ICodeAction => ({ type: InteractiveActionTypes.SUBMIT_INPUT, code, cellId })
+    submitInput: (code: string, cellId: string): InteractiveAction & ICodeAction => ({ type: InteractiveActionTypes.SUBMIT_INPUT, code, cellId }),
+    toggleVariableExplorer: (): InteractiveAction => ({ type: InteractiveActionTypes.TOGGLE_VARIABLE_EXPLORER }),
+    expandAll: (): InteractiveAction => ({ type: InteractiveActionTypes.EXPAND_ALL }),
+    collapseAll: (): InteractiveAction => ({ type: InteractiveActionTypes.COLLAPSE_ALL }),
+    export: (): InteractiveAction => ({ type: InteractiveActionTypes.EXPORT }),
+    showDataViewer: (variableName: string, columnSize: number): InteractiveAction & IShowDataViewerAction => ({ type: InteractiveActionTypes.SHOW_DATA_VIEWER, variableName, columnSize })
 };

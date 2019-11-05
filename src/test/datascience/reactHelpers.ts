@@ -358,7 +358,6 @@ export function setUpDomEnvironment() {
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
             allowInput: true,
-            showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method'
         };
     };

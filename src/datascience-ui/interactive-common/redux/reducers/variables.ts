@@ -1,11 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages, IRefreshVariablesRequest } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    InteractiveWindowMessages,
+    IRefreshVariablesRequest
+} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
-import { CommonReducerArg } from './types';
 import { createPostableAction } from '../postOffice';
+import { CommonReducerArg } from './types';
 
 export namespace Variables {
 
