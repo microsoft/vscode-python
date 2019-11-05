@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveActionTypes } from '../actions';
 import { IInteractiveActionMapping } from '../mapping';
 import { CssMessages } from '../../../../client/datascience/messages';
@@ -12,6 +11,7 @@ import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
 import { Execution } from './execution';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Effects } from './effects';
+import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 
 
 
@@ -30,27 +30,29 @@ export const reducerMap: IInteractiveActionMapping = {
     [InteractiveActionTypes.REDO]: Execution.redo,
     [InteractiveActionTypes.SHOW_PLOT]: Transfer.showPlot,
     [InteractiveActionTypes.OPEN_LINK]: Transfer.openLink,
+    [InteractiveActionTypes.GOTO_CELL]: Transfer.gotoCell,
+    [InteractiveActionTypes.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
 
     // Messages from the webview (some are ignored)
-    [InteractiveWindowMessages.StartCell]: Creation.startCell,
-    [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
-    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
-    [InteractiveWindowMessages.Activate]: CommonEffects.activate,
-    [InteractiveWindowMessages.GetVariablesResponse]: Variables.handleVariablesResponse,
-    [InteractiveWindowMessages.GetVariableValueResponse]: Variables.handleVariableResponse,
-    [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
-    [CssMessages.GetCssResponse]: CommonEffects.handleCss,
-    [InteractiveWindowMessages.MonacoReady]: CommonEffects.monacoReady,
-    [CssMessages.GetMonacoThemeResponse]: CommonEffects.monacoThemeChange,
-    [InteractiveWindowMessages.GetAllCells]: Transfer.getAllCells,
-    [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
-    [InteractiveWindowMessages.CollapseAll]: Effects.collapseAll,
-    [InteractiveWindowMessages.DeleteAllCells]: Creation.deleteAllCells,
-    [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
-    [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
-    [InteractiveWindowMessages.UpdateSettings]: Effects.updateSettings,
-    [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
-    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
-    [InteractiveWindowMessages.ScrollToCell]: Effects.scrollToCell,
+    [IncomingMessageActions.STARTCELL]: Creation.startCell,
+    [IncomingMessageActions.FINISHCELL]: Creation.finishCell,
+    [IncomingMessageActions.UPDATECELL]: Creation.updateCell,
+    [IncomingMessageActions.ACTIVATE]: CommonEffects.activate,
+    [IncomingMessageActions.GETVARIABLESRESPONSE]: Variables.handleVariablesResponse,
+    [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: Variables.handleVariableResponse,
+    [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
+    [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
+    [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,
+    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange,
+    [IncomingMessageActions.GETALLCELLS]: Transfer.getAllCells,
+    [IncomingMessageActions.EXPANDALL]: Effects.expandAll,
+    [IncomingMessageActions.COLLAPSEALL]: Effects.collapseAll,
+    [IncomingMessageActions.DELETEALLCELLS]: Creation.deleteAllCells,
+    [IncomingMessageActions.STARTPROGRESS]: CommonEffects.startProgress,
+    [IncomingMessageActions.STOPPROGRESS]: CommonEffects.stopProgress,
+    [IncomingMessageActions.UPDATESETTINGS]: Effects.updateSettings,
+    [IncomingMessageActions.STARTDEBUGGING]: Execution.startDebugging,
+    [IncomingMessageActions.STOPDEBUGGING]: Execution.stopDebugging,
+    [IncomingMessageActions.SCROLLTOCELL]: Effects.scrollToCell
 
 }

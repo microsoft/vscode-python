@@ -5,17 +5,18 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState } from '../../mainState';
 import { CommonReducerArg } from './types';
+import { postOfficeActionCreators, createPostableAction } from '../postOffice';
 
 export namespace Kernel {
     export function restartKernel<T>(arg: CommonReducerArg<T>): IMainState {
-        arg.postMessage(InteractiveWindowMessages.RestartKernel);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.RestartKernel));
 
         // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
         return arg.prevState;
     }
 
     export function interruptKernel<T>(arg: CommonReducerArg<T>): IMainState {
-        arg.postMessage(InteractiveWindowMessages.Interrupt);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.Interrupt));
 
         // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
         return arg.prevState;
@@ -31,7 +32,7 @@ export namespace Kernel {
         });
 
         // Update our variables
-        arg.postMessage(InteractiveWindowMessages.GetVariablesRequest);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariablesRequest, 0));
 
         return {
             ...arg.prevState,

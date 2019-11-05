@@ -13,6 +13,7 @@ import { Effects } from './effects';
 import { Execution } from './execution';
 import { Movement } from './movement';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
+import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 
 // The list of reducers. 1 per message/action.
 export const reducerMap: INativeEditorActionMapping = {
@@ -52,27 +53,27 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.OPEN_LINK]: Transfer.openLink,
 
     // Messages from the webview (some are ignored)
-    [InteractiveWindowMessages.StartCell]: Creation.startCell,
-    [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
-    [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
-    [InteractiveWindowMessages.NotebookDirty]: CommonEffects.notebookDirty,
-    [InteractiveWindowMessages.NotebookClean]: CommonEffects.notebookClean,
-    [InteractiveWindowMessages.LoadAllCells]: Creation.loadAllCells,
-    [InteractiveWindowMessages.NotebookRunAllCells]: Execution.executeAllCells,
-    [InteractiveWindowMessages.NotebookRunSelectedCell]: Execution.executeSelectedCell,
-    [InteractiveWindowMessages.NotebookAddCellBelow]: Creation.addNewCell,
-    [InteractiveWindowMessages.DoSave]: Transfer.save,
-    [InteractiveWindowMessages.DeleteAllCells]: Creation.deleteAllCells,
-    [InteractiveWindowMessages.Undo]: Execution.undo,
-    [InteractiveWindowMessages.Redo]: Execution.redo,
-    [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
-    [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
-    [InteractiveWindowMessages.UpdateSettings]: Effects.updateSettings,
-    [InteractiveWindowMessages.Activate]: CommonEffects.activate,
-    [InteractiveWindowMessages.GetVariablesResponse]: Variables.handleVariablesResponse,
-    [InteractiveWindowMessages.GetVariableValueResponse]: Variables.handleVariableResponse,
-    [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
-    [CssMessages.GetCssResponse]: CommonEffects.handleCss,
-    [InteractiveWindowMessages.MonacoReady]: CommonEffects.monacoReady,
-    [CssMessages.GetMonacoThemeResponse]: CommonEffects.monacoThemeChange,
+    [IncomingMessageActions.STARTCELL]: Creation.startCell,
+    [IncomingMessageActions.FINISHCELL]: Creation.finishCell,
+    [IncomingMessageActions.UPDATECELL]: Creation.updateCell,
+    [IncomingMessageActions.NOTEBOOKDIRTY]: CommonEffects.notebookDirty,
+    [IncomingMessageActions.NOTEBOOKCLEAN]: CommonEffects.notebookClean,
+    [IncomingMessageActions.LOADALLCELLS]: Creation.loadAllCells,
+    [IncomingMessageActions.NOTEBOOKRUNALLCELLS]: Execution.executeAllCells,
+    [IncomingMessageActions.NOTEBOOKRUNSELECTEDCELL]: Execution.executeSelectedCell,
+    [IncomingMessageActions.NOTEBOOKADDCELLBELOW]: Creation.addNewCell,
+    [IncomingMessageActions.DOSAVE]: Transfer.save,
+    [IncomingMessageActions.DELETEALLCELLS]: Creation.deleteAllCells,
+    [IncomingMessageActions.UNDO]: Execution.undo,
+    [IncomingMessageActions.REDO]: Execution.redo,
+    [IncomingMessageActions.STARTPROGRESS]: CommonEffects.startProgress,
+    [IncomingMessageActions.STOPPROGRESS]: CommonEffects.stopProgress,
+    [IncomingMessageActions.UPDATESETTINGS]: Effects.updateSettings,
+    [IncomingMessageActions.ACTIVATE]: CommonEffects.activate,
+    [IncomingMessageActions.GETVARIABLESRESPONSE]: Variables.handleVariablesResponse,
+    [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: Variables.handleVariableResponse,
+    [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
+    [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
+    [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,
+    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange,
 }

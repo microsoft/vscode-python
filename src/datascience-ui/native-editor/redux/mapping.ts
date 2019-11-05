@@ -3,7 +3,6 @@
 'use strict';
 import {
     ILoadAllCells,
-    InteractiveWindowMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
@@ -23,6 +22,7 @@ import {
     IShowPlotAction,
     NativeEditorActionTypes
 } from './actions';
+import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 
 type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, NativeEditorActionTypes, T>;
 
@@ -64,27 +64,27 @@ export class INativeEditorActionMapping {
     public [NativeEditorActionTypes.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
 
     // Messages from the extension
-    public [InteractiveWindowMessages.StartCell]: NativeEditorReducerFunc<ICell>;
-    public [InteractiveWindowMessages.FinishCell]: NativeEditorReducerFunc<ICell>;
-    public [InteractiveWindowMessages.UpdateCell]: NativeEditorReducerFunc<ICell>;
-    public [InteractiveWindowMessages.NotebookDirty]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.NotebookClean]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.LoadAllCells]: NativeEditorReducerFunc<ILoadAllCells>;
-    public [InteractiveWindowMessages.NotebookRunAllCells]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.NotebookRunSelectedCell]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.NotebookAddCellBelow]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.DoSave]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.DeleteAllCells]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.Undo]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.Redo]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.StartProgress]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.StopProgress]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.UpdateSettings]: NativeEditorReducerFunc<string>;
-    public [InteractiveWindowMessages.Activate]: NativeEditorReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.GetVariablesResponse]: NativeEditorReducerFunc<IJupyterVariablesResponse>;
-    public [InteractiveWindowMessages.GetVariableValueResponse]: NativeEditorReducerFunc<IJupyterVariable>;
-    public [InteractiveWindowMessages.RestartKernel]: NativeEditorReducerFunc<never | undefined>;
-    public [CssMessages.GetCssResponse]: NativeEditorReducerFunc<IGetCssResponse>;
-    public [InteractiveWindowMessages.MonacoReady]: NativeEditorReducerFunc<never | undefined>;
-    public [CssMessages.GetMonacoThemeResponse]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
+    public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;
+    public [IncomingMessageActions.FINISHCELL]: NativeEditorReducerFunc<ICell>;
+    public [IncomingMessageActions.UPDATECELL]: NativeEditorReducerFunc<ICell>;
+    public [IncomingMessageActions.NOTEBOOKDIRTY]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.NOTEBOOKCLEAN]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.LOADALLCELLS]: NativeEditorReducerFunc<ILoadAllCells>;
+    public [IncomingMessageActions.NOTEBOOKRUNALLCELLS]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.NOTEBOOKRUNSELECTEDCELL]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.NOTEBOOKADDCELLBELOW]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.DOSAVE]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.DELETEALLCELLS]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.UNDO]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.REDO]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.STARTPROGRESS]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.STOPPROGRESS]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.UPDATESETTINGS]: NativeEditorReducerFunc<string>;
+    public [IncomingMessageActions.ACTIVATE]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.GETVARIABLESRESPONSE]: NativeEditorReducerFunc<IJupyterVariablesResponse>;
+    public [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: NativeEditorReducerFunc<IJupyterVariable>;
+    public [IncomingMessageActions.RESTARTKERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.GETCSSRESPONSE]: NativeEditorReducerFunc<IGetCssResponse>;
+    public [IncomingMessageActions.MONACOREADY]: NativeEditorReducerFunc<never | undefined>;
+    public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
 }

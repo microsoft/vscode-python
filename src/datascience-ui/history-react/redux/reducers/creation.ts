@@ -7,6 +7,7 @@ import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../.
 import { ICellAction } from '../actions';
 import { InteractiveReducerArg } from '../mapping';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 
 export namespace Creation {
 
@@ -82,7 +83,7 @@ export namespace Creation {
 
     export function deleteAllCells(arg: InteractiveReducerArg): IMainState {
         // Send messages to other side to indicate the deletes
-        arg.postMessage(InteractiveWindowMessages.DeleteAllCells);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteAllCells));
 
         return {
             ...arg.prevState,
@@ -97,8 +98,8 @@ export namespace Creation {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0 && arg.payload.cellId) {
             // Send messages to other side to indicate the delete
-            arg.postMessage(InteractiveWindowMessages.DeleteCell);
-            arg.postMessage(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId });
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteCell));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId }));
 
             const newVMs = arg.prevState.cellVMs.filter((_c, i) => i !== index);
             return {

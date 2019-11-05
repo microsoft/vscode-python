@@ -8,6 +8,7 @@ import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { ICellAction, ICellAndCursorAction, ICodeAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 
 export namespace Effects {
 
@@ -138,8 +139,8 @@ export namespace Effects {
         if (newSettings && newSettings.extraSettings && newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName) {
             const knownDark = Helpers.computeKnownDark(newSettings);
             // User changed the current theme. Rerender
-            arg.postMessage(CssMessages.GetCssRequest, { isDark: knownDark });
-            arg.postMessage(CssMessages.GetMonacoThemeRequest, { isDark: knownDark });
+            arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: knownDark }));
+            arg.queueAction(createPostableAction(CssMessages.GetMonacoThemeRequest, { isDark: knownDark }));
         }
 
         return {

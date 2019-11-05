@@ -7,6 +7,7 @@ import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessa
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
+import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
     ICellAction,
     InteractiveActionTypes,
@@ -32,26 +33,28 @@ export class IInteractiveActionMapping {
     public [InteractiveActionTypes.DELETE_CELL]: InteractiveReducerFunc<ICellAction>;
     public [InteractiveActionTypes.OPEN_LINK]: InteractiveReducerFunc<IOpenLinkAction>;
     public [InteractiveActionTypes.SHOW_PLOT]: InteractiveReducerFunc<IShowPlotAction>;
+    public [InteractiveActionTypes.TOGGLE_INPUT_BLOCK]: InteractiveReducerFunc<ICellAction>;
+    public [InteractiveActionTypes.GOTO_CELL]: InteractiveReducerFunc<ICellAction>;
 
     // Messages from the extension
-    public [InteractiveWindowMessages.StartCell]: InteractiveReducerFunc<ICell>;
-    public [InteractiveWindowMessages.FinishCell]: InteractiveReducerFunc<ICell>;
-    public [InteractiveWindowMessages.UpdateCell]: InteractiveReducerFunc<ICell>;
-    public [InteractiveWindowMessages.Activate]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.GetVariablesResponse]: InteractiveReducerFunc<IJupyterVariablesResponse>;
-    public [InteractiveWindowMessages.GetVariableValueResponse]: InteractiveReducerFunc<IJupyterVariable>;
-    public [InteractiveWindowMessages.RestartKernel]: InteractiveReducerFunc<never | undefined>;
-    public [CssMessages.GetCssResponse]: InteractiveReducerFunc<IGetCssResponse>;
-    public [InteractiveWindowMessages.MonacoReady]: InteractiveReducerFunc<never | undefined>;
-    public [CssMessages.GetMonacoThemeResponse]: InteractiveReducerFunc<IGetMonacoThemeResponse>;
-    public [InteractiveWindowMessages.GetAllCells]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.ExpandAll]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.CollapseAll]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.DeleteAllCells]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.StartProgress]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.StopProgress]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.UpdateSettings]: InteractiveReducerFunc<string>;
-    public [InteractiveWindowMessages.StartDebugging]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.StopDebugging]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveWindowMessages.ScrollToCell]: InteractiveReducerFunc<ICellAction>;
+    public [IncomingMessageActions.STARTCELL]: InteractiveReducerFunc<ICell>;
+    public [IncomingMessageActions.FINISHCELL]: InteractiveReducerFunc<ICell>;
+    public [IncomingMessageActions.UPDATECELL]: InteractiveReducerFunc<ICell>;
+    public [IncomingMessageActions.ACTIVATE]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.GETVARIABLESRESPONSE]: InteractiveReducerFunc<IJupyterVariablesResponse>;
+    public [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: InteractiveReducerFunc<IJupyterVariable>;
+    public [IncomingMessageActions.RESTARTKERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.GETCSSRESPONSE]: InteractiveReducerFunc<IGetCssResponse>;
+    public [IncomingMessageActions.MONACOREADY]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: InteractiveReducerFunc<IGetMonacoThemeResponse>;
+    public [IncomingMessageActions.GETALLCELLS]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.EXPANDALL]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.COLLAPSEALL]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.DELETEALLCELLS]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.STARTPROGRESS]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.STOPPROGRESS]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.UPDATESETTINGS]: InteractiveReducerFunc<string>;
+    public [IncomingMessageActions.STARTDEBUGGING]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.STOPDEBUGGING]: InteractiveReducerFunc<never | undefined>;
+    public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<ICellAction>;
 }

@@ -19,6 +19,7 @@ import {
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { actionCreators, ICellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 
 export namespace Creation {
     function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
@@ -55,7 +56,7 @@ export namespace Creation {
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
-            arg.queueAnother(actionCreators.focusCell(newVM.cell.id));
+            arg.queueAction(actionCreators.focusCell(newVM.cell.id));
         });
 
         return result;
@@ -80,7 +81,7 @@ export namespace Creation {
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
-            arg.queueAnother(actionCreators.focusCell(newVM.cell.id));
+            arg.queueAction(actionCreators.focusCell(newVM.cell.id));
         });
 
         return result;
@@ -113,7 +114,7 @@ export namespace Creation {
 
     export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {
         // Send messages to other side to indicate the deletes
-        arg.postMessage(InteractiveWindowMessages.DeleteAllCells);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteAllCells));
 
         // Just leave one single blank empty cell
         const newVM: ICellViewModel = {
@@ -128,7 +129,7 @@ export namespace Creation {
             cursorPos: CursorPos.Current
         };
 
-        arg.postMessage(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined });
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined }));
 
         return {
             ...arg.prevState,
@@ -156,9 +157,9 @@ export namespace Creation {
             };
 
             // Send messages to other side to indicate the new add
-            arg.postMessage(InteractiveWindowMessages.DeleteCell);
-            arg.postMessage(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId });
-            arg.postMessage(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined });
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteCell));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId }));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined }));
 
             return {
                 ...arg.prevState,
@@ -169,8 +170,8 @@ export namespace Creation {
             // Otherwise just a straight delete
             const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
             if (index >= 0) {
-                arg.postMessage(InteractiveWindowMessages.DeleteCell);
-                arg.postMessage(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId });
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.DeleteCell));
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: arg.payload.cellId }));
 
                 // Recompute select/focus if this item has either
                 let newSelection = arg.prevState.selectedCellId;

@@ -7,6 +7,7 @@ import { ICellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { Effects } from './effects';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 
 export namespace Movement {
     export function moveCellUp(arg: NativeEditorReducerArg<ICellAction>): IMainState {
@@ -14,7 +15,7 @@ export namespace Movement {
         const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.cellId);
         if (index > 0) {
             [newVMs[index - 1], newVMs[index]] = [newVMs[index], newVMs[index - 1]];
-            arg.postMessage(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.cellId!, secondCellId: newVMs[index].cell.id });
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.cellId!, secondCellId: newVMs[index].cell.id }));
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
@@ -30,7 +31,7 @@ export namespace Movement {
         const index = newVMs.findIndex(cvm => cvm.cell.id === arg.payload.cellId);
         if (index < newVMs.length - 1) {
             [newVMs[index + 1], newVMs[index]] = [newVMs[index], newVMs[index + 1]];
-            arg.postMessage(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.cellId!, secondCellId: newVMs[index].cell.id });
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.SwapCells, { firstCellId: arg.payload.cellId!, secondCellId: newVMs[index].cell.id }));
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,

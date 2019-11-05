@@ -4,7 +4,10 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { Action } from 'redux';
 
-import { IShowDataViewer, IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IRefreshVariablesRequest,
+    IShowDataViewer
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
 /**
  * How to add a new state change:
@@ -28,7 +31,10 @@ export enum InteractiveActionTypes {
     UNDO = 'action.undo',
     REDO = 'action.redo',
     OPEN_LINK = 'action.open_link',
-    SHOW_PLOT = 'action.show_plot'
+    SHOW_PLOT = 'action.show_plot',
+    TOGGLE_INPUT_BLOCK = 'action.toggle_input_block',
+    GOTO_CELL = 'action.goto_cell',
+    START_CELL = 'action.start_cell'
 }
 
 export interface ICellAction {
@@ -56,5 +62,7 @@ export const actionCreators = {
     deleteCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.DELETE_CELL, cellId }),
     undo: (): InteractiveAction => ({ type: InteractiveActionTypes.UNDO }),
     openLink: (uri: monacoEditor.Uri): InteractiveAction & IOpenLinkAction => ({ type: InteractiveActionTypes.OPEN_LINK, uri }),
-    showPlot: (imageHtml: string): InteractiveAction & IShowPlotAction => ({ type: InteractiveActionTypes.SHOW_PLOT, imageHtml })
+    showPlot: (imageHtml: string): InteractiveAction & IShowPlotAction => ({ type: InteractiveActionTypes.SHOW_PLOT, imageHtml }),
+    toggleInputBlock: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.TOGGLE_INPUT_BLOCK, cellId }),
+    gotoCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.GOTO_CELL, cellId })
 };

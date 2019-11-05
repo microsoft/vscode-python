@@ -9,14 +9,15 @@ import {
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
-import { PostMessageFunc } from '../../../react-common/reduxUtils';
-import { ICellAction, IChangeCellTypeAction, ICodeAction, IEditCellAction } from '../actions';
+import { ICellAction, IChangeCellTypeAction, ICodeAction, IEditCellAction, NativeEditorActionTypes } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 
 export namespace Execution {
 
-    function executeRange(prevState: IMainState, start: number, end: number, code: string[], postMessage: PostMessageFunc<IInteractiveWindowMapping>): IMainState {
+    function executeRange(prevState: IMainState, start: number, end: number, code: string[], queueAction: QueueAnotherFunc<NativeEditorActionTypes>): IMainState {
         const newVMs = [...prevState.cellVMs];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
@@ -33,7 +34,7 @@ export namespace Execution {
             }
 
             // Send a message for each
-            postMessage(InteractiveWindowMessages.ReExecuteCell, { code: code[pos], id: orig.cell.id });
+            queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code: code[pos], id: orig.cell.id }));
         }
 
         return {
@@ -46,7 +47,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index > 0) {
             const codes = arg.prevState.cellVMs.filter((c, i) => i < index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, 0, index - 1, codes, arg.postMessage);
+            return executeRange(arg.prevState, 0, index - 1, codes, arg.queueAction);
         }
         return arg.prevState;
     }
@@ -54,7 +55,7 @@ export namespace Execution {
     export function executeCell(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0) {
-            return executeRange(arg.prevState, index, index, [arg.payload.code], arg.postMessage);
+            return executeRange(arg.prevState, index, index, [arg.payload.code], arg.queueAction);
         }
         return arg.prevState;
     }
@@ -63,7 +64,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0) {
             const codes = arg.prevState.cellVMs.filter((c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, index, index, [...arg.payload.code, ...codes], arg.postMessage);
+            return executeRange(arg.prevState, index, index, [...arg.payload.code, ...codes], arg.queueAction);
         }
         return arg.prevState;
     }
@@ -115,11 +116,11 @@ export namespace Execution {
             // tslint:disable-next-line: no-any
             cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
             if (newType === 'code') {
-                arg.postMessage(InteractiveWindowMessages.InsertCell,
-                    { cell: cellVMs[index].cell, index, code: arg.payload.currentCode, codeCellAboveId: Helpers.firstCodeCellAbove(arg.prevState, current.cell.id) });
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell,
+                    { cell: cellVMs[index].cell, index, code: arg.payload.currentCode, codeCellAboveId: Helpers.firstCodeCellAbove(arg.prevState, current.cell.id) }));
             } else {
-                arg.postMessage(InteractiveWindowMessages.RemoveCell,
-                    { id: current.cell.id });
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell,
+                    { id: current.cell.id }));
             }
             return {
                 ...arg.prevState,
@@ -136,7 +137,7 @@ export namespace Execution {
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
-            arg.postMessage(InteractiveWindowMessages.Undo);
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
@@ -155,7 +156,7 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.undoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            arg.postMessage(InteractiveWindowMessages.Redo);
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
@@ -170,7 +171,7 @@ export namespace Execution {
 
     export function editCell(arg: NativeEditorReducerArg<IEditCellAction>): IMainState {
         if (arg.payload.cellId) {
-            arg.postMessage(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId });
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId }));
         }
         return arg.prevState;
     }

@@ -5,6 +5,7 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { InteractiveReducerArg } from '../mapping';
+import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 
 export namespace Execution {
 
@@ -14,7 +15,7 @@ export namespace Execution {
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
-            arg.postMessage(InteractiveWindowMessages.Undo);
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
@@ -33,7 +34,7 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.undoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
-            arg.postMessage(InteractiveWindowMessages.Redo);
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,

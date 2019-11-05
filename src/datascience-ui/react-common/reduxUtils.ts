@@ -3,7 +3,6 @@
 'use strict';
 import { Action, AnyAction, applyMiddleware, createStore, Middleware, Reducer } from 'redux';
 import { logger } from 'redux-logger';
-import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 // tslint:disable-next-line: interface-name
 interface TypedAnyAction<T> extends Action<T> {
@@ -13,17 +12,14 @@ interface TypedAnyAction<T> extends Action<T> {
 }
 export type QueueAnotherFunc<T> = (nextAction: Action<T>) => void;
 export type QueuableAction<M> = TypedAnyAction<keyof M> & { queueAction: QueueAnotherFunc<keyof M> };
-export type PostMessageFunc<M, T extends keyof M = keyof M> = (type: T, payload?: M[keyof M]) => void;
 export type ReducerArg<S, AT, T> = T extends null | undefined ?
     {
         prevState: S;
-        postMessage: PostMessageFunc<IInteractiveWindowMapping>;
-        queueAnother: QueueAnotherFunc<AT>;
+        queueAction: QueueAnotherFunc<AT>;
     } :
     {
         prevState: S;
-        postMessage: PostMessageFunc<IInteractiveWindowMapping>;
-        queueAnother: QueueAnotherFunc<AT>;
+        queueAction: QueueAnotherFunc<AT>;
         payload: T;
     };
 
@@ -36,7 +32,7 @@ export type ReducerFunc<S, AT, T> = (args: ReducerArg<S, AT, T>) => S;
  * @param postMessage - function passed in to use to post messages back to the extension
  * @param map - map of action type to func to call
  */
-export function combineReducers<S, M>(defaultState: S, postMessage: PostMessageFunc<IInteractiveWindowMapping>, map: M): Reducer<S, QueuableAction<M>> {
+export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, QueuableAction<M>> {
     return (currentState: S = defaultState, action: QueuableAction<M>) => {
         const func = map[action.type];
         if (typeof func === 'function') {
@@ -45,7 +41,7 @@ export function combineReducers<S, M>(defaultState: S, postMessage: PostMessageF
             // - function to potentially post stuff to the other side
             // - queue function to dispatch again
             // - payload containing the data from the action
-            return func({ prevState: currentState, postMessage, queueAnother: action.queueAction, payload: action });
+            return func({ prevState: currentState, queueAnother: action.queueAction, payload: action });
         } else {
             return currentState;
         }

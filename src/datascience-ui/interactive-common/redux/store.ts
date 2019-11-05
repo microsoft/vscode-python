@@ -4,12 +4,12 @@
 import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { generateMonacoReducer, IMonacoState } from '../../react-common/redux/reducers/monaco';
-import { combineReducers, createAsyncStore, PostMessageFunc, QueuableAction } from '../../react-common/reduxUtils';
+import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
+import { generatePostOfficeSendReducer } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -44,19 +44,13 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainSta
     };
 }
 
-function generateReactReducer<M>(skipDefault: boolean, baseTheme: string, postOffice: PostOffice, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
+function generateMainReducer<M>(skipDefault: boolean, baseTheme: string, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
     // First create our default state.
     const defaultState = generateDefaultState(skipDefault, baseTheme);
-
-    // Extract out a post message function
-    const postMessage: PostMessageFunc<IInteractiveWindowMapping> = (type, payload) => {
-        setTimeout(() => postOffice.sendMessage<IInteractiveWindowMapping>(type, payload));
-    };
 
     // Then combine that with our map of state change message to reducer
     return combineReducers<IMainState, M>(
         defaultState,
-        postMessage,
         reducerMap);
 }
 
@@ -66,26 +60,34 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const postOffice = new PostOffice();
 
     // Create reducer for the main react UI
-    const reactReducer = generateReactReducer(skipDefault, baseTheme, postOffice, reducerMap);
+    const mainReducer = generateMainReducer(skipDefault, baseTheme, reducerMap);
+
+    // Create reducer to pass window messages to the other side
+    const postOfficeReducer = generatePostOfficeSendReducer(postOffice);
 
     // Create another reducer for handling monaco state
-    const monacoReducer = generateMonacoReducer(testMode, postOffice);
+    const monacoReducer = generateMonacoReducer(testMode);
 
     // Combine these together
     const rootReducer = Redux.combineReducers({
-        react: reactReducer,
-        monaco: monacoReducer
+        main: mainReducer,
+        monaco: monacoReducer,
+        post: postOfficeReducer
     });
 
     // Send this into the root reducer
-    const store = createAsyncStore<{ react: IMainState, monaco: IMonacoState }, Redux.AnyAction>(
+    const store = createAsyncStore<{ main: IMainState; monaco: IMonacoState; post: {} }, Redux.AnyAction>(
         rootReducer);
 
-    // Make all messages from the post office dispatch to the store.
+    // Make all messages from the post office dispatch to the store, changing the type to
+    // turn them into actions.
     postOffice.addHandler({
         // tslint:disable-next-line: no-any
         handleMessage(message: string, payload: any): boolean {
-            store.dispatch({ type: message, ...payload });
+            // Prefix with action so that we can:
+            // - Have one reducer for incoming
+            // - Have another reducer for outgoing
+            store.dispatch({ type: `action.${message}`, ...payload });
             return true;
         }
     });

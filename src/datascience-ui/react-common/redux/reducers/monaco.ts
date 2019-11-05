@@ -1,19 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Reducer, Action } from 'redux';
-
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CssMessages } from '../../../../client/datascience/messages';
-import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
-import { initializeTokenizer } from '../../../interactive-common/tokenizer';
-import { PostOffice } from '../../postOffice';
-import { combineReducers, PostMessageFunc, QueuableAction, ReducerArg, ReducerFunc } from '../../reduxUtils';
+import { Reducer } from 'redux';
+
 import { Identifiers } from '../../../../client/datascience/constants';
+import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
+import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
+import { initializeTokenizer } from '../../../interactive-common/tokenizer';
+import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../reduxUtils';
 
 export interface IMonacoState {
     onigasmData: Buffer | undefined;
@@ -21,14 +16,14 @@ export interface IMonacoState {
     testMode: boolean;
 }
 
-type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, InteractiveWindowMessages, T>;
+type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, IncomingMessageActions, T>;
 
-type MonacoReducerArg<T = never | undefined> = ReducerArg<IMonacoState, InteractiveWindowMessages, T>;
+type MonacoReducerArg<T = never | undefined> = ReducerArg<IMonacoState, IncomingMessageActions, T>;
 
 function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
     if (arg.prevState.tmLanguageData) {
         // Monaco is ready. Initialize the tokenizer
-        initializeTokenizer(arg.payload, arg.prevState.tmLanguageData, () => arg.queueAnother({ type: InteractiveWindowMessages.MonacoReady })).ignoreErrors();
+        initializeTokenizer(arg.payload, arg.prevState.tmLanguageData, () => arg.queueAction({ type: IncomingMessageActions.MONACOREADY })).ignoreErrors();
     }
 
     return {
@@ -40,7 +35,7 @@ function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState 
 function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoState {
     if (arg.prevState.onigasmData) {
         // Monaco is ready. Initialize the tokenizer
-        initializeTokenizer(arg.prevState.onigasmData, arg.payload, () => arg.queueAnother({ type: InteractiveWindowMessages.MonacoReady })).ignoreErrors();
+        initializeTokenizer(arg.prevState.onigasmData, arg.payload, () => arg.queueAction({ type: IncomingMessageActions.MONACOREADY })).ignoreErrors();
     }
 
     return {
@@ -57,36 +52,30 @@ function handleThemeResponse(arg: MonacoReducerArg<IGetMonacoThemeResponse>): IM
 
 // Create a mapping between message and reducer type
 class IMonacoActionMapping {
-    public [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: MonacoReducerFunc<Buffer>;
-    public [InteractiveWindowMessages.LoadTmLanguageResponse]: MonacoReducerFunc<string>;
-    public [CssMessages.GetMonacoThemeResponse]: MonacoReducerFunc<IGetMonacoThemeResponse>;
+    public [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE]: MonacoReducerFunc<Buffer>;
+    public [IncomingMessageActions.LOADTMLANGUAGERESPONSE]: MonacoReducerFunc<string>;
+    public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: MonacoReducerFunc<IGetMonacoThemeResponse>;
 }
 
 // Create the map between message type and the actual function to call to update state
 const reducerMap: IMonacoActionMapping = {
-    [InteractiveWindowMessages.LoadOnigasmAssemblyResponse]: handleLoadOnigasmResponse,
-    [InteractiveWindowMessages.LoadTmLanguageResponse]: handleLoadTmLanguageResponse,
-    [CssMessages.GetMonacoThemeResponse]: handleThemeResponse
+    [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE]: handleLoadOnigasmResponse,
+    [IncomingMessageActions.LOADTMLANGUAGERESPONSE]: handleLoadTmLanguageResponse,
+    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: handleThemeResponse
 };
 
 
-export function generateMonacoReducer(testMode: boolean, postOffice: PostOffice):
+export function generateMonacoReducer(testMode: boolean):
     Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
     // First create our default state.
     const defaultState: IMonacoState = {
         onigasmData: undefined,
         tmLanguageData: undefined,
         testMode
-    }
-
-    // Extract out a post message function
-    const postMessage: PostMessageFunc<IInteractiveWindowMapping> = (type, payload) => {
-        setTimeout(() => postOffice.sendMessage<IInteractiveWindowMapping>(type, payload));
     };
 
     // Then combine that with our map of state change message to reducer
     return combineReducers<IMonacoState, IMonacoActionMapping>(
         defaultState,
-        postMessage,
         reducerMap);
 }

@@ -5,12 +5,13 @@ import { InteractiveWindowMessages, IRefreshVariablesRequest } from '../../../..
 import { IJupyterVariable, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { CommonReducerArg } from './types';
+import { createPostableAction } from '../postOffice';
 
 export namespace Variables {
 
     export function refreshVariables<T>(arg: CommonReducerArg<T, IRefreshVariablesRequest>): IMainState {
-        arg.postMessage(InteractiveWindowMessages.GetVariablesRequest,
-            arg.payload.newExecutionCount === undefined ? arg.prevState.currentExecutionCount : arg.payload.newExecutionCount);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariablesRequest,
+            arg.payload.newExecutionCount === undefined ? arg.prevState.currentExecutionCount : arg.payload.newExecutionCount));
         return arg.prevState;
     }
 
@@ -20,7 +21,7 @@ export namespace Variables {
             variablesVisible: !arg.prevState.variablesVisible
         };
 
-        arg.postMessage(InteractiveWindowMessages.VariableExplorerToggle, newState.variablesVisible);
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.VariableExplorerToggle, newState.variablesVisible));
 
         // If going visible for the first time, refresh our variables
         if (newState.variablesVisible) {
@@ -36,7 +37,7 @@ export namespace Variables {
         // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
         if (variablesResponse.executionCount === arg.prevState.currentExecutionCount) {
             // Now put out a request for all of the sub values for the variables
-            variablesResponse.variables.forEach(v => arg.postMessage(InteractiveWindowMessages.GetVariableValueRequest, v));
+            variablesResponse.variables.forEach(v => arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariableValueRequest, v)));
 
             return {
                 ...arg.prevState,

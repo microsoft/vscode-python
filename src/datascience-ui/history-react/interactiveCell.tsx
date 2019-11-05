@@ -9,7 +9,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState } from '../../client/datascience/types';
+import { CellState, IDataScienceExtraSettings } from '../../client/datascience/types';
 import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { CollapseButton } from '../interactive-common/collapseButton';
@@ -20,6 +20,7 @@ import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainStat
 import { IKeyboardEvent } from '../react-common/event';
 import { getLocString } from '../react-common/locReactSide';
 import { ImageButton } from '../react-common/imageButton';
+import { actionCreators } from './redux/actions';
 
 // tslint:disable-next-line: no-require-imports
 interface IInteractiveCellBaseProps {
@@ -37,10 +38,10 @@ interface IInteractiveCellBaseProps {
     editExecutionCount?: string;
     editorMeasureClassName?: string;
     font: IFont;
+    settings: IDataScienceExtraSettings;
 }
 
-type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
-
+type IInteractiveCellProps = IInteractiveCellBaseProps & typeof actionCreators;
 
 // tslint:disable: react-this-binding-issue
 export class InteractiveCell extends React.Component<IInteractiveCellProps> {
@@ -106,7 +107,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private toggleInputBlock = () => {
         const cellId: string = this.getCell().id;
-        this.props.cellVM.inputBlockToggled(cellId);
+        this.props.toggleInputBlock(cellId);
     }
 
     private getCell = () => {
@@ -118,11 +119,11 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private renderNormalCell() {
-        const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
+        const allowsPlainInput = this.props.settings.showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
         const shouldRender = allowsPlainInput || this.shouldRenderResults();
         const cellOuterClass = this.props.cellVM.editable ? 'cell-outer-editable' : 'cell-outer';
         const cellWrapperClass = this.props.cellVM.editable ? 'cell-wrapper' : 'cell-wrapper cell-wrapper-noneditable';
-        const themeMatplotlibPlots = getSettings().themeMatplotlibPlots ? true : false;
+        const themeMatplotlibPlots = this.props.settings.themeMatplotlibPlots ? true : false;
 
         // Only render if we are allowed to.
         if (shouldRender) {
@@ -136,7 +137,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                 <CellOutput
                                     cellVM={this.props.cellVM}
                                     baseTheme={this.props.baseTheme}
-                                    expandImage={this.props.expandImage}
+                                    expandImage={this.props.showPlot}
                                     openLink={this.props.openLink}
                                     maxTextSize={this.props.maxTextSize}
                                     themeMatplotlibPlots={themeMatplotlibPlots}
@@ -153,8 +154,9 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     private renderNormalToolbar = () => {
-        const gotoCode = () => this.stateController.gotoCellCode(cellId);
-        const deleteCode = () => this.stateController.deleteCell(cellId);
+        const cellId = this.getCell().id;
+        const gotoCode = () => this.props.gotoCell(cellId);
+        const deleteCode = () => this.props.deleteCell(cellId);
         const copyCode = () => this.stateController.copyCellCode(cellId);
         const cell = this.stateController.findCell(cellId);
         const gatherCode = () => this.stateController.gatherCell(cell);
