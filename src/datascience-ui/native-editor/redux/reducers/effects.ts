@@ -6,9 +6,10 @@ import { IDataScienceExtraSettings } from '../../../../client/datascience/types'
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
-import { ICellAction, ICellAndCursorAction, ICodeAction } from '../actions';
+import { ICellAndCursorAction, ICodeAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { ICellAction } from '../../../interactive-common/redux/reducers/types';
 
 export namespace Effects {
 

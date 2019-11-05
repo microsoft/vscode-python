@@ -3,17 +3,15 @@
 'use strict';
 import { CellMatcher } from '../../../../client/datascience/cellMatcher';
 import { concatMultilineStringInput } from '../../../../client/datascience/common';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
-import { ICellAction, IChangeCellTypeAction, ICodeAction, IEditCellAction, NativeEditorActionTypes } from '../actions';
-import { NativeEditorReducerArg } from '../mapping';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { ICellAction, IEditCellAction } from '../../../interactive-common/redux/reducers/types';
+import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
+import { IChangeCellTypeAction, ICodeAction, NativeEditorActionTypes } from '../actions';
+import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Execution {
 
@@ -166,13 +164,6 @@ export namespace Execution {
             };
         }
 
-        return arg.prevState;
-    }
-
-    export function editCell(arg: NativeEditorReducerArg<IEditCellAction>): IMainState {
-        if (arg.payload.cellId) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId }));
-        }
         return arg.prevState;
     }
 }

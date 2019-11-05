@@ -48,9 +48,10 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.UNDO]: Execution.undo,
     [NativeEditorActionTypes.ARROW_UP]: Movement.arrowUp,
     [NativeEditorActionTypes.ARROW_DOWN]: Movement.arrowDown,
-    [NativeEditorActionTypes.EDIT_CELL]: Execution.editCell,
+    [NativeEditorActionTypes.EDIT_CELL]: Transfer.editCell,
     [NativeEditorActionTypes.SHOW_PLOT]: Transfer.showPlot,
     [NativeEditorActionTypes.OPEN_LINK]: Transfer.openLink,
+    [NativeEditorActionTypes.GATHER_CELL]: Transfer.gather,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

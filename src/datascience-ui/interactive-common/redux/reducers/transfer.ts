@@ -2,9 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState } from '../../mainState';
+import { IMainState, extractInputText } from '../../mainState';
 import { ISendCommandAction, IShowDataViewerAction, IShowPlotAction, IOpenLinkAction } from '../../../native-editor/redux/actions';
-import { CommonReducerArg } from './types';
+import { CommonReducerArg, ICellAction, IEditCellAction } from './types';
 import { createPostableAction } from '../postOffice';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
@@ -49,11 +49,41 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function gotoCell<T>(arg: CommonReducerArg<T, { cellId: string | undefined }>): IMainState {
+    export function gotoCell<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
         const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
         if (cellVM && cellVM.cell.data.cell_type === 'code') {
             arg.queueAction(createPostableAction(InteractiveWindowMessages.GotoCodeCell, { file: cellVM.cell.file, line: cellVM.cell.line }));
         }
         return arg.prevState;
     }
+
+    export function copyCellCode<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
+        let cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
+        if (!cellVM && arg.prevState.editCellVM && arg.payload.cellId === arg.prevState.editCellVM.cell.id) {
+            cellVM = arg.prevState.editCellVM;
+        }
+
+        // Send a message to the other side to jump to a particular cell
+        if (cellVM) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, arg.prevState.settings) }));
+        }
+
+        return arg.prevState;
+    }
+
+    export function gather<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
+        const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
+        if (cellVM) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.GatherCode, cellVM.cell));
+        }
+        return arg.prevState;
+    }
+
+    export function editCell<T>(arg: CommonReducerArg<T, IEditCellAction>): IMainState {
+        if (arg.payload.cellId) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId }));
+        }
+        return arg.prevState;
+    }
+
 }

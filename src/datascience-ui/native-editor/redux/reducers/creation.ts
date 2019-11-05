@@ -16,10 +16,11 @@ import {
     ICellViewModel,
     IMainState
 } from '../../../interactive-common/mainState';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { actionCreators, ICellAction } from '../actions';
-import { NativeEditorReducerArg } from '../mapping';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { actionCreators } from '../actions';
+import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Creation {
     function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {

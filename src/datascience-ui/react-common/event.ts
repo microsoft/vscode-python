@@ -43,6 +43,7 @@ export interface IKeyboardEvent {
         isSuggesting: boolean;
         isDirty: boolean;
         contents: string;
+        clear(): void;
     };
     preventDefault(): void;
     stopPropagation(): void;

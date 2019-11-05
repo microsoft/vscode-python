@@ -32,6 +32,10 @@ export const reducerMap: IInteractiveActionMapping = {
     [InteractiveActionTypes.OPEN_LINK]: Transfer.openLink,
     [InteractiveActionTypes.GOTO_CELL]: Transfer.gotoCell,
     [InteractiveActionTypes.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
+    [InteractiveActionTypes.COPY_CELL_CODE]: Transfer.copyCellCode,
+    [InteractiveActionTypes.GATHER_CELL]: Transfer.gather,
+    [InteractiveActionTypes.EDIT_CELL]: Transfer.editCell,
+    [InteractiveActionTypes.SUBMIT_INPUT]: Execution.submitInput,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

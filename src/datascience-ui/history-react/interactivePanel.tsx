@@ -255,58 +255,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         }
     }
 
-    private editCellKeyDown = (_cellId: string, e: IKeyboardEvent) => {
-        if (e.code === 'Escape') {
-            this.editCellEscape(e);
-        } else if (e.code === 'Enter' && e.shiftKey) {
-            this.editCellSubmit(e);
-        }
-    }
-
-    private editCellSubmit(e: IKeyboardEvent) {
-        if (e.editorInfo && e.editorInfo.contents && this.state.editCellVM) {
-            // Prevent shift+enter from turning into a enter
-            e.stopPropagation();
-            e.preventDefault();
-
-            // Remove empty lines off the end
-            let endPos = e.editorInfo.contents.length - 1;
-            while (endPos >= 0 && e.editorInfo.contents[endPos] === '\n') {
-                endPos -= 1;
-            }
-            const content = e.editorInfo.contents.slice(0, endPos + 1);
-
-            // Send to the input history too if necessary
-            if (this.state.history) {
-                this.state.history.add(content, e.editorInfo.isDirty);
-            }
-
-            // Send to jupyter
-            this.stateController.submitInput(content, this.state.editCellVM);
-        }
-    }
-
-    private editCellEscape = (e: IKeyboardEvent) => {
-        const focusedElement = document.activeElement;
-        if (focusedElement !== null && e.editorInfo && !e.editorInfo.isSuggesting) {
-            const nextTabStop = this.findTabStop(1, focusedElement);
-            if (nextTabStop) {
-                nextTabStop.focus();
-            }
-        }
-    }
-
-    private findTabStop(direction: number, element: Element) : HTMLElement | undefined {
-        if (element) {
-            const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
-            if (allFocusable) {
-                const tabable = Array.prototype.filter.call(allFocusable, (i: HTMLElement) => i.tabIndex >= 0);
-                const self = tabable.indexOf(element);
-                return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
-            }
-        }
-    }
-
     private renderCell = (cellVM: ICellViewModel, _index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
         const cellRef = React.createRef<InteractiveCell>();
         this.cellRefs.set(cellVM.cell.id, cellRef);

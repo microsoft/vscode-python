@@ -4,8 +4,8 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
 import { IMainState } from '../../mainState';
+import { createPostableAction } from '../postOffice';
 import { CommonReducerArg } from './types';
-import { postOfficeActionCreators, createPostableAction } from '../postOffice';
 
 export namespace Kernel {
     export function restartKernel<T>(arg: CommonReducerArg<T>): IMainState {

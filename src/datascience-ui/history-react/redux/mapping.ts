@@ -1,20 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages, IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CssMessages, IGetCssResponse } from '../../../client/datascience/messages';
+import { IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
-import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import {
-    ICellAction,
-    InteractiveActionTypes,
-    IOpenLinkAction,
-    IShowDataViewerAction,
-    IShowPlotAction
-} from './actions';
+import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
+import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
+import { InteractiveActionTypes, IOpenLinkAction, IShowDataViewerAction, IShowPlotAction } from './actions';
 
 type InteractiveReducerFunc<T> = ReducerFunc<IMainState, InteractiveActionTypes, T>;
 
@@ -35,6 +30,10 @@ export class IInteractiveActionMapping {
     public [InteractiveActionTypes.SHOW_PLOT]: InteractiveReducerFunc<IShowPlotAction>;
     public [InteractiveActionTypes.TOGGLE_INPUT_BLOCK]: InteractiveReducerFunc<ICellAction>;
     public [InteractiveActionTypes.GOTO_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [InteractiveActionTypes.COPY_CELL_CODE]: InteractiveReducerFunc<ICellAction>;
+    public [InteractiveActionTypes.GATHER_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [InteractiveActionTypes.EDIT_CELL]: InteractiveReducerFunc<IEditCellAction>;
+    public [InteractiveActionTypes.SUBMIT_INPUT]: InteractiveReducerFunc<ICodeAction>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: InteractiveReducerFunc<ICell>;

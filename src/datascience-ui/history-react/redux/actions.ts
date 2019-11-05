@@ -8,6 +8,7 @@ import {
     IRefreshVariablesRequest,
     IShowDataViewer
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
 
 /**
  * How to add a new state change:
@@ -34,11 +35,13 @@ export enum InteractiveActionTypes {
     SHOW_PLOT = 'action.show_plot',
     TOGGLE_INPUT_BLOCK = 'action.toggle_input_block',
     GOTO_CELL = 'action.goto_cell',
-    START_CELL = 'action.start_cell'
-}
-
-export interface ICellAction {
-    cellId: string | undefined;
+    START_CELL = 'action.start_cell',
+    COPY_CELL_CODE = 'action.copy_cell_code',
+    GATHER_CELL = 'action.gather_cell',
+    CLICK_CELL = 'action.click_cell',
+    DOUBLE_CLICK_CELL = 'action.double_click_cell',
+    EDIT_CELL = 'action.edit_cell',
+    SUBMIT_INPUT = 'action.submit_input'
 }
 
 export interface IShowDataViewerAction extends IShowDataViewer {
@@ -64,5 +67,11 @@ export const actionCreators = {
     openLink: (uri: monacoEditor.Uri): InteractiveAction & IOpenLinkAction => ({ type: InteractiveActionTypes.OPEN_LINK, uri }),
     showPlot: (imageHtml: string): InteractiveAction & IShowPlotAction => ({ type: InteractiveActionTypes.SHOW_PLOT, imageHtml }),
     toggleInputBlock: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.TOGGLE_INPUT_BLOCK, cellId }),
-    gotoCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.GOTO_CELL, cellId })
+    gotoCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.GOTO_CELL, cellId }),
+    copyCellCode: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.COPY_CELL_CODE, cellId }),
+    gatherCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.GATHER_CELL, cellId }),
+    clickCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.CLICK_CELL, cellId }),
+    doubleClickCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.DOUBLE_CLICK_CELL, cellId }),
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): InteractiveAction & IEditCellAction => ({ type: InteractiveActionTypes.EDIT_CELL, cellId, changes }),
+    submitInput: (code: string, cellId: string): InteractiveAction & ICodeAction => ({ type: InteractiveActionTypes.SUBMIT_INPUT, code, cellId })
 };

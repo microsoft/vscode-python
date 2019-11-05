@@ -592,7 +592,6 @@ class NativeCell extends React.Component<INativeCellProps> {
         // Used to use this to track the model id. Might still need it for intellisense.
     }
 
-
     private renderOutput = (): JSX.Element | null => {
         const themeMatplotlibPlots = this.props.themeMatplotlibPlots ? true : false;
         if (this.shouldRenderOutput()) {

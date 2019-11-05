@@ -6,6 +6,7 @@ import { Action } from 'redux';
 
 import { IShowDataViewer, NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CursorPos } from '../../interactive-common/mainState';
+import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
 
 /**
  * How to add a new state change:
@@ -50,23 +51,12 @@ export enum NativeEditorActionTypes {
     ARROW_DOWN = 'action.arrow_down',
     EDIT_CELL = 'action.edit_cell',
     OPEN_LINK = 'action.open_link',
-    SHOW_PLOT = 'action.show_plot'
-}
-
-export interface ICellAction {
-    cellId: string | undefined;
-}
-
-export interface IEditCellAction extends ICellAction {
-    changes: monacoEditor.editor.IModelContentChange[];
+    SHOW_PLOT = 'action.show_plot',
+    GATHER_CELL = 'action.gather_cell'
 }
 
 export interface ICellAndCursorAction extends ICellAction {
     cursorPos: CursorPos;
-}
-
-export interface ICodeAction extends ICellAction {
-    code: string;
 }
 
 export interface IRefreshVariablesAction {

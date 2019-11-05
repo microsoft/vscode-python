@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState, CursorPos } from '../../../interactive-common/mainState';
-import { ICellAction } from '../actions';
-import { NativeEditorReducerArg } from '../mapping';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { Effects } from './effects';
+import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { NativeEditorReducerArg } from '../mapping';
+import { Effects } from './effects';
 
 export namespace Movement {
     export function moveCellUp(arg: NativeEditorReducerArg<ICellAction>): IMainState {

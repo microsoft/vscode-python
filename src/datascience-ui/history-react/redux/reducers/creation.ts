@@ -4,10 +4,10 @@
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
-import { ICellAction } from '../actions';
 import { InteractiveReducerArg } from '../mapping';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { ICellAction } from '../../../interactive-common/redux/reducers/types';
 
 export namespace Creation {
 
@@ -57,7 +57,7 @@ export namespace Creation {
         return cellVM;
     }
 
-    function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
+    export function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
         let cellVM: ICellViewModel = createCellVM(cell, settings, true);
 
         const visible = settings.showCellInputCode;

@@ -8,8 +8,8 @@ import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { CssMessages } from '../../../../client/datascience/messages';
-import { ICellAction } from '../actions';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { ICellAction } from '../../../interactive-common/redux/reducers/types';
 
 export namespace Effects {
 

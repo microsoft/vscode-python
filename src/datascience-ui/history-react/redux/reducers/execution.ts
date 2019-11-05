@@ -1,11 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
+
+import { CellMatcher } from '../../../../client/datascience/cellMatcher';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState } from '../../../interactive-common/mainState';
-import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { InteractiveReducerArg } from '../mapping';
+import { IMainState, createCellVM } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { ICodeAction } from '../../../interactive-common/redux/reducers/types';
+import { InteractiveReducerArg } from '../mapping';
+import { CellState } from '../../../../client/datascience/types';
+import { generateMarkdownFromCodeLines } from '../../../../client/datascience/common';
+import { Creation } from './creation';
+import * as uuid from 'uuid/v4';
 
 export namespace Execution {
 
@@ -59,5 +68,58 @@ export namespace Execution {
             ...arg.prevState,
             debugging: false
         };
+    }
+
+    export function submitInput(arg: InteractiveReducerArg<ICodeAction>): IMainState {
+        // noop if the submitted code is just a cell marker
+        const matcher = new CellMatcher(arg.prevState.settings);
+        if (matcher.stripFirstMarker(arg.payload.code).length > 0 && arg.prevState.editCellVM) {
+            // This should be from the edit cell VM. Copy it and change the cell id
+            let newCell = cloneDeep(arg.prevState.editCellVM);
+
+            // Change this editable cell to not editable.
+            newCell.cell.state = CellState.executing;
+            newCell.cell.data.source = arg.payload.code;
+
+            // Change type to markdown if necessary
+            const split = arg.payload.code.splitLines({ trim: false });
+            const firstLine = split[0];
+            if (matcher.isMarkdown(firstLine)) {
+                newCell.cell.data.cell_type = 'markdown';
+                newCell.cell.data.source = generateMarkdownFromCodeLines(split);
+                newCell.cell.state = CellState.finished;
+            } else if (newCell.cell.data.cell_type === 'markdown') {
+                newCell.cell.state = CellState.finished;
+            }
+
+            // Update input controls (always show expanded since we just edited it.)
+            newCell = createCellVM(newCell.cell, arg.prevState.settings, false);
+            const collapseInputs = arg.prevState.settings.collapseCellInputCodeByDefault;
+            newCell = Creation.alterCellVM(newCell, arg.prevState.settings, true, !collapseInputs);
+            newCell.useQuickEdit = false;
+
+            // Generate a new id
+            newCell.cell.id = uuid();
+
+            // Indicate this is direct input so that we don't hide it if the user has
+            // hide all inputs turned on.
+            newCell.directInput = true;
+
+            // Send a message to execute this code if necessary.
+            if (newCell.cell.state !== CellState.finished) {
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.SubmitNewCell, { code: arg.payload.code, id: newCell.cell.id }));
+            }
+
+            // Stick in a new cell at the bottom that's editable and update our state
+            // so that the last cell becomes busy
+            return {
+                ...arg.prevState,
+                cellVMs: [...arg.prevState.cellVMs, newCell],
+                undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
+                skipNextScroll: false,
+                submittedText: true
+            };
+        }
+        return arg.prevState;
     }
 }

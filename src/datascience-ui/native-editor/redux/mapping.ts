@@ -1,20 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    ILoadAllCells,
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CssMessages, IGetCssResponse } from '../../../client/datascience/messages';
+import { ILoadAllCells } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
+import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
+import { ICellAction, IEditCellAction, ICodeAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 import {
-    ICellAction,
     ICellAndCursorAction,
     IChangeCellTypeAction,
-    ICodeAction,
-    IEditCellAction,
     IOpenLinkAction,
     IRefreshVariablesAction,
     ISendCommandAction,
@@ -22,7 +19,6 @@ import {
     IShowPlotAction,
     NativeEditorActionTypes
 } from './actions';
-import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 
 type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, NativeEditorActionTypes, T>;
 
@@ -62,6 +58,7 @@ export class INativeEditorActionMapping {
     public [NativeEditorActionTypes.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
     public [NativeEditorActionTypes.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;
     public [NativeEditorActionTypes.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
+    public [NativeEditorActionTypes.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;
