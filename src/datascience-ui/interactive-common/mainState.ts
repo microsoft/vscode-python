@@ -61,6 +61,7 @@ export type IMainState = {
     dirty?: boolean;
     selectedCellId?: string;
     focusedCellId?: string;
+    scrolledCellId?: string;
     enableGather: boolean;
     isAtBottom: boolean;
     newCellId?: string;

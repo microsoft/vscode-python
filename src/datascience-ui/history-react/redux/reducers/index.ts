@@ -8,6 +8,10 @@ import { CssMessages } from '../../../../client/datascience/messages';
 import { Variables } from '../../../interactive-common/redux/reducers/variables';
 import { Creation } from './creation';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
+import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
+import { Execution } from './execution';
+import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
+import { Effects } from './effects';
 
 
 
@@ -23,6 +27,7 @@ export const reducerMap: IInteractiveActionMapping = {
     [InteractiveActionTypes.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [InteractiveActionTypes.DELETE_CELL]: Creation.deleteCell,
     [InteractiveActionTypes.UNDO]: Execution.undo,
+    [InteractiveActionTypes.REDO]: Execution.redo,
     [InteractiveActionTypes.SHOW_PLOT]: Transfer.showPlot,
     [InteractiveActionTypes.OPEN_LINK]: Transfer.openLink,
 
@@ -30,11 +35,22 @@ export const reducerMap: IInteractiveActionMapping = {
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
     [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
-    [InteractiveWindowMessages.Activate]: Effects.activate,
+    [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [InteractiveWindowMessages.GetVariablesResponse]: Variables.handleVariablesResponse,
     [InteractiveWindowMessages.GetVariableValueResponse]: Variables.handleVariableResponse,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
-    [CssMessages.GetCssResponse]: Effects.handleCss,
-    [InteractiveWindowMessages.MonacoReady]: Effects.monacoReady,
-    [CssMessages.GetMonacoThemeResponse]: Effects.monacoThemeChange,
+    [CssMessages.GetCssResponse]: CommonEffects.handleCss,
+    [InteractiveWindowMessages.MonacoReady]: CommonEffects.monacoReady,
+    [CssMessages.GetMonacoThemeResponse]: CommonEffects.monacoThemeChange,
+    [InteractiveWindowMessages.GetAllCells]: Transfer.getAllCells,
+    [InteractiveWindowMessages.ExpandAll]: Effects.expandAll,
+    [InteractiveWindowMessages.CollapseAll]: Effects.collapseAll,
+    [InteractiveWindowMessages.DeleteAllCells]: Creation.deleteAllCells,
+    [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
+    [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
+    [InteractiveWindowMessages.UpdateSettings]: Effects.updateSettings,
+    [InteractiveWindowMessages.StartDebugging]: Execution.startDebugging,
+    [InteractiveWindowMessages.StopDebugging]: Execution.stopDebugging,
+    [InteractiveWindowMessages.ScrollToCell]: Effects.scrollToCell,
+
 }

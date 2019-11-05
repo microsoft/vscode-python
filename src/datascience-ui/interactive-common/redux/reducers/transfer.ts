@@ -41,4 +41,10 @@ export namespace Transfer {
         arg.postMessage(InteractiveWindowMessages.OpenLink, arg.payload.uri.toString());
         return arg.prevState;
     }
+
+    export function getAllCells<T>(arg: CommonReducerArg<T>): IMainState {
+        const cells = arg.prevState.cellVMs.map(c => c.cell);
+        arg.postMessage(InteractiveWindowMessages.ReturnAllCells, cells);
+        return arg.prevState;
+    }
 }

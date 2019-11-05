@@ -26,6 +26,7 @@ export enum InteractiveActionTypes {
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     DELETE_CELL = 'action.delete_cell',
     UNDO = 'action.undo',
+    REDO = 'action.redo',
     OPEN_LINK = 'action.open_link',
     SHOW_PLOT = 'action.show_plot'
 }

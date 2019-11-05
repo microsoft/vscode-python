@@ -2,26 +2,26 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState } from '../../../interactive-common/mainState';
-import { NativeEditorReducerArg } from '../mapping';
 import { CellState } from '../../../../client/datascience/types';
+import { IMainState } from '../../mainState';
+import { CommonReducerArg } from './types';
 
 export namespace Kernel {
-    export function restartKernel(arg: NativeEditorReducerArg): IMainState {
+    export function restartKernel<T>(arg: CommonReducerArg<T>): IMainState {
         arg.postMessage(InteractiveWindowMessages.RestartKernel);
 
         // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
         return arg.prevState;
     }
 
-    export function interruptKernel(arg: NativeEditorReducerArg): IMainState {
+    export function interruptKernel<T>(arg: CommonReducerArg<T>): IMainState {
         arg.postMessage(InteractiveWindowMessages.Interrupt);
 
         // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
         return arg.prevState;
     }
 
-    export function handleRestarted(arg: NativeEditorReducerArg) {
+    export function handleRestarted<T>(arg: CommonReducerArg<T>) {
         // When we restart, make sure to turn off all executing cells. They aren't executing anymore
         const newVMs = [...arg.prevState.cellVMs];
         newVMs.forEach((vm, i) => {

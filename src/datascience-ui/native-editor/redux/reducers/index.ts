@@ -2,16 +2,17 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CssMessages } from '../../../../client/datascience/messages';
+import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
+import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
+import { Variables } from '../../../interactive-common/redux/reducers/variables';
 import { NativeEditorActionTypes } from '../actions';
 import { INativeEditorActionMapping } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
 import { Execution } from './execution';
-import { Kernel } from './kernel';
 import { Movement } from './movement';
-import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
-import { CssMessages } from '../../../../client/datascience/messages';
-import { Variables } from '../../../interactive-common/redux/reducers/variables';
+import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 
 // The list of reducers. 1 per message/action.
 export const reducerMap: INativeEditorActionMapping = {
@@ -54,8 +55,8 @@ export const reducerMap: INativeEditorActionMapping = {
     [InteractiveWindowMessages.StartCell]: Creation.startCell,
     [InteractiveWindowMessages.FinishCell]: Creation.finishCell,
     [InteractiveWindowMessages.UpdateCell]: Creation.updateCell,
-    [InteractiveWindowMessages.NotebookDirty]: Effects.notebookDirty,
-    [InteractiveWindowMessages.NotebookClean]: Effects.notebookClean,
+    [InteractiveWindowMessages.NotebookDirty]: CommonEffects.notebookDirty,
+    [InteractiveWindowMessages.NotebookClean]: CommonEffects.notebookClean,
     [InteractiveWindowMessages.LoadAllCells]: Creation.loadAllCells,
     [InteractiveWindowMessages.NotebookRunAllCells]: Execution.executeAllCells,
     [InteractiveWindowMessages.NotebookRunSelectedCell]: Execution.executeSelectedCell,
@@ -64,14 +65,14 @@ export const reducerMap: INativeEditorActionMapping = {
     [InteractiveWindowMessages.DeleteAllCells]: Creation.deleteAllCells,
     [InteractiveWindowMessages.Undo]: Execution.undo,
     [InteractiveWindowMessages.Redo]: Execution.redo,
-    [InteractiveWindowMessages.StartProgress]: Effects.startProgress,
-    [InteractiveWindowMessages.StopProgress]: Effects.stopProgress,
+    [InteractiveWindowMessages.StartProgress]: CommonEffects.startProgress,
+    [InteractiveWindowMessages.StopProgress]: CommonEffects.stopProgress,
     [InteractiveWindowMessages.UpdateSettings]: Effects.updateSettings,
-    [InteractiveWindowMessages.Activate]: Effects.activate,
+    [InteractiveWindowMessages.Activate]: CommonEffects.activate,
     [InteractiveWindowMessages.GetVariablesResponse]: Variables.handleVariablesResponse,
     [InteractiveWindowMessages.GetVariableValueResponse]: Variables.handleVariableResponse,
     [InteractiveWindowMessages.RestartKernel]: Kernel.handleRestarted,
-    [CssMessages.GetCssResponse]: Effects.handleCss,
-    [InteractiveWindowMessages.MonacoReady]: Effects.monacoReady,
-    [CssMessages.GetMonacoThemeResponse]: Effects.monacoThemeChange,
+    [CssMessages.GetCssResponse]: CommonEffects.handleCss,
+    [InteractiveWindowMessages.MonacoReady]: CommonEffects.monacoReady,
+    [CssMessages.GetMonacoThemeResponse]: CommonEffects.monacoThemeChange,
 }

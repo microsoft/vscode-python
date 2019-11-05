@@ -27,6 +27,7 @@ export class IInteractiveActionMapping {
     public [InteractiveActionTypes.EXPORT]: InteractiveReducerFunc<never | undefined>;
     public [InteractiveActionTypes.SAVE]: InteractiveReducerFunc<never | undefined>;
     public [InteractiveActionTypes.UNDO]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveActionTypes.REDO]: InteractiveReducerFunc<never | undefined>;
     public [InteractiveActionTypes.SHOW_DATA_VIEWER]: InteractiveReducerFunc<IShowDataViewerAction>;
     public [InteractiveActionTypes.DELETE_CELL]: InteractiveReducerFunc<ICellAction>;
     public [InteractiveActionTypes.OPEN_LINK]: InteractiveReducerFunc<IOpenLinkAction>;
@@ -43,4 +44,14 @@ export class IInteractiveActionMapping {
     public [CssMessages.GetCssResponse]: InteractiveReducerFunc<IGetCssResponse>;
     public [InteractiveWindowMessages.MonacoReady]: InteractiveReducerFunc<never | undefined>;
     public [CssMessages.GetMonacoThemeResponse]: InteractiveReducerFunc<IGetMonacoThemeResponse>;
+    public [InteractiveWindowMessages.GetAllCells]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.ExpandAll]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.CollapseAll]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.DeleteAllCells]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.StartProgress]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.StopProgress]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.UpdateSettings]: InteractiveReducerFunc<string>;
+    public [InteractiveWindowMessages.StartDebugging]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.StopDebugging]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveWindowMessages.ScrollToCell]: InteractiveReducerFunc<ICellAction>;
 }

@@ -10,10 +10,7 @@ import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 
 export namespace Creation {
 
-    function alterCellVM(cellVM: ICellViewModel, settings: IDataScienceExtraSettings): ICellViewModel {
-        const visible = settings.showCellInputCode;
-        const expanded = !settings.collapseCellInputCodeByDefault;
-
+    export function alterCellVM(cellVM: ICellViewModel, settings: IDataScienceExtraSettings, visible: boolean, expanded: boolean): ICellViewModel {
         if (cellVM.cell.data.cell_type === 'code') {
             // If we are already in the correct state, return back our initial cell vm
             if (cellVM.inputBlockShow === visible && cellVM.inputBlockOpen === expanded) {
@@ -62,8 +59,11 @@ export namespace Creation {
     function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
         let cellVM: ICellViewModel = createCellVM(cell, settings, true);
 
+        const visible = settings.showCellInputCode;
+        const expanded = !settings.collapseCellInputCodeByDefault;
+
         // Set initial cell visibility and collapse
-        cellVM = alterCellVM(cellVM, settings);
+        cellVM = alterCellVM(cellVM, settings, visible, expanded);
 
         return cellVM;
     }
