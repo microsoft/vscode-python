@@ -209,7 +209,7 @@ export class JupyterCommandFinder {
 
         // First we look in the current interpreter
         const current = await this.interpreterService.getActiveInterpreter();
-
+        const stopWatch = new StopWatch();
         if (isCommandFinderCancelled(command, cancelToken)) {
             return cancelledResult;
         }
@@ -220,6 +220,8 @@ export class JupyterCommandFinder {
 
             // Save our error information. This should propagate out as the error information for the command
             firstError = found.error;
+        } else {
+            this.sendSearchTelemetry(command, 'activeInterpreter', stopWatch.elapsedTime, cancelToken);
         }
 
         // Display a progress message when searching, as this could take a while.
@@ -244,6 +246,11 @@ export class JupyterCommandFinder {
                 if (found.status === ModuleExistsStatus.NotFound) {
                     progress.report({ message: localize.DataScience.findJupyterCommandProgressSearchCurrentPath() });
                     found = await this.findPathCommand(command, cancelToken);
+                    if (found.status !== ModuleExistsStatus.NotFound){
+                        this.sendSearchTelemetry(command, 'path', stopWatch.elapsedTime, cancelToken);
+                    }
+                } else {
+                    this.sendSearchTelemetry(command, 'otherInterpreter', stopWatch.elapsedTime, cancelToken);
                 }
 
                 return found;
@@ -256,9 +263,18 @@ export class JupyterCommandFinder {
             found.error = firstError;
         }
 
+        if (found.status === ModuleExistsStatus.NotFound){
+            this.sendSearchTelemetry(command, 'nowhere', stopWatch.elapsedTime, cancelToken);
+        }
+
         return found;
     }
-
+    private sendSearchTelemetry(command: JupyterCommands, where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere', elapsedTime: number, cancelToken?: CancellationToken){
+        if (Cancellation.isCanceled(cancelToken)){
+            return;
+        }
+        sendTelemetryEvent(Telemetry.JupyterCommandSearch, elapsedTime, {where, command});
+    }
     private async searchOtherInterpretersForCommand(
         command: JupyterCommands,
         progress: ProgressNotification,

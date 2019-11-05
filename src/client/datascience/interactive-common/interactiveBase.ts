@@ -29,7 +29,7 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { generateCellRanges } from '../cellFactory';
+import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
@@ -1013,7 +1013,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
         if (editor && (editor.document.languageId === PYTHON_LANGUAGE || editor.document.isUntitled)) {
             // Figure out if any cells in this document already.
-            const ranges = generateCellRanges(editor.document, this.generateDataScienceExtraSettings());
+            const ranges = generateCellRangesFromDocument(editor.document, this.generateDataScienceExtraSettings());
             const hasCellsAlready = ranges.length > 0;
             const line = editor.selection.start.line;
             const revealLine = line + 1;
@@ -1086,6 +1086,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Then create a new notebook
         if (server) {
             this.notebook = await server.createNotebook(await this.getNotebookIdentity());
+        }
+
+        if (this.notebook) {
+            const uri: Uri = await this.getNotebookIdentity();
+            this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri).ignoreErrors();
         }
 
         traceInfo('Connected to jupyter server.');

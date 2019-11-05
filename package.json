@@ -1526,7 +1526,7 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
+                    "description": "When a Notebook Editor or Interactive Window session is started, create the kernel on the specified Jupyter server. Select 'local' to create a new Jupyter server on this local machine.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
@@ -1694,8 +1694,14 @@
                 },
                 "python.dataScience.enableGather": {
                     "type": "boolean",
+                    "default": true,
+                    "description": "Enable code gather for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
+                    "scope": "resource"
+                },
+                "python.dataScience.gatherToScript": {
+                    "type": "boolean",
                     "default": false,
-                    "description": "Enable code gathering for single cells in the interactive window (experimental).",
+                    "description": "Gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
@@ -2679,7 +2685,8 @@
     "dependencies": {
         "@blueprintjs/select": "3.10.0",
         "@jupyterlab/services": "^3.2.1",
-        "@msrvida/python-program-analysis": "^0.2.6",
+        "@jupyterlab/coreutils": "^3.1.0",
+        "@msrvida/python-program-analysis": "^0.4.1",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",

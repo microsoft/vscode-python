@@ -562,10 +562,18 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
             this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
         };
+        const gatherCell = () => {
+            this.props.stateController.gatherCell(this.props.cellVM);
+        };
         const deleteCell = () => {
             this.props.stateController.possiblyDeleteCell(cellId);
             this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
         };
+        const gatherDisabled =  this.props.cellVM.cell.data.execution_count === null ||
+                                this.props.cellVM.hasBeenRun === null ||
+                                this.props.cellVM.hasBeenRun === false ||
+                                this.isMarkdownCell() ||
+                                getSettings().enableGather === false;
         const switchTooltip = this.props.cellVM.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
             getLocString('DataScience.switchToCode', 'Change to code');
         const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
@@ -585,6 +593,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCell} tooltip={getLocString('DataScience.gatherCell', 'Gather the code required to generate this cell into a new notebook')} hidden={gatherDisabled}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')} className='delete-cell-button'>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />

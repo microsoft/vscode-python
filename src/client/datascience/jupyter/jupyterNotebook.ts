@@ -255,6 +255,10 @@ export class JupyterNotebookBase implements INotebook {
         return this.updateWorkingDirectory(file);
     }
 
+    public addLogger(logger: INotebookExecutionLogger) {
+        this.loggers.push(logger);
+    }
+
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
         // Create an observable and wrap the result so we can time it.
         const stopWatch = new StopWatch();

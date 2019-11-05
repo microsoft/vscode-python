@@ -107,10 +107,56 @@ export function hasCells(document: TextDocument, settings?: IDataScienceSettings
     return false;
 }
 
-export function generateCellRanges(document: TextDocument, settings?: IDataScienceSettings): { range: Range; title: string; cell_type: string }[] {
+// CellRange is used as the basis for creating new ICells. We only use it in this file.
+interface ICellRange {
+    range: Range;
+    title: string;
+    cell_type: string;
+}
+
+export function generateCellsFromString(source: string, settings?: IDataScienceSettings): ICell[] {
+    const lines: string[] = source.splitLines({ trim: false, removeEmptyEntries: false });
+
+    // Find all the lines that start a cell
+    const matcher = new CellMatcher(settings);
+    const starts: { startLine: number; title: string; code: string; cell_type: string }[] = [];
+    let currentCode: string | undefined;
+    for (let index = 0; index < lines.length; index += 1) {
+        const line = lines[index];
+        if (matcher.isCell(line)) {
+            if (starts.length > 0 && currentCode) {
+                const previousCell = starts[starts.length - 1];
+                previousCell.code = currentCode;
+            }
+            const results = matcher.exec(line);
+            if (results !== undefined) {
+                starts.push({
+                    startLine: index + 1,
+                    title: results,
+                    cell_type: matcher.getCellType(line),
+                    code: ''
+                });
+            }
+            currentCode = undefined;
+        }
+        currentCode = currentCode ? `${currentCode}\n${line}` : line;
+    }
+
+    if (starts.length >= 1 && currentCode) {
+        const previousCell = starts[starts.length - 1];
+        previousCell.code = currentCode;
+    }
+
+    // For each one, get its text and turn it into a cell
+    return Array.prototype.concat(...starts.map(s => {
+        return generateCells(settings, s.code, '', s.startLine, false, uuid());
+    }));
+}
+
+export function generateCellRangesFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICellRange[] {
     // Implmentation of getCells here based on Don's Jupyter extension work
     const matcher = new CellMatcher(settings);
-    const cells : { range: Range; title: string; cell_type: string }[] = [];
+    const cells: ICellRange[] = [];
     for (let index = 0; index < document.lineCount; index += 1) {
         const line = document.lineAt(index);
         if (matcher.isCell(line.text)) {
@@ -140,12 +186,11 @@ export function generateCellRanges(document: TextDocument, settings?: IDataScien
 }
 
 export function generateCellsFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICell[] {
-    // Get our ranges. They'll determine our cells
-    const ranges = generateCellRanges(document, settings);
+    const ranges = generateCellRangesFromDocument(document, settings);
 
     // For each one, get its text and turn it into a cell
-    return Array.prototype.concat(...ranges.map(r => {
-        const code = document.getText(r.range);
-        return generateCells(settings, code, document.fileName, r.range.start.line, false, uuid());
+    return Array.prototype.concat(...ranges.map(cr => {
+        const code = document.getText(cr.range);
+        return generateCells(settings, code, '', cr.range.start.line, false, uuid());
     }));
 }

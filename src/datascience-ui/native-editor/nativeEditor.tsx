@@ -58,7 +58,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             scrollToCell: this.scrollToCell.bind(this),
             defaultEditable: true,
             hasEdit: false,
-            enableGather: false
+            enableGather: true
         });
 
         // Default our state.

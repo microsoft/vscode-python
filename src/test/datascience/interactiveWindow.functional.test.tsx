@@ -577,6 +577,7 @@ for _ in range(50):
 
     runMountedTest('Gather code run from text editor', async (wrapper) => {
         ioc.getSettings().datascience.enableGather = true;
+        ioc.getSettings().datascience.gatherToScript = true;
         // Enter some code.
         const code = `${defaultCellMarker}\na=1\na`;
         await addCode(ioc, wrapper, code);
@@ -590,12 +591,13 @@ for _ in range(50):
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         assert.notEqual(docManager.activeTextEditor, undefined);
         if (docManager.activeTextEditor) {
-            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains the minimal amount of code required to produce the code cell you gathered.\n${defaultCellMarker}\na=1\na\n\n`);
+            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na\n\n`);
         }
     }, () => { return ioc; });
 
     runMountedTest('Gather code run from input box', async (wrapper) => {
         ioc.getSettings().datascience.enableGather = true;
+        ioc.getSettings().datascience.gatherToScript = true;
         // Create an interactive window so that it listens to the results.
         const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
         await interactiveWindow.show();
@@ -612,7 +614,7 @@ for _ in range(50):
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         assert.notEqual(docManager.activeTextEditor, undefined);
         if (docManager.activeTextEditor) {
-            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains the minimal amount of code required to produce the code cell you gathered.\n${defaultCellMarker}\na=1\na\n\n`);
+            assert.equal(docManager.activeTextEditor.document.getText(), `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na\n\n`);
         }
     }, () => { return ioc; });
 

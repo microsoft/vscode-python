@@ -363,11 +363,12 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         const cell = this.stateController.findCell(cellId);
         const gatherCode = () => this.stateController.gatherCell(cell);
         const hasNoSource = !cell || !cell.cell.file || cell.cell.file === Identifiers.EmptyFileName;
+        const gatherHidden = !cell || !this.state.enableGather || cell.cell.data.cell_type !== 'code';
 
         return (
             [
                 <div className='cell-toolbar' key={0}>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={gatherCode} hidden={!this.state.enableGather} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} >
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={gatherCode} hidden={gatherHidden} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} >
                         <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
                     </ImageButton>
                     <ImageButton baseTheme={this.state.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
