@@ -599,9 +599,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
-        if (this.mockJupyter) {
-            this.mockJupyter.addInterpreter(this.workingPython, SupportedCommands.all);
-        }
+        this.addInterpreter(this.workingPython, SupportedCommands.all);
     }
 
     // tslint:disable:any
@@ -716,6 +714,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public enableJedi(enabled: boolean) {
         this.pythonSettings.jediEnabled = enabled;
+    }
+
+    public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
+        if (this.mockJupyter) {
+            this.mockJupyter.addInterpreter(newInterpreter, commands);
+        }
     }
 
     private findPythonPath(): string {

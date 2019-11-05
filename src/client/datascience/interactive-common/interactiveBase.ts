@@ -935,7 +935,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private onInterpreterChanged = () => {
         // Update our load promise. We need to restart the jupyter server
-        this.loadPromise = this.reloadWithNew();
+        if (this.loadPromise) {
+            this.loadPromise = this.reloadWithNew();
+        }
     }
 
     private async stopServer(): Promise<void> {
