@@ -607,26 +607,13 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private renderControls = () => {
-        // const cellId = this.props.cellVM.cell.id;
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '-';
-        // const runCell = () => {
-        //     this.props.stateController.updateCellSource(cellId);
-        //     this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
-        //     this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
-        // };
-        // const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
-        // const runCellHidden = !canRunBelow || this.isMarkdownCell();
 
         return (
             <div className='controls-div'>
                 <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
-                {/* <div className='native-editor-celltoolbar-inner'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={runCellHidden} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
-                    </ImageButton>
-                </div> */}
             </div>
         );
     }
