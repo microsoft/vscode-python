@@ -354,7 +354,7 @@ export class FileSystemUtils implements IFileSystemUtils {
     ): Promise<boolean> {
         let stat: FileStat;
         try {
-            stat = await this.raw.stat(filename);
+            stat = await this._stat(filename);
         } catch (err) {
             return false;
         }
@@ -395,7 +395,7 @@ export class FileSystemUtils implements IFileSystemUtils {
             tmpFile = await this.tmp.createFile('___vscpTest___', dirname);
         } catch {
             // Use a stat call to ensure the directory exists.
-            await this.raw.stat(dirname);
+            await this._stat(dirname);
             return true;
         }
         tmpFile.dispose();
@@ -412,6 +412,10 @@ export class FileSystemUtils implements IFileSystemUtils {
         const files = await this.globFile(globPattern);
         return Array.isArray(files) ? files : [];
     }
+
+    public async _stat(filename: string): Promise<FileStat> {
+        return this.raw.stat(filename);
+    }
 }
 
 // We *could* use ICryptoUtils, but it's a bit overkill, issue tracked
@@ -425,7 +429,7 @@ function getHashString(data: string): string {
 // more aliases (to cause less churn)
 @injectable()
 export class FileSystem implements IFileSystem {
-    private readonly utils: FileSystemUtils;
+    protected readonly utils: FileSystemUtils;
     constructor() {
         this.utils = FileSystemUtils.withDefaults();
     }
@@ -486,7 +490,7 @@ export class FileSystem implements IFileSystem {
     // aliases
 
     public async stat(filePath: string): Promise<FileStat> {
-        return this.utils.raw.stat(filePath);
+        return this.utils._stat(filePath);
     }
 
     public async readFile(filename: string): Promise<string> {

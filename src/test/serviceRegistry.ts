@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fsextra from 'fs-extra';
 import { Container } from 'inversify';
+import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel } from 'vscode';
@@ -13,7 +15,7 @@ import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
-import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
+import { FileStat, FileType, IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
@@ -22,6 +24,7 @@ import { registerTypes as processRegisterTypes } from '../client/common/process/
 import { IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonToolExecutionService } from '../client/common/process/types';
 import { registerTypes as commonRegisterTypes } from '../client/common/serviceRegistry';
 import { GLOBAL_MEMENTO, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IsWindows, WORKSPACE_MEMENTO } from '../client/common/types';
+import { createDeferred } from '../client/common/utils/async';
 import { registerTypes as variableRegisterTypes } from '../client/common/variables/serviceRegistry';
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
@@ -58,7 +61,77 @@ import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
 
+// This is necessary for unit tests and functional tests, since they
+// do not run under VS Code so they do not have access to the actual
+// "vscode" namespace.
+class LegacyFileSystem extends FileSystem {
+    public async readFile(filename: string): Promise<string> {
+        return fsextra.readFile(filename, 'utf8');
+    }
+    public async writeFile(filename: string, data: {}): Promise<void> {
+        const options: fsextra.WriteFileOptions = {
+            encoding: 'utf8'
+        };
+        return fsextra.writeFile(filename, data, options);
+    }
+    public async deleteDirectory(dirname: string): Promise<void> {
+        return fsextra.stat(dirname)
+            .then(() => fsextra.remove(dirname));
+    }
+    public async deleteFile(filename: string): Promise<void> {
+        return fsextra.unlink(filename);
+    }
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        const names: string[] = await fsextra.readdir(dirname);
+        const promises = names
+            .map(name => {
+                 const filename = path.join(dirname, name);
+                 return this.utils.raw.lstat(filename)
+                     .then(stat => [name, stat.type] as [string, FileType])
+                     .catch(() => [name, FileType.Unknown] as [string, FileType]);
+            });
+        return Promise.all(promises);
+    }
+    public async createDirectory(dirname: string): Promise<void> {
+        return fsextra.mkdirp(dirname);
+    }
+    public async copyFile(src: string, dest: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        const rs = fsextra.createReadStream(src)
+            .on('error', (err) => {
+                deferred.reject(err);
+            });
+        const ws = fsextra.createWriteStream(dest)
+            .on('error', (err) => {
+                deferred.reject(err);
+            }).on('close', () => {
+                deferred.resolve();
+            });
+        rs.pipe(ws);
+        return deferred.promise;
+    }
+    protected async _stat(filePath: string): Promise<FileStat> {
+        const stat = await fsextra.stat(filePath);
+        let fileType = FileType.Unknown;
+        if (stat.isFile()) {
+            fileType = FileType.File;
+        } else if (stat.isDirectory()) {
+            fileType = FileType.Directory;
+        } else if (stat.isSymbolicLink()) {
+            fileType = FileType.SymbolicLink;
+        }
+        return {
+            type: fileType,
+            size: stat.size,
+            ctime: stat.ctimeMs,
+            mtime: stat.mtimeMs
+        };
+    }
+}
+
 export class IocContainer {
+    public vscode = true;
+
     public readonly serviceManager: IServiceManager;
     public readonly serviceContainer: IServiceContainer;
 
@@ -105,7 +178,10 @@ export class IocContainer {
     }
     public registerFileSystemTypes() {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
-        this.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+        this.serviceManager.addSingleton<IFileSystem>(
+            IFileSystem,
+            this.vscode ? FileSystem : LegacyFileSystem
+        );
     }
     public registerProcessTypes() {
         processRegisterTypes(this.serviceManager);
