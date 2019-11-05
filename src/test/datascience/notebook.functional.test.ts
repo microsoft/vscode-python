@@ -528,9 +528,6 @@ suite('DataScience notebook tests', () => {
 
         // Real Jupyter doesn't help this test at all and is tricky to set up for it, so just skip it
         if (!isRollingBuild) {
-            //jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-            //processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
-
             const server = await createNotebook(true);
 
             // Create again, we should get the same server from the cache
