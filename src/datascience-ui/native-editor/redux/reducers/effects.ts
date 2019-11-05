@@ -1,23 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Identifiers } from '../../../../client/datascience/constants';
+import { CssMessages, IGetCssResponse } from '../../../../client/datascience/messages';
+import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
+import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
+import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { ICellAction, ICellAndCursorAction, ICodeAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
-import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { computeEditorOptions } from '../../../react-common/settingsReactSide';
-import { CssMessages, IGetCssResponse } from '../../../../client/datascience/messages';
-import { detectBaseTheme } from '../../../react-common/themeDetector';
-import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
-import { Identifiers } from '../../../../client/datascience/constants';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 
 export namespace Effects {
-
-    function computeKnownDark(settings: IDataScienceExtraSettings): boolean {
-        const ignore = settings.ignoreVscodeTheme ? true : false;
-        const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
-        return baseTheme !== 'vscode-light';
-    }
 
     export function focusCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
         const newVMs = [...arg.prevState.cellVMs];
@@ -172,7 +166,7 @@ export namespace Effects {
 
         // Ask for new theme data if necessary
         if (newSettings && newSettings.extraSettings && newSettings.extraSettings.theme !== arg.prevState.vscodeThemeName) {
-            const knownDark = computeKnownDark(newSettings);
+            const knownDark = Helpers.computeKnownDark(newSettings);
             // User changed the current theme. Rerender
             arg.postMessage(CssMessages.GetCssRequest, { isDark: knownDark });
             arg.postMessage(CssMessages.GetMonacoThemeRequest, { isDark: knownDark });
@@ -199,12 +193,12 @@ export namespace Effects {
     export function handleCss(arg: NativeEditorReducerArg<IGetCssResponse>): IMainState {
         // Recompute our known dark value from the class name in the body
         // VS code should update this dynamically when the theme changes
-        const computedKnownDark = computeKnownDark(arg.prevState.settings);
+        const computedKnownDark = Helpers.computeKnownDark(arg.prevState.settings);
 
         // We also get this in our response, but computing is more reliable
         // than searching for it.
         const newBaseTheme = (arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode) ?
-            computeKnownDark ? 'vscode-dark' : 'vscode-light' : arg.prevState.baseTheme;
+            computedKnownDark ? 'vscode-dark' : 'vscode-light' : arg.prevState.baseTheme;
 
         let fontSize: number = 14;
         let fontFamily: string = 'Consolas, \'Courier New\', monospace';

@@ -2,18 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMainState } from '../../../interactive-common/mainState';
-import { ISendCommandAction, IShowDataViewerAction, IShowPlotAction, IOpenLinkAction } from '../actions';
-import { NativeEditorReducerArg } from '../mapping';
+import { IMainState } from '../../mainState';
+import { ISendCommandAction, IShowDataViewerAction, IShowPlotAction, IOpenLinkAction } from '../../../native-editor/redux/actions';
+import { CommonReducerArg } from './types';
 
+// These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
-    export function exportCells(arg: NativeEditorReducerArg): IMainState {
+    export function exportCells<T>(arg: CommonReducerArg<T>): IMainState {
         const cellContents = arg.prevState.cellVMs.map(v => v.cell);
         arg.postMessage(InteractiveWindowMessages.Export, cellContents);
         return arg.prevState;
     }
 
-    export function save(arg: NativeEditorReducerArg): IMainState {
+    export function save<T>(arg: CommonReducerArg<T>): IMainState {
         // Note: this is assuming editor contents have already been saved. That should happen as a result of focus change
 
         // Actually waiting for save results before marking as not dirty, so don't do it here.
@@ -21,22 +22,22 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function showDataViewer(arg: NativeEditorReducerArg<IShowDataViewerAction>): IMainState {
+    export function showDataViewer<T>(arg: CommonReducerArg<T, IShowDataViewerAction>): IMainState {
         arg.postMessage(InteractiveWindowMessages.ShowDataViewer, { variableName: arg.payload.variableName, columnSize: arg.payload.columnSize });
         return arg.prevState;
     }
 
-    export function sendCommand(arg: NativeEditorReducerArg<ISendCommandAction>): IMainState {
+    export function sendCommand<T>(arg: CommonReducerArg<T, ISendCommandAction>): IMainState {
         arg.postMessage(InteractiveWindowMessages.NativeCommand, { command: arg.payload.command, source: arg.payload.commandType })
         return arg.prevState;
     }
 
-    export function showPlot(arg: NativeEditorReducerArg<IShowPlotAction>): IMainState {
+    export function showPlot<T>(arg: CommonReducerArg<T, IShowPlotAction>): IMainState {
         arg.postMessage(InteractiveWindowMessages.NativeCommand, arg.payload.imageHtml);
         return arg.prevState;
     }
 
-    export function openLink(arg: NativeEditorReducerArg<IOpenLinkAction>): IMainState {
+    export function openLink<T>(arg: CommonReducerArg<T, IOpenLinkAction>): IMainState {
         arg.postMessage(InteractiveWindowMessages.OpenLink, arg.payload.uri.toString());
         return arg.prevState;
     }

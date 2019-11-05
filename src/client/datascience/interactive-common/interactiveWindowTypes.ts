@@ -237,6 +237,10 @@ export interface IShowDataViewer {
     columnSize: number;
 }
 
+export interface IRefreshVariablesRequest {
+    newExecutionCount?: number;
+}
+
 export interface ILoadAllCells {
     cells: ICell[];
 }

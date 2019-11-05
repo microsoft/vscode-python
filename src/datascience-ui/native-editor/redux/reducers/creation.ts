@@ -3,7 +3,10 @@
 'use strict';
 import * as uuid from 'uuid/v4';
 
-import { InteractiveWindowMessages, ILoadAllCells } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    ILoadAllCells,
+    InteractiveWindowMessages
+} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import {
     createCellVM,
@@ -13,11 +16,9 @@ import {
     ICellViewModel,
     IMainState
 } from '../../../interactive-common/mainState';
-import { arePathsSame } from '../../../react-common/arePathsSame';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { actionCreators, ICellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
-import { Helpers } from './helpers';
-import { Variables } from './variables';
 
 export namespace Creation {
     function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
@@ -33,67 +34,6 @@ export namespace Creation {
         cellVM.inputBlockText = newText;
 
         return cellVM;
-    }
-
-    function updateOrAdd(arg: NativeEditorReducerArg<ICell>): IMainState {
-        // First compute new execution count.
-        const newExecutionCount = arg.payload.data.execution_count ?
-            Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10)) :
-            arg.prevState.currentExecutionCount;
-        if (newExecutionCount !== arg.prevState.currentExecutionCount && arg.prevState.variablesVisible) {
-            // We also need to update our variable explorer when the execution count changes
-            // Use the ref here to maintain var explorer independence
-            Variables.refreshVariables({ ...arg, payload: { newExecutionCount } });
-        }
-
-        const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
-            return c.cell.id === arg.payload.id &&
-                c.cell.line === arg.payload.line &&
-                arePathsSame(c.cell.file, arg.payload.file);
-        });
-        if (index >= 0) {
-            // This means the cell existed already so it was actual executed code.
-            // Use its execution count to update our execution count.
-
-            // Have to make a copy of the cell VM array or
-            // we won't actually update.
-            const newVMs = [...arg.prevState.cellVMs];
-
-            // Live share has been disabled for now, see https://github.com/microsoft/vscode-python/issues/7972
-            // Check to see if our code still matches for the cell (in liveshare it might be updated from the other side)
-            // if (concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source) !== concatMultilineStringInput(cell.data.source)) {
-
-            // Prevent updates to the source, as its possible we have recieved a response for a cell execution
-            // and the user has updated the cell text since then.
-            newVMs[index] = {
-                ...newVMs[index],
-                cell: {
-                    ...newVMs[index].cell,
-                    state: arg.payload.state,
-                    data: {
-                        ...arg.payload.data,
-                        source: newVMs[index].cell.data.source
-                    }
-                }
-            };
-
-            return {
-                ...arg.prevState,
-                cellVMs: newVMs,
-                currentExecutionCount: newExecutionCount
-            };
-        } else {
-            // This is an entirely new cell (it may have started out as finished)
-            const newVM = prepareCellVM(arg.payload, arg.prevState.settings);
-            const newVMs = [
-                ...arg.prevState.cellVMs,
-                newVM];
-            return {
-                ...arg.prevState,
-                cellVMs: newVMs,
-                currentExecutionCount: newExecutionCount
-            };
-        }
     }
 
     export function insertAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
@@ -160,15 +100,15 @@ export namespace Creation {
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return updateOrAdd(arg);
+        return Helpers.updateOrAdd(arg, prepareCellVM);
     }
 
     export function updateCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return updateOrAdd(arg);
+        return Helpers.updateOrAdd(arg, prepareCellVM);
     }
 
     export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return updateOrAdd(arg);
+        return Helpers.updateOrAdd(arg, prepareCellVM);
     }
 
     export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {

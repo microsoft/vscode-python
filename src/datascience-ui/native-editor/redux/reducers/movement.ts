@@ -5,7 +5,7 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { IMainState, CursorPos } from '../../../interactive-common/mainState';
 import { ICellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
-import { Helpers } from './helpers';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { Effects } from './effects';
 
 export namespace Movement {

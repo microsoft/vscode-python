@@ -9,9 +9,9 @@ import { Effects } from './effects';
 import { Execution } from './execution';
 import { Kernel } from './kernel';
 import { Movement } from './movement';
-import { Transfer } from './transfer';
-import { Variables } from './variables';
+import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CssMessages } from '../../../../client/datascience/messages';
+import { Variables } from '../../../interactive-common/redux/reducers/variables';
 
 // The list of reducers. 1 per message/action.
 export const reducerMap: INativeEditorActionMapping = {

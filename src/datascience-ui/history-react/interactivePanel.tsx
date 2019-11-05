@@ -28,8 +28,6 @@ interface IInteractivePanelProps {
 }
 
 export class InteractivePanel extends React.Component<IInteractivePanelProps, IMainState> {
-    // Public for testing
-    public stateController: InteractivePanelStateController;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private editCellRef: React.RefObject<InteractiveCell> = React.createRef<InteractiveCell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
@@ -39,22 +37,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
 
     constructor(props: IInteractivePanelProps) {
         super(props);
-
-        // Create our state controller. It manages updating our state.
-        this.stateController = new InteractivePanelStateController({
-            skipDefault: this.props.skipDefault,
-            testMode: this.props.testMode ? true : false,
-            baseTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : this.props.baseTheme,
-            setState: this.setState.bind(this),
-            activate: this.activated.bind(this),
-            scrollToCell: this.scrollToCell.bind(this),
-            defaultEditable: false,
-            hasEdit: getSettings && getSettings().allowInput,
-            enableGather: (getSettings && getSettings().enableGather) ? true : false
-        });
-
-        // Default our state.
-        this.state = this.stateController.getState();
     }
 
     public shouldComponentUpdate(_nextProps: IInteractivePanelProps, nextState: IMainState): boolean {

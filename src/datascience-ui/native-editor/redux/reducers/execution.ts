@@ -12,7 +12,7 @@ import { IMainState } from '../../../interactive-common/mainState';
 import { PostMessageFunc } from '../../../react-common/reduxUtils';
 import { ICellAction, IChangeCellTypeAction, ICodeAction, IEditCellAction } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
-import { Helpers } from './helpers';
+import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 
 export namespace Execution {
 
