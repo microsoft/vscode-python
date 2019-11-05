@@ -25,7 +25,9 @@ suite('Unit Tests - Navigation Command Handler', () => {
 
         // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
         // A solution is to mock the `then` on the mock that the `Promise` resolves to.
-        // in this case factory below returns a promise that is a mock of python service
+        // typemoq: https://github.com/florinn/typemoq/issues/66#issuecomment-315681245
+        // ts-mockito: https://github.com/NagRock/ts-mockito/issues/163#issuecomment-536210863
+        // In this case, the factory below returns a promise that is a mock of python service
         // so we need to mock the `then` on the service.
         pythonService.setup((x: any) => x.then).returns(() => undefined);
 

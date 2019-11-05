@@ -31,7 +31,7 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
             const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
-            const processService = await this.pythonServiceFactory.create({ resource: resource });
+            const processService = await this.pythonServiceFactory.create({ resource });
             const proc = await processService.exec(args, { throwOnStdErr: true });
 
             return proc.stdout;
