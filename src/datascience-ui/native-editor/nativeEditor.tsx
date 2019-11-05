@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './nativeEditor.less';
-
 import * as React from 'react';
-
 import { noop } from '../../client/common/utils/misc';
 import { OSType } from '../../client/common/utils/platform';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CellState } from '../../client/datascience/types';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { CursorPos, ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -20,6 +18,7 @@ import { Progress } from '../react-common/progress';
 import { getSettings } from '../react-common/settingsReactSide';
 import { AddCellLine } from './addCellLine';
 import { NativeCell } from './nativeCell';
+import './nativeEditor.less';
 import { NativeEditorStateController } from './nativeEditorStateController';
 
 // See the discussion here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
@@ -171,6 +170,14 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
+        const currentCell = this.state.cellVMs.find(cellVM => {
+            if (cellVM.focused || cellVM.selected) {
+                return true;
+            }
+
+            return false;
+        });
+
         const addCell = () => {
             const newCell = this.stateController.addNewCell();
             this.stateController.sendCommand(NativeCommandType.AddToEnd, 'mouse');
@@ -191,9 +198,39 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
             getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
+        const runAbove = () => {
+            if (currentCell) {
+                this.stateController.runAbove(currentCell.cell.id);
+                this.stateController.sendCommand(NativeCommandType.RunAbove, 'mouse');
+            }
+        };
+        const runBelow = () => {
+            if (currentCell) {
+                this.stateController.runBelow(currentCell.cell.id);
+                this.stateController.sendCommand(NativeCommandType.RunBelow, 'mouse');
+            }
+        };
+
+        let canRunAbove;
+        let canRunBelow;
+
+        if (currentCell) {
+            canRunAbove = this.stateController.canRunAbove(currentCell.cell.id);
+            canRunBelow = currentCell.cell.state === CellState.finished || currentCell.cell.state === CellState.error;
+        }
+
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.RunAll} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} className='native-button' tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} className='native-button' tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
+                    </ImageButton>
                     <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
                         <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Restart} />
                     </ImageButton>
@@ -202,9 +239,6 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     </ImageButton>
                     <ImageButton baseTheme={this.state.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
                         <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.RunAll} />
                     </ImageButton>
                     <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.clearAllOutputs} disabled={!this.stateController.canClearAllOutputs} className='native-button' tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}>
                         <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ClearAllOutput} />
