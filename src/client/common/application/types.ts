@@ -891,7 +891,7 @@ export interface IApplicationEnvironment {
      * @type {string}
      * @memberof IApplicationShell
      */
-    readonly shell: string | undefined;
+    readonly shell: string;
     /**
      * Gets the vscode channel (whether 'insiders' or 'stable').
      */

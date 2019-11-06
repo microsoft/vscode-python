@@ -7,7 +7,6 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { parse } from 'semver';
 import * as vscode from 'vscode';
-import { traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
@@ -57,10 +56,10 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
      * unstable API.
      * Solution - log and suppress the errors.
      * @readonly
-     * @type {(string | undefined)}
+     * @type {(string)}
      * @memberof ApplicationEnvironment
      */
-    public get shell(): string | undefined {
+    public get shell(): string {
         // tslint:disable-next-line:no-any
         return vscode.env.shell;
     }
