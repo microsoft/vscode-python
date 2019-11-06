@@ -555,11 +555,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return null;
     }
 
-    private renderMiddleToolbar = (toolbarShouldRender: boolean) => {
-        if (!toolbarShouldRender) {
-            return;
-        }
-
+    private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
             this.props.stateController.updateCellSource(cellId);
@@ -626,7 +622,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         if (this.shouldRenderInput()) {
             return (
                 <div>
-                    {this.renderMiddleToolbar(true)}
+                    {this.renderMiddleToolbar()}
                     <CellInput
                         cellVM={this.props.cellVM}
                         editorOptions={this.props.stateController.getState().editorOptions}
@@ -678,11 +674,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private renderOutput = (): JSX.Element | null => {
         const themeMatplotlibPlots = getSettings().themeMatplotlibPlots ? true : false;
-        const toolbarShouldRender = this.props.cellVM.cell.data.cell_type === 'code' ? false : true;
+        const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
         if (this.shouldRenderOutput()) {
             return (
                 <div>
-                    {this.renderMiddleToolbar(toolbarShouldRender)}
+                    {toolbar}
                     <CellOutput
                         cellVM={this.props.cellVM}
                         baseTheme={this.props.baseTheme}
