@@ -20,11 +20,12 @@ import { Progress } from '../react-common/progress';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
 import { actionCreators } from './redux/actions';
+import { IStore } from '../interactive-common/redux/store';
 
 type INativeEditorProps = IMainState & typeof actionCreators;
 
-function mapStateToProps(state: IMainState): IMainState {
-    return state;
+function mapStateToProps(state: IStore): IMainState {
+    return state.main;
 }
 
 const ConnectedNativeCell = getConnectedNativeCell();

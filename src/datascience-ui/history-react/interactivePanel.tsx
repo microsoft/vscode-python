@@ -17,11 +17,12 @@ import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { getConnectedInteractiveCell } from './interactiveCell';
 import { actionCreators } from './redux/actions';
+import { IStore } from '../interactive-common/redux/store';
 
 type IInteractivePanelProps = IMainState & typeof actionCreators;
 
-function mapStateToProps(state: IMainState): IMainState {
-    return state;
+function mapStateToProps(state: IStore): IMainState {
+    return state.main;
 }
 
 const ConnectedInteractiveCell = getConnectedInteractiveCell();

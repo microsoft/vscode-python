@@ -657,8 +657,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
 export function getConnectedNativeCell() {
     return connect(
         null,
-        actionCreators,
-        null,
-        { withRef: true }
+        actionCreators
     )(NativeCell);
 }

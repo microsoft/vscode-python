@@ -10,6 +10,7 @@ import { generateMonacoReducer, IMonacoState } from '../../react-common/redux/re
 import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { generatePostOfficeSendReducer } from './postOffice';
+import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
 function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -54,6 +55,12 @@ function generateMainReducer<M>(skipDefault: boolean, baseTheme: string, reducer
         reducerMap);
 }
 
+export interface IStore {
+    main: IMainState;
+    monaco: IMonacoState;
+    post: {};
+}
+
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
@@ -69,14 +76,14 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const monacoReducer = generateMonacoReducer(testMode);
 
     // Combine these together
-    const rootReducer = Redux.combineReducers({
+    const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
         monaco: monacoReducer,
         post: postOfficeReducer
     });
 
     // Send this into the root reducer
-    const store = createAsyncStore<{ main: IMainState; monaco: IMonacoState; post: {} }, Redux.AnyAction>(
+    const store = createAsyncStore<IStore, Redux.AnyAction>(
         rootReducer);
 
     // Make all messages from the post office dispatch to the store, changing the type to
@@ -87,7 +94,10 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
             // Prefix with action so that we can:
             // - Have one reducer for incoming
             // - Have another reducer for outgoing
-            store.dispatch({ type: `action.${message}`, ...payload });
+            // Double check this is one of our messages. React will actually post messages here too during development
+            if (message in IInteractiveWindowMapping) {
+                store.dispatch({ type: `action.${message}`, ...payload });
+            }
             return true;
         }
     });

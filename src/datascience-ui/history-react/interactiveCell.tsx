@@ -344,8 +344,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 export function getConnectedInteractiveCell() {
     return connect(
         null,
-        actionCreators,
-        null,
-        { withRef: true }
+        actionCreators
     )(InteractiveCell);
 }
