@@ -567,8 +567,8 @@ export class MainStateController implements IMessageHandler {
         if (index >= 0 && this.pendingState.cellVMs[index].cell.data.cell_type !== newType) {
             const cellVMs = [...this.pendingState.cellVMs];
             const current = this.pendingState.cellVMs[index];
-            const newSource = current.focused ? this.getMonacoEditorContents(cellId) : current.cell.data.source;
-            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.executing, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
+            const newSource = current.focused ? this.getMonacoEditorContents(cellId) : concatMultilineStringInput(current.cell.data.source);
+            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.finished, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
             // tslint:disable-next-line: no-any
             cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
             this.setState({ cellVMs });
