@@ -50,5 +50,6 @@
     "python.linting.flake8Args": [
         "--max-line-length=120"
     ],
-    "typescript.preferences.importModuleSpecifier": "relative"
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "python.pythonPath": ".venv/bin/python3"
 }

@@ -2738,6 +2738,7 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.0",
+        "vscode-jsonrpc": "^4.0.0",
         "vscode-languageclient": "^5.2.1",
         "vscode-languageserver": "^5.2.1",
         "vscode-languageserver-protocol": "^3.14.1",

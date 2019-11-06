@@ -19,7 +19,7 @@ steps:
 
     - bash: |
           python -m pip install -U pip
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python2 --no-cache-dir --implementation py --no-deps --upgrade futures==3.3.0'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python2 --no-cache-dir --implementation py --no-deps --upgrade futures==3.3.0
       failOnStderr: true
       displayName: "pip install python2 requirements"
 

@@ -63,8 +63,17 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
+export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
+    /**
+     * Python file that implements the daemon.
+     *
+     * @type {string}
+     */
+    daemonPythonFile: string;
+};
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
+    pythonPath?: string;
     interpreter?: PythonInterpreter;
     allowEnvironmentFetchExceptions?: boolean;
 };
