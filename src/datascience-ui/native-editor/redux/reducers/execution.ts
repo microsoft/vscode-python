@@ -62,7 +62,7 @@ export namespace Execution {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0) {
             const codes = arg.prevState.cellVMs.filter((_c, i) => i > index).map(c => concatMultilineStringInput(c.cell.data.source));
-            return executeRange(arg.prevState, index, index, [...arg.payload.code, ...codes], arg.queueAction);
+            return executeRange(arg.prevState, index, index + codes.length, [arg.payload.code, ...codes], arg.queueAction);
         }
         return arg.prevState;
     }
