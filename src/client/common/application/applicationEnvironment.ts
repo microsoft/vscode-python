@@ -60,7 +60,6 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
      * @memberof ApplicationEnvironment
      */
     public get shell(): string {
-        // tslint:disable-next-line:no-any
         return vscode.env.shell;
     }
     // tslint:disable-next-line:no-any

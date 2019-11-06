@@ -85,7 +85,7 @@ suite('Shell Detectors', () => {
     test('Identify shell based on VSC Environment', async () => {
         const shellDetector = new VSCEnvironmentShellDetector(instance(appEnv));
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
-            when(appEnv.shell).thenReturn(shellPath as any);
+            when(appEnv.shell).thenReturn(shellPath);
             expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
         });
 
