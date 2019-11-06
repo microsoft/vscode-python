@@ -3,14 +3,16 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import { expect, use } from 'chai';
+import * as chaiPromise from 'chai-as-promised';
 import { Uri } from 'vscode';
 import { Resource } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import {
-    cacheResourceSpecificInterpreterData, makeDebounceAsyncDecorator, makeDebounceDecorator
+    cache, cacheResourceSpecificInterpreterData, makeDebounceAsyncDecorator, makeDebounceDecorator
 } from '../../../client/common/utils/decorators';
 import { sleep } from '../../core';
+use(chaiPromise);
 
 // tslint:disable:no-any max-func-body-length no-unnecessary-class
 suite('Common Utils - Decorators', function () {
@@ -105,6 +107,48 @@ suite('Common Utils - Decorators', function () {
 
             expect(result).to.equal(3);
             expect(cls.invoked).to.equal(true, 'Must be invoked');
+        });
+    });
+    suite('Cache Decorator', () => {
+        const oldValueOfVSC_PYTHON_UNIT_TEST = process.env.VSC_PYTHON_UNIT_TEST;
+        const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
+
+        setup(() => {
+            process.env.VSC_PYTHON_UNIT_TEST = undefined;
+            process.env.VSC_PYTHON_CI_TEST = undefined;
+        });
+
+        teardown(() => {
+            process.env.VSC_PYTHON_UNIT_TEST = oldValueOfVSC_PYTHON_UNIT_TEST;
+            process.env.VSC_PYTHON_CI_TEST = oldValueOfVSC_PYTHON_CI_TEST;
+            clearCache();
+        });
+        class TestClass {
+            public invoked = false;
+            @cache(1000)
+            public async doSomething(a: number, b: number): Promise<number> {
+                this.invoked = true;
+                return a + b;
+            }
+        }
+
+        test('Result should be cached for 1s', async () => {
+            const cls = new TestClass();
+            expect(cls.invoked).to.equal(false, 'Wrong initialization value');
+            await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
+            expect(cls.invoked).to.equal(true, 'Should have been invoked');
+
+            // Reset and ensure it is not updated.
+            cls.invoked = false;
+            await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
+            expect(cls.invoked).to.equal(false, 'Should not have been invoked');
+            await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
+            expect(cls.invoked).to.equal(false, 'Should not have been invoked');
+
+            await sleep(2000);
+
+            await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
+            expect(cls.invoked).to.equal(false, 'Should have been invoked');
         });
     });
 

@@ -6,7 +6,7 @@ import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { Resource } from '../types';
 import { createDeferred, Deferred } from './async';
-import { getCacheKeyFromFunctionArgs, InMemoryInterpreterSpecificCache } from './cacheUtils';
+import { getCacheKeyFromFunctionArgs, getGlobalCacheStore, InMemoryInterpreterSpecificCache } from './cacheUtils';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -144,7 +144,7 @@ export function cacheResourceSpecificInterpreterData(key: string, expiryDuration
 }
 
 type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
-const cacheStoreForMethods = new Map<string, {expiry: number; data: any}>();
+const cacheStoreForMethods = getGlobalCacheStore();
 export function cache(expiryDurationMs: number) {
     return function (target: Object, propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunctionWithAnyArgs>) {
         const originalMethod = descriptor.value!;
