@@ -559,17 +559,11 @@ type CacheInfo = {
     }
 
     private async getNotebookCommand(pythonPath: string, cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
-        if (!(await this.fileSystem.fileExists(pythonPath))){
-            return;
-        }
-        if (cancelToken.isCancellationRequested){
+        if (cancelToken.isCancellationRequested || !(await this.fileSystem.fileExists(pythonPath))){
             return;
         }
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
-        if (!interpreterInfo){
-            return;
-        }
-        if (cancelToken.isCancellationRequested){
+        if (!interpreterInfo || cancelToken.isCancellationRequested){
             return;
         }
         const result = await this.findInterpreterCommand(JupyterCommands.NotebookCommand, interpreterInfo, cancelToken);
