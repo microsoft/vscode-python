@@ -109,7 +109,12 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         return args[0].toLowerCase().endsWith('.py') && this.areOptionsSupported(options);
     }
     private canExecModuleUsingDaemon(moduleName: string, args: string[], options: SpawnOptions): boolean {
-        if (moduleName === 'notebook' || (moduleName === 'jupyter' && args[0] === 'notebook') || (moduleName === 'jupyter' && args.join(',') === 'kernelspec,list')) {
+        if (
+            moduleName === 'notebook' ||
+            (moduleName === 'jupyter' && args[0] === 'notebook') ||
+            (moduleName === 'jupyter' && args.join(',') === 'kernelspec,list') ||
+            (moduleName === 'jupyter' && args.join(',') === 'kernelspec,--version')
+        ) {
             return this.areOptionsSupported(options);
         } else {
             return false;

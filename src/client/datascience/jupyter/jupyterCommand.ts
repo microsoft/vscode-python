@@ -8,10 +8,10 @@ import {
     ExecutionResult,
     IProcessService,
     IProcessServiceFactory,
+    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    ObservableExecutionResult,
-    IPythonDaemonExecutionService
+    ObservableExecutionResult
 } from '../../common/process/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
@@ -65,18 +65,23 @@ class ProcessJupyterCommand implements IJupyterCommand {
 }
 
 class InterpreterJupyterCommand implements IJupyterCommand {
+    private static daemonsIndexedByPythonPath = new Map<string, Promise<IPythonDaemonExecutionService>>();
+    public readonly daemon: Promise<IPythonDaemonExecutionService>;
     private requiredArgs: string[];
     private interpreterPromise: Promise<PythonInterpreter | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
-    private pythonDaemon: Promise<IPythonDaemonExecutionService>;
 
     constructor(args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter) {
         this.requiredArgs = args;
         this.interpreterPromise = Promise.resolve(interpreter);
         this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
-        this.pythonDaemon = pythonExecutionFactory.createDaemon({ resource: undefined, pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon' });
+        if (InterpreterJupyterCommand.daemonsIndexedByPythonPath.has(interpreter.path)){
+            this.daemon = InterpreterJupyterCommand.daemonsIndexedByPythonPath.get(interpreter.path)!;
+        } else {
+            this.daemon = pythonExecutionFactory.createDaemon({ resource: undefined, pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon' });
+            InterpreterJupyterCommand.daemonsIndexedByPythonPath.set(interpreter.path, this.daemon);
+        }
     }
-
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
     }
@@ -91,7 +96,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const newOptions = { ...options };
         if (this.requiredArgs[0] === '-m'){
-            const launcher = await this.pythonDaemon;
+            const launcher = await this.daemon;
             const newArgs = [...this.requiredArgs.slice(2), ...args];
             return launcher.execModule(this.requiredArgs[1], newArgs, newOptions);
         } else {

@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions, IPythonDaemonExecutionService, IPythonExecutionService } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -55,6 +55,7 @@ export class JupyterCommandFinderImpl {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
     private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
+    private daemonExecService?: Promise<IPythonDaemonExecutionService | undefined>;
     constructor(
         @unmanaged() protected readonly interpreterService: IInterpreterService,
         @unmanaged() private readonly executionFactory: IPythonExecutionFactory,
@@ -202,6 +203,12 @@ export class JupyterCommandFinderImpl {
         }
         return true;
     }
+    private async createPythonService(interpreter: PythonInterpreter): Promise<IPythonExecutionService>{
+        if (this.daemonExecService && (await this.daemonExecService)){
+            return (await this.daemonExecService)!;
+        }
+        return this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+    }
 
     // tslint:disable:cyclomatic-complexity max-func-body-length
     private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
@@ -213,6 +220,12 @@ export class JupyterCommandFinderImpl {
         // First we look in the current interpreter
         const current = await this.interpreterService.getActiveInterpreter();
         const stopWatch = new StopWatch();
+        // Create a daemon just for the current interpreter.
+        // If user changes the current interpreter, then this variable will be cleared.
+        if (current && !this.daemonExecService){
+            this.daemonExecService = this.executionFactory.createDaemon({pythonPath: current.path, daemonModule: 'datascience.jupyter_daemon'});
+        }
+
         if (isCommandFinderCancelled(command, cancelToken)) {
             return cancelledResult;
         }
@@ -354,7 +367,7 @@ export class JupyterCommandFinderImpl {
         };
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: false, encoding: 'utf8', token: cancelToken };
-            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+            const pythonService = await this.createPythonService(interpreter);
 
             // For commands not 'ipykernel' first try them as jupyter commands
             if (moduleName !== JupyterCommands.KernelCreateCommand) {
@@ -396,15 +409,15 @@ export class JupyterCommandFinderImpl {
         return result;
     }
 
-    private async doesJupyterCommandExist(command?: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> {
+    private async doesJupyterCommandExist(command: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> {
         const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
-        const args = command ? [command, '--version'] : ['--version'];
+        const args = [command, '--version'];
         const processService = await this.processServicePromise;
         try {
             const result = await processService.exec('jupyter', args, newOptions);
             return !result.stderr;
         } catch (err) {
-            this.logger.logWarning(err);
+            traceWarning(err);
             return false;
         }
     }

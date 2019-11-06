@@ -220,14 +220,10 @@ class PythonDaemon(MethodDispatcher):
             # E.g. python -m jupyter notebook --version.
             # In such cases, use the subcommand. We can ignore jupyter.
             module_name = args[0]
-            args = args[1:]
-
-        old_argv, sys.argv = sys.argv, [""]
 
         try:
             log.info("getting module_version %s", module_name)
             m = importlib.import_module(module_name)
-            log.info("imported")
             return {"stdout": m.__version__}
         except Exception:
             return {"error": traceback.format_exc()}
