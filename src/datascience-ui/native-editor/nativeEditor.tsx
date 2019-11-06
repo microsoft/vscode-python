@@ -29,7 +29,7 @@ function mapStateToProps(state: IMainState): IMainState {
 
 const ConnectedNativeCell = getConnectedNativeCell();
 
-class NativeEditor extends React.Component<INativeEditorProps> {
+export class NativeEditor extends React.Component<INativeEditorProps> {
     private renderCount: number = 0;
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelScrollRef: React.RefObject<HTMLElement> = React.createRef<HTMLElement>();

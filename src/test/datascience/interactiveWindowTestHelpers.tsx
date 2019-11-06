@@ -28,7 +28,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
-            const wrapper = mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+            const wrapper = mountWebView(ioc, 'interactive');
             await testFunc(wrapper);
         } else {
             // tslint:disable-next-line:no-console

@@ -44,7 +44,7 @@ interface IInteractiveCellBaseProps {
 type IInteractiveCellProps = IInteractiveCellBaseProps & typeof actionCreators;
 
 // tslint:disable: react-this-binding-issue
-class InteractiveCell extends React.Component<IInteractiveCellProps> {
+export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private codeRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private inputHistory: InputHistory | undefined;

@@ -26,7 +26,7 @@ function mapStateToProps(state: IMainState): IMainState {
 
 const ConnectedInteractiveCell = getConnectedInteractiveCell();
 
-class InteractivePanel extends React.Component<IInteractivePanelProps> {
+export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
     private renderCount: number = 0;

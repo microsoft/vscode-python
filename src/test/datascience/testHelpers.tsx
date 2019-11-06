@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount, ReactWrapper } from 'enzyme';
+import { ReactWrapper } from 'enzyme';
 import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
@@ -13,15 +13,12 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
-import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { createInputEvent, createKeyboardEvent, mountConnectedMainPanel, waitForUpdate } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -84,14 +81,14 @@ async function testInnerLoop(
 export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+        testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
     test(`${name} (native)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+        testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
-export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement): ReactWrapper<any, Readonly<{}>, React.Component> {
+export function mountWebView(ioc: DataScienceIocContainer, type: 'native' | 'interactive'): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Setup our webview panel
-    ioc.createWebView(() => mount(node));
+    ioc.createWebView(() => mountConnectedMainPanel(type));
     return ioc.wrapper!;
 }
 
@@ -215,7 +212,8 @@ export function createKeyboardEventForCell(event: Partial<IKeyboardEvent> & { co
             isDirty: false,
             isFirstLine: false,
             isLastLine: false,
-            isSuggesting: false
+            isSuggesting: false,
+            clear: noop
         },
         metaKey: false,
         preventDefault: noop,
@@ -540,9 +538,10 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
 }
 
 // Set initial data science settings to use for a test (initially loaded via settingsReactSide.ts)
-export function initialDataScienceSettings(newSettings: IDataScienceSettings) {
-    const settingsString = JSON.stringify(newSettings);
-    updateSettings(settingsString);
+export function initialDataScienceSettings(_newSettings: IDataScienceSettings) {
+    // const settingsString = JSON.stringify(newSettings);
+    //updateSettings(settingsString);
+    noop();
 }
 
 export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainClass: React.ComponentClass<any>): P | undefined {

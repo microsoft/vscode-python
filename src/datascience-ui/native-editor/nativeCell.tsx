@@ -47,7 +47,7 @@ interface INativeCellBaseProps {
 type INativeCellProps = INativeCellBaseProps & typeof actionCreators;
 
 // tslint:disable: react-this-binding-issue
-class NativeCell extends React.Component<INativeCellProps> {
+export class NativeCell extends React.Component<INativeCellProps> {
     private inputRef: React.RefObject<CellInput> = React.createRef<CellInput>();
     private wrapperRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
     private lastKeyPressed: string | undefined;

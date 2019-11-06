@@ -27,7 +27,6 @@ import { CellOutput } from '../../datascience-ui/interactive-common/cellOutput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
-import { NativeEditorStateController } from '../../datascience-ui/native-editor/nativeEditorStateController';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
@@ -1028,11 +1027,8 @@ for _ in range(50):
         });
 
         suite('Auto Save', () => {
-            let controller: NativeEditorStateController;
             let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
-            let handleMessageSpy: sinon.SinonSpy<[string, any?], boolean>;
             setup(async function() {
-                handleMessageSpy = sinon.spy(NativeEditorStateController.prototype, 'handleMessage');
                 initIoc();
 
                 windowStateChangeHandlers = [];
@@ -1041,11 +1037,6 @@ for _ in range(50):
 
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
-
-                controller = (wrapper
-                    .find(NativeEditor)
-                    .first()
-                    .instance() as NativeEditor).stateController;
             });
             teardown(() => sinon.restore());
 
@@ -1058,8 +1049,7 @@ for _ in range(50):
              * @returns {Promise<void>}
              */
             async function waitForMessageReceivedEditorComponent(message: string, timeout: number = 5000): Promise<void> {
-                const errorMessage = `Timeout waiting for message ${message}`;
-                await waitForCondition(async () => handleMessageSpy.calledWith(message, sinon.match.any), timeout, errorMessage);
+                return waitForMessage(ioc, message, timeout);
             }
 
             /**
@@ -1072,7 +1062,7 @@ for _ in range(50):
                 // Wait for the notebook to be marked as dirty (the NotebookDirty message will be sent).
                 await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookDirty, 5_000);
                 // Wait for the state to get updated.
-                await waitForCondition(async () => controller.getState().dirty === true, 1_000, `Timeout waiting for dirty state to get updated to true`);
+                //await waitForCondition(async () => controller.getState().dirty === true, 1_000, `Timeout waiting for dirty state to get updated to true`);
             }
 
             /**
@@ -1086,7 +1076,7 @@ for _ in range(50):
                 await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookClean, 5_000);
 
                 // Wait for the state to get updated.
-                await waitForCondition(async () => controller.getState().dirty === false, 2_000, `Timeout waiting for dirty state to get updated to false`);
+                //await waitForCondition(async () => controller.getState().dirty === false, 2_000, `Timeout waiting for dirty state to get updated to false`);
             }
 
             /**

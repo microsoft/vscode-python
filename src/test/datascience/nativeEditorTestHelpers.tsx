@@ -16,7 +16,6 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import {
     addMockData,
     getCellResults,
-    getMainPanel,
     getNativeFocusedEditor,
     injectCode,
     mountWebView,
@@ -71,7 +70,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
 }
 
 export function mountNativeWebView(ioc: DataScienceIocContainer): ReactWrapper<any, Readonly<{}>, React.Component> {
-    return mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+    return mountWebView(ioc, 'native');
 }
 export async function setupWebview(ioc: DataScienceIocContainer) {
     const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
@@ -86,7 +85,7 @@ export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<an
     const cell = wrapper.find(NativeCell).at(index);
     if (cell) {
         const vm = cell.props().cellVM;
-        cell.props().focusCell(vm.cell.id, true, CursorPos.Current);
+        cell.props().focusCell(vm.cell.id, CursorPos.Current);
     }
     return focusChange;
 }
@@ -119,10 +118,6 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     }
 }
 
-export function closeNotebook(editor: INotebookEditor, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
-    const reactEditor = getMainPanel<NativeEditor>(wrapper, NativeEditor);
-    if (reactEditor) {
-        reactEditor.stateController.reset();
-    }
+export function closeNotebook(editor: INotebookEditor, _wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
     return editor.dispose();
 }
