@@ -121,7 +121,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         }
     }
     private areOptionsSupported(options: SpawnOptions): boolean {
-        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'throwOnStdErr'];
+        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'throwOnStdErr', 'mergeStdOutErr'];
         // tslint:disable-next-line: no-any
         return Object.keys(options).every(item => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
