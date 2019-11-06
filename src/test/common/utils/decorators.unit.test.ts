@@ -148,7 +148,9 @@ suite('Common Utils - Decorators', function () {
             await sleep(2000);
 
             await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
-            expect(cls.invoked).to.equal(false, 'Should have been invoked');
+            expect(cls.invoked).to.equal(true, 'Should have been invoked');
+            await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
+            expect(cls.invoked).to.equal(false, 'Should not have been invoked');
         }).timeout(3000);
     });
 
