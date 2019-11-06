@@ -548,6 +548,7 @@ type CacheInfo = {
                 await this.cacheStore.state.updateValue(interpreter ? interpreter.path : undefined);
             } catch (ex){
                 traceError('Failed to update Jupyter Command', ex);
+            } finally {
                 resolve();
             }
         }).ignoreErrors();
