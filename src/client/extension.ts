@@ -353,7 +353,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
     const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : false;
-    const hasPython3 = interpreters
+    const hasPython3 = interpreters!
         .filter(item => item && item.version ? item.version.major === 3 : false)
         .length > 0;
 

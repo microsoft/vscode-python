@@ -120,7 +120,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
                     this.registry.getValue(tagKey, hive, arch, 'SysVersion'),
                     this.getCompanyDisplayName(companyKey, hive, arch)
                 ]).then(([installedPath, executablePath, version, companyDisplayName]) => {
-                    companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName) === -1 ? companyDisplayName : AnacondaCompanyName;
+                    companyDisplayName = AnacondaCompanyNames.indexOf(companyDisplayName!) === -1 ? companyDisplayName : AnacondaCompanyName;
                     // tslint:disable-next-line:prefer-type-cast no-object-literal-type-assertion
                     return { installPath: installedPath, executablePath, version, companyDisplayName } as InterpreterInformation;
                 });

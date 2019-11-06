@@ -74,7 +74,7 @@ export class NotebookStarter implements Disposable {
 
             // Then use this to launch our notebook process.
             const stopWatch = new StopWatch();
-            const launchResult = await notebookCommand.command!.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
+            const launchResult = await notebookCommand.command!.execObservable(args as string[], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
 
             // Watch for premature exits
             if (launchResult.proc) {
