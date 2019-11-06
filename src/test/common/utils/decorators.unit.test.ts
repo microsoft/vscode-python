@@ -149,7 +149,7 @@ suite('Common Utils - Decorators', function () {
 
             await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
             expect(cls.invoked).to.equal(false, 'Should have been invoked');
-        });
+        }).timeout(3000);
     });
 
     suite('Debounce', () => {
