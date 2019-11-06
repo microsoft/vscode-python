@@ -52,9 +52,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Ensure its activated (always).
         const activatedProc = await this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
         const envPythonPath =
-            '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/pythonFiles:/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/pythonFiles/lib/python';
+            'C:\\Development\\vscode\\pythonVSCode\\pythonFiles;C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\lib\\python';
         const env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
-        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', '--log-file=/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/h.log'], { env });
+        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', '--log-file=C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\h.log'], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }

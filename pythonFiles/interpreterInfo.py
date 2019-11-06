@@ -1,16 +1,16 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
-# import json
-# import sys
+import json
+import sys
 
-# obj = {}
-# obj["versionInfo"] = sys.version_info[:4]
-# obj["sysPrefix"] = sys.prefix
-# obj["version"] = sys.version
-# obj["is64Bit"] = sys.maxsize > 2**32
+obj = {}
+obj["versionInfo"] = sys.version_info[:4]
+obj["sysPrefix"] = sys.prefix
+obj["version"] = sys.version
+obj["is64Bit"] = sys.maxsize > 2**32
 
-# print(json.dumps(obj))
+print(json.dumps(obj))
 # import io
 # import sys
 
@@ -38,7 +38,7 @@
 # #     jupyter_core.command.main()
 
 
-import time
-for i in range(10):
-    time.sleep(1)
-    print(i)
+# import time
+# for i in range(10):
+#     time.sleep(1)
+#     print(i)

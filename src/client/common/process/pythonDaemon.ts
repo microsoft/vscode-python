@@ -121,9 +121,9 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         }
     }
     private areOptionsSupported(options: SpawnOptions): boolean {
-        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr'];
+        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'throwOnStdErr'];
         // tslint:disable-next-line: no-any
-        return Object.keys(options).some(item => daemonSupportedSpawnOptions.indexOf(item as any) === -1);
+        return Object.keys(options).every(item => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
     }
     private async execFileWithDaemon(file: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };

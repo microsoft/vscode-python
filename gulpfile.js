@@ -232,7 +232,7 @@ gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
 gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
 
 async function installPythonPackage(packageName, targetDir = './pythonFiles/lib/python') {
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', targetDir, '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', targetDir, '--no-cache-dir', '--no-deps', '--upgrade'];
     const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(packageName))
         .then(() => true)
         .catch(ex => {
@@ -251,7 +251,7 @@ gulp.task('installPythonRequirements', async () => {
         .split('\n')
         .map(item => item.trim())
         .filter(item => item.length > 0);
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--no-deps', '--upgrade'];
     await Promise.all(requirements.map(async requirement => installPythonPackage(requirement)));
 });
 

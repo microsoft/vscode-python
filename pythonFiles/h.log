@@ -1,0 +1,278 @@
+2019-11-06 00:25:31,062 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 00:25:31,174 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 00:25:31,174 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 00:25:31,174 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 00:25:31,174 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:25:31,174 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:25:31,174 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 00:25:31,175 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 00:25:31,175 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573028730660
+2019-11-06 00:25:31,178 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 00:25:31,178 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 00:25:31,178 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['notebook', '--version']
+2019-11-06 00:25:31,178 UTC - INFO - datascience.jupyter_daemon - check base class stuff
+2019-11-06 00:25:31,178 UTC - INFO - datascience.daemon.daemon_python - Exec module jupyter with args ['notebook', '--version']
+2019-11-06 00:25:31,179 UTC - INFO - datascience.daemon.daemon_python - getting module_version notebook
+2019-11-06 00:25:31,603 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 00:25:31,604 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 00:25:31,604 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['notebook', '--version']
+2019-11-06 00:25:31,604 UTC - INFO - datascience.jupyter_daemon - check base class stuff
+2019-11-06 00:25:31,604 UTC - INFO - datascience.daemon.daemon_python - Exec module jupyter with args ['notebook', '--version']
+2019-11-06 00:25:31,605 UTC - INFO - datascience.daemon.daemon_python - getting module_version notebook
+2019-11-06 00:25:31,698 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 00:25:31,698 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 00:25:31,698 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 00:25:32,464 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 00:25:32,639 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 00:25:32,640 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 00:25:32,640 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 00:25:32,640 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:25:32,641 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:25:32,641 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 00:25:32,641 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 00:25:32,641 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573028731620
+2019-11-06 00:25:32,642 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 00:25:32,642 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 00:25:32,643 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 00:25:32,643 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 00:25:34,308 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 00:25:34,309 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 00:25:34,309 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 00:25:34,310 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 00:25:41,858 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_file in Jupyter class
+2019-11-06 00:25:41,858 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_file
+2019-11-06 00:25:41,858 UTC - INFO - datascience.daemon.daemon_python - Exec file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py with args []
+2019-11-06 00:25:41,858 UTC - INFO - datascience.daemon.daemon_python - execute file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py
+2019-11-06 00:25:44,289 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_file in Jupyter class
+2019-11-06 00:25:44,290 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_file
+2019-11-06 00:25:44,290 UTC - INFO - datascience.daemon.daemon_python - Exec file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py with args []
+2019-11-06 00:25:44,290 UTC - INFO - datascience.daemon.daemon_python - execute file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py
+2019-11-06 00:37:18,304 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 00:37:18,368 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 00:37:18,368 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 00:37:18,368 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 00:37:18,368 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:37:18,368 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:37:18,368 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 00:37:18,368 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 00:37:18,368 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573029437975
+2019-11-06 00:37:22,827 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 00:37:22,916 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 00:37:22,916 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 00:37:22,916 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 00:37:22,916 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:37:22,916 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:37:22,917 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 00:37:22,918 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 00:37:22,918 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573029442264
+2019-11-06 00:38:48,610 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_file in Jupyter class
+2019-11-06 00:38:48,611 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_file
+2019-11-06 00:38:48,612 UTC - INFO - datascience.daemon.daemon_python - Exec file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py with args []
+2019-11-06 00:38:48,612 UTC - INFO - datascience.daemon.daemon_python - execute file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py
+2019-11-06 00:44:08,094 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 00:44:08,148 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 00:44:08,149 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 00:44:08,149 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 00:44:08,149 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:44:08,149 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:44:08,150 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 00:44:08,150 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 00:44:08,151 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573029847890
+2019-11-06 00:44:14,277 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 00:44:14,441 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 00:44:14,441 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 00:44:14,442 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 00:44:14,442 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:44:14,442 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 00:44:14,442 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 00:44:14,442 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 00:44:14,443 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573029853774
+2019-11-06 00:45:11,661 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_file in Jupyter class
+2019-11-06 00:45:11,662 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_file
+2019-11-06 00:45:11,662 UTC - INFO - datascience.daemon.daemon_python - Exec file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py with args []
+2019-11-06 00:45:11,662 UTC - INFO - datascience.daemon.daemon_python - execute file c:\Development\vscode\pythonVSCode\pythonFiles\datascience\getServerInfo.py
+2019-11-06 01:03:23,287 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:03:23,376 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:03:23,376 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:03:23,376 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:03:23,377 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:03:23,377 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:03:23,377 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:03:23,377 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:03:23,377 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031002826
+2019-11-06 01:04:32,939 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:04:33,023 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:04:33,023 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:04:33,023 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:04:33,023 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:04:33,023 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:04:33,024 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:04:33,024 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:04:33,024 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031072360
+2019-11-06 01:05:51,544 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:05:51,635 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:05:51,635 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:05:51,635 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:05:51,635 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:05:51,636 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:05:51,636 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:05:51,636 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:05:51,636 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031151086
+2019-11-06 01:07:51,665 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:07:51,895 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:07:51,896 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:07:51,896 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:07:51,896 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:07:51,896 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:07:51,897 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:07:51,897 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:07:51,897 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031270965
+2019-11-06 01:10:07,928 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:10:08,234 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:10:08,234 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:10:08,235 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:10:08,235 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:10:08,235 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:10:08,235 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:10:08,236 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:10:08,236 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031406987
+2019-11-06 01:15:31,681 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:15:31,826 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:15:31,826 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:15:31,826 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:15:31,827 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:15:31,827 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:15:31,827 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:15:31,827 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:15:31,828 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031731142
+2019-11-06 01:15:59,831 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:15:59,832 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:15:59,832 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['notebook', '--version']
+2019-11-06 01:15:59,832 UTC - INFO - datascience.jupyter_daemon - check base class stuff
+2019-11-06 01:15:59,832 UTC - INFO - datascience.daemon.daemon_python - Exec module jupyter with args ['notebook', '--version']
+2019-11-06 01:15:59,833 UTC - INFO - datascience.daemon.daemon_python - getting module_version notebook
+2019-11-06 01:16:00,482 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:16:00,483 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:16:00,483 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['notebook', '--version']
+2019-11-06 01:16:00,484 UTC - INFO - datascience.jupyter_daemon - check base class stuff
+2019-11-06 01:16:00,484 UTC - INFO - datascience.daemon.daemon_python - Exec module jupyter with args ['notebook', '--version']
+2019-11-06 01:16:00,484 UTC - INFO - datascience.daemon.daemon_python - getting module_version notebook
+2019-11-06 01:16:00,667 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:16:00,668 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:16:00,668 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:16:01,526 UTC - INFO - __main__ - Starting daemon from datascience.jupyter_daemon.PythonDaemon
+2019-11-06 01:16:01,651 UTC - INFO - datascience.daemon.daemon_python - Starting PythonDaemon IO language server
+2019-11-06 01:16:01,651 UTC - INFO - datascience.jupyter_daemon - Child class init
+2019-11-06 01:16:01,652 UTC - INFO - datascience.daemon.daemon_output - Redirect stdout/stderr
+2019-11-06 01:16:01,652 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:16:01,652 UTC - INFO - datascience.daemon.daemon_output - wrap
+2019-11-06 01:16:01,652 UTC - INFO - datascience.jupyter_daemon - Execute rpc method ping in Jupyter class
+2019-11-06 01:16:01,652 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method ping
+2019-11-06 01:16:01,653 UTC - INFO - datascience.daemon.daemon_python - pinged with 1573031760523
+2019-11-06 01:16:01,654 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:16:01,654 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:16:01,654 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:16:01,654 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:16:03,651 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:16:03,652 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:16:03,652 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:16:03,652 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:06,421 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:06,422 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:06,422 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:19:13,790 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:13,790 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:13,791 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:13,791 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:13,913 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:13,914 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:13,914 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:13,915 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:28,125 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:28,126 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:28,126 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:19:28,150 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:28,150 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:28,151 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:28,151 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:28,171 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:28,171 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:28,171 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:28,171 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:48,351 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:48,352 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:48,352 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:19:48,376 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:48,377 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:48,378 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:48,378 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:48,433 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:48,433 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:48,433 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:48,434 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:49,038 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:49,039 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:49,039 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:19:49,090 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:49,090 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:49,091 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:49,091 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:19:49,112 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:19:49,112 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:19:49,112 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:19:49,112 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:20:10,096 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:20:10,096 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:20:10,097 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:20:10,154 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:20:10,154 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:20:10,154 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:20:10,155 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:20:10,177 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:20:10,177 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:20:10,178 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:20:10,178 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:22:15,919 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:22:15,920 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:22:15,920 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:22:17,562 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:22:17,562 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:22:17,562 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:22:17,562 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:22:18,669 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:22:18,670 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:22:18,671 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:22:18,671 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:23:19,687 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:23:19,687 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:23:19,688 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:23:21,154 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:23:21,154 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:23:21,154 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:23:21,155 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:23:26,723 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:23:26,723 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:23:26,724 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:23:26,724 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:23:40,623 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:23:40,623 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:23:40,623 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:23:40,700 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:23:40,700 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:23:40,700 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:23:40,701 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:23:40,736 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:23:40,736 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:23:40,736 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:23:40,736 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:24:03,620 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:24:03,620 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:24:03,621 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', '--version']
+2019-11-06 01:24:03,632 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:24:03,632 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:24:03,632 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:24:03,632 UTC - INFO - datascience.jupyter_daemon - check kernels
+2019-11-06 01:24:03,654 UTC - INFO - datascience.jupyter_daemon - Execute rpc method exec_module in Jupyter class
+2019-11-06 01:24:03,654 UTC - INFO - datascience.daemon.daemon_python - Execute rpc method exec_module
+2019-11-06 01:24:03,655 UTC - INFO - datascience.jupyter_daemon - Exec in child class jupyter with args ['kernelspec', 'list']
+2019-11-06 01:24:03,655 UTC - INFO - datascience.jupyter_daemon - check kernels

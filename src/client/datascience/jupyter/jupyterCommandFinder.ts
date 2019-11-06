@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions, IPythonDaemonExecutionService, IPythonExecutionService } from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, IPythonDaemonExecutionService, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -18,7 +18,6 @@ import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterprete
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
-import { injectable, unmanaged, inject } from 'inversify';
 
 export enum ModuleExistsStatus {
     NotFound,
@@ -55,7 +54,9 @@ export class JupyterCommandFinderImpl {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
     private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
-    private daemonExecService?: Promise<IPythonDaemonExecutionService | undefined>;
+    private daemonExecService?: Promise<IPythonDaemonExecutionService>;
+    private currentInterpreter?: PythonInterpreter;
+    private currentInterpreterPromise?: Promise<PythonInterpreter | undefined>;
     constructor(
         @unmanaged() protected readonly interpreterService: IInterpreterService,
         @unmanaged() private readonly executionFactory: IPythonExecutionFactory,
@@ -80,6 +81,13 @@ export class JupyterCommandFinderImpl {
             });
             disposableRegistry.push(disposable);
         }
+        this.currentInterpreterPromise = this.interpreterService.getActiveInterpreter();
+        this.currentInterpreterPromise.then(interpreter => {
+            if (!interpreter){
+                return;
+            }
+            this.daemonExecService = this.executionFactory.createDaemon({pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon'});
+        }).ignoreErrors();
     }
     /**
      * For jupyter,
@@ -203,9 +211,15 @@ export class JupyterCommandFinderImpl {
         }
         return true;
     }
-    private async createPythonService(interpreter: PythonInterpreter): Promise<IPythonExecutionService>{
-        if (this.daemonExecService && (await this.daemonExecService)){
-            return (await this.daemonExecService)!;
+    private async createPythonService(interpreter: PythonInterpreter): Promise<IPythonExecutionService> {
+        if (this.currentInterpreter && this.currentInterpreter.path === interpreter.path && this.daemonExecService){
+            return this.daemonExecService;
+        }
+        if (!this.currentInterpreter && this.currentInterpreterPromise && this.daemonExecService){
+            const current = await this.currentInterpreterPromise;
+            if (current && current.path === interpreter.path){
+                return this.daemonExecService;
+            }
         }
         return this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
     }
@@ -223,6 +237,7 @@ export class JupyterCommandFinderImpl {
         // Create a daemon just for the current interpreter.
         // If user changes the current interpreter, then this variable will be cleared.
         if (current && !this.daemonExecService){
+            this.currentInterpreter = current;
             this.daemonExecService = this.executionFactory.createDaemon({pythonPath: current.path, daemonModule: 'datascience.jupyter_daemon'});
         }
 
