@@ -351,8 +351,7 @@ steps:
   #
   # Example command line (windows pwsh):
   # > npm run test:functional
-  - script: |
-      npm run test:functional
+  - bash: mocha --require source-map-support/register --opts ./build/.mocha.functional.opts
     displayName: 'Run functional tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testFunctional'))
     env:
@@ -374,8 +373,7 @@ steps:
   #
   # Example command line (windows pwsh):
   # > npm run testSingleWorkspace
-  - script: |
-      npm run testSingleWorkspace
+  - bash: node ./out/test/testBootstrap.js ./out/test/standardTest.js
     displayName: 'Run single workspace tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testSingleWorkspace'))
     env:
@@ -397,8 +395,7 @@ steps:
   #
   # Example command line (windows pwsh):
   # > npm run testMultiWorkspace
-  - script: |
-      npm run testMultiWorkspace
+  - script: node ./out/test/testBootstrap.js ./out/test/multiRootTest.js
     displayName: 'Run multi-workspace tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testMultiWorkspace'))
     env:
@@ -420,8 +417,7 @@ steps:
   #
   # Example command line (windows pwsh):
   # > npm run testDebugger
-  - script: |
-      npm run testDebugger
+  - bash: node ./out/test/testBootstrap.js ./out/test/debuggerTest.js
     displayName: 'Run debugger tests'
     condition: and(succeeded(), contains(variables['TestsToRun'], 'testDebugger'))
     env:
