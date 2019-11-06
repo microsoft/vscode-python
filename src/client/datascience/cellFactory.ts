@@ -6,8 +6,8 @@ import '../common/extensions';
 import * as uuid from 'uuid/v4';
 import { Range, TextDocument } from 'vscode';
 
-import { noop } from '../../test/core';
 import { IDataScienceSettings } from '../common/types';
+import { noop } from '../common/utils/misc';
 import { CellMatcher } from './cellMatcher';
 import { appendLineFeed, generateMarkdownFromCodeLines, parseForComments } from './common';
 import { CellState, ICell } from './types';

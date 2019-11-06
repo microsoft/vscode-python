@@ -3,7 +3,7 @@
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { noop } from '../../../../test/core';
+import { noop } from '../../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
 
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
