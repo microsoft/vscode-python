@@ -5,13 +5,14 @@ import { CellMatcher } from '../../../../client/datascience/cellMatcher';
 import { concatMultilineStringInput } from '../../../../client/datascience/common';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
-import { IMainState } from '../../../interactive-common/mainState';
+import { IMainState, CursorPos } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
 import { IChangeCellTypeAction, NativeEditorActionTypes } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
+import { Effects } from './effects';
 
 export namespace Execution {
 
@@ -120,10 +121,9 @@ export namespace Execution {
                 arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell,
                     { id: current.cell.id }));
             }
-            return {
-                ...arg.prevState,
-                cellVMs
-            };
+
+            // When changing a cell type, also give the cell focus.
+            return Effects.focusCell({ ...arg, prevState: { ...arg.prevState, cellVMs }, payload: { cellId: arg.payload.cellId, cursorPos: CursorPos.Current } });
         }
 
         return arg.prevState;

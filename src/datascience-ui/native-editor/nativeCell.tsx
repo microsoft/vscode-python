@@ -64,7 +64,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     public componentDidUpdate(prevProps: INativeCellProps) {
-        if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
+        if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused) {
             this.giveFocus();
         }
 
@@ -473,8 +473,9 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private getCurrentCode(): string {
+        // Input may not be open at this time. If not, then use current cell contents.
         const contents = this.inputRef.current ? this.inputRef.current.getContents() : undefined;
-        return contents || '';
+        return contents || concatMultilineStringInput(this.props.cellVM.cell.data.source);
     }
 
     private renderMiddleToolbar = () => {
@@ -488,10 +489,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.sendCommand(NativeCommandType.RunAbove, 'mouse');
         };
         const runBelow = () => {
-            if (this.inputRef.current) {
-                this.props.executeCellAndBelow(cellId, this.getCurrentCode());
-                this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
-            }
+            this.props.executeCellAndBelow(cellId, this.getCurrentCode());
+            this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
         };
         const canRunAbove = !this.props.firstCell;
         const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
@@ -500,7 +499,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
         const otherCellTypeCommand = otherCellType === 'markdown' ? NativeCommandType.ChangeToMarkdown : NativeCommandType.ChangeToCode;
         const otherCellImage = otherCellType === 'markdown' ? ImageName.SwitchToMarkdown : ImageName.SwitchToCode;
-        const switchCellType = () => {
+        const switchCellType = (event: React.MouseEvent<HTMLButtonElement>) => {
+            // Prevent this mouse click from stealing focus so that we
+            // can give focus to the cell input.
+            event.stopPropagation();
+            event.preventDefault();
             this.props.changeCellType(cellId, this.getCurrentCode());
             this.props.sendCommand(otherCellTypeCommand, 'mouse');
         };
@@ -579,8 +582,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private onCodeUnfocused = () => {
         // Make sure to save the code from the editor into the cell
-        const contents = this.inputRef.current ? this.inputRef.current.getContents() : concatMultilineStringInput(this.props.cellVM.cell.data.source);
-        this.props.unfocusCell(this.cellId, contents!);
+        this.props.unfocusCell(this.cellId, this.getCurrentCode());
     }
 
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, _modelId: string) => {

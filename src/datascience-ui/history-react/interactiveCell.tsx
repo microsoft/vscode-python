@@ -67,7 +67,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     public componentDidUpdate(prevProps: IInteractiveCellProps) {
-        if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
+        if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused) {
             this.giveFocus();
         }
     }
