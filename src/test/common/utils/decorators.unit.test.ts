@@ -145,10 +145,13 @@ suite('Common Utils - Decorators', function () {
             await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
             expect(cls.invoked).to.equal(false, 'Should not have been invoked');
 
+            // Cache should expire.
             await sleep(2000);
 
             await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
             expect(cls.invoked).to.equal(true, 'Should have been invoked');
+            // Reset and ensure it is not updated.
+            cls.invoked = false;
             await expect(cls.doSomething(1, 2)).to.eventually.equal(3);
             expect(cls.invoked).to.equal(false, 'Should not have been invoked');
         }).timeout(3000);
