@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as path from 'path';
 import '../../../common/extensions';
 import { CondaInfo } from '../../contracts';
-import { AnacondaDisplayName, AnacondaIdentfiers } from './conda';
+import { AnacondaDisplayName, AnacondaIdentifiers } from './conda';
 
 export type EnvironmentPath = string;
 export type EnvironmentName = string;
@@ -13,7 +12,6 @@ export type EnvironmentName = string;
  * Helpers for conda.
  */
 export class CondaHelper {
-
     /**
      * Return the string to display for the conda interpreter.
      */
@@ -51,6 +49,8 @@ export class CondaHelper {
      * py27                     /Users/donjayamanne/anaconda3/envs/py27
      * py36                     /Users/donjayamanne/anaconda3/envs/py36
      * three                    /Users/donjayamanne/anaconda3/envs/three
+     *                          /Users/donjayamanne/anaconda3/envs/four
+     *                          /Users/donjayamanne/anaconda3/envs/five 5
      * @param {string} condaEnvironmentList
      * @param {CondaInfo} condaInfo
      * @returns {{ name: string, path: string }[] | undefined}
@@ -73,8 +73,7 @@ export class CondaHelper {
                 name = name.substring(0, name.length - 1).trim();
             }
             const envPath = line.substring(pathStartIndex).trim();
-            name = name.length === 0 ? path.basename(envPath) : name;
-            if (name.length > 0 && envPath.length > 0) {
+            if (envPath.length > 0) {
                 envs.push({ name, path: envPath });
             }
         });
@@ -87,6 +86,6 @@ export class CondaHelper {
      */
     private isIdentifiableAsAnaconda(value: string) {
         const valueToSearch = value.toLowerCase();
-        return AnacondaIdentfiers.some(item => valueToSearch.indexOf(item.toLowerCase()) !== -1);
+        return AnacondaIdentifiers.some(item => valueToSearch.indexOf(item.toLowerCase()) !== -1);
     }
 }
