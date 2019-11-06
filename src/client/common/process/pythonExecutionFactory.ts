@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 
+import * as path from 'path';
 import { createMessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
@@ -52,19 +54,23 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Create the python process that will spawn the daemon.
         // Ensure its activated (always).
         const activatedProc = await this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
+
+        // const envPythonPath =
+        //     'C:\\Development\\vscode\\pythonVSCode\\pythonFiles;C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\lib\\python';
         const envPythonPath =
-            'C:\\Development\\vscode\\pythonVSCode\\pythonFiles;C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\lib\\python';
+            `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
         let envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined , false);
         let env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
         envVars = envVars || {};
         if (envVars.PYTHONPATH){
-            envVars.PYTHONPATH += ';' + env.PYTHONPATH;
+            envVars.PYTHONPATH += path.delimiter + env.PYTHONPATH;
         } else {
             envVars.PYTHONPATH = env.PYTHONPATH;
         }
         envVars.PYTHONUNBUFFERED = '1';
         env = envVars as any;
-        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', '--log-file=C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\h.log'], { env });
+        // const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', '--log-file=/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/h.log'], { env });
+        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'daemon.log')}`], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
