@@ -119,6 +119,7 @@ import {
     InteractiveWindowCommandListener
 } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -413,6 +414,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
 
         // Disable experiments.
         const experimentManager = mock(ExperimentsManager);
