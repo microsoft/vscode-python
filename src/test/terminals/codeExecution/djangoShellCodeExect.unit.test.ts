@@ -9,9 +9,11 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { ICondaService } from '../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ICodeExecutionService } from '../../../client/terminals/types';
 import { PYTHON_PATH } from '../../common';
@@ -44,7 +46,21 @@ suite('Terminal - Django Shell Code Execution', () => {
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object, condaService.object, platform.object, commandManager.object, fileSystem.object, disposables);
+        const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+        const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+        executor = new DjangoShellCodeExecutionProvider(
+            terminalFactory.object,
+            configService.object,
+            workspace.object,
+            documentManager.object,
+            condaService.object,
+            platform.object,
+            commandManager.object,
+            fileSystem.object,
+            serviceContainer.object,
+            processServiceFactory.object,
+            disposables
+        );
 
         terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
 

@@ -64,4 +64,8 @@ export class MockPythonService implements IPythonExecutionService  {
     public setDelay(timeout: number | undefined) {
         this.procService.setDelay(timeout);
     }
+
+    public getExecutableInfo(command: string, args: string[]) {
+        return { command, args };
+    }
 }

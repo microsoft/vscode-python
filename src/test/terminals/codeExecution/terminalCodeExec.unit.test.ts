@@ -9,10 +9,12 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
+import { IProcessServiceFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
 import { ICondaService } from '../../../client/interpreter/contracts';
+import { IServiceContainer } from '../../../client/ioc/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../../client/terminals/codeExecution/terminalCodeExecution';
@@ -35,6 +37,8 @@ suite('Terminal - Code Execution', () => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let commandManager: TypeMoq.IMock<ICommandManager>;
         let fileSystem: TypeMoq.IMock<IFileSystem>;
+        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+        let processServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
         let isDjangoRepl: boolean;
 
         teardown(() => {
@@ -59,18 +63,37 @@ suite('Terminal - Code Execution', () => {
             commandManager = TypeMoq.Mock.ofType<ICommandManager>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
             condaService = TypeMoq.Mock.ofType<ICondaService>();
-
+            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.terminal).returns(() => terminalSettings.object);
             configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
             switch (testSuiteName) {
                 case 'Terminal Execution': {
-                    executor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, condaService.object, platform.object);
+                    executor = new TerminalCodeExecutionProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        disposables,
+                        condaService.object,
+                        platform.object,
+                        serviceContainer.object,
+                        processServiceFactory.object
+                    );
                     break;
                 }
                 case 'Repl Execution': {
-                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, condaService.object, disposables, platform.object);
+                    executor = new ReplProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        condaService.object,
+                        serviceContainer.object,
+                        processServiceFactory.object,
+                        disposables,
+                        platform.object
+                    );
                     expectedTerminalTitle = 'REPL';
                     break;
                 }
@@ -79,7 +102,19 @@ suite('Terminal - Code Execution', () => {
                     workspace.setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
                         return { dispose: noop };
                     });
-                    executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object, condaService.object, platform.object, commandManager.object, fileSystem.object, disposables);
+                    executor = new DjangoShellCodeExecutionProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        documentManager.object,
+                        condaService.object,
+                        platform.object,
+                        commandManager.object,
+                        fileSystem.object,
+                        serviceContainer.object,
+                        processServiceFactory.object,
+                        disposables
+                    );
                     expectedTerminalTitle = 'Django Shell';
                     break;
                 }

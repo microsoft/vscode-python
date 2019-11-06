@@ -9,10 +9,12 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
-import { IPythonExecutableInfo } from '../../common/process/types';
+import { CondaExecutionService } from '../../common/process/condaExecutionService';
+import { IProcessService, IProcessServiceFactory, IPythonExecutableInfo } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { ICondaService } from '../../interpreter/contracts';
+import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -20,12 +22,15 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     protected terminalTitle!: string;
     private _terminalService!: ITerminalService;
     private replActive?: Promise<boolean>;
-    constructor(@inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
+    constructor(
+        @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
         @inject(ICondaService) protected readonly condaService: ICondaService,
-        @inject(IPlatformService) protected readonly platformService: IPlatformService
+        @inject(IPlatformService) protected readonly platformService: IPlatformService,
+        @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
+        @inject(IProcessServiceFactory) protected readonly processServiceFactory: IProcessServiceFactory
     ) {}
 
     public async executeFile(file: Uri) {
@@ -66,21 +71,11 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
         if (condaEnvironment) {
             const condaFile = await this.condaService.getCondaFile();
+            const processService: IProcessService = await this.processServiceFactory.create(resource);
+            const condaExecutionService = new CondaExecutionService(this.serviceContainer, processService, command, condaFile, condaEnvironment);
 
-            if (condaEnvironment.name !== '') {
-                return {
-                    command: condaFile,
-                    args: ['run', '-n', condaEnvironment.name, 'python', ...launchArgs, ...args]
-                };
+            return condaExecutionService.getExecutableInfo(command, [...launchArgs, ...args]);
             }
-
-            if (condaEnvironment.path.length > 0) {
-                return {
-                    command: condaFile,
-                    args: ['run', '-p', condaEnvironment.path, 'python', ...launchArgs, ...args]
-                };
-            }
-        }
 
         const isWindows = this.platformService.isWindows;
 

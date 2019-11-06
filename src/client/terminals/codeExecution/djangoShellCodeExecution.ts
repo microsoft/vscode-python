@@ -9,15 +9,18 @@ import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
+import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { ICondaService } from '../../interpreter/contracts';
+import { IServiceContainer } from '../../ioc/types';
 import { DjangoContextInitializer } from './djangoContext';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
 @injectable()
 export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvider {
-    constructor(@inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
+    constructor(
+        @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
@@ -25,9 +28,11 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
+        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[]
     ) {
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, condaService, platformService);
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, condaService, platformService, serviceContainer, processServiceFactory);
         this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
