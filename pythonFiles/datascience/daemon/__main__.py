@@ -83,10 +83,16 @@ def main():
     args = parser.parse_args()
     _configure_logger(args.verbose, args.log_config, args.log_file)
 
-    log.info('Starting daemon from %s.PythonDaemon', args.daemon_module)
-    daemon_module = importlib.import_module(args.daemon_module)
-    daemon_cls = daemon_module.PythonDaemon
-    daemon_cls.start_daemon()
+    log.info("Starting daemon from %s.PythonDaemon", args.daemon_module)
+    try:
+        daemon_module = importlib.import_module(args.daemon_module)
+        daemon_cls = daemon_module.PythonDaemon
+        daemon_cls.start_daemon()
+    except Exception:
+        import traceback
+
+        log.error(traceback.format_exc())
+        raise Exception("Failed to start daemon")
 
 
 if __name__ == "__main__":

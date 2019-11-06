@@ -63,6 +63,16 @@ class PythonDaemon(MethodDispatcher):
         )
         self._shutdown = False
 
+    def __getitem__(self, item):
+        """Override getitem to fallback through multiple dispatchers."""
+        if self._shutdown and item != "exit":
+            # exit is the only allowed method during shutdown
+            log.debug("Ignoring non-exit method during shutdown: %s", item)
+            raise KeyError
+
+        log.info("Execute rpc method %s", item)
+        return super(PythonDaemon, self).__getitem__(item)
+
     def start(self):
         """Entry point for the server."""
         self._shutdown = False
@@ -76,16 +86,6 @@ class PythonDaemon(MethodDispatcher):
     def m_initialized(self):
         self._endpoint.notify("output", {"category": "stdout", "output": "Initialized"})
         return {"capabilities": {"textDocumentSync": {"openClose": True,}}}
-
-    def __getitem__(self, item):
-        """Override getitem to fallback through multiple dispatchers."""
-        if self._shutdown and item != "exit":
-            # exit is the only allowed method during shutdown
-            log.debug("Ignoring non-exit method during shutdown: %s", item)
-            raise KeyError
-
-        log.info("Execute rpc method %s", item)
-        return super(PythonDaemon, self).__getitem__(item)
 
     def _execute_and_capture_output(self, func):
         fout = io.StringIO()
@@ -169,7 +169,7 @@ class PythonDaemon(MethodDispatcher):
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
-        log.info("Exec module (observale) %s with args %s", module_name, args)
+        log.info("Exec module %s with args %s", module_name, args)
         if args[-1] == "--version":
             return self._get_module_version(module_name, args)
 
@@ -195,7 +195,7 @@ class PythonDaemon(MethodDispatcher):
         Hence consider the daemon useless after any calls to exec_module_observable.
         """
         args = [] if args is None else args
-        log.info("Exec module (observale) %s with args %s", module_name, args)
+        log.info("Exec module (observable) %s with args %s", module_name, args)
         old_argv, sys.argv = sys.argv, [""] + args
 
         try:

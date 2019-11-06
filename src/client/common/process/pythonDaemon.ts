@@ -10,11 +10,20 @@ import { traceError } from '../logger';
 import { noop } from '../utils/misc';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
-import { ExecutionResult, InterpreterInfomation, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo, SpawnOptions } from './types';
+import {
+    ExecutionResult,
+    InterpreterInfomation,
+    IPythonDaemonExecutionService,
+    IPythonExecutionService,
+    ObservableExecutionResult,
+    Output,
+    PythonVersionInfo,
+    SpawnOptions
+} from './types';
 
 type ErrorResponse = { error?: string };
 
-export class PythonDaemonExecutionService implements IPythonExecutionService {
+export class PythonDaemonExecutionService implements IPythonDaemonExecutionService {
     constructor(
         private readonly pythonExecutionService: IPythonExecutionService,
         private readonly pythonPath: string,
@@ -64,14 +73,14 @@ export class PythonDaemonExecutionService implements IPythonExecutionService {
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.canExecFileUsingDaemon(args, options)) {
-            return this.execFileWithDaemonAsObservable(args[0], args.splice(1), options);
+            return this.execFileWithDaemonAsObservable(args[0], args.slice(1), options);
         } else {
             return this.pythonExecutionService.execObservable(args, options);
         }
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        if (this.areOptionsSupported(options)) {
-            return this.execModuleWithDaemonAsObservable(args[0], args.splice(1), options);
+        if (!this.canExecModuleUsingDaemon(moduleName, args, options)) {
+            return this.execModuleWithDaemonAsObservable(moduleName, args, options);
         } else {
             return this.pythonExecutionService.execModuleObservable(moduleName, args, options);
         }
@@ -81,23 +90,30 @@ export class PythonDaemonExecutionService implements IPythonExecutionService {
             return this.pythonExecutionService.exec(args, options);
         }
         try {
-            return this.execFileWithDaemon(args[0], args.splice(1), options);
+            return this.execFileWithDaemon(args[0], args.slice(1), options);
         } catch {
             return this.pythonExecutionService.exec(args, options);
         }
     }
     public execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        if (!this.areOptionsSupported(options)) {
+        if (!this.canExecModuleUsingDaemon(moduleName, args, options)) {
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
         try {
-            return this.execModuleWithDaemon(args[0], args.splice(1), options);
+            return this.execModuleWithDaemon(moduleName, args, options);
         } catch {
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
     }
     private canExecFileUsingDaemon(args: string[], options: SpawnOptions): boolean {
         return args[0].toLowerCase().endsWith('.py') && this.areOptionsSupported(options);
+    }
+    private canExecModuleUsingDaemon(moduleName: string, args: string[], options: SpawnOptions): boolean {
+        if (moduleName === 'notebook' || (moduleName === 'jupyter' && args[0] === 'notebook') || (moduleName === 'jupyter' && args.join(',') === 'kernelspec,list')) {
+            return this.areOptionsSupported(options);
+        } else {
+            return false;
+        }
     }
     private areOptionsSupported(options: SpawnOptions): boolean {
         const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr'];

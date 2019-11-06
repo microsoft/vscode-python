@@ -69,7 +69,7 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
      *
      * @type {string}
      */
-    daemonPythonFile: string;
+    daemonModule: string;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
@@ -90,7 +90,7 @@ export interface IPythonExecutionFactory {
      * @returns {(Promise<IPythonExecutionService & IDisposable>)}
      * @memberof IPythonExecutionFactory
      */
-    createDaemon(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService & IDisposable>;
+    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
@@ -115,6 +115,9 @@ export interface IPythonExecutionService {
 
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+}
+
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {
 }
 
 export class StdErrError extends Error {

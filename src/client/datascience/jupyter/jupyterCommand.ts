@@ -10,7 +10,8 @@ import {
     IProcessServiceFactory,
     IPythonExecutionFactory,
     IPythonExecutionService,
-    ObservableExecutionResult
+    ObservableExecutionResult,
+    IPythonDaemonExecutionService
 } from '../../common/process/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
@@ -67,11 +68,13 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     private requiredArgs: string[];
     private interpreterPromise: Promise<PythonInterpreter | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
+    private pythonDaemon: Promise<IPythonDaemonExecutionService>;
 
     constructor(args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter) {
         this.requiredArgs = args;
         this.interpreterPromise = Promise.resolve(interpreter);
         this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+        this.pythonDaemon = pythonExecutionFactory.createDaemon({ resource: undefined, pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon' });
     }
 
     public interpreter() : Promise<PythonInterpreter | undefined> {
@@ -87,9 +90,15 @@ class InterpreterJupyterCommand implements IJupyterCommand {
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const newOptions = { ...options };
-        const launcher = await this.pythonLauncher;
-        const newArgs = [...this.requiredArgs, ...args];
-        return launcher.exec(newArgs, newOptions);
+        if (this.requiredArgs[0] === '-m'){
+            const launcher = await this.pythonDaemon;
+            const newArgs = [...this.requiredArgs.slice(2), ...args];
+            return launcher.execModule(this.requiredArgs[1], newArgs, newOptions);
+        } else {
+            const launcher = await this.pythonLauncher;
+            const newArgs = [...this.requiredArgs, ...args];
+            return launcher.exec(newArgs, newOptions);
+        }
     }
 }
 
