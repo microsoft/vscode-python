@@ -198,15 +198,15 @@ export class JupyterNotebookBase implements INotebook {
             await this.updateWorkingDirectory();
 
             const settings = this.configService.getSettings().datascience;
-            const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
+            // const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
 
-            traceInfo(`Initialize matplotlib for ${this.resource.toString()}`);
-            // Force matplotlib to inline and save the default style. We'll use this later if we
-            // get a request to update style
-            await this.executeSilently(
-                matplobInit,
-                cancelToken
-            );
+            // traceInfo(`Initialize matplotlib for ${this.resource.toString()}`);
+            // // Force matplotlib to inline and save the default style. We'll use this later if we
+            // // get a request to update style
+            // await this.executeSilently(
+            //     matplobInit,
+            //     cancelToken
+            // );
 
             // Run any startup commands that we specified. Support the old form too
             const setting = settings.runStartupCommands || settings.runMagicCommands;

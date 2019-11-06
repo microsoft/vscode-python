@@ -395,6 +395,7 @@ export interface IStatusProvider {
 
 export interface IJupyterCommand {
     readonly daemon?: Promise<IPythonDaemonExecutionService>;
+    readonly daemon2?: Promise<IPythonDaemonExecutionService>;
     interpreter(): Promise<PythonInterpreter | undefined>;
     execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;

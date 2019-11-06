@@ -48,12 +48,22 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService> {
+        const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         // Create the python process that will spawn the daemon.
         // Ensure its activated (always).
         const activatedProc = await this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
         const envPythonPath =
             'C:\\Development\\vscode\\pythonVSCode\\pythonFiles;C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\lib\\python';
-        const env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
+        let envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined , false);
+        let env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
+        envVars = envVars || {};
+        if (envVars.PYTHONPATH){
+            envVars.PYTHONPATH += ';' + env.PYTHONPATH;
+        } else {
+            envVars.PYTHONPATH = env.PYTHONPATH;
+        }
+        envVars.PYTHONUNBUFFERED = '1';
+        env = envVars as any;
         const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', '--log-file=C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\h.log'], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
@@ -75,7 +85,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             if (result.pong !== data) {
                 throw new Error('Daemon did not reply correctly to the ping!');
             }
-            const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
             return new PythonDaemonExecutionService(activatedProc, pythonPath, daemonProc.proc, connection);
         } catch (ex) {
             console.error(ex);

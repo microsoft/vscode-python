@@ -178,6 +178,12 @@ class JupyterConnectionWaiter {
                 })
                 .ignoreErrors();
         }
+        // .then so that we can keep from pushing aync up to the subscribed observable function
+        this.getServerInfo(this.cancelToken)
+            .then(serverInfos => {
+                this.getJupyterURL(serverInfos, data);
+            })
+            .ignoreErrors();
 
         // Sometimes jupyter will return a 403 error. Not sure why. We used
         // to fail on this, but it looks like jupyter works with this error in place.

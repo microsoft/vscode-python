@@ -67,6 +67,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
 class InterpreterJupyterCommand implements IJupyterCommand {
     private static daemonsIndexedByPythonPath = new Map<string, Promise<IPythonDaemonExecutionService>>();
     public readonly daemon: Promise<IPythonDaemonExecutionService>;
+    public readonly daemon2: Promise<IPythonDaemonExecutionService>;
     private requiredArgs: string[];
     private interpreterPromise: Promise<PythonInterpreter | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
@@ -81,6 +82,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             this.daemon = pythonExecutionFactory.createDaemon({ resource: undefined, pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon' });
             InterpreterJupyterCommand.daemonsIndexedByPythonPath.set(interpreter.path, this.daemon);
         }
+        this.daemon2 = pythonExecutionFactory.createDaemon({ resource: undefined, pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon' });
     }
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
@@ -88,9 +90,16 @@ class InterpreterJupyterCommand implements IJupyterCommand {
 
     public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
         const newOptions = { ...options };
-        const launcher = await this.pythonLauncher;
-        const newArgs = [...this.requiredArgs, ...args];
-        return launcher.execObservable(newArgs, newOptions);
+        if (this.requiredArgs[0] === '-m'){
+            const launcher = await this.daemon2;
+            const newArgs = [...this.requiredArgs.slice(2), ...args];
+            return launcher.execModuleObservable(this.requiredArgs[1], newArgs, newOptions);
+        } else {
+            const newOptions = { ...options };
+            const launcher = await this.pythonLauncher;
+            const newArgs = [...this.requiredArgs, ...args];
+            return launcher.execObservable(newArgs, newOptions);
+        }
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {

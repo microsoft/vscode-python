@@ -79,7 +79,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         }
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        if (!this.canExecModuleUsingDaemon(moduleName, args, options)) {
+        if (this.canExecModuleUsingDaemon(moduleName, args, options)) {
             return this.execModuleWithDaemonAsObservable(moduleName, args, options);
         } else {
             return this.pythonExecutionService.execModuleObservable(moduleName, args, options);

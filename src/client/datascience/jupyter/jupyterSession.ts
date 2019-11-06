@@ -115,7 +115,7 @@ export class JupyterSession implements IJupyterSession {
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
-            this.restartSessionPromise = this.createRestartSession(oldSession.serverSettings, this.contentsManager);
+            // this.restartSessionPromise = this.createRestartSession(oldSession.serverSettings, this.contentsManager);
             traceInfo('Started new restart session');
             if (oldStatusHandler) {
                 oldSession.statusChanged.disconnect(oldStatusHandler);
@@ -167,9 +167,9 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private startRestartSession() {
-        if (!this.restartSessionPromise && this.session && this.contentsManager) {
-            this.restartSessionPromise = this.createRestartSession(this.session.serverSettings, this.contentsManager);
-        }
+        // if (!this.restartSessionPromise && this.session && this.contentsManager) {
+        //     this.restartSessionPromise = this.createRestartSession(this.session.serverSettings, this.contentsManager);
+        // }
     }
 
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {

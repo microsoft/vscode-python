@@ -108,6 +108,8 @@ import { TEST_OUTPUT_CHANNEL } from './testing/common/constants';
 import { ITestContextService } from './testing/common/types';
 import { ITestCodeNavigatorCommandHandler, ITestExplorerCommandHandler } from './testing/navigation/types';
 import { registerTypes as unitTestsRegisterTypes } from './testing/serviceRegistry';
+import { JupyterCommandFinder } from './datascience/jupyter/jupyterCommandFinder';
+import { JupyterCommands } from './datascience/constants';
 
 durations.codeLoadingTime = stopWatch.elapsedTime;
 const activationDeferred = createDeferred<void>();
@@ -192,6 +194,8 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     });
 
     serviceContainer.get<IDebuggerBanner>(IDebuggerBanner).initialize();
+    serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder).findBestCommand(JupyterCommands.NotebookCommand).ignoreErrors();
+    serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder).findBestCommand(JupyterCommands.KernelSpecCommand).ignoreErrors();
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
