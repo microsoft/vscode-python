@@ -2684,8 +2684,8 @@
     },
     "dependencies": {
         "@blueprintjs/select": "3.10.0",
-        "@jupyterlab/services": "^3.2.1",
         "@jupyterlab/coreutils": "^3.1.0",
+        "@jupyterlab/services": "^3.2.1",
         "@msrvida/python-program-analysis": "^0.4.1",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
@@ -2762,6 +2762,7 @@
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^5.0.0",
+        "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",

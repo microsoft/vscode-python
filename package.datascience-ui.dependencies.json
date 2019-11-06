@@ -15,6 +15,7 @@
     "@nteract/transform-model-debug",
     "@nteract/transform-plotly",
     "@nteract/transform-vdom",
+    "@nteract/transform-vega",
     "@nteract/transforms",
     "anser",
     "ansi-regex",
