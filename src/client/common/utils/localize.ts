@@ -293,8 +293,8 @@ export namespace DataScience {
     export const findJupyterCommandProgress = localize('DataScience.findJupyterCommandProgress', 'Active interpreter does not support {0}. Searching for the best available interpreter.');
     export const findJupyterCommandProgressCheckInterpreter = localize('DataScience.findJupyterCommandProgressCheckInterpreter', 'Checking {0}.');
     export const findJupyterCommandProgressSearchCurrentPath = localize('DataScience.findJupyterCommandProgressSearchCurrentPath', 'Searching current path.');
-    export const gatheredScriptDescription = localize('DataScience.gatheredScriptDescription', '# This file contains the minimal amount of code required to produce the code cell gathered.\n');
-    export const gatheredNotebookDescriptionInMarkdown = localize('DataScience.gatheredNotebookDescriptionInMarkdown', '## This notebook was generated for a cell gathered from {0}.');
+    export const gatheredScriptDescription = localize('DataScience.gatheredScriptDescription', '# This file contains only the code required to produce the results of the gathered cell.\n');
+    export const gatheredNotebookDescriptionInMarkdown = localize('DataScience.gatheredNotebookDescriptionInMarkdown', '# Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.');
 }
 
 export namespace DebugConfigStrings {
