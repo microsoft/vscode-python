@@ -17,7 +17,7 @@ import { CollapseButton } from '../interactive-common/collapseButton';
 import { ExecutionCount } from '../interactive-common/executionCount';
 import { InformationMessages } from '../interactive-common/informationMessages';
 import { InputHistory } from '../interactive-common/inputHistory';
-import { CursorPos, ICellViewModel, IFont } from '../interactive-common/mainState';
+import { ICellViewModel, IFont } from '../interactive-common/mainState';
 import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
@@ -68,7 +68,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     public componentDidUpdate(prevProps: IInteractiveCellProps) {
         if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
-            this.giveFocus(this.props.cellVM.focused);
+            this.giveFocus();
         }
     }
 
@@ -88,25 +88,22 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     }
 
-    public giveFocus(giveCodeFocus: boolean) {
-        // Start out with ourselves
-        if (this.wrapperRef && this.wrapperRef.current) {
-            this.wrapperRef.current.focus();
-        }
-        // Then attempt to move into the object
-        if (giveCodeFocus) {
-            // This depends upon what type of cell we are.
-            if (this.props.cellVM.cell.data.cell_type === 'code') {
-                if (this.codeRef.current) {
-                    this.codeRef.current.giveFocus(CursorPos.Current);
-                }
-            }
-        }
-    }
-
     // Public for testing
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
+    }
+
+    public giveFocus() {
+        // Start out with ourselves
+        if (this.wrapperRef && this.wrapperRef.current) {
+            // Give focus to the cell if not already owning focus
+            if (!this.wrapperRef.current.contains(document.activeElement)) {
+                this.wrapperRef.current.focus();
+            }
+
+            // Make sure we're in view
+            this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+        }
     }
 
     private toggleInputBlock = () => {
@@ -228,7 +225,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     cellVM={this.props.cellVM}
                     editorOptions={this.props.editorOptions}
                     history={this.inputHistory}
-                    autoFocus={this.props.autoFocus}
                     codeTheme={this.props.codeTheme}
                     onCodeChange={this.onCodeChange}
                     onCodeCreated={this.onCodeCreated}

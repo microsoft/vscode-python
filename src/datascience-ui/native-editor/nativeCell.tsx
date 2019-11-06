@@ -33,7 +33,6 @@ interface INativeCellBaseProps {
     baseTheme: string;
     codeTheme: string;
     testMode?: boolean;
-    autoFocus: boolean;
     maxTextSize?: number;
     monacoTheme: string | undefined;
     lastCell: boolean;
@@ -66,7 +65,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     public componentDidUpdate(prevProps: INativeCellProps) {
         if (this.props.cellVM.selected && !prevProps.cellVM.selected) {
-            this.giveFocus(this.props.cellVM.focused, CursorPos.Current);
+            this.giveFocus();
         }
 
         // Anytime we update, reset the key. This object will be reused for different cell ids
@@ -77,22 +76,21 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return !fastDeepEqual(this.props, nextProps);
     }
 
-    public giveFocus(giveCodeFocus: boolean, cursorPos: CursorPos) {
-        // Start out with ourselves
-        if (this.wrapperRef && this.wrapperRef.current) {
-            this.wrapperRef.current.focus();
-        }
-        // Then attempt to move into the object
-        if (giveCodeFocus) {
-            if (this.inputRef && this.inputRef.current) {
-                this.inputRef.current.giveFocus(cursorPos);
-            }
-        }
-    }
-
     // Public for testing
     public getUnknownMimeTypeFormatString() {
         return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
+    }
+
+    private giveFocus() {
+        if (this.wrapperRef && this.wrapperRef.current) {
+            // Give focus to the cell if not already owning focus
+            if (!this.wrapperRef.current.contains(document.activeElement)) {
+                this.wrapperRef.current.focus();
+            }
+
+            // Make sure we're in view
+            this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+        }
     }
 
     private getCell = () => {
@@ -325,19 +323,21 @@ export class NativeCell extends React.Component<INativeCellProps> {
         // Unfocus the current cell by giving focus to the cell itself
         if (this.wrapperRef && this.wrapperRef.current && this.isFocused()) {
             e.stopPropagation();
-            this.onCodeUnfocused();
+            this.wrapperRef.current.focus();
             this.props.sendCommand(NativeCommandType.Unfocus, 'keyboard');
         }
     }
 
     private arrowUpFromCell = (e: IKeyboardEvent) => {
         e.stopPropagation();
+        e.preventDefault();
         this.props.arrowUp(this.cellId);
         this.props.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
     }
 
     private arrowDownFromCell = (e: IKeyboardEvent) => {
         e.stopPropagation();
+        e.preventDefault();
         this.props.arrowDown(this.cellId);
         this.props.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
     }
@@ -431,7 +431,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.sendCommand(NativeCommandType.MoveCellUp, 'mouse');
         };
         const moveDown = () => {
-            this.props.moveCellUp(this.cellId);
+            this.props.moveCellDown(this.cellId);
             this.props.sendCommand(NativeCommandType.MoveCellDown, 'mouse');
         };
         const addButtonRender = !this.props.lastCell ?
@@ -553,7 +553,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     cellVM={this.props.cellVM}
                     editorOptions={this.props.editorOptions}
                     history={undefined}
-                    autoFocus={this.props.autoFocus}
                     codeTheme={this.props.codeTheme}
                     onCodeChange={this.onCodeChange}
                     onCodeCreated={this.onCodeCreated}
@@ -610,8 +609,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private onOuterKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
-        // Handle keydown events for the entire cell
-        if (event.key !== 'Tab') {
+        // Handle keydown events for the entire cell when we don't have focus
+        if (event.key !== 'Tab' && !this.isFocused()) {
             this.keyDownInput(
                 this.props.cellVM.cell.id,
                 {

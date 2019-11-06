@@ -13,7 +13,6 @@ import { CursorPos, IFont } from './mainState';
 // tslint:disable-next-line: import-name
 export interface IEditorProps {
     content : string;
-    autoFocus?: boolean;
     codeTheme: string;
     readOnly: boolean;
     testMode: boolean;
@@ -26,6 +25,8 @@ export interface IEditorProps {
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
     font: IFont;
+    hasFocus: boolean;
+    cursorPos: CursorPos;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -52,6 +53,12 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
 
     public componentWillUnmount = () => {
         this.subscriptions.forEach(d => d.dispose());
+    }
+
+    public componentDidUpdate(prevProps: IEditorProps, prevState: IEditorState) {
+        if (this.props.hasFocus && (!prevProps.hasFocus || !prevState.editor)) {
+            this.giveFocus(this.props.cursorPos);
+        }
     }
 
     public render() {
@@ -176,11 +183,6 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         // Track focus changes
         this.subscriptions.push(editor.onDidFocusEditorWidget(this.props.focused ? this.props.focused : noop));
         this.subscriptions.push(editor.onDidBlurEditorWidget(this.props.unfocused ? this.props.unfocused : noop));
-
-        // Give focus if necessary
-        if (this.props.autoFocus) {
-            setTimeout(() => editor.focus(), 1);
-        }
     }
 
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {

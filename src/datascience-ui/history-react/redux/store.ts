@@ -7,5 +7,5 @@ import { reducerMap } from './reducers';
 
 // This special version uses the reducer map from the IInteractiveWindowMapping
 export function createStore(skipDefault: boolean, baseTheme: string, testMode: boolean) {
-    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, reducerMap);
+    return ReduxCommon.createStore(skipDefault, baseTheme, testMode, false, reducerMap);
 }

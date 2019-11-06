@@ -244,19 +244,6 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
         {
-            // These are special. Sys_info is our own custom cell
-            cell_type: 'messages',
-            messages: [
-                'You have this python data:',
-                'c:\\data\\python.exe',
-                '3.9.9.9 The Uber Version',
-                '(5, 9, 9)',
-                'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
-            ],
-            source: [],
-            metadata: {}
-        },
-        {
             cell_type: 'code',
             execution_count: 467,
             metadata: {

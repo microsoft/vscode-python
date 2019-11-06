@@ -10,6 +10,7 @@ import { OSType } from '../../client/common/utils/platform';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -20,7 +21,6 @@ import { Progress } from '../react-common/progress';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
 import { actionCreators } from './redux/actions';
-import { IStore } from '../interactive-common/redux/store';
 
 type INativeEditorProps = IMainState & typeof actionCreators;
 
@@ -264,7 +264,6 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <ConnectedNativeCell
                         role='listitem'
                         maxTextSize={this.props.settings.maxOutputSize}
-                        autoFocus={false}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
                         baseTheme={this.props.baseTheme}

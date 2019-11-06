@@ -41,7 +41,7 @@ export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, Queua
             // - function to potentially post stuff to the other side
             // - queue function to dispatch again
             // - payload containing the data from the action
-            return func({ prevState: currentState, queueAnother: action.queueAction, payload: action });
+            return func({ prevState: currentState, queueAction: action.queueAction, payload: action });
         } else {
             return currentState;
         }

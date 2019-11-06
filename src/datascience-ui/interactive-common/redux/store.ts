@@ -4,50 +4,55 @@
 import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
+import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { generateMonacoReducer, IMonacoState } from '../../react-common/redux/reducers/monaco';
 import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
+import { generateTestState } from '../mainState';
 import { generatePostOfficeSendReducer } from './postOffice';
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 
-function generateDefaultState(skipDefault: boolean, baseTheme: string): IMainState {
+function generateDefaultState(skipDefault: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
-    return {
-        // tslint:disable-next-line: no-typeof-undefined
-        skipDefault,
-        testMode: false,
-        baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
-        editorOptions: computeEditorOptions(defaultSettings),
-        cellVMs: [],
-        busy: true,
-        undoStack: [],
-        redoStack: [],
-        submittedText: false,
-        currentExecutionCount: 0,
-        variables: [],
-        pendingVariableCount: 0,
-        debugging: false,
-        knownDark: false,
-        variablesVisible: false,
-        editCellVM: undefined,
-        enableGather: false,
-        isAtBottom: true,
-        font: {
-            size: 14,
-            family: 'Consolas, \'Courier New\', monospace'
-        },
-        codeTheme: Identifiers.GeneratedThemeName,
-        settings: defaultSettings,
-        activateCount: 0,
-        monacoReady: false
-    };
+    if (!skipDefault) {
+        return generateTestState('', editable);
+    } else {
+        return {
+            // tslint:disable-next-line: no-typeof-undefined
+            skipDefault,
+            testMode: false,
+            baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
+            editorOptions: computeEditorOptions(defaultSettings),
+            cellVMs: [],
+            busy: true,
+            undoStack: [],
+            redoStack: [],
+            submittedText: false,
+            currentExecutionCount: 0,
+            variables: [],
+            pendingVariableCount: 0,
+            debugging: false,
+            knownDark: false,
+            variablesVisible: false,
+            editCellVM: undefined,
+            enableGather: false,
+            isAtBottom: true,
+            font: {
+                size: 14,
+                family: 'Consolas, \'Courier New\', monospace'
+            },
+            codeTheme: Identifiers.GeneratedThemeName,
+            settings: defaultSettings,
+            activateCount: 0,
+            monacoReady: false
+        };
+    }
 }
 
-function generateMainReducer<M>(skipDefault: boolean, baseTheme: string, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
+function generateMainReducer<M>(skipDefault: boolean, baseTheme: string, editable: boolean, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
     // First create our default state.
-    const defaultState = generateDefaultState(skipDefault, baseTheme);
+    const defaultState = generateDefaultState(skipDefault, baseTheme, editable);
 
     // Then combine that with our map of state change message to reducer
     return combineReducers<IMainState, M>(
@@ -61,13 +66,13 @@ export interface IStore {
     post: {};
 }
 
-export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, reducerMap: M) {
+export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
     const postOffice = new PostOffice();
 
     // Create reducer for the main react UI
-    const mainReducer = generateMainReducer(skipDefault, baseTheme, reducerMap);
+    const mainReducer = generateMainReducer(skipDefault, baseTheme, editable, reducerMap);
 
     // Create reducer to pass window messages to the other side
     const postOfficeReducer = generatePostOfficeSendReducer(postOffice);
