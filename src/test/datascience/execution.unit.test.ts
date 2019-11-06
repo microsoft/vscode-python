@@ -658,7 +658,7 @@ suite('Jupyter Execution', async () => {
             instance(workspaceService),
             instance(application),
             instance(persistentSateFactory));
-        when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(instance(commandFinder));
+        when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(commandFinder);
         return new JupyterExecutionFactory(
             instance(liveShare),
             instance(executionFactory),
