@@ -85,7 +85,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async refreshCommands(): Promise<void> {
-        this.commandFinder.clearCache();
+        await this.commandFinder.clearCache();
     }
 
     public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {

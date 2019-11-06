@@ -641,6 +641,7 @@ suite('Jupyter Execution', async () => {
             instance(interpreterService));
         const persistentSateFactory = mock(PersistentStateFactory);
         const persistentState = mock(PersistentState);
+        when(persistentState.updateValue(anything())).thenResolve();
         when(persistentSateFactory.createGlobalPersistentState(anything())).thenReturn(instance(persistentState));
         when(persistentSateFactory.createGlobalPersistentState(anything(), anything())).thenReturn(instance(persistentState));
         when(persistentSateFactory.createWorkspacePersistentState(anything())).thenReturn(instance(persistentState));
@@ -746,6 +747,8 @@ suite('Jupyter Execution', async () => {
             }
         };
         configChangeEvent.fire(evt);
+        // Wait for cache to get cleared.
+        await sleep(100);
         await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
     }).timeout(10000);
 
@@ -766,6 +769,8 @@ suite('Jupyter Execution', async () => {
             }
         };
         configChangeEvent.fire(evt);
+        // Wait for cache to get cleared.
+        await sleep(100);
         await assert.eventually.equal(execution.isNotebookSupported(), false, 'Notebook should not be supported after config change');
         verify(application.withProgress(anything(), anything())).atLeast(1);
     }).timeout(10000);

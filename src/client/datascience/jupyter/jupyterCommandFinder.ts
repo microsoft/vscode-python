@@ -8,7 +8,7 @@ import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
-import { traceInfo, traceWarning } from '../../common/logger';
+import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
@@ -68,12 +68,12 @@ export class JupyterCommandFinderImpl {
         @unmanaged() private readonly appShell: IApplicationShell
     ) {
         this.processServicePromise = this.processServiceFactory.create();
-        disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.commands.clear()));
+        disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(async () => this.clearCache()));
         if (workspace) {
-            const disposable = workspace.onDidChangeConfiguration(e => {
-                if (e.affectsConfiguration('python.dataScience', undefined)) {
+            const disposable = workspace.onDidChangeConfiguration(async e => {
+                if (e.affectsConfiguration('python.dataScience.searchForJupyter', undefined)) {
                     // When config changes happen, recreate our commands.
-                    this.commands.clear();
+                    await this.clearCache();
                 }
             });
             disposableRegistry.push(disposable);
@@ -130,7 +130,7 @@ export class JupyterCommandFinderImpl {
     /**
      * Clears the caching of any commands so a search starts a new
      */
-    public clearCache() {
+    public async clearCache(): Promise<void> {
         this.commands.clear();
     }
 
@@ -482,6 +482,12 @@ type CacheInfo = {
             return super.findBestCommand(command, token);
         }
     }
+    public async clearCache(): Promise<void> {
+        this.cacheStore.checked = undefined;
+        this.cacheStore.sessionState = undefined;
+        await this.cacheStore.state.updateValue(undefined);
+        await super.clearCache();
+    }
     private async findBestNotebookCommand(token?: CancellationToken): Promise<IFindCommandResult> {
         const command = JupyterCommands.NotebookCommand;
         // Searching takes a while.
@@ -511,15 +517,15 @@ type CacheInfo = {
         // No need to search cache any more, cancel it.
         // And update the cache store with what ever we got from the find.
         cancellationTokenSource.cancel();
-        await this.updateCacheWithInterpreter(searchResult.cmd);
+        this.updateCacheWithInterpreter(searchResult.cmd);
         return searchResult.cmd;
     }
-    private async updateCacheWithInterpreter(result?: IFindCommandResult, cancelToken?: CancellationToken): Promise<void> {
-        if (!result){
+    private updateCacheWithInterpreter(result?: IFindCommandResult, cancelToken?: CancellationToken) {
+        if (!result || result.status === ModuleExistsStatus.NotFound){
             // Ensure we remove this so others don't try using this.
             // Possible we don't have any interpeter, or the one
             // that was available has been uninstalled.
-            await this.cacheStore.state.updateValue(undefined);
+            this.cacheStore.state.updateValue(undefined).ignoreErrors();
             return;
         }
 
@@ -533,11 +539,18 @@ type CacheInfo = {
 
         // Cache for other VS Code sessions.
         // i.e. make it available when new VS Code instance is opened.
-        const interpreter = await result.command.interpreter();
-        if (!interpreter || (cancelToken && cancelToken.isCancellationRequested)){
-            return;
-        }
-        await this.cacheStore.state.updateValue(interpreter ? interpreter.path : undefined);
+        new Promise(async resolve => {
+            try {
+                const interpreter = await result.command!.interpreter();
+                if (!interpreter || (cancelToken && cancelToken.isCancellationRequested)){
+                    return;
+                }
+                await this.cacheStore.state.updateValue(interpreter ? interpreter.path : undefined);
+            } catch (ex){
+                traceError('Failed to update Jupyter Command', ex);
+                resolve();
+            }
+        }).ignoreErrors();
     }
     private async getCachedNotebookInterpreter(cancelToken: CancellationToken): Promise<IFindCommandResult | undefined>{
         // We have already checked in current session.
@@ -554,7 +567,7 @@ type CacheInfo = {
             return;
         }
 
-        await this.updateCacheWithInterpreter(result, cancelToken);
+        this.updateCacheWithInterpreter(result, cancelToken);
     }
 
     private async getNotebookCommand(pythonPath: string, cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
