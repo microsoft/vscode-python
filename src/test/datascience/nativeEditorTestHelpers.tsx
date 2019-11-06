@@ -98,7 +98,7 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     assert.ok(toolbar, 'Cannot find the main panel toolbar during adding a cell');
     const ImageButtons = toolbar.find(ImageButton);
     assert.equal(ImageButtons.length, 10, 'Toolbar buttons not found');
-    const addButton = ImageButtons.at(2);
+    const addButton = ImageButtons.at(5);
     let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
     addButton.simulate('click');
 
