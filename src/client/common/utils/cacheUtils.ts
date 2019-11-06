@@ -57,7 +57,7 @@ function getCacheStore(resource: Resource, vscode: VSCodeType = require('vscode'
     return resourceSpecificCacheStores.get(key)!;
 }
 
-function getCacheKeyFromFunctionArgs(keyPrefix: string, fnArgs: any[]): string {
+export function getCacheKeyFromFunctionArgs(keyPrefix: string, fnArgs: any[]): string {
     const argsKey = fnArgs.map(arg => `${JSON.stringify(arg)}`).join('-Arg-Separator-');
     return `KeyPrefix=${keyPrefix}-Args=${argsKey}`;
 }
