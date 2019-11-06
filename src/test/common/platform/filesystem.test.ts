@@ -233,8 +233,8 @@ suite('Raw FileSystem', () => {
                 ['__init__.py', FileType.File],
                 ['__main__.py', FileType.File],
                 ['eggs.py', FileType.File],
-                ['info.py', FileType.SymbolicLink],
-                ['ipc.sock', FileType.Unknown],
+                ['info.py', FileType.SymbolicLink | FileType.File],
+                ['ipc.sock', FileType.File], // This isn't "Unknown" for some reason.
                 ['spam.py', FileType.File],
                 ['w', FileType.Directory]
             ]);

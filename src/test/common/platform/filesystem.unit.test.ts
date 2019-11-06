@@ -506,7 +506,7 @@ suite('Raw FileSystem', () => {
                 ['dev1', FileType.Unknown],
                 ['w', FileType.Directory],
                 ['spam.py', FileType.File],
-                ['other', FileType.SymbolicLink]
+                ['other', FileType.SymbolicLink | FileType.File]
             ];
             raw.setup(r => r.readDirectory(Uri.file(dirname)))
                 .returns(() => Promise.resolve(expected));
