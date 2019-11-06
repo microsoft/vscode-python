@@ -344,14 +344,11 @@ for _ in range(50):
             const cell = getOutputCell(wrapper, 'NativeCell', 1);
             assert.ok(cell, 'Cannot find the first cell');
             const imageButtons = cell!.find(ImageButton);
-            // Here some buttons are repeated (run, change to markdown, gather and delete)
-            // There's one for the input and another for the output, but the output is hidden
-            assert.equal(imageButtons.length, 10, 'Cell buttons not found');
+            assert.equal(imageButtons.length, 6, 'Cell buttons not found');
             const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
-            assert.equal(runButton.length, 2, 'No run button found');
+            assert.equal(runButton.length, 1, 'No run button found');
             const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
-            // The first run button is the one for the input, the second one is for the output
-            runButton.first().simulate('click');
+            runButton.simulate('click');
             await update;
             verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 1);
         });
