@@ -434,7 +434,6 @@ type CacheInfo = {
     checked?: boolean;
 };
 
-
 /**
  * Decorates the `JupyterCommanFinderImpl` with ability to cache the results.
  *
