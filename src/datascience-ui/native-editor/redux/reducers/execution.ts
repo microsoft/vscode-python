@@ -5,7 +5,7 @@ import { CellMatcher } from '../../../../client/datascience/cellMatcher';
 import { concatMultilineStringInput } from '../../../../client/datascience/common';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
-import { IMainState, CursorPos } from '../../../interactive-common/mainState';
+import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
@@ -16,24 +16,25 @@ import { Effects } from './effects';
 
 export namespace Execution {
 
-    function executeRange(prevState: IMainState, start: number, end: number, code: string[], queueAction: QueueAnotherFunc<NativeEditorActionTypes>): IMainState {
+    function executeRange(prevState: IMainState, start: number, end: number, codes: string[], queueAction: QueueAnotherFunc<NativeEditorActionTypes>): IMainState {
         const newVMs = [...prevState.cellVMs];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];
+            const code = codes[pos - start];
             // noop if the submitted code is just a cell marker
             const matcher = new CellMatcher(prevState.settings);
-            if (code && matcher.stripFirstMarker(code[pos]).length > 0) {
+            if (code && matcher.stripFirstMarker(code).length > 0) {
                 if (orig.cell.data.cell_type === 'code') {
                     // Update our input cell to be in progress again and clear outputs
-                    newVMs[pos] = { ...orig, inputBlockText: code[pos], cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code[pos], outputs: [] } } };
+                    newVMs[pos] = { ...orig, inputBlockText: code, cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code, outputs: [] } } };
                 } else {
                     // Update our input to be our new code
-                    newVMs[pos] = { ...orig, inputBlockText: code[pos], cell: { ...orig.cell, data: { ...orig.cell.data, source: code[pos] } } };
+                    newVMs[pos] = { ...orig, inputBlockText: code, cell: { ...orig.cell, data: { ...orig.cell.data, source: code } } };
                 }
             }
 
             // Send a message for each
-            queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code: code[pos], id: orig.cell.id }));
+            queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
         }
 
         return {
