@@ -3,6 +3,9 @@
 'use strict';
 import '../../common/extensions';
 
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
+
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
@@ -141,6 +144,7 @@ export class JupyterNotebookBase implements INotebook {
     private _resource: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
+    private _loggers: INotebookExecutionLogger[] = [];
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -149,13 +153,14 @@ export class JupyterNotebookBase implements INotebook {
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,
         private launchInfo: INotebookServerLaunchInfo,
-        private loggers: INotebookExecutionLogger[],
+        loggers: INotebookExecutionLogger[],
         resource: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService
     ) {
         this.sessionStartTime = Date.now();
         this._resource = resource;
+        this._loggers = [...loggers];
     }
 
     public get server(): INotebookServer {
@@ -256,7 +261,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public addLogger(logger: INotebookExecutionLogger) {
-        this.loggers.push(logger);
+        this._loggers.push(logger);
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
@@ -749,11 +754,11 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
+        await Promise.all(this._loggers.map(l => l.preExecute(cell, silent)));
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map(l => l.postExecute(cell, silent)));
+        await Promise.all(this._loggers.map(l => l.postExecute(cloneDeep(cell), silent)));
     }
 
     private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {
