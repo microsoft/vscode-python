@@ -18,7 +18,7 @@ export class CondaExecutionService extends PythonExecutionService {
         super(serviceContainer, procService, pythonPath);
     }
 
-    protected getExecutableInfo(command: string, args: string[]): IPythonExecutableInfo {
+    public getExecutableInfo(command: string, args: string[]): IPythonExecutableInfo {
         if (this.condaEnvironment.name !== '') {
             return {
                 command: this.condaFile,

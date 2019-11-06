@@ -111,7 +111,7 @@ export class PythonExecutionService implements IPythonExecutionService {
         return result;
     }
 
-    protected getExecutableInfo(command: string, args: string[]): IPythonExecutableInfo {
+    public getExecutableInfo(command: string, args: string[]): IPythonExecutableInfo {
         return { command, args };
     }
 }
