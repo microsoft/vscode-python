@@ -23,9 +23,11 @@ import {
 suite('Raw FileSystem', () => {
     let filesystem: IRawFileSystem;
     let fix: FSFixture;
-    setup(() => {
+    setup(async () => {
         filesystem = RawFileSystem.withDefaults();
         fix = new FSFixture();
+
+        await assertDoesNotExist(DOES_NOT_EXIST);
     });
     teardown(async () => {
         await fix.cleanUp();
