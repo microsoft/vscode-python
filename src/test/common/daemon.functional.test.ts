@@ -208,7 +208,7 @@ suite('Daemon', () => {
 
     test('Execute a file and throw exception if stderr is not empty when streaming output', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'import time', 'time.sleep(1)', 'sys.stderr.write("KABOOM")'].join(os.EOL));
-        const output = pythonDaemon.execObservable([fileToExecute], {});
+        const output = pythonDaemon.execObservable([fileToExecute], { throwOnStdErr: true });
         const outputsReceived: string[] = [];
         const promise = new Promise((resolve, reject) => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
