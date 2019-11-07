@@ -53,27 +53,24 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         // Create the python process that will spawn the daemon.
         // Ensure its activated (always).
-        const activatedProc = await this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
+        const [activatedProc, activatedEnvVars] = await Promise.all([
+            this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource }),
+            this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
+        ]);
 
-        const envPythonPath =
-            `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
-
-        // TODO: Need to merge env variables.
-        let envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined , false);
-        let env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
-        envVars = envVars || {};
-        if (envVars.PYTHONPATH){
-            envVars.PYTHONPATH += path.delimiter + env.PYTHONPATH;
+        const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
+        const env = { ...activatedEnvVars } || {};
+        if (env.PYTHONPATH) {
+            env.PYTHONPATH += path.delimiter + envPythonPath;
         } else {
-            envVars.PYTHONPATH = env.PYTHONPATH;
+            env.PYTHONPATH = envPythonPath;
         }
-        envVars.PYTHONUNBUFFERED = '1';
-        // tslint:disable-next-line: no-any
-        env = envVars as any;
+        env.PYTHONUNBUFFERED = '1';
         const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
+
         const connection = createMessageConnection(new StreamMessageReader(daemonProc.proc.stdout), new StreamMessageWriter(daemonProc.proc.stdin));
         connection.listen();
         let stdError = '';
@@ -82,17 +79,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             d = typeof d === 'string' ? d : d.toString('utf8');
             stdError += d;
         });
-        daemonProc.proc.on('error', ex => procEndEx = ex);
+        daemonProc.proc.on('error', ex => (procEndEx = ex));
 
         // Check whether the daemon has started correctly, by sending a ping.
-        const data = Date.now().toString();
-        type Param = { data: string };
-        type Return = { pong: string };
-        const request = new RequestType<Param, Return, void, void>('ping');
+        const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
         try {
-            const result = await connection.sendRequest(request, { data });
-            if (result.pong !== data) {
-                throw new Error('Daemon did not reply correctly to the ping!');
+            const result = await connection.sendRequest(request, { data: 'hello' });
+            if (result.pong !== 'hello') {
+                throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
             }
             return new options.daemonClass(activatedProc, pythonPath, daemonProc.proc, connection);
         } catch (ex) {

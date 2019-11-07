@@ -94,7 +94,7 @@ class CustomWriter(object):
         self.encoding = encoding
         self._wrap_buffer = wrap_buffer
         if wrap_buffer:
-            log.info('wrap')
+            log.info("wrap")
             self.buffer = CustomWriter(
                 wrap_stream, wrap_buffer=False, on_write=on_write
             )
@@ -102,7 +102,7 @@ class CustomWriter(object):
 
     def disable_redirection(self):
         """ Restores the original stream, thereby temporarily disabling the redirection."""
-        log.info('Disable redirection')
+        log.info("Disable redirection")
         if self._wrap_buffer:
             self.buffer.disable_redirection()
         self._enabled = False
@@ -117,7 +117,7 @@ class CustomWriter(object):
         pass  # no-op here
 
     def write(self, s):
-        log.info('Enabled %s', self._enabled)
+        log.info("Enabled %s", self._enabled)
         if self._enabled and s:
             # Need s in str
             if isinstance(s, bytes):
@@ -127,7 +127,9 @@ class CustomWriter(object):
                 self._on_write(s)
 
 
-_stdin, _stdout = sys.stdin.buffer, sys.stdout.buffer
+_stdin = sys.stdin.buffer
+_stdout = sys.stdout.buffer
+
 
 def get_io_buffers():
     return _stdin, _stdout
@@ -135,15 +137,19 @@ def get_io_buffers():
 
 def redirect_output(stdout_handler, stderr_handler):
     log.info("Redirect stdout/stderr")
-    wrap_buffer = True # Always for Python 3
+    wrap_buffer = True  # Always for Python 3
 
     sys._vsc_out_buffer_ = CustomWriter(sys.stdout, wrap_buffer, stdout_handler)
     sys.stdout_original = sys.stdout
-    _stdout_redirector = sys.stdout = IORedirector(sys.stdout, sys._vsc_out_buffer_, wrap_buffer)
+    _stdout_redirector = sys.stdout = IORedirector(
+        sys.stdout, sys._vsc_out_buffer_, wrap_buffer
+    )
 
     sys._vsc_err_buffer_ = CustomWriter(sys.stderr, wrap_buffer, stderr_handler)
     sys.stderr_original = sys.stderr
-    _stderr_redirector = sys.stderr = IORedirector(sys.stderr, sys._vsc_err_buffer_, wrap_buffer)
+    _stderr_redirector = sys.stderr = IORedirector(
+        sys.stderr, sys._vsc_err_buffer_, wrap_buffer
+    )
 
 
 def disable_redirection():
@@ -152,6 +158,7 @@ def disable_redirection():
     sys._vsc_err_buffer_.disable_redirection()
     sys.stdout.disable_redirection()
     sys.stderr.disable_redirection()
+
 
 def enable_redirection():
     log.info("Enable redirecting stdout/stderr")

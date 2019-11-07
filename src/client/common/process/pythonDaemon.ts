@@ -183,13 +183,15 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                 await this.connection.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
             }
         };
+        let stdErr = '';
+        this.daemonProc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
         const subscription = this.outputObservale.subscribe(out => subject.next(out));
         start()
             .catch(ex => {
                 const errorMsg = `Failed to run ${'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName} as observable with args ${args.join(' ')}`;
                 traceError(errorMsg, ex);
-                subject.next({ source: 'stderr', out: errorMsg });
+                subject.next({ source: 'stderr', out: `${errorMsg}\n${stdErr}` });
                 subject.error(ex);
             })
             .finally(() => {

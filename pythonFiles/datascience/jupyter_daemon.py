@@ -8,10 +8,6 @@ log = logging.getLogger(__name__)
 
 
 class PythonDaemon(BasePythonDaemon.PythonDaemon):
-    """ Implementation of the Microsoft VSCode Language Server Protocol
-    https://github.com/Microsoft/language-server-protocol/blob/master/versions/protocol-1-x.md
-    """
-
     def __init__(self, rx, tx):
         log.info("Child class init")
         super().__init__(rx, tx)

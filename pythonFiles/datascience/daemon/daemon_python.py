@@ -3,6 +3,7 @@
 
 import logging
 import io
+import os
 import sys
 import traceback
 import runpy
@@ -14,7 +15,7 @@ from datascience.daemon.daemon_output import (
     redirect_output,
     disable_redirection,
 )
-from contextlib import redirect_stdout, redirect_stderr
+from contextlib import redirect_stdout, redirect_stderr, contextmanager
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
@@ -22,6 +23,28 @@ from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 log = logging.getLogger(__name__)
 
 MAX_WORKERS = 64
+
+
+@contextmanager
+def change_exec_context(args=[], cwd=None, env=None):
+    # Code for setting and restoring env variables borrowed from stackoverflow
+    # https://stackoverflow.com/questions/2059482/python-temporarily-modify-the-current-processs-environment
+    if env is not None:
+        old_environ = dict(os.environ)
+        os.environ.update(env)
+    old_argv, sys.argv = sys.argv, [""] + args
+    old_cwd = os.getcwd()
+    try:
+        if cwd is not None:
+            os.chdir(cwd)
+        yield
+    finally:
+        sys.argv = old_argv
+        if cwd is not None:
+            os.chdir(old_cwd)
+        if env is not None:
+            os.environ.clear()
+            os.environ.update(old_environ)
 
 
 def error_decorator(func):
@@ -70,10 +93,6 @@ class PythonDaemon(MethodDispatcher):
         log.info("pinged with %s", data)
         return {"pong": data}
 
-    def m_initialized(self):
-        self._endpoint.notify("output", {"category": "stdout", "output": "Initialized"})
-        return {"capabilities": {"textDocumentSync": {"openClose": True,}}}
-
     def _execute_and_capture_output(self, func):
         fout = io.StringIO()
         ferr = io.StringIO()
@@ -100,25 +119,19 @@ class PythonDaemon(MethodDispatcher):
 
     def m_exit(self, **_kwargs):
         self.close()
-
-    def m_initialize(self, rootUri=None, **kwargs):
-        log.info("Got initialize params: %s", kwargs)
-        return {"capabilities": {"textDocumentSync": {"openClose": True,}}}
+        self._jsonrpc_stream_writer.close()
 
     @error_decorator
     def m_exec_file(self, file_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
-        old_argv, sys.argv = sys.argv, [""] + args
         log.info("Exec file %s with args %s", file_name, args)
 
         def exec_file():
             log.info("execute file %s", file_name)
             runpy.run_path(file_name, globals())
 
-        try:
+        with change_exec_context(args, cwd, env):
             return self._execute_and_capture_output(exec_file)
-        finally:
-            sys.argv = old_argv
 
     @error_decorator
     def m_exec_code(self, code):
@@ -129,7 +142,9 @@ class PythonDaemon(MethodDispatcher):
 
         return self._execute_and_capture_output(exec_code)
 
-    def m_exec_file_observable(self, file_name, args=[], cwd=None, env=None, disconnect_rpc=False):
+    def m_exec_file_observable(
+        self, file_name, args=[], cwd=None, env=None, disconnect_rpc=None
+    ):
         """ Sometimes calling modules could result in Python running a process from within.
         E.g. when running something like `jupyter notebook` we're unable to hijack the stdout.
         At this point we're unable to take over stdout/stderr. Hence python program writes directly to stdout.
@@ -142,11 +157,12 @@ class PythonDaemon(MethodDispatcher):
         log.info("Exec file (observale) %s with args %s", file_name, args)
 
         try:
-            log.info("execute file %s", file_name)
             if disconnect_rpc:
+                log.inf("Close RPC")
                 # rpc is no-longer usable (see comments).
                 self.close()
-            runpy.run_path(file_name, globals())
+            with change_exec_context(args, cwd, env):
+                runpy.run_path(file_name, globals())
         except Exception:
             if disconnect_rpc:
                 # Its possible the code fell over and we returned an error.
@@ -154,8 +170,6 @@ class PythonDaemon(MethodDispatcher):
                 sys.stderr.flush()
             else:
                 return {"error": traceback.format_exc()}
-        finally:
-            sys.argv = old_argv
 
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
@@ -164,19 +178,17 @@ class PythonDaemon(MethodDispatcher):
         if args[-1] == "--version":
             return self._get_module_version(module_name, args)
 
-        old_argv, sys.argv = sys.argv, [""] + args
-
         def exec_module():
 
             log.info("execute module %s", module_name)
             runpy.run_module(module_name, globals(), run_name="__main__")
 
-        try:
+        with change_exec_context(args, cwd, env):
             return self._execute_and_capture_output(exec_module)
-        finally:
-            sys.argv = old_argv
 
-    def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None, disconnect_rpc=False):
+    def m_exec_module_observable(
+        self, module_name, args=None, cwd=None, env=None, disconnect_rpc=False
+    ):
         """ Sometimes calling modules could result in Python running a process from within.
         E.g. when running something like `jupyter notebook` we're unable to hijack the stdout.
         At this point we're unable to take over stdout/stderr. Hence python program writes directly to stdout.
@@ -186,14 +198,13 @@ class PythonDaemon(MethodDispatcher):
         """
         args = [] if args is None else args
         log.info("Exec module (observable) %s with args %s", module_name, args)
-        old_argv, sys.argv = sys.argv, [""] + args
 
         try:
-            log.info("execute module %s", module_name)
             if disconnect_rpc:
                 # rpc is no-longer usable (see comments).
                 self.close()
-            runpy.run_module(module_name, globals(), run_name="__main__")
+            with change_exec_context(args, cwd, env):
+                runpy.run_module(module_name, globals(), run_name="__main__")
         except Exception:
             if disconnect_rpc:
                 # Its possible the code fell over and we returned an error.
@@ -201,8 +212,6 @@ class PythonDaemon(MethodDispatcher):
                 sys.stderr.flush()
             else:
                 return {"error": traceback.format_exc()}
-        finally:
-            sys.argv = old_argv
 
     def _get_module_version(self, module_name, args):
         """We handle `-m pip --version` as a special case. As this causes the current process to die.
