@@ -9,6 +9,7 @@ import * as uuid from 'uuid/v4';
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 
 export class ServerCache implements IAsyncDisposable {
@@ -18,7 +19,8 @@ export class ServerCache implements IAsyncDisposable {
     constructor(
         private configService: IConfigurationService,
         private workspace: IWorkspaceService,
-        private fileSystem: IFileSystem
+        private fileSystem: IFileSystem,
+        private interpreterService: IInterpreterService
     ) { }
 
     public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
@@ -60,13 +62,16 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async generateDefaultOptions(options?: INotebookServerOptions): Promise<INotebookServerOptions> {
+        const activeInterpreter = await this.interpreterService.getActiveInterpreter();
+        const activeInterpreterPath = activeInterpreter ? activeInterpreter.path : undefined;
         return {
             enableDebugging: options ? options.enableDebugging : false,
             uri: options ? options.uri : undefined,
             useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
-            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory()
+            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
+            interpreterPath: options && options.interpreterPath ? options.interpreterPath : activeInterpreterPath
         };
     }
 
@@ -76,11 +81,12 @@ export class ServerCache implements IAsyncDisposable {
         } else {
             // combine all the values together to make a unique key
             const uri = options.uri ? options.uri : '';
+            const interpreter = options.interpreterPath ? options.interpreterPath : '';
             const useFlag = options.useDefaultConfig ? 'true' : 'false';
             const debug = options.enableDebugging ? 'true' : 'false';
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Should there be some separator in the key?
-            return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}`;
+            return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}${interpreter}`;
         }
     }
 

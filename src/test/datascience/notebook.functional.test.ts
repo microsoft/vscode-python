@@ -8,6 +8,7 @@ import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
+import { SemVer } from 'semver';
 import { Readable, Writable } from 'stream';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -23,6 +24,7 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -42,6 +44,7 @@ import {
 import {
     IInterpreterService,
     IKnownSearchPathsForInterpreters,
+    InterpreterType,
     PythonInterpreter
 } from '../../client/interpreter/contracts';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
@@ -49,6 +52,7 @@ import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getConnectionInfo, getIPConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
+import { SupportedCommands } from './mockJupyterManager';
 import { MockPythonService } from './mockPythonService';
 
 // tslint:disable:no-any no-multiline-string max-func-body-length no-console max-classes-per-file trailing-comma
@@ -516,6 +520,38 @@ suite('DataScience notebook tests', () => {
         } finally {
             importer.dispose();
             temp.dispose();
+        }
+    });
+
+    runTest('Change Interpreter', async () => {
+        const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+
+        // Real Jupyter doesn't help this test at all and is tricky to set up for it, so just skip it
+        if (!isRollingBuild) {
+            const server = await createNotebook(true);
+
+            // Create again, we should get the same server from the cache
+            const server2 = await createNotebook(true);
+            assert.equal(server, server2, 'With no settings changed we should return the cached server');
+
+            // Create a new mock interpreter with a different path
+            const newPython: PythonInterpreter = {
+                path: '/foo/bar/baz/python.exe',
+                version: new SemVer('3.6.6-final'),
+                sysVersion: '1.0.0.0',
+                sysPrefix: 'Python',
+                type: InterpreterType.Unknown,
+                architecture: Architecture.x64,
+            };
+
+            // Add interpreter into mock jupyter service and set it as active
+            ioc.addInterpreter(newPython, SupportedCommands.all);
+
+            // Create a new notebook, we should not be the same anymore
+            const server3 = await createNotebook(true);
+            assert.notEqual(server, server3, 'With interpreter changed we should return a new server');
+        } else {
+            console.log(`Skipping Change Interpreter test in non-mocked Jupyter case`);
         }
     });
 

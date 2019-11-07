@@ -218,18 +218,15 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
-        const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
-        const selection = await this.appShell.showQuickPick(quickPickOptions, { ignoreFocusOut: true });
-        switch (selection) {
-            case localize.DataScience.jupyterSelectURILaunchLocal():
-                return this.setJupyterURIToLocal();
-                break;
-            case localize.DataScience.jupyterSelectURISpecifyURI():
-                return this.selectJupyterLaunchURI();
-                break;
-            default:
-                // If user cancels quick pick we will get undefined as the selection and fall through here
-                break;
+        const userURI = await this.appShell.showInputBox({
+            prompt: localize.DataScience.jupyterSelectURIPrompt(),
+            placeHolder: localize.DataScience.jupyterSelectWatermarkFormat().format('local', 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe'), validateInput: this.validateSelectJupyterURI, ignoreFocusOut: true
+        });
+
+        if (userURI && userURI.toUpperCase() === 'LOCAL') {
+            await this.setJupyterURIToLocal();
+        } else if (userURI) {
+            await this.setJupyterURIToRemote(userURI);
         }
     }
 
@@ -274,6 +271,22 @@ export class DataScience implements IDataScience {
             this.commandManager.executeCommand('workbench.action.debug.continue');
         }
     }
+    private validateSelectJupyterURI = (inputText: string): string | undefined | null => {
+        // First check if the input is 'local' specifically checking against local so culture less comparison is fine
+        if (inputText.toUpperCase() === 'LOCAL') {
+            return null;
+        }
+
+        try {
+            // tslint:disable-next-line:no-unused-expression
+            new URL(inputText);
+        } catch {
+            return localize.DataScience.jupyterSelectURIInvalidURI();
+        }
+
+        // Return null tells the dialog that our string is valid
+        return null;
+    }
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
@@ -281,16 +294,8 @@ export class DataScience implements IDataScience {
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
-    private async selectJupyterLaunchURI(): Promise<void> {
-        // First get the proposed URI from the user
-        const userURI = await this.appShell.showInputBox({
-            prompt: localize.DataScience.jupyterSelectURIPrompt(),
-            placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI, ignoreFocusOut: true
-        });
-
-        if (userURI) {
-            await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
-        }
+    private async setJupyterURIToRemote(userURI: string): Promise<void> {
+        await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
     @captureTelemetry(Telemetry.AddCellBelow)
@@ -368,18 +373,6 @@ export class DataScience implements IDataScience {
         } else {
             return Promise.resolve();
         }
-    }
-
-    private validateURI = (testURI: string): string | undefined | null => {
-        try {
-            // tslint:disable-next-line:no-unused-expression
-            new URL(testURI);
-        } catch {
-            return localize.DataScience.jupyterSelectURIInvalidURI();
-        }
-
-        // Return null tells the dialog that our string is valid
-        return null;
     }
 
     private onSettingsChanged = () => {
@@ -512,9 +505,9 @@ export class DataScience implements IDataScience {
         }
     }
     @swallowExceptions('Error in sending DS Startup telemetry')
-    private sendStartupTelemetry(){
+    private sendStartupTelemetry() {
         const filesConfig = this.workspace.getConfiguration('files');
-        sendTelemetryEvent(Telemetry.AutoSaveEnabled, undefined, {enabled: filesConfig.get('autoSave', 'off') !== 'off'});
+        sendTelemetryEvent(Telemetry.AutoSaveEnabled, undefined, { enabled: filesConfig.get('autoSave', 'off') !== 'off' });
     }
 
     private async createNewNotebook(): Promise<void> {

@@ -15,7 +15,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
-    constructor(specModel : Kernel.ISpecModel, file?: string) {
+    constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
         this.language = specModel.language;
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';

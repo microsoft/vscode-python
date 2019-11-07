@@ -129,7 +129,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(false)}
                     {this.renderOutput()}
-                    {this.renderMiddleToolbar()}
                 </div>
                 {this.renderAddDivider(false)}
             </div> :
@@ -138,7 +137,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                     {this.renderCollapseBar(true)}
                     {this.renderControls()}
                     {this.renderInput()}
-                    {this.renderMiddleToolbar()}
                 </div>
                 {this.renderAddDivider(true)}
                 <div className='cell-row-container'>
@@ -228,7 +226,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 's':
-                if (e.ctrlKey || (e.metaKey && getOSType() === OSType.OSX)) {
+                if ((e.ctrlKey && getOSType() !== OSType.OSX) || (e.metaKey && getOSType() === OSType.OSX)) {
                     // This is save, save our cells
                     this.props.save();
                 }
@@ -480,6 +478,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
+        const runCell = () => {
+            this.props.stateController.updateCellSource(cellId);
+            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
+            this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
+        };
+        const gatherCell = () => {
+            this.props.stateController.gatherCell(this.props.cellVM);
+        };
         const deleteCell = () => {
             this.props.deleteCell(cellId);
             this.props.sendCommand(NativeCommandType.DeleteCell, 'mouse');
@@ -507,21 +513,25 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.changeCellType(cellId, this.getCurrentCode());
             this.props.sendCommand(otherCellTypeCommand, 'mouse');
         };
+        const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
         return (
-            <div className='native-editor-celltoolbar-middle'>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
-                </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
-                </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
-                </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
-                </ImageButton>
+            <div className={toolbarClassName}>
+                <div className='native-editor-celltoolbar-middle'>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')} className='run-cell-button'>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCell} tooltip={getLocString('DataScience.gatherCell', 'Gather the code required to generate this cell into a new notebook')} hidden={gatherDisabled}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')} className='delete-cell-button'>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
+                    </ImageButton>
+                </div>
+                <div className='native-editor-celltoolbar-divider' />
             </div>
         );
     }
@@ -540,11 +550,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return (
             <div className='controls-div'>
                 <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
-                <div className='native-editor-celltoolbar-inner'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={runCellHidden} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
-                    </ImageButton>
-                </div>
             </div>
         );
     }

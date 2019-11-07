@@ -80,7 +80,8 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one.Test_test1.test_A'), true, 'Test File not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one'), true, 'Test File not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'), true, 'Test File not found');
     });
 
     test('Discover Tests (many test files, subdir included)', async () => {
@@ -91,9 +92,12 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         assert.equal(tests.testFiles.length, 3, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 9, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 3, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one.Test_test1.test_A'), true, 'Test File one not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_two.py' && t.nameToRun === 'test_two.Test_test2.test_2A'), true, 'Test File two not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_three.py' && t.nameToRun === 'more_tests.test_three.Test_test3.test_3A'), true, 'Test File three not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one'), true, 'Test File one not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_two.py' && t.nameToRun === 'test_two'), true, 'Test File two not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_three.py' && t.nameToRun === 'more_tests.test_three'), true, 'Test File three not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'), true, 'Test File one not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_2A' && t.testFunction.nameToRun === 'test_two.Test_test2.test_2A'), true, 'Test File two not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_3A' && t.testFunction.nameToRun === 'more_tests.test_three.Test_test3.test_3A'), true, 'Test File three not found');
     });
 
     test('Run single test', async () => {
@@ -102,7 +106,7 @@ suite('Unit Tests - unittest - discovery against actual python process', () => {
         const testManager = factory('unittest', rootWorkspaceUri!, UNITTEST_MULTI_TEST_FILE_PATH);
         const testsDiscovered: Tests = await testManager.discoverTests(CommandSource.ui, true, true);
         const testFile: TestFile | undefined = testsDiscovered.testFiles.find(
-            (value: TestFile) => value.nameToRun.endsWith('_3A')
+            (value: TestFile) => value.nameToRun.endsWith('_three')
         );
         assert.notEqual(testFile, undefined, 'No test file suffixed with _3A in test files.');
         assert.equal(testFile!.suites.length, 1, 'Expected only 1 test suite in test file three.');

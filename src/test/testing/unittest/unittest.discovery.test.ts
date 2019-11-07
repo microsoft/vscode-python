@@ -102,7 +102,8 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 3, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one.Test_test1.test_A'), true, 'Test File not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py' && t.nameToRun === 'test_one'), true, 'Test File not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_one.Test_test1.test_A'), true, 'Test File not found');
     });
 
     test('Discover Tests', async () => {
@@ -125,8 +126,10 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 9, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 3, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_one.py' && t.nameToRun === 'test_unittest_one.Test_test1.test_A'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_two.py' && t.nameToRun === 'test_unittest_two.Test_test2.test_A2'), true, 'Test File not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_one.py' && t.nameToRun === 'test_unittest_one'), true, 'Test File not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_two.py' && t.nameToRun === 'test_unittest_two'), true, 'Test File not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'test_unittest_one.Test_test1.test_A'), true, 'Test File not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_A2' && t.testFunction.nameToRun === 'test_unittest_two.Test_test2.test_A2'), true, 'Test File not found');
     });
 
     test('Discover Tests (pattern = *_test_*.py)', async () => {
@@ -142,7 +145,8 @@ suite('Unit Tests - unittest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'unittest_three_test.py' && t.nameToRun === 'unittest_three_test.Test_test3.test_A'), true, 'Test File not found');
+        assert.equal(tests.testFiles.some(t => t.name === 'unittest_three_test.py' && t.nameToRun === 'unittest_three_test'), true, 'Test File not found');
+        assert.equal(tests.testFunctions.some(t => t.testFunction.name === 'test_A' && t.testFunction.nameToRun === 'unittest_three_test.Test_test3.test_A'), true, 'Test File not found');
     });
 
     test('Setting cwd should return tests', async () => {

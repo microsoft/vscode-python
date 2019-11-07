@@ -1526,7 +1526,7 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
+                    "description": "When a Notebook Editor or Interactive Window session is started, create the kernel on the specified Jupyter server. Select 'local' to create a new Jupyter server on this local machine.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
@@ -1695,8 +1695,14 @@
                 },
                 "python.dataScience.enableGather": {
                     "type": "boolean",
+                    "default": true,
+                    "description": "Enable code gather for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
+                    "scope": "resource"
+                },
+                "python.dataScience.gatherToScript": {
+                    "type": "boolean",
                     "default": false,
-                    "description": "Enable code gathering for single cells in the interactive window (experimental).",
+                    "description": "Gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
@@ -2679,8 +2685,9 @@
     },
     "dependencies": {
         "@blueprintjs/select": "3.10.0",
+        "@jupyterlab/coreutils": "^3.1.0",
         "@jupyterlab/services": "^3.2.1",
-        "@msrvida/python-program-analysis": "^0.2.6",
+        "@msrvida/python-program-analysis": "^0.4.1",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
@@ -2761,6 +2768,7 @@
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
         "@nteract/transform-plotly": "^5.0.0",
+        "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
@@ -2897,7 +2905,7 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.6.4",
+        "typescript": "^3.7.2",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",

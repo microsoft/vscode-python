@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './nativeEditor.less';
-
 import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { OSType } from '../../client/common/utils/platform';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CellState } from '../../client/datascience/types';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
@@ -91,6 +90,14 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
+        const currentCell = this.state.cellVMs.find(cellVM => {
+            if (cellVM.focused || cellVM.selected) {
+                return true;
+            }
+
+            return false;
+        });
+
         const addCell = () => {
             this.props.addCell();
             this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
@@ -111,6 +118,27 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         const variableExplorerTooltip = this.props.variablesVisible ?
             getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
             getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+
+        const runAbove = () => {
+            if (currentCell) {
+                this.stateController.runAbove(currentCell.cell.id);
+                this.stateController.sendCommand(NativeCommandType.RunAbove, 'mouse');
+            }
+        };
+        const runBelow = () => {
+            if (currentCell) {
+                this.stateController.runBelow(currentCell.cell.id);
+                this.stateController.sendCommand(NativeCommandType.RunBelow, 'mouse');
+            }
+        };
+
+        let canRunAbove;
+        let canRunBelow;
+
+        if (currentCell) {
+            canRunAbove = this.stateController.canRunAbove(currentCell.cell.id);
+            canRunBelow = currentCell.cell.state === CellState.finished || currentCell.cell.state === CellState.error;
+        }
 
         return (
             <div id='toolbar-panel'>
@@ -199,7 +227,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             // tslint:disable-next-line: no-suspicious-comment
             // TODO: How to have this work for when the keyboard shortcuts are changed?
             case 's': {
-                if (event.ctrlKey || (event.metaKey && getOSType() === OSType.OSX)) {
+                if ((event.ctrlKey && getOSType() !== OSType.OSX) || (event.metaKey && getOSType() === OSType.OSX)) {
                     // This is save, save our cells
                     this.props.save();
                     this.props.sendCommand(NativeCommandType.Save, 'keyboard');

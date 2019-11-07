@@ -98,6 +98,7 @@ export interface INotebook extends IAsyncDisposable {
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
+    addLogger(logger: INotebookExecutionLogger): void;
 }
 
 export interface INotebookServerOptions {
@@ -106,6 +107,7 @@ export interface INotebookServerOptions {
     usingDarkTheme?: boolean;
     useDefaultConfig?: boolean;
     workingDir?: string;
+    interpreterPath?: string;
     purpose: string;
 }
 
@@ -118,7 +120,9 @@ export interface INotebookExecutionLogger {
 export const IGatherExecution = Symbol('IGatherExecution');
 export interface IGatherExecution {
     enabled: boolean;
+    logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
+    resetLog(): void;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -186,7 +190,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(file: string): Promise<string>;
+    importFromFile(contentsFile: string, originalFile?: string): Promise<string>; // originalFile is the base file if file is a temp file / location
     importCellsFromFile(file: string): Promise<ICell[]>;
     importCells(json: string): Promise<ICell[]>;
 }
@@ -241,7 +245,7 @@ export interface INotebookEditorProvider {
     readonly editors: INotebookEditor[];
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
-    createNew(): Promise<INotebookEditor>;
+    createNew(contents?: string): Promise<INotebookEditor>;
     getNotebookOptions(): Promise<INotebookServerOptions>;
 }
 

@@ -8,6 +8,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
@@ -34,6 +35,7 @@ export interface ICellViewModel {
     selected: boolean;
     focused: boolean;
     cursorPos: CursorPos;
+    hasBeenRun: boolean;
 }
 
 export type IMainState = {
@@ -164,7 +166,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         inputBlockCollapseNeeded: false,
         selected: false,
         focused: false,
-        cursorPos: CursorPos.Current
+        cursorPos: CursorPos.Current,
+        hasBeenRun: false
     };
 }
 
@@ -207,7 +210,8 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockCollapseNeeded: (inputLinesCount > 1),
         selected: false,
         focused: false,
-        cursorPos: CursorPos.Current
+        cursorPos: CursorPos.Current,
+        hasBeenRun: false
     };
 }
 

@@ -277,6 +277,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateCell]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
+    public [InteractiveWindowMessages.NotebookExecutionActivated]: Uri;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;
@@ -330,7 +331,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
-    public [InteractiveWindowMessages.GatherCode]: ICell;
+    public [InteractiveWindowMessages.GatherCodeRequest]: ICell;
     public [InteractiveWindowMessages.LoadAllCells]: ILoadAllCells;
     public [InteractiveWindowMessages.LoadAllCellsComplete]: ILoadAllCells;
     public [InteractiveWindowMessages.ScrollToCell]: IScrollToCell;

@@ -202,7 +202,12 @@ export enum Telemetry {
     NotebookRunCount = 'DATASCIENCE.NATIVE.NOTEBOOK_RUN_COUNT',
     NotebookOpenCount = 'DATASCIENCE.NATIVE.NOTEBOOK_OPEN_COUNT',
     NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
-    SessionIdleTimeout = 'DATASCIENCE.JUPYTER_IDLE_TIMEOUT'
+    SessionIdleTimeout = 'DATASCIENCE.JUPYTER_IDLE_TIMEOUT',
+    NotebookExecutionActivated = 'DATASCIENCE.NOTEBOOK.EXECUTION.ACTIVATED',
+    JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
+    JupyterCommandSearch = 'DATASCIENCE.JUPYTER_COMMAND_SEARCH',
+    UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
+    UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER'
 }
 
 export enum NativeKeyboardCommandTelemetry {

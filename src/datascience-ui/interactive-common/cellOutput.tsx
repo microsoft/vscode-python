@@ -11,7 +11,6 @@ import { concatMultilineStringInput, concatMultilineStringOutput } from '../../c
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
-import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -24,6 +23,7 @@ const ansiToHtml = require('ansi-to-html');
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { noop } from '../../client/common/utils/misc';
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;
@@ -251,6 +251,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
             switch (mimeType) {
                 case 'text/plain':
+                case 'text/html':
                     return {
                         mimeType,
                         data: concatMultilineStringOutput(data as nbformat.MultilineString),
@@ -345,59 +346,64 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     // tslint:disable-next-line: max-func-body-length
     private renderOutputs(outputs: nbformat.IOutput[]): JSX.Element[] {
-        return outputs.map(this.renderOutput);
+        return [this.renderOutput(outputs)];
     }
 
-    private renderOutput = (output: nbformat.IOutput, index: number): JSX.Element => {
-        const transformed = this.transformOutput(output);
-        let mimetype = transformed.mimeType;
+    private renderOutput = (outputs: nbformat.IOutput[]): JSX.Element => {
+        const buffer: JSX.Element[] = [];
+        const transformedList = outputs.map(this.transformOutput.bind(this));
 
-        // If that worked, use the transform
-        if (mimetype) {
-            // Get the matching React.Component for that mimetype
-            const Transform = transforms[mimetype];
+        transformedList.forEach((transformed, index) => {
+            let mimetype = transformed.mimeType;
 
-            // Create a default set of properties
-            const style: React.CSSProperties = {
-            };
+            // If that worked, use the transform
+            if (mimetype) {
+                // Get the matching React.Component for that mimetype
+                const Transform = transforms[mimetype];
 
-            // Create a scrollbar style if necessary
-            if (transformed.renderWithScrollbars && this.props.maxTextSize) {
-                style.overflowX = 'auto';
-                style.overflowY = 'auto';
-                style.maxHeight = `${this.props.maxTextSize}px`;
-            }
+                let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
+                className = transformed.isError ? `${className} cell-output-error` : className;
 
-            let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
-            className = transformed.isError ? `${className} cell-output-error` : className;
-
-            // If we are not theming plots then wrap them in a white span
-            if (transformed.outputSpanClassName) {
-                return (
-                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
-                        <span className={transformed.outputSpanClassName}>
+                // If we are not theming plots then wrap them in a white span
+                if (transformed.outputSpanClassName) {
+                    buffer.push(
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                            <span className={transformed.outputSpanClassName}>
+                                {transformed.extraButton}
+                                <Transform data={transformed.data} />
+                            </span>
+                        </div>
+                    );
+                } else {
+                    buffer.push(
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
                             {transformed.extraButton}
                             <Transform data={transformed.data} />
-                        </span>
-                    </div>
-                );
+                        </div>
+                    );
+                }
             } else {
-                return (
-                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
-                        {transformed.extraButton}
-                        <Transform data={transformed.data} />
-                    </div>
-                );
+                if (transformed.data) {
+                    const keys = Object.keys(transformed.data);
+                    mimetype = keys.length > 0 ? keys[0] : 'unknown';
+                } else {
+                    mimetype = 'unknown';
+                }
+                const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
+                buffer.push(<div key={index}>{str}</div>);
             }
+        });
+
+        // Create a default set of properties
+        const style: React.CSSProperties = {
+        };
+
+        // Create a scrollbar style if necessary
+        if (transformedList.some(transformed => transformed.renderWithScrollbars) && this.props.maxTextSize) {
+            style.overflowY = 'auto';
+            style.maxHeight = `${this.props.maxTextSize}px`;
         }
 
-        if (output.data) {
-            const keys = Object.keys(output.data);
-            mimetype = keys.length > 0 ? keys[0] : 'unknown';
-        } else {
-            mimetype = 'unknown';
-        }
-        const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
-        return <div key={index}>{str}</div>;
+        return <div key={0} style={style}>{buffer}</div>;
     }
 }

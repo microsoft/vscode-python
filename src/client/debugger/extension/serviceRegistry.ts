@@ -8,6 +8,7 @@ import { IServiceManager } from '../../ioc/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebugAdapterActivator } from './adapter/activator';
 import { DebugAdapterDescriptorFactory } from './adapter/factory';
+import { DebugSessionLoggingFactory } from './adapter/logging';
 import { DebuggerBanner } from './banner';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
@@ -26,7 +27,7 @@ import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from 
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
-import { DebugConfigurationType, IDebugAdapterDescriptorFactory, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner } from './types';
+import { DebugConfigurationType, IDebugAdapterDescriptorFactory, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner, IDebugSessionLoggingFactory } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonCompletionProvider);
@@ -47,4 +48,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugAdapterActivator);
     serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
+    serviceManager.addSingleton<IDebugSessionLoggingFactory>(IDebugSessionLoggingFactory, DebugSessionLoggingFactory);
 }
