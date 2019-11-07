@@ -51,6 +51,7 @@ import {
     INotebookServerLaunchInfo,
     InterruptResult
 } from '../../client/datascience/types';
+import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';

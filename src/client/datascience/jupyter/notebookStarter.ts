@@ -73,11 +73,11 @@ export class NotebookStarter implements Disposable {
 
             // Then use this to launch our notebook process.
             const stopWatch = new StopWatch();
-            const [launchResult, tempDir] = await Promise.all([notebookCommand.command!.execObservable(args, { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }), tempDirPromise]);
+            const [launchResult, tempDir] = await Promise.all([notebookCommand!.command!.execObservable(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }), tempDirPromise]);
 
             // Watch for premature exits
             if (launchResult.proc) {
-                launchResult.proc.on('exit', c => (exitCode = c));
+                launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
