@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonDaemonExecutionService, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -54,9 +54,6 @@ export class JupyterCommandFinderImpl {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
     private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
-    private daemonExecService?: Promise<IPythonDaemonExecutionService>;
-    private currentInterpreter?: PythonInterpreter;
-    private currentInterpreterPromise?: Promise<PythonInterpreter | undefined>;
     constructor(
         @unmanaged() protected readonly interpreterService: IInterpreterService,
         @unmanaged() private readonly executionFactory: IPythonExecutionFactory,
@@ -81,13 +78,6 @@ export class JupyterCommandFinderImpl {
             });
             disposableRegistry.push(disposable);
         }
-        this.currentInterpreterPromise = this.interpreterService.getActiveInterpreter();
-        this.currentInterpreterPromise.then(interpreter => {
-            if (!interpreter){
-                return;
-            }
-            this.daemonExecService = this.executionFactory.createDaemon({pythonPath: interpreter.path, daemonModule: 'datascience.jupyter_daemon'});
-        }).ignoreErrors();
     }
     /**
      * For jupyter,
@@ -211,19 +201,6 @@ export class JupyterCommandFinderImpl {
         }
         return true;
     }
-    private async createPythonService(interpreter: PythonInterpreter): Promise<IPythonExecutionService> {
-        if (this.currentInterpreter && this.currentInterpreter.path === interpreter.path && this.daemonExecService){
-            return this.daemonExecService;
-        }
-        if (!this.currentInterpreter && this.currentInterpreterPromise && this.daemonExecService){
-            const current = await this.currentInterpreterPromise;
-            if (current && current.path === interpreter.path){
-                return this.daemonExecService;
-            }
-        }
-        return this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
-    }
-
     // tslint:disable:cyclomatic-complexity max-func-body-length
     private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
@@ -234,12 +211,6 @@ export class JupyterCommandFinderImpl {
         // First we look in the current interpreter
         const current = await this.interpreterService.getActiveInterpreter();
         const stopWatch = new StopWatch();
-        // Create a daemon just for the current interpreter.
-        // If user changes the current interpreter, then this variable will be cleared.
-        if (current && !this.daemonExecService){
-            this.currentInterpreter = current;
-            this.daemonExecService = this.executionFactory.createDaemon({pythonPath: current.path, daemonModule: 'datascience.jupyter_daemon'});
-        }
 
         if (isCommandFinderCancelled(command, cancelToken)) {
             return cancelledResult;
@@ -382,7 +353,7 @@ export class JupyterCommandFinderImpl {
         };
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: false, encoding: 'utf8', token: cancelToken };
-            const pythonService = await this.createPythonService(interpreter);
+            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
 
             // For commands not 'ipykernel' first try them as jupyter commands
             if (moduleName !== JupyterCommands.KernelCreateCommand) {

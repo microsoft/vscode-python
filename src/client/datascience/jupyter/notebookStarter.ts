@@ -11,7 +11,7 @@ import { CancellationToken, Disposable } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
+import { IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -221,28 +221,15 @@ export class NotebookStarter implements Disposable {
             }
         };
     }
-    private launcher: IPythonExecutionService | undefined;
     private getJupyterServerInfo = async (cancelToken?: CancellationToken): Promise<JupyterServerInfo[] | undefined> => {
-        if (!this.launcher){
-            // This would have already been found by now.
-            const [jupyterCommandPromise, bestInterpreter] = await Promise.all([
-                this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand),
-                this.jupyterExecution.getUsableJupyterPython(cancelToken)
-            ]);
-
-            // let launcher: IPythonExecutionService | undefined;
-            if (jupyterCommandPromise.command && jupyterCommandPromise.command.daemon) {
-                this.launcher = await jupyterCommandPromise.command.daemon;
-            } else if (bestInterpreter) {
-                this.launcher = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter: bestInterpreter, allowEnvironmentFetchExceptions: true });
-            }
-        }
+        const bestInterpreter = await this.jupyterExecution.getUsableJupyterPython(cancelToken);
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
-        if (this.launcher) {
+        if (bestInterpreter) {
             const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
+            const launcher = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter: bestInterpreter, allowEnvironmentFetchExceptions: true });
             const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
-            const serverInfoString = await this.launcher.exec([file], newOptions);
+            const serverInfoString = await launcher.exec([file], newOptions);
 
             let serverInfos: JupyterServerInfo[];
             try {

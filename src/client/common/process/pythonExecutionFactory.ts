@@ -55,8 +55,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Ensure its activated (always).
         const activatedProc = await this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
 
-        // const envPythonPath =
-        //     'C:\\Development\\vscode\\pythonVSCode\\pythonFiles;C:\\Development\\vscode\\pythonVSCode\\pythonFiles\\lib\\python';
         const envPythonPath =
             `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
         let envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined , false);
@@ -68,20 +66,21 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             envVars.PYTHONPATH = env.PYTHONPATH;
         }
         envVars.PYTHONUNBUFFERED = '1';
+        // tslint:disable-next-line: no-any
         env = envVars as any;
-        // const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', '--log-file=/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/h.log'], { env });
-        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`, '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'daemon.log')}`], { env });
+        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
         const connection = createMessageConnection(new StreamMessageReader(daemonProc.proc.stdout), new StreamMessageWriter(daemonProc.proc.stdin));
         connection.listen();
+        let stdError = '';
+        let procEndEx?: Error;
         daemonProc.proc.stderr.on('data', (d: string | Buffer) => {
-            console.error(d.toString());
+            d = typeof d === 'string' ? d : d.toString('utf8');
+            stdError += d;
         });
-        daemonProc.proc.on('error', ex => {
-            console.error(ex);
-        });
+        daemonProc.proc.on('error', ex => procEndEx = ex);
         const data = Date.now().toString();
         type Param = { data: string };
         type Return = { pong: string };
@@ -93,7 +92,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             }
             return new PythonDaemonExecutionService(activatedProc, pythonPath, daemonProc.proc, connection);
         } catch (ex) {
-            console.error(ex);
             throw ex;
         }
     }
@@ -101,10 +99,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
-        const pythonPath = options.interpreter ? options.interpreter.path : options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         if (!hasEnvVars) {
-            return this.create({ resource: options.resource, pythonPath });
+            return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
+        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));

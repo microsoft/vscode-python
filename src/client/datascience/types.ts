@@ -19,7 +19,7 @@ import {
 } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
-import { ExecutionResult, ObservableExecutionResult, SpawnOptions, IPythonDaemonExecutionService } from '../common/process/types';
+import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
@@ -394,8 +394,6 @@ export interface IStatusProvider {
 }
 
 export interface IJupyterCommand {
-    readonly daemon?: Promise<IPythonDaemonExecutionService>;
-    readonly daemon2?: Promise<IPythonDaemonExecutionService>;
     interpreter(): Promise<PythonInterpreter | undefined>;
     execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
