@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
+import { lt } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -25,6 +26,9 @@ import {
     IPythonExecutionService
 } from './types';
 import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
+
+// Minimum version number of conda required to be able to use 'conda run'
+export const CONDA_RUN_VERSION = '4.6.0';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -74,6 +78,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
+        const condaVersion = await this.condaService.getCondaVersion();
+        if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
+            return;
+        }
+
         const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
         if (condaEnvironment) {
             const condaFile = await this.condaService.getCondaFile();
