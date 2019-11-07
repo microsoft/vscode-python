@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CssMessages } from '../../../../client/datascience/messages';
 import {
     IOpenLinkAction,
     ISendCommandAction,
@@ -93,7 +94,8 @@ export namespace Transfer {
 
     export function started<T>(arg: CommonReducerArg<T>): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Started));
+        arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
+        arg.queueAction(createPostableAction(CssMessages.GetMonacoThemeRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
         return arg.prevState;
     }
-
 }
