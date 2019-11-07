@@ -63,6 +63,12 @@ steps:
           verbose: true
           customCommand: "install -g npm@$(NpmVersion)"
 
+    # Cache the node modules directory as this shouldn't change that often
+    - uses: actions/cache@v1
+      with:
+      path: node_modules
+      key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+
     # In the past installs of npm, node-pre-gyp 0.12.0 was installed.
     # However in the latest versions, 0.11.0 is getting isntalled.
     # - bash: |
