@@ -19,9 +19,6 @@ parameters:
   sqlite: 'false'
   installVSCEorNPX: 'true'
 
-variables:
-  npm_config_cache: $(Pipeline.Workspace)/.npm
-
 steps:
     - bash: |
           printenv
@@ -80,9 +77,9 @@ steps:
     # https://docs.microsoft.com/en-us/azure/devops/pipelines/caching/?view=azure-devops#nodejsnpm
     - task: CacheBeta@0
       inputs:
-      key: npm | $(Agent.OS) | package-lock.json
-      path: $(npm_config_cache)
-      displayName: Cache npm
+          key: npm | $(Agent.OS) | package-lock.json
+          path: $(npm_config_cache)
+          displayName: Cache npm
 
     - task: Npm@1
       displayName: "npm ci"
