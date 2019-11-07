@@ -19,6 +19,9 @@ parameters:
   sqlite: 'false'
   installVSCEorNPX: 'true'
 
+variables:
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+
 steps:
     - bash: |
           printenv
@@ -63,12 +66,6 @@ steps:
           verbose: true
           customCommand: "install -g npm@$(NpmVersion)"
 
-    # Cache the node modules directory as this shouldn't change that often
-    - uses: actions/cache@v1
-      with:
-      path: node_modules
-      key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-
     # In the past installs of npm, node-pre-gyp 0.12.0 was installed.
     # However in the latest versions, 0.11.0 is getting isntalled.
     # - bash: |
@@ -79,15 +76,21 @@ steps:
     #   displayName: 'Uninstall canvas and install build from source (only for Linux)'
     #   condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'))
 
-    # Using npm install because we're caching the node_modules directory. If we
-    # cache node_modules, npm ci would delete it, so we have to use install here
+    # See the help here on how to cache npm
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/caching/?view=azure-devops#nodejsnpm
+    - task: CacheBeta@0
+      inputs:
+      key: npm | $(Agent.OS) | package-lock.json
+      path: $(npm_config_cache)
+      displayName: Cache npm
+
     - task: Npm@1
-      displayName: "npm install"
+      displayName: "npm ci"
       inputs:
           workingDir: ${{ parameters.workingDirectory }}
           command: custom
           verbose: true
-          customCommand: install
+          customCommand: ci
 
     # On Mac, the command `node` doesn't always point to the current node version.
     # Debugger tests use the variable process.env.NODE_PATH
