@@ -16,13 +16,7 @@ import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import {
-    ExecutionFactoryCreationOptions,
-    IBufferDecoder,
-    IProcessLogger,
-    IProcessServiceFactory,
-    IPythonExecutionService
-} from '../../../client/common/process/types';
+import { ExecutionFactoryCreationOptions, IBufferDecoder, IProcessLogger, IProcessServiceFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
@@ -274,6 +268,29 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(service).instanceOf(PythonExecutionService);
                 assert.equal(createInvoked, false);
+            });
+
+            test('Ensure `createCondaExecutionService` creates a CondaExecutionService instance if there is a conda environment', async () => {
+                const pythonPath = 'path/to/python';
+                when(condaService.getCondaEnvironment(pythonPath)).thenResolve({ name: 'foo', path: 'path/to/foo/env' });
+                when(condaService.getCondaFile()).thenResolve('conda');
+
+                const result = await factory.createCondaExecutionService(pythonPath, processService, resource);
+
+                expect(result).instanceOf(CondaExecutionService);
+                verify(condaService.getCondaEnvironment(pythonPath)).once();
+                verify(condaService.getCondaFile()).once();
+            });
+
+            test('Ensure `createCondaExecutionService` returns undefined if there is no conda environment', async () => {
+                const pythonPath = 'path/to/python';
+                when(condaService.getCondaEnvironment(pythonPath)).thenResolve(undefined);
+
+                const result = await factory.createCondaExecutionService(pythonPath, processService);
+
+                expect(result).to.be.equal(undefined, 'createCondaExecutionService should return undefined if not in a conda environment');
+                verify(condaService.getCondaEnvironment(pythonPath)).once();
+                verify(condaService.getCondaFile()).never();
             });
         });
     });
