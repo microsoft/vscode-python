@@ -13,6 +13,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { traceError } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
+import { sleep } from '../utils/async';
 import { ProcessService } from './proc';
 import { PythonExecutionService } from './pythonProcess';
 import {
@@ -66,7 +67,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             env.PYTHONPATH = envPythonPath;
         }
         env.PYTHONUNBUFFERED = '1';
-        const daemonProc = activatedProc.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`], { env });
+        const daemonProc = activatedProc!.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
@@ -84,7 +85,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         // Check whether the daemon has started correctly, by sending a ping.
         const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
         try {
-            const result = await connection.sendRequest(request, { data: 'hello' });
+            // If we don't get a reply to the ping in 5 minutes assume it will never work. Bomb out.
+            // At this point there should be some information logged in stderr of the daemon process.
+            const timeoutedError = sleep(5_000).then(() => Promise.reject(new Error('Timeout waiting for daemon to start')));
+            const result = await Promise.race([timeoutedError, connection.sendRequest(request, { data: 'hello' })]);
             if (result.pong !== 'hello') {
                 throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
             }
@@ -92,7 +96,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         } catch (ex) {
             traceError('Failed to start the Daemon, StdErr: ', stdError);
             traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
-            traceError('Failed to start the Daemon, Ex', ex);
+            traceError('Failed  to start the Daemon, Ex', ex);
             throw ex;
         }
     }

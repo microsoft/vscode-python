@@ -24,6 +24,7 @@ use(chaiPromised);
 
 // tslint:disable-next-line: max-func-body-length
 suite('Daemon', () => {
+    // Set PYTHONPATH to pickup our module and the jsonrpc modules.
     const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
     const env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
     let pythonProc: ChildProcess;
@@ -32,6 +33,7 @@ suite('Daemon', () => {
     let pythonDaemon: PythonDaemonExecutionService;
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
+
     suiteSetup(() => {
         // When running locally.
         if (PYTHON_PATH.toLowerCase() === 'python') {
@@ -63,18 +65,21 @@ suite('Daemon', () => {
         await fs.writeFile(tmpFile.filePath, source, { encoding: 'utf8' });
         return tmpFile.filePath;
     }
+
     test('Ping', async () => {
         const data = 'Hello World';
         const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
         const result = await connection.sendRequest(request, { data });
         assert.equal(result.pong, data);
     });
+
     test('Ping with Unicode', async () => {
         const data = 'Hello World-₹-😄';
         const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
         const result = await connection.sendRequest(request, { data });
         assert.equal(result.pong, data);
     });
+
     test('Interpreter Information', async () => {
         type InterpreterInfo = { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
         const json: InterpreterInfo = JSON.parse(
@@ -95,17 +100,21 @@ suite('Daemon', () => {
 
         assert.deepEqual(version, expectedVersion);
     });
+
     test('Executable path', async () => {
         const execPath = await pythonDaemon.getExecutablePath();
 
         assert.deepEqual(execPath, fullyQualifiedPythonPath);
     });
+
     async function testModuleInstalled(moduleName: string, expectedToBeInstalled: boolean) {
         await assert.eventually.equal(pythonDaemon.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
+
     test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
     test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
     test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+
     test('Execute a file and capture stdout (with unicode)', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stdout.write("HELLO WORLD-₹-😄")'].join(os.EOL));
         const output = await pythonDaemon.exec([fileToExecute], {});
@@ -113,6 +122,7 @@ suite('Daemon', () => {
         assert.isUndefined(output.stderr);
         assert.deepEqual(output.stdout, 'HELLO WORLD-₹-😄');
     });
+
     test('Execute a file and capture stderr (with unicode)', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stderr.write("HELLO WORLD-₹-😄")'].join(os.EOL));
         const output = await pythonDaemon.exec([fileToExecute], {});
@@ -120,6 +130,7 @@ suite('Daemon', () => {
         assert.isUndefined(output.stdout);
         assert.deepEqual(output.stderr, 'HELLO WORLD-₹-😄');
     });
+
     test('Execute a file with arguments', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stdout.write(sys.argv[1])'].join(os.EOL));
         const output = await pythonDaemon.exec([fileToExecute, 'HELLO WORLD'], {});
@@ -127,6 +138,7 @@ suite('Daemon', () => {
         assert.isUndefined(output.stderr);
         assert.equal(output.stdout, 'HELLO WORLD');
     });
+
     test('Execute a file with custom cwd', async () => {
         const fileToExecute = await createPythonFile(['import os', 'print(os.getcwd())'].join(os.EOL));
         const output1 = await pythonDaemon.exec([fileToExecute, 'HELLO WORLD'], { cwd: EXTENSION_ROOT_DIR });
@@ -139,6 +151,7 @@ suite('Daemon', () => {
         assert.isUndefined(output2.stderr);
         assert.equal(output2.stdout.trim(), __dirname);
     });
+
     test('Execute a file and capture stdout & stderr', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stdout.write("HELLO WORLD-₹-😄")', 'sys.stderr.write("FOO BAR-₹-😄")'].join(os.EOL));
         const output = await pythonDaemon.exec([fileToExecute, 'HELLO WORLD'], {});
@@ -146,11 +159,13 @@ suite('Daemon', () => {
         assert.equal(output.stdout, 'HELLO WORLD-₹-😄');
         assert.equal(output.stderr, 'FOO BAR-₹-😄');
     });
+
     test('Execute a file and handle error', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'raise Exception("KABOOM")'].join(os.EOL));
         const promise = pythonDaemon.exec([fileToExecute], {});
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
     });
+
     test('Execute a file with custom env variable', async () => {
         const fileToExecute = await createPythonFile(['import os', 'print(os.getenv("VSC_HELLO_CUSTOM", "NONE"))'].join(os.EOL));
 
@@ -163,6 +178,7 @@ suite('Daemon', () => {
         const output2 = await pythonDaemon.exec([fileToExecute], { env: { VSC_HELLO_CUSTOM: 'wow' } });
         assert.equal(output2.stdout.trim(), 'wow');
     });
+
     test('Execute simple module', async () => {
         const pipVersion = spawnSync(fullyQualifiedPythonPath, ['-c', 'import pip;print(pip.__version__)'])
             .stdout.toString()
@@ -173,6 +189,7 @@ suite('Daemon', () => {
         assert.isUndefined(output.stderr);
         assert.equal(output.stdout.trim(), pipVersion);
     });
+
     test('Execute a file and stream output', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'import time', 'for i in range(5):', '    print(i)', '    time.sleep(1)'].join(os.EOL));
         const output = pythonDaemon.execObservable([fileToExecute], {});
@@ -182,4 +199,20 @@ suite('Daemon', () => {
         });
         assert.deepEqual(outputsReceived.filter(item => item.length > 0), ['0', '1', '2', '3', '4']);
     }).timeout(10_000);
+
+    test('Execute a file and throw exception if stderr is not empty', async () => {
+        const fileToExecute = await createPythonFile(['import sys', 'sys.stderr.write("KABOOM")'].join(os.EOL));
+        const promise = pythonDaemon.exec([fileToExecute], { throwOnStdErr: true });
+        await expect(promise).to.eventually.be.rejectedWith('KABOOM');
+    });
+
+    test('Execute a file and throw exception if stderr is not empty when streaming output', async () => {
+        const fileToExecute = await createPythonFile(['import sys', 'import time', 'time.sleep(1)', 'sys.stderr.write("KABOOM")'].join(os.EOL));
+        const output = pythonDaemon.execObservable([fileToExecute], {});
+        const outputsReceived: string[] = [];
+        const promise = new Promise((resolve, reject) => {
+            output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
+        });
+        await expect(promise).to.eventually.be.rejectedWith('KABOOM');
+    }).timeout(3_000);
 });

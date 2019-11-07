@@ -4,6 +4,7 @@
 'use strict';
 
 import { ChildProcess } from 'child_process';
+import * as os from 'os';
 import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
@@ -20,7 +21,8 @@ import {
     ObservableExecutionResult,
     Output,
     PythonVersionInfo,
-    SpawnOptions
+    SpawnOptions,
+    StdErrError
 } from './types';
 
 type ErrorResponse = { error?: string };
@@ -137,19 +139,38 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         return this.areOptionsSupported(options);
     }
     protected areOptionsSupported(options: SpawnOptions): boolean {
-        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'throwOnStdErr', 'mergeStdOutErr'];
+        const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'mergeStdOutErr'];
         // tslint:disable-next-line: no-any
         return Object.keys(options).every(item => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
+    }
+    /**
+     * Process the response.
+     *
+     * @private
+     * @param {{ error?: string | undefined; stdout: string; stderr?: string }} response
+     * @param {SpawnOptions} options
+     * @memberof PythonDaemonExecutionService
+     */
+    private processResponse(response: { error?: string | undefined; stdout: string; stderr?: string }, options: SpawnOptions) {
+        if (response.error) {
+            traceError('Failed to execute file using the daemon', response.error);
+            throw new Error(`Failed to execute using the daemon, ${response.error}`);
+        }
+        // Throw an error if configured to do so if there's any output in stderr.
+        if (response.stderr && options.throwOnStdErr) {
+            throw new StdErrError(response.stderr);
+        }
+        // Merge stdout and stderr into on if configured to do so.
+        if (response.stderr && options.mergeStdOutErr) {
+            response.stdout = `${response.stdout || ''}${os.EOL}${response.stderr}`;
+        }
     }
     private async execFileWithDaemon(fileName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
         // tslint:disable-next-line: no-any
         const request = new RequestType<{ file_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_file');
         const response = await this.connection.sendRequest(request, { file_name: fileName, args, cwd: options.cwd, env: options.env });
-        if (response.error) {
-            traceError('Failed to execute file using the daemon', response.error);
-            throw new Error(`Failed to execute using the daemon, ${response.error}`);
-        }
+        this.processResponse(response, options);
         return response;
     }
     private execFileWithDaemonAsObservable(fileName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
@@ -160,10 +181,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         // tslint:disable-next-line: no-any
         const request = new RequestType<{ module_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_module');
         const response = await this.connection.sendRequest(request, { module_name: moduleName, args, cwd: options.cwd, env: options.env });
-        if (response.error) {
-            traceError('Failed to execute module using the daemon', response.error);
-            throw new Error(`Failed to execute using the daemon, ${response.error}`);
-        }
+        this.processResponse(response, options);
         return response;
     }
     private execModuleWithDaemonAsObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
@@ -186,7 +204,15 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         let stdErr = '';
         this.daemonProc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
-        const subscription = this.outputObservale.subscribe(out => subject.next(out));
+        const subscription = this.outputObservale.subscribe(out => {
+            if (out.source === 'stderr' && options.throwOnStdErr) {
+                subject.error(new StdErrError(out.out));
+            } else if (out.source === 'stderr' && options.mergeStdOutErr) {
+                subject.next({ source: 'stdout', out: out.out });
+            } else {
+                subject.next(out);
+            }
+        });
         start()
             .catch(ex => {
                 const errorMsg = `Failed to run ${'fileName' in moduleOrFile ? moduleOrFile.fileName : moduleOrFile.moduleName} as observable with args ${args.join(' ')}`;

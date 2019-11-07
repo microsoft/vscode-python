@@ -83,9 +83,7 @@ class CustomWriter(object):
         if not encoding:
             encoding = os.environ.get("PYTHONIOENCODING", "utf-8")
         self.encoding = encoding
-        self._wrap_buffer = wrap_buffer
         if wrap_buffer:
-            log.info("wrap")
             self.buffer = CustomWriter(
                 wrap_stream, wrap_buffer=False, on_write=on_write
             )
@@ -118,12 +116,12 @@ def redirect_output(stdout_handler, stderr_handler):
     sys._vsc_out_buffer_ = CustomWriter(sys.stdout, True, stdout_handler)
     sys.stdout_original = sys.stdout
     _stdout_redirector = sys.stdout = IORedirector(
-        sys.stdout, sys._vsc_out_buffer_, wrap_buffer
+        sys.stdout, sys._vsc_out_buffer_, True
     )
 
     sys._vsc_err_buffer_ = CustomWriter(sys.stderr, True, stderr_handler)
     sys.stderr_original = sys.stderr
     _stderr_redirector = sys.stderr = IORedirector(
-        sys.stderr, sys._vsc_err_buffer_, wrap_buffer
+        sys.stderr, sys._vsc_err_buffer_, True
     )
 
