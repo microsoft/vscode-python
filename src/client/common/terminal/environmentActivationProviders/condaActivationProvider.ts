@@ -53,6 +53,8 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
             return;
         }
 
+        const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
+
         // Algorithm differs based on version
         // Old version, just call activate directly.
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
@@ -61,8 +63,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
             // Conda added support for powershell in 4.6.
             if (versionInfo.minor >= CondaRequiredMinorForPowerShell && (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)) {
-                const psCondaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
-                return this.getPowershellCommands(psCondaEnv);
+                return this.getPowershellCommands(condaEnv);
             }
             if (versionInfo.minor >= CondaRequiredMinor) {
                 // New version.
@@ -70,28 +71,26 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
                 if (interpreterPath) {
                     const activatePath = path.join(path.dirname(interpreterPath), 'activate').fileToCommandArgument();
                     const firstActivate = this.platform.isWindows ? activatePath : `source ${activatePath}`;
-                    const condaEnv = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
                     return [firstActivate, `conda activate ${condaEnv.toCommandArgument()}`];
                 }
             }
         }
 
-        const env = envInfo.name.length > 0 ? envInfo.name : envInfo.path;
         switch (targetShell) {
             case TerminalShellType.powershell:
             case TerminalShellType.powershellCore:
-                return this.getPowershellCommands(env);
+                return this.getPowershellCommands(condaEnv);
 
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Do we really special-case fish on Windows?
             case TerminalShellType.fish:
-                return this.getFishCommands(env, await this.condaService.getCondaFile());
+                return this.getFishCommands(condaEnv, await this.condaService.getCondaFile());
 
             default:
                 if (this.platform.isWindows) {
-                    return this.getWindowsCommands(env);
+                    return this.getWindowsCommands(condaEnv);
                 } else {
-                    return this.getUnixCommands(env, await this.condaService.getCondaFile());
+                    return this.getUnixCommands(condaEnv, await this.condaService.getCondaFile());
                 }
         }
     }
