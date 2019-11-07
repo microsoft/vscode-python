@@ -9,11 +9,11 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
-import { IProcessServiceFactory } from '../../../client/common/process/types';
+import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
+import { IProcessService, IPythonExecutionFactory } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../../client/common/types';
 import { noop } from '../../../client/common/utils/misc';
-import { ICondaService } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { DjangoShellCodeExecutionProvider } from '../../../client/terminals/codeExecution/djangoShellCodeExecution';
 import { ReplProvider } from '../../../client/terminals/codeExecution/repl';
@@ -29,7 +29,6 @@ suite('Terminal - Code Execution', () => {
         let platform: TypeMoq.IMock<IPlatformService>;
         let workspaceFolder: TypeMoq.IMock<WorkspaceFolder>;
         let settings: TypeMoq.IMock<IPythonSettings>;
-        let condaService: TypeMoq.IMock<ICondaService>;
         let disposables: Disposable[] = [];
         let executor: ICodeExecutionService;
         let expectedTerminalTitle: string | undefined;
@@ -37,8 +36,7 @@ suite('Terminal - Code Execution', () => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let commandManager: TypeMoq.IMock<ICommandManager>;
         let fileSystem: TypeMoq.IMock<IFileSystem>;
-        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
-        let processServiceFactory: TypeMoq.IMock<IProcessServiceFactory>;
+        let pythonExecutionFactory: TypeMoq.IMock<IPythonExecutionFactory>;
         let isDjangoRepl: boolean;
 
         teardown(() => {
@@ -62,9 +60,7 @@ suite('Terminal - Code Execution', () => {
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             commandManager = TypeMoq.Mock.ofType<ICommandManager>();
             fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-            condaService = TypeMoq.Mock.ofType<ICondaService>();
-            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+            pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
             settings = TypeMoq.Mock.ofType<IPythonSettings>();
             settings.setup(s => s.terminal).returns(() => terminalSettings.object);
             configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
@@ -76,24 +72,13 @@ suite('Terminal - Code Execution', () => {
                         configService.object,
                         workspace.object,
                         disposables,
-                        condaService.object,
                         platform.object,
-                        serviceContainer.object,
-                        processServiceFactory.object
+                        pythonExecutionFactory.object
                     );
                     break;
                 }
                 case 'Repl Execution': {
-                    executor = new ReplProvider(
-                        terminalFactory.object,
-                        configService.object,
-                        workspace.object,
-                        condaService.object,
-                        serviceContainer.object,
-                        processServiceFactory.object,
-                        disposables,
-                        platform.object
-                    );
+                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, pythonExecutionFactory.object, disposables, platform.object);
                     expectedTerminalTitle = 'REPL';
                     break;
                 }
@@ -107,12 +92,10 @@ suite('Terminal - Code Execution', () => {
                         configService.object,
                         workspace.object,
                         documentManager.object,
-                        condaService.object,
                         platform.object,
                         commandManager.object,
                         fileSystem.object,
-                        serviceContainer.object,
-                        processServiceFactory.object,
+                        pythonExecutionFactory.object,
                         disposables
                     );
                     expectedTerminalTitle = 'Django Shell';
@@ -246,13 +229,13 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => false);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
+                pythonExecutionFactory.setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
 
                 await executor.executeFile(file);
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
                 const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
                 terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
-                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
-                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.never());
+                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath), TypeMoq.Times.once());
             }
 
             test('Ensure python file execution script is sent to terminal on windows', async () => {
@@ -280,19 +263,21 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
                 terminalSettings.setup(t => t.executeInFileDir).returns(() => false);
                 workspace.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
-                condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
-                condaService.setup(c => c.getCondaEnvironment(pythonPath)).returns(() => Promise.resolve(condaEnv));
+
+                const condaFile = 'conda';
+                const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+                const processService = TypeMoq.Mock.ofType<IProcessService>();
+                const condaExecutionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, condaEnv);
+                pythonExecutionFactory.setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(condaExecutionService));
 
                 await executor.executeFile(file);
 
                 const hasEnvName = condaEnv.name !== '';
-                const expectedPythonPath = 'conda';
                 const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
                 const expectedArgs = [...condaArgs, ...terminalArgs, file.fsPath.fileToCommandArgument()];
 
-                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
-                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.once());
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(condaFile), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
             }
 
             test('Ensure conda args with conda env name are sent to terminal if there is a conda environment with a name', async () => {
@@ -306,6 +291,7 @@ suite('Terminal - Code Execution', () => {
             });
 
             async function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[]) {
+                pythonExecutionFactory.setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
                 platform.setup(p => p.isWindows).returns(() => isWindows);
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
@@ -315,8 +301,7 @@ suite('Terminal - Code Execution', () => {
                 expect(replCommandArgs).not.to.be.an('undefined', 'Command args is undefined');
                 expect(replCommandArgs.command).to.be.equal(expectedPythonPath, 'Incorrect python path');
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect arguments');
-                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
-                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.never());
+                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath), TypeMoq.Times.once());
             }
 
             test('Ensure fully qualified python path is escaped when building repl args on Windows', async () => {
@@ -357,8 +342,12 @@ suite('Terminal - Code Execution', () => {
             async function testReplCondaCommandArguments(pythonPath: string, terminalArgs: string[], condaEnv: { name: string; path: string }) {
                 settings.setup(s => s.pythonPath).returns(() => pythonPath);
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
-                condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
-                condaService.setup(c => c.getCondaEnvironment(pythonPath)).returns(() => Promise.resolve(condaEnv));
+
+                const condaFile = 'conda';
+                const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+                const processService = TypeMoq.Mock.ofType<IProcessService>();
+                const condaExecutionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, condaEnv);
+                pythonExecutionFactory.setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(condaExecutionService));
 
                 const hasEnvName = condaEnv.name !== '';
                 const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
@@ -370,8 +359,7 @@ suite('Terminal - Code Execution', () => {
                 expect(replCommandArgs).not.to.be.an('undefined', 'Conda command args are undefined');
                 expect(replCommandArgs.command).to.be.equal('conda', 'Incorrect conda path');
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect conda arguments');
-                condaService.verify(async c => c.getCondaEnvironment(pythonPath), TypeMoq.Times.once());
-                condaService.verify(async c => c.getCondaFile(), TypeMoq.Times.once());
+                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath), TypeMoq.Times.once());
             }
 
             test('Ensure conda args with env name are returned when building repl args with a conda env with a name', async () => {

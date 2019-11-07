@@ -9,12 +9,9 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
-import { CondaExecutionService } from '../../common/process/condaExecutionService';
-import { IProcessService, IProcessServiceFactory, IPythonExecutableInfo } from '../../common/process/types';
+import { IPythonExecutableInfo, IPythonExecutionFactory } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { ICondaService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionService } from '../../terminals/types';
 
 @injectable()
@@ -27,10 +24,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
-        @inject(ICondaService) protected readonly condaService: ICondaService,
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
-        @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
-        @inject(IProcessServiceFactory) protected readonly processServiceFactory: IProcessServiceFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
     ) {}
 
     public async executeFile(file: Uri) {
@@ -67,13 +62,10 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
-        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonSettings.pythonPath);
 
-        if (condaEnvironment) {
-            const condaFile = await this.condaService.getCondaFile();
-            const processService: IProcessService = await this.processServiceFactory.create(resource);
-            const condaExecutionService = new CondaExecutionService(this.serviceContainer, processService, command, condaFile, condaEnvironment);
+        const condaExecutionService = await this.pythonExecFactory.createCondaExecutionService(command);
 
+        if (condaExecutionService) {
             return condaExecutionService.getExecutableInfo(command, [...launchArgs, ...args]);
             }
 

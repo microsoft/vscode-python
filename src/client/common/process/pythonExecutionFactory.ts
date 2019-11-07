@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 
+import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { ICondaService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
@@ -42,10 +43,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
-        if (condaEnvironment) {
-            const condaFile = await this.condaService.getCondaFile();
-            return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
         }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
@@ -66,12 +66,25 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
 
-        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
-        if (condaEnvironment) {
-            const condaFile = await this.condaService.getCondaFile();
-            return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
         }
 
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
+    }
+    public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
+        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
+        if (condaEnvironment) {
+            const condaFile = await this.condaService.getCondaFile();
+
+            if (!processService) {
+                processService = await this.processServiceFactory.create(resource);
+            }
+
+            return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+        }
+
+        return;
     }
 }

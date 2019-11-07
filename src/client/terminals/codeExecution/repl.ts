@@ -7,11 +7,9 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
-import { ICondaService } from '../../interpreter/contracts';
-import { IServiceContainer } from '../../ioc/types';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
 @injectable()
@@ -20,13 +18,11 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
         @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
-        @inject(ICondaService) condaService: ICondaService,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
+        @inject(IPythonExecutionFactory) pythonExecFactory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) platformService: IPlatformService
     ) {
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, condaService, platformService, serviceContainer, processServiceFactory);
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService, pythonExecFactory);
         this.terminalTitle = 'REPL';
     }
 }
