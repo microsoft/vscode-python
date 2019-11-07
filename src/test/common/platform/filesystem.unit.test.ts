@@ -17,6 +17,28 @@ import {
 
 // tslint:disable:max-func-body-length chai-vague-errors
 
+function createMockStat(): TypeMoq.IMock<FileStat> {
+    const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
+    // This is necessary because passing "mock.object" to
+    // Promise.resolve() triggers the lookup.
+    //tslint:disable-next-line:no-any
+    stat.setup((s: any) => s.then)
+        .returns(() => undefined)
+        .verifiable(TypeMoq.Times.atLeast(0));
+    return stat;
+}
+
+function createMockLegacyStat(): TypeMoq.IMock<fsextra.Stats> {
+    const stat = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
+    // This is necessary because passing "mock.object" to
+    // Promise.resolve() triggers the lookup.
+    //tslint:disable-next-line:no-any
+    stat.setup((s: any) => s.then)
+        .returns(() => undefined)
+        .verifiable(TypeMoq.Times.atLeast(0));
+    return stat;
+}
+
 //tslint:disable-next-line:no-any
 type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 interface IRawFS {
@@ -251,31 +273,20 @@ suite('FileSystem paths', () => {
 
 suite('Raw FileSystem', () => {
     let raw: TypeMoq.IMock<IRawFS>;
-    //let stat: TypeMoq.IMock<FileStat>;
     let oldStat: TypeMoq.IMock<fsextra.Stats>;
     let filesystem: IRawFileSystem;
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
-        //stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
-        oldStat = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
+        oldStat = createMockLegacyStat();
         filesystem = new RawFileSystem(
-            //raw.object,
             raw.object,
             raw.object,
             raw.object,
             raw.object
         );
-
-        // This is necessary because passing "stat.object" to
-        // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
-        oldStat.setup((s: any) => s.then)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.atLeast(0));
     });
     function verifyAll() {
         raw.verifyAll();
-        //stat.verifyAll();
         oldStat.verifyAll();
     }
 
@@ -283,15 +294,8 @@ suite('Raw FileSystem', () => {
         if (old === undefined) {
             old = oldStat;
         } else if (old === null) {
-            old = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
+            old = createMockLegacyStat();
         }
-
-        // This is necessary because passing "stat.object" to
-        // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
-        old!.setup((s: any) => s.then)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.atLeast(0));
 
         if (stat.type === FileType.File) {
             old!.setup(s => s.isFile())
@@ -419,22 +423,28 @@ suite('Raw FileSystem', () => {
     suite('rmtree', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.delete(Uri.file(dirname), { recursive: true, useTrash: false }))
+            const uri = Uri.file(dirname);
+            const stat = createMockStat();
+            raw.setup(r => r.stat(uri))
+                .returns(() => Promise.resolve(stat.object));
+            raw.setup(r => r.delete(uri, { recursive: true, useTrash: false }))
                 .returns(() => Promise.resolve());
 
             await filesystem.rmtree(dirname);
 
             verifyAll();
+            stat.verifyAll();
         });
 
         test('fails if the directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.delete(Uri.file(dirname), { recursive: true, useTrash: false }))
+            raw.setup(r => r.stat(Uri.file(dirname)))
                 .throws(new Error('file not found'));
 
             const promise = filesystem.rmtree(dirname);
 
             await expect(promise).to.eventually.be.rejected;
+            verifyAll();
         });
     });
 
@@ -545,11 +555,31 @@ suite('Raw FileSystem', () => {
         test('read/write streams are used properly', async () => {
             const src = 'x/y/z/spam.py';
             const dest = 'x/y/z/spam.py.bak';
+            raw.setup(r => r.dirname(dest))
+                .returns(() => 'x/y/z');
+            const stat = createMockStat();
+            raw.setup(r => r.stat(Uri.file('x/y/z')))
+                .returns(() => Promise.resolve(stat.object));
             raw.setup(r => r.copy(Uri.file(src), Uri.file(dest), { overwrite: true }))
                 .returns(() => Promise.resolve());
 
             await filesystem.copyFile(src, dest);
 
+            verifyAll();
+            stat.verifyAll();
+        });
+
+        test('fails if the parent directory does not exist', async () => {
+            const src = '/tmp/spam.py';
+            const dest = '/tmp/__does_not_exist__/spam.py';
+            raw.setup(r => r.dirname(dest))
+                .returns(() => '/tmp/__does_not_exist__');
+            raw.setup(r => r.stat(Uri.file('/tmp/__does_not_exist__')))
+                .throws(new Error('file not found'));
+
+            const promise = filesystem.copyFile(src, dest);
+
+            await expect(promise).to.eventually.be.rejected;
             verifyAll();
         });
     });
@@ -630,7 +660,7 @@ suite('FileSystem Utils', () => {
     let deps: TypeMoq.IMock<IDeps>;
     let utils: IFileSystemUtils;
     setup(() => {
-        stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
+        stat = createMockStat();
         filesystem = TypeMoq.Mock.ofType<IRawFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         path = TypeMoq.Mock.ofType<IFileSystemPaths>(undefined, TypeMoq.MockBehavior.Strict);
         tmp = TypeMoq.Mock.ofType<ITempFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
@@ -642,13 +672,6 @@ suite('FileSystem Utils', () => {
             ((data: string) => deps.object.getHashString(data)),
             ((p: string) => deps.object.glob(p))
         );
-
-        // This is necessary because passing "stat.object" to
-        // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
-        stat.setup((s: any) => s.then)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.atLeast(0));
     });
     function verifyAll() {
         filesystem.verifyAll();

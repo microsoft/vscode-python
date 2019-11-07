@@ -19,6 +19,7 @@ import {
 // are found in filesystem.functional.test.ts.
 
 // tslint:disable:max-func-body-length chai-vague-errors
+// tslint:disable:no-suspicious-comment
 
 suite('Raw FileSystem', () => {
     let filesystem: IRawFileSystem;
@@ -148,9 +149,11 @@ suite('Raw FileSystem', () => {
             return {
                 type: filetype,
                 size: old.size,
-                // XXX Apparently VS Code's new "fs" has granularity of seconds.
-                // So we round to the nearest integer.
-                // XXX ctime is showing up as 0.
+                // TODO (https://github.com/microsoft/vscode/issues/84177)
+                //   FileStat.ctime and FileStat.mtime only have 1-second resolution.
+                //   So for now we round to the nearest integer.
+                // TODO (https://github.com/microsoft/vscode/issues/84177)
+                //   FileStat.ctime is consistently 0 instead of the actual ctime.
                 ctime: 0,
                 //ctime: Math.round(old.ctimeMs),
                 mtime: Math.round(old.mtimeMs)
