@@ -50,6 +50,7 @@ export const reducerMap: INativeEditorActionMapping = {
     [NativeEditorActionTypes.SHOW_PLOT]: Transfer.showPlot,
     [NativeEditorActionTypes.OPEN_LINK]: Transfer.openLink,
     [NativeEditorActionTypes.GATHER_CELL]: Transfer.gather,
+    [NativeEditorActionTypes.EDITOR_LOADED]: Transfer.started,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

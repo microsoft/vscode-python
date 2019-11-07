@@ -39,6 +39,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     }
 
     public componentDidMount() {
+        this.props.editorLoaded();
         window.addEventListener('keydown', this.mainKeyDown);
         window.addEventListener('resize', () => this.forceUpdate(), true);
     }

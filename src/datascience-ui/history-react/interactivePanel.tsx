@@ -9,6 +9,7 @@ import { connect } from 'react-redux';
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
 import { Image, ImageName } from '../react-common/image';
@@ -17,7 +18,6 @@ import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { getConnectedInteractiveCell } from './interactiveCell';
 import { actionCreators } from './redux/actions';
-import { IStore } from '../interactive-common/redux/store';
 
 type IInteractivePanelProps = IMainState & typeof actionCreators;
 
@@ -35,6 +35,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
 
     constructor(props: IInteractivePanelProps) {
         super(props);
+    }
+
+    public componentDidMount() {
+        this.props.editorLoaded();
     }
 
     public render() {
@@ -245,9 +249,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         } else {
             const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
             const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
-            this.setState({
-                isAtBottom
-            });
+            this.props.scroll(isAtBottom);
         }
     }
 

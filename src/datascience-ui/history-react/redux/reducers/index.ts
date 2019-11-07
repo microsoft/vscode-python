@@ -36,6 +36,10 @@ export const reducerMap: IInteractiveActionMapping = {
     [InteractiveActionTypes.DELETE_ALL_CELLS]: Creation.deleteAllCells,
     [InteractiveActionTypes.EXPAND_ALL]: Effects.expandAll,
     [InteractiveActionTypes.COLLAPSE_ALL]: Effects.collapseAll,
+    [InteractiveActionTypes.EDITOR_LOADED]: Transfer.started,
+    [InteractiveActionTypes.SCROLL]: Effects.scrolled,
+    [InteractiveActionTypes.CLICK_CELL]: Effects.clickCell,
+    [InteractiveActionTypes.UNFOCUS_CELL]: Effects.unfocusCell,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

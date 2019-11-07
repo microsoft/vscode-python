@@ -44,7 +44,10 @@ export enum InteractiveActionTypes {
     EDIT_CELL = 'action.edit_cell',
     SUBMIT_INPUT = 'action.submit_input',
     EXPAND_ALL = 'action.expand_all',
-    COLLAPSE_ALL = 'action.collapse_all'
+    COLLAPSE_ALL = 'action.collapse_all',
+    EDITOR_LOADED = 'action.editor_loaded',
+    SCROLL = 'action.scroll',
+    UNFOCUS_CELL = 'action.unfocus_cell'
 }
 
 export interface IShowDataViewerAction extends IShowDataViewer {
@@ -56,6 +59,10 @@ export interface IOpenLinkAction {
 
 export interface IShowPlotAction {
     imageHtml: string;
+}
+
+export interface IScrollAction {
+    isAtBottom: boolean;
 }
 
 type InteractiveAction = Action<InteractiveActionTypes>;
@@ -83,5 +90,8 @@ export const actionCreators = {
     expandAll: (): InteractiveAction => ({ type: InteractiveActionTypes.EXPAND_ALL }),
     collapseAll: (): InteractiveAction => ({ type: InteractiveActionTypes.COLLAPSE_ALL }),
     export: (): InteractiveAction => ({ type: InteractiveActionTypes.EXPORT }),
-    showDataViewer: (variableName: string, columnSize: number): InteractiveAction & IShowDataViewerAction => ({ type: InteractiveActionTypes.SHOW_DATA_VIEWER, variableName, columnSize })
+    showDataViewer: (variableName: string, columnSize: number): InteractiveAction & IShowDataViewerAction => ({ type: InteractiveActionTypes.SHOW_DATA_VIEWER, variableName, columnSize }),
+    editorLoaded: (): InteractiveAction => ({ type: InteractiveActionTypes.EDITOR_LOADED }),
+    scroll: (isAtBottom: boolean): InteractiveAction & IScrollAction => ({ type: InteractiveActionTypes.SCROLL, isAtBottom }),
+    unfocus: (cellId: string | undefined): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.UNFOCUS_CELL, cellId })
 };

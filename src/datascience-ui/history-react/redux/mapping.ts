@@ -9,7 +9,7 @@ import { IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
-import { InteractiveActionTypes, IOpenLinkAction, IShowDataViewerAction, IShowPlotAction } from './actions';
+import { InteractiveActionTypes, IOpenLinkAction, IScrollAction, IShowDataViewerAction, IShowPlotAction } from './actions';
 
 type InteractiveReducerFunc<T> = ReducerFunc<IMainState, InteractiveActionTypes, T>;
 
@@ -37,6 +37,10 @@ export class IInteractiveActionMapping {
     public [InteractiveActionTypes.DELETE_ALL_CELLS]: InteractiveReducerFunc<never | undefined>;
     public [InteractiveActionTypes.EXPAND_ALL]: InteractiveReducerFunc<never | undefined>;
     public [InteractiveActionTypes.COLLAPSE_ALL]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveActionTypes.EDITOR_LOADED]: InteractiveReducerFunc<never | undefined>;
+    public [InteractiveActionTypes.SCROLL]: InteractiveReducerFunc<IScrollAction>;
+    public [InteractiveActionTypes.CLICK_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [InteractiveActionTypes.UNFOCUS_CELL]: InteractiveReducerFunc<ICellAction>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: InteractiveReducerFunc<ICell>;

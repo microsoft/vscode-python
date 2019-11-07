@@ -59,6 +59,7 @@ export class INativeEditorActionMapping {
     public [NativeEditorActionTypes.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;
     public [NativeEditorActionTypes.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
     public [NativeEditorActionTypes.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [NativeEditorActionTypes.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;

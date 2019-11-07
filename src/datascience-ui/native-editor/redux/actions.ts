@@ -52,7 +52,8 @@ export enum NativeEditorActionTypes {
     EDIT_CELL = 'action.edit_cell',
     OPEN_LINK = 'action.open_link',
     SHOW_PLOT = 'action.show_plot',
-    GATHER_CELL = 'action.gather_cell'
+    GATHER_CELL = 'action.gather_cell',
+    EDITOR_LOADED = 'action.editor_loaded'
 }
 
 export interface ICellAndCursorAction extends ICellAction {
@@ -121,5 +122,6 @@ export const actionCreators = {
     editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): NativeEditorAction & IEditCellAction => ({ type: NativeEditorActionTypes.EDIT_CELL, cellId, changes }),
     openLink: (uri: monacoEditor.Uri): NativeEditorAction & IOpenLinkAction => ({ type: NativeEditorActionTypes.OPEN_LINK, uri }),
     showPlot: (imageHtml: string): NativeEditorAction & IShowPlotAction => ({ type: NativeEditorActionTypes.SHOW_PLOT, imageHtml }),
-    gatherCell: (cellId: string | undefined): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.GATHER_CELL, cellId })
+    gatherCell: (cellId: string | undefined): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.GATHER_CELL, cellId }),
+    editorLoaded: (): NativeEditorAction => ({ type: NativeEditorActionTypes.EDITOR_LOADED })
 };

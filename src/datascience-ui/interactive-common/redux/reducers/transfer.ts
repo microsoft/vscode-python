@@ -91,4 +91,9 @@ export namespace Transfer {
         return arg.prevState;
     }
 
+    export function started<T>(arg: CommonReducerArg<T>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.Started));
+        return arg.prevState;
+    }
+
 }

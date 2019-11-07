@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Identifiers } from '../../../../client/datascience/constants';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
@@ -8,6 +9,7 @@ import { createPostableAction } from '../../../interactive-common/redux/postOffi
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
+import { IScrollAction } from '../actions';
 import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
 
@@ -89,5 +91,48 @@ export namespace Effects {
             ...arg.prevState,
             scrolledCellId: arg.payload.cellId
         };
+    }
+
+    export function scrolled(arg: InteractiveReducerArg<IScrollAction>): IMainState {
+        return {
+            ...arg.prevState,
+            isAtBottom: arg.payload.isAtBottom
+        };
+    }
+
+    export function clickCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
+        if (arg.payload.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && !arg.prevState.editCellVM.focused) {
+            return {
+                ...arg.prevState,
+                editCellVM: {
+                    ...arg.prevState.editCellVM,
+                    focused: true
+                }
+            };
+        } else if (arg.prevState.editCellVM) {
+            return {
+                ...arg.prevState,
+                editCellVM: {
+                    ...arg.prevState.editCellVM,
+                    focused: false
+                }
+            };
+        }
+
+        return arg.prevState;
+    }
+
+    export function unfocusCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
+        if (arg.payload.cellId === Identifiers.EditCellId && arg.prevState.editCellVM && arg.prevState.editCellVM.focused) {
+            return {
+                ...arg.prevState,
+                editCellVM: {
+                    ...arg.prevState.editCellVM,
+                    focused: false
+                }
+            };
+        }
+
+        return arg.prevState;
     }
 }

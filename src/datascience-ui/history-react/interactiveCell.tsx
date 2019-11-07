@@ -228,19 +228,28 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     codeTheme={this.props.codeTheme}
                     onCodeChange={this.onCodeChange}
                     onCodeCreated={this.onCodeCreated}
+                    unfocused={this.onUnfocused}
                     testMode={this.props.testMode ? true : false}
                     showWatermark={this.props.showWatermark}
                     ref={this.codeRef}
                     monacoTheme={this.props.monacoTheme}
                     openLink={this.props.openLink}
                     editorMeasureClassName={this.props.editorMeasureClassName}
-                    keyDown={this.onEditCellKeyDown}
+                    keyDown={this.isEditCell() ? this.onEditCellKeyDown : undefined}
                     showLineNumbers={this.props.cellVM.showLineNumbers}
                     font={this.props.font}
                 />
             );
         }
         return null;
+    }
+
+    private isEditCell(): boolean {
+        return this.getCell().id === Identifiers.EditCellId;
+    }
+
+    private onUnfocused = () => {
+        this.props.unfocus(this.getCell().id);
     }
 
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, _modelId: string) => {
