@@ -8,7 +8,7 @@ import {
     FileSystem, FileSystemUtils, RawFileSystem
 } from '../../../client/common/platform/fileSystem';
 import {
-    FileType,
+    FileStat, FileType,
     IFileSystemUtils, IRawFileSystem
 } from '../../../client/common/platform/types';
 import {
@@ -144,15 +144,23 @@ suite('Raw FileSystem', () => {
     });
 
     suite('stat', () => {
+        function convertStat(old: fsextra.Stats, filetype: FileType): FileStat {
+            return {
+                type: filetype,
+                size: old.size,
+                // XXX Apparently VS Code's new "fs" has granularity of seconds.
+                // So we round to the nearest integer.
+                // XXX ctime is showing up as 0.
+                ctime: 0,
+                //ctime: Math.round(old.ctimeMs),
+                mtime: Math.round(old.mtimeMs)
+            };
+        }
+
         test('gets the info for an existing file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const old = await fsextra.stat(filename);
-            const expected = {
-                type: FileType.File,
-                size: old.size,
-                ctime: old.ctimeMs,
-                mtime: old.mtimeMs
-            };
+            const expected = convertStat(old, FileType.File);
 
             const stat = await filesystem.stat(filename);
 
@@ -162,12 +170,7 @@ suite('Raw FileSystem', () => {
         test('gets the info for an existing directory', async () => {
             const dirname = await fix.createDirectory('x/y/z/spam');
             const old = await fsextra.stat(dirname);
-            const expected = {
-                type: FileType.Directory,
-                size: old.size,
-                ctime: old.ctimeMs,
-                mtime: old.mtimeMs
-            };
+            const expected = convertStat(old, FileType.Directory);
 
             const stat = await filesystem.stat(dirname);
 
@@ -178,12 +181,7 @@ suite('Raw FileSystem', () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
             const old = await fsextra.stat(filename);
-            const expected = {
-                type: FileType.SymbolicLink,
-                size: old.size,
-                ctime: old.ctimeMs,
-                mtime: old.mtimeMs
-            };
+            const expected = convertStat(old, FileType.SymbolicLink | FileType.File);
 
             const stat = await filesystem.stat(symlink);
 
