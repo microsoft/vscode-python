@@ -79,7 +79,7 @@ export namespace Transfer {
     export function gather<T>(arg: CommonReducerArg<T, ICellAction>): IMainState {
         const cellVM = arg.prevState.cellVMs.find(c => c.cell.id === arg.payload.cellId);
         if (cellVM) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.GatherCode, cellVM.cell));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.GatherCodeRequest, cellVM.cell));
         }
         return arg.prevState;
     }

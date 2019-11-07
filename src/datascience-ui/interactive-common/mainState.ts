@@ -8,7 +8,6 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
@@ -64,7 +63,6 @@ export type IMainState = {
     selectedCellId?: string;
     focusedCellId?: string;
     scrolledCellId?: string;
-    enableGather: boolean;
     isAtBottom: boolean;
     newCellId?: string;
     loadTotal?: number;
@@ -97,8 +95,10 @@ const darkStyle = `
 // This function generates test state when running under a browser instead of inside of
 export function generateTestState(filePath: string = '', editable: boolean = false): IMainState {
     const defaultSettings = loadDefaultSettings();
+    defaultSettings.enableGather = true;
+
     return {
-        cellVMs: generateVMs(filePath, editable),
+        cellVMs: generateTestVMs(filePath, editable),
         editCellVM: createEditableCellVM(1),
         busy: false,
         skipNextScroll: false,
@@ -126,7 +126,6 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         ],
         pendingVariableCount: 0,
         debugging: false,
-        enableGather: true,
         isAtBottom: true,
         font: {
             size: 14,
@@ -215,16 +214,17 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
     };
 }
 
-function generateVMs(filePath: string, editable: boolean): ICellViewModel[] {
-    const cells = generateCells(filePath, 10);
+function generateTestVMs(filePath: string, editable: boolean): ICellViewModel[] {
+    const cells = generateTestCells(filePath, 10);
     return cells.map((cell: ICell) => {
         const vm = createCellVM(cell, undefined, editable);
         vm.useQuickEdit = false;
+        vm.hasBeenRun = true;
         return vm;
     });
 }
 
-export function generateCells(filePath: string, repetitions: number): ICell[] {
+export function generateTestCells(filePath: string, repetitions: number): ICell[] {
     // Dupe a bunch times for perf reasons
     let cellData: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] = [];
     for (let i = 0; i < repetitions; i += 1) {

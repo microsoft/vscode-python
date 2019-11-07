@@ -36,7 +36,6 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string, editable:
             knownDark: false,
             variablesVisible: false,
             editCellVM: undefined,
-            enableGather: false,
             isAtBottom: true,
             font: {
                 size: 14,

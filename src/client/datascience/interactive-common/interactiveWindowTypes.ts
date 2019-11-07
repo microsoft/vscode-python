@@ -13,6 +13,7 @@ export enum InteractiveWindowMessages {
     UpdateCell = 'update_cell',
     GotoCodeCell = 'gotocell_code',
     CopyCodeCell = 'copycell_code',
+    NotebookExecutionActivated = 'notebook_execution_activated',
     RestartKernel = 'restart_kernel',
     Export = 'export_to_ipynb',
     GetAllCells = 'get_all_cells',
@@ -64,7 +65,7 @@ export enum InteractiveWindowMessages {
     ShowPlot = 'show_plot',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
-    GatherCode = 'gather_code',
+    GatherCodeRequest = 'gather_code',
     LoadAllCells = 'load_all_cells',
     LoadAllCellsComplete = 'load_all_cells_complete',
     ScrollToCell = 'scroll_to_cell',
@@ -277,7 +278,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateCell]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
-    public [InteractiveWindowMessages.NotebookExecutionActivated]: Uri;
+    public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;

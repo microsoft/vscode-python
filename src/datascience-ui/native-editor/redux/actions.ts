@@ -120,5 +120,6 @@ export const actionCreators = {
     arrowDown: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.ARROW_DOWN, cellId }),
     editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): NativeEditorAction & IEditCellAction => ({ type: NativeEditorActionTypes.EDIT_CELL, cellId, changes }),
     openLink: (uri: monacoEditor.Uri): NativeEditorAction & IOpenLinkAction => ({ type: NativeEditorActionTypes.OPEN_LINK, uri }),
-    showPlot: (imageHtml: string): NativeEditorAction & IShowPlotAction => ({ type: NativeEditorActionTypes.SHOW_PLOT, imageHtml })
+    showPlot: (imageHtml: string): NativeEditorAction & IShowPlotAction => ({ type: NativeEditorActionTypes.SHOW_PLOT, imageHtml }),
+    gatherCell: (cellId: string | undefined): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.GATHER_CELL, cellId })
 };

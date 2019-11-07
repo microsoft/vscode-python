@@ -24,7 +24,7 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { createEmptyCell, generateCells } from '../../datascience-ui/interactive-common/mainState';
+import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockLanguageClient } from './mockLanguageClient';
 
@@ -319,7 +319,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     });
 
     test('Load remove and insert', async () => {
-        const cells = generateCells('foo.py', 1);
+        const cells = generateTestCells('foo.py', 1);
         await loadAllCells(cells);
         expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Load all cells is failing');
         await removeAllCells();
@@ -331,7 +331,7 @@ suite('DataScience Intellisense Unit Tests', () => {
     });
 
     test('Swap cells around', async () => {
-        const cells = generateCells('foo.py', 1);
+        const cells = generateTestCells('foo.py', 1);
         await loadAllCells(cells);
         await swapCells('1', '2'); // 2nd cell is markdown
         expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Swap cells should skip swapping on markdown');
@@ -355,7 +355,7 @@ df
     });
 
     test('Insert and swap', async () => {
-        const cells = generateCells('foo.py', 1);
+        const cells = generateTestCells('foo.py', 1);
         await loadAllCells(cells);
         expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Load all cells is failing');
         await insertCell('6', 'foo');

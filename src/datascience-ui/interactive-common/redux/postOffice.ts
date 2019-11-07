@@ -88,7 +88,6 @@ export enum IncomingMessageActions {
     GETCSSRESPONSE = 'action.get_css_response',
     GETMONACOTHEMEREQUEST = 'action.get_monaco_theme_request',
     GETMONACOTHEMERESPONSE = 'action.get_monaco_theme_response'
-
 }
 
 // Actions created from messages

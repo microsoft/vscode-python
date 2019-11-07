@@ -39,6 +39,7 @@ interface INativeCellBaseProps {
     firstCell: boolean;
     font: IFont;
     allowUndo: boolean;
+    enableGather: boolean | undefined;
     editorOptions: monacoEditor.editor.IEditorOptions;
     themeMatplotlibPlots: boolean | undefined;
 }
@@ -57,7 +58,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     public render() {
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
-            return <InformationMessages messages={this.props.cellVM.cell.data.messages}/>;
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages} />;
         } else {
             return this.renderNormalCell();
         }
@@ -175,11 +176,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
         this.props.focusCell(this.cellId, CursorPos.Current);
     }
 
-    private shouldRenderCodeEditor = () : boolean => {
+    private shouldRenderCodeEditor = (): boolean => {
         return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
     }
 
-    private shouldRenderMarkdownEditor = () : boolean => {
+    private shouldRenderMarkdownEditor = (): boolean => {
         return (this.isMarkdownCell() && (this.isShowingMarkdownEditor() || this.props.cellVM.cell.id === Identifiers.EditCellId));
     }
 
@@ -188,7 +189,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private shouldRenderInput(): boolean {
-       return this.shouldRenderCodeEditor() || this.shouldRenderMarkdownEditor();
+        return this.shouldRenderCodeEditor() || this.shouldRenderMarkdownEditor();
     }
 
     private hasOutput = () => {
@@ -277,7 +278,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 'd':
-                if (this.lastKeyPressed === 'd' && !this.isFocused()  && this.isSelected()) {
+                if (this.lastKeyPressed === 'd' && !this.isFocused() && this.isSelected()) {
                     e.stopPropagation();
                     this.lastKeyPressed = undefined; // Reset it so we don't keep deleting
                     this.props.deleteCell(cellId);
@@ -402,7 +403,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
     }
 
     private submitCell = (possibleContents?: string) => {
-        let content: string | undefined ;
+        let content: string | undefined;
 
         // If inside editor, submit this code
         if (possibleContents) {
@@ -479,27 +480,21 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
-            this.props.stateController.updateCellSource(cellId);
-            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
-            this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
+            this.runAndMove(this.getCurrentCode());
+            this.props.sendCommand(NativeCommandType.Run, 'mouse');
         };
         const gatherCell = () => {
-            this.props.stateController.gatherCell(this.props.cellVM);
+            this.props.gatherCell(cellId);
         };
         const deleteCell = () => {
             this.props.deleteCell(cellId);
             this.props.sendCommand(NativeCommandType.DeleteCell, 'mouse');
         };
-        const runAbove = () => {
-            this.props.executeAbove(cellId);
-            this.props.sendCommand(NativeCommandType.RunAbove, 'mouse');
-        };
-        const runBelow = () => {
-            this.props.executeCellAndBelow(cellId, this.getCurrentCode());
-            this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
-        };
-        const canRunAbove = !this.props.firstCell;
-        const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
+        const gatherDisabled =  this.props.cellVM.cell.data.execution_count === null ||
+                                this.props.cellVM.hasBeenRun === null ||
+                                this.props.cellVM.hasBeenRun === false ||
+                                this.isMarkdownCell() ||
+                                this.props.enableGather === false;
         const switchTooltip = this.props.cellVM.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
             getLocString('DataScience.switchToCode', 'Change to code');
         const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
@@ -518,16 +513,16 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return (
             <div className={toolbarClassName}>
                 <div className='native-editor-celltoolbar-middle'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')} className='run-cell-button'>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')} className='hover-cell-button'>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCell} tooltip={getLocString('DataScience.gatherCell', 'Gather the code required to generate this cell into a new notebook')} hidden={gatherDisabled}>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCell} tooltip={getLocString('DataScience.gatherCell', 'Gather the code required to generate this cell into a new notebook')} hidden={gatherDisabled} className='hover-cell-button'>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')} className='delete-cell-button'>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')} className='delete-cell-button hover-cell-button'>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
                     </ImageButton>
                 </div>
@@ -540,12 +535,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '-';
-        const runCell = () => {
-            this.runAndMove(this.inputRef.current ? this.inputRef.current.getContents() : undefined);
-            this.props.sendCommand(NativeCommandType.Run, 'mouse');
-        };
-        const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
-        const runCellHidden = !canRunBelow || this.isMarkdownCell();
 
         return (
             <div className='controls-div'>
@@ -557,25 +546,28 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderInput = () => {
         if (this.shouldRenderInput()) {
             return (
-                <CellInput
-                    cellVM={this.props.cellVM}
-                    editorOptions={this.props.editorOptions}
-                    history={undefined}
-                    codeTheme={this.props.codeTheme}
-                    onCodeChange={this.onCodeChange}
-                    onCodeCreated={this.onCodeCreated}
-                    testMode={this.props.testMode ? true : false}
-                    showWatermark={false}
-                    ref={this.inputRef}
-                    monacoTheme={this.props.monacoTheme}
-                    openLink={this.props.openLink}
-                    editorMeasureClassName={undefined}
-                    focused={this.onCodeFocused}
-                    unfocused={this.onCodeUnfocused}
-                    keyDown={this.keyDownInput}
-                    showLineNumbers={this.props.cellVM.showLineNumbers}
-                    font={this.props.font}
-                />
+                <div>
+                    {this.renderMiddleToolbar()}
+                    <CellInput
+                        cellVM={this.props.cellVM}
+                        editorOptions={this.props.editorOptions}
+                        history={undefined}
+                        codeTheme={this.props.codeTheme}
+                        onCodeChange={this.onCodeChange}
+                        onCodeCreated={this.onCodeCreated}
+                        testMode={this.props.testMode ? true : false}
+                        showWatermark={false}
+                        ref={this.inputRef}
+                        monacoTheme={this.props.monacoTheme}
+                        openLink={this.props.openLink}
+                        editorMeasureClassName={undefined}
+                        focused={this.onCodeFocused}
+                        unfocused={this.onCodeUnfocused}
+                        keyDown={this.keyDownInput}
+                        showLineNumbers={this.props.cellVM.showLineNumbers}
+                        font={this.props.font}
+                    />
+                </div>
             );
         }
         return null;
@@ -600,16 +592,20 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private renderOutput = (): JSX.Element | null => {
         const themeMatplotlibPlots = this.props.themeMatplotlibPlots ? true : false;
+        const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
         if (this.shouldRenderOutput()) {
             return (
-                <CellOutput
-                    cellVM={this.props.cellVM}
-                    baseTheme={this.props.baseTheme}
-                    expandImage={this.props.showPlot}
-                    openLink={this.props.openLink}
-                    maxTextSize={this.props.maxTextSize}
-                    themeMatplotlibPlots={themeMatplotlibPlots}
-                 />
+                <div>
+                    {toolbar}
+                    <CellOutput
+                        cellVM={this.props.cellVM}
+                        baseTheme={this.props.baseTheme}
+                        expandImage={this.props.showPlot}
+                        openLink={this.props.openLink}
+                        maxTextSize={this.props.maxTextSize}
+                        themeMatplotlibPlots={themeMatplotlibPlots}
+                    />
+                </div>
             );
         }
         return null;

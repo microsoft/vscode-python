@@ -69,12 +69,12 @@ export class GatherListener implements IInteractiveWindowListener {
         handler.bind(this)(args);
     }
 
-    private doSetLogger(payload: Uri): void {
+    private doSetLogger(payload: string): void {
         this.setLogger(payload).ignoreErrors();
     }
 
-    private async setLogger(notebookUri: Uri) {
-        this.notebookUri = notebookUri;
+    private async setLogger(notebookUri: string) {
+        this.notebookUri = Uri.parse(notebookUri);
 
         // First get the active server
         const activeServer = await this.jupyterExecution.getServer(await this.interactiveWindowProvider.getNotebookOptions());
@@ -82,7 +82,7 @@ export class GatherListener implements IInteractiveWindowListener {
         let nb: INotebook | undefined;
         // If that works, see if there's a matching notebook running
         if (activeServer) {
-            nb = await activeServer.getNotebook(notebookUri);
+            nb = await activeServer.getNotebook(this.notebookUri);
 
             // If we have an executing notebook, add the gather logger.
             if (nb) {
