@@ -1,13 +1,18 @@
+# Copyright (c) Microsoft Corporation. All rights reserved.
+# Licensed under the MIT License.
+
 import sys
-import datascience.daemon.daemon_python as BasePythonDaemon
 import logging
 import os
-from datascience.daemon.daemon_python import error_decorator
+from datascience.daemon.daemon_python import (
+    error_decorator,
+    PythonDaemon as BasePythonDaemon,
+)
 
 log = logging.getLogger(__name__)
 
 
-class PythonDaemon(BasePythonDaemon.PythonDaemon):
+class PythonDaemon(BasePythonDaemon):
     def __init__(self, rx, tx):
         log.info("Child class init")
         super().__init__(rx, tx)
@@ -45,11 +50,14 @@ class PythonDaemon(BasePythonDaemon.PythonDaemon):
         import jupyter_client.kernelspec
 
         specs = jupyter_client.kernelspec.find_kernel_specs()
-        sys.stdout.write(os.linesep.join(list("{0} {1}".format(k, v) for k, v in specs.items())))
+        sys.stdout.write(
+            os.linesep.join(list("{0} {1}".format(k, v) for k, v in specs.items()))
+        )
         sys.stdout.flush()
 
     def m_hello(self, rootUri=None, **kwargs):
         from notebook.notebookapp import main
+
         sys.argv = ["notebook", "--no-browser"]
         main()
         return {}
