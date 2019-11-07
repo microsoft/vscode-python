@@ -380,7 +380,7 @@ body, html {
     grid-column: 1;
     font-weight: bold;
     display:flex;
-    color: var(--code-comment-color);
+    color: var(--vscode-descriptionForeground);
     font-family: var(--code-font-family);
  }
 
