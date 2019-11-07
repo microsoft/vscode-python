@@ -5,6 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { Newable } from '../../ioc/types';
 import { ExecutionInfo, IDisposable, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
@@ -70,6 +71,7 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
      * @type {string}
      */
     daemonModule: string;
+    daemonClass: Newable<IPythonDaemonExecutionService>;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
@@ -117,6 +119,15 @@ export interface IPythonExecutionService {
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
 
+/**
+ * Identical to the PythonExecutionService, but with a `dispose` method.
+ * This is a daemon process that lives on until it is disposed, hence the `IDisposable`.
+ *
+ * @export
+ * @interface IPythonDaemonExecutionService
+ * @extends {IPythonExecutionService}
+ * @extends {IDisposable}
+ */
 export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {
 }
 

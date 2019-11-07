@@ -11,9 +11,9 @@ import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { traceError } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import { ProcessService } from './proc';
-import { PythonDaemonExecutionService } from './pythonDaemon';
 import { PythonExecutionService } from './pythonProcess';
 import {
     DaemonExecutionFactoryCreationOptions,
@@ -57,6 +57,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         const envPythonPath =
             `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
+
+        // TODO: Need to merge env variables.
         let envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined , false);
         let env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
         envVars = envVars || {};
@@ -75,12 +77,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const connection = createMessageConnection(new StreamMessageReader(daemonProc.proc.stdout), new StreamMessageWriter(daemonProc.proc.stdin));
         connection.listen();
         let stdError = '';
-        let procEndEx?: Error;
+        let procEndEx: Error | undefined;
         daemonProc.proc.stderr.on('data', (d: string | Buffer) => {
             d = typeof d === 'string' ? d : d.toString('utf8');
             stdError += d;
         });
         daemonProc.proc.on('error', ex => procEndEx = ex);
+
+        // Check whether the daemon has started correctly, by sending a ping.
         const data = Date.now().toString();
         type Param = { data: string };
         type Return = { pong: string };
@@ -90,8 +94,11 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             if (result.pong !== data) {
                 throw new Error('Daemon did not reply correctly to the ping!');
             }
-            return new PythonDaemonExecutionService(activatedProc, pythonPath, daemonProc.proc, connection);
+            return new options.daemonClass(activatedProc, pythonPath, daemonProc.proc, connection);
         } catch (ex) {
+            traceError('Failed to start the Daemon, StdErr: ', stdError);
+            traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
+            traceError('Failed to start the Daemon, Ex', ex);
             throw ex;
         }
     }
