@@ -114,12 +114,10 @@ class PythonDaemon(MethodDispatcher):
         disable_redirection()
         self._endpoint.shutdown()
         self._jsonrpc_stream_reader.close()
-        # Do not close the `writer` stream, as this results in closing the underlying stdout stream.
-        # self._jsonrpc_stream_writer.close()
+        self._jsonrpc_stream_writer.close()
 
     def m_exit(self, **_kwargs):
         self.close()
-        self._jsonrpc_stream_writer.close()
 
     @error_decorator
     def m_exec_file(self, file_name, args=[], cwd=None, env=None):
@@ -142,34 +140,14 @@ class PythonDaemon(MethodDispatcher):
 
         return self._execute_and_capture_output(exec_code)
 
-    def m_exec_file_observable(
-        self, file_name, args=[], cwd=None, env=None, disconnect_rpc=None
-    ):
-        """ Sometimes calling modules could result in Python running a process from within.
-        E.g. when running something like `jupyter notebook` we're unable to hijack the stdout.
-        At this point we're unable to take over stdout/stderr. Hence python program writes directly to stdout.
-        Meaning JSON rpc is busted.
-        After all, we cannot have two seprate requests that run something in an observable manner. We can only have one piece of code.
-        In such cases, please set dtisconnect_rpc=True
-        """
+    @error_decorator
+    def m_exec_file_observable(self, file_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
         old_argv, sys.argv = sys.argv, [""] + args
         log.info("Exec file (observale) %s with args %s", file_name, args)
 
-        try:
-            if disconnect_rpc:
-                log.inf("Close RPC")
-                # rpc is no-longer usable (see comments).
-                self.close()
-            with change_exec_context(args, cwd, env):
-                runpy.run_path(file_name, globals())
-        except Exception:
-            if disconnect_rpc:
-                # Its possible the code fell over and we returned an error.
-                sys.stderr.write(traceback.format_exc())
-                sys.stderr.flush()
-            else:
-                return {"error": traceback.format_exc()}
+        with change_exec_context(args, cwd, env):
+            runpy.run_path(file_name, globals())
 
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
@@ -186,32 +164,13 @@ class PythonDaemon(MethodDispatcher):
         with change_exec_context(args, cwd, env):
             return self._execute_and_capture_output(exec_module)
 
-    def m_exec_module_observable(
-        self, module_name, args=None, cwd=None, env=None, disconnect_rpc=False
-    ):
-        """ Sometimes calling modules could result in Python running a process from within.
-        E.g. when running something like `jupyter notebook` we're unable to hijack the stdout.
-        At this point we're unable to take over stdout/stderr. Hence python program writes directly to stdout.
-        Meaning JSON rpc is busted.
-        After all, we cannot have two seprate requests that run something in an observable manner. We can only have one piece of code.
-        In such cases, please set dtisconnect_rpc=True
-        """
+    @error_decorator
+    def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None):
         args = [] if args is None else args
         log.info("Exec module (observable) %s with args %s", module_name, args)
 
-        try:
-            if disconnect_rpc:
-                # rpc is no-longer usable (see comments).
-                self.close()
-            with change_exec_context(args, cwd, env):
-                runpy.run_module(module_name, globals(), run_name="__main__")
-        except Exception:
-            if disconnect_rpc:
-                # Its possible the code fell over and we returned an error.
-                sys.stderr.write(traceback.format_exc())
-                sys.stderr.flush()
-            else:
-                return {"error": traceback.format_exc()}
+        with change_exec_context(args, cwd, env):
+            runpy.run_module(module_name, globals(), run_name="__main__")
 
     def _get_module_version(self, module_name, args):
         """We handle `-m pip --version` as a special case. As this causes the current process to die.
@@ -254,7 +213,7 @@ class PythonDaemon(MethodDispatcher):
         """ Starts the daemon. """
         if not issubclass(cls, PythonDaemon):
             raise ValueError("Handler class must be an instance of PythonDaemon")
-        log.info("Starting %s IO language server", cls.__name__)
+        log.info("Starting %s Daemon", cls.__name__)
 
         def on_write_stdout(output):
             server._endpoint.notify("output", {"source": "stdout", "out": output})
