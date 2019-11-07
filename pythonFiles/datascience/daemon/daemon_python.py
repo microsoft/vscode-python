@@ -223,5 +223,5 @@ class PythonDaemon(MethodDispatcher):
 
         stdin, stdout = get_io_buffers()
         server = cls(stdin, stdout)
-        redirect_output(on_write_stdout, on_write_stdout)
+        redirect_output(on_write_stdout, on_write_stderr)
         server.start()

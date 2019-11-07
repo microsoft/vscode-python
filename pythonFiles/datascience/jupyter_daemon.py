@@ -14,7 +14,7 @@ log = logging.getLogger(__name__)
 
 class PythonDaemon(BasePythonDaemon):
     def __init__(self, rx, tx):
-        log.info("Child class init")
+        log.info("DataScience Daemon init")
         super().__init__(rx, tx)
 
     def __getitem__(self, item):

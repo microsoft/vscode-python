@@ -16,7 +16,7 @@ class IORedirector:
     This class works to wrap a stream (stdout/stderr) with an additional redirect.
     """
 
-    def __init__(self, original, new_redirect, wrap_buffer=False):
+    def __init__(self, name, original, new_redirect, wrap_buffer=False):
         """
         :param stream original:
             The stream to be wrapped (usually stdout/stderr, but could be None).
@@ -27,11 +27,14 @@ class IORedirector:
             Whether to create a buffer attribute (needed to mimick python 3 s
             tdout/stderr which has a buffer to write binary data).
         """
+        self._name = name
         self._lock = Lock()
         self._writing = False
         self._redirect_to = (new_redirect,)
         if wrap_buffer and hasattr(original, "buffer"):
-            self.buffer = IORedirector(original.buffer, new_redirect.buffer, False)
+            self.buffer = IORedirector(
+                name, original.buffer, new_redirect.buffer, False
+            )
 
     def write(self, s):
         # Note that writing to the original stream may fail for some reasons
@@ -59,7 +62,7 @@ class IORedirector:
                 r.flush()
 
     def __getattr__(self, name):
-        log.info("getting attr for stdout: " + name)
+        log.info("getting attr for %s: %s", self._name, name)
         for r in self._redirect_to:
             if hasattr(r, name):
                 return getattr(r, name)
@@ -67,7 +70,7 @@ class IORedirector:
 
 
 class CustomWriter(object):
-    def __init__(self, wrap_stream, wrap_buffer, on_write=None):
+    def __init__(self, name, wrap_stream, wrap_buffer, on_write=None):
         """
         :param wrap_stream:
             Either sys.stdout or sys.stderr.
@@ -79,13 +82,14 @@ class CustomWriter(object):
         :param callable(str) on_write:
             Call back with the string that has been written.
         """
+        self._name = name
         encoding = getattr(wrap_stream, "encoding", None)
         if not encoding:
             encoding = os.environ.get("PYTHONIOENCODING", "utf-8")
         self.encoding = encoding
         if wrap_buffer:
             self.buffer = CustomWriter(
-                wrap_stream, wrap_buffer=False, on_write=on_write
+                name, wrap_stream, wrap_buffer=False, on_write=on_write
             )
         self._on_write = on_write
 
@@ -97,7 +101,7 @@ class CustomWriter(object):
             # Need s in str
             if isinstance(s, bytes):
                 s = s.decode(self.encoding, errors="replace")
-            log.info("write to stdout/stderr: " + s)
+            log.info("write to %s: %s", self._name, s)
             if self._on_write is not None:
                 self._on_write(s)
 
@@ -113,15 +117,15 @@ def get_io_buffers():
 def redirect_output(stdout_handler, stderr_handler):
     log.info("Redirect stdout/stderr")
 
-    sys._vsc_out_buffer_ = CustomWriter(sys.stdout, True, stdout_handler)
+    sys._vsc_out_buffer_ = CustomWriter("stdout", sys.stdout, True, stdout_handler)
     sys.stdout_original = sys.stdout
     _stdout_redirector = sys.stdout = IORedirector(
-        sys.stdout, sys._vsc_out_buffer_, True
+        "stdout", sys.stdout, sys._vsc_out_buffer_, True
     )
 
-    sys._vsc_err_buffer_ = CustomWriter(sys.stderr, True, stderr_handler)
+    sys._vsc_err_buffer_ = CustomWriter("stderr", sys.stderr, True, stderr_handler)
     sys.stderr_original = sys.stderr
     _stderr_redirector = sys.stderr = IORedirector(
-        sys.stderr, sys._vsc_err_buffer_, True
+        "stderr", sys.stderr, sys._vsc_err_buffer_, True
     )
 

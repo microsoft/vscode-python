@@ -33,7 +33,6 @@ suite('Daemon', () => {
     let pythonDaemon: PythonDaemonExecutionService;
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
-
     suiteSetup(() => {
         // When running locally.
         if (PYTHON_PATH.toLowerCase() === 'python') {
@@ -43,6 +42,8 @@ suite('Daemon', () => {
         }
     });
     setup(() => {
+        // Enable the following to log everything going on at pyton end.
+        // pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon', '-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, 'test.log')}`], { env });
         pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon'], { env });
         connection = createMessageConnection(new StreamMessageReader(pythonProc.stdout), new StreamMessageWriter(pythonProc.stdin));
         connection.listen();
@@ -207,7 +208,9 @@ suite('Daemon', () => {
     });
 
     test('Execute a file and throw exception if stderr is not empty when streaming output', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'import time', 'time.sleep(1)', 'sys.stderr.write("KABOOM")'].join(os.EOL));
+        const fileToExecute = await createPythonFile(
+            ['import sys', 'import time', 'time.sleep(1)', 'sys.stderr.write("KABOOM")', 'sys.stderr.flush()', 'time.sleep(1)'].join(os.EOL)
+        );
         const output = pythonDaemon.execObservable([fileToExecute], { throwOnStdErr: true });
         const outputsReceived: string[] = [];
         const promise = new Promise((resolve, reject) => {
