@@ -249,4 +249,13 @@ suite('PythonExecutionService', () => {
 
         expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
     });
+
+    test('getExecutableInfo should return the command and execution arguments as is', () => {
+        const args = ['-a', 'b', '-c'];
+        const command = 'command';
+
+        const result = executionService.getExecutableInfo(command, args);
+
+        expect(result).to.deep.equal({ command, args }, 'getExecutableInfo should return the command and execution arguments as is');
+    });
 });

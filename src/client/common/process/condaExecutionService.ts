@@ -18,19 +18,9 @@ export class CondaExecutionService extends PythonExecutionService {
         super(serviceContainer, procService, pythonPath);
     }
 
-    public getExecutableInfo(command: string, args: string[]): IPythonExecutableInfo {
-        if (this.condaEnvironment.name !== '') {
-            return {
-                command: this.condaFile,
-                args: ['run', '-n', this.condaEnvironment.name, 'python', ...args]
-            };
-        }
-        if (this.condaEnvironment.path.length > 0) {
-            return {
-                command: this.condaFile,
-                args: ['run', '-p', this.condaEnvironment.path, 'python', ...args]
-            };
-        }
-        return { command, args };
+    public getExecutableInfo(_: string, args: string[]): IPythonExecutableInfo {
+        const executionArgs = this.condaEnvironment.name !== '' ? ['run', '-n', this.condaEnvironment.name] : ['run', '-p', this.condaEnvironment.path];
+
+        return { command: this.condaFile, args: [...executionArgs, 'python', ...args] };
     }
 }

@@ -5,7 +5,6 @@ import * as TypeMoq from 'typemoq';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
 import { IProcessService } from '../../../client/common/process/types';
-import { CondaEnvironmentInfo } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('CondaExecutionService', () => {
@@ -25,31 +24,21 @@ suite('CondaExecutionService', () => {
         serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
     });
 
-    async function testExecutionService(environment: CondaEnvironmentInfo, expectedCommand: string, expectedArgs: string[]): Promise<void> {
-        const expectedExecResult = { stdout: 'foo' };
-
-        processService.setup(p => p.exec(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), {})).returns(() => Promise.resolve(expectedExecResult));
-
+    test('getExecutableInfo with a named environment should return an executable command using the environment name', () => {
+        const environment = { name: 'foo', path: 'bar' };
         executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
-        const executableInfo = await executionService.exec(args, {});
+        const result = executionService.getExecutableInfo(pythonPath, args);
 
-        expect(executableInfo).to.be.equal(expectedExecResult);
-        processService.verify(p => p.exec(expectedCommand, expectedArgs, {}), TypeMoq.Times.once());
-    }
-
-    test('getExecutableInfo with a named environment should return an executable command using the environment name', async () => {
-        const environment = { name: 'foo', path: 'bar' };
-        await testExecutionService(environment, condaFile, ['run', '-n', environment.name, 'python', ...args]);
+        expect(result).to.deep.equal({ command: condaFile, args: ['run', '-n', environment.name, 'python', ...args] });
     });
 
     test('getExecutableInfo with a non-named environment should return an executable command using the environment npathame', async () => {
         const environment = { name: '', path: 'bar' };
-        await testExecutionService(environment, condaFile, ['run', '-p', environment.path, 'python', ...args]);
-    });
+        executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
-    test('getExecutableInfo with an environment without a name or a prefix should return an executable command using pythonPath', async () => {
-        const environment = { name: '', path: '' };
-        await testExecutionService(environment, pythonPath, args);
+        const result = executionService.getExecutableInfo(pythonPath, args);
+
+        expect(result).to.deep.equal({ command: condaFile, args: ['run', '-p', environment.path, 'python', ...args] });
     });
 });
