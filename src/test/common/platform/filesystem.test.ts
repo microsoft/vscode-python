@@ -468,16 +468,17 @@ suite('FileSystem Utils', () => {
             const file1 = await fix.createFile('x/y/z/scripts/spam.py');
             await fix.createDirectory('x/y/z/scripts/v');
             const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
-            await fix.createSocket('x/y/z/scripts/spam.sock');
+            const file3 = await fix.createSocket('x/y/z/scripts/spam.sock');
             await fix.createSymlink('x/y/z/scripts/other', symlinkSource);
-            const file3 = await fix.createFile('x/y/z/scripts/data.json');
+            const file4 = await fix.createFile('x/y/z/scripts/data.json');
 
             const results = await utils.getFiles(dirname);
 
             expect(results.sort()).to.deep.equal([
-                file3,
+                file4,
                 file2,
-                file1
+                file1,
+                file3
             ]);
         });
 
