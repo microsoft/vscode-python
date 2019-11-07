@@ -292,7 +292,7 @@ gulp.task('installOldPtvsd', async () => {
     }
 });
 
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installPtvsdWheels', 'installPythonJSONRpcPackagesForPython2'));
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installPtvsdWheels'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
