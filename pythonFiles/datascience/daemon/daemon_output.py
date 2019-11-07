@@ -4,7 +4,6 @@
 import os
 import sys
 import logging
-from datascience.daemon.daemon_constants import IS_PY2, IS_PY3
 from threading import Lock
 
 log = logging.getLogger(__name__)
@@ -120,47 +119,15 @@ class CustomWriter(object):
     def write(self, s):
         log.info('Enabled %s', self._enabled)
         if self._enabled and s:
-            if IS_PY2:
-                # Need s in utf-8 bytes
-                if isinstance(s, unicode):  # noqa
-                    s = s.encode("utf-8", "replace")
-                else:
-                    s = s.decode(self.encoding, "replace").encode("utf-8", "replace")
-
-            else:
-                # Need s in str
-                if isinstance(s, bytes):
-                    s = s.decode(self.encoding, errors="replace")
+            # Need s in str
+            if isinstance(s, bytes):
+                s = s.decode(self.encoding, errors="replace")
             log.info("write to stdout/stderr: " + s)
             if self._on_write is not None:
                 self._on_write(s)
 
 
-def _binary_stdio():
-    """Construct binary stdio streams (not text mode).
-    check `from_stdio` in https://github.com/microsoft/ptvsd/blob/fad3c4f8785cf185cdb4c9c769467c1e27784cf0/src/ptvsd/common/messaging.py#L76
-    """
-
-    if IS_PY3:
-        # pylint: disable=no-member
-        stdin, stdout = sys.stdin.buffer, sys.stdout.buffer
-    else:
-        # Python 2 on Windows opens sys.stdin in text mode, and
-        # binary data that read from it becomes corrupted on \r\n
-        if sys.platform == "win32":
-            # set sys.stdin to binary mode
-            # pylint: disable=no-member,import-error
-            import os
-            import msvcrt
-
-            msvcrt.setmode(sys.stdin.fileno(), os.O_BINARY)
-            msvcrt.setmode(sys.stdout.fileno(), os.O_BINARY)
-        stdin, stdout = sys.stdin, sys.stdout
-
-    return stdin, stdout
-
-
-_stdin, _stdout = _binary_stdio()
+_stdin, _stdout = sys.stdin.buffer, sys.stdout.buffer
 
 def get_io_buffers():
     return _stdin, _stdout
@@ -168,7 +135,7 @@ def get_io_buffers():
 
 def redirect_output(stdout_handler, stderr_handler):
     log.info("Redirect stdout/stderr")
-    wrap_buffer = True if not IS_PY2 else False
+    wrap_buffer = True # Always for Python 3
 
     sys._vsc_out_buffer_ = CustomWriter(sys.stdout, wrap_buffer, stdout_handler)
     sys.stdout_original = sys.stdout

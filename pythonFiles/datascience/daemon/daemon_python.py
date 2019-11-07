@@ -14,7 +14,7 @@ from datascience.daemon.daemon_output import (
     redirect_output,
     disable_redirection,
 )
-from contextlib import contextmanager
+from contextlib import redirect_stdout, redirect_stderr
 from pyls_jsonrpc.dispatchers import MethodDispatcher
 from pyls_jsonrpc.endpoint import Endpoint
 from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
@@ -22,19 +22,6 @@ from pyls_jsonrpc.streams import JsonRpcStreamReader, JsonRpcStreamWriter
 log = logging.getLogger(__name__)
 
 MAX_WORKERS = 64
-
-
-@contextmanager
-def stdout_redirector(stdout_stream, stderr_stream):
-    old_stdout = sys.stdout
-    sys.stdout = stdout_stream
-    old_stderr = sys.stderr
-    sys.stderr = stderr_stream
-    try:
-        yield
-    finally:
-        sys.stdout = old_stdout
-        sys.stderr = old_stderr
 
 
 def error_decorator(func):
@@ -71,7 +58,7 @@ class PythonDaemon(MethodDispatcher):
             raise KeyError
 
         log.info("Execute rpc method %s", item)
-        return super(PythonDaemon, self).__getitem__(item)
+        return super().__getitem__(item)
 
     def start(self):
         """Entry point for the server."""
@@ -91,8 +78,9 @@ class PythonDaemon(MethodDispatcher):
         fout = io.StringIO()
         ferr = io.StringIO()
 
-        with stdout_redirector(fout, ferr):
-            func()
+        with redirect_stdout(fout):
+            with redirect_stderr(ferr):
+                func()
 
         output = {}
         if fout.tell():

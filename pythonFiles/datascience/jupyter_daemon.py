@@ -14,12 +14,12 @@ class PythonDaemon(BasePythonDaemon.PythonDaemon):
 
     def __init__(self, rx, tx):
         log.info("Child class init")
-        super(PythonDaemon, self).__init__(rx, tx)
+        super().__init__(rx, tx)
 
     def __getitem__(self, item):
         """Override getitem to ensure we use these methods."""
         log.info("Execute rpc method %s in Jupyter class", item)
-        return super(PythonDaemon, self).__getitem__(item)
+        return super().__getitem__(item)
 
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
@@ -32,7 +32,7 @@ class PythonDaemon(BasePythonDaemon.PythonDaemon):
             return self._execute_and_capture_output(self._print_kernelspec_version)
         else:
             log.info("check base class stuff")
-            return super(PythonDaemon, self).m_exec_module(module_name, args, cwd, env)
+            return super().m_exec_module(module_name, args, cwd, env)
 
     def _print_kernelspec_version(self):
         import jupyter_client
@@ -53,13 +53,7 @@ class PythonDaemon(BasePythonDaemon.PythonDaemon):
         sys.stdout.flush()
 
     def m_hello(self, rootUri=None, **kwargs):
-        # print("Hello World")
-        # log.info("Got initialize params: %s", kwargs)
-        # return {"hello": {"wow": 1}}
-        import jupyter_core
-        import jupyter_core.command
-
-        sys.argv = ["", "notebook", "--no-browser"]
-        self.close()
-        # jupyter_core.command.main()
-        return {"started": {"wow": 1}}
+        from notebook.notebookapp import main
+        sys.argv = ["notebook", "--no-browser"]
+        main()
+        return {}
