@@ -141,14 +141,13 @@ class PythonDaemon(MethodDispatcher):
 
         return self._execute_and_capture_output(exec_code)
 
-    def m_exec_file_observable(self, file_name, args=[], cwd=None, env=None):
-        """ At this point the rcp server is busted.
-        We assume the code will hijack the stdout/stderr and write to it directly.
-        We can try to ensure we take control.
-        However we're not going to bother for now.
+    def m_exec_file_observable(self, file_name, args=[], cwd=None, env=None, disconnect_rpc=False):
+        """ Sometimes calling modules could result in Python running a process from within.
+        E.g. when running something like `jupyter notebook` we're unable to hijack the stdout.
+        At this point we're unable to take over stdout/stderr. Hence python program writes directly to stdout.
+        Meaning JSON rpc is busted.
         After all, we cannot have two seprate requests that run something in an observable manner. We can only have one piece of code.
-        Also, when running something like `jupyter notebook` we're unable to hijack the stdout.
-        Hence consider the daemon useless after any calls to exec_module_observable.
+        In such cases, please set dtisconnect_rpc=True
         """
         args = [] if args is None else args
         old_argv, sys.argv = sys.argv, [""] + args
@@ -156,13 +155,17 @@ class PythonDaemon(MethodDispatcher):
 
         try:
             log.info("execute file %s", file_name)
-            # rpc is no-longer usable (see comments).
-            self.close()
+            if disconnect_rpc:
+                # rpc is no-longer usable (see comments).
+                self.close()
             runpy.run_path(file_name, globals())
         except Exception:
-            # Its possible the code fell over and we returned an error.
-            sys.stderr.write(traceback.format_exc())
-            sys.stderr.flush()
+            if disconnect_rpc:
+                # Its possible the code fell over and we returned an error.
+                sys.stderr.write(traceback.format_exc())
+                sys.stderr.flush()
+            else:
+                return {"error": traceback.format_exc()}
         finally:
             sys.argv = old_argv
 
@@ -185,14 +188,13 @@ class PythonDaemon(MethodDispatcher):
         finally:
             sys.argv = old_argv
 
-    def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None):
-        """ At this point the rcp server is busted.
-        We assume the code will hijack the stdout/stderr and write to it directly.
-        We can try to ensure we take control.
-        However we're not going to bother for now.
+    def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None, disconnect_rpc=False):
+        """ Sometimes calling modules could result in Python running a process from within.
+        E.g. when running something like `jupyter notebook` we're unable to hijack the stdout.
+        At this point we're unable to take over stdout/stderr. Hence python program writes directly to stdout.
+        Meaning JSON rpc is busted.
         After all, we cannot have two seprate requests that run something in an observable manner. We can only have one piece of code.
-        Also, when running something like `jupyter notebook` we're unable to hijack the stdout.
-        Hence consider the daemon useless after any calls to exec_module_observable.
+        In such cases, please set dtisconnect_rpc=True
         """
         args = [] if args is None else args
         log.info("Exec module (observable) %s with args %s", module_name, args)
@@ -200,13 +202,17 @@ class PythonDaemon(MethodDispatcher):
 
         try:
             log.info("execute module %s", module_name)
-            # rpc is no-longer usable (see comments).
-            self.close()
+            if disconnect_rpc:
+                # rpc is no-longer usable (see comments).
+                self.close()
             runpy.run_module(module_name, globals(), run_name="__main__")
         except Exception:
-            # Its possible the code fell over and we returned an error.
-            sys.stderr.write(traceback.format_exc())
-            sys.stderr.flush()
+            if disconnect_rpc:
+                # Its possible the code fell over and we returned an error.
+                sys.stderr.write(traceback.format_exc())
+                sys.stderr.flush()
+            else:
+                return {"error": traceback.format_exc()}
         finally:
             sys.argv = old_argv
 
@@ -254,10 +260,10 @@ class PythonDaemon(MethodDispatcher):
         log.info("Starting %s IO language server", cls.__name__)
 
         def on_write_stdout(output):
-            server._endpoint.notify("output", {"category": "stdout", "output": output})
+            server._endpoint.notify("output", {"source": "stdout", "out": output})
 
         def on_write_stderr(output):
-            server._endpoint.notify("output", {"category": "stderr", "output": output})
+            server._endpoint.notify("output", {"source": "stderr", "out": output})
 
         stdin, stdout = get_io_buffers()
         server = cls(stdin, stdout)
