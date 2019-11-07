@@ -13,7 +13,6 @@ from datascience.daemon.daemon_output import (
     IORedirector,
     get_io_buffers,
     redirect_output,
-    disable_redirection,
 )
 from contextlib import redirect_stdout, redirect_stderr, contextmanager
 from pyls_jsonrpc.dispatchers import MethodDispatcher
@@ -63,7 +62,9 @@ def error_decorator(func):
 
 
 class PythonDaemon(MethodDispatcher):
-    """ Base Python Daemon with simple methods to check if a module exists, get version info and the like.    """
+    """ Base Python Daemon with simple methods to check if a module exists, get version info and the like.
+    To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `datascience.daemon`.
+    """
 
     def __init__(self, rx, tx):
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
@@ -111,7 +112,6 @@ class PythonDaemon(MethodDispatcher):
     def close(self):
         log.info("Closing rpc channel")
         self._shutdown = True
-        disable_redirection()
         self._endpoint.shutdown()
         self._jsonrpc_stream_reader.close()
         self._jsonrpc_stream_writer.close()

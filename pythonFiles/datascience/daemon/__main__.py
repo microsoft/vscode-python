@@ -77,6 +77,8 @@ def _configure_logger(verbose=0, log_config=None, log_file=None):
 def main():
     """ Starts the daemon.
     The daemon_module allows authors of modules to provide a custom daemon implementation.
+    E.g. we have a base implementation for standard python functionality,
+    and a custom daemon implementation for DS work (related to jupyter).
     """
     parser = argparse.ArgumentParser()
     add_arguments(parser)
