@@ -464,9 +464,6 @@ suite('DataScience notebook tests', () => {
             public shouldAutoSetInterpreter(): Promise<boolean> {
                 throw new Error('Method not implemented');
             }
-            public getInterpreterIdentifier(interpreter: PythonInterpreter): string {
-                return interpreter.path;
-            }
         }
         class EmptyPathService implements IKnownSearchPathsForInterpreters {
             public getSearchPaths(): string[] {
