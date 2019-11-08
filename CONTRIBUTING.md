@@ -19,7 +19,7 @@
 
 ### Prerequisites
 
-1. [Node.js](https://nodejs.org/) 10.x
+1. [Node.js](https://nodejs.org/) 12.x
 1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
