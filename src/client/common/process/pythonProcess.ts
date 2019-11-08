@@ -82,13 +82,15 @@ export class PythonExecutionService implements IPythonExecutionService {
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.getExecutionInfo(this.pythonPath, args);
-        return this.procService.execObservable(executable.command, executable.args, opts);
+        // Cannot use this.getExecutionInfo() until 'conda run' can be run without buffering output.
+        // See https://github.com/conda/conda/issues/9412
+        return this.procService.execObservable(this.pythonPath, args, opts);
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.getExecutionInfo(this.pythonPath, ['-m', moduleName, ...args]);
-        return this.procService.execObservable(executable.command, executable.args, opts);
+        // Cannot use this.getExecutionInfo() until 'conda run' can be run without buffering output.
+        // See https://github.com/conda/conda/issues/9412
+        return this.procService.execObservable(this.pythonPath, ['-m', moduleName, ...args], opts);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
