@@ -146,7 +146,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             this.condaService.getCondaFile(),
             processServicePromise
         ]);
-        if (condaEnvironment) {
+        if (condaEnvironment && condaFile && procService) {
             return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
         }
 

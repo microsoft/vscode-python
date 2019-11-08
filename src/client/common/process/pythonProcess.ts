@@ -80,6 +80,10 @@ export class PythonExecutionService implements IPythonExecutionService {
             .catch(() => false);
     }
 
+    public getExecutionInfo(command: string, args: string[]): PythonExecutionInfo {
+        return { command, args };
+    }
+
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
         // Cannot use this.getExecutionInfo() until 'conda run' can be run without buffering output.
@@ -111,9 +115,5 @@ export class PythonExecutionService implements IPythonExecutionService {
         }
 
         return result;
-    }
-
-    public getExecutionInfo(command: string, args: string[]): PythonExecutionInfo {
-        return { command, args };
     }
 }
