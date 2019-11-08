@@ -33,7 +33,7 @@ suite('CondaExecutionService', () => {
         expect(result).to.deep.equal({ command: condaFile, args: ['run', '-n', environment.name, 'python', ...args] });
     });
 
-    test('getExecutableInfo with a non-named environment should return an executable command using the environment npathame', async () => {
+    test('getExecutableInfo with a non-named environment should return an executable command using the environment path', async () => {
         const environment = { name: '', path: 'bar' };
         executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
