@@ -202,8 +202,8 @@ for _ in range(50):
             // find the buttons on the cell itself
             let cell = getLastOutputCell(wrapper, 'NativeCell');
             let ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
-            let deleteButton = ImageButtons.at(6);
+            assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
+            let deleteButton = ImageButtons.at(5);
 
             // Make sure delete works
             let afterDelete = await getNativeCellResults(wrapper, 1, async () => {
@@ -216,8 +216,8 @@ for _ in range(50):
             // least one cell in the file.
             cell = getLastOutputCell(wrapper, 'NativeCell');
             ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 7, 'Cell buttons not found');
-            deleteButton = ImageButtons.at(6);
+            assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
+            deleteButton = ImageButtons.at(5);
 
             afterDelete = await getNativeCellResults(wrapper, 1, async () => {
                 deleteButton.simulate('click');
@@ -247,7 +247,7 @@ for _ in range(50):
             await addCell(wrapper, ioc, 'a=1\na');
 
             // Export should cause exportCalled to change to true
-            const exportButton = findButton(wrapper, NativeEditor, 6);
+            const exportButton = findButton(wrapper, NativeEditor, 8);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
             assert.equal(exportCalled, true, 'Export should have been called');
         }, () => { return ioc; });
@@ -266,7 +266,7 @@ for _ in range(50):
             await openEditor(ioc, JSON.stringify(notebook));
 
             // Export should cause exportCalled to change to true
-            const runAllButton = findButton(wrapper, NativeEditor, 3);
+            const runAllButton = findButton(wrapper, NativeEditor, 0);
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
 
             await waitForUpdate(wrapper, NativeEditor, 15);
@@ -293,7 +293,7 @@ for _ in range(50):
             let editor = await openEditor(ioc, JSON.stringify(notebook));
 
             // Run everything
-            let runAllButton = findButton(wrapper, NativeEditor, 3);
+            let runAllButton = findButton(wrapper, NativeEditor, 0);
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
             await waitForUpdate(wrapper, NativeEditor, 15);
 
@@ -306,7 +306,7 @@ for _ in range(50):
 
             // Reopen, and rerun
             editor = await openEditor(ioc, JSON.stringify(notebook));
-            runAllButton = findButton(wrapper, NativeEditor, 3);
+            runAllButton = findButton(wrapper, NativeEditor, 0);
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
             await waitForUpdate(wrapper, NativeEditor, 15);
             verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
@@ -344,7 +344,7 @@ for _ in range(50):
             const cell = getOutputCell(wrapper, 'NativeCell', 1);
             assert.ok(cell, 'Cannot find the first cell');
             const imageButtons = cell!.find(ImageButton);
-            assert.equal(imageButtons.length, 7, 'Cell buttons not found');
+            assert.equal(imageButtons.length, 6, 'Cell buttons not found');
             const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
             assert.equal(runButton.length, 1, 'No run button found');
             const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);

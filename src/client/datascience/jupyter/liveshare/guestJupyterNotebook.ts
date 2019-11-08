@@ -14,7 +14,7 @@ import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, INotebook, INotebookCompletion, INotebookServer, InterruptResult } from '../../types';
+import { ICell, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -90,6 +90,10 @@ export class GuestJupyterNotebook
     public setLaunchingFile(_directory: string): Promise<void> {
         // Ignore this command on this side
         return Promise.resolve();
+    }
+
+    public addLogger(_logger: INotebookExecutionLogger): void {
+        noop();
     }
 
     public async setMatplotLibStyle(_useDark: boolean): Promise<void> {

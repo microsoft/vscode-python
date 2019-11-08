@@ -14,10 +14,9 @@ import {
     IDisposableRegistry,
     ILogger
 } from '../../common/types';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import {
-    IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterSessionManagerFactory,
     INotebookServer,
@@ -36,7 +35,6 @@ type JupyterExecutionClassType = {
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
-        knownSearchPaths: IKnownSearchPathsForInterpreters,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
@@ -44,7 +42,6 @@ type JupyterExecutionClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        commandFactory: IJupyterCommandFactory,
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };
@@ -60,7 +57,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
-        @inject(IKnownSearchPathsForInterpreters) knownSearchPaths: IKnownSearchPathsForInterpreters,
         @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -68,7 +64,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IJupyterCommandFactory) commandFactory: IJupyterCommandFactory,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
@@ -79,7 +74,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             pythonFactory,
             interpreterService,
             processServiceFactory,
-            knownSearchPaths,
             logger,
             disposableRegistry,
             asyncRegistry,
@@ -87,7 +81,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             sessionManagerFactory,
             workspace,
             configuration,
-            commandFactory,
             serviceContainer
         );
         this.executionFactory.sessionChanged(() => this.onSessionChanged());

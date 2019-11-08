@@ -17,6 +17,7 @@ import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INo
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
+
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
     private executedEditors: Set<string> = new Set<string>();
     private notebookCount: number = 0;
@@ -72,7 +73,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         sendTelemetryEvent(Telemetry.NotebookRunCount, this.executedEditors.size);
         sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, this.notebookCount);
     }
-
     public get activeEditor(): INotebookEditor | undefined {
         const active = [...this.activeEditors.entries()].find(e => e[1].active);
         if (active) {
@@ -106,11 +106,15 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(): Promise<INotebookEditor> {
+    public async createNew(contents?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
         this.notebookCount += 1;
-        return this.open(uri, '');
+        if (contents) {
+            return this.open(uri, contents);
+        } else {
+            return this.open(uri, '');
+        }
     }
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
@@ -130,6 +134,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             purpose: Identifiers.HistoryPurpose  // Share the same one as the interactive window. Just need a new session
         };
     }
+
     /**
      * Open ipynb files when user opens an ipynb file.
      *

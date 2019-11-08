@@ -432,7 +432,7 @@ export class MainStateController implements IMessageHandler {
 
     public gatherCell = (cellVM: ICellViewModel | undefined) => {
         if (cellVM) {
-            this.sendMessage(InteractiveWindowMessages.GatherCode, cellVM.cell);
+            this.sendMessage(InteractiveWindowMessages.GatherCodeRequest, cellVM.cell);
         }
     }
 
@@ -567,8 +567,8 @@ export class MainStateController implements IMessageHandler {
         if (index >= 0 && this.pendingState.cellVMs[index].cell.data.cell_type !== newType) {
             const cellVMs = [...this.pendingState.cellVMs];
             const current = this.pendingState.cellVMs[index];
-            const newSource = current.focused ? this.getMonacoEditorContents(cellId) : current.cell.data.source;
-            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.executing, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
+            const newSource = current.focused ? this.getMonacoEditorContents(cellId) : concatMultilineStringInput(current.cell.data.source);
+            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.finished, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
             // tslint:disable-next-line: no-any
             cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
             this.setState({ cellVMs });
@@ -970,19 +970,27 @@ export class MainStateController implements IMessageHandler {
     private handleRestarted() {
         this.suspendUpdates();
 
-        // When we restart, make sure to turn off all executing cells. They aren't executing anymore
-        const executingCells = this.pendingState.cellVMs
-            .map((cvm, i) => { return { cvm, i }; })
-            .filter(s => s.cvm.cell.state !== CellState.error && s.cvm.cell.state !== CellState.finished);
+        const newVMs = [...this.pendingState.cellVMs];
 
-        if (executingCells && executingCells.length) {
-            const newVMs = [...this.pendingState.cellVMs];
-            executingCells.forEach(s => {
-                newVMs[s.i] = immutable.updateIn(s.cvm, ['cell', 'state'], () => CellState.finished);
+        // When we restart, reset all code cells to indicate they haven't been run in the new kernel.
+        // Also make sure to turn off all executing cells as they aren't executing anymore.
+        const executableCells = newVMs
+            .map((cvm, i) => { return { cvm, i }; })
+            .filter(s => s.cvm.cell.data.cell_type === 'code');
+
+        if (executableCells) {
+            executableCells.forEach(s => {
+                if (newVMs[s.i].hasBeenRun && newVMs[s.i].hasBeenRun === true) {
+                    newVMs[s.i] = immutable.updateIn(s.cvm, ['hasBeenRun'], () => false);
+                }
+
+                if (newVMs[s.i].cell.state !== CellState.error && newVMs[s.i].cell.state !== CellState.finished) {
+                    newVMs[s.i] = immutable.updateIn(s.cvm, ['cell', 'state'], () => CellState.finished);
+                }
             });
-            this.setState({ cellVMs: newVMs });
         }
-        this.setState({ currentExecutionCount: 0 });
+
+        this.setState({ cellVMs: newVMs, currentExecutionCount: 0 });
         this.resumeUpdates();
 
         // Update our variables
@@ -1152,6 +1160,8 @@ export class MainStateController implements IMessageHandler {
                 // Use the ref here to maintain var explorer independence
                 this.refreshVariables(newExecutionCount);
             }
+
+            this.pendingState.cellVMs[index].hasBeenRun = true;
 
             // Have to make a copy of the cell VM array or
             // we won't actually update.

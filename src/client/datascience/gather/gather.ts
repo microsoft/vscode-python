@@ -1,29 +1,22 @@
-import { DataflowAnalyzer } from '@msrvida/python-program-analysis';
-import { Cell as ICell, LogCell } from '@msrvida/python-program-analysis/dist/es5/cell';
-import { CellSlice } from '@msrvida/python-program-analysis/dist/es5/cellslice';
-import { ExecutionLogSlicer } from '@msrvida/python-program-analysis/dist/es5/log-slicer';
+import { CellSlice, DataflowAnalyzer, ExecutionLogSlicer } from '@msrvida/python-program-analysis';
+import { Cell as IGatherCell } from '@msrvida/python-program-analysis/dist/es5/cell';
 
 import { inject, injectable } from 'inversify';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 // tslint:disable-next-line: no-duplicate-imports
 import { Common } from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { CellMatcher } from '../cellMatcher';
-import { concatMultilineStringInput } from '../common';
 import { Identifiers } from '../constants';
-import { CellState, ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
+import { CellState, ICell as IVscCell, IGatherExecution } from '../types';
 
 /**
  * An adapter class to wrap the code gathering functionality from [microsoft/python-program-analysis](https://www.npmjs.com/package/@msrvida/python-program-analysis).
  */
 @injectable()
-export class GatherExecution implements IGatherExecution, INotebookExecutionLogger {
-    private _executionSlicer: ExecutionLogSlicer;
+export class GatherExecution implements IGatherExecution {
+    private _executionSlicer: ExecutionLogSlicer<IGatherCell>;
     private dataflowAnalyzer: DataflowAnalyzer;
     private _enabled: boolean;
 
@@ -44,40 +37,24 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 
         traceInfo('Gathering tools have been activated');
     }
+    public logExecution(vscCell: IVscCell): void {
+        const gatherCell = convertVscToGatherCell(vscCell);
 
-    public async preExecute(_vscCell: IVscCell, _silent: boolean): Promise<void> {
-        // This function is just implemented here for compliance with the INotebookExecutionLogger interface
-        noop();
+        if (gatherCell) {
+            this._executionSlicer.logExecution(gatherCell);
+        }
     }
 
-    public async postExecute(vscCell: IVscCell, _silent: boolean): Promise<void> {
-        if (this._enabled) {
-            // Don't log if vscCell.data.source is an empty string or if it was
-            // silently executed. Original Jupyter extension also does this.
-            if (vscCell.data.source !== '' && !_silent) {
-                // First make a copy of this cell, as we are going to modify it
-                const cloneCell: IVscCell = cloneDeep(vscCell);
-
-                // Strip first line marker. We can't do this at JupyterServer.executeCodeObservable because it messes up hashing
-                const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
-                cloneCell.data.source = cellMatcher.stripFirstMarker(concatMultilineStringInput(vscCell.data.source));
-
-                // Convert IVscCell to IGatherCell
-                const cell = convertVscToGatherCell(cloneCell) as LogCell;
-
-                // Call internal logging method
-                this._executionSlicer.logExecution(cell);
-            }
-        }
+    public async resetLog(): Promise<void> {
+        this._executionSlicer.reset();
     }
 
     /**
      * For a given code cell, returns a string representing a program containing all the code it depends on.
      */
     public gatherCode(vscCell: IVscCell): string {
-        // sliceAllExecutions does a lookup based on executionEventId
-        const cell = convertVscToGatherCell(vscCell);
-        if (cell === undefined) {
+        const gatherCell = convertVscToGatherCell(vscCell);
+        if (!gatherCell) {
             return '';
         }
 
@@ -85,11 +62,11 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
         const defaultCellMarker = this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
 
         // Call internal slice method
-        const slices = this._executionSlicer.sliceAllExecutions(cell);
+        const slices = this._executionSlicer.sliceAllExecutions(gatherCell.persistentId);
         const program = slices.length > 0 ? slices[0].cellSlices.reduce(concat, '').replace(/#%%/g, defaultCellMarker) : '';
 
         // Add a comment at the top of the file explaining what gather does
-        const descriptor = '# This file contains the minimal amount of code required to produce the code cell you gathered.\n';
+        const descriptor = localize.DataScience.gatheredScriptDescription();
         return descriptor.concat(program);
     }
 
@@ -122,7 +99,7 @@ export class GatherExecution implements IGatherExecution, INotebookExecutionLogg
 /**
  * Accumulator to concatenate cell slices for a sliced program, preserving cell structures.
  */
-function concat(existingText: string, newText: CellSlice) {
+function concat(existingText: string, newText: CellSlice): string {
     // Include our cell marker so that cell slices are preserved
     return `${existingText}#%%\n${newText.textSliceLines}\n\n`;
 }
@@ -131,14 +108,11 @@ function concat(existingText: string, newText: CellSlice) {
  * This is called to convert VS Code ICells to Gather ICells for logging.
  * @param cell A cell object conforming to the VS Code cell interface
  */
-function convertVscToGatherCell(cell: IVscCell): ICell | undefined {
+function convertVscToGatherCell(cell: IVscCell): IGatherCell | undefined {
     // This should always be true since we only want to log code cells. Putting this here so types match for outputs property
     if (cell.data.cell_type === 'code') {
-        const result: ICell = {
+        const result: IGatherCell = {
             // tslint:disable-next-line no-unnecessary-local-variable
-            id: cell.id,
-            gathered: false,
-            dirty: false,
             text: cell.data.source,
 
             // This may need to change for native notebook support since in the original Gather code this refers to the number of times that this same cell was executed
@@ -147,9 +121,7 @@ function convertVscToGatherCell(cell: IVscCell): ICell | undefined {
 
             // This may need to change for native notebook support, since this is intended to persist in the metadata for a notebook that is saved and then re-loaded
             persistentId: cell.id,
-            outputs: cell.data.outputs,
-            hasError: cell.state === CellState.error,
-            is_cell: true
+            hasError: cell.state === CellState.error
             // tslint:disable-next-line: no-any
         } as any;
         return result;

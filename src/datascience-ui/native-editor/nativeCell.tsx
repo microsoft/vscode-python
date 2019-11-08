@@ -152,7 +152,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 <div className='cell-row-container'>
                     {this.renderCollapseBar(false)}
                     {this.renderOutput()}
-                    {this.renderMiddleToolbar()}
                 </div>
                 {this.renderAddDivider(false)}
             </div> :
@@ -558,20 +557,23 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
+        const runCell = () => {
+            this.props.stateController.updateCellSource(cellId);
+            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
+            this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
+        };
+        const gatherCell = () => {
+            this.props.stateController.gatherCell(this.props.cellVM);
+        };
         const deleteCell = () => {
             this.props.stateController.possiblyDeleteCell(cellId);
             this.props.stateController.sendCommand(NativeCommandType.DeleteCell, 'mouse');
         };
-        const runAbove = () => {
-            this.props.stateController.runAbove(cellId);
-            this.props.stateController.sendCommand(NativeCommandType.RunAbove, 'mouse');
-        };
-        const runBelow = () => {
-            this.props.stateController.runBelow(cellId);
-            this.props.stateController.sendCommand(NativeCommandType.RunBelow, 'mouse');
-        };
-        const canRunAbove = this.props.stateController.canRunAbove(cellId);
-        const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
+        const gatherDisabled =  this.props.cellVM.cell.data.execution_count === null ||
+                                this.props.cellVM.hasBeenRun === null ||
+                                this.props.cellVM.hasBeenRun === false ||
+                                this.isMarkdownCell() ||
+                                getSettings().enableGather === false;
         const switchTooltip = this.props.cellVM.cell.data.cell_type === 'code' ? getLocString('DataScience.switchToMarkdown', 'Change to markdown') :
             getLocString('DataScience.switchToCode', 'Change to code');
         const otherCellType = this.props.cellVM.cell.data.cell_type === 'code' ? 'markdown' : 'code';
@@ -581,46 +583,37 @@ export class NativeCell extends React.Component<INativeCellProps> {
             this.props.stateController.changeCellType(cellId, otherCellType);
             this.props.stateController.sendCommand(otherCellTypeCommand, 'mouse');
         };
+        const toolbarClassName = this.props.cellVM.cell.data.cell_type === 'code' ? '' : 'markdown-toolbar';
 
         return (
-            <div className='native-editor-celltoolbar-middle'>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
-                </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
-                </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
-                </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
-                </ImageButton>
+            <div className={toolbarClassName}>
+                <div className='native-editor-celltoolbar-middle'>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')} className='run-cell-button'>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={otherCellImage} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCell} tooltip={getLocString('DataScience.gatherCell', 'Gather the code required to generate this cell into a new notebook')} hidden={gatherDisabled}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
+                    </ImageButton>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCell} tooltip={getLocString('DataScience.deleteCell', 'Delete cell')} className='delete-cell-button'>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Delete} />
+                    </ImageButton>
+                </div>
+                <div className='native-editor-celltoolbar-divider' />
             </div>
         );
     }
 
     private renderControls = () => {
-        const cellId = this.props.cellVM.cell.id;
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
         const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
             this.props.cellVM.cell.data.execution_count.toString() : '-';
-        const runCell = () => {
-            this.props.stateController.updateCellSource(cellId);
-            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
-            this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
-        };
-        const canRunBelow = this.props.cellVM.cell.state === CellState.finished || this.props.cellVM.cell.state === CellState.error;
-        const runCellHidden = !canRunBelow || this.isMarkdownCell();
 
         return (
             <div className='controls-div'>
                 <ExecutionCount isBusy={busy} count={executionCount} visible={this.isCodeCell()} />
-                <div className='native-editor-celltoolbar-inner'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} hidden={runCellHidden} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
-                    </ImageButton>
-                </div>
             </div>
         );
     }
@@ -629,6 +622,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         if (this.shouldRenderInput()) {
             return (
                 <div>
+                    {this.renderMiddleToolbar()}
                     <CellInput
                         cellVM={this.props.cellVM}
                         editorOptions={this.props.stateController.getState().editorOptions}
@@ -649,7 +643,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         showLineNumbers={this.props.cellVM.showLineNumbers}
                         font={this.props.font}
                     />
-                    {this.renderMiddleToolbar()}
                 </div>
             );
         }
@@ -681,16 +674,20 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private renderOutput = (): JSX.Element | null => {
         const themeMatplotlibPlots = getSettings().themeMatplotlibPlots ? true : false;
+        const toolbar = this.props.cellVM.cell.data.cell_type === 'markdown' ? this.renderMiddleToolbar() : null;
         if (this.shouldRenderOutput()) {
             return (
-                <CellOutput
-                    cellVM={this.props.cellVM}
-                    baseTheme={this.props.baseTheme}
-                    expandImage={this.props.stateController.showPlot}
-                    openLink={this.props.stateController.openLink}
-                    maxTextSize={this.props.maxTextSize}
-                    themeMatplotlibPlots={themeMatplotlibPlots}
-                 />
+                <div>
+                    {toolbar}
+                    <CellOutput
+                        cellVM={this.props.cellVM}
+                        baseTheme={this.props.baseTheme}
+                        expandImage={this.props.stateController.showPlot}
+                        openLink={this.props.stateController.openLink}
+                        maxTextSize={this.props.maxTextSize}
+                        themeMatplotlibPlots={themeMatplotlibPlots}
+                    />
+                </div>
             );
         }
         return null;

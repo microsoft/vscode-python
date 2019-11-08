@@ -8,8 +8,7 @@ import { IApplicationShell, IDocumentManager } from '../../common/application/ty
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
-import { IProcessServiceFactory } from '../../common/process/types';
-import { IConfigurationService } from '../../common/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 
@@ -17,13 +16,11 @@ import { ICodeExecutionHelper } from '../types';
 export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
-    private readonly processServiceFactory: IProcessServiceFactory;
-    private readonly configurationService: IConfigurationService;
+    private readonly pythonServiceFactory: IPythonExecutionFactory;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.pythonServiceFactory = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
     }
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
         try {
@@ -33,10 +30,9 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // On windows cr is not handled well by python when passing in/out via stdin/stdout.
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
-            const pythonPath = this.configurationService.getSettings(resource).pythonPath;
             const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
-            const processService = await this.processServiceFactory.create(resource);
-            const proc = await processService.exec(pythonPath, args, { throwOnStdErr: true });
+            const processService = await this.pythonServiceFactory.create({ resource });
+            const proc = await processService.exec(args, { throwOnStdErr: true });
 
             return proc.stdout;
         } catch (ex) {

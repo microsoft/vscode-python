@@ -6,7 +6,7 @@ import { isTestExecution } from '../constants';
 import { traceError, traceVerbose } from '../logger';
 import { Resource } from '../types';
 import { createDeferred, Deferred } from './async';
-import { InMemoryInterpreterSpecificCache } from './cacheUtils';
+import { getCacheKeyFromFunctionArgs, getGlobalCacheStore, InMemoryInterpreterSpecificCache } from './cacheUtils';
 
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _debounce = require('lodash/debounce') as typeof import('lodash/debounce');
@@ -124,20 +124,44 @@ type VSCodeType = typeof import('vscode');
 type PromiseFunctionWithFirstArgOfResource = (...any: [Uri | undefined, ...any[]]) => Promise<any>;
 
 export function clearCachedResourceSpecificIngterpreterData(key: string, resource: Resource, vscode: VSCodeType = require('vscode')) {
-    const cache = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode);
-    cache.clear();
+    const cacheStore = new InMemoryInterpreterSpecificCache(key, 0, [resource], vscode);
+    cacheStore.clear();
 }
 export function cacheResourceSpecificInterpreterData(key: string, expiryDurationMs: number, vscode: VSCodeType = require('vscode')) {
     return function (_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunctionWithFirstArgOfResource>) {
         const originalMethod = descriptor.value!;
         descriptor.value = async function (...args: [Uri | undefined, ...any[]]) {
-            const cache = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
-            if (cache.hasData) {
+            const cacheStore = new InMemoryInterpreterSpecificCache(key, expiryDurationMs, args, vscode);
+            if (cacheStore.hasData) {
                 traceVerbose(`Cached data exists ${key}, ${args[0] ? args[0].fsPath : '<No Resource>'}`);
-                return Promise.resolve(cache.data);
+                return Promise.resolve(cacheStore.data);
             }
             const promise = originalMethod.apply(this, args) as Promise<any>;
-            promise.then(result => (cache.data = result)).ignoreErrors();
+            promise.then(result => (cacheStore.data = result)).ignoreErrors();
+            return promise;
+        };
+    };
+}
+
+type PromiseFunctionWithAnyArgs = (...any: any) => Promise<any>;
+const cacheStoreForMethods = getGlobalCacheStore();
+export function cache(expiryDurationMs: number) {
+    return function (target: Object, propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunctionWithAnyArgs>) {
+        const originalMethod = descriptor.value!;
+        const className = ('constructor' in target && target.constructor.name) ? target.constructor.name : '';
+        const keyPrefix = `Cache_Method_Output_${className}.${propertyName}`;
+        descriptor.value = async function (...args: any) {
+            if (isTestExecution()){
+                return originalMethod.apply(this, args) as Promise<any>;
+            }
+            const key = getCacheKeyFromFunctionArgs(keyPrefix, args);
+            const cachedItem = cacheStoreForMethods.get(key);
+            if (cachedItem && cachedItem.expiry > Date.now()) {
+                traceVerbose(`Cached data exists ${key}`);
+                return Promise.resolve(cachedItem.data);
+            }
+            const promise = originalMethod.apply(this, args) as Promise<any>;
+            promise.then(result => cacheStoreForMethods.set(key, {data: result, expiry: Date.now() + expiryDurationMs})).ignoreErrors();
             return promise;
         };
     };

@@ -11,7 +11,6 @@ import { concatMultilineStringInput, concatMultilineStringOutput } from '../../c
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
-import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
@@ -24,6 +23,7 @@ const ansiToHtml = require('ansi-to-html');
 
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { noop } from '../../client/common/utils/misc';
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;

@@ -8,7 +8,7 @@ import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
-import { generateCellRanges } from '../cellFactory';
+import { generateCellRangesFromDocument } from '../cellFactory';
 
 @injectable()
 export class Decorator implements IExtensionSingleActivationService, IDisposable {
@@ -100,7 +100,7 @@ export class Decorator implements IExtensionSingleActivationService, IDisposable
             const settings = this.configuration.getSettings().datascience;
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
-                const cells = generateCellRanges(editor.document, this.configuration.getSettings().datascience);
+                const cells = generateCellRangesFromDocument(editor.document, this.configuration.getSettings().datascience);
 
                 // Find the range for our active cell.
                 const currentRange = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));

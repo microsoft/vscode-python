@@ -119,6 +119,7 @@ import {
     InteractiveWindowCommandListener
 } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -406,14 +407,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
         this.serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
         this.serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
-        this.serviceManager.addSingleton<IGatherExecution>(IGatherExecution, GatherExecution);
-        this.serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
+        this.serviceManager.add<IGatherExecution>(IGatherExecution, GatherExecution);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
         this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
 
         // Disable experiments.
         const experimentManager = mock(ExperimentsManager);
@@ -600,9 +601,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
-        if (this.mockJupyter) {
-            this.mockJupyter.addInterpreter(this.workingPython, SupportedCommands.all);
-        }
+        this.addInterpreter(this.workingPython, SupportedCommands.all);
     }
 
     // tslint:disable:any
@@ -717,6 +716,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public enableJedi(enabled: boolean) {
         this.pythonSettings.jediEnabled = enabled;
+    }
+
+    public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
+        if (this.mockJupyter) {
+            this.mockJupyter.addInterpreter(newInterpreter, commands);
+        }
     }
 
     private findPythonPath(): string {

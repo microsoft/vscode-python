@@ -17,7 +17,7 @@ import {
 } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -48,6 +48,7 @@ import {
 export class InteractiveWindow extends InteractiveBase implements IInteractiveWindow {
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
+    private trackedJupyterStart: boolean = false;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -71,7 +72,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
-        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler
+        @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
     ) {
         super(
             listeners,
@@ -251,7 +253,16 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
-
+    protected startServer(): Promise<void> {
+        // Keep track of users who have used interactive window in a worksapce folder.
+        // To be used if/when changing workflows related to startup of jupyter.
+        if (!this.trackedJupyterStart){
+            this.trackedJupyterStart = true;
+            const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
+            store.updateValue(true).ignoreErrors();
+        }
+        return super.startServer();
+    }
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
     // tslint:disable-next-line: no-any no-empty
     private export(cells: ICell[]) {

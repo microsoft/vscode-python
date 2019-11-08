@@ -9,7 +9,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { generateCellRanges } from '../cellFactory';
+import { generateCellRangesFromDocument } from '../cellFactory';
 import { CodeLensCommands, Commands } from '../constants';
 import { InteractiveWindowMessages } from '../interactive-common/interactiveWindowTypes';
 import { ICell, ICellHashProvider, ICodeLensFactory, IFileHashes, IInteractiveWindowListener } from '../types';
@@ -63,7 +63,7 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
     }
 
     public createCodeLenses(document: TextDocument): CodeLens[] {
-        const ranges = generateCellRanges(document, this.configService.getSettings().datascience);
+        const ranges = generateCellRangesFromDocument(document, this.configService.getSettings().datascience);
         const commands = this.enumerateCommands();
         const hashes = this.configService.getSettings().datascience.addGotoCodeLenses ? this.hashProvider.getHashes() : [];
         const codeLenses: CodeLens[] = [];

@@ -14,8 +14,7 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../../client/common/cons
 import '../../../client/common/extensions';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessService } from '../../../client/common/process/proc';
-import { IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -32,28 +31,22 @@ suite('Terminal - Code Execution Helper', () => {
     let helper: ICodeExecutionHelper;
     let document: TypeMoq.IMock<TextDocument>;
     let editor: TypeMoq.IMock<TextEditor>;
-    let processService: TypeMoq.IMock<IProcessService>;
-    let configService: TypeMoq.IMock<IConfigurationService>;
+    let pythonService: TypeMoq.IMock<IPythonExecutionService>;
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         const envVariablesProvider = TypeMoq.Mock.ofType<IEnvironmentVariablesProvider>();
-        processService = TypeMoq.Mock.ofType<IProcessService>();
-        configService = TypeMoq.Mock.ofType<IConfigurationService>();
-        const pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-        pythonSettings.setup(p => p.pythonPath).returns(() => PYTHON_PATH);
+        pythonService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         // tslint:disable-next-line:no-any
-        processService.setup((x: any) => x.then).returns(() => undefined);
-        configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+        pythonService.setup((x: any) => x.then).returns(() => undefined);
         envVariablesProvider.setup(e => e.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
-        const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
-        processServiceFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(processService.object));
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProcessServiceFactory), TypeMoq.It.isAny())).returns(() => processServiceFactory.object);
+        const pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
+        pythonExecFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonService.object));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny())).returns(() => pythonExecFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDocumentManager), TypeMoq.It.isAny())).returns(() => documentManager.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell), TypeMoq.It.isAny())).returns(() => applicationShell.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IEnvironmentVariablesProvider), TypeMoq.It.isAny())).returns(() => envVariablesProvider.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configService.object);
         helper = new CodeExecutionHelper(serviceContainer.object);
 
         document = TypeMoq.Mock.ofType<TextDocument>();
@@ -63,19 +56,20 @@ suite('Terminal - Code Execution Helper', () => {
 
     async function ensureBlankLinesAreRemoved(source: string, expectedSource: string) {
         const actualProcessService = new ProcessService(new BufferDecoder());
-        processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) => {
-                return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
+        pythonService
+            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((args, options) => {
+                return actualProcessService.exec.apply(actualProcessService, [PYTHON_PATH, args, options]);
             });
         const normalizedZCode = await helper.normalizeLines(source);
         // In case file has been saved with different line endings.
         expectedSource = expectedSource.splitLines({ removeEmptyEntries: false, trim: false }).join(EOL);
         expect(normalizedZCode).to.be.equal(expectedSource);
     }
-    test('Ensure blank lines are NOT removed when code is not indented (simple)', async function () {
+    test('Ensure blank lines are NOT removed when code is not indented (simple)', async function() {
         // This test has not been working for many months in Python 2.7 under
         // Windows.Tracked by #2544.
-        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+        if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -87,19 +81,20 @@ suite('Terminal - Code Execution Helper', () => {
     test('Ensure there are no multiple-CR elements in the normalized code.', async () => {
         const code = ['import sys', '', '', '', 'print(sys.executable)', '', 'print("1234")', '', '', 'print(1)', 'print(2)'];
         const actualProcessService = new ProcessService(new BufferDecoder());
-        processService.setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns((file, args, options) => {
-                return actualProcessService.exec.apply(actualProcessService, [file, args, options]);
+        pythonService
+            .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((args, options) => {
+                return actualProcessService.exec.apply(actualProcessService, [PYTHON_PATH, args, options]);
             });
         const normalizedCode = await helper.normalizeLines(code.join(EOL));
         const doubleCrIndex = normalizedCode.indexOf('\r\r');
         expect(doubleCrIndex).to.be.equal(-1, 'Double CR (CRCRLF) line endings detected in normalized code snippet.');
     });
     ['', '1', '2', '3', '4', '5', '6', '7', '8'].forEach(fileNameSuffix => {
-        test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function () {
+        test(`Ensure blank lines are removed (Sample${fileNameSuffix})`, async function() {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -108,10 +103,10 @@ suite('Terminal - Code Execution Helper', () => {
             const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
             await ensureBlankLinesAreRemoved(code, expectedCode);
         });
-        test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function () {
+        test(`Ensure last two blank lines are preserved (Sample${fileNameSuffix})`, async function() {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -120,10 +115,10 @@ suite('Terminal - Code Execution Helper', () => {
             const expectedCode = await fs.readFile(path.join(TEST_FILES_PATH, `sample${fileNameSuffix}_normalized.py`), 'utf8');
             await ensureBlankLinesAreRemoved(code + EOL, expectedCode + EOL);
         });
-        test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function () {
+        test(`Ensure last two blank lines are preserved even if we have more than 2 trailing blank lines (Sample${fileNameSuffix})`, async function() {
             // This test has not been working for many months in Python 2.7 under
             // Windows.Tracked by #2544.
-            if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+            if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
             }
@@ -133,7 +128,7 @@ suite('Terminal - Code Execution Helper', () => {
             await ensureBlankLinesAreRemoved(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
         });
     });
-    test('Display message if there\s no active file', async () => {
+    test('Display message if there\'s no active file', async () => {
         documentManager.setup(doc => doc.activeTextEditor).returns(() => undefined);
 
         const uri = await helper.getFileToExecute();
@@ -233,14 +228,20 @@ suite('Terminal - Code Execution Helper', () => {
     });
 
     test('saveFileIfDirty will not fail if file is not opened', async () => {
-        documentManager.setup(d => d.textDocuments).returns(() => []).verifiable(TypeMoq.Times.once());
+        documentManager
+            .setup(d => d.textDocuments)
+            .returns(() => [])
+            .verifiable(TypeMoq.Times.once());
 
         await helper.saveFileIfDirty(Uri.file(`${__filename}.py`));
         documentManager.verifyAll();
     });
 
     test('File will be saved if file is dirty', async () => {
-        documentManager.setup(d => d.textDocuments).returns(() => [document.object]).verifiable(TypeMoq.Times.once());
+        documentManager
+            .setup(d => d.textDocuments)
+            .returns(() => [document.object])
+            .verifiable(TypeMoq.Times.once());
         document.setup(doc => doc.isUntitled).returns(() => false);
         document.setup(doc => doc.isDirty).returns(() => true);
         document.setup(doc => doc.languageId).returns(() => PYTHON_LANGUAGE);
@@ -253,7 +254,10 @@ suite('Terminal - Code Execution Helper', () => {
     });
 
     test('File will be not saved if file is not dirty', async () => {
-        documentManager.setup(d => d.textDocuments).returns(() => [document.object]).verifiable(TypeMoq.Times.once());
+        documentManager
+            .setup(d => d.textDocuments)
+            .returns(() => [document.object])
+            .verifiable(TypeMoq.Times.once());
         document.setup(doc => doc.isUntitled).returns(() => false);
         document.setup(doc => doc.isDirty).returns(() => false);
         document.setup(doc => doc.languageId).returns(() => PYTHON_LANGUAGE);

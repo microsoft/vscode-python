@@ -5,7 +5,7 @@ import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -13,13 +13,12 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/pr
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, Telemetry } from '../constants';
 import {
     IConnection,
-    IJupyterCommandFactory,
     IJupyterExecution,
     IJupyterKernelSpec,
     IJupyterSessionManagerFactory,
@@ -48,7 +47,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         executionFactory: IPythonExecutionFactory,
         private readonly interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
-        knownSearchPaths: IKnownSearchPathsForInterpreters,
         private readonly logger: ILogger,
         private readonly disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
@@ -56,14 +54,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
-        commandFactory: IJupyterCommandFactory,
         private readonly serviceContainer: IServiceContainer
     ) {
-        this.commandFinder = new JupyterCommandFinder(interpreterService, executionFactory,
-            configuration, knownSearchPaths, disposableRegistry,
-            fileSystem, logger, processServiceFactory,
-            commandFactory, workspace,
-            serviceContainer.get<IApplicationShell>(IApplicationShell));
+        this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
         this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
             processServiceFactory, interpreterService, fileSystem);
         this.notebookStarter = new NotebookStarter(executionFactory, this, this.commandFinder,
@@ -92,7 +85,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async refreshCommands(): Promise<void> {
-        this.commandFinder.clearCache();
+        await this.commandFinder.clearCache();
     }
 
     public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
@@ -149,7 +142,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 try {
                     // Start or connect to the process
                     startInfo = await this.startOrConnect(options, cancelToken);
-
                     // Create a server that we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 

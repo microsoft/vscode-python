@@ -152,6 +152,9 @@ def parse_item(item, #*,
     """
     #_debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
+    # Skip plugin generated tests
+    if kind is None:
+        return None, None
     (nodeid, parents, fileid, testfunc, parameterized
      ) = _parse_node_id(item.nodeid, kind)
     # Note: testfunc does not necessarily match item.function.__name__.

@@ -8,11 +8,11 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
-import { noop } from '../../test/core';
 import { InputHistory } from './inputHistory';
 
 export interface ICellViewModel {
@@ -28,6 +28,7 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
+    hasBeenRun?: boolean;
     inputBlockToggled(id: string): void;
 }
 
@@ -198,7 +199,8 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockCollapseNeeded: (inputLinesCount > 1),
         inputBlockToggled: inputBlockToggled,
         selected: false,
-        focused: false
+        focused: false,
+        hasBeenRun: false
     };
 }
 

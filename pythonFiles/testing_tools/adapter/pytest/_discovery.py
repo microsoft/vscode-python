@@ -78,7 +78,8 @@ class TestCollector(object):
         self._tests.reset()
         for item in items:
             test, parents = self.parse_item(item)
-            self._tests.add_test(test, parents)
+            if test is not None:
+                self._tests.add_test(test, parents)
 
     # This hook is not specified in the docs, so we also provide
     # the "modifyitems" hook just in case.
@@ -92,4 +93,5 @@ class TestCollector(object):
         self._tests.reset()
         for item in items:
             test, parents = self.parse_item(item)
-            self._tests.add_test(test, parents)
+            if test is not None:
+                self._tests.add_test(test, parents)

@@ -89,7 +89,7 @@ suite('Shell Detectors', () => {
             expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
         });
 
-        when(appEnv.shell).thenReturn(undefined);
+        when(appEnv.shell).thenReturn(undefined as any);
         expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when vscode.env.shell is undefined');
     });
     test('Identify shell based on VSC Settings', async () => {

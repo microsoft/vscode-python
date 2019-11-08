@@ -16,7 +16,7 @@ import { IConfigurationService, IDisposableRegistry, ILogger } from '../../commo
 import * as localize from '../../common/utils/localize';
 import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
-import { generateCellRanges, generateCellsFromDocument } from '../cellFactory';
+import { generateCellRangesFromDocument, generateCellsFromDocument } from '../cellFactory';
 import { Commands, Identifiers, Telemetry } from '../constants';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import {
@@ -198,7 +198,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && activeEditor.document && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
-                const ranges = generateCellRanges(activeEditor.document);
+                const ranges = generateCellRangesFromDocument(activeEditor.document);
                 if (ranges.length > 0) {
                     // Ask user for path
                     const output = await this.showExportDialog();
