@@ -145,9 +145,9 @@ export class JupyterCommandFinderImpl {
             if (interpreter && !Cancellation.isCanceled(cancelToken)) {
                 findResult = await this.doesModuleExist(command, interpreter, cancelToken);
                 if (findResult.status === ModuleExistsStatus.FoundJupyter) {
-                    findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', [command], interpreter);
+                    findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
                 } else if (findResult.status === ModuleExistsStatus.Found) {
-                    findResult.command = this.commandFactory.createInterpreterCommand(command, command, [], interpreter);
+                    findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
                 }
             }
             return findResult;
