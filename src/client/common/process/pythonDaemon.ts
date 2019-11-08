@@ -117,7 +117,11 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         }
         try {
             return await this.execFileWithDaemon(args[0], args.slice(1), options);
-        } catch {
+        } catch (ex) {
+            // This is a handled error (error from user code that must be bubbled up).
+            if (ex instanceof StdErrError){
+                throw ex;
+            }
             return this.pythonExecutionService.exec(args, options);
         }
     }
@@ -128,7 +132,11 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         }
         try {
             return await this.execModuleWithDaemon(moduleName, args, options);
-        } catch {
+        } catch (ex) {
+            // This is a handled error (error from user code that must be bubbled up).
+            if (ex instanceof StdErrError){
+                throw ex;
+            }
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
     }
@@ -154,7 +162,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     private processResponse(response: { error?: string | undefined; stdout: string; stderr?: string }, options: SpawnOptions) {
         if (response.error) {
             traceError('Failed to execute file using the daemon', response.error);
-            throw new Error(`Failed to execute using the daemon, ${response.error}`);
+            throw new StdErrError(`Failed to execute using the daemon, ${response.error}`);
         }
         // Throw an error if configured to do so if there's any output in stderr.
         if (response.stderr && options.throwOnStdErr) {

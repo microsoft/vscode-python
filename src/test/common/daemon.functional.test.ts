@@ -6,6 +6,7 @@
 import { assert, expect, use } from 'chai';
 import * as chaiPromised from 'chai-as-promised';
 import { ChildProcess, spawn, spawnSync } from 'child_process';
+import * as dedent from 'dedent';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -117,7 +118,11 @@ suite('Daemon', () => {
     test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'sys.stdout.write("HELLO WORLD-₹-😄")'].join(os.EOL));
+        const source = dedent`
+        import sys
+        sys.stdout.write("HELLO WORLD-₹-😄")
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output = await pythonDaemon.exec([fileToExecute], {});
 
         assert.isUndefined(output.stderr);
@@ -125,7 +130,11 @@ suite('Daemon', () => {
     });
 
     test('Execute a file and capture stderr (with unicode)', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'sys.stderr.write("HELLO WORLD-₹-😄")'].join(os.EOL));
+        const source = dedent`
+        import sys
+        sys.stderr.write("HELLO WORLD-₹-😄")
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output = await pythonDaemon.exec([fileToExecute], {});
 
         assert.isUndefined(output.stdout);
@@ -133,7 +142,11 @@ suite('Daemon', () => {
     });
 
     test('Execute a file with arguments', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'sys.stdout.write(sys.argv[1])'].join(os.EOL));
+        const source = dedent`
+        import sys
+        sys.stdout.write(sys.argv[1])
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output = await pythonDaemon.exec([fileToExecute, 'HELLO WORLD'], {});
 
         assert.isUndefined(output.stderr);
@@ -141,7 +154,11 @@ suite('Daemon', () => {
     });
 
     test('Execute a file with custom cwd', async () => {
-        const fileToExecute = await createPythonFile(['import os', 'print(os.getcwd())'].join(os.EOL));
+        const source = dedent`
+        import os
+        print(os.getcwd())
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output1 = await pythonDaemon.exec([fileToExecute, 'HELLO WORLD'], { cwd: EXTENSION_ROOT_DIR });
 
         assert.isUndefined(output1.stderr);
@@ -154,7 +171,12 @@ suite('Daemon', () => {
     });
 
     test('Execute a file and capture stdout & stderr', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'sys.stdout.write("HELLO WORLD-₹-😄")', 'sys.stderr.write("FOO BAR-₹-😄")'].join(os.EOL));
+        const source = dedent`
+        import sys
+        sys.stdout.write("HELLO WORLD-₹-😄")
+        sys.stderr.write("FOO BAR-₹-😄")
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output = await pythonDaemon.exec([fileToExecute, 'HELLO WORLD'], {});
 
         assert.equal(output.stdout, 'HELLO WORLD-₹-😄');
@@ -162,13 +184,21 @@ suite('Daemon', () => {
     });
 
     test('Execute a file and handle error', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'raise Exception("KABOOM")'].join(os.EOL));
+        const source = dedent`
+        import sys
+        raise Exception("KABOOM")
+        `;
+        const fileToExecute = await createPythonFile(source);
         const promise = pythonDaemon.exec([fileToExecute], {});
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
     });
 
     test('Execute a file with custom env variable', async () => {
-        const fileToExecute = await createPythonFile(['import os', 'print(os.getenv("VSC_HELLO_CUSTOM", "NONE"))'].join(os.EOL));
+        const source = dedent`
+        import os
+        print(os.getenv("VSC_HELLO_CUSTOM", "NONE"))
+        `;
+        const fileToExecute = await createPythonFile(source);
 
         const output1 = await pythonDaemon.exec([fileToExecute], {});
 
@@ -192,7 +222,14 @@ suite('Daemon', () => {
     });
 
     test('Execute a file and stream output', async () => {
-        const fileToExecute = await createPythonFile(['import sys', 'import time', 'for i in range(5):', '    print(i)', '    time.sleep(1)'].join(os.EOL));
+        const source = dedent`
+        import sys
+        import time
+        for i in range(5):
+            print(i)
+            time.sleep(1)
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output = pythonDaemon.execObservable([fileToExecute], {});
         const outputsReceived: string[] = [];
         await new Promise((resolve, reject) => {
@@ -208,9 +245,15 @@ suite('Daemon', () => {
     });
 
     test('Execute a file and throw exception if stderr is not empty when streaming output', async () => {
-        const fileToExecute = await createPythonFile(
-            ['import sys', 'import time', 'time.sleep(1)', 'sys.stderr.write("KABOOM")', 'sys.stderr.flush()', 'time.sleep(1)'].join(os.EOL)
-        );
+        const source = dedent`
+        import sys
+        import time
+        time.sleep(1)
+        sys.stderr.write("KABOOM")
+        sys.stderr.flush()
+        time.sleep(1)
+        `;
+        const fileToExecute = await createPythonFile(source);
         const output = pythonDaemon.execObservable([fileToExecute], { throwOnStdErr: true });
         const outputsReceived: string[] = [];
         const promise = new Promise((resolve, reject) => {
