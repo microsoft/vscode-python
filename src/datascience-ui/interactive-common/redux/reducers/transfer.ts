@@ -93,9 +93,12 @@ export namespace Transfer {
     }
 
     export function started<T>(arg: CommonReducerArg<T>): IMainState {
+        // Send all of our initial requests
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Started));
         arg.queueAction(createPostableAction(CssMessages.GetCssRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
         arg.queueAction(createPostableAction(CssMessages.GetMonacoThemeRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadOnigasmAssemblyRequest));
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadTmLanguageRequest));
         return arg.prevState;
     }
 }

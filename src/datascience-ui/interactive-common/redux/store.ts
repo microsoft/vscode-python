@@ -4,14 +4,13 @@
 import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../interactive-common/mainState';
 import { PostOffice } from '../../react-common/postOffice';
 import { generateMonacoReducer, IMonacoState } from '../../react-common/redux/reducers/monaco';
 import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
-import { generateTestState } from '../mainState';
-import { generatePostOfficeSendReducer } from './postOffice';
+import { createEditableCellVM, generateTestState } from '../mainState';
+import { AllowedMessages, generatePostOfficeSendReducer } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -35,7 +34,7 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string, editable:
             debugging: false,
             knownDark: false,
             variablesVisible: false,
-            editCellVM: undefined,
+            editCellVM: editable ? undefined : createEditableCellVM(0),
             isAtBottom: true,
             font: {
                 size: 14,
@@ -95,12 +94,13 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     postOffice.addHandler({
         // tslint:disable-next-line: no-any
         handleMessage(message: string, payload: any): boolean {
-            // Prefix with action so that we can:
-            // - Have one reducer for incoming
-            // - Have another reducer for outgoing
+            window.console.log(`Receiving message ${message} from extension`);
             // Double check this is one of our messages. React will actually post messages here too during development
-            if (message in IInteractiveWindowMapping) {
-                store.dispatch({ type: `action.${message}`, ...payload });
+            if (AllowedMessages.find(k => k === message)) {
+                // Prefix message type with 'action.' so that we can:
+                // - Have one reducer for incoming
+                // - Have another reducer for outgoing
+                store.dispatch({ type: `action.${message}`, payload });
             }
             return true;
         }

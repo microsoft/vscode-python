@@ -25,6 +25,10 @@ export type ReducerArg<S, AT, T> = T extends null | undefined ?
 
 export type ReducerFunc<S, AT, T> = (args: ReducerArg<S, AT, T>) => S;
 
+export type ActionWithPayload<T, K> = T extends null | undefined ?
+    TypedAnyAction<K> :
+    TypedAnyAction<K> & { payload: T };
+
 /**
  * CombineReducers takes in a map of action.type to func and creates a reducer that will call the appropriate function for
  * each action
@@ -41,7 +45,7 @@ export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, Queua
             // - function to potentially post stuff to the other side
             // - queue function to dispatch again
             // - payload containing the data from the action
-            return func({ prevState: currentState, queueAction: action.queueAction, payload: action });
+            return func({ prevState: currentState, queueAction: action.queueAction, payload: action.payload });
         } else {
             return currentState;
         }

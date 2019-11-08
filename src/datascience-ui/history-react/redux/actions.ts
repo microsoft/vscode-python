@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import { Action } from 'redux';
 
 import {
     IRefreshVariablesRequest,
     IShowDataViewer
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
+import { ActionWithPayload } from '../../react-common/reduxUtils';
 
 /**
  * How to add a new state change:
@@ -65,33 +65,33 @@ export interface IScrollAction {
     isAtBottom: boolean;
 }
 
-type InteractiveAction = Action<InteractiveActionTypes>;
+type InteractiveAction<T> = ActionWithPayload<T, InteractiveActionTypes>;
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
-    refreshVariables: (newExecutionCount?: number): InteractiveAction & IRefreshVariablesRequest => ({ type: InteractiveActionTypes.REFRESH_VARIABLES, newExecutionCount }),
-    restartKernel: (): InteractiveAction => ({ type: InteractiveActionTypes.RESTART_KERNEL }),
-    interruptKernel: (): InteractiveAction => ({ type: InteractiveActionTypes.INTERRUPT_KERNEL }),
-    deleteAllCells: (): InteractiveAction => ({ type: InteractiveActionTypes.DELETE_ALL_CELLS }),
-    deleteCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.DELETE_CELL, cellId }),
-    undo: (): InteractiveAction => ({ type: InteractiveActionTypes.UNDO }),
-    redo: (): InteractiveAction => ({ type: InteractiveActionTypes.REDO }),
-    openLink: (uri: monacoEditor.Uri): InteractiveAction & IOpenLinkAction => ({ type: InteractiveActionTypes.OPEN_LINK, uri }),
-    showPlot: (imageHtml: string): InteractiveAction & IShowPlotAction => ({ type: InteractiveActionTypes.SHOW_PLOT, imageHtml }),
-    toggleInputBlock: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.TOGGLE_INPUT_BLOCK, cellId }),
-    gotoCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.GOTO_CELL, cellId }),
-    copyCellCode: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.COPY_CELL_CODE, cellId }),
-    gatherCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.GATHER_CELL, cellId }),
-    clickCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.CLICK_CELL, cellId }),
-    doubleClickCell: (cellId: string): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.DOUBLE_CLICK_CELL, cellId }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): InteractiveAction & IEditCellAction => ({ type: InteractiveActionTypes.EDIT_CELL, cellId, changes }),
-    submitInput: (code: string, cellId: string): InteractiveAction & ICodeAction => ({ type: InteractiveActionTypes.SUBMIT_INPUT, code, cellId }),
-    toggleVariableExplorer: (): InteractiveAction => ({ type: InteractiveActionTypes.TOGGLE_VARIABLE_EXPLORER }),
-    expandAll: (): InteractiveAction => ({ type: InteractiveActionTypes.EXPAND_ALL }),
-    collapseAll: (): InteractiveAction => ({ type: InteractiveActionTypes.COLLAPSE_ALL }),
-    export: (): InteractiveAction => ({ type: InteractiveActionTypes.EXPORT }),
-    showDataViewer: (variableName: string, columnSize: number): InteractiveAction & IShowDataViewerAction => ({ type: InteractiveActionTypes.SHOW_DATA_VIEWER, variableName, columnSize }),
-    editorLoaded: (): InteractiveAction => ({ type: InteractiveActionTypes.EDITOR_LOADED }),
-    scroll: (isAtBottom: boolean): InteractiveAction & IScrollAction => ({ type: InteractiveActionTypes.SCROLL, isAtBottom }),
-    unfocus: (cellId: string | undefined): InteractiveAction & ICellAction => ({ type: InteractiveActionTypes.UNFOCUS_CELL, cellId })
+    refreshVariables: (newExecutionCount?: number): InteractiveAction<IRefreshVariablesRequest> => ({ type: InteractiveActionTypes.REFRESH_VARIABLES, payload: { newExecutionCount } }),
+    restartKernel: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.RESTART_KERNEL }),
+    interruptKernel: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.INTERRUPT_KERNEL }),
+    deleteAllCells: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.DELETE_ALL_CELLS }),
+    deleteCell: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.DELETE_CELL, payload: { cellId } }),
+    undo: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.UNDO }),
+    redo: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.REDO }),
+    openLink: (uri: monacoEditor.Uri): InteractiveAction<IOpenLinkAction> => ({ type: InteractiveActionTypes.OPEN_LINK, payload: { uri } }),
+    showPlot: (imageHtml: string): InteractiveAction<IShowPlotAction> => ({ type: InteractiveActionTypes.SHOW_PLOT, payload: { imageHtml } }),
+    toggleInputBlock: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.TOGGLE_INPUT_BLOCK, payload: { cellId } }),
+    gotoCell: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.GOTO_CELL, payload: { cellId } }),
+    copyCellCode: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.COPY_CELL_CODE, payload: { cellId } }),
+    gatherCell: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.GATHER_CELL, payload: { cellId } }),
+    clickCell: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.CLICK_CELL, payload: { cellId } }),
+    doubleClickCell: (cellId: string): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.DOUBLE_CLICK_CELL, payload: { cellId } }),
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): InteractiveAction<IEditCellAction> => ({ type: InteractiveActionTypes.EDIT_CELL, payload: { cellId, changes } }),
+    submitInput: (code: string, cellId: string): InteractiveAction<ICodeAction> => ({ type: InteractiveActionTypes.SUBMIT_INPUT, payload: { code, cellId } }),
+    toggleVariableExplorer: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.TOGGLE_VARIABLE_EXPLORER }),
+    expandAll: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.EXPAND_ALL }),
+    collapseAll: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.COLLAPSE_ALL }),
+    export: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.EXPORT }),
+    showDataViewer: (variableName: string, columnSize: number): InteractiveAction<IShowDataViewerAction> => ({ type: InteractiveActionTypes.SHOW_DATA_VIEWER, payload: { variableName, columnSize } }),
+    editorLoaded: (): InteractiveAction<never | undefined> => ({ type: InteractiveActionTypes.EDITOR_LOADED }),
+    scroll: (isAtBottom: boolean): InteractiveAction<IScrollAction> => ({ type: InteractiveActionTypes.SCROLL, payload: { isAtBottom } }),
+    unfocus: (cellId: string | undefined): InteractiveAction<ICellAction> => ({ type: InteractiveActionTypes.UNFOCUS_CELL, payload: { cellId } })
 };

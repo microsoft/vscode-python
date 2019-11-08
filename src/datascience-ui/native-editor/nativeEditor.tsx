@@ -179,7 +179,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     private renderContentPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.props.tokenizerLoaded && !this.props.testMode) {
+        if (!this.props.monacoReady && !this.props.testMode) {
             return null;
         }
 

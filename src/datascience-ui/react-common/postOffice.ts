@@ -39,17 +39,17 @@ export class PostOffice implements IDisposable {
     }
 
     public sendMessage<M, T extends keyof M = keyof M>(type: T, payload?: M[T]) {
-        const api = this.acquireApi();
-        if (api) {
-            api.postMessage({ type: type.toString(), payload });
-        }
+        return this.sendUnsafeMessage(type.toString(), payload);
     }
 
     // tslint:disable-next-line:no-any
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
+            window.console.log(`Posting message ${type} to extension.`);
             api.postMessage({ type: type, payload });
+        } else {
+            window.console.log(`No vscode API to post message ${type}`);
         }
     }
 

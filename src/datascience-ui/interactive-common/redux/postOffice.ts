@@ -3,7 +3,11 @@
 'use strict';
 import * as Redux from 'redux';
 
-import { IInteractiveWindowMapping } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CssMessages } from '../../../client/datascience/messages';
 import { PostOffice } from '../../react-common/postOffice';
 
 // Action types for Incoming messages. Basically all possible messages prefixed with the word 'action'
@@ -90,6 +94,8 @@ export enum IncomingMessageActions {
     GETMONACOTHEMERESPONSE = 'action.get_monaco_theme_response'
 }
 
+export const AllowedMessages = [...Object.values(InteractiveWindowMessages), ...Object.values(CssMessages)];
+
 // Actions created from messages
 export function createPostableAction<M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(message: T, payload?: M[T]): Redux.AnyAction {
     return ({ type: `${message}`, payload });
@@ -99,7 +105,7 @@ export function generatePostOfficeSendReducer(postOffice: PostOffice): Redux.Red
     // tslint:disable-next-line: no-function-expression
     return function (_state: {} | undefined, action: Redux.AnyAction): {} {
         // Make sure a valid message
-        if (action.type in IInteractiveWindowMapping) {
+        if (AllowedMessages.find(k => k === action.type)) {
             // Just post this to the post office.
             // tslint:disable-next-line: no-any
             postOffice.sendMessage<IInteractiveWindowMapping>(action.type, action.payload);

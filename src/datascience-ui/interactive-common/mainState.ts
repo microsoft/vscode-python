@@ -51,7 +51,6 @@ export type IMainState = {
     vscodeThemeName?: string;
     baseTheme: string;
     monacoTheme?: string;
-    tokenizerLoaded?: boolean;
     knownDark: boolean;
     editorOptions: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
@@ -106,7 +105,6 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         redoStack: [],
         submittedText: false,
         rootStyle: darkStyle,
-        tokenizerLoaded: true,
         editorOptions: {},
         currentExecutionCount: 0,
         knownDark: false,
@@ -157,7 +155,7 @@ export function createEmptyCell(id: string | undefined, executionCount: number |
 
 export function createEditableCellVM(executionCount: number): ICellViewModel {
     return {
-        cell: createEmptyCell(undefined, executionCount),
+        cell: createEmptyCell(Identifiers.EditCellId, executionCount),
         editable: true,
         inputBlockOpen: true,
         inputBlockShow: true,

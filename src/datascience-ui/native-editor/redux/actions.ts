@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-import { Action } from 'redux';
 
 import { IShowDataViewer, NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CursorPos } from '../../interactive-common/mainState';
 import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
+import { ActionWithPayload } from '../../react-common/reduxUtils';
 
 /**
  * How to add a new state change:
@@ -85,43 +85,43 @@ export interface IShowPlotAction {
     imageHtml: string;
 }
 
-type NativeEditorAction = Action<NativeEditorActionTypes>;
+type NativeEditorAction<T> = ActionWithPayload<T, NativeEditorActionTypes>;
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
 export const actionCreators = {
-    insertAbove: (cellId: string | undefined): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.INSERT_ABOVE, cellId }),
-    insertAboveFirst: (): NativeEditorAction => ({ type: NativeEditorActionTypes.INSERT_ABOVE_FIRST }),
-    insertBelow: (cellId: string | undefined): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.INSERT_BELOW, cellId }),
-    focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): NativeEditorAction & ICellAndCursorAction => ({ type: NativeEditorActionTypes.FOCUS_CELL, cellId, cursorPos }),
-    unfocusCell: (cellId: string, code: string): NativeEditorAction & ICodeAction => ({ type: NativeEditorActionTypes.UNFOCUS_CELL, cellId, code }),
-    selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): NativeEditorAction & ICellAndCursorAction => ({ type: NativeEditorActionTypes.SELECT_CELL, cellId, cursorPos }),
-    selectNextCell: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.SELECT_NEXT_CELL, cellId }),
-    addCell: (): NativeEditorAction => ({ type: NativeEditorActionTypes.ADD_NEW_CELL }),
-    executeCell: (cellId: string, code: string): NativeEditorAction & ICodeAction => ({ type: NativeEditorActionTypes.EXECUTE_CELL, cellId, code }),
-    executeAllCells: (): NativeEditorAction => ({ type: NativeEditorActionTypes.EXECUTE_ALL_CELLS }),
-    executeAbove: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.EXECUTE_ABOVE, cellId }),
-    executeCellAndBelow: (cellId: string, code: string): NativeEditorAction & ICodeAction => ({ type: NativeEditorActionTypes.EXECUTE_CELL_AND_BELOW, cellId, code }),
-    toggleVariableExplorer: (): NativeEditorAction => ({ type: NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER }),
-    refreshVariables: (newExecutionCount?: number): NativeEditorAction & IRefreshVariablesAction => ({ type: NativeEditorActionTypes.REFRESH_VARIABLES, newExecutionCount }),
-    restartKernel: (): NativeEditorAction => ({ type: NativeEditorActionTypes.RESTART_KERNEL }),
-    interruptKernel: (): NativeEditorAction => ({ type: NativeEditorActionTypes.INTERRUPT_KERNEL }),
-    clearAllOutputs: (): NativeEditorAction => ({ type: NativeEditorActionTypes.CLEAR_ALL_OUTPUTS }),
-    export: (): NativeEditorAction => ({ type: NativeEditorActionTypes.EXPORT }),
-    save: (): NativeEditorAction => ({ type: NativeEditorActionTypes.SAVE }),
-    showDataViewer: (variableName: string, columnSize: number): NativeEditorAction & IShowDataViewerAction => ({ type: NativeEditorActionTypes.SHOW_DATA_VIEWER, variableName, columnSize }),
+    insertAbove: (cellId: string | undefined): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.INSERT_ABOVE, payload: { cellId } }),
+    insertAboveFirst: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.INSERT_ABOVE_FIRST }),
+    insertBelow: (cellId: string | undefined): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.INSERT_BELOW, payload: { cellId } }),
+    focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): NativeEditorAction<ICellAndCursorAction> => ({ type: NativeEditorActionTypes.FOCUS_CELL, payload: { cellId, cursorPos } }),
+    unfocusCell: (cellId: string, code: string): NativeEditorAction<ICodeAction> => ({ type: NativeEditorActionTypes.UNFOCUS_CELL, payload: { cellId, code } }),
+    selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): NativeEditorAction<ICellAndCursorAction> => ({ type: NativeEditorActionTypes.SELECT_CELL, payload: { cellId, cursorPos } }),
+    selectNextCell: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.SELECT_NEXT_CELL, payload: { cellId } }),
+    addCell: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.ADD_NEW_CELL }),
+    executeCell: (cellId: string, code: string): NativeEditorAction<ICodeAction> => ({ type: NativeEditorActionTypes.EXECUTE_CELL, payload: { cellId, code } }),
+    executeAllCells: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.EXECUTE_ALL_CELLS }),
+    executeAbove: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.EXECUTE_ABOVE, payload: { cellId } }),
+    executeCellAndBelow: (cellId: string, code: string): NativeEditorAction<ICodeAction> => ({ type: NativeEditorActionTypes.EXECUTE_CELL_AND_BELOW, payload: { cellId, code } }),
+    toggleVariableExplorer: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER }),
+    refreshVariables: (newExecutionCount?: number): NativeEditorAction<IRefreshVariablesAction> => ({ type: NativeEditorActionTypes.REFRESH_VARIABLES, payload: { newExecutionCount } }),
+    restartKernel: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.RESTART_KERNEL }),
+    interruptKernel: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.INTERRUPT_KERNEL }),
+    clearAllOutputs: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.CLEAR_ALL_OUTPUTS }),
+    export: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.EXPORT }),
+    save: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.SAVE }),
+    showDataViewer: (variableName: string, columnSize: number): NativeEditorAction<IShowDataViewerAction> => ({ type: NativeEditorActionTypes.SHOW_DATA_VIEWER, payload: { variableName, columnSize } }),
     sendCommand: (command: NativeCommandType, commandType: 'mouse' | 'keyboard') => ({ type: NativeEditorActionTypes.SEND_COMMAND, command, commandType }),
-    moveCellUp: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.MOVE_CELL_UP, cellId }),
-    moveCellDown: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.MOVE_CELL_DOWN, cellId }),
-    changeCellType: (cellId: string, currentCode: string): NativeEditorAction & IChangeCellTypeAction => ({ type: NativeEditorActionTypes.CHANGE_CELL_TYPE, cellId, currentCode }),
-    toggleLineNumbers: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.TOGGLE_LINE_NUMBERS, cellId }),
-    toggleOutput: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.TOGGLE_OUTPUT, cellId }),
-    deleteCell: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.DELETE_CELL, cellId }),
-    undo: (): NativeEditorAction => ({ type: NativeEditorActionTypes.UNDO }),
-    arrowUp: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.ARROW_UP, cellId }),
-    arrowDown: (cellId: string): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.ARROW_DOWN, cellId }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): NativeEditorAction & IEditCellAction => ({ type: NativeEditorActionTypes.EDIT_CELL, cellId, changes }),
-    openLink: (uri: monacoEditor.Uri): NativeEditorAction & IOpenLinkAction => ({ type: NativeEditorActionTypes.OPEN_LINK, uri }),
-    showPlot: (imageHtml: string): NativeEditorAction & IShowPlotAction => ({ type: NativeEditorActionTypes.SHOW_PLOT, imageHtml }),
-    gatherCell: (cellId: string | undefined): NativeEditorAction & ICellAction => ({ type: NativeEditorActionTypes.GATHER_CELL, cellId }),
-    editorLoaded: (): NativeEditorAction => ({ type: NativeEditorActionTypes.EDITOR_LOADED })
+    moveCellUp: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.MOVE_CELL_UP, payload: { cellId } }),
+    moveCellDown: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.MOVE_CELL_DOWN, payload: { cellId } }),
+    changeCellType: (cellId: string, currentCode: string): NativeEditorAction<IChangeCellTypeAction> => ({ type: NativeEditorActionTypes.CHANGE_CELL_TYPE, payload: { cellId, currentCode } }),
+    toggleLineNumbers: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.TOGGLE_LINE_NUMBERS, payload: { cellId } }),
+    toggleOutput: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.TOGGLE_OUTPUT, payload: { cellId } }),
+    deleteCell: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.DELETE_CELL, payload: { cellId } }),
+    undo: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.UNDO }),
+    arrowUp: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.ARROW_UP, payload: { cellId } }),
+    arrowDown: (cellId: string): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.ARROW_DOWN, payload: { cellId } }),
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[]): NativeEditorAction<IEditCellAction> => ({ type: NativeEditorActionTypes.EDIT_CELL, payload: { cellId, changes } }),
+    openLink: (uri: monacoEditor.Uri): NativeEditorAction<IOpenLinkAction> => ({ type: NativeEditorActionTypes.OPEN_LINK, payload: { uri } }),
+    showPlot: (imageHtml: string): NativeEditorAction<IShowPlotAction> => ({ type: NativeEditorActionTypes.SHOW_PLOT, payload: { imageHtml } }),
+    gatherCell: (cellId: string | undefined): NativeEditorAction<ICellAction> => ({ type: NativeEditorActionTypes.GATHER_CELL, payload: { cellId } }),
+    editorLoaded: (): NativeEditorAction<never | undefined> => ({ type: NativeEditorActionTypes.EDITOR_LOADED })
 };
