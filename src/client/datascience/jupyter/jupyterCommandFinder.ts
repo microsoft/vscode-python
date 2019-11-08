@@ -153,14 +153,13 @@ export class JupyterCommandFinderImpl {
             return findResult;
         };
 
-        const id = `${command}#${this.interpreterService.getInterpreterIdentifier(interpreter)}`;
-        let promise = this.findInterpreterCommandPromises.get(id);
+        let promise = this.findInterpreterCommandPromises.get(interpreter.path);
         if (promise) {
             return promise;
         }
 
         promise = search();
-        this.findInterpreterCommandPromises.set(id, promise);
+        this.findInterpreterCommandPromises.set(interpreter.path, promise);
         return promise;
     }
 
