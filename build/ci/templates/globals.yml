@@ -7,3 +7,5 @@ variables:
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
   CI_BRANCH_NAME: ${Build.SourceBranchName}
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+

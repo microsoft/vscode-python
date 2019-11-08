@@ -5,6 +5,9 @@
         },
         {
             "path": "uitests"
+        },
+        {
+            "path": "pythonFiles"
         }
     ],
     "settings": {

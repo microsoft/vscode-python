@@ -249,71 +249,72 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const mimeBundle = copy.data as nbformat.IMimeBundle;
             let data: nbformat.MultilineString | JSONObject = mimeBundle[mimeType];
 
-            switch (mimeType) {
-                case 'text/plain':
-                case 'text/html':
-                    return {
-                        mimeType,
-                        data: concatMultilineStringOutput(data as nbformat.MultilineString),
-                        isText,
-                        isError,
-                        renderWithScrollbars: true,
-                        extraButton,
-                        doubleClick: noop
+            // Text based mimeTypes don't get a white background
+            if (/^text\//.test(mimeType)) {
+                return {
+                    mimeType,
+                    data: concatMultilineStringOutput(data as nbformat.MultilineString),
+                    isText,
+                    isError,
+                    renderWithScrollbars: true,
+                    extraButton,
+                    doubleClick: noop
+                };
+            } else if (mimeType === 'image/svg+xml' || mimeType === 'image/png') {
+                // If we have a png or svg enable the plot viewer button
+                // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
+                const svg = mimeBundle['image/svg+xml'];
+                const png = mimeBundle['image/png'];
+                const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
+                let doubleClick: () => void = noop;
+                if (svg && png) {
+                    // Save the svg in the extra button.
+                    const openClick = () => {
+                        this.props.expandImage(svg.toString());
                     };
+                    extraButton = (
+                        <div className='plot-open-button'>
+                            <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
+                                <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
+                            </ImageButton>
+                        </div>
+                    );
 
-                case 'image/svg+xml':
-                case 'image/png':
-                    // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
-                    const svg = mimeBundle['image/svg+xml'];
-                    const png = mimeBundle['image/png'];
-                    const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
-                    let doubleClick: () => void = noop;
-                    if (svg && png) {
-                        // Save the svg in the extra button.
-                        const openClick = () => {
-                            this.props.expandImage(svg.toString());
-                        };
-                        extraButton = (
-                            <div className='plot-open-button'>
-                                <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
-                                    <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
-                                </ImageButton>
-                            </div>
-                        );
+                    // Switch the data to the png
+                    data = png;
+                    mimeType = 'image/png';
 
-                        // Switch the data to the png
-                        data = png;
-                        mimeType = 'image/png';
+                    // Switch double click to do the same thing as the extra button
+                    doubleClick = openClick;
+                }
 
-                        // Switch double click to do the same thing as the extra button
-                        doubleClick = openClick;
-                    }
-
-                    // return the image
-                    // If not theming plots then wrap in a span
-                    return {
-                        mimeType,
-                        data,
-                        isText,
-                        isError,
-                        renderWithScrollbars,
-                        extraButton,
-                        doubleClick,
-                        outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
-                    };
-
-                default:
-                    return {
-                        mimeType,
-                        data,
-                        isText,
-                        isError,
-                        renderWithScrollbars,
-                        extraButton,
-                        doubleClick: noop
-                    };
+                // return the image
+                // If not theming plots then wrap in a span
+                return {
+                    mimeType,
+                    data,
+                    isText,
+                    isError,
+                    renderWithScrollbars,
+                    extraButton,
+                    doubleClick,
+                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                };
+            } else {
+                // For anything else just return it with a white plot background. This lets stuff like vega look good in
+                // dark mode
+                return {
+                    mimeType,
+                    data,
+                    isText,
+                    isError,
+                    renderWithScrollbars,
+                    extraButton,
+                    doubleClick: noop,
+                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                };
             }
+
         } catch (e) {
             return {
                 data: e.toString(),

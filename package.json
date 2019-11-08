@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.11.0-dev",
-    "languageServerVersion": "0.4.24",
+    "version": "2019.12.0-dev",
+    "languageServerVersion": "0.4.71",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1695,13 +1695,13 @@
                 },
                 "python.dataScience.enableGather": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "Enable code gather for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.gatherToScript": {
                     "type": "boolean",
-                    "default": false,
+                    "default": true,
                     "description": "Gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
@@ -2662,6 +2662,7 @@
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --watch",
+        "checkDependencies": "gulp checkDependencies",
         "dump-datascience-webpack-stats": "npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
@@ -2744,6 +2745,7 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.0",
+        "vscode-jsonrpc": "^4.0.0",
         "vscode-languageclient": "^5.2.1",
         "vscode-languageserver": "^5.2.1",
         "vscode-languageserver-protocol": "^3.14.1",
@@ -2775,6 +2777,7 @@
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
         "@types/copy-webpack-plugin": "^4.4.2",
+        "@types/dedent": "^0.7.0",
         "@types/del": "^3.0.0",
         "@types/diff-match-patch": "^1.0.32",
         "@types/download": "^6.2.2",
@@ -2839,6 +2842,7 @@
         "css-loader": "^1.0.1",
         "cucumber-html-reporter": "^4.0.5",
         "decache": "^4.4.0",
+        "dedent": "^0.7.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
         "electron-download": "^4.1.1",

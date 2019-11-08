@@ -5,6 +5,7 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { Newable } from '../../ioc/types';
 import { ExecutionInfo, IDisposable, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
@@ -63,13 +64,35 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
+export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
+    /**
+     * Python file that implements the daemon.
+     *
+     * @type {string}
+     */
+    daemonModule: string;
+    daemonClass: Newable<IPythonDaemonExecutionService>;
+};
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
+    pythonPath?: string;
     interpreter?: PythonInterpreter;
     allowEnvironmentFetchExceptions?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
+    /**
+     * Creates a daemon Python Process.
+     * On windows its cheapter to create a daemon and use that than spin up Python Processes everytime.
+     * The returned object implements an IDisposable so as to allow terminating the daemon process.
+     * If something cannot be executed within the daemin, it will resort to using the stanard IPythonExecutionService.
+     * Note: The returned execution service is always using an activated environment.
+     *
+     * @param {ExecutionFactoryCreationOptions} options
+     * @returns {(Promise<IPythonExecutionService & IDisposable>)}
+     * @memberof IPythonExecutionFactory
+     */
+    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
@@ -94,6 +117,18 @@ export interface IPythonExecutionService {
 
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
+}
+
+/**
+ * Identical to the PythonExecutionService, but with a `dispose` method.
+ * This is a daemon process that lives on until it is disposed, hence the `IDisposable`.
+ *
+ * @export
+ * @interface IPythonDaemonExecutionService
+ * @extends {IPythonExecutionService}
+ * @extends {IDisposable}
+ */
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {
 }
 
 export class StdErrError extends Error {
