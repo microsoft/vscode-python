@@ -1,4 +1,4 @@
-# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh
+# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega
 
 # %% Basic Imports
 import numpy as np
@@ -18,13 +18,13 @@ p = figure(plot_width=400, plot_height=400)
 p.circle([1,2,3,4,5], [6,7,2,4,5], size=15, line_color="navy", fill_color="orange", fill_alpha=0.5)
 show(p)
 
-#%% Progress bar
+# %% Progress bar
 from tqdm import trange
 import time
 for i in trange(100):
     time.sleep(0.01)
 
-#%% [markdown]
+# %% [markdown]
 # # Heading
 # ## Sub-heading
 # *bold*,_italic_,`monospace`
@@ -39,20 +39,32 @@ for i in trange(100):
 #
 # [Link](http://www.microsoft.com)
 
-#%% Magics
+# %% Magics
 %whos
 
-#%% Some extra variable types for the variable explorer
+# %% Some extra variable types for the variable explorer
 myNparray = np.array([['Bob', 1, 2, 3], ['Alice', 4, 5, 6], ['Gina', 7, 8, 9]])
 myDataFrame = pd.DataFrame(myNparray, columns=['name', 'b', 'c', 'd'])
 mySeries = myDataFrame['name']
 myList = [x ** 2 for x in range(0, 100000)]
 myString = 'testing testing testing'
 
-#%%
+# %% Latex
 %%latex
 \begin{align}
 \nabla \cdot \vec{\mathbf{E}} & = 4 \pi \rho \\
 \nabla \times \vec{\mathbf{E}}\, +\, \frac1c\, \frac{\partial\vec{\mathbf{B}}}{\partial t} & = \vec{\mathbf{0}} \\
 \nabla \cdot \vec{\mathbf{B}} & = 0
 \end{align}
+
+# %% Altair (vega)
+import altair as alt
+from vega_datasets import data
+
+iris = data.iris()
+
+alt.Chart(iris).mark_point().encode(
+    x='petalLength',
+    y='petalWidth',
+    color='species'
+)
