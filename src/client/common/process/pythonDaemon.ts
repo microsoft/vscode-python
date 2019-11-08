@@ -209,7 +209,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                 const request = new RequestType<{ module_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_module_observable');
                 response = await this.connection.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
             }
-            if (response.error){
+            // Might not get a response object back, as its observable.
+            if (response && response.error){
                 throw new StdErrError(response.error);
             }
         };
