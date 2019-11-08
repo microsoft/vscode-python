@@ -54,7 +54,6 @@ export class JupyterCommandFinderImpl {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
     private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
-    private readonly findInterpreterCommandPromises = new Map<string, Promise<IFindCommandResult>>();
     constructor(
         @unmanaged() protected readonly interpreterService: IInterpreterService,
         @unmanaged() private readonly executionFactory: IPythonExecutionFactory,
@@ -135,32 +134,21 @@ export class JupyterCommandFinderImpl {
     }
 
     protected async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
-        const search = async () => {
-            let findResult: IFindCommandResult = {
-                status: ModuleExistsStatus.NotFound,
-                error: localize.DataScience.noInterpreter()
-            };
-
-            // If the module is found on this interpreter, then we found it.
-            if (interpreter && !Cancellation.isCanceled(cancelToken)) {
-                findResult = await this.doesModuleExist(command, interpreter, cancelToken);
-                if (findResult.status === ModuleExistsStatus.FoundJupyter) {
-                    findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
-                } else if (findResult.status === ModuleExistsStatus.Found) {
-                    findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
-                }
-            }
-            return findResult;
+        let findResult: IFindCommandResult = {
+            status: ModuleExistsStatus.NotFound,
+            error: localize.DataScience.noInterpreter()
         };
 
-        let promise = this.findInterpreterCommandPromises.get(interpreter.path);
-        if (promise) {
-            return promise;
+        // If the module is found on this interpreter, then we found it.
+        if (interpreter && !Cancellation.isCanceled(cancelToken)) {
+            findResult = await this.doesModuleExist(command, interpreter, cancelToken);
+            if (findResult.status === ModuleExistsStatus.FoundJupyter) {
+                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
+            } else if (findResult.status === ModuleExistsStatus.Found) {
+                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
+            }
         }
-
-        promise = search();
-        this.findInterpreterCommandPromises.set(interpreter.path, promise);
-        return promise;
+        return findResult;
     }
 
     private async lookForJupyterInDirectory(pathToCheck: string): Promise<string[]> {
