@@ -93,6 +93,20 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.didChangeInterpreterInformation.event;
     }
 
+    public getInterpreterIdentifier(interpreter: PythonInterpreter): string {
+        // Using just python Path doesn't make it unique.
+        // E.g. its possible to create conda environments that do not have an executable in their environment directory.
+        // Basically using `conda create -n=name` will create an environment without an executable in the environment `name`.
+        // Now that we support `conda run` we shouldn't assume the executable is the unique identifier.
+        // WARNING: DO NOT change this, its possible this is being used elewhere for caching purposes.
+        // We wouldn't need anything else to uniquely identify an interpreter.
+        return [
+            interpreter.path, interpreter.sysVersion,
+            interpreter.envName || '', interpreter.envPath || '',
+            interpreter.pipEnvWorkspaceFolder || ''
+        ].join('#');
+    }
+
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = await pythonExecutionFactory.create({ resource });

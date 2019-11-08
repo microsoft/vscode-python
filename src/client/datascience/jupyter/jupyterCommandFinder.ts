@@ -54,6 +54,7 @@ export class JupyterCommandFinderImpl {
     private readonly processServicePromise: Promise<IProcessService>;
     private jupyterPath?: string;
     private readonly commands = new Map<JupyterCommands, Promise<IFindCommandResult>>();
+    private readonly findInterpreterCommandPromises = new Map<string, Promise<IFindCommandResult>>();
     constructor(
         @unmanaged() protected readonly interpreterService: IInterpreterService,
         @unmanaged() private readonly executionFactory: IPythonExecutionFactory,
@@ -147,6 +148,7 @@ export class JupyterCommandFinderImpl {
             } else if (findResult.status === ModuleExistsStatus.Found) {
                 findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
             }
+            return findResult;
         }
         return findResult;
     }

@@ -89,6 +89,7 @@ export interface IInterpreterService {
     getInterpreters(resource?: Uri): Promise<PythonInterpreter[]>;
     getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined>;
     getInterpreterDetails(pythonPath: string, resoure?: Uri): Promise<undefined | PythonInterpreter>;
+    getInterpreterIdentifier(interpreter: PythonInterpreter): string;
     refresh(resource: Resource): Promise<void>;
     initialize(): void;
     getDisplayName(interpreter: Partial<PythonInterpreter>): Promise<string>;
