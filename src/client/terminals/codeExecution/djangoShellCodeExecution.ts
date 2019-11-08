@@ -9,7 +9,6 @@ import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IPythonExecutionFactory, PythonExecutionInfo } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { DjangoContextInitializer } from './djangoContext';
@@ -17,38 +16,31 @@ import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
 
 @injectable()
 export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvider {
-    constructor(
-        @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
+    constructor(@inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(ICommandManager) commandManager: ICommandManager,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IPythonExecutionFactory) pythonExecFactory: IPythonExecutionFactory,
-        @inject(IDisposableRegistry) disposableRegistry: Disposable[]
-    ) {
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService, pythonExecFactory);
+        @inject(IDisposableRegistry) disposableRegistry: Disposable[]) {
+
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
         this.terminalTitle = 'Django Shell';
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
-
-    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
-        const { command, args: executableArgs } = await super.getExecutableInfo(resource, args);
+    public getReplCommandArgs(resource?: Uri): { command: string; args: string[] } {
+        const pythonSettings = this.configurationService.getSettings(resource);
+        const command = this.platformService.isWindows ? pythonSettings.pythonPath.replace(/\\/g, '/') : pythonSettings.pythonPath;
+        const args = pythonSettings.terminal.launchArgs.slice();
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
         const defaultWorkspace = Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0 ? this.workspace.workspaceFolders[0].uri.fsPath : '';
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
 
-        executableArgs.push(managePyPath.fileToCommandArgument());
-        executableArgs.push('shell');
-        return { command, args: executableArgs };
-    }
-
-    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecutionInfo> {
-        // We need the executable info but not the 'manage.py shell' args
-        const { command, args } = await super.getExecutableInfo(resource);
-        return { command, args: args.concat(executeArgs) };
+        args.push(managePyPath.fileToCommandArgument());
+        args.push('shell');
+        return { command, args };
     }
 }
