@@ -18,7 +18,7 @@ export class GatherListener implements IInteractiveWindowListener {
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
     private gatherLogger: GatherLogger;
-    private notebookUri: Uri = Uri.parse('');
+    private notebookUri: Uri | undefined;
 
     constructor(
         @inject(IGatherExecution) private gather: IGatherExecution,
@@ -116,7 +116,7 @@ export class GatherListener implements IInteractiveWindowListener {
                 state: 0,
                 data: {
                     cell_type: 'markdown',
-                    source: localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(cell.file === Identifiers.EmptyFileName ? this.notebookUri.fsPath : cell.file),
+                    source: localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(cell.file === Identifiers.EmptyFileName && this.notebookUri ? this.notebookUri.fsPath : cell.file),
                     metadata: {}
                 }
             }];

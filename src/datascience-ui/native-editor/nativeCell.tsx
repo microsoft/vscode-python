@@ -513,7 +513,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         return (
             <div className={toolbarClassName}>
                 <div className='native-editor-celltoolbar-middle'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')} className='hover-cell-button'>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runCell} tooltip={getLocString('DataScience.runCell', 'Run cell')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Run} />
                     </ImageButton>
                     <ImageButton baseTheme={this.props.baseTheme} onMouseDown={switchCellType} tooltip={switchTooltip}>
