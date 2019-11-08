@@ -116,18 +116,18 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return this.pythonExecutionService.exec(args, options);
         }
         try {
-            return this.execFileWithDaemon(args[0], args.slice(1), options);
+            return await this.execFileWithDaemon(args[0], args.slice(1), options);
         } catch {
             return this.pythonExecutionService.exec(args, options);
         }
     }
-    public execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+    public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         this.throwIfRPCConnectionIsDead();
         if (!this.canExecModuleUsingDaemon(moduleName, args, options)) {
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
         try {
-            return this.execModuleWithDaemon(moduleName, args, options);
+            return await this.execModuleWithDaemon(moduleName, args, options);
         } catch {
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
