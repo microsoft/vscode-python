@@ -5,8 +5,8 @@ import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
 import { IMainState } from '../../interactive-common/mainState';
+import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
-import { generateMonacoReducer, IMonacoState } from '../../react-common/redux/reducers/monaco';
 import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';

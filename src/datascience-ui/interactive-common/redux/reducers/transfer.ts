@@ -3,15 +3,17 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
+import { extractInputText, IMainState } from '../../mainState';
+import { createPostableAction } from '../postOffice';
 import {
+    CommonReducerArg,
+    ICellAction,
+    IEditCellAction,
     IOpenLinkAction,
     ISendCommandAction,
     IShowDataViewerAction,
     IShowPlotAction
-} from '../../../native-editor/redux/actions';
-import { extractInputText, IMainState } from '../../mainState';
-import { createPostableAction } from '../postOffice';
-import { CommonReducerArg, ICellAction, IEditCellAction } from './types';
+} from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
@@ -99,6 +101,11 @@ export namespace Transfer {
         arg.queueAction(createPostableAction(CssMessages.GetMonacoThemeRequest, { isDark: arg.prevState.baseTheme !== 'vscode-light' }));
         arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadOnigasmAssemblyRequest));
         arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadTmLanguageRequest));
+        return arg.prevState;
+    }
+
+    export function loadedAllCells<T>(arg: CommonReducerArg<T>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.LoadAllCellsComplete, { cells: arg.prevState.cellVMs.map(c => c.cell) }));
         return arg.prevState;
     }
 }

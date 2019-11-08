@@ -8,15 +8,19 @@ import { CellState } from '../../../../client/datascience/types';
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
+import {
+    CommonActionType,
+    ICellAction,
+    IChangeCellTypeAction,
+    ICodeAction
+} from '../../../interactive-common/redux/reducers/types';
 import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
-import { IChangeCellTypeAction, NativeEditorActionTypes } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 import { Effects } from './effects';
 
 export namespace Execution {
 
-    function executeRange(prevState: IMainState, start: number, end: number, codes: string[], queueAction: QueueAnotherFunc<NativeEditorActionTypes>): IMainState {
+    function executeRange(prevState: IMainState, start: number, end: number, codes: string[], queueAction: QueueAnotherFunc<CommonActionType>): IMainState {
         const newVMs = [...prevState.cellVMs];
         for (let pos = start; pos <= end; pos += 1) {
             const orig = prevState.cellVMs[pos];

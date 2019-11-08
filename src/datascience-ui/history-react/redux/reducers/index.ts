@@ -5,8 +5,8 @@ import { IncomingMessageActions } from '../../../interactive-common/redux/postOf
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
+import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
 import { Variables } from '../../../interactive-common/redux/reducers/variables';
-import { InteractiveActionTypes } from '../actions';
 import { IInteractiveActionMapping } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
@@ -15,31 +15,31 @@ import { Execution } from './execution';
 // The list of reducers. 1 per message/action.
 export const reducerMap: IInteractiveActionMapping = {
     // State updates
-    [InteractiveActionTypes.TOGGLE_VARIABLE_EXPLORER]: Variables.toggleVariableExplorer,
-    [InteractiveActionTypes.REFRESH_VARIABLES]: Variables.refreshVariables,
-    [InteractiveActionTypes.RESTART_KERNEL]: Kernel.restartKernel,
-    [InteractiveActionTypes.INTERRUPT_KERNEL]: Kernel.interruptKernel,
-    [InteractiveActionTypes.EXPORT]: Transfer.exportCells,
-    [InteractiveActionTypes.SAVE]: Transfer.save,
-    [InteractiveActionTypes.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
-    [InteractiveActionTypes.DELETE_CELL]: Creation.deleteCell,
-    [InteractiveActionTypes.UNDO]: Execution.undo,
-    [InteractiveActionTypes.REDO]: Execution.redo,
-    [InteractiveActionTypes.SHOW_PLOT]: Transfer.showPlot,
-    [InteractiveActionTypes.OPEN_LINK]: Transfer.openLink,
-    [InteractiveActionTypes.GOTO_CELL]: Transfer.gotoCell,
-    [InteractiveActionTypes.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
-    [InteractiveActionTypes.COPY_CELL_CODE]: Transfer.copyCellCode,
-    [InteractiveActionTypes.GATHER_CELL]: Transfer.gather,
-    [InteractiveActionTypes.EDIT_CELL]: Transfer.editCell,
-    [InteractiveActionTypes.SUBMIT_INPUT]: Execution.submitInput,
-    [InteractiveActionTypes.DELETE_ALL_CELLS]: Creation.deleteAllCells,
-    [InteractiveActionTypes.EXPAND_ALL]: Effects.expandAll,
-    [InteractiveActionTypes.COLLAPSE_ALL]: Effects.collapseAll,
-    [InteractiveActionTypes.EDITOR_LOADED]: Transfer.started,
-    [InteractiveActionTypes.SCROLL]: Effects.scrolled,
-    [InteractiveActionTypes.CLICK_CELL]: Effects.clickCell,
-    [InteractiveActionTypes.UNFOCUS_CELL]: Effects.unfocusCell,
+    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: Variables.toggleVariableExplorer,
+    [CommonActionType.REFRESH_VARIABLES]: Variables.refreshVariables,
+    [CommonActionType.RESTART_KERNEL]: Kernel.restartKernel,
+    [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
+    [CommonActionType.EXPORT]: Transfer.exportCells,
+    [CommonActionType.SAVE]: Transfer.save,
+    [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
+    [CommonActionType.DELETE_CELL]: Creation.deleteCell,
+    [CommonActionType.UNDO]: Execution.undo,
+    [CommonActionType.REDO]: Execution.redo,
+    [CommonActionType.SHOW_PLOT]: Transfer.showPlot,
+    [CommonActionType.OPEN_LINK]: Transfer.openLink,
+    [CommonActionType.GOTO_CELL]: Transfer.gotoCell,
+    [CommonActionType.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
+    [CommonActionType.COPY_CELL_CODE]: Transfer.copyCellCode,
+    [CommonActionType.GATHER_CELL]: Transfer.gather,
+    [CommonActionType.EDIT_CELL]: Transfer.editCell,
+    [CommonActionType.SUBMIT_INPUT]: Execution.submitInput,
+    [CommonActionType.DELETE_ALL_CELLS]: Creation.deleteAllCells,
+    [CommonActionType.EXPAND_ALL]: Effects.expandAll,
+    [CommonActionType.COLLAPSE_ALL]: Effects.collapseAll,
+    [CommonActionType.EDITOR_LOADED]: Transfer.started,
+    [CommonActionType.SCROLL]: Effects.scrolled,
+    [CommonActionType.CLICK_CELL]: Effects.clickCell,
+    [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

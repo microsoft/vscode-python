@@ -7,9 +7,8 @@ import { IDataScienceExtraSettings } from '../../../../client/datascience/types'
 import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { ICellAction, IScrollAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
-import { IScrollAction } from '../actions';
 import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
 

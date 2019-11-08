@@ -11,7 +11,7 @@ import { Disposable } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
-import { InteractiveActionTypes } from '../../datascience-ui/history-react/redux/actions';
+import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
@@ -259,7 +259,7 @@ function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     if (nodes.length > 0) {
         const provider: Provider = nodes.instance() as Provider;
         if (provider) {
-            provider.props.store.dispatch(({type: InteractiveActionTypes.TOGGLE_VARIABLE_EXPLORER}));
+            provider.props.store.dispatch(({type: CommonActionType.TOGGLE_VARIABLE_EXPLORER}));
         }
     }
 }

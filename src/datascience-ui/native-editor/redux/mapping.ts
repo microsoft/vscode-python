@@ -7,59 +7,62 @@ import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessa
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
-import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 import {
+    CommonActionType,
+    ICellAction,
     ICellAndCursorAction,
     IChangeCellTypeAction,
+    ICodeAction,
+    IEditCellAction,
     IOpenLinkAction,
     IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
-    IShowPlotAction,
-    NativeEditorActionTypes
-} from './actions';
+    IShowPlotAction
+} from '../../interactive-common/redux/reducers/types';
+import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 
-type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, NativeEditorActionTypes, T>;
+type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
 
-export type NativeEditorReducerArg<T = never | undefined> = ReducerArg<IMainState, NativeEditorActionTypes, T>;
+export type NativeEditorReducerArg<T = never | undefined> = ReducerArg<IMainState, CommonActionType, T>;
 
 export class INativeEditorActionMapping {
-    public [NativeEditorActionTypes.INSERT_ABOVE]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.FOCUS_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
-    public [NativeEditorActionTypes.UNFOCUS_CELL]: NativeEditorReducerFunc<ICodeAction>;
-    public [NativeEditorActionTypes.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.EXECUTE_CELL]: NativeEditorReducerFunc<ICodeAction>;
-    public [NativeEditorActionTypes.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.EXECUTE_ABOVE]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.EXECUTE_CELL_AND_BELOW]: NativeEditorReducerFunc<ICodeAction>;
-    public [NativeEditorActionTypes.TOGGLE_VARIABLE_EXPLORER]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.REFRESH_VARIABLES]: NativeEditorReducerFunc<IRefreshVariablesAction>;
-    public [NativeEditorActionTypes.RESTART_KERNEL]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.INTERRUPT_KERNEL]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.CLEAR_ALL_OUTPUTS]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.EXPORT]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.SAVE]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.UNDO]: NativeEditorReducerFunc<never | undefined>;
-    public [NativeEditorActionTypes.SHOW_DATA_VIEWER]: NativeEditorReducerFunc<IShowDataViewerAction>;
-    public [NativeEditorActionTypes.SEND_COMMAND]: NativeEditorReducerFunc<ISendCommandAction>;
-    public [NativeEditorActionTypes.SELECT_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
-    public [NativeEditorActionTypes.SELECT_NEXT_CELL]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.MOVE_CELL_UP]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.MOVE_CELL_DOWN]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.TOGGLE_LINE_NUMBERS]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.TOGGLE_OUTPUT]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.DELETE_CELL]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.ARROW_UP]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.ARROW_DOWN]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.CHANGE_CELL_TYPE]: NativeEditorReducerFunc<IChangeCellTypeAction>;
-    public [NativeEditorActionTypes.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
-    public [NativeEditorActionTypes.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;
-    public [NativeEditorActionTypes.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
-    public [NativeEditorActionTypes.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
-    public [NativeEditorActionTypes.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.INSERT_ABOVE]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.FOCUS_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
+    public [CommonActionType.UNFOCUS_CELL]: NativeEditorReducerFunc<ICodeAction>;
+    public [CommonActionType.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.EXECUTE_CELL]: NativeEditorReducerFunc<ICodeAction>;
+    public [CommonActionType.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.EXECUTE_ABOVE]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.EXECUTE_CELL_AND_BELOW]: NativeEditorReducerFunc<ICodeAction>;
+    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.REFRESH_VARIABLES]: NativeEditorReducerFunc<IRefreshVariablesAction>;
+    public [CommonActionType.RESTART_KERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.INTERRUPT_KERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.CLEAR_ALL_OUTPUTS]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.EXPORT]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.SAVE]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.UNDO]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.SHOW_DATA_VIEWER]: NativeEditorReducerFunc<IShowDataViewerAction>;
+    public [CommonActionType.SEND_COMMAND]: NativeEditorReducerFunc<ISendCommandAction>;
+    public [CommonActionType.SELECT_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
+    public [CommonActionType.SELECT_NEXT_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.MOVE_CELL_UP]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.MOVE_CELL_DOWN]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.TOGGLE_LINE_NUMBERS]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.TOGGLE_OUTPUT]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.DELETE_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.ARROW_UP]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.ARROW_DOWN]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.CHANGE_CELL_TYPE]: NativeEditorReducerFunc<IChangeCellTypeAction>;
+    public [CommonActionType.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
+    public [CommonActionType.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;
+    public [CommonActionType.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
+    public [CommonActionType.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.LOADED_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;

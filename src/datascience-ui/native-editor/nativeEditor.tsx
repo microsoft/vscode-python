@@ -8,7 +8,7 @@ import { connect } from 'react-redux';
 
 import { OSType } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
-import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { NativeCommandType, ILoadAllCells } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
@@ -33,6 +33,7 @@ const ConnectedNativeCell = getConnectedNativeCell();
 
 export class NativeEditor extends React.Component<INativeEditorProps> {
     private renderCount: number = 0;
+    private waitingForLoadRender = true;
 
     constructor(props: INativeEditorProps) {
         super(props);
@@ -47,6 +48,21 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     public componentWillUnmount() {
         window.removeEventListener('keydown', this.mainKeyDown);
         window.removeEventListener('resize', () => this.forceUpdate());
+    }
+
+    public componentDidUpdate(prevProps: IMainState) {
+        if (!this.props.busy && prevProps.busy && this.waitingForLoadRender) {
+            this.waitingForLoadRender = false;
+            // After this render is complete (see this SO)
+            // https://stackoverflow.com/questions/26556436/react-after-render-code,
+            // indicate we are done loading. We want to wait for the render
+            // so we get accurate timing on first launch.
+            setTimeout(() => {
+                window.requestAnimationFrame(() => {
+                    this.props.loadedAllCells();
+                });
+            });
+        }
     }
 
     public render() {

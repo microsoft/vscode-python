@@ -7,40 +7,48 @@ import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessa
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import { ICellAction, ICodeAction, IEditCellAction } from '../../interactive-common/redux/reducers/types';
+import {
+    CommonActionType,
+    ICellAction,
+    ICodeAction,
+    IEditCellAction,
+    IOpenLinkAction,
+    IScrollAction,
+    IShowDataViewerAction,
+    IShowPlotAction
+} from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
-import { InteractiveActionTypes, IOpenLinkAction, IScrollAction, IShowDataViewerAction, IShowPlotAction } from './actions';
 
-type InteractiveReducerFunc<T> = ReducerFunc<IMainState, InteractiveActionTypes, T>;
+type InteractiveReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
 
-export type InteractiveReducerArg<T = never | undefined> = ReducerArg<IMainState, InteractiveActionTypes, T>;
+export type InteractiveReducerArg<T = never | undefined> = ReducerArg<IMainState, CommonActionType, T>;
 
 export class IInteractiveActionMapping {
-    public [InteractiveActionTypes.TOGGLE_VARIABLE_EXPLORER]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.REFRESH_VARIABLES]: InteractiveReducerFunc<IRefreshVariablesRequest>;
-    public [InteractiveActionTypes.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.INTERRUPT_KERNEL]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.EXPORT]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.SAVE]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.UNDO]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.REDO]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.SHOW_DATA_VIEWER]: InteractiveReducerFunc<IShowDataViewerAction>;
-    public [InteractiveActionTypes.DELETE_CELL]: InteractiveReducerFunc<ICellAction>;
-    public [InteractiveActionTypes.OPEN_LINK]: InteractiveReducerFunc<IOpenLinkAction>;
-    public [InteractiveActionTypes.SHOW_PLOT]: InteractiveReducerFunc<IShowPlotAction>;
-    public [InteractiveActionTypes.TOGGLE_INPUT_BLOCK]: InteractiveReducerFunc<ICellAction>;
-    public [InteractiveActionTypes.GOTO_CELL]: InteractiveReducerFunc<ICellAction>;
-    public [InteractiveActionTypes.COPY_CELL_CODE]: InteractiveReducerFunc<ICellAction>;
-    public [InteractiveActionTypes.GATHER_CELL]: InteractiveReducerFunc<ICellAction>;
-    public [InteractiveActionTypes.EDIT_CELL]: InteractiveReducerFunc<IEditCellAction>;
-    public [InteractiveActionTypes.SUBMIT_INPUT]: InteractiveReducerFunc<ICodeAction>;
-    public [InteractiveActionTypes.DELETE_ALL_CELLS]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.EXPAND_ALL]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.COLLAPSE_ALL]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.EDITOR_LOADED]: InteractiveReducerFunc<never | undefined>;
-    public [InteractiveActionTypes.SCROLL]: InteractiveReducerFunc<IScrollAction>;
-    public [InteractiveActionTypes.CLICK_CELL]: InteractiveReducerFunc<ICellAction>;
-    public [InteractiveActionTypes.UNFOCUS_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.REFRESH_VARIABLES]: InteractiveReducerFunc<IRefreshVariablesRequest>;
+    public [CommonActionType.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.INTERRUPT_KERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.EXPORT]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SAVE]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.UNDO]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.REDO]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SHOW_DATA_VIEWER]: InteractiveReducerFunc<IShowDataViewerAction>;
+    public [CommonActionType.DELETE_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.OPEN_LINK]: InteractiveReducerFunc<IOpenLinkAction>;
+    public [CommonActionType.SHOW_PLOT]: InteractiveReducerFunc<IShowPlotAction>;
+    public [CommonActionType.TOGGLE_INPUT_BLOCK]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.GOTO_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.COPY_CELL_CODE]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.GATHER_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.EDIT_CELL]: InteractiveReducerFunc<IEditCellAction>;
+    public [CommonActionType.SUBMIT_INPUT]: InteractiveReducerFunc<ICodeAction>;
+    public [CommonActionType.DELETE_ALL_CELLS]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.EXPAND_ALL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.COLLAPSE_ALL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.EDITOR_LOADED]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SCROLL]: InteractiveReducerFunc<IScrollAction>;
+    public [CommonActionType.CLICK_CELL]: InteractiveReducerFunc<ICellAction>;
+    public [CommonActionType.UNFOCUS_CELL]: InteractiveReducerFunc<ICellAction>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: InteractiveReducerFunc<ICell>;

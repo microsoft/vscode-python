@@ -252,12 +252,12 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         this.props.unfocus(this.getCell().id);
     }
 
-    private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, _modelId: string) => {
-        this.props.editCell(cellId, changes);
+    private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string) => {
+        this.props.editCell(cellId, changes, modelId);
     }
 
-    private onCodeCreated = (_code: string, _file: string, _cellId: string, _modelId: string) => {
-        // Used to use this to track the model id. Might still need it for intellisense.
+    private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {
+        this.props.codeCreated(cellId, modelId);
     }
 
     private hasOutput = () => {
