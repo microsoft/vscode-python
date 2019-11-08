@@ -2832,6 +2832,7 @@
         "css-loader": "^1.0.1",
         "cucumber-html-reporter": "^4.0.5",
         "decache": "^4.4.0",
+        "dedent": "^0.7.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
         "electron-download": "^4.1.1",
