@@ -95,7 +95,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
             }
             const cls = options.daemonClass ? options.daemonClass : PythonDaemonExecutionService;
-            return new cls(activatedProc, pythonPath, daemonProc.proc, connection);
+            return new cls(activatedProc!, pythonPath, daemonProc.proc, connection);
         } catch (ex) {
             traceError('Failed to start the Daemon, StdErr: ', stdError);
             traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
