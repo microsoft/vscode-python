@@ -9,7 +9,7 @@ schedules:
   branches:
     include:
     - master
-    - releases/*
+    - releases*
 
 # Variables that are available for the entire pipeline.
 variables:

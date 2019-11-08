@@ -49,7 +49,7 @@ steps:
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
       displayName: "Update release Version of Extension"
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranchName'], 'release'))
 
     - bash: |
           npm run package
