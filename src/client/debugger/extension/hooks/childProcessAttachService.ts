@@ -26,19 +26,18 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) {}
+    ) { }
 
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
     public async attach(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration), parentSession: DebugSession): Promise<void> {
         let debugConfig: AttachRequestArguments & DebugConfiguration;
         let processId: number;
-        const launchData = data as ChildProcessLaunchData;
-        if (launchData) {
-            processId = launchData.processId;
-            debugConfig = this.getAttachConfiguration(launchData);
+        if (data.rootStartRequest) {
+            processId = data.processId;
+            debugConfig = this.getAttachConfiguration(data as ChildProcessLaunchData);
         } else {
             debugConfig = data as (AttachRequestArguments & DebugConfiguration);
-            processId = debugConfig.subProcessId;
+            processId = debugConfig.subProcessId!;
         }
         const folder = this.getRelatedWorkspaceFolder(debugConfig);
         const launched = await this.debugService.startDebugging(folder, debugConfig, parentSession);

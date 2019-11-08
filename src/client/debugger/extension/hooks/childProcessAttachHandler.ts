@@ -34,6 +34,8 @@ export class ChildProcessAttachEventHandler implements IDebugSessionEventHandler
             return;
         }
 
-        await this.childProcessAttachService.attach(data, event.session);
+        if (Object.keys(data).length > 0) {
+            await this.childProcessAttachService.attach(data, event.session);
+        }
     }
 }
