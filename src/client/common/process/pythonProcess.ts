@@ -50,14 +50,14 @@ export class PythonExecutionService implements IPythonExecutionService {
                 traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
                 return;
             }
-                const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
-                return {
-                    architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                    path: this.pythonPath,
-                    version: parsePythonVersion(versionValue),
-                    sysVersion: json.sysVersion,
-                    sysPrefix: json.sysPrefix
-                };
+            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+            return {
+                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
+                path: this.pythonPath,
+                version: parsePythonVersion(versionValue),
+                sysVersion: json.sysVersion,
+                sysPrefix: json.sysPrefix
+            };
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }
@@ -83,13 +83,13 @@ export class PythonExecutionService implements IPythonExecutionService {
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
         // Cannot use this.getExecutionInfo() until 'conda run' can be run without buffering output.
-        // See https://github.com/conda/conda/issues/9412
+        // See https://github.com/microsoft/vscode-python/issues/8473
         return this.procService.execObservable(this.pythonPath, args, opts);
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const opts: SpawnOptions = { ...options };
         // Cannot use this.getExecutionInfo() until 'conda run' can be run without buffering output.
-        // See https://github.com/conda/conda/issues/9412
+        // See https://github.com/microsoft/vscode-python/issues/8473
         return this.procService.execObservable(this.pythonPath, ['-m', moduleName, ...args], opts);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
