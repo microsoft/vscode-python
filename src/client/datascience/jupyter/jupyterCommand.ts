@@ -119,9 +119,9 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
 
     public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand){
-            return new InterpreterJupyterNotebookCommand(moduleName, ['-m', moduleName].concat(args), this.executionFactory, interpreter);
+            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter);
         }
-        return new InterpreterJupyterCommand(moduleName, ['-m', moduleName].concat(args), this.executionFactory, interpreter);
+        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter);
     }
 
     public createProcessCommand(exe: string, args: string[]): IJupyterCommand {
