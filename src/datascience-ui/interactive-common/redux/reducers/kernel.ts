@@ -27,7 +27,7 @@ export namespace Kernel {
         const newVMs = [...arg.prevState.cellVMs];
         newVMs.forEach((vm, i) => {
             if (vm.cell.state !== CellState.finished && vm.cell.state !== CellState.error) {
-                newVMs[i] = { ...vm, cell: { ...vm.cell, state: CellState.finished } };
+                newVMs[i] = { ...vm, hasBeenRun: false, cell: { ...vm.cell, state: CellState.finished } };
             }
         });
 

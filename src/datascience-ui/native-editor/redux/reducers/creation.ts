@@ -23,7 +23,7 @@ import { actionCreators } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Creation {
-    function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
+    function prepareCellVM(cell: ICell, hasBeenRun: boolean, settings: IDataScienceExtraSettings): ICellViewModel {
         const cellVM: ICellViewModel = createCellVM(cell, settings, true);
 
         // Set initial cell visibility and collapse
@@ -34,12 +34,13 @@ export namespace Creation {
 
         cellVM.inputBlockOpen = true;
         cellVM.inputBlockText = newText;
+        cellVM.hasBeenRun = hasBeenRun;
 
         return cellVM;
     }
 
     export function insertAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(uuid(), null), arg.prevState.settings);
+        const newVM = prepareCellVM(createEmptyCell(uuid(), null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -64,7 +65,7 @@ export namespace Creation {
     }
 
     export function insertBelow(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const newVM = prepareCellVM(createEmptyCell(uuid(), null), arg.prevState.settings);
+        const newVM = prepareCellVM(createEmptyCell(uuid(), null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
@@ -102,15 +103,15 @@ export namespace Creation {
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, prepareCellVM);
+        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
     }
 
     export function updateCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, prepareCellVM);
+        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
     }
 
     export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, prepareCellVM);
+        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
     }
 
     export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {
@@ -204,7 +205,7 @@ export namespace Creation {
     }
 
     export function loadAllCells(arg: NativeEditorReducerArg<ILoadAllCells>): IMainState {
-        const vms = arg.payload.cells.map(c => prepareCellVM(c, arg.prevState.settings));
+        const vms = arg.payload.cells.map(c => prepareCellVM(c, false, arg.prevState.settings));
         return {
             ...arg.prevState,
             busy: false,

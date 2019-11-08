@@ -58,13 +58,14 @@ export namespace Creation {
     }
 
     export function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
-        let cellVM: ICellViewModel = createCellVM(cell, settings, true);
+        let cellVM: ICellViewModel = createCellVM(cell, settings, false);
 
         const visible = settings.showCellInputCode;
         const expanded = !settings.collapseCellInputCodeByDefault;
 
         // Set initial cell visibility and collapse
         cellVM = alterCellVM(cellVM, settings, visible, expanded);
+        cellVM.hasBeenRun = true;
 
         return cellVM;
     }
