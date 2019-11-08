@@ -11,7 +11,7 @@ import { initializeTokenizer } from '../../../interactive-common/tokenizer';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../reduxUtils';
 
 export interface IMonacoState {
-    onigasmData: Buffer | undefined;
+    onigasmData: ArrayBuffer | undefined;
     tmLanguageData: string | undefined;
     testMode: boolean;
 }
@@ -20,22 +20,35 @@ type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, IncomingMessageActions, T>
 
 type MonacoReducerArg<T = never | undefined> = ReducerArg<IMonacoState, IncomingMessageActions, T>;
 
+function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoReducerArg<T>) {
+    initializeTokenizer(buffer, tmJson, (e) => {
+        if (e) {
+            window.console.log(`ERROR from onigasm: ${e}`);
+        }
+        arg.queueAction({ type: IncomingMessageActions.MONACOREADY });
+    }).ignoreErrors();
+}
+
 function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState {
-    if (arg.prevState.tmLanguageData) {
+    // Have to convert the buffer into an ArrayBuffer for the tokenizer to load it.
+    // tslint:disable-next-line: no-any
+    const typedArray = new Uint8Array((arg.payload as any).data);
+
+    if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData) {
         // Monaco is ready. Initialize the tokenizer
-        initializeTokenizer(arg.payload, arg.prevState.tmLanguageData, () => arg.queueAction({ type: IncomingMessageActions.MONACOREADY })).ignoreErrors();
+        finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);
     }
 
     return {
         ...arg.prevState,
-        onigasmData: arg.payload
+        onigasmData: typedArray.buffer
     };
 }
 
 function handleLoadTmLanguageResponse(arg: MonacoReducerArg<string>): IMonacoState {
-    if (arg.prevState.onigasmData) {
+    if (arg.prevState.onigasmData && !arg.prevState.tmLanguageData) {
         // Monaco is ready. Initialize the tokenizer
-        initializeTokenizer(arg.prevState.onigasmData, arg.payload, () => arg.queueAction({ type: IncomingMessageActions.MONACOREADY })).ignoreErrors();
+        finishTokenizer(arg.prevState.onigasmData, arg.payload, arg);
     }
 
     return {
