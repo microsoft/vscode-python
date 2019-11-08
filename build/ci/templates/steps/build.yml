@@ -35,6 +35,12 @@ steps:
     - bash: npm run clean
       displayName: "Clean"
 
+    # This is a slow process, hence do this only on master and release branches.
+    # I.e. skip on in PRs.
+    - bash: npm run checkDependencies
+      displayName: "Check Dependencies"
+      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), startsWith(variables['Build.SourceBranchName'], 'release')))
+
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       displayName: "Update dev Version of Extension"
