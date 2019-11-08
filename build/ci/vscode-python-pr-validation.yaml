@@ -6,7 +6,7 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-pr'
 pr:
   autoCancel: true
   branches:
-    include: ["master", "release"]
+    include: ["master", "release*"]
   paths:
     exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
 

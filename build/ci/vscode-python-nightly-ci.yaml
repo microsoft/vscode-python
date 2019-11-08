@@ -15,7 +15,7 @@ schedules:
   branches:
     include:
     - master
-    - release
+    - release*
   always: true
 
 # Variables that are available for the entire pipeline.
