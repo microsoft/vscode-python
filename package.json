@@ -2770,6 +2770,7 @@
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
         "@types/copy-webpack-plugin": "^4.4.2",
+        "@types/dedent": "^0.7.0",
         "@types/del": "^3.0.0",
         "@types/diff-match-patch": "^1.0.32",
         "@types/download": "^6.2.2",
