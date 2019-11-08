@@ -10,7 +10,7 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
