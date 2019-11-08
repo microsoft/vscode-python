@@ -29,7 +29,7 @@ suite('Daemon', () => {
     const env = { PYTHONPATH: envPythonPath, PYTHONUNBUFFERED: '1' };
     let pythonProc: ChildProcess;
     let connection: MessageConnection;
-    let fullyQualifiedPythonPath: string;
+    let fullyQualifiedPythonPath: string = PYTHON_PATH;
     let pythonDaemon: PythonDaemonExecutionService;
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
