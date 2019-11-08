@@ -6,7 +6,6 @@ import '../../common/extensions';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
-
 import { CancellationError } from '../../common/cancellation';
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';

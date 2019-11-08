@@ -88,13 +88,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         this.measureWidthRef = React.createRef<HTMLDivElement>();
         this.debouncedUpdateEditorSize = debounce(this.updateEditorSize.bind(this), 150);
         this.hideAllOtherHoverAndParameterWidgets = debounce(this.hideAllOtherHoverAndParameterWidgets.bind(this), 150);
-
-        // JSDOM has MutationObserver in the window object
-        if ('MutationObserver' in window) {
-            // tslint:disable-next-line: no-string-literal no-any
-            const ctor = (window as any)['MutationObserver'];
-            this.styleObserver = new ctor(this.watchStyles);
-        }
     }
 
     // tslint:disable-next-line: max-func-body-length
@@ -361,28 +354,6 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (current !== undefined && current >= 0) {
             window.console.log(`Scrolling to line ${current}`);
             visibleLineDivs[current].scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
-        }
-    }
-
-    private watchStyles = (mutations: MutationRecord[], _observer: MutationObserver): void => {
-        try {
-            if (mutations && mutations.length > 0 && this.styleObserver) {
-                mutations.forEach(m => {
-                    if (m.type === 'attributes' && m.attributeName === 'style') {
-                        const element = m.target as HTMLDivElement;
-                        if (element && element.style && element.style.left) {
-                            const left = element.style.left.endsWith('px') ? parseInt(element.style.left.substr(0, element.style.left.length - 2), 10) : -1;
-                            if (left > 10) {
-                                this.styleObserver!.disconnect();
-                                element.style.left = `${left + 3}px`;
-                                this.styleObserver!.observe(element, { attributes: true, attributeFilter: ['style']});
-                            }
-                        }
-                    }
-                });
-            }
-        } catch {
-            // Skip doing anything if it fails
         }
     }
 

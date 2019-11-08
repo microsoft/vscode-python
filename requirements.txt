@@ -2,3 +2,4 @@ jedi==0.15.1
 parso==0.5.1
 isort==4.3.21
 pyparsing==2.4.0
+python-jsonrpc-server==0.2.0

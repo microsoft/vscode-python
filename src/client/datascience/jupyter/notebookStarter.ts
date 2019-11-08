@@ -56,16 +56,15 @@ export class NotebookStarter implements Disposable {
     }
     // tslint:disable-next-line: max-func-body-length
     public async start(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
-        const notebookCommand = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
+        const notebookCommandPromise = this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
         // Now actually launch it
         let exitCode: number | null = 0;
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
-
             // Before starting the notebook process, make sure we generate a kernel spec
-            const [args, kernelSpec] = await Promise.all([this.generateArguments(useDefaultConfig, tempDirPromise), this.kernelService.getMatchingKernelSpec(undefined, cancelToken)]);
+            const [args, kernelSpec, notebookCommand] = await Promise.all([this.generateArguments(useDefaultConfig, tempDirPromise), this.kernelService.getMatchingKernelSpec(undefined, cancelToken), notebookCommandPromise]);
 
             // Make sure we haven't canceled already.
             if (cancelToken && cancelToken.isCancellationRequested) {
@@ -74,11 +73,11 @@ export class NotebookStarter implements Disposable {
 
             // Then use this to launch our notebook process.
             const stopWatch = new StopWatch();
-            const launchResult = await notebookCommand.command!.execObservable(args as string[], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken });
+            const [launchResult, tempDir] = await Promise.all([notebookCommand!.command!.execObservable(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }), tempDirPromise]);
 
             // Watch for premature exits
             if (launchResult.proc) {
-                launchResult.proc.on('exit', c => (exitCode = c));
+                launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.
@@ -89,7 +88,6 @@ export class NotebookStarter implements Disposable {
             }
 
             // Wait for the connection information on this result
-            const tempDir = await tempDirPromise;
             const connection = await JupyterConnection.waitForConnection(tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer, cancelToken);
 
             // Fire off telemetry for the process being talkable
@@ -224,8 +222,9 @@ export class NotebookStarter implements Disposable {
         };
     }
     private getJupyterServerInfo = async (cancelToken?: CancellationToken): Promise<JupyterServerInfo[] | undefined> => {
-        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const bestInterpreter = await this.jupyterExecution.getUsableJupyterPython(cancelToken);
+
+        // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         if (bestInterpreter) {
             const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
             const launcher = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter: bestInterpreter, allowEnvironmentFetchExceptions: true });

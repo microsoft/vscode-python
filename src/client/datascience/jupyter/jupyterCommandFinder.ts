@@ -201,7 +201,6 @@ export class JupyterCommandFinderImpl {
         }
         return true;
     }
-
     // tslint:disable:cyclomatic-complexity max-func-body-length
     private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
         let found: IFindCommandResult = {
@@ -212,6 +211,7 @@ export class JupyterCommandFinderImpl {
         // First we look in the current interpreter
         const current = await this.interpreterService.getActiveInterpreter();
         const stopWatch = new StopWatch();
+
         if (isCommandFinderCancelled(command, cancelToken)) {
             return cancelledResult;
         }
@@ -395,15 +395,15 @@ export class JupyterCommandFinderImpl {
         return result;
     }
 
-    private async doesJupyterCommandExist(command?: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> {
+    private async doesJupyterCommandExist(command: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> {
         const newOptions: SpawnOptions = { throwOnStdErr: true, encoding: 'utf8', token: cancelToken };
-        const args = command ? [command, '--version'] : ['--version'];
+        const args = [command, '--version'];
         const processService = await this.processServicePromise;
         try {
             const result = await processService.exec('jupyter', args, newOptions);
             return !result.stderr;
         } catch (err) {
-            this.logger.logWarning(err);
+            traceWarning(err);
             return false;
         }
     }
