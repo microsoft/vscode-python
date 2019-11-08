@@ -16,7 +16,13 @@ import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { CONDA_RUN_VERSION, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { ExecutionFactoryCreationOptions, IBufferDecoder, IProcessLogger, IProcessServiceFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import {
+    ExecutionFactoryCreationOptions,
+    IBufferDecoder,
+    IProcessLogger,
+    IProcessServiceFactory,
+    IPythonExecutionService
+} from '../../../client/common/process/types';
 import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';

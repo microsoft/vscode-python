@@ -93,7 +93,7 @@ export interface IPythonExecutionFactory {
      * @returns {(Promise<IPythonExecutionService & IDisposable>)}
      * @memberof IPythonExecutionFactory
      */
-    createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService>;
+    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
     createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined>;
 }
@@ -135,7 +135,8 @@ export type PythonExecutionInfo = {
  * @extends {IPythonExecutionService}
  * @extends {IDisposable}
  */
-export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {
+}
 
 export class StdErrError extends Error {
     constructor(message: string) {
