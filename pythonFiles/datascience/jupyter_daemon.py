@@ -7,6 +7,7 @@ import os
 from datascience.daemon.daemon_python import (
     error_decorator,
     PythonDaemon as BasePythonDaemon,
+    change_exec_context,
 )
 
 log = logging.getLogger(__name__)
@@ -24,7 +25,7 @@ class PythonDaemon(BasePythonDaemon):
 
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
-        log.info("Exec in child class %s with args %s", module_name, args)
+        log.info("Exec in DS Daemon %s with args %s", module_name, args)
         args = [] if args is None else args
 
         if module_name == "jupyter" and args == ["kernelspec", "list"]:
@@ -34,6 +35,37 @@ class PythonDaemon(BasePythonDaemon):
         else:
             log.info("check base class stuff")
             return super().m_exec_module(module_name, args, cwd, env)
+
+    @error_decorator
+    def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None):
+        log.info("Exec in DS Daemon (observable) %s with args %s", module_name, args)
+        args = [] if args is None else args
+
+        # Assumption is that `python -m jupyter notebook` or `python -m notebook` with observable output
+        # will only ever be used to start a notebook and nothing else.
+        # E.g. `python -m jupyter notebook --version` wouldn't require the use of exec_module_observable,
+        # In such cases, we can get the output immediately.
+        if (module_name == "jupyter" and args[0] == "notebook") or (
+            module_name == "notebook"
+        ):
+            # Args must not have ['notebook'] in the begining. Drop the `notebook` subcommand when using `jupyter`
+            args = args[1:] if args[0] == "notebook" else args
+            log.info("Starting notebook with args %s", args)
+
+            # When launching notebook always ensure the first argument is `notebook`.
+            with change_exec_context(args, cwd, env):
+                self._start_notebook(args)
+        else:
+            return super().m_exec_module_observable(module_name, args, cwd, env)
+
+    def _print_kernelspec_version(self):
+        import jupyter_client
+
+        # Check whether kernelspec module exists.
+        import jupyter_client.kernelspec
+
+        sys.stdout.write(jupyter_client.__version__)
+        sys.stdout.flush()
 
     def _print_kernelspec_version(self):
         import jupyter_client
@@ -55,9 +87,8 @@ class PythonDaemon(BasePythonDaemon):
         )
         sys.stdout.flush()
 
-    def m_hello(self, rootUri=None, **kwargs):
-        from notebook.notebookapp import main
+    def _start_notebook(self, args):
+        from notebook import notebookapp as app
 
-        sys.argv = ["notebook", "--no-browser"]
-        main()
-        return {}
+        sys.argv = [""] + args
+        app.launch_new_instance()

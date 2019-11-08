@@ -70,8 +70,8 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
      *
      * @type {string}
      */
-    daemonModule: string;
-    daemonClass: Newable<IPythonDaemonExecutionService>;
+    daemonModule?: string;
+    daemonClass?: Newable<IPythonDaemonExecutionService>;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
@@ -129,6 +129,20 @@ export interface IPythonExecutionService {
  * @extends {IDisposable}
  */
 export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {
+    // /**
+    //  * Whether a request is being processed (i.e. whether the daemon is currently busy).
+    //  *
+    //  * @type {boolean}
+    //  * @memberof IPythonDaemonExecutionService
+    //  */
+    // readonly busy: boolean;
+    // /**
+    //  * Tells us how long the daemon has been busy with the current request/operation.
+    //  * This will return a number if `busy = true`.
+    //  *
+    //  * @memberof IPythonDaemonExecutionService
+    //  */
+    // readonly currentExecutionTime?: number;
 }
 
 export class StdErrError extends Error {

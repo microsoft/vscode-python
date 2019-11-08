@@ -23,6 +23,7 @@ import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../com
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
+import { JupyterCommands } from './constants';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -401,7 +402,7 @@ export interface IJupyterCommand {
 
 export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
 export interface IJupyterCommandFactory {
-    createInterpreterCommand(args: string[], interpreter: PythonInterpreter): IJupyterCommand;
+    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter): IJupyterCommand;
     createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 
