@@ -4,7 +4,7 @@ import { injectable } from 'inversify';
 import { CondaEnvironmentInfo } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { PythonExecutionService } from './pythonProcess';
-import { IProcessService, IPythonExecutableInfo } from './types';
+import { IProcessService, PythonExecutionInfo } from './types';
 
 @injectable()
 export class CondaExecutionService extends PythonExecutionService {
@@ -18,7 +18,7 @@ export class CondaExecutionService extends PythonExecutionService {
         super(serviceContainer, procService, pythonPath);
     }
 
-    public getExecutableInfo(_: string, args: string[]): IPythonExecutableInfo {
+    public getExecutionInfo(_: string, args: string[]): PythonExecutionInfo {
         const executionArgs = this.condaEnvironment.name !== '' ? ['run', '-n', this.condaEnvironment.name] : ['run', '-p', this.condaEnvironment.path];
 
         return { command: this.condaFile, args: [...executionArgs, 'python', ...args] };

@@ -254,7 +254,7 @@ suite('PythonExecutionService', () => {
         const args = ['-a', 'b', '-c'];
         const command = 'command';
 
-        const result = executionService.getExecutableInfo(command, args);
+        const result = executionService.getExecutionInfo(command, args);
 
         expect(result).to.deep.equal({ command, args }, 'getExecutableInfo should return the command and execution arguments as is');
     });

@@ -28,7 +28,7 @@ suite('CondaExecutionService', () => {
         const environment = { name: 'foo', path: 'bar' };
         executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
-        const result = executionService.getExecutableInfo(pythonPath, args);
+        const result = executionService.getExecutionInfo(pythonPath, args);
 
         expect(result).to.deep.equal({ command: condaFile, args: ['run', '-n', environment.name, 'python', ...args] });
     });
@@ -37,7 +37,7 @@ suite('CondaExecutionService', () => {
         const environment = { name: '', path: 'bar' };
         executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
-        const result = executionService.getExecutableInfo(pythonPath, args);
+        const result = executionService.getExecutionInfo(pythonPath, args);
 
         expect(result).to.deep.equal({ command: condaFile, args: ['run', '-p', environment.path, 'python', ...args] });
     });

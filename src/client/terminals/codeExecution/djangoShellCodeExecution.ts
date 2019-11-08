@@ -9,7 +9,7 @@ import { Disposable, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
-import { IPythonExecutionFactory } from '../../common/process/types';
+import { IPythonExecutionFactory, PythonExecutionInfo } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { DjangoContextInitializer } from './djangoContext';
@@ -33,22 +33,22 @@ export class DjangoShellCodeExecutionProvider extends TerminalCodeExecutionProvi
         disposableRegistry.push(new DjangoContextInitializer(documentManager, workspace, fileSystem, commandManager));
     }
 
-    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<{ command: string; args: string[] }> {
-        // We need the executable info but not the 'manage.py shell' args
-        const { command, args } = await super.getExecutableInfo(resource);
-        return { command, args: args.concat(executeArgs) };
-    }
-
-    public async getExecutableInfo(resource?: Uri): Promise<{ command: string; args: string[] }> {
-        const { command, args } = await super.getExecutableInfo(resource);
+    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
+        const { command, args: executableArgs } = await super.getExecutableInfo(resource, args);
 
         const workspaceUri = resource ? this.workspace.getWorkspaceFolder(resource) : undefined;
         const defaultWorkspace = Array.isArray(this.workspace.workspaceFolders) && this.workspace.workspaceFolders.length > 0 ? this.workspace.workspaceFolders[0].uri.fsPath : '';
         const workspaceRoot = workspaceUri ? workspaceUri.uri.fsPath : defaultWorkspace;
         const managePyPath = workspaceRoot.length === 0 ? 'manage.py' : path.join(workspaceRoot, 'manage.py');
 
-        args.push(managePyPath.fileToCommandArgument());
-        args.push('shell');
-        return { command, args };
+        executableArgs.push(managePyPath.fileToCommandArgument());
+        executableArgs.push('shell');
+        return { command, args: executableArgs };
+    }
+
+    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecutionInfo> {
+        // We need the executable info but not the 'manage.py shell' args
+        const { command, args } = await super.getExecutableInfo(resource);
+        return { command, args: args.concat(executeArgs) };
     }
 }

@@ -9,7 +9,7 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
-import { IPythonExecutableInfo, IPythonExecutionFactory } from '../../common/process/types';
+import { IPythonExecutionFactory, PythonExecutionInfo } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { ICodeExecutionService } from '../../terminals/types';
@@ -58,7 +58,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
 
         await this.replActive;
     }
-    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<IPythonExecutableInfo> {
+
+    public async getExecutableInfo(resource?: Uri, args: string[] = []): Promise<PythonExecutionInfo> {
         const pythonSettings = this.configurationService.getSettings(resource);
         const command = pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
@@ -66,7 +67,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const condaExecutionService = await this.pythonExecFactory.createCondaExecutionService(command);
 
         if (condaExecutionService) {
-            return condaExecutionService.getExecutableInfo(command, [...launchArgs, ...args]);
+            return condaExecutionService.getExecutionInfo(command, [...launchArgs, ...args]);
             }
 
         const isWindows = this.platformService.isWindows;
@@ -77,7 +78,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         };
     }
 
-    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<IPythonExecutableInfo> {
+    // Overridden in subclasses, see djangoShellCodeExecution.ts
+    public async getExecuteFileArgs(resource?: Uri, executeArgs: string[] = []): Promise<PythonExecutionInfo> {
         return this.getExecutableInfo(resource, executeArgs);
     }
     private getTerminalService(resource?: Uri): ITerminalService {
