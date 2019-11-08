@@ -19,8 +19,8 @@ export class CondaExecutionService extends PythonExecutionService {
     }
 
     public getExecutionInfo(_: string, args: string[]): PythonExecutionInfo {
-        const executionArgs = this.condaEnvironment.name !== '' ? ['run', '-n', this.condaEnvironment.name] : ['run', '-p', this.condaEnvironment.path];
+        const executionArgs = this.condaEnvironment.name !== '' ? ['-n', this.condaEnvironment.name] : ['-p', this.condaEnvironment.path];
 
-        return { command: this.condaFile, args: [...executionArgs, 'python', ...args] };
+        return { command: this.condaFile, args: ['run', ...executionArgs, 'python', ...args] };
     }
 }

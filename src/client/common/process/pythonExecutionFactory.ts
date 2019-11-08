@@ -140,15 +140,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return;
         }
 
-        const condaEnvironment = await this.condaService.getCondaEnvironment(pythonPath);
+        const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
+        const [condaEnvironment, condaFile, procService] = await Promise.all([
+            this.condaService.getCondaEnvironment(pythonPath),
+            this.condaService.getCondaFile(),
+            processServicePromise
+        ]);
         if (condaEnvironment) {
-            const condaFile = await this.condaService.getCondaFile();
-
-            if (!processService) {
-                processService = await this.processServiceFactory.create(resource);
-            }
-
-            return new CondaExecutionService(this.serviceContainer, processService, pythonPath, condaFile, condaEnvironment);
+            return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
         }
 
         return;
