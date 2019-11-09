@@ -558,8 +558,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
-            this.props.stateController.updateCellSource(cellId);
-            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
+            const contents = this.props.stateController.getMonacoEditorContents(cellId) || concatMultilineStringInput(this.props.cellVM.cell.data.source);
+            this.runAndMove(contents);
             this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
         };
         const gatherCell = () => {
