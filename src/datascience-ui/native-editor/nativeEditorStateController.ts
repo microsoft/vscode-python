@@ -286,7 +286,7 @@ export class NativeEditorStateController extends MainStateController {
         if (index >= 0) {
             // Get the model source from the monaco editor
             const source = this.getMonacoEditorContents(cellId);
-            if (source) {
+            if (source !== undefined) {
                 const newVMs = [...this.getState().cellVMs];
 
                 // Update our state

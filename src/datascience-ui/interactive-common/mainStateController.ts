@@ -344,7 +344,7 @@ export class MainStateController implements IMessageHandler {
         const newVMs = [...this.pendingState.cellVMs];
         for (let i = 0; i < newVMs.length; i += 1) {
             const text = this.getMonacoEditorContents(newVMs[i].cell.id);
-            if (text) {
+            if (text !== undefined) {
                 newVMs[i] = { ...newVMs[i], inputBlockText: text, cell: { ...newVMs[i].cell, data: { ...newVMs[i].cell.data, source: text } } };
             }
         }
