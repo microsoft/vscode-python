@@ -61,6 +61,9 @@ suite('Linting - MyPy', () => {
             expect(msg).to.deep.equal(expected);
         }
     });
+});
+
+suite('Test Linter', () => {
     class TestMyPyLinter extends MyPy {
         // tslint:disable: no-unnecessary-override
         public async runLinter(document: TextDocument, cancellation: CancellationToken): Promise<ILintMessage[]> {
@@ -76,56 +79,55 @@ suite('Linting - MyPy', () => {
             return super.parseMessagesSeverity(error, severity);
         }
     }
-    suite('Test Linter', () => {
-        let linter: TestMyPyLinter;
-        let getWorkspaceRootPathStub: sinon.SinonStub<[TextDocument], string>;
-        let runStub: sinon.SinonStub<[string[], TextDocument, CancellationToken, (string | undefined)?], Promise<ILintMessage[]>>;
-        const token = new CancellationTokenSource().token;
-        teardown(() => sinon.restore());
-        setup(() => {
-            const linterManager = mock(LinterManager);
-            when(linterManager.getLinterInfo(anything())).thenReturn({ product: Product.mypy } as any);
-            const serviceContainer = mock(ServiceContainer);
-            when(serviceContainer.get<ILinterManager>(ILinterManager)).thenReturn(instance(linterManager));
-            getWorkspaceRootPathStub = sinon.stub(TestMyPyLinter.prototype, 'getWorkspaceRootPath');
-            runStub = sinon.stub(TestMyPyLinter.prototype, 'run');
-            linter = new TestMyPyLinter(instance(mock(MockOutputChannel)), instance(serviceContainer));
-        });
 
-        test('Get cwd based on document', async () => {
-            const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
-            const cwd = path.join('a', 'b', 'c');
-            const doc = { uri: fileUri } as any as TextDocument;
-            getWorkspaceRootPathStub.callsFake(() => cwd);
-            runStub.callsFake(() => Promise.resolve([]));
+    let linter: TestMyPyLinter;
+    let getWorkspaceRootPathStub: sinon.SinonStub<[TextDocument], string>;
+    let runStub: sinon.SinonStub<[string[], TextDocument, CancellationToken, (string | undefined)?], Promise<ILintMessage[]>>;
+    const token = new CancellationTokenSource().token;
+    teardown(() => sinon.restore());
+    setup(() => {
+        const linterManager = mock(LinterManager);
+        when(linterManager.getLinterInfo(anything())).thenReturn({ product: Product.mypy } as any);
+        const serviceContainer = mock(ServiceContainer);
+        when(serviceContainer.get<ILinterManager>(ILinterManager)).thenReturn(instance(linterManager));
+        getWorkspaceRootPathStub = sinon.stub(TestMyPyLinter.prototype, 'getWorkspaceRootPath');
+        runStub = sinon.stub(TestMyPyLinter.prototype, 'run');
+        linter = new TestMyPyLinter(instance(mock(MockOutputChannel)), instance(serviceContainer));
+    });
 
-            await linter.runLinter(doc, token);
+    test('Get cwd based on document', async () => {
+        const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
+        const cwd = path.join('a', 'b', 'c');
+        const doc = { uri: fileUri } as any as TextDocument;
+        getWorkspaceRootPathStub.callsFake(() => cwd);
+        runStub.callsFake(() => Promise.resolve([]));
 
-            expect(getWorkspaceRootPathStub.callCount).to.equal(1);
-            expect(getWorkspaceRootPathStub.args[0]).to.deep.equal([doc]);
-        });
-        test('Pass relative path of document to linter', async () => {
-            const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
-            const cwd = path.join('a', 'b', 'c');
-            const doc = { uri: fileUri } as any as TextDocument;
-            getWorkspaceRootPathStub.callsFake(() => cwd);
-            runStub.callsFake(() => Promise.resolve([]));
+        await linter.runLinter(doc, token);
 
-            await linter.runLinter(doc, token);
+        expect(getWorkspaceRootPathStub.callCount).to.equal(1);
+        expect(getWorkspaceRootPathStub.args[0]).to.deep.equal([doc]);
+    });
+    test('Pass relative path of document to linter', async () => {
+        const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
+        const cwd = path.join('a', 'b', 'c');
+        const doc = { uri: fileUri } as any as TextDocument;
+        getWorkspaceRootPathStub.callsFake(() => cwd);
+        runStub.callsFake(() => Promise.resolve([]));
 
-            expect(runStub.callCount).to.equal(1);
-            expect(runStub.args[0]).to.deep.equal([[path.relative(cwd, fileUri.fsPath)], doc, token, REGEX]);
-        });
-        test('Return empty messages', async () => {
-            const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
-            const cwd = path.join('a', 'b', 'c');
-            const doc = { uri: fileUri } as any as TextDocument;
-            getWorkspaceRootPathStub.callsFake(() => cwd);
-            runStub.callsFake(() => Promise.resolve([]));
+        await linter.runLinter(doc, token);
 
-            const messages = await linter.runLinter(doc, token);
+        expect(runStub.callCount).to.equal(1);
+        expect(runStub.args[0]).to.deep.equal([[path.relative(cwd, fileUri.fsPath)], doc, token, REGEX]);
+    });
+    test('Return empty messages', async () => {
+        const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
+        const cwd = path.join('a', 'b', 'c');
+        const doc = { uri: fileUri } as any as TextDocument;
+        getWorkspaceRootPathStub.callsFake(() => cwd);
+        runStub.callsFake(() => Promise.resolve([]));
 
-            expect(messages).to.be.deep.equal([]);
-        });
+        const messages = await linter.runLinter(doc, token);
+
+        expect(messages).to.be.deep.equal([]);
     });
 });
