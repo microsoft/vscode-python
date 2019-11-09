@@ -84,7 +84,6 @@ export interface IPythonExecutionFactory {
     /**
      * Creates a daemon Python Process.
      * On windows its cheapter to create a daemon and use that than spin up Python Processes everytime.
-     * The returned object implements an IDisposable so as to allow terminating the daemon process.
      * If something cannot be executed within the daemin, it will resort to using the stanard IPythonExecutionService.
      * Note: The returned execution service is always using an activated environment.
      *
@@ -92,7 +91,7 @@ export interface IPythonExecutionFactory {
      * @returns {(Promise<IPythonExecutionService & IDisposable>)}
      * @memberof IPythonExecutionFactory
      */
-    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService>;
+    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';

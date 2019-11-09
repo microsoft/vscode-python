@@ -178,7 +178,7 @@ export class HostJupyterServer
                 this.workspaceService);
 
             // Wait for it to be ready
-            traceInfo(`Waiting for idle ${this.id}`);
+            traceInfo(`Waiting for idle (session) ${this.id}`);
             const stopWatch = new StopWatch();
             const idleTimeout = configService.getSettings().datascience.jupyterLaunchTimeout;
             await notebook.waitForIdle(idleTimeout);

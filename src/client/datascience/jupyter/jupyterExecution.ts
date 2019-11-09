@@ -59,7 +59,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
         this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
             processServiceFactory, interpreterService, fileSystem);
-        this.notebookStarter = new NotebookStarter(executionFactory, this, this.commandFinder,
+        this.notebookStarter = new NotebookStarter(executionFactory, this.commandFinder,
             this.kernelService, fileSystem, serviceContainer);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
