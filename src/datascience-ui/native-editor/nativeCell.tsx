@@ -406,7 +406,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         let content: string | undefined;
 
         // If inside editor, submit this code
-        if (possibleContents) {
+        if (possibleContents !== undefined) {
             content = possibleContents;
         } else {
             // Outside editor, just use the cell

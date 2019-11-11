@@ -70,8 +70,8 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
      *
      * @type {string}
      */
-    daemonModule: string;
-    daemonClass: Newable<IPythonDaemonExecutionService>;
+    daemonModule?: string;
+    daemonClass?: Newable<IPythonDaemonExecutionService>;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;

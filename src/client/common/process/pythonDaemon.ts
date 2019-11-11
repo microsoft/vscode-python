@@ -199,14 +199,19 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         const subject = new Subject<Output<string>>();
         const start = async () => {
             type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
+            let response: ExecResponse;
             if ('fileName' in moduleOrFile) {
                 // tslint:disable-next-line: no-any
                 const request = new RequestType<{ file_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_file_observable');
-                await this.connection.sendRequest(request, { file_name: moduleOrFile.fileName, args, cwd: options.cwd, env: options.env });
+                response = await this.connection.sendRequest(request, { file_name: moduleOrFile.fileName, args, cwd: options.cwd, env: options.env });
             } else {
                 // tslint:disable-next-line: no-any
                 const request = new RequestType<{ module_name: string; args: string[]; cwd?: string; env?: any }, ExecResponse, void, void>('exec_module_observable');
-                await this.connection.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
+                response = await this.connection.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
+            }
+            // Might not get a response object back, as its observable.
+            if (response && response.error){
+                throw new StdErrError(response.error);
             }
         };
         let stdErr = '';

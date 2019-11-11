@@ -15,6 +15,7 @@ import { traceError } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { ProcessService } from './proc';
+import { PythonDaemonExecutionService } from './pythonDaemon';
 import { PythonExecutionService } from './pythonProcess';
 import {
     DaemonExecutionFactoryCreationOptions,
@@ -67,7 +68,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             env.PYTHONPATH = envPythonPath;
         }
         env.PYTHONUNBUFFERED = '1';
-        const daemonProc = activatedProc!.execModuleObservable('datascience.daemon', [`--daemon-module=${options.daemonModule}`], { env });
+        const args = options.daemonModule ? [`--daemon-module=${options.daemonModule}`] : [];
+        const daemonProc = activatedProc!.execModuleObservable('datascience.daemon', args, { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
@@ -92,7 +94,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             if (result.pong !== 'hello') {
                 throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
             }
-            return new options.daemonClass(activatedProc, pythonPath, daemonProc.proc, connection);
+            const cls = options.daemonClass ? options.daemonClass : PythonDaemonExecutionService;
+            return new cls(activatedProc!, pythonPath, daemonProc.proc, connection);
         } catch (ex) {
             traceError('Failed to start the Daemon, StdErr: ', stdError);
             traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
