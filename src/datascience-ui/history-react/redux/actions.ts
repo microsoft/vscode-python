@@ -4,6 +4,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IMainState } from '../../interactive-common/mainState';
 import {
     CommonAction,
     CommonActionType,
@@ -44,5 +45,6 @@ export const actionCreators = {
     editorLoaded: (): CommonAction<never | undefined> => ({ type: CommonActionType.EDITOR_LOADED }),
     scroll: (isAtBottom: boolean): CommonAction<IScrollAction> => ({ type: CommonActionType.SCROLL, payload: { isAtBottom } }),
     unfocus: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId } }),
-    codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } })
+    codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } }),
+    nextUpdate: (oldState: IMainState): CommonAction<IMainState> => ({ type: CommonActionType.NEXT_UPDATE, payload: oldState })
 };

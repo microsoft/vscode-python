@@ -71,6 +71,7 @@ export type IMainState = {
     settings: IDataScienceExtraSettings;
     activateCount: number;
     monacoReady: boolean;
+    loaded: boolean;
 };
 
 export interface IFont {
@@ -132,7 +133,9 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         codeTheme: 'Foo',
         settings: defaultSettings,
         activateCount: 0,
-        monacoReady: true
+        monacoReady: true,
+        loaded: false,
+        testMode: true
     };
 }
 

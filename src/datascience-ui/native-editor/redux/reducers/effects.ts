@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
@@ -13,6 +14,11 @@ import { NativeEditorReducerArg } from '../mapping';
 export namespace Effects {
 
     export function focusCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
+        // Send out a message that we received a focus change (needed for tests)
+        if (arg.prevState.testMode && arg.payload.cellId) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.FocusedCellEditor, { cellId: arg.payload.cellId }));
+        }
+
         // Do nothing if already the focused cell.
         if (arg.prevState.focusedCellId !== arg.payload.cellId) {
             const newVMs = [...arg.prevState.cellVMs];

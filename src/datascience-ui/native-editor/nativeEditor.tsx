@@ -51,7 +51,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     }
 
     public componentDidUpdate(prevProps: IMainState) {
-        if (!this.props.busy && prevProps.busy && this.waitingForLoadRender) {
+        if (this.props.loaded && !prevProps.loaded && this.waitingForLoadRender) {
             this.waitingForLoadRender = false;
             // After this render is complete (see this SO)
             // https://stackoverflow.com/questions/26556436/react-after-render-code,
@@ -63,6 +63,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                 });
             });
         }
+        this.props.nextUpdate(prevProps);
     }
 
     public render() {

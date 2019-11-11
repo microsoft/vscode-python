@@ -63,6 +63,7 @@ export class INativeEditorActionMapping {
     public [CommonActionType.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.LOADED_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.NEXT_UPDATE]: NativeEditorReducerFunc<IMainState>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;

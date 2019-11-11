@@ -86,12 +86,11 @@ const queueableDispatcher: Middleware = store => next => action => {
     return res;
 };
 
-export function createAsyncStore<S, A extends Action>(reducers: Reducer<S, A>) {
+export function createAsyncStore<S, A extends Action>(reducers: Reducer<S, A>, applyLogger: boolean) {
+    const middleWare = applyLogger ? [logger, queueableDispatcher] : [queueableDispatcher];
+
     return createStore(
         reducers,
-        applyMiddleware(
-            logger,
-            queueableDispatcher
-        )
+        applyMiddleware(...middleWare)
     );
 }

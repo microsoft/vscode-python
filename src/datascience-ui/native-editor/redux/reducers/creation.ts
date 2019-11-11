@@ -211,7 +211,8 @@ export namespace Creation {
             busy: false,
             loadTotal: arg.payload.cells.length,
             undoStack: [],
-            cellVMs: vms
+            cellVMs: vms,
+            loaded: true
         };
     }
 

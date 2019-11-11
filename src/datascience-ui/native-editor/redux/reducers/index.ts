@@ -4,6 +4,7 @@
 import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
+import { Test } from '../../../interactive-common/redux/reducers/test';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
 import { Variables } from '../../../interactive-common/redux/reducers/variables';
@@ -52,6 +53,7 @@ export const reducerMap: INativeEditorActionMapping = {
     [CommonActionType.GATHER_CELL]: Transfer.gather,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
+    [CommonActionType.NEXT_UPDATE]: Test.nextUpdate,
 
     // Messages from the webview (some are ignored)
     [IncomingMessageActions.STARTCELL]: Creation.startCell,

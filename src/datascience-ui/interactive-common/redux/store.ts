@@ -43,7 +43,8 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string, editable:
             codeTheme: Identifiers.GeneratedThemeName,
             settings: defaultSettings,
             activateCount: 0,
-            monacoReady: false
+            monacoReady: false,
+            loaded: false
         };
     }
 }
@@ -87,7 +88,8 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
 
     // Send this into the root reducer
     const store = createAsyncStore<IStore, Redux.AnyAction>(
-        rootReducer);
+        rootReducer,
+        !testMode);
 
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.

@@ -53,6 +53,7 @@ export enum CommonActionType {
     LOADED_ALL_CELLS = 'action.loaded_all_cells',
     MOVE_CELL_DOWN = 'action.move_cell_down',
     MOVE_CELL_UP = 'action.move_cell_up',
+    NEXT_UPDATE = 'action.next_update',
     OPEN_LINK = 'action.open_link',
     REDO = 'action.redo',
     REFRESH_VARIABLES = 'action.refresh_variables',

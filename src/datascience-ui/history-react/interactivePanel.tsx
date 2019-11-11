@@ -41,6 +41,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         this.props.editorLoaded();
     }
 
+    public componentDidUpdate(prevProps: IMainState) {
+        this.props.nextUpdate(prevProps);
+    }
+
     public render() {
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size,
@@ -239,7 +243,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             this.internalScrollCount += 1;
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
-            div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            if (div.scrollIntoView) {
+                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            }
         }
     }
 

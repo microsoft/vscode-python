@@ -56,7 +56,7 @@ function handleLoadOnigasmResponse(arg: MonacoReducerArg<Buffer>): IMonacoState 
     // tslint:disable-next-line: no-any
     const typedArray = new Uint8Array((arg.payload as any).data);
 
-    if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData) {
+    if (arg.prevState.tmLanguageData && !arg.prevState.onigasmData && typedArray.length > 0) {
         // Monaco is ready. Initialize the tokenizer
         finishTokenizer(typedArray.buffer, arg.prevState.tmLanguageData, arg);
     }
