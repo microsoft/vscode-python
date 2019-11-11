@@ -57,20 +57,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
-        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
-        const hasEnvVars = envVars && Object.keys(envVars).length > 0;
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
-        if (!hasEnvVars) {
-            return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
-        }
-        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
-        const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        processService.on('exec', processLogger.logProcess.bind(processLogger));
-        this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
-        return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
-    }
     public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
@@ -103,5 +89,19 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             this.daemonsPerPythonService.delete(daemonPoolKey);
             return activatedProcPromise;
         });
+    }
+    public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
+        const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
+        const hasEnvVars = envVars && Object.keys(envVars).length > 0;
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
+        if (!hasEnvVars) {
+            return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
+        }
+        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
+        const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
+        const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        processService.on('exec', processLogger.logProcess.bind(processLogger));
+        this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
+        return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
 }
