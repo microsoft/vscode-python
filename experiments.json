@@ -54,6 +54,18 @@
         "max": 100
     },
     {
+        "name": "Reload - control",
+        "salt": "DebugAdapterFactory",
+        "min": 0,
+        "max": 0
+    },
+    {
+        "name": "Reload - experiment",
+        "salt": "DebugAdapterFactory",
+        "min": 0,
+        "max": 0
+    },
+    {
         "name": "LS - enabled",
         "salt": "LS",
         "min": 0,
