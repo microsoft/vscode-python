@@ -1513,7 +1513,7 @@
                 },
                 "python.dataScience.jupyterLaunchTimeout": {
                     "type": "number",
-                    "default": 10000,
+                    "default": 60000,
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
                     "scope": "resource"
                 },
