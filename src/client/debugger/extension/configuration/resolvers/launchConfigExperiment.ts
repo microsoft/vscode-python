@@ -16,7 +16,7 @@ import { ILaunchDebugConfigurationResolverExperiment } from '../types';
 export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigurationResolverExperiment {
     constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) {}
 
-    public setExperimentConfiguration(debugConfiguration: LaunchRequestArguments): LaunchRequestArguments {
+    public setExperimentConfiguration(debugConfiguration: LaunchRequestArguments): void {
         if (
             this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) &&
             this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment) &&
@@ -24,6 +24,7 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
             this.isWebAppConfiguration(debugConfiguration)
         ) {
             traceInfo(`Configuration used for Web App Reload experiment (before):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
+
             let subProcessModified: boolean = false;
             if (!debugConfiguration.subProcess) {
                 subProcessModified = true;
@@ -38,13 +39,10 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
             }
 
             traceInfo(`Configuration used for Web App Reload experiment (after):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
-
             sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, { subProcessModified, argsModified });
         } else {
             this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
         }
-
-        return debugConfiguration;
     }
 
     private isWebAppConfiguration(debugConfiguration: LaunchRequestArguments): boolean {

@@ -19,5 +19,5 @@ export interface IDebugConfigurationProviderFactory {
 
 export const ILaunchDebugConfigurationResolverExperiment = Symbol('ILaunchDebugConfigurationResolverExperiment');
 export interface ILaunchDebugConfigurationResolverExperiment {
-    setExperimentConfiguration(debugConfiguration: LaunchRequestArguments): LaunchRequestArguments;
+    setExperimentConfiguration(debugConfiguration: LaunchRequestArguments): void;
 }

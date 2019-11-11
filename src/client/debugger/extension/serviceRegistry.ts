@@ -23,6 +23,7 @@ import { RemoteAttachDebugConfigurationProvider } from './configuration/provider
 import { AttachConfigurationResolver } from './configuration/resolvers/attach';
 import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
+import { LaunchDebugConfigurationExperiment } from './configuration/resolvers/launchConfigExperiment';
 import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver, ILaunchDebugConfigurationResolverExperiment } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
