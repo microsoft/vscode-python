@@ -207,6 +207,19 @@ suite('Raw FileSystem', () => {
             expect(text).to.equal(expected);
         });
 
+        test('returns garbage if encoding is UCS-2', async () => {
+            const filename = await fix.resolve('spam.py');
+            // There are probably cases where this would fail too.
+            // However, the extension never has to deal with non-UTF8
+            // cases, so it doesn't matter too much.
+            const original = '... 😁 ...';
+            await fsextra.writeFile(filename, original, { encoding: 'ucs2' });
+
+            const text = await filesystem.readText(filename);
+
+            expect(text).to.equal('.\u0000.\u0000.\u0000 \u0000=�\u0001� \u0000.\u0000.\u0000.\u0000');
+        });
+
         test('throws an exception if file does not exist', async () => {
             const promise = filesystem.readText(DOES_NOT_EXIST);
 
