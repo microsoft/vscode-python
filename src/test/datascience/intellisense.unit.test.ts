@@ -333,9 +333,9 @@ suite('DataScience Intellisense Unit Tests', () => {
     test('Swap cells around', async () => {
         const cells = generateTestCells('foo.py', 1);
         await loadAllCells(cells);
-        await swapCells('1', '2'); // 2nd cell is markdown
+        await swapCells('0', '1'); // 2nd cell is markdown
         expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Swap cells should skip swapping on markdown');
-        await swapCells('1', '3');
+        await swapCells('0', '2');
         const afterSwap = `df
 myvar = """ # Lorem Ipsum
 
@@ -350,7 +350,7 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 df
 `;
         expect(languageClient.getDocumentContents()).to.be.eq(afterSwap, 'Swap cells failed');
-        await swapCells('1', '3');
+        await swapCells('0', '2');
         expect(languageClient.getDocumentContents()).to.be.eq(TestCellContents, 'Swap cells back failed');
     });
 
@@ -374,7 +374,7 @@ df
 df
 `;
         expect(languageClient.getDocumentContents()).to.be.eq(afterInsert, 'Insert cell failed');
-        await insertCell('7', 'foo', '1');
+        await insertCell('7', 'foo', '0');
         const afterInsert2 = `foo
 myvar = """ # Lorem Ipsum
 
@@ -393,7 +393,7 @@ df
         expect(languageClient.getDocumentContents()).to.be.eq(afterInsert2, 'Insert2 cell failed');
         await removeCell('7');
         expect(languageClient.getDocumentContents()).to.be.eq(afterInsert, 'Remove 2 cell failed');
-        await swapCells('1', '3');
+        await swapCells('0', '2');
         const afterSwap = `foo
 df
 myvar = """ # Lorem Ipsum
