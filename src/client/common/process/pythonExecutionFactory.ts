@@ -2,20 +2,15 @@
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
 
-import * as path from 'path';
-import { createMessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
-import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { traceDecorators, traceError } from '../logger';
+import { traceError } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-import { sleep } from '../utils/async';
 import { ProcessService } from './proc';
-import { PythonDaemonExecutionService } from './pythonDaemon';
 import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
 import { PythonExecutionService } from './pythonProcess';
 import {
@@ -31,10 +26,6 @@ import {
     IPythonExecutionService
 } from './types';
 import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
-
-// Use 3, as we have one dedicated for use of starting notebooks (long running operations)
-// & two for other operations.
-const NumberOfDaemonsPerPythonProcess = 3;
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
