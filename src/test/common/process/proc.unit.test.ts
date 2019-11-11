@@ -6,7 +6,7 @@
 // tslint:disable:no-any max-func-body-length no-invalid-this max-classes-per-file
 
 import { expect } from 'chai';
-import { execSync, spawn, ChildProcess } from 'child_process';
+import { ChildProcess, execSync, spawn } from 'child_process';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { PYTHON_PATH } from '../../common';
@@ -23,7 +23,7 @@ suite('Process - Process Service', function () {
     teardown(() => {
         procsToKill.forEach(p => {
             if (!p.exited.resolved) {
-                ProcessService.kill(p.proc.pid);
+                p.proc.kill();
             }
         });
     });
