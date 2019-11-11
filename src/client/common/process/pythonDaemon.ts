@@ -34,15 +34,15 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     constructor(
         protected readonly pythonExecutionService: IPythonExecutionService,
         protected readonly pythonPath: string,
-        protected readonly daemonProc: ChildProcess,
-        protected readonly connection: MessageConnection
+        public readonly proc: ChildProcess,
+        public readonly connection: MessageConnection
     ) {
         this.monitorConnection();
     }
     public dispose() {
         try {
             this.connection.dispose();
-            this.daemonProc.kill();
+            this.proc.kill();
         } catch {
             noop();
         }
@@ -215,7 +215,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             }
         };
         let stdErr = '';
-        this.daemonProc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
+        this.proc.stderr.on('data', (output: string | Buffer) => (stdErr += output.toString()));
         // Wire up stdout/stderr.
         const subscription = this.outputObservale.subscribe(out => {
             if (out.source === 'stderr' && options.throwOnStdErr) {
@@ -243,7 +243,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             .ignoreErrors();
 
         return {
-            proc: this.daemonProc,
+            proc: this.proc,
             dispose: () => this.dispose(),
             out: subject
         };

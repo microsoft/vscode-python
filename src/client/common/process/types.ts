@@ -71,7 +71,29 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
      * @type {string}
      */
     daemonModule?: string;
+    /**
+     * Typescript Daemon class (client) that maps to the Python daemon.
+     * Defaults to `PythonDaemonExecutionService`.
+     * Any other class provided must extend `PythonDaemonExecutionService`.
+     *
+     * @type {Newable<IPythonDaemonExecutionService>}
+     */
     daemonClass?: Newable<IPythonDaemonExecutionService>;
+    /**
+     * Number of daemons to be created for standard synchronous operations such as
+     * checking if a module is installed, running a module, running a python file, etc.
+     * Defaults to `2`.
+     *
+     */
+    daemonCount?: number;
+    /**
+     * Number of daemons to be created for operations such as execObservable, execModuleObservale.
+     * These operations are considered to be long running compared to checking if a module is installed.
+     * Hence a separate daemon will be created for this.
+     * Defaults to `1`.
+     *
+     */
+    observableDaemonCount?: number;
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
@@ -84,7 +106,6 @@ export interface IPythonExecutionFactory {
     /**
      * Creates a daemon Python Process.
      * On windows its cheapter to create a daemon and use that than spin up Python Processes everytime.
-     * The returned object implements an IDisposable so as to allow terminating the daemon process.
      * If something cannot be executed within the daemin, it will resort to using the stanard IPythonExecutionService.
      * Note: The returned execution service is always using an activated environment.
      *
@@ -92,7 +113,7 @@ export interface IPythonExecutionFactory {
      * @returns {(Promise<IPythonExecutionService & IDisposable>)}
      * @memberof IPythonExecutionFactory
      */
-    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService>;
+    createDaemon(options:  DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';

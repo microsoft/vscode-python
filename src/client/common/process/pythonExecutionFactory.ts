@@ -11,11 +11,12 @@ import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { traceError } from '../logger';
+import { traceDecorators, traceError } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import { sleep } from '../utils/async';
 import { ProcessService } from './proc';
 import { PythonDaemonExecutionService } from './pythonDaemon';
+import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
 import { PythonExecutionService } from './pythonProcess';
 import {
     DaemonExecutionFactoryCreationOptions,
@@ -31,8 +32,13 @@ import {
 } from './types';
 import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
 
+// Use 3, as we have one dedicated for use of starting notebooks (long running operations)
+// & two for other operations.
+const NumberOfDaemonsPerPythonProcess = 3;
+
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
+    private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -51,58 +57,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         }
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonDaemonExecutionService> {
-        const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
-        // Create the python process that will spawn the daemon.
-        // Ensure its activated (always).
-        const [activatedProc, activatedEnvVars] = await Promise.all([
-            this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource }),
-            this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
-        ]);
-
-        const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
-        const env = { ...activatedEnvVars } || {};
-        if (env.PYTHONPATH) {
-            env.PYTHONPATH += path.delimiter + envPythonPath;
-        } else {
-            env.PYTHONPATH = envPythonPath;
-        }
-        env.PYTHONUNBUFFERED = '1';
-        const args = options.daemonModule ? [`--daemon-module=${options.daemonModule}`] : [];
-        const daemonProc = activatedProc!.execModuleObservable('datascience.daemon', args, { env });
-        if (!daemonProc.proc) {
-            throw new Error('Failed to create Daemon Proc');
-        }
-
-        const connection = createMessageConnection(new StreamMessageReader(daemonProc.proc.stdout), new StreamMessageWriter(daemonProc.proc.stdin));
-        connection.listen();
-        let stdError = '';
-        let procEndEx: Error | undefined;
-        daemonProc.proc.stderr.on('data', (d: string | Buffer) => {
-            d = typeof d === 'string' ? d : d.toString('utf8');
-            stdError += d;
-        });
-        daemonProc.proc.on('error', ex => (procEndEx = ex));
-
-        // Check whether the daemon has started correctly, by sending a ping.
-        const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
-        try {
-            // If we don't get a reply to the ping in 5 minutes assume it will never work. Bomb out.
-            // At this point there should be some information logged in stderr of the daemon process.
-            const timeoutedError = sleep(5_000).then(() => Promise.reject(new Error('Timeout waiting for daemon to start')));
-            const result = await Promise.race([timeoutedError, connection.sendRequest(request, { data: 'hello' })]);
-            if (result.pong !== 'hello') {
-                throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
-            }
-            const cls = options.daemonClass ? options.daemonClass : PythonDaemonExecutionService;
-            return new cls(activatedProc!, pythonPath, daemonProc.proc, connection);
-        } catch (ex) {
-            traceError('Failed to start the Daemon, StdErr: ', stdError);
-            traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
-            traceError('Failed  to start the Daemon, Ex', ex);
-            throw ex;
-        }
-    }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
@@ -116,5 +70,38 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
+    }
+    public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
+        const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
+        const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
+        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
+
+        // Ensure we do not start multiple daemons for the same interpreter.
+        // Cache the promise.
+        const start = async () => {
+            const [activatedProc, activatedEnvVars] = await Promise.all([
+                activatedProcPromise,
+                this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
+            ]);
+
+            const daemon = new PythonDaemonExecutionServicePool(options, pythonPath, activatedProc!, activatedEnvVars);
+            disposables.push(daemon);
+            return daemon;
+        };
+
+        // Ensure we do not create muliple daemon pools for the same python interpreter.
+        let promise = this.daemonsPerPythonService.get(daemonPoolKey);
+        if (!promise) {
+            promise = start();
+            this.daemonsPerPythonService.set(daemonPoolKey, promise);
+        }
+        return promise.catch(ex => {
+            // Ok, we failed to create the daemon (or failed to start).
+            // What ever the cause, we need to log this & give a standard IPythonExecutionService
+            traceError('Failed to create the daemon service, defaulting to activated environment', ex);
+            this.daemonsPerPythonService.delete(daemonPoolKey);
+            return activatedProcPromise;
+        });
     }
 }
