@@ -6,7 +6,7 @@
 // tslint:disable:no-any max-func-body-length no-invalid-this max-classes-per-file
 
 import { expect } from 'chai';
-import { ChildProcess, execSync, spawn } from 'child_process';
+import { ChildProcess, spawn } from 'child_process';
 import { ProcessService } from '../../../client/common/process/proc';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { PYTHON_PATH } from '../../common';
