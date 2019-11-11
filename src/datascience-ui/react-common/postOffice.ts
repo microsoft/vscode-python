@@ -4,6 +4,7 @@
 
 import { WebPanelMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
+import { logMessage } from './logger';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
@@ -46,10 +47,10 @@ export class PostOffice implements IDisposable {
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
-            window.console.log(`Posting message ${type} to extension.`);
+            logMessage(`Posting message ${type} to extension.`);
             api.postMessage({ type: type, payload });
         } else {
-            window.console.log(`No vscode API to post message ${type}`);
+            logMessage(`No vscode API to post message ${type}`);
         }
     }
 

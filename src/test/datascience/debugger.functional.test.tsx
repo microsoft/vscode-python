@@ -26,7 +26,7 @@ import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpe
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel } from './reactHelpers';
+import { mountConnectedMainPanel } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any

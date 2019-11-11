@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './interactivePanel.less';
-
 import * as React from 'react';
 import { connect } from 'react-redux';
 
@@ -18,6 +16,8 @@ import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { getConnectedInteractiveCell } from './interactiveCell';
 import { actionCreators } from './redux/actions';
+
+import './interactivePanel.less';
 
 type IInteractivePanelProps = IMainState & typeof actionCreators;
 

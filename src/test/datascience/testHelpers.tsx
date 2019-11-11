@@ -2,10 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { ReactWrapper } from 'enzyme';
+import { mount, ReactWrapper } from 'enzyme';
 import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
+import { Provider } from 'react-redux';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -13,12 +14,16 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
+import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
+import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
+import { getConnectedNativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { createInputEvent, createKeyboardEvent, mountConnectedMainPanel, waitForUpdate } from './reactHelpers';
+import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -579,4 +584,18 @@ export function escapePath(p: string) {
 
 export function srcDirectory() {
     return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+}
+
+export function mountConnectedMainPanel(type: 'native' | 'interactive') {
+    const ConnectedMainPanel = type === 'native' ? getConnectedNativeEditor() : getConnectedInteractiveEditor();
+
+    // Create the redux store in test mode.
+    const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
+    const store = createStore(false, 'vs-light', true);
+
+    // Mount this with a react redux provider
+    return mount(
+        <Provider store={store}>
+            <ConnectedMainPanel/>
+        </Provider>);
 }

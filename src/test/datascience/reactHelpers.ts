@@ -1,17 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ComponentClass, configure, mount, ReactWrapper } from 'enzyme';
-import * as Adapter from 'enzyme-adapter-react-16';
-import { DOMWindow, JSDOM } from 'jsdom';
-import * as React from 'react';
-import { Provider } from 'react-redux';
 
-import { noop } from '../../client/common/utils/misc';
-import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
-import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
-import { getConnectedNativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
-import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
+// Note: Don't change this to a tsx file as it loads in the unit tests. That will mess up mocha
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load
 // inside of vscode
@@ -32,7 +23,6 @@ const Module = require('module');
                 }
             } catch {
                 // This should happen when not inside vscode.
-                noop();
             }
         }
         // tslint:disable-next-line:no-invalid-this
@@ -61,6 +51,13 @@ if (ssExports && ssExports.createStylesheet) {
         }
     };
 }
+
+import { ComponentClass, configure, ReactWrapper } from 'enzyme';
+import * as Adapter from 'enzyme-adapter-react-16';
+import { DOMWindow, JSDOM } from 'jsdom';
+import * as React from 'react';
+
+import { noop } from '../../client/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
@@ -593,18 +590,4 @@ export function blurWindow() {
     const domWindow = (window as any) as DOMWindow;
     const blurEvent = new domWindow.Event('blur', { bubbles: true });
     domWindow.dispatchEvent(blurEvent);
-}
-
-export function mountConnectedMainPanel(type: 'native' | 'interactive') {
-    const ConnectedMainPanel = type === 'native' ? getConnectedNativeEditor() : getConnectedInteractiveEditor();
-
-    // Create the redux store in test mode.
-    const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
-    const store = createStore(false, 'vs-light', true);
-
-    // Mount this with a react redux provider
-    return mount(
-        <Provider store={store}>
-            <ConnectedMainPanel/>
-        </Provider>);
 }

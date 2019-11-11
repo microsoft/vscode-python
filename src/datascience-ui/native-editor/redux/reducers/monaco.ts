@@ -16,6 +16,7 @@ import { IntellisenseProvider } from '../../../interactive-common/intellisensePr
 import { createPostableAction, IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 import { CommonActionType, ICodeCreatedAction, IEditCellAction } from '../../../interactive-common/redux/reducers/types';
 import { initializeTokenizer } from '../../../interactive-common/tokenizer';
+import { logMessage } from '../../../react-common/logger';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 
 export interface IMonacoState {
@@ -44,7 +45,7 @@ function handleStarted(arg: MonacoReducerArg): IMonacoState {
 function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoReducerArg<T>) {
     initializeTokenizer(buffer, tmJson, (e) => {
         if (e) {
-            window.console.log(`ERROR from onigasm: ${e}`);
+            logMessage(`ERROR from onigasm: ${e}`);
         }
         arg.queueAction({ type: IncomingMessageActions.MONACOREADY });
     }).ignoreErrors();

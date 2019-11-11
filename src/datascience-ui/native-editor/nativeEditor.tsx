@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './nativeEditor.less';
-
 import * as React from 'react';
 import { connect } from 'react-redux';
 
@@ -22,6 +20,8 @@ import { Progress } from '../react-common/progress';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
 import { actionCreators } from './redux/actions';
+
+import './nativeEditor.less';
 
 type INativeEditorProps = IMainState & typeof actionCreators;
 

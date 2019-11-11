@@ -9,7 +9,7 @@ import { IInstallationChannelManager, IModuleInstaller } from '../../client/comm
 import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel } from './reactHelpers';
+import { mountConnectedMainPanel } from './testHelpers';
 
 suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;

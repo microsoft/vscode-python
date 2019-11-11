@@ -94,7 +94,6 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     postOffice.addHandler({
         // tslint:disable-next-line: no-any
         handleMessage(message: string, payload: any): boolean {
-            window.console.log(`Receiving message ${message} from extension`);
             // Double check this is one of our messages. React will actually post messages here too during development
             if (AllowedMessages.find(k => k === message)) {
                 // Prefix message type with 'action.' so that we can:
