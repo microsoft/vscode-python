@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+// tslint:disable:no-require-imports no-var-requires max-func-body-length chai-vague-errors
+
 import { expect, use } from 'chai';
+import * as chaiAsPromised from 'chai-as-promised';
 import * as fsextra from 'fs-extra';
 import * as net from 'net';
 import * as path from 'path';
@@ -16,12 +19,10 @@ import {
     TemporaryFile
 } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
-// tslint:disable:no-require-imports no-var-requires
-const assertArrays = require('chai-arrays');
-use(require('chai-as-promised'));
-use(assertArrays);
 
-// tslint:disable:max-func-body-length chai-vague-errors
+const assertArrays = require('chai-arrays');
+use(assertArrays);
+use(chaiAsPromised);
 
 const WINDOWS = /^win/.test(process.platform);
 
