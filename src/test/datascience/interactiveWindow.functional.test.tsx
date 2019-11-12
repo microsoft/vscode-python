@@ -353,7 +353,7 @@ for _ in range(50):
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
-        const exportButton = findButton(wrapper, InteractivePanel, 5);
+        const exportButton = findButton(wrapper, InteractivePanel, 6);
         const undo = findButton(wrapper, InteractivePanel, 2);
 
         // Now verify if we undo, we have no cells

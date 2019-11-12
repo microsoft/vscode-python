@@ -118,6 +118,8 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     }
 }
 
-export function closeNotebook(editor: INotebookEditor, _wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
-    return editor.dispose();
+export function closeNotebook(editor: INotebookEditor, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): Promise<void> {
+    const promise = editor.dispose();
+    wrapper.unmount();
+    return promise;
 }

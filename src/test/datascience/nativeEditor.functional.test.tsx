@@ -304,11 +304,13 @@ for _ in range(50):
             assert.ok(server, 'Server was destroyed on notebook shutdown');
 
             // Reopen, and rerun
+            const newWrapper = await setupWebview(ioc);
+            assert.ok(newWrapper, 'Could not mount a second time');
             editor = await openEditor(ioc, JSON.stringify(notebook));
-            runAllButton = findButton(wrapper, NativeEditor, 0);
+            runAllButton = findButton(newWrapper!, NativeEditor, 0);
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-            await waitForUpdate(wrapper, NativeEditor, 15);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
+            await waitForUpdate(newWrapper!, NativeEditor, 15);
+            verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
         },
         () => {
                 // Disable the warning displayed by nodejs when there are too many listeners.

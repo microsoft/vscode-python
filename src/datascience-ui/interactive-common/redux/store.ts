@@ -4,13 +4,14 @@
 import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IMainState } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
-import { AllowedMessages, generatePostOfficeSendReducer } from './postOffice';
+import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -59,6 +60,28 @@ function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseThe
         reducerMap);
 }
 
+function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
+    return store => next => action => {
+        const prevState = store.getState();
+        const res = next(action);
+        const afterState = store.getState();
+
+        // If cell vm count changed or selected cell changed, send the message
+        if (prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
+            prevState.main.selectedCellId !== afterState.main.selectedCellId ||
+            prevState.main.undoStack.length !== afterState.main.undoStack.length ||
+            prevState.main.redoStack.length !== afterState.main.redoStack.length) {
+            store.dispatch(createPostableAction(InteractiveWindowMessages.SendInfo, {
+                cellCount: afterState.main.cellVMs.length,
+                undoCount: afterState.main.undoStack.length,
+                redoCount: afterState.main.redoStack.length,
+                selectedCell: afterState.main.selectedCellId
+            }));
+        }
+        return res;
+    };
+}
+
 export interface IStore {
     main: IMainState;
     monaco: IMonacoState;
@@ -86,10 +109,15 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
         post: postOfficeReducer
     });
 
-    // Send this into the root reducer
+    // Create the update context middle ware. It handles the 'sendInfo' message that
+    // requires sending on every cell vm length change
+    const updateContext = createSendInfoMiddleware();
+
+    // Use this reducer and middle ware to create a store
     const store = createAsyncStore<IStore, Redux.AnyAction>(
         rootReducer,
-        !testMode);
+        !testMode,
+        [updateContext]);
 
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.
