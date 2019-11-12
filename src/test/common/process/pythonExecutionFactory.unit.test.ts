@@ -5,7 +5,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when, anyString } from 'ts-mockito';
+import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -346,6 +346,7 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).never();
                 verify(condaService.getCondaFile()).never();
+            });
             test('Create Daemon Service an invoke initialize', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
