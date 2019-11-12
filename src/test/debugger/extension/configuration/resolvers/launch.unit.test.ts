@@ -75,7 +75,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 platformService
             );
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
-            configExperiment.setup(c => c.setExperimentConfiguration(TypeMoq.It.isAny())).returns(() =>{
+            configExperiment.setup(c => c.setExperimentConfiguration(TypeMoq.It.isAny())).returns(() => {
                 return;
             });
 

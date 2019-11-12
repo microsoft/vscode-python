@@ -3,14 +3,18 @@
 
 'use strict';
 
+import * as assert from 'assert';
+// tslint:disable-next-line: match-default-export-name
 import rewiremock from 'rewiremock';
 import * as TypeMoq from 'typemoq';
+import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd, WebAppReload } from '../../../../../client/common/experimentGroups';
 import { IExperimentsManager } from '../../../../../client/common/types';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { LaunchDebugConfigurationExperiment } from '../../../../../client/debugger/extension/configuration/resolvers/launchConfigExperiment';
 import { ILaunchDebugConfigurationResolverExperiment } from '../../../../../client/debugger/extension/configuration/types';
 import { LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { clearTelemetryReporter } from '../../../../../client/telemetry';
+import { EventName } from '../../../../../client/telemetry/constants';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Debugging - Config Resolver Launch Experiments', () => {
@@ -24,9 +28,11 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
-            Reporter.eventNames.push(eventName);
-            Reporter.properties.push(properties!);
-            Reporter.measures.push(measures!);
+            if (eventName === EventName.PYTHON_WEB_APP_RELOAD) {
+                Reporter.eventNames.push(eventName);
+                Reporter.properties.push(properties!);
+                Reporter.measures.push(measures!);
+            }
         }
     }
 
@@ -60,17 +66,68 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
 
     // tslint:disable-next-line: no-any
     function runTest(testConfig: any) {
-        test(`Test modifying debug config for reload experiment`, () => {
-            // run tests here
+        let modify: boolean = false;
+        if (
+            ['django', 'flask', 'jinja', 'pyramid'].includes(testConfig.framework) &&
+            testConfig.descriptorExperiment === 'experiment' &&
+            testConfig.newDebuggerExperiment === 'experiment' &&
+            testConfig.reloadExperiment === 'experiment'
+        ) {
+            modify = !testConfig.subProcessValue || testConfig.args.includes('--no-reload') || testConfig.args.includes('--noreload');
+        }
+
+        const argsModified = modify && (testConfig.args.includes('--no-reload') || testConfig.args.includes('--noreload'));
+        const subProcModified = modify && !testConfig.subProcessValue;
+        const inExperiment = testConfig.descriptorExperiment === 'experiment' && testConfig.newDebuggerExperiment === 'experiment' && testConfig.reloadExperiment === 'experiment';
+
+        const textModify = modify ? 'modifying' : 'skip modifying';
+        const textExperiment = inExperiment ? 'in' : 'NOT in';
+        const textSubProc = subProcModified ? 'subProcess modified' : 'subProcess NOT modified';
+        const textArgs = argsModified ? 'args modified' : 'args NOT modified';
+
+        test(`Test ${textModify} debug config when ${textExperiment} reload experiment for ${testConfig.framework}, with ${textSubProc}, and with ${textArgs}`, () => {
+            experimentManager
+                .setup(e => e.inExperiment(TypeMoq.It.isValue(DebugAdapterDescriptorFactory.experiment)))
+                .returns(() => 'experiment' === testConfig.descriptorExperiment);
+            experimentManager.setup(e => e.inExperiment(TypeMoq.It.isValue(DebugAdapterNewPtvsd.experiment))).returns(() => 'experiment' === testConfig.newDebuggerExperiment);
+            experimentManager.setup(e => e.inExperiment(TypeMoq.It.isValue(WebAppReload.experiment))).returns(() => 'experiment' === testConfig.reloadExperiment);
+
             const config: LaunchRequestArguments = {
                 pythonPath: '',
                 request: 'launch',
                 args: testConfig.args,
                 name: '',
                 envFile: '',
-                type: DebuggerTypeName
+                type: DebuggerTypeName,
+                subProcess: testConfig.subProcessValue
             };
+            const expectedConfig: LaunchRequestArguments = {
+                pythonPath: '',
+                request: 'launch',
+                args: modify ? testConfig.withoutReloadArgs : testConfig.args,
+                name: '',
+                envFile: '',
+                type: DebuggerTypeName,
+                subProcess: modify ? true : testConfig.subProcessValue
+            };
+
+            if (testConfig.framework !== 'not-web-framework') {
+                config[testConfig.framework] = true;
+                expectedConfig[testConfig.framework] = true;
+            }
+
             resolverExperiment.setExperimentConfiguration(config);
+
+            assert.deepEqual(expectedConfig, config);
+            if (modify) {
+                assert.ok(Reporter.eventNames.includes(EventName.PYTHON_WEB_APP_RELOAD));
+                assert.deepEqual(Reporter.properties, [
+                    {
+                        subProcessModified: `${subProcModified}`,
+                        argsModified: `${argsModified}`
+                    }
+                ]);
+            }
         });
     }
     descriptorExperiment.forEach(descExp => {

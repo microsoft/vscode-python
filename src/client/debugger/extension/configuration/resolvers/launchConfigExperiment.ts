@@ -32,16 +32,14 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
             }
 
             let argsModified: boolean = false;
-            const args = debugConfiguration.args.filter(arg => arg === '--noreload' || arg === '--no-reload');
-            if (args.length !== debugConfiguration.ars.length) {
+            const args = debugConfiguration.args.filter(arg => arg !== '--noreload' && arg !== '--no-reload');
+            if (args.length !== debugConfiguration.args.length) {
                 argsModified = true;
                 debugConfiguration.args = args;
             }
 
             traceInfo(`Configuration used for Web App Reload experiment (after):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
             sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, { subProcessModified, argsModified });
-        } else {
-            this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
         }
     }
 
