@@ -8,9 +8,9 @@ import {
     ExecutionResult,
     IProcessService,
     IProcessServiceFactory,
-    IPythonExecutionFactory,
+    ObservableExecutionResult,
     IPythonExecutionService,
-    ObservableExecutionResult
+    IPythonExecutionFactory
 } from '../../common/process/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
@@ -68,9 +68,9 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonInterpreter | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
 
-    constructor(protected readonly moduleName: string, protected args: string[], pythonExecutionFactory: IPythonExecutionFactory, private readonly _interpreter: PythonInterpreter) {
+    constructor(protected readonly moduleName: string, protected args: string[], protected readonly pythonExecutionFactory: IPythonExecutionFactory, private readonly _interpreter: PythonInterpreter) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter: _interpreter, allowEnvironmentFetchExceptions: true });
+        this.pythonLauncher = this.interpreterPromise.then(interpreter => pythonExecutionFactory.createDaemon({ daemonModule: 'datascience.jupyter_daemon', pythonPath: interpreter!.path }));
     }
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
@@ -80,14 +80,20 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
-        return launcher.execObservable(newArgs, newOptions);
+        const moduleName = newArgs[1];
+        newArgs.shift(); // Remove '-m'
+        newArgs.shift(); // Remove module name
+        return launcher.execModuleObservable(moduleName, newArgs, newOptions);
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
-        return launcher.exec(newArgs, newOptions);
+        const moduleName = newArgs[1];
+        newArgs.shift(); // Remove '-m'
+        newArgs.shift(); // Remove module name
+        return launcher.execModule(moduleName, newArgs, newOptions);
     }
 }
 
@@ -109,10 +115,10 @@ class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
 export class JupyterCommandFactory implements IJupyterCommandFactory {
 
     constructor(
-        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-        @inject(IEnvironmentActivationService) private activationHelper : IEnvironmentActivationService,
-        @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService
+        @inject(IPythonExecutionFactory) private readonly executionFactory : IPythonExecutionFactory,
+        @inject(IEnvironmentActivationService) private readonly activationHelper : IEnvironmentActivationService,
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
 
     }
