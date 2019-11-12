@@ -293,6 +293,8 @@ suite('DataScience LiveShare tests', () => {
     });
 
     test('Export from guest', async () => {
+        // tslint:disable-next-line:no-console
+        console.log('***** Start export from guest *****');
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 
@@ -310,21 +312,31 @@ suite('DataScience LiveShare tests', () => {
         fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
+        // tslint:disable-next-line:no-console
+        console.log('***** Start register commands *****');
         const listeners = guestContainer!.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         const guestCommandManager = guestContainer!.get<ICommandManager>(ICommandManager);
         listeners.forEach(f => f.register(guestCommandManager));
 
         // Start both the host and the guest
+        // tslint:disable-next-line:no-console
+        console.log('***** Start sessions *****');
         await startSession(vsls.Role.Host);
         await startSession(vsls.Role.Guest);
 
         // Create a document on the guest
+        // tslint:disable-next-line:no-console
+        console.log('***** Start sessions *****');
         guestContainer!.addDocument('#%%\na=1\na', Uri.file('foo.py').fsPath);
         guestContainer!.get<IDocumentManager>(IDocumentManager).showTextDocument(Uri.file('foo.py'));
 
         // Attempt to export a file from the guest by running an ExportFileAndOutputAsNotebook
+        // tslint:disable-next-line:no-console
+        console.log('***** Export Command starting *****');
         const executePromise = guestCommandManager.executeCommand(Commands.ExportFileAndOutputAsNotebook, Uri.file('foo.py')) as Promise<Uri>;
         assert.ok(executePromise, 'Export file did not return a promise');
+        // tslint:disable-next-line:no-console
+        console.log('***** Export Command await *****');
         const savedUri = await executePromise;
         assert.ok(savedUri, 'Uri not returned from export');
         assert.equal(savedUri.fsPath, Uri.file('test.ipynb').fsPath, 'Export did not work');

@@ -194,7 +194,11 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutput, undefined, false)
     private async exportFileAndOutput(file: string): Promise<Uri | undefined> {
+        // tslint:disable-next-line:no-console
+        console.log('***** Export File And Output *****');
         if (file && file.length > 0 && this.jupyterExecution.isNotebookSupported()) {
+            // tslint:disable-next-line:no-console
+            console.log('***** Export File And Output - Notebook Supported *****');
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && activeEditor.document && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {

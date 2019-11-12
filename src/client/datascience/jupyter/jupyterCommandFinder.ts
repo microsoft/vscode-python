@@ -96,6 +96,8 @@ export class JupyterCommandFinderImpl {
      * @memberof JupyterCommandFinder
      */
     public async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+        // tslint:disable-next-line:no-console
+        console.log('***** Find Best Command *****');
         if (this.commands.has(command)) {
             return this.commands.get(command)!;
         }
@@ -134,6 +136,8 @@ export class JupyterCommandFinderImpl {
     }
 
     protected async findInterpreterCommand(command: JupyterCommands, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+        // tslint:disable-next-line:no-console
+        console.log('***** Find Interpreter Command *****');
         let findResult: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound,
             error: localize.DataScience.noInterpreter()
@@ -142,6 +146,8 @@ export class JupyterCommandFinderImpl {
         // If the module is found on this interpreter, then we found it.
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
             findResult = await this.doesModuleExist(command, interpreter, cancelToken);
+            // tslint:disable-next-line:no-console
+            console.log('***** Find Interpreter Command - Find Results *****');
             if (findResult.status === ModuleExistsStatus.FoundJupyter) {
                 findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
             } else if (findResult.status === ModuleExistsStatus.Found) {
@@ -201,6 +207,8 @@ export class JupyterCommandFinderImpl {
     }
     // tslint:disable:cyclomatic-complexity max-func-body-length
     private async findBestCommandImpl(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
+        // tslint:disable-next-line:no-console
+        console.log('***** Find Best Command Impl *****');
         let found: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound
         };
@@ -215,6 +223,8 @@ export class JupyterCommandFinderImpl {
         }
 
         found = current ? await this.findInterpreterCommand(command, current, cancelToken) : found;
+        // tslint:disable-next-line:no-console
+        console.log('***** Find Best Command Impl - interpreter found *****');
         if (found.status === ModuleExistsStatus.NotFound) {
             traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
 
@@ -351,6 +361,8 @@ export class JupyterCommandFinderImpl {
         return found;
     }
     private async doesModuleExist(moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IModuleExistsResult> {
+        // tslint:disable-next-line:no-console
+        console.log('***** Does Module Exist *****');
         const result: IModuleExistsResult = {
             status: ModuleExistsStatus.NotFound
         };
