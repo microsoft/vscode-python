@@ -413,5 +413,5 @@ suite('Daemon - Python Daemon Pool', () => {
         // Confirm we have a total of three process ids (for 3 daemons).
         // 2 for earlier, then one died and a new one was created.
         expect(processesUsedToRunCode.size).to.be.greaterThan(2);
-    }).timeout(5_000);
+    }).timeout(10_000);
 });
