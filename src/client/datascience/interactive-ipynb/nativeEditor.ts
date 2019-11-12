@@ -3,6 +3,7 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as detectIndent from 'detect-indent';
+import * as immutable from 'immutable';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -848,28 +849,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async clearAllOutputs() {
-        const clearedCells: ICell[] = [];
-
-        this.visibleCells.forEach(cell => {
-            if (cell.data.cell_type === 'code') {
-                const c: ICell = {
-                    id: cell.id,
-                    file: cell.file,
-                    line: cell.line,
-                    state: cell.state,
-                    data: {
-                        cell_type: cell.data.cell_type,
-                        outputs: [],
-                        execution_count: null,
-                        source: cell.data.source,
-                        metadata: cell.data.metadata
-                    }
-                };
-                clearedCells.push(c);
-            } else {
-                clearedCells.push(cell);
-            }
-        });
+        let clearedCells = immutable.updateIn(this.visibleCells, ['cell', 'data', 'outputs'], () => []);
+        clearedCells = immutable.removeIn(clearedCells, ['cell', 'data', 'execution_count']);
 
         // Reuse our original json except for the cells.
         const json = {
