@@ -148,6 +148,7 @@ export function getOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
 export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Skip the edit cell if in the interactive window
     const count = cellType === 'InteractiveCell' ? 2 : 1;
+    wrapper.update();
     const foundResult = wrapper.find(cellType);
     return getOutputCell(wrapper, cellType, foundResult.length - count)!;
 }
@@ -310,7 +311,7 @@ function verifyCell(
 
 export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, state: CellInputState) {
     const lastCell = getLastOutputCell(wrapper, cellType);
-    assert.ok(lastCell, 'Last call doesn\'t exist');
+    assert.ok(lastCell, 'Last cell doesn\'t exist');
 
     const inputBlock = lastCell.find('div.cell-input');
     const toggleButton = lastCell.find('polygon.collapse-input-svg');
@@ -545,13 +546,6 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
     };
 }
 
-// Set initial data science settings to use for a test (initially loaded via settingsReactSide.ts)
-export function initialDataScienceSettings(_newSettings: IDataScienceSettings) {
-    // const settingsString = JSON.stringify(newSettings);
-    //updateSettings(settingsString);
-    noop();
-}
-
 export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainClass: React.ComponentClass<any>): P | undefined {
     const mainObj = wrapper.find(mainClass);
     if (mainObj) {
@@ -594,7 +588,7 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
 
     // Create the redux store in test mode.
     const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
-    const store = createStore(false, 'vs-light', true);
+    const store = createStore(true, 'vs-light', true);
 
     // Mount this with a react redux provider
     return mount(

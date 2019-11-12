@@ -10,6 +10,13 @@ import { ICellAction } from '../../../interactive-common/redux/reducers/types';
 import { InteractiveReducerArg } from '../mapping';
 
 export namespace Creation {
+    function isCellSupported(state: IMainState, cell: ICell): boolean {
+        // Skip message cells in test mode
+        if (state.testMode) {
+            return cell.data.cell_type !== 'messages';
+        }
+        return true;
+    }
 
     export function alterCellVM(cellVM: ICellViewModel, settings: IDataScienceExtraSettings, visible: boolean, expanded: boolean): ICellViewModel {
         if (cellVM.cell.data.cell_type === 'code') {
@@ -71,15 +78,24 @@ export namespace Creation {
     }
 
     export function startCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, prepareCellVM);
+        if (isCellSupported(arg.prevState, arg.payload)) {
+            return Helpers.updateOrAdd(arg, prepareCellVM);
+        }
+        return arg.prevState;
     }
 
     export function updateCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, prepareCellVM);
+        if (isCellSupported(arg.prevState, arg.payload)) {
+            return Helpers.updateOrAdd(arg, prepareCellVM);
+        }
+        return arg.prevState;
     }
 
     export function finishCell(arg: InteractiveReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, prepareCellVM);
+        if (isCellSupported(arg.prevState, arg.payload)) {
+            return Helpers.updateOrAdd(arg, prepareCellVM);
+        }
+        return arg.prevState;
     }
 
     export function deleteAllCells(arg: InteractiveReducerArg): IMainState {

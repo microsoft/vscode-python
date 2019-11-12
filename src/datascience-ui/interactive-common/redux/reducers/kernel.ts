@@ -31,12 +31,16 @@ export namespace Kernel {
             }
         });
 
-        // Update our variables
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariablesRequest, 0));
+        // Update our variables if variable window is open
+        if (arg.prevState.variablesVisible) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariablesRequest, 0));
+        }
 
         return {
             ...arg.prevState,
             cellVMs: newVMs,
+            pendingVariableCount: 0,
+            variables: [],
             currentExecutionCount: 0
         };
     }

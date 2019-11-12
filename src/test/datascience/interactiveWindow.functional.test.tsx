@@ -39,7 +39,6 @@ import {
     escapePath,
     findButton,
     getLastOutputCell,
-    initialDataScienceSettings,
     srcDirectory,
     toggleCellExpansion,
     updateDataScienceSettings,
@@ -49,6 +48,7 @@ import {
 } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
+import { IDataScienceSettings } from '../../client/common/types';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
@@ -74,6 +74,11 @@ suite('DataScience Interactive Window output tests', () => {
         await ioc.dispose();
     });
 
+    async function forceSettingsChange(newSettings: IDataScienceSettings) {
+        await getOrCreateInteractiveWindow(ioc);
+        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
+    }
+
     // Uncomment this to debug hangs on exit
     // suiteTeardown(() => {
     //      asyncDump();
@@ -86,7 +91,7 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Hide inputs', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
         await addCode(ioc, wrapper, 'a=1\na');
 
@@ -101,7 +106,7 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Show inputs', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings() });
+        await forceSettingsChange({ ...defaultDataScienceSettings() });
 
         await addCode(ioc, wrapper, 'a=1\na');
 
@@ -110,14 +115,14 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Expand inputs', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
         await addCode(ioc, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Expanded);
     }, () => { return ioc; });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings() });
+        await forceSettingsChange({ ...defaultDataScienceSettings() });
         await addCode(ioc, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Visible);
@@ -135,7 +140,7 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Hide / show cell', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings() });
+        await forceSettingsChange({ ...defaultDataScienceSettings() });
         await addCode(ioc, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Visible);

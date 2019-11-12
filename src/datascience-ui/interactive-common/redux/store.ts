@@ -12,7 +12,7 @@ import { computeEditorOptions, loadDefaultSettings } from '../../react-common/se
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, generatePostOfficeSendReducer } from './postOffice';
 
-function generateDefaultState(skipDefault: boolean, baseTheme: string, editable: boolean): IMainState {
+function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
     if (!skipDefault) {
         return generateTestState('', editable);
@@ -20,7 +20,7 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string, editable:
         return {
             // tslint:disable-next-line: no-typeof-undefined
             skipDefault,
-            testMode: false,
+            testMode,
             baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
             editorOptions: computeEditorOptions(defaultSettings),
             cellVMs: [],
@@ -43,15 +43,15 @@ function generateDefaultState(skipDefault: boolean, baseTheme: string, editable:
             codeTheme: Identifiers.GeneratedThemeName,
             settings: defaultSettings,
             activateCount: 0,
-            monacoReady: false,
+            monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false
         };
     }
 }
 
-function generateMainReducer<M>(skipDefault: boolean, baseTheme: string, editable: boolean, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
+function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean, reducerMap: M): Redux.Reducer<IMainState, QueuableAction<M>> {
     // First create our default state.
-    const defaultState = generateDefaultState(skipDefault, baseTheme, editable);
+    const defaultState = generateDefaultState(skipDefault, testMode, baseTheme, editable);
 
     // Then combine that with our map of state change message to reducer
     return combineReducers<IMainState, M>(
@@ -71,7 +71,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const postOffice = new PostOffice();
 
     // Create reducer for the main react UI
-    const mainReducer = generateMainReducer(skipDefault, baseTheme, editable, reducerMap);
+    const mainReducer = generateMainReducer(skipDefault, testMode, baseTheme, editable, reducerMap);
 
     // Create reducer to pass window messages to the other side
     const postOfficeReducer = generatePostOfficeSendReducer(postOffice);

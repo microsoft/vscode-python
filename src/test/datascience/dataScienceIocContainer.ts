@@ -21,6 +21,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
+
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -84,6 +85,7 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
+    IDataScienceSettings,
     IExperimentsManager,
     IExtensions,
     ILogger,
@@ -676,8 +678,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.pythonSettings;
     }
 
-    public forceSettingsChanged(newPath: string) {
+    public forceSettingsChanged(newPath: string, datascienceSettings?: IDataScienceSettings) {
         this.pythonSettings.pythonPath = newPath;
+        this.pythonSettings.datascience = datascienceSettings ? datascienceSettings : this.pythonSettings.datascience;
         this.pythonSettings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {
