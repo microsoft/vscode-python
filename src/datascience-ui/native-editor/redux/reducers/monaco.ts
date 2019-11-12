@@ -15,7 +15,7 @@ import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMe
 import { IntellisenseProvider } from '../../../interactive-common/intellisenseProvider';
 import { createPostableAction, IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 import { CommonActionType, ICodeCreatedAction, IEditCellAction } from '../../../interactive-common/redux/reducers/types';
-import { initializeTokenizer } from '../../../interactive-common/tokenizer';
+import { initializeTokenizer, registerMonacoLanguage } from '../../../interactive-common/tokenizer';
 import { logMessage } from '../../../react-common/logger';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 
@@ -31,6 +31,11 @@ type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, IncomingMessageActions, T>
 type MonacoReducerArg<T = never | undefined> = ReducerArg<IMonacoState, IncomingMessageActions, T>;
 
 function handleStarted(arg: MonacoReducerArg): IMonacoState {
+    // If in test mode, register the monaco provider
+    if (arg.prevState.testMode) {
+        registerMonacoLanguage();
+    }
+
     // When the window is first starting up, create our intellisense provider
     if (!arg.prevState.intellisenseProvider) {
         return {
@@ -120,6 +125,18 @@ function handleEditCell(arg: MonacoReducerArg<IEditCellAction>): IMonacoState {
     return ensuredProvider;
 }
 
+function handleUnmount(arg: MonacoReducerArg): IMonacoState {
+    if (arg.prevState.intellisenseProvider) {
+        arg.prevState.intellisenseProvider.dispose();
+    }
+
+    return {
+        ...arg.prevState,
+        onigasmData: undefined,
+        tmLanguageData: undefined
+    };
+}
+
 // Create a mapping between message and reducer type
 class IMonacoActionMapping {
     public [InteractiveWindowMessages.Started]: MonacoReducerFunc<never | undefined>;
@@ -131,6 +148,7 @@ class IMonacoActionMapping {
     public [IncomingMessageActions.PROVIDEHOVERRESPONSE]: MonacoReducerFunc<IProvideHoverResponse>;
     public [CommonActionType.CODE_CREATED]: MonacoReducerFunc<ICodeCreatedAction>;
     public [CommonActionType.EDIT_CELL]: MonacoReducerFunc<IEditCellAction>;
+    public [CommonActionType.UNMOUNT]: MonacoReducerFunc<never | undefined>;
 }
 
 // Create the map between message type and the actual function to call to update state
@@ -143,7 +161,8 @@ const reducerMap: IMonacoActionMapping = {
     [IncomingMessageActions.PROVIDESIGNATUREHELPRESPONSE]: handleSignatureHelpResponse,
     [IncomingMessageActions.PROVIDEHOVERRESPONSE]: handleHoverResponse,
     [CommonActionType.CODE_CREATED]: handleCodeCreated,
-    [CommonActionType.EDIT_CELL]: handleEditCell
+    [CommonActionType.EDIT_CELL]: handleEditCell,
+    [CommonActionType.UNMOUNT]: handleUnmount
 };
 
 export function generateMonacoReducer(testMode: boolean):

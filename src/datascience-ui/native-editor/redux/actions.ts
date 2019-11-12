@@ -60,5 +60,6 @@ export const actionCreators = {
     editorLoaded: (): CommonAction<never | undefined> => ({ type: CommonActionType.EDITOR_LOADED }),
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } }),
     loadedAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.LOADED_ALL_CELLS }),
-    nextUpdate: (oldState: IMainState): CommonAction<IMainState> => ({ type: CommonActionType.NEXT_UPDATE, payload: oldState })
+    nextUpdate: (oldState: IMainState): CommonAction<IMainState> => ({ type: CommonActionType.NEXT_UPDATE, payload: oldState }),
+    editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT })
 };

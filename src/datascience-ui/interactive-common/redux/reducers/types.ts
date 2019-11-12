@@ -72,7 +72,8 @@ export enum CommonActionType {
     TOGGLE_OUTPUT = 'action.toggle_output',
     TOGGLE_VARIABLE_EXPLORER = 'action.toggle_variable_explorer',
     UNDO = 'action.undo',
-    UNFOCUS_CELL = 'action.unfocus_cell'
+    UNFOCUS_CELL = 'action.unfocus_cell',
+    UNMOUNT = 'action.unmount'
 }
 
 export interface IShowDataViewerAction extends IShowDataViewer {

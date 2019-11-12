@@ -464,7 +464,10 @@ export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Co
     // (we can't actually find it with the enzyme wrappers because they only search
     //  React accessible nodes and the monaco html is not react)
     assert.ok(editorControl, 'Editor not defined in order to type code into');
-    const ecDom = editorControl!.getDOMNode();
+    let ecDom = editorControl!.getDOMNode();
+    if ((ecDom as any).length) {
+        ecDom = (ecDom as any)[0];
+    }
     assert.ok(ecDom, 'ec DOM object not found');
     const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');

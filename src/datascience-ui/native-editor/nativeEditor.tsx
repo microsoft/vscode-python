@@ -48,6 +48,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     public componentWillUnmount() {
         window.removeEventListener('keydown', this.mainKeyDown);
         window.removeEventListener('resize', () => this.forceUpdate());
+        this.props.editorUnmounted();
     }
 
     public componentDidUpdate(prevProps: IMainState) {

@@ -216,4 +216,13 @@ export namespace Creation {
         };
     }
 
+    export function unmount(arg: NativeEditorReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            cellVMs: [],
+            undoStack: [],
+            redoStack: []
+        };
+    }
+
 }

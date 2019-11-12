@@ -41,6 +41,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         this.props.editorLoaded();
     }
 
+    public componentWillUnmount() {
+        this.props.editorUnmounted();
+    }
+
     public componentDidUpdate(prevProps: IMainState) {
         this.props.nextUpdate(prevProps);
     }

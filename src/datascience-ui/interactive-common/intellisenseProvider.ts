@@ -15,14 +15,13 @@ import {
     IProvideHoverResponse,
     IProvideSignatureHelpResponse
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMessageHandler } from '../react-common/postOffice';
 
 interface IRequestData<T> {
     promise: Deferred<T>;
     cancelDisposable: monacoEditor.IDisposable;
 }
 
-export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
+export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable {
     public triggerCharacters?: string[] | undefined = ['.'];
     public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
     public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
@@ -112,28 +111,6 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     public mapCellIdToModelId(cellId: string, modelId: string) {
         this.cellIdToMonacoId.set(cellId, modelId);
         this.monacoIdToCellId.set(modelId, cellId);
-    }
-
-    // tslint:disable-next-line: no-any
-    public handleMessage(type: string, payload?: any): boolean {
-        switch (type) {
-            case InteractiveWindowMessages.ProvideCompletionItemsResponse:
-                this.handleCompletionResponse(payload);
-                return true;
-
-            case InteractiveWindowMessages.ProvideHoverResponse:
-                this.handleHoverResponse(payload);
-                return true;
-
-            case InteractiveWindowMessages.ProvideSignatureHelpResponse:
-                this.handleSignatureHelpResponse(payload);
-                return true;
-
-            default:
-                break;
-        }
-
-        return false;
     }
 
     // Handle completion response

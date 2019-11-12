@@ -112,4 +112,13 @@ export namespace Creation {
 
         return arg.prevState;
     }
+
+    export function unmount(arg: InteractiveReducerArg): IMainState {
+        return {
+            ...arg.prevState,
+            cellVMs: [],
+            undoStack: [],
+            redoStack: []
+        };
+    }
 }

@@ -107,7 +107,7 @@ suite('DataScience Intellisense tests', () => {
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
         const suggestion = waitForSuggestion(wrapper);
-        typeCode(wrapper, 'print');
+        typeCode(getInteractiveEditor(wrapper), 'print');
         await suggestion.promise;
         suggestion.disposable.dispose();
         verifyIntellisenseVisible(wrapper, 'print');
@@ -123,7 +123,7 @@ suite('DataScience Intellisense tests', () => {
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
             const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
+            typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
             verifyIntellisenseVisible(wrapper, 'printly');
@@ -143,7 +143,7 @@ suite('DataScience Intellisense tests', () => {
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
             const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
+            typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
             verifyIntellisenseMissing(wrapper, 'printly');
