@@ -1,15 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    Contents,
-    ContentsManager,
-    Kernel,
-    KernelMessage,
-    ServerConnection,
-    Session,
-    SessionManager
-} from '@jupyterlab/services';
+import { Contents, ContentsManager, Kernel, KernelMessage, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils';
 import { Slot } from '@phosphor/signaling';
 import * as uuid from 'uuid/v4';
@@ -40,8 +32,7 @@ export class JupyterSession implements IJupyterSession {
         private kernelSpec: IJupyterKernelSpec | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager
-    ) {
-    }
+    ) {}
 
     public dispose(): Promise<void> {
         return this.shutdown();
@@ -69,7 +60,6 @@ export class JupyterSession implements IJupyterSession {
                     traceInfo('Shutdown session - shutdown restart session');
                     await this.shutdownSession(restartSession, undefined);
                 }
-
             } catch {
                 noop();
             }
@@ -176,16 +166,13 @@ export class JupyterSession implements IJupyterSession {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
 
-            const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => e.newValue && e.newValue.status === 'idle' ? resolve() : undefined));
+            const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => (e.newValue && e.newValue.status === 'idle' ? resolve() : undefined)));
             const checkStatusPromise = new Promise(async resolve => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
                 const startTime = Date.now();
-                while (session &&
-                    session.kernel &&
-                    session.kernel.status !== 'idle' &&
-                    (Date.now() - startTime < timeout)) {
+                while (session && session.kernel && session.kernel.status !== 'idle' && Date.now() - startTime < timeout) {
                     await sleep(100);
                 }
                 resolve();
@@ -226,7 +213,6 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
-
         // Create a temporary notebook for this session.
         this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
 

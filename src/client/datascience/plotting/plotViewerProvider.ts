@@ -13,14 +13,10 @@ import { IPlotViewer, IPlotViewerProvider } from '../types';
 
 @injectable()
 export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable {
-
     private currentViewer: IPlotViewer | undefined;
     private currentViewerClosed: IDisposable | undefined;
     private imageList: string[] = [];
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry
-        ) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry) {
         asyncRegistry.push(this);
     }
 
@@ -30,7 +26,7 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
         }
     }
 
-    public async showPlot(imageHtml: string) : Promise<void> {
+    public async showPlot(imageHtml: string): Promise<void> {
         this.imageList.push(imageHtml);
         // If the viewer closed, send it all of the old images
         const imagesToSend = this.currentViewer ? [imageHtml] : this.imageList;
@@ -38,7 +34,7 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
         await Promise.all(imagesToSend.map(viewer.addPlot));
     }
 
-    private async getOrCreate() : Promise<IPlotViewer>{
+    private async getOrCreate(): Promise<IPlotViewer> {
         // Get or create a new plot viwer
         if (!this.currentViewer) {
             this.currentViewer = this.serviceContainer.get<IPlotViewer>(IPlotViewer);
@@ -59,9 +55,9 @@ export class PlotViewerProvider implements IPlotViewerProvider, IAsyncDisposable
             this.currentViewerClosed.dispose();
             this.currentViewerClosed = undefined;
         }
-    }
+    };
 
     private removedPlot = (index: number) => {
         this.imageList.splice(index, 1);
-    }
+    };
 }

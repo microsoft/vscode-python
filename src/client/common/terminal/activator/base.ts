@@ -9,7 +9,7 @@ import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../types
 
 export class BaseTerminalActivator implements ITerminalActivator {
     private readonly activatedTerminals: Map<Terminal, Promise<boolean>> = new Map<Terminal, Promise<boolean>>();
-    constructor(private readonly helper: ITerminalHelper) { }
+    constructor(private readonly helper: ITerminalHelper) {}
     public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true) {
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;

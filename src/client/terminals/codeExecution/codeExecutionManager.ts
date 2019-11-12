@@ -21,24 +21,21 @@ import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } fr
 @injectable()
 export class CodeExecutionManager implements ICodeExecutionManager {
     private eventEmitter: EventEmitter<string> = new EventEmitter<string>();
-    constructor(@inject(ICommandManager) private commandManager: ICommandManager,
+    constructor(
+        @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IDisposableRegistry) private disposableRegistry: Disposable[],
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_INTERACTIVE_SHIFTENTER) private readonly shiftEnterBanner: IPythonExtensionBanner,
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-
-    }
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer
+    ) {}
 
     public get onExecutedCode(): Event<string> {
         return this.eventEmitter.event;
     }
 
     public registerCommands() {
-        [
-            Commands.Exec_In_Terminal,
-            Commands.Exec_In_Terminal_Icon
-        ].forEach(cmd => {
+        [Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon].forEach(cmd => {
             this.disposableRegistry.push(
                 this.commandManager.registerCommand(
                     // tslint:disable-next-line:no-any

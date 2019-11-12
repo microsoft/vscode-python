@@ -7,14 +7,7 @@ import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, TextEditor, Uri, ViewColumn } from 'vscode';
 
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
@@ -98,7 +91,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             errorHandler,
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js'),
             localize.DataScience.historyTitle(),
-            ViewColumn.Two);
+            ViewColumn.Two
+        );
         // Start the server as soon as we open
         this.startServer().ignoreErrors();
     }
@@ -213,9 +207,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.interactiveWindowProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
-            }).ignoreErrors();
+            this.interactiveWindowProvider
+                .getOrCreateActive()
+                .then(_v => {
+                    this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
+                        code: info.code,
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        id: info.id,
+                        originator: this.id,
+                        debug: false
+                    });
+                })
+                .ignoreErrors();
         }
     }
 
@@ -256,7 +260,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected startServer(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
-        if (!this.trackedJupyterStart){
+        if (!this.trackedJupyterStart) {
             this.trackedJupyterStart = true;
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
@@ -268,17 +272,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private export(cells: ICell[]) {
         // Should be an array of cells
         if (cells && this.applicationShell) {
-
             const filtersKey = localize.DataScience.exportDialogFilter();
             const filtersObject: Record<string, string[]> = {};
             filtersObject[filtersKey] = ['ipynb'];
 
             // Bring up the open file dialog box
-            this.applicationShell.showSaveDialog(
-                {
+            this.applicationShell
+                .showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
                     filters: filtersObject
-                }).then(async (uri: Uri | undefined) => {
+                })
+                .then(async (uri: Uri | undefined) => {
                     if (uri) {
                         await this.exportToFile(cells, uri.fsPath);
                     }
@@ -293,5 +297,4 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.export(cells);
         }
     }
-
 }

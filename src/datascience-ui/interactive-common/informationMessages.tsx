@@ -5,8 +5,7 @@
 import * as React from 'react';
 
 // tslint:disable-next-line:match-default-export-name import-name
-interface IInformationMessagesProps
-{
+interface IInformationMessagesProps {
     messages: string[];
 }
 
@@ -23,8 +22,10 @@ export class InformationMessages extends React.Component<IInformationMessagesPro
         return (
             <div className={wrapperClassName}>
                 <div className={outerClassName}>
-                    <div className='messages-result-container'>
-                        <pre><span>{output}</span></pre>
+                    <div className="messages-result-container">
+                        <pre>
+                            <span>{output}</span>
+                        </pre>
                     </div>
                 </div>
             </div>

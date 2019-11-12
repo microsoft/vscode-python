@@ -21,17 +21,15 @@ export class RefactorProxy extends Disposable {
     private _commandResolve?: (value?: any | PromiseLike<any>) => void;
     private _commandReject!: (reason?: any) => void;
     private initialized!: Deferred<void>;
-    constructor(extensionDir: string, _pythonSettings: IPythonSettings, private workspaceRoot: string,
-        private serviceContainer: IServiceContainer) {
-        super(() => { });
+    constructor(extensionDir: string, _pythonSettings: IPythonSettings, private workspaceRoot: string, private serviceContainer: IServiceContainer) {
+        super(() => {});
         this._extensionDir = extensionDir;
     }
 
     public dispose() {
         try {
             this._process!.kill();
-        } catch (ex) {
-        }
+        } catch (ex) {}
         this._process = undefined;
     }
     private getOffsetAt(document: TextDocument, position: Position): number {
@@ -114,27 +112,33 @@ export class RefactorProxy extends Disposable {
         const cwd = path.join(this._extensionDir, 'pythonFiles');
         const result = pythonProc.execObservable(args, { cwd });
         this._process = result.proc;
-        result.out.subscribe(output => {
-            if (output.source === 'stdout') {
-                if (!this._startedSuccessfully && output.out.startsWith('STARTED')) {
-                    this._startedSuccessfully = true;
-                    return this.initialized.resolve();
+        result.out.subscribe(
+            output => {
+                if (output.source === 'stdout') {
+                    if (!this._startedSuccessfully && output.out.startsWith('STARTED')) {
+                        this._startedSuccessfully = true;
+                        return this.initialized.resolve();
+                    }
+                    this.onData(output.out);
+                } else {
+                    this.handleStdError(output.out);
                 }
-                this.onData(output.out);
-            } else {
-                this.handleStdError(output.out);
-            }
-        }, error => this.handleError(error));
+            },
+            error => this.handleError(error)
+        );
 
         return this.initialized.promise;
     }
     private handleStdError(data: string) {
         // Possible there was an exception in parsing the data returned
         // So append the data then parse it
-        let dataStr = this._previousStdErrData = this._previousStdErrData + data + '';
+        let dataStr = (this._previousStdErrData = this._previousStdErrData + data + '');
         let errorResponse: { message: string; traceback: string; type: string }[];
         try {
-            errorResponse = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
+            errorResponse = dataStr
+                .split(/\r?\n/g)
+                .filter(line => line.length > 0)
+                .map(resp => JSON.parse(resp));
             this._previousStdErrData = '';
         } catch (ex) {
             traceError(ex);
@@ -164,14 +168,19 @@ export class RefactorProxy extends Disposable {
         this.initialized.reject(error);
     }
     private onData(data: string) {
-        if (!this._commandResolve) { return; }
+        if (!this._commandResolve) {
+            return;
+        }
 
         // Possible there was an exception in parsing the data returned
         // So append the data then parse it
-        let dataStr = this._previousOutData = this._previousOutData + data + '';
+        let dataStr = (this._previousOutData = this._previousOutData + data + '');
         let response: any;
         try {
-            response = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
+            response = dataStr
+                .split(/\r?\n/g)
+                .filter(line => line.length > 0)
+                .map(resp => JSON.parse(resp));
             this._previousOutData = '';
         } catch (ex) {
             // Possible we've only received part of the data, hence don't clear previousData

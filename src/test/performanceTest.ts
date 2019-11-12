@@ -33,7 +33,8 @@ const publishedExtensionPath = path.join(tmpFolder, 'ext', 'testReleaseExtension
 const logFilesPath = path.join(tmpFolder, 'test', 'logs');
 
 enum Version {
-    Dev, Release
+    Dev,
+    Release
 }
 
 class TestRunner {
@@ -75,7 +76,7 @@ class TestRunner {
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
     }
 
-    private async  capturePerfTimes(version: Version, logFile: string) {
+    private async capturePerfTimes(version: Version, logFile: string) {
         const releaseVersion = await this.getReleaseVersion();
         const devVersion = await this.getDevVersion();
         await fs.ensureDir(path.dirname(logFile));
@@ -87,7 +88,7 @@ class TestRunner {
 
         await this.launchTest(env);
     }
-    private async  runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
+    private async runPerfTest(devLogFiles: string[], releaseLogFiles: string[], languageServerLogFiles: string[]) {
         const env: Record<string, {}> = {
             ACTIVATION_TIMES_DEV_LOG_FILE_PATHS: JSON.stringify(devLogFiles),
             ACTIVATION_TIMES_RELEASE_LOG_FILE_PATHS: JSON.stringify(releaseLogFiles),
@@ -97,7 +98,7 @@ class TestRunner {
         await this.launchTest(env);
     }
 
-    private async  launchTest(customEnvVars: Record<string, {}>) {
+    private async launchTest(customEnvVars: Record<string, {}>) {
         await new Promise((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'perf.test',
@@ -125,7 +126,7 @@ class TestRunner {
         await unzip(extensionFile, targetDir);
     }
 
-    private async  getReleaseVersion(): Promise<string> {
+    private async getReleaseVersion(): Promise<string> {
         const url = `https://marketplace.visualstudio.com/items?itemName=${PVSC_EXTENSION_ID}`;
         const content = await new Promise<string>((resolve, reject) => {
             request(url, (error, response, body) => {
@@ -138,12 +139,12 @@ class TestRunner {
                 reject(`Status code of ${response.statusCode} received.`);
             });
         });
-        const re = NamedRegexp('"version"\S?:\S?"(:<version>\\d{4}\\.\\d{1,2}\\.\\d{1,2})"', 'g');
+        const re = NamedRegexp('"version"S?:S?"(:<version>\\d{4}\\.\\d{1,2}\\.\\d{1,2})"', 'g');
         const matches = re.exec(content);
         return matches.groups().version;
     }
 
-    private async  getDevVersion(): Promise<string> {
+    private async getDevVersion(): Promise<string> {
         // tslint:disable-next-line:non-literal-require
         return require(path.join(EXTENSION_ROOT_DIR, 'package.json')).version;
     }

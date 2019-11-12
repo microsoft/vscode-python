@@ -30,17 +30,27 @@ suite('Terminal - Django Shell Code Execution', () => {
         terminalService = TypeMoq.Mock.ofType<ITerminalService>();
         const configService = TypeMoq.Mock.ofType<IConfigurationService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        workspace.setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-            return {
-                dispose: () => void 0
-            };
-        });
+        workspace
+            .setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                return {
+                    dispose: () => void 0
+                };
+            });
         platform = TypeMoq.Mock.ofType<IPlatformService>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object,
-            workspace.object, documentManager.object, platform.object, commandManager.object, fileSystem.object, disposables);
+        executor = new DjangoShellCodeExecutionProvider(
+            terminalFactory.object,
+            configService.object,
+            workspace.object,
+            documentManager.object,
+            platform.object,
+            commandManager.object,
+            fileSystem.object,
+            disposables
+        );
 
         terminalFactory.setup(f => f.getTerminalService(TypeMoq.It.isAny())).returns(() => terminalService.object);
 
@@ -58,8 +68,7 @@ suite('Terminal - Django Shell Code Execution', () => {
         disposables = [];
     });
 
-    function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string,
-        terminalArgs: string[], expectedTerminalArgs: string[], resource?: Uri) {
+    function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[], expectedTerminalArgs: string[], resource?: Uri) {
         platform.setup(p => p.isWindows).returns(() => isWindows);
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
@@ -155,5 +164,4 @@ suite('Terminal - Django Shell Code Execution', () => {
 
         testReplCommandArguments(true, pythonPath, pythonPath, terminalArgs, expectedTerminalArgs, Uri.file('x'));
     });
-
 });

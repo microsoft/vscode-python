@@ -73,11 +73,21 @@ suite('Terminal - Code Execution', () => {
                 }
                 case 'Django Execution': {
                     isDjangoRepl = true;
-                    workspace.setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-                        return { dispose: noop };
-                    });
-                    executor = new DjangoShellCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, documentManager.object,
-                        platform.object, commandManager.object, fileSystem.object, disposables);
+                    workspace
+                        .setup(w => w.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => {
+                            return { dispose: noop };
+                        });
+                    executor = new DjangoShellCodeExecutionProvider(
+                        terminalFactory.object,
+                        configService.object,
+                        workspace.object,
+                        documentManager.object,
+                        platform.object,
+                        commandManager.object,
+                        fileSystem.object,
+                        disposables
+                    );
                     expectedTerminalTitle = 'Django Shell';
                     break;
                 }
@@ -115,7 +125,7 @@ suite('Terminal - Code Execution', () => {
             });
         });
 
-        suite(testSuiteName, async function () {
+        suite(testSuiteName, async function() {
             // tslint:disable-next-line:no-invalid-this
             this.timeout(5000); // Activation of terminals take some time (there's a delay in the code to account for VSC Terminal issues).
             setup(() => {
@@ -287,7 +297,7 @@ suite('Terminal - Code Execution', () => {
                 await executor.execute('');
                 await executor.execute('   ');
                 // tslint:disable-next-line:no-any
-                await executor.execute(undefined as any as string);
+                await executor.execute((undefined as any) as string);
 
                 terminalService.verify(async t => t.sendCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
                 terminalService.verify(async t => t.sendText(TypeMoq.It.isAny()), TypeMoq.Times.never());
@@ -317,12 +327,14 @@ suite('Terminal - Code Execution', () => {
                 terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
 
                 let closeTerminalCallback: undefined | (() => void);
-                terminalService.setup(t => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((callback => {
-                    closeTerminalCallback = callback;
-                    return {
-                        dispose: noop
-                    };
-                }));
+                terminalService
+                    .setup(t => t.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                    .returns(callback => {
+                        closeTerminalCallback = callback;
+                        return {
+                            dispose: noop
+                        };
+                    });
 
                 await executor.execute('cmd1');
                 await executor.execute('cmd2');

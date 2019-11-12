@@ -79,17 +79,19 @@ export class FileSystem implements IFileSystem {
                 if (error) {
                     return resolve([]);
                 }
-                const subDirs = (await Promise.all(
-                    files.map(async name => {
-                        const fullPath = path.join(rootDir, name);
-                        try {
-                            if ((await fs.stat(fullPath)).isDirectory()) {
-                                return fullPath;
-                            }
-                            // tslint:disable-next-line:no-empty
-                        } catch (ex) {}
-                    })
-                )).filter(dir => dir !== undefined) as string[];
+                const subDirs = (
+                    await Promise.all(
+                        files.map(async name => {
+                            const fullPath = path.join(rootDir, name);
+                            try {
+                                if ((await fs.stat(fullPath)).isDirectory()) {
+                                    return fullPath;
+                                }
+                                // tslint:disable-next-line:no-empty
+                            } catch (ex) {}
+                        })
+                    )
+                ).filter(dir => dir !== undefined) as string[];
                 resolve(subDirs);
             });
         });

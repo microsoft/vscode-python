@@ -119,7 +119,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return await this.execFileWithDaemon(args[0], args.slice(1), options);
         } catch (ex) {
             // This is a handled error (error from user code that must be bubbled up).
-            if (ex instanceof StdErrError){
+            if (ex instanceof StdErrError) {
                 throw ex;
             }
             return this.pythonExecutionService.exec(args, options);
@@ -134,7 +134,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return await this.execModuleWithDaemon(moduleName, args, options);
         } catch (ex) {
             // This is a handled error (error from user code that must be bubbled up).
-            if (ex instanceof StdErrError){
+            if (ex instanceof StdErrError) {
                 throw ex;
             }
             return this.pythonExecutionService.execModule(moduleName, args, options);
@@ -210,7 +210,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                 response = await this.connection.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
             }
             // Might not get a response object back, as its observable.
-            if (response && response.error){
+            if (response && response.error) {
                 throw new StdErrError(response.error);
             }
         };

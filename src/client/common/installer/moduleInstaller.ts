@@ -17,8 +17,8 @@ import { noop } from '../utils/misc';
 @injectable()
 export abstract class ModuleInstaller {
     public abstract get name(): string;
-    public abstract get displayName(): string
-    constructor(protected serviceContainer: IServiceContainer) { }
+    public abstract get displayName(): string;
+    constructor(protected serviceContainer: IServiceContainer) {}
     public async installModule(name: string, resource?: vscode.Uri): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const executionInfo = await this.getExecutionInfo(name, resource);

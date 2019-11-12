@@ -17,14 +17,9 @@ export class DjangoContextInitializer implements Disposable {
     private lastCheckedWorkspace: string = '';
     private disposables: Disposable[] = [];
 
-    constructor(private documentManager: IDocumentManager,
-        private workpaceService: IWorkspaceService,
-        private fileSystem: IFileSystem,
-        commandManager: ICommandManager) {
-
+    constructor(private documentManager: IDocumentManager, private workpaceService: IWorkspaceService, private fileSystem: IFileSystem, commandManager: ICommandManager) {
         this.isDjangoProject = new ContextKey('python.isDjangoProject', commandManager);
-        this.ensureContextStateIsSet()
-            .catch(ex => traceError('Python Extension: ensureState', ex));
+        this.ensureContextStateIsSet().catch(ex => traceError('Python Extension: ensureState', ex));
         this.disposables.push(this.workpaceService.onDidChangeWorkspaceFolders(() => this.updateContextKeyBasedOnActiveWorkspace()));
     }
 

@@ -24,7 +24,15 @@ import { TestResultsService } from '../../../../client/testing/common/services/t
 import { TestsStatusUpdaterService } from '../../../../client/testing/common/services/testsStatusService';
 import { UnitTestDiagnosticService } from '../../../../client/testing/common/services/unitTestDiagnosticService';
 import { TestsHelper } from '../../../../client/testing/common/testUtils';
-import { ITestCollectionStorageService, ITestDiscoveryService, ITestManager, ITestMessageService, ITestResultsService, ITestsHelper, ITestsStatusUpdaterService } from '../../../../client/testing/common/types';
+import {
+    ITestCollectionStorageService,
+    ITestDiscoveryService,
+    ITestManager,
+    ITestMessageService,
+    ITestResultsService,
+    ITestsHelper,
+    ITestsStatusUpdaterService
+} from '../../../../client/testing/common/types';
 import { TestManager as NoseTestManager } from '../../../../client/testing/nosetest/main';
 import { TestManager as PyTestTestManager } from '../../../../client/testing/pytest/main';
 import { ArgumentsService } from '../../../../client/testing/pytest/services/argsService';
@@ -113,7 +121,7 @@ suite('Unit Tests - Base Test Manager', () => {
 
                 verify(commandManager.executeCommand('setContext', 'testsDiscovered', true)).once();
             });
-            test('When failing to discover tests prompt to install test framework', async function () {
+            test('When failing to discover tests prompt to install test framework', async function() {
                 if (item.name === 'unittest') {
                     // tslint:disable-next-line: no-invalid-this
                     return this.skip();
@@ -130,7 +138,7 @@ suite('Unit Tests - Base Test Manager', () => {
                 verify(installer.isInstalled(anything(), anything())).once();
                 verify(installer.promptToInstall(anything(), anything())).once();
             });
-            test('When failing to discover tests do not prompt to install test framework', async function () {
+            test('When failing to discover tests do not prompt to install test framework', async function() {
                 if (item.name === 'unittest') {
                     // tslint:disable-next-line: no-invalid-this
                     return this.skip();
@@ -147,7 +155,7 @@ suite('Unit Tests - Base Test Manager', () => {
                 verify(installer.isInstalled(anything(), anything())).never();
                 verify(installer.promptToInstall(anything(), anything())).never();
             });
-            test('When failing to discover tests do not prompt to install test framework if installed', async function () {
+            test('When failing to discover tests do not prompt to install test framework if installed', async function() {
                 if (item.name === 'unittest') {
                     // tslint:disable-next-line: no-invalid-this
                     return this.skip();

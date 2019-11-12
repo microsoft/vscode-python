@@ -170,7 +170,7 @@ export class Tokenizer implements ITokenizer {
             return true;
         }
 
-        const next = (this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus) ? 1 : 0;
+        const next = this.cs.currentChar === Char.Hyphen || this.cs.currentChar === Char.Plus ? 1 : 0;
         // Next character must be decimal or a dot otherwise
         // it is not a number. No whitespace is allowed.
         if (isDecimal(this.cs.lookAhead(next)) || this.cs.lookAhead(next) === Char.Period) {
@@ -181,12 +181,14 @@ export class Tokenizer implements ITokenizer {
             }
 
             const prev = this.tokens[this.tokens.length - 1];
-            if (prev.type === TokenType.OpenBrace
-                || prev.type === TokenType.OpenBracket
-                || prev.type === TokenType.Comma
-                || prev.type === TokenType.Colon
-                || prev.type === TokenType.Semicolon
-                || prev.type === TokenType.Operator) {
+            if (
+                prev.type === TokenType.OpenBrace ||
+                prev.type === TokenType.OpenBracket ||
+                prev.type === TokenType.Comma ||
+                prev.type === TokenType.Colon ||
+                prev.type === TokenType.Semicolon ||
+                prev.type === TokenType.Operator
+            ) {
                 return true;
             }
         }
@@ -264,7 +266,8 @@ export class Tokenizer implements ITokenizer {
             decimal = this.cs.currentChar !== Char.Period && this.cs.currentChar !== Char.e && this.cs.currentChar !== Char.E;
         }
 
-        if (this.cs.currentChar === Char._0) { // "0" (["_"] "0")*
+        if (this.cs.currentChar === Char._0) {
+            // "0" (["_"] "0")*
             while (this.cs.currentChar === Char._0 || this.cs.currentChar === Char.Underscore) {
                 this.cs.moveNext();
             }
@@ -280,8 +283,10 @@ export class Tokenizer implements ITokenizer {
         }
 
         // Floating point. Sign was already skipped over.
-        if ((this.cs.currentChar >= Char._0 && this.cs.currentChar <= Char._9) ||
-            (this.cs.currentChar === Char.Period && this.cs.nextChar >= Char._0 && this.cs.nextChar <= Char._9)) {
+        if (
+            (this.cs.currentChar >= Char._0 && this.cs.currentChar <= Char._9) ||
+            (this.cs.currentChar === Char.Period && this.cs.nextChar >= Char._0 && this.cs.nextChar <= Char._9)
+        ) {
             if (this.skipFloatingPointCandidate(false)) {
                 const text = this.cs.getText().substr(start, this.cs.position - start);
                 if (!isNaN(parseFloat(text))) {
@@ -401,7 +406,10 @@ export class Tokenizer implements ITokenizer {
         }
 
         if (this.cs.lookAhead(2) === Char.SingleQuote || this.cs.lookAhead(2) === Char.DoubleQuote) {
-            const prefix = this.cs.getText().substr(this.cs.position, 2).toLowerCase();
+            const prefix = this.cs
+                .getText()
+                .substr(this.cs.position, 2)
+                .toLowerCase();
             switch (prefix) {
                 case 'rf':
                 case 'ur':
@@ -416,14 +424,10 @@ export class Tokenizer implements ITokenizer {
 
     private getQuoteType(): QuoteType {
         if (this.cs.currentChar === Char.SingleQuote) {
-            return this.cs.nextChar === Char.SingleQuote && this.cs.lookAhead(2) === Char.SingleQuote
-                ? QuoteType.TripleSingle
-                : QuoteType.Single;
+            return this.cs.nextChar === Char.SingleQuote && this.cs.lookAhead(2) === Char.SingleQuote ? QuoteType.TripleSingle : QuoteType.Single;
         }
         if (this.cs.currentChar === Char.DoubleQuote) {
-            return this.cs.nextChar === Char.DoubleQuote && this.cs.lookAhead(2) === Char.DoubleQuote
-                ? QuoteType.TripleDouble
-                : QuoteType.Double;
+            return this.cs.nextChar === Char.DoubleQuote && this.cs.lookAhead(2) === Char.DoubleQuote ? QuoteType.TripleDouble : QuoteType.Double;
         }
         return QuoteType.None;
     }
@@ -432,14 +436,10 @@ export class Tokenizer implements ITokenizer {
         const start = this.cs.position - stringPrefixLength;
         if (quoteType === QuoteType.Single || quoteType === QuoteType.Double) {
             this.cs.moveNext();
-            this.skipToSingleEndQuote(quoteType === QuoteType.Single
-                ? Char.SingleQuote
-                : Char.DoubleQuote);
+            this.skipToSingleEndQuote(quoteType === QuoteType.Single ? Char.SingleQuote : Char.DoubleQuote);
         } else {
             this.cs.advance(3);
-            this.skipToTripleEndQuote(quoteType === QuoteType.TripleSingle
-                ? Char.SingleQuote
-                : Char.DoubleQuote);
+            this.skipToTripleEndQuote(quoteType === QuoteType.TripleSingle ? Char.SingleQuote : Char.DoubleQuote);
         }
         this.tokens.push(new Token(TokenType.String, start, this.cs.position - start));
     }

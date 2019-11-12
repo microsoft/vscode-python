@@ -5,17 +5,11 @@
 
 import { expect } from 'chai';
 import { Uri } from 'vscode';
-import {
-    Commands
-} from '../../../client/common/constants';
-import {
-    TestFile, TestFolder, TestFunction, TestSuite
-} from '../../../client/testing/common/types';
+import { Commands } from '../../../client/common/constants';
+import { TestFile, TestFolder, TestFunction, TestSuite } from '../../../client/testing/common/types';
 import { TestTreeItem } from '../../../client/testing/explorer/testTreeViewItem';
 import { TestDataItemType } from '../../../client/testing/types';
-import {
-    createMockTestDataItem, createSubtestParent
-} from '../common/testUtils.unit.test';
+import { createMockTestDataItem, createSubtestParent } from '../common/testUtils.unit.test';
 import { getTestExplorerViewItemData } from './explorerTestData';
 
 suite('Unit Tests Test Explorer View Items', () => {
@@ -67,7 +61,7 @@ suite('Unit Tests Test Explorer View Items', () => {
     });
 
     test('Test subtest created into test view item', () => {
-        createSubtestParent([testFunction]);  // sets testFunction.subtestParent
+        createSubtestParent([testFunction]); // sets testFunction.subtestParent
 
         const viewItem = new TestTreeItem(resource, testFunction);
 

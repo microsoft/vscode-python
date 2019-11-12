@@ -16,9 +16,7 @@ import { SystemVariables } from '../../../../common/variables/systemVariables';
 import { sendTelemetryEvent } from '../../../../telemetry';
 import { EventName } from '../../../../telemetry/constants';
 import { DebuggerTelemetry } from '../../../../telemetry/types';
-import {
-    AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMapping
-} from '../../../types';
+import { AttachRequestArguments, DebugOptions, LaunchRequestArguments, PathMapping } from '../../../types';
 import { PythonPathSource } from '../../types';
 import { IDebugConfigurationResolver } from '../types';
 
@@ -30,7 +28,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         protected readonly documentManager: IDocumentManager,
         protected readonly platformService: IPlatformService,
         protected readonly configurationService: IConfigurationService
-    ) { }
+    ) {}
     public abstract resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<T | undefined>;
     protected getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
         if (folder) {
@@ -89,13 +87,9 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
     }
     protected isLocalHost(hostName?: string) {
         const LocalHosts = ['localhost', '127.0.0.1', '::1'];
-        return (hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0) ? true : false;
+        return hostName && LocalHosts.indexOf(hostName.toLowerCase()) >= 0 ? true : false;
     }
-    protected fixUpPathMappings(
-        pathMappings: PathMapping[],
-        defaultLocalRoot?: string,
-        defaultRemoteRoot?: string
-    ): PathMapping[] {
+    protected fixUpPathMappings(pathMappings: PathMapping[], defaultLocalRoot?: string, defaultRemoteRoot?: string): PathMapping[] {
         if (!defaultLocalRoot) {
             return [];
         }
@@ -136,7 +130,7 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         return pathMappings;
     }
     protected isDebuggingFlask(debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
-        return (debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK') ? true : false;
+        return debugConfiguration.module && debugConfiguration.module.toUpperCase() === 'FLASK' ? true : false;
     }
     protected sendTelemetry(trigger: 'launch' | 'attach' | 'test', debugConfiguration: Partial<LaunchRequestArguments & AttachRequestArguments>) {
         const name = debugConfiguration.name || '';
@@ -163,5 +157,4 @@ export abstract class BaseConfigurationResolver<T extends DebugConfiguration> im
         };
         sendTelemetryEvent(EventName.DEBUGGER, undefined, telemetryProps);
     }
-
 }

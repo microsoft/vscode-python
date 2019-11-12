@@ -30,16 +30,10 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
     let interpreterService: IInterpreterService;
     let helper: IInterpreterHelper;
     class SystemWideInterpretersAutoSelectionRuleTest extends SystemWideInterpretersAutoSelectionRule {
-        public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
-            manager?: IInterpreterAutoSelectionService
-        ): Promise<boolean> {
+        public async setGlobalInterpreter(interpreter?: PythonInterpreter, manager?: IInterpreterAutoSelectionService): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
-        public async onAutoSelectInterpreter(
-            resource: Resource,
-            manager?: IInterpreterAutoSelectionService
-        ): Promise<NextAction> {
+        public async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
             return super.onAutoSelectInterpreter(resource, manager);
         }
     }
@@ -50,15 +44,8 @@ suite('Interpreters - Auto Selection - System Interpreters Rule', () => {
         helper = mock(InterpreterHelper);
         interpreterService = mock(InterpreterService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
-        );
-        rule = new SystemWideInterpretersAutoSelectionRuleTest(
-            instance(fs),
-            instance(helper),
-            instance(stateFactory),
-            instance(interpreterService)
-        );
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
+        rule = new SystemWideInterpretersAutoSelectionRuleTest(instance(fs), instance(helper), instance(stateFactory), instance(interpreterService));
     });
 
     test('Invoke next rule if there are no interpreters in the current path', async () => {

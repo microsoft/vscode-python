@@ -106,7 +106,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         verify(state.updateValue(anything())).never();
         verify(fs.fileExists(interpreterInfo.path)).once();
     });
-    test('Get undefined if there\'s nothing in state store', async () => {
+    test("Get undefined if there's nothing in state store", async () => {
         when(state.value).thenReturn(undefined);
 
         expect(rule.getPreviouslyAutoSelectedInterpreter(Uri.parse('x'))).to.be.equal(undefined, 'Must be undefined');

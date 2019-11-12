@@ -128,7 +128,7 @@ suite('Terminal - Code Execution Helper', () => {
             await ensureBlankLinesAreRemoved(code + EOL + EOL + EOL + EOL, expectedCode + EOL);
         });
     });
-    test('Display message if there\'s no active file', async () => {
+    test("Display message if there's no active file", async () => {
         documentManager.setup(doc => doc.activeTextEditor).returns(() => undefined);
 
         const uri = await helper.getFileToExecute();

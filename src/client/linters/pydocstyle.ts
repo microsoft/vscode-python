@@ -33,49 +33,51 @@ export class PyDocStyle extends BaseLinter {
         const oldOutputLines = outputLines.filter(line => line.length > 0);
         outputLines = [];
         for (let counter = 0; counter < oldOutputLines.length / 2; counter += 1) {
-            outputLines.push(oldOutputLines[2 * counter] + oldOutputLines[(2 * counter) + 1]);
+            outputLines.push(oldOutputLines[2 * counter] + oldOutputLines[2 * counter + 1]);
         }
 
-        return outputLines
-            .filter((value, index) => index < maxLines && value.indexOf(':') >= 0)
-            .map(line => {
-                // Windows will have a : after the drive letter (e.g. c:\).
-                if (IS_WINDOWS) {
-                    return line.substring(line.indexOf(`${baseFileName}:`) + baseFileName.length + 1).trim();
-                }
-                return line.substring(line.indexOf(':') + 1).trim();
-            })
-            // Iterate through the lines (skipping the messages).
-            // So, just iterate the response in pairs.
-            .map(line => {
-                try {
-                    if (line.trim().length === 0) {
+        return (
+            outputLines
+                .filter((value, index) => index < maxLines && value.indexOf(':') >= 0)
+                .map(line => {
+                    // Windows will have a : after the drive letter (e.g. c:\).
+                    if (IS_WINDOWS) {
+                        return line.substring(line.indexOf(`${baseFileName}:`) + baseFileName.length + 1).trim();
+                    }
+                    return line.substring(line.indexOf(':') + 1).trim();
+                })
+                // Iterate through the lines (skipping the messages).
+                // So, just iterate the response in pairs.
+                .map(line => {
+                    try {
+                        if (line.trim().length === 0) {
+                            return;
+                        }
+                        const lineNumber = parseInt(line.substring(0, line.indexOf(' ')), 10);
+                        const part = line.substring(line.indexOf(':') + 1).trim();
+                        const code = part.substring(0, part.indexOf(':')).trim();
+                        const message = part.substring(part.indexOf(':') + 1).trim();
+
+                        const sourceLine = document.lineAt(lineNumber - 1).text;
+                        const trmmedSourceLine = sourceLine.trim();
+                        const sourceStart = sourceLine.indexOf(trmmedSourceLine);
+
+                        // tslint:disable-next-line:no-object-literal-type-assertion
+                        return {
+                            code: code,
+                            message: message,
+                            column: sourceStart,
+                            line: lineNumber,
+                            type: '',
+                            provider: this.info.id
+                        } as ILintMessage;
+                    } catch (ex) {
+                        this.logger.logError(`Failed to parse pydocstyle line '${line}'`, ex);
                         return;
                     }
-                    const lineNumber = parseInt(line.substring(0, line.indexOf(' ')), 10);
-                    const part = line.substring(line.indexOf(':') + 1).trim();
-                    const code = part.substring(0, part.indexOf(':')).trim();
-                    const message = part.substring(part.indexOf(':') + 1).trim();
-
-                    const sourceLine = document.lineAt(lineNumber - 1).text;
-                    const trmmedSourceLine = sourceLine.trim();
-                    const sourceStart = sourceLine.indexOf(trmmedSourceLine);
-
-                    // tslint:disable-next-line:no-object-literal-type-assertion
-                    return {
-                        code: code,
-                        message: message,
-                        column: sourceStart,
-                        line: lineNumber,
-                        type: '',
-                        provider: this.info.id
-                    } as ILintMessage;
-                } catch (ex) {
-                    this.logger.logError(`Failed to parse pydocstyle line '${line}'`, ex);
-                    return;
-                }
-            })
-            .filter(item => item !== undefined)
-            .map(item => item!);
+                })
+                .filter(item => item !== undefined)
+                .map(item => item!)
+        );
     }
 }

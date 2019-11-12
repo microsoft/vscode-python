@@ -35,8 +35,7 @@ suite('Debugging - launch.json Updater Service', () => {
         documentManager = mock(DocumentManager);
         debugConfigService = mock(PythonDebugConfigurationService);
         sandbox.stub(LaunchJsonUpdaterServiceHelper.prototype, 'isCommaImmediatelyBeforeCursor').returns(false);
-        helper = new LaunchJsonUpdaterServiceHelper(instance(commandManager),
-            instance(workspace), instance(documentManager), instance(debugConfigService));
+        helper = new LaunchJsonUpdaterServiceHelper(instance(commandManager), instance(workspace), instance(documentManager), instance(debugConfigService));
     });
     teardown(() => sandbox.restore());
     test('Activation will register the required commands', async () => {
@@ -248,7 +247,10 @@ suite('Debugging - launch.json Updater Service', () => {
         const position = new Position(0, 0);
         const token = new CancellationTokenSource().token;
         const textEditor = typemoq.Mock.ofType<TextEditor>();
-        textEditor.setup(t => t.document).returns(() => 'x' as any).verifiable(typemoq.Times.atLeastOnce());
+        textEditor
+            .setup(t => t.document)
+            .returns(() => 'x' as any)
+            .verifiable(typemoq.Times.atLeastOnce());
         when(documentManager.activeTextEditor).thenReturn(textEditor.object);
         let debugConfigInserted = false;
         helper.insertDebugConfiguration = async () => {
@@ -273,8 +275,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const docUri = Uri.file(__filename);
         const folderUri = Uri.file('Folder Uri');
         const folder = { name: '', index: 0, uri: folderUri };
-        document.setup(doc => doc.uri).returns(() => docUri).verifiable(typemoq.Times.atLeastOnce());
-        textEditor.setup(t => t.document).returns(() => document.object).verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.uri)
+            .returns(() => docUri)
+            .verifiable(typemoq.Times.atLeastOnce());
+        textEditor
+            .setup(t => t.document)
+            .returns(() => document.object)
+            .verifiable(typemoq.Times.atLeastOnce());
         when(documentManager.activeTextEditor).thenReturn(textEditor.object);
         when(workspace.getWorkspaceFolder(docUri)).thenReturn(folder);
         when(debugConfigService.provideDebugConfigurations!(folder, token)).thenResolve([''] as any);
@@ -301,8 +309,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const docUri = Uri.file(__filename);
         const folderUri = Uri.file('Folder Uri');
         const folder = { name: '', index: 0, uri: folderUri };
-        document.setup(doc => doc.uri).returns(() => docUri).verifiable(typemoq.Times.atLeastOnce());
-        textEditor.setup(t => t.document).returns(() => document.object).verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.uri)
+            .returns(() => docUri)
+            .verifiable(typemoq.Times.atLeastOnce());
+        textEditor
+            .setup(t => t.document)
+            .returns(() => document.object)
+            .verifiable(typemoq.Times.atLeastOnce());
         when(documentManager.activeTextEditor).thenReturn(textEditor.object);
         when(workspace.getWorkspaceFolder(docUri)).thenReturn(folder);
         when(debugConfigService.provideDebugConfigurations!(folder, token)).thenResolve([] as any);
@@ -329,8 +343,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const docUri = Uri.file(__filename);
         const folderUri = Uri.file('Folder Uri');
         const folder = { name: '', index: 0, uri: folderUri };
-        document.setup(doc => doc.uri).returns(() => docUri).verifiable(typemoq.Times.atLeastOnce());
-        textEditor.setup(t => t.document).returns(() => document.object).verifiable(typemoq.Times.atLeastOnce());
+        document
+            .setup(doc => doc.uri)
+            .returns(() => docUri)
+            .verifiable(typemoq.Times.atLeastOnce());
+        textEditor
+            .setup(t => t.document)
+            .returns(() => document.object)
+            .verifiable(typemoq.Times.atLeastOnce());
         when(documentManager.activeTextEditor).thenReturn(textEditor.object);
         when(workspace.getWorkspaceFolder(docUri)).thenReturn(folder);
         when(debugConfigService.provideDebugConfigurations!(folder, token)).thenResolve(['config'] as any);
@@ -354,14 +374,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const position = new Position(1, 0);
         document
             .setup(doc => doc.lineAt(1))
-            .returns(() => ({range: new Range(1, 0, 1, 1)}) as any)
+            .returns(() => ({ range: new Range(1, 0, 1, 1) } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.getText(typemoq.It.isAny()))
             .returns(() => '')
             .verifiable(typemoq.Times.atLeastOnce());
 
-        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+        const isBeforeCursor = helper.isCommaImmediatelyBeforeCursor(document.object, position);
 
         assert.ok(!isBeforeCursor);
         document.verifyAll();
@@ -372,14 +392,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const position = new Position(2, 2);
         document
             .setup(doc => doc.lineAt(2))
-            .returns(() => ({range: new Range(2, 0, 1, 5)}) as any)
+            .returns(() => ({ range: new Range(2, 0, 1, 5) } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.getText(typemoq.It.isAny()))
             .returns(() => 'Hello')
             .verifiable(typemoq.Times.atLeastOnce());
 
-        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+        const isBeforeCursor = helper.isCommaImmediatelyBeforeCursor(document.object, position);
 
         assert.ok(!isBeforeCursor);
         document.verifyAll();
@@ -390,14 +410,14 @@ suite('Debugging - launch.json Updater Service', () => {
         const position = new Position(2, 2);
         document
             .setup(doc => doc.lineAt(2))
-            .returns(() => ({range: new Range(2, 0, 2, 3)}) as any)
+            .returns(() => ({ range: new Range(2, 0, 2, 3) } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.getText(typemoq.It.isAny()))
             .returns(() => '}, ')
             .verifiable(typemoq.Times.atLeastOnce());
 
-        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+        const isBeforeCursor = helper.isCommaImmediatelyBeforeCursor(document.object, position);
 
         assert.ok(isBeforeCursor);
         document.verifyAll();
@@ -408,18 +428,18 @@ suite('Debugging - launch.json Updater Service', () => {
         const position = new Position(2, 2);
         document
             .setup(doc => doc.lineAt(1))
-            .returns(() => ({range: new Range(1, 0, 1, 3), text: '}, '}) as any)
+            .returns(() => ({ range: new Range(1, 0, 1, 3), text: '}, ' } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.lineAt(2))
-            .returns(() => ({range: new Range(2, 0, 2, 3), text: '   '}) as any)
+            .returns(() => ({ range: new Range(2, 0, 2, 3), text: '   ' } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.getText(typemoq.It.isAny()))
             .returns(() => '   ')
             .verifiable(typemoq.Times.atLeastOnce());
 
-        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+        const isBeforeCursor = helper.isCommaImmediatelyBeforeCursor(document.object, position);
 
         assert.ok(isBeforeCursor);
         document.verifyAll();
@@ -430,18 +450,18 @@ suite('Debugging - launch.json Updater Service', () => {
         const position = new Position(2, 2);
         document
             .setup(doc => doc.lineAt(1))
-            .returns(() => ({range: new Range(1, 0, 1, 3), text: '} '}) as any)
+            .returns(() => ({ range: new Range(1, 0, 1, 3), text: '} ' } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.lineAt(2))
-            .returns(() => ({range: new Range(2, 0, 2, 3), text: '   '}) as any)
+            .returns(() => ({ range: new Range(2, 0, 2, 3), text: '   ' } as any))
             .verifiable(typemoq.Times.atLeastOnce());
         document
             .setup(doc => doc.getText(typemoq.It.isAny()))
             .returns(() => '   ')
             .verifiable(typemoq.Times.atLeastOnce());
 
-        const isBeforeCursor =  helper.isCommaImmediatelyBeforeCursor(document.object, position);
+        const isBeforeCursor = helper.isCommaImmediatelyBeforeCursor(document.object, position);
 
         assert.ok(!isBeforeCursor);
         document.verifyAll();

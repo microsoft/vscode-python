@@ -77,19 +77,19 @@ suite('Linting - Linter Commands', () => {
             verify(manager.enableLintingAsync(anything(), anything())).never();
         }
     }
-    test('Enable linting should check if linting is enabled, and display current state of \'on\' and select nothing', async () => {
+    test("Enable linting should check if linting is enabled, and display current state of 'on' and select nothing", async () => {
         await testEnableLintingWithCurrentState(true, undefined);
     });
-    test('Enable linting should check if linting is enabled, and display current state of \'on\' and select \'on\'', async () => {
+    test("Enable linting should check if linting is enabled, and display current state of 'on' and select 'on'", async () => {
         await testEnableLintingWithCurrentState(true, 'on');
     });
-    test('Enable linting should check if linting is enabled, and display current state of \'on\' and select \'off\'', async () => {
+    test("Enable linting should check if linting is enabled, and display current state of 'on' and select 'off'", async () => {
         await testEnableLintingWithCurrentState(true, 'off');
     });
-    test('Enable linting should check if linting is enabled, and display current state of \'off\' and select \'on\'', async () => {
+    test("Enable linting should check if linting is enabled, and display current state of 'off' and select 'on'", async () => {
         await testEnableLintingWithCurrentState(true, 'on');
     });
-    test('Enable linting should check if linting is enabled, and display current state of \'off\' and select \'off\'', async () => {
+    test("Enable linting should check if linting is enabled, and display current state of 'off' and select 'off'", async () => {
         await testEnableLintingWithCurrentState(true, 'off');
     });
 

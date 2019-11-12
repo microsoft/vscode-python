@@ -59,7 +59,9 @@ suite('Virtual Environment Manager', () => {
     test('Get PyEnv Root from PYENV_ROOT', async () => {
         process
             .setup(p => p.env)
-            .returns(() => { return { PYENV_ROOT: 'yes' }; })
+            .returns(() => {
+                return { PYENV_ROOT: 'yes' };
+            })
             .verifiable(TypeMoq.Times.once());
 
         const pyenvRoot = await virtualEnvMgr.getPyEnvRoot();
@@ -71,7 +73,9 @@ suite('Virtual Environment Manager', () => {
     test('Get PyEnv Root from current PYENV_ROOT', async () => {
         process
             .setup(p => p.env)
-            .returns(() => { return {}; })
+            .returns(() => {
+                return {};
+            })
             .verifiable(TypeMoq.Times.once());
         processService
             .setup(p => p.exec(TypeMoq.It.isValue('pyenv'), TypeMoq.It.isValue(['root'])))
@@ -88,7 +92,9 @@ suite('Virtual Environment Manager', () => {
     test('Get default PyEnv Root path', async () => {
         process
             .setup(p => p.env)
-            .returns(() => { return {}; })
+            .returns(() => {
+                return {};
+            })
             .verifiable(TypeMoq.Times.once());
         processService
             .setup(p => p.exec(TypeMoq.It.isValue('pyenv'), TypeMoq.It.isValue(['root'])))
@@ -135,7 +141,8 @@ suite('Virtual Environment Manager', () => {
     test('Get Environment Type, detects pyenv', async () => {
         const pythonPath = path.join('py-env-root', 'b', 'c', 'python');
 
-        process.setup(p => p.env)
+        process
+            .setup(p => p.env)
             .returns(() => {
                 return { PYENV_ROOT: path.join('py-env-root', 'b') };
             })
@@ -150,7 +157,8 @@ suite('Virtual Environment Manager', () => {
     test('Get Environment Type, does not detect pyenv incorrectly', async () => {
         const pythonPath = path.join('a', 'b', 'c', 'python');
 
-        process.setup(p => p.env)
+        process
+            .setup(p => p.env)
             .returns(() => {
                 return { PYENV_ROOT: path.join('py-env-root', 'b') };
             })

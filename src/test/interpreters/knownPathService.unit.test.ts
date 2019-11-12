@@ -39,9 +39,11 @@ suite('Interpreters Known Paths', () => {
         pathUtils.setup(p => p.delimiter).returns(() => pathDelimiter);
         platformService.setup(p => p.isWindows).returns(() => true);
         platformService.setup(p => p.pathVariableName).returns(() => 'PATH');
-        currentProcess.setup(p => p.env).returns(() => {
-            return { PATH: pathsInPATHVar.join(pathDelimiter) };
-        });
+        currentProcess
+            .setup(p => p.env)
+            .returns(() => {
+                return { PATH: pathsInPATHVar.join(pathDelimiter) };
+            });
 
         const expectedPaths = [...pathsInPATHVar].filter(item => item.length > 0);
 
@@ -57,16 +59,17 @@ suite('Interpreters Known Paths', () => {
         pathUtils.setup(p => p.home).returns(() => homeDir);
         platformService.setup(p => p.isWindows).returns(() => false);
         platformService.setup(p => p.pathVariableName).returns(() => 'PATH');
-        currentProcess.setup(p => p.env).returns(() => {
-            return { PATH: '' };
-        });
+        currentProcess
+            .setup(p => p.env)
+            .returns(() => {
+                return { PATH: '' };
+            });
 
         const expectedPaths: string[] = [];
-        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin']
-            .forEach(p => {
-                expectedPaths.push(p);
-                expectedPaths.push(path.join(homeDir, p));
-            });
+        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach(p => {
+            expectedPaths.push(p);
+            expectedPaths.push(path.join(homeDir, p));
+        });
 
         expectedPaths.push(path.join(homeDir, 'anaconda', 'bin'));
         expectedPaths.push(path.join(homeDir, 'python', 'bin'));
@@ -84,16 +87,17 @@ suite('Interpreters Known Paths', () => {
         pathUtils.setup(p => p.home).returns(() => homeDir);
         platformService.setup(p => p.isWindows).returns(() => false);
         platformService.setup(p => p.pathVariableName).returns(() => 'PATH');
-        currentProcess.setup(p => p.env).returns(() => {
-            return { PATH: pathsInPATHVar.join(pathDelimiter) };
-        });
+        currentProcess
+            .setup(p => p.env)
+            .returns(() => {
+                return { PATH: pathsInPATHVar.join(pathDelimiter) };
+            });
 
         const expectedPaths = [...pathsInPATHVar].filter(item => item.length > 0);
-        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin']
-            .forEach(p => {
-                expectedPaths.push(p);
-                expectedPaths.push(path.join(homeDir, p));
-            });
+        ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach(p => {
+            expectedPaths.push(p);
+            expectedPaths.push(path.join(homeDir, p));
+        });
 
         expectedPaths.push(path.join(homeDir, 'anaconda', 'bin'));
         expectedPaths.push(path.join(homeDir, 'python', 'bin'));

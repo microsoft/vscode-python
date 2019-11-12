@@ -29,8 +29,7 @@ suite('Nuget Azure Storage Repository', () => {
         nugetService = typeMoq.Mock.ofType<INugetService>(undefined, typeMoq.MockBehavior.Strict);
         cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, typeMoq.MockBehavior.Strict);
 
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService)))
-            .returns(() => nugetService.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
     });
 
     class FakeBlobStore {
@@ -59,37 +58,23 @@ suite('Nuget Azure Storage Repository', () => {
     for (const [uri, setting, expected] of tests) {
         test(`Get all packages ("${uri}" / ${setting})`, async () => {
             if (uri.startsWith('https://')) {
-                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
-                    .returns(() => workspace.object);
-                workspace.setup(w => w.getConfiguration('http', undefined))
-                    .returns(() => cfg.object);
-                cfg.setup(c => c.get('proxyStrictSSL', true))
-                    .returns(() => setting);
+                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
+                workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
+                cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => setting);
             }
             const blobstore = new FakeBlobStore();
             // tslint:disable:no-object-literal-type-assertion
-            blobstore.results = [
-                { name: 'Azarath' } as BlobService.BlobResult,
-                { name: 'Metrion' } as BlobService.BlobResult,
-                { name: 'Zinthos' } as BlobService.BlobResult
-            ];
+            blobstore.results = [{ name: 'Azarath' } as BlobService.BlobResult, { name: 'Metrion' } as BlobService.BlobResult, { name: 'Zinthos' } as BlobService.BlobResult];
             // tslint:enable:no-object-literal-type-assertion
             const version = new SemVer('1.1.1');
             blobstore.results.forEach(r => {
-                nugetService.setup(n => n.getVersionFromPackageFileName(r.name))
-                    .returns(() => version);
+                nugetService.setup(n => n.getVersionFromPackageFileName(r.name)).returns(() => version);
             });
             let actualURI = '';
-            const repo = new AzureBlobStoreNugetRepository(
-                serviceContainer.object,
-                uri,
-                'spam',
-                'eggs',
-                async (uriArg) => {
-                    actualURI = uriArg;
-                    return blobstore;
-                }
-            );
+            const repo = new AzureBlobStoreNugetRepository(serviceContainer.object, uri, 'spam', 'eggs', async uriArg => {
+                actualURI = uriArg;
+                return blobstore;
+            });
 
             const packages = await repo.getPackages(packageName, undefined);
 
@@ -99,9 +84,7 @@ suite('Nuget Azure Storage Repository', () => {
                 { package: 'Zinthos', uri: 'eggs/spam/Zinthos', version: version }
             ]);
             expect(actualURI).to.equal(expected);
-            expect(blobstore.calls).to.deep.equal([
-                ['spam', packageName, undefined]
-            ], 'failed');
+            expect(blobstore.calls).to.deep.equal([['spam', packageName, undefined]], 'failed');
             serviceContainer.verifyAll();
             workspace.verifyAll();
             cfg.verifyAll();

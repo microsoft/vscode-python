@@ -52,7 +52,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         this.stateController = new NativeEditorStateController({
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode ? true : false,
-            baseTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : this.props.baseTheme,
+            baseTheme: getSettings && getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme,
             setState: this.setState.bind(this),
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
@@ -103,24 +103,22 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 setTimeout(() => this.focusCell(newCell, true, CursorPos.Top), 0);
             }
         };
-        const addCellLine = this.state.cellVMs.length === 0 ? null :
-            <AddCellLine includePlus={true} className='add-cell-line-top' click={insertAboveFirst} baseTheme={this.state.baseTheme}/>;
+        const addCellLine =
+            this.state.cellVMs.length === 0 ? null : <AddCellLine includePlus={true} className="add-cell-line-top" click={insertAboveFirst} baseTheme={this.state.baseTheme} />;
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
-                <div className='styleSetter'>
-                    <style>
-                        {this.state.rootCss}
-                    </style>
+            <div id="main-panel" ref={this.mainPanelRef} role="Main" style={dynamicFont}>
+                <div className="styleSetter">
+                    <style>{this.state.rootCss}</style>
                 </div>
-                <header id='main-panel-toolbar'>
+                <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.state.baseTheme)}
                 </section>
-                <main id='main-panel-content' onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
+                <main id="main-panel-content" onScroll={this.onContentScroll} ref={this.contentPanelScrollRef}>
                     {addCellLine}
                     {this.renderContentPanel(this.state.baseTheme)}
                 </main>
@@ -135,11 +133,11 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             setTimeout(() => {
                 // First we have to give ourselves focus (so that focus actually ends up in the code cell)
                 if (this.mainPanelRef && this.mainPanelRef.current) {
-                    this.mainPanelRef.current.focus({preventScroll: true});
+                    this.mainPanelRef.current.focus({ preventScroll: true });
                 }
             }, 100);
         }
-    }
+    };
 
     private scrollToCell(_id: string) {
         // Not used in the native editor
@@ -152,7 +150,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
             this.focusCell(cellId, focusCode ? true : false, cursorPos);
         }
-    }
+    };
 
     private selectCell = (id: string, focusCode: boolean, cursorPos: CursorPos) => {
         // Check to see that this cell already exists in our window (it's part of the rendered state)
@@ -166,7 +164,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         // Then wait to give it actual input focus. The cell may not exist yet so we can't just
         // force focus immediately.
         setTimeout(() => this.moveSelectionToExisting(id, focusCode, cursorPos), 1);
-    }
+    };
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
@@ -194,9 +192,9 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             this.stateController.toggleVariableExplorer();
             this.stateController.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');
         };
-        const variableExplorerTooltip = this.state.variablesVisible ?
-            getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
-            getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+        const variableExplorerTooltip = this.state.variablesVisible
+            ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
+            : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
         const runAbove = () => {
             if (currentCell) {
@@ -220,40 +218,80 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         }
 
         return (
-            <div id='toolbar-panel'>
-                <div className='toolbar-menu-bar'>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.RunAll} />
+            <div id="toolbar-panel">
+                <div className="toolbar-menu-bar">
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={runAll} className="native-button" tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.RunAll} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} className='native-button' tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={runAbove}
+                        disabled={!canRunAbove}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAbove} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} className='native-button' tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={runBelow}
+                        disabled={!canRunBelow}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunBelow} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Restart} />
+                    <ImageButton
+                        baseTheme={this.state.baseTheme}
+                        onClick={this.stateController.restartKernel}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                    >
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Restart} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
+                    <ImageButton
+                        baseTheme={this.state.baseTheme}
+                        onClick={this.stateController.interruptKernel}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                    >
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={addCell} className="native-button" tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.clearAllOutputs} disabled={!this.stateController.canClearAllOutputs} className='native-button' tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ClearAllOutput} />
+                    <ImageButton
+                        baseTheme={this.state.baseTheme}
+                        onClick={this.stateController.clearAllOutputs}
+                        disabled={!this.stateController.canClearAllOutputs}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}
+                    >
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.ClearAllOutput} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                    <ImageButton baseTheme={this.state.baseTheme} onClick={toggleVariableExplorer} className="native-button" tooltip={variableExplorerTooltip}>
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.saveFromToolbar} disabled={!this.state.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
+                    <ImageButton
+                        baseTheme={this.state.baseTheme}
+                        onClick={this.saveFromToolbar}
+                        disabled={!this.state.dirty}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.save', 'Save File')}
+                    >
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} className='native-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
+                    <ImageButton
+                        baseTheme={this.state.baseTheme}
+                        onClick={this.stateController.export}
+                        disabled={!this.stateController.canExport()}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
+                    >
+                        <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.ExportToPython} />
                     </ImageButton>
                 </div>
-                <div className='toolbar-divider'/>
+                <div className="toolbar-divider" />
             </div>
         );
     }
@@ -261,7 +299,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     private saveFromToolbar = () => {
         this.stateController.save();
         this.stateController.sendCommand(NativeCommandType.Save, 'mouse');
-    }
+    };
 
     private renderVariablePanel(baseTheme: string) {
         if (this.state.variablesVisible) {
@@ -281,7 +319,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
         // Otherwise render our cells.
         const contentProps = this.getContentProps(baseTheme);
-        return <ContentPanel {...contentProps} ref={this.contentPanelRef}/>;
+        return <ContentPanel {...contentProps} ref={this.contentPanelRef} />;
     }
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
@@ -297,28 +335,28 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             renderCell: this.renderCell,
             scrollToBottom: this.scrollDiv
         };
-    }
+    };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
-       return {
-        variables: this.state.variables,
-        pendingVariableCount: this.state.pendingVariableCount,
-        debugging: this.state.debugging,
-        busy: this.state.busy,
-        showDataExplorer: this.stateController.showDataViewer,
-        skipDefault: this.props.skipDefault,
-        testMode: this.props.testMode,
-        closeVariableExplorer: this.stateController.toggleVariableExplorer,
-        baseTheme: baseTheme
-       };
-    }
+        return {
+            variables: this.state.variables,
+            pendingVariableCount: this.state.pendingVariableCount,
+            debugging: this.state.debugging,
+            busy: this.state.busy,
+            showDataExplorer: this.stateController.showDataViewer,
+            skipDefault: this.props.skipDefault,
+            testMode: this.props.testMode,
+            closeVariableExplorer: this.stateController.toggleVariableExplorer,
+            baseTheme: baseTheme
+        };
+    };
 
     private onContentScroll = (_event: React.UIEvent<HTMLDivElement>) => {
         if (this.contentPanelScrollRef.current) {
             this.debounceUpdateVisibleCells();
         }
-    }
+    };
 
-    private updateVisibleCells()  {
+    private updateVisibleCells() {
         if (this.contentPanelScrollRef.current && this.cellContainerRefs.size !== 0) {
             const visibleTop = this.contentPanelScrollRef.current.offsetTop + this.contentPanelScrollRef.current.scrollTop;
             const visibleBottom = visibleTop + this.contentPanelScrollRef.current.clientHeight;
@@ -338,7 +376,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                         } else if (bottom < visibleTop) {
                             continue;
                         } else {
-                            cellVMs[i] = {...cellVM, useQuickEdit: false };
+                            cellVMs[i] = { ...cellVM, useQuickEdit: false };
                             makeChange = true;
                         }
                     }
@@ -347,7 +385,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
 
             // update our state so that newly visible items appear
             if (makeChange) {
-                this.setState({cellVMs});
+                this.setState({ cellVMs });
             }
         }
     }
@@ -368,7 +406,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
             default:
                 break;
         }
-    }
+    };
 
     // private copyToClipboard = (cellId: string) => {
     //     const cell = this.stateController.findCell(cellId);
@@ -403,7 +441,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
     // }
 
     private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
-        const cellRef : React.RefObject<NativeCell> = React.createRef<NativeCell>();
+        const cellRef: React.RefObject<NativeCell> = React.createRef<NativeCell>();
         const containerRef = React.createRef<HTMLDivElement>();
         this.cellRefs.set(cellVM.cell.id, cellRef);
         this.cellContainerRefs.set(cellVM.cell.id, containerRef);
@@ -415,12 +453,8 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 setTimeout(() => this.focusCell(newCell, true, CursorPos.Top), 0);
             }
         };
-        const lastLine = index === this.state.cellVMs.length - 1 ?
-            <AddCellLine
-                includePlus={true}
-                baseTheme={this.state.baseTheme}
-                className='add-cell-line-cell'
-                click={addNewCell} /> : null;
+        const lastLine =
+            index === this.state.cellVMs.length - 1 ? <AddCellLine includePlus={true} baseTheme={this.state.baseTheme} className="add-cell-line-cell" click={addNewCell} /> : null;
 
         // Special case, see if our initial load is finally complete.
         if (this.state.loadTotal && this.cellRefs.size >= this.state.loadTotal && !this.initialVisibilityUpdate) {
@@ -433,7 +467,7 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 <ErrorBoundary>
                     <NativeCell
                         ref={cellRef}
-                        role='listitem'
+                        role="listitem"
                         stateController={this.stateController}
                         maxTextSize={getSettings().maxOutputSize}
                         autoFocus={false}
@@ -449,8 +483,9 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                     />
                 </ErrorBoundary>
                 {lastLine}
-            </div>);
-    }
+            </div>
+        );
+    };
 
     private focusCell = (cellId: string, focusCode: boolean, cursorPos: CursorPos): void => {
         this.stateController.selectCell(cellId, focusCode ? cellId : undefined);
@@ -458,16 +493,16 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
         if (ref && ref.current) {
             ref.current.giveFocus(focusCode, cursorPos);
         }
-    }
+    };
 
     private scrollDiv = (_div: HTMLDivElement) => {
         if (this.state.newCellId) {
             const newCell = this.state.newCellId;
-            this.stateController.setState({newCell: undefined});
+            this.stateController.setState({ newCell: undefined });
             // Bounce this so state has time to update.
             setTimeout(() => {
                 this.focusCell(newCell, true, CursorPos.Current);
             }, 0);
         }
-    }
+    };
 }

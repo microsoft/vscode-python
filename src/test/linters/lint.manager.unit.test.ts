@@ -97,5 +97,4 @@ suite('Lint Manager Unit Tests', () => {
         // test expectations
         expect(lm.enableUnconfiguredLintersCallCount).to.equal(expectedCallCount);
     });
-
 });

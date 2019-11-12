@@ -96,15 +96,18 @@ suite('FileSystem', () => {
         expect(tempFile.filePath).to.not.equal(tempFile2.filePath, 'Temp files must be unique, implementation of createTemporaryFile is off.');
     });
     test('Ensure writing to a temp file is supported via file stream', async () => {
-        await fileSystem.createTemporaryFile('.tmp').then((tf: TemporaryFile) => {
-            expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
-            const writeStream = fileSystem.createWriteStream(tf.filePath);
-            writeStream.write('hello', 'utf8', (err: Error | null | undefined) => {
-                expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
-            });
-        }, (failReason) => {
-            expect(failReason).to.equal('No errors occurred', `Failed to create a temporary file with error ${failReason}`);
-        });
+        await fileSystem.createTemporaryFile('.tmp').then(
+            (tf: TemporaryFile) => {
+                expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
+                const writeStream = fileSystem.createWriteStream(tf.filePath);
+                writeStream.write('hello', 'utf8', (err: Error | null | undefined) => {
+                    expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
+                });
+            },
+            failReason => {
+                expect(failReason).to.equal('No errors occurred', `Failed to create a temporary file with error ${failReason}`);
+            }
+        );
     });
     test('Ensure chmod works against a temporary file', async () => {
         await fileSystem.createTemporaryFile('.tmp').then(async (fl: TemporaryFile) => {
@@ -112,9 +115,10 @@ suite('FileSystem', () => {
                 (_success: void) => {
                     // cannot check for success other than we got here, chmod in Windows won't have any effect on the file itself.
                 },
-                (failReason) => {
+                failReason => {
                     expect(failReason).to.equal('There was no error using chmod', `Failed to perform chmod operation successfully, got error ${failReason}`);
-                });
+                }
+            );
         });
     });
     test('Getting hash for non existent file should throw error', async () => {

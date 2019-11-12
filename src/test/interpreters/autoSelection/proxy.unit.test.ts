@@ -14,14 +14,14 @@ import { PythonInterpreter } from '../../../client/interpreter/contracts';
 suite('Interpreters - Auto Selection Proxy', () => {
     class InstanceClass implements IInterpreterAutoSeletionProxyService {
         public eventEmitter = new EventEmitter<void>();
-        constructor(private readonly pythonPath: string = '') { }
+        constructor(private readonly pythonPath: string = '') {}
         public get onDidChangeAutoSelectedInterpreter(): Event<void> {
             return this.eventEmitter.event;
         }
         public getAutoSelectedInterpreter(_resource: Uri): PythonInterpreter {
             return { path: this.pythonPath } as any;
         }
-        public async setWorkspaceInterpreter(_resource: Uri, _interpreter: PythonInterpreter | undefined): Promise<void>{
+        public async setWorkspaceInterpreter(_resource: Uri, _interpreter: PythonInterpreter | undefined): Promise<void> {
             return;
         }
     }
@@ -36,7 +36,7 @@ suite('Interpreters - Auto Selection Proxy', () => {
         proxy.registerInstance(obj);
         let eventRaised = false;
 
-        proxy.onDidChangeAutoSelectedInterpreter(() => eventRaised = true);
+        proxy.onDidChangeAutoSelectedInterpreter(() => (eventRaised = true));
         proxy.registerInstance(obj);
 
         obj.eventEmitter.fire();
@@ -58,6 +58,5 @@ suite('Interpreters - Auto Selection Proxy', () => {
 
             expect(value).to.be.deep.equal({ path: pythonPath });
         });
-
     });
 });

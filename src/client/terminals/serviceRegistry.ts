@@ -27,8 +27,5 @@ export function registerTypes(serviceManager: IServiceRegistry) {
 
     serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation);
 
-    serviceManager.addSingleton<IExtensionSingleActivationService>(
-        IExtensionSingleActivationService,
-        ExtensionActivationForTerminalActivation
-    );
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionActivationForTerminalActivation);
 }

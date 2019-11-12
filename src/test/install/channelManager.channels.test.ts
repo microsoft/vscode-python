@@ -99,7 +99,9 @@ suite('Installation - installation channels', () => {
             .callback((i: string[], _o: QuickPickOptions) => {
                 items = i;
             })
-            .returns(() => new Promise<string | undefined>((resolve, _reject) => resolve(undefined)));
+            .returns(
+                () => new Promise<string | undefined>((resolve, _reject) => resolve(undefined))
+            );
 
         installer1.setup(x => x.displayName).returns(() => 'Name 1');
         installer2.setup(x => x.displayName).returns(() => 'Name 2');
@@ -117,8 +119,10 @@ suite('Installation - installation channels', () => {
         const installer = TypeMoq.Mock.ofType<IModuleInstaller>();
         installer
             .setup(x => x.isSupported(TypeMoq.It.isAny()))
-            .returns(() => new Promise<boolean>((resolve) => resolve(supported)));
-        installer.setup(x => x.priority).returns(() => priority ? priority : 0);
+            .returns(
+                () => new Promise<boolean>(resolve => resolve(supported))
+            );
+        installer.setup(x => x.priority).returns(() => (priority ? priority : 0));
         serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, installer.object, name);
         return installer;
     }

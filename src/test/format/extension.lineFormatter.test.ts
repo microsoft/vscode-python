@@ -1,4 +1,3 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
@@ -31,20 +30,16 @@ suite('Formatting - line formatter', () => {
         testFormatLine('x[1: 30]', 'x[1:30]');
     });
     test('Colon slices in arguments', () => {
-        testFormatLine('spam ( ham[ 1 :3], {eggs : 2})',
-            'spam(ham[1:3], {eggs: 2})');
+        testFormatLine('spam ( ham[ 1 :3], {eggs : 2})', 'spam(ham[1:3], {eggs: 2})');
     });
     test('Colon slices with double colon', () => {
-        testFormatLine('ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]',
-            'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]');
+        testFormatLine('ham [1:9 ], ham[ 1: 9:   3], ham[: 9 :3], ham[1: :3], ham [ 1: 9:]', 'ham[1:9], ham[1:9:3], ham[:9:3], ham[1::3], ham[1:9:]');
     });
     test('Colon slices with operators', () => {
-        testFormatLine('ham [lower+ offset :upper+offset]',
-            'ham[lower + offset:upper + offset]');
+        testFormatLine('ham [lower+ offset :upper+offset]', 'ham[lower + offset:upper + offset]');
     });
     test('Colon slices with functions', () => {
-        testFormatLine('ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]',
-            'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
+        testFormatLine('ham[ : upper_fn ( x) : step_fn(x )], ham[ :: step_fn(x)]', 'ham[:upper_fn(x):step_fn(x)], ham[::step_fn(x)]');
     });
     test('Colon in for loop', () => {
         testFormatLine('for index in  range( len(fruits) ): ', 'for index in range(len(fruits)):');
@@ -151,15 +146,16 @@ suite('Formatting - line formatter', () => {
         testFormatMultiline('z=foo (0 , x= 1, (3+7) , y , z )', 0, 'z = foo(0, x=1, (3 + 7), y, z)');
         testFormatMultiline('foo (0,\n x= 1,', 1, ' x=1,');
         testFormatMultiline(
-// tslint:disable-next-line:no-multiline-string
-`async def fetch():
+            // tslint:disable-next-line:no-multiline-string
+            `async def fetch():
   async with aiohttp.ClientSession() as session:
     async with session.ws_connect(
-        "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`, 3,
-            '        "http://127.0.0.1:8000/", headers=cookie) as ws:  # add unwanted spaces');
+        "http://127.0.0.1:8000/", headers = cookie) as ws: # add unwanted spaces`,
+            3,
+            '        "http://127.0.0.1:8000/", headers=cookie) as ws:  # add unwanted spaces'
+        );
         testFormatMultiline('def pos0key1(*, key): return key\npos0key1(key= 100)', 1, 'pos0key1(key=100)');
-        testFormatMultiline('def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)', 1,
-            '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)');
+        testFormatMultiline('def test_string_literals(self):\n  x= 1; y =2; self.assertTrue(len(x) == 0 and x == y)', 1, '  x = 1; y = 2; self.assertTrue(len(x) == 0 and x == y)');
     });
     test('Grammar file', () => {
         const content = fs.readFileSync(grammarFile).toString('utf8');
@@ -185,35 +181,41 @@ suite('Formatting - line formatter', () => {
         const lines = content.splitLines({ trim: false, removeEmptyEntries: false });
 
         const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup(x => x.lineAt(TypeMoq.It.isAnyNumber())).returns(n => {
-            const line = TypeMoq.Mock.ofType<TextLine>();
-            line.setup(x => x.text).returns(() => lines[n]);
-            line.setup(x => x.range).returns(() => new Range(new Position(n, 0), new Position(n, lines[n].length)));
-            return line.object;
-        });
-        document.setup(x => x.getText(TypeMoq.It.isAny())).returns(o => {
-            const r = o as Range;
-            const bits: string[] = [];
+        document
+            .setup(x => x.lineAt(TypeMoq.It.isAnyNumber()))
+            .returns(n => {
+                const line = TypeMoq.Mock.ofType<TextLine>();
+                line.setup(x => x.text).returns(() => lines[n]);
+                line.setup(x => x.range).returns(() => new Range(new Position(n, 0), new Position(n, lines[n].length)));
+                return line.object;
+            });
+        document
+            .setup(x => x.getText(TypeMoq.It.isAny()))
+            .returns(o => {
+                const r = o as Range;
+                const bits: string[] = [];
 
-            if (r.start.line === r.end.line) {
-                return lines[r.start.line].substring(r.start.character, r.end.character);
-            }
+                if (r.start.line === r.end.line) {
+                    return lines[r.start.line].substring(r.start.character, r.end.character);
+                }
 
-            bits.push(lines[r.start.line].substr(r.start.character));
-            for (let i = r.start.line + 1; i < r.end.line; i += 1) {
-                bits.push(lines[i]);
-            }
-            bits.push(lines[r.end.line].substring(0, r.end.character));
-            return bits.join('\n');
-        });
-        document.setup(x => x.offsetAt(TypeMoq.It.isAny())).returns(o => {
-            const p = o as Position;
-            let offset = 0;
-            for (let i = 0; i < p.line; i += 1) {
-                offset += lines[i].length + 1; // Accounting for the line break
-            }
-            return offset + p.character;
-        });
+                bits.push(lines[r.start.line].substr(r.start.character));
+                for (let i = r.start.line + 1; i < r.end.line; i += 1) {
+                    bits.push(lines[i]);
+                }
+                bits.push(lines[r.end.line].substring(0, r.end.character));
+                return bits.join('\n');
+            });
+        document
+            .setup(x => x.offsetAt(TypeMoq.It.isAny()))
+            .returns(o => {
+                const p = o as Position;
+                let offset = 0;
+                for (let i = 0; i < p.line; i += 1) {
+                    offset += lines[i].length + 1; // Accounting for the line break
+                }
+                return offset + p.character;
+            });
 
         return formatter.formatLine(document.object, lineNumber);
     }

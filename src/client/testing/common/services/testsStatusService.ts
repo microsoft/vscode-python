@@ -11,7 +11,7 @@ import { ITestCollectionStorageService, ITestsStatusUpdaterService, Tests, TestS
 
 @injectable()
 export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
-    constructor(@inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService) { }
+    constructor(@inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService) {}
     public updateStatusAsDiscovering(resource: Uri, tests?: Tests): void {
         if (!tests) {
             return;
@@ -53,21 +53,14 @@ export class TestsStatusUpdaterService implements ITestsStatusUpdaterService {
                 this.storage.update(resource, item);
             }
         };
-        const failedItems = [
-            ...tests.testFunctions.map(f => f.testFunction).filter(predicate),
-            ...tests.testSuites.map(f => f.testSuite).filter(predicate)
-        ];
+        const failedItems = [...tests.testFunctions.map(f => f.testFunction).filter(predicate), ...tests.testSuites.map(f => f.testSuite).filter(predicate)];
         failedItems.forEach(failedItem => visitRecursive(tests, failedItem, visitor));
     }
     public updateStatusAsRunningSpecificTests(resource: Uri, testsToRun: TestsToRun, tests?: Tests): void {
         if (!tests) {
             return;
         }
-        const itemsRunning = [
-            ...(testsToRun.testFile || []),
-            ...(testsToRun.testSuite || []),
-            ...(testsToRun.testFunction || [])
-        ];
+        const itemsRunning = [...(testsToRun.testFile || []), ...(testsToRun.testSuite || []), ...(testsToRun.testFunction || [])];
         const visitor = (item: TestDataItem) => {
             item.status = TestStatus.Running;
             this.storage.update(resource, item);

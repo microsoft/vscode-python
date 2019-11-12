@@ -54,7 +54,8 @@ export namespace vscMockArrays {
      * @returns the least x for which p(x) is true or array.length if no element fullfills the given function.
      */
     export function findFirst<T>(array: T[], p: (x: T) => boolean): number {
-        let low = 0, high = array.length;
+        let low = 0,
+            high = array.length;
         if (high === 0) {
             return 0; // no children
         }
@@ -126,9 +127,10 @@ export namespace vscMockArrays {
         return result;
     }
 
-    type IMutableSplice<T> = Array<T> & any & {
-        deleteCount: number;
-    }
+    type IMutableSplice<T> = Array<T> &
+        any & {
+            deleteCount: number;
+        };
     type ISplice<T> = Array<T> & any;
 
     /**
@@ -193,7 +195,7 @@ export namespace vscMockArrays {
      * @param after
      * @param compare
      */
-    export function delta<T>(before: T[], after: T[], compare: (a: T, b: T) => number): { removed: T[], added: T[] } {
+    export function delta<T>(before: T[], after: T[], compare: (a: T, b: T) => number): { removed: T[]; added: T[] } {
         const splices = sortedDiff(before, after, compare);
         const removed: T[] = [];
         const added: T[] = [];
@@ -274,7 +276,7 @@ export namespace vscMockArrays {
         }
 
         const seen: Record<string, boolean> = Object.create(null);
-        return array.filter((elem) => {
+        return array.filter(elem => {
             const key = keyFn(elem);
             if (seen[key]) {
                 return false;

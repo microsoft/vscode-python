@@ -29,13 +29,7 @@ import { UnitTestIocContainer } from './serviceRegistry';
 use(chaiAsPromised);
 
 const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'testFiles', 'debuggerTest');
-const defaultUnitTestArgs = [
-    '-v',
-    '-s',
-    '.',
-    '-p',
-    '*test*.py'
-];
+const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - debugging', () => {
@@ -104,18 +98,17 @@ suite('Unit Tests - debugging', () => {
         const runningPromise = testManager.runTest(CommandSource.commandPalette, { testFunction }, false, true);
 
         // This promise should never resolve nor reject.
-        runningPromise
-            .then(() => deferred.reject('Debugger stopped when it shouldn\'t have'))
-            .catch(error => deferred.reject(error));
+        runningPromise.then(() => deferred.reject("Debugger stopped when it shouldn't have")).catch(error => deferred.reject(error));
 
         mockDebugLauncher.launched
-            .then((launched) => {
+            .then(launched => {
                 if (launched) {
                     deferred.resolve('');
                 } else {
                     deferred.reject('Debugger not launched');
                 }
-            }).catch(error => deferred.reject(error));
+            })
+            .catch(error => deferred.reject(error));
 
         await deferred.promise;
     }
@@ -193,8 +186,8 @@ suite('Unit Tests - debugging', () => {
 
         // This promise should never resolve nor reject.
         runningPromise
-            .then(() => 'Debugger stopped when it shouldn\'t have')
-            .catch(() => 'Debugger crashed when it shouldn\'t have')
+            .then(() => "Debugger stopped when it shouldn't have")
+            .catch(() => "Debugger crashed when it shouldn't have")
             // tslint:disable-next-line: no-floating-promises
             .then(error => {
                 deferred.reject(error);

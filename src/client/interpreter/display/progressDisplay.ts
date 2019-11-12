@@ -16,9 +16,11 @@ import { IInterpreterLocatorProgressHandler, IInterpreterLocatorProgressService 
 export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLocatorProgressHandler {
     private deferred: Deferred<void> | undefined;
     private isFirstTimeLoadingInterpreters = true;
-    constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell,
+    constructor(
+        @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IInterpreterLocatorProgressService) private readonly progressService: IInterpreterLocatorProgressService,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]) { }
+        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
+    ) {}
     public register() {
         this.progressService.onRefreshing(() => this.showProgress(), this, this.disposables);
         this.progressService.onRefreshed(() => this.hideProgress(), this, this.disposables);

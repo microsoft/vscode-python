@@ -72,9 +72,7 @@ suite('Data Science - Native Editor Provider', () => {
             .setup(e => e.show())
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.exactly(invocationCount));
-        editor
-            .setup(e => e.file)
-            .returns(() => file);
+        editor.setup(e => e.file).returns(() => file);
 
         return new NativeEditorProvider(
             instance(svcContainer),

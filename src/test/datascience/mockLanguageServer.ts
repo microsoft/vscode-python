@@ -32,5 +32,4 @@ export class MockLanguageServer implements ILanguageServer {
     public dispose(): void | undefined {
         this.mockLanguageClient = undefined;
     }
-
 }

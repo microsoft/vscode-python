@@ -31,7 +31,7 @@ suite('Debugging - Configuration Service', () => {
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
         // tslint:disable-next-line:no-unnecessary-override
-        public async  pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
+        public async pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
             return super.pickDebugConfiguration(input, state);
         }
     }
@@ -41,13 +41,12 @@ suite('Debugging - Configuration Service', () => {
         multiStepFactory = typemoq.Mock.ofType<IMultiStepInputFactory>();
         providerFactory = mock(DebugConfigurationProviderFactory);
         fs = mock(FileSystem);
-        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object,
-            instance(providerFactory), multiStepFactory.object, instance(fs));
+        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory), multiStepFactory.object, instance(fs));
     });
     test('Should use attach resolver when passing attach config', async () => {
-        const config = {
+        const config = ({
             request: 'attach'
-        } as any as AttachRequestArguments;
+        } as any) as AttachRequestArguments;
         const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         const expectedConfig = { yay: 1 };
 
@@ -55,9 +54,7 @@ suite('Debugging - Configuration Service', () => {
             .setup(a => a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config), typemoq.It.isAny()))
             .returns(() => Promise.resolve(expectedConfig as any))
             .verifiable(typemoq.Times.once());
-        launchResolver
-            .setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
-            .verifiable(typemoq.Times.never());
+        launchResolver.setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.never());
 
         const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
 
@@ -65,20 +62,16 @@ suite('Debugging - Configuration Service', () => {
         attachResolver.verifyAll();
         launchResolver.verifyAll();
     });
-    [
-        { request: 'launch' }, { request: undefined }
-    ].forEach(config => {
+    [{ request: 'launch' }, { request: undefined }].forEach(config => {
         test(`Should use launch resolver when passing launch config with request=${config.request}`, async () => {
             const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
             const expectedConfig = { yay: 1 };
 
             launchResolver
-                .setup(a => a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue(config as any as LaunchRequestArguments), typemoq.It.isAny()))
+                .setup(a => a.resolveDebugConfiguration(typemoq.It.isValue(folder), typemoq.It.isValue((config as any) as LaunchRequestArguments), typemoq.It.isAny()))
                 .returns(() => Promise.resolve(expectedConfig as any))
                 .verifiable(typemoq.Times.once());
-            attachResolver
-                .setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
-                .verifiable(typemoq.Times.never());
+            attachResolver.setup(a => a.resolveDebugConfiguration(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).verifiable(typemoq.Times.never());
 
             const resolvedConfig = await configService.resolveDebugConfiguration(folder, config as any);
 
@@ -89,7 +82,7 @@ suite('Debugging - Configuration Service', () => {
     });
     test('Picker should be displayed', async () => {
         // tslint:disable-next-line:no-object-literal-type-assertion
-        const state = { configs: [], folder: {}, token: undefined } as any as DebugConfigurationState;
+        const state = ({ configs: [], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
             .setup(i => i.showQuickPick(typemoq.It.isAny()))
@@ -102,7 +95,7 @@ suite('Debugging - Configuration Service', () => {
     });
     test('Existing Configuration items must be removed before displaying picker', async () => {
         // tslint:disable-next-line:no-object-literal-type-assertion
-        const state = { configs: [1, 2, 3], folder: {}, token: undefined } as any as DebugConfigurationState;
+        const state = ({ configs: [1, 2, 3], folder: {}, token: undefined } as any) as DebugConfigurationState;
         const multiStepInput = typemoq.Mock.ofType<IMultiStepInput<DebugConfigurationState>>();
         multiStepInput
             .setup(i => i.showQuickPick(typemoq.It.isAny()))

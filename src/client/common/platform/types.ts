@@ -8,7 +8,8 @@ import { Disposable, FileStat } from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
-    HKCU, HKLM
+    HKCU,
+    HKLM
 }
 
 export const IRegistry = Symbol('IRegistry');

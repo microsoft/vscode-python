@@ -20,7 +20,8 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     private totalGetCodeLensCalls: number = 0;
     private activeCodeWatchers: ICodeWatcher[] = [];
     private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IDebugLocationTracker) private debugLocationTracker: IDebugLocationTracker,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(IConfigurationService) private configuration: IConfigurationService,
@@ -124,7 +125,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         } else {
             return lenses.filter(lens => {
                 if (lens.command) {
-                    return !(debugCellList.includes(lens.command.command));
+                    return !debugCellList.includes(lens.command.command);
                 }
                 return false;
             });

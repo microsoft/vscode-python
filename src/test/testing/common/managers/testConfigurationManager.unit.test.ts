@@ -45,15 +45,14 @@ suite('Unit Test Configuration Manager (unit)', () => {
             });
 
             test('Enabling a test product shoud disable other products', async () => {
-                UNIT_TEST_PRODUCTS.filter(item => item !== product)
-                    .forEach(productToDisable => {
-                        configService.setup(c => c.disable(TypeMoq.It.isValue(workspaceUri),
-                            TypeMoq.It.isValue(productToDisable)))
-                            .returns(() => Promise.resolve(undefined))
-                            .verifiable(TypeMoq.Times.once());
-                    });
-                configService.setup(c => c.enable(TypeMoq.It.isValue(workspaceUri),
-                    TypeMoq.It.isValue(product)))
+                UNIT_TEST_PRODUCTS.filter(item => item !== product).forEach(productToDisable => {
+                    configService
+                        .setup(c => c.disable(TypeMoq.It.isValue(workspaceUri), TypeMoq.It.isValue(productToDisable)))
+                        .returns(() => Promise.resolve(undefined))
+                        .verifiable(TypeMoq.Times.once());
+                });
+                configService
+                    .setup(c => c.enable(TypeMoq.It.isValue(workspaceUri), TypeMoq.It.isValue(product)))
                     .returns(() => Promise.resolve(undefined))
                     .verifiable(TypeMoq.Times.once());
 

@@ -31,7 +31,7 @@ suite('Terminal Provider', () => {
         try {
             terminalProvider.dispose();
             // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {}
     });
 
     test('Ensure command is registered', () => {
@@ -52,10 +52,12 @@ suite('Terminal Provider', () => {
     test('Ensure terminal is created and displayed when command is invoked', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
         workspace.setup(w => w.workspaceFolders).returns(() => undefined);
 
@@ -74,10 +76,12 @@ suite('Terminal Provider', () => {
     test('Ensure terminal creation does not use uri of the active documents which is untitled', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         const editor = TypeMoq.Mock.ofType<TextEditor>();
         documentManager.setup(d => d.activeTextEditor).returns(() => editor.object);
         const document = TypeMoq.Mock.ofType<TextDocument>();
@@ -100,10 +104,12 @@ suite('Terminal Provider', () => {
     test('Ensure terminal creation uses uri of active document', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         const editor = TypeMoq.Mock.ofType<TextEditor>();
         documentManager.setup(d => d.activeTextEditor).returns(() => editor.object);
         const document = TypeMoq.Mock.ofType<TextDocument>();
@@ -128,10 +134,12 @@ suite('Terminal Provider', () => {
     test('Ensure terminal creation uses uri of active workspace', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
         const workspaceUri = Uri.file('a');
         const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();

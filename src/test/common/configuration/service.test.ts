@@ -35,6 +35,6 @@ suite('Configuration Service', () => {
         };
         asyncRegistry.push(disposable);
         await asyncRegistry.dispose();
-        expect(disposed).to.be.equal(true, 'Didn\'t dispose during async registry cleanup');
+        expect(disposed).to.be.equal(true, "Didn't dispose during async registry cleanup");
     });
 });

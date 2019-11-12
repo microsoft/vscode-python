@@ -17,9 +17,12 @@ suite('Terminal Base Activator', () => {
 
     setup(() => {
         helper = TypeMoq.Mock.ofType<ITerminalHelper>();
-        activator = new class extends BaseTerminalActivator {
-            public waitForCommandToProcess() { noop(); return Promise.resolve(); }
-        }(helper.object) as any as ITerminalActivator;
+        activator = (new (class extends BaseTerminalActivator {
+            public waitForCommandToProcess() {
+                noop();
+                return Promise.resolve();
+            }
+        })(helper.object) as any) as ITerminalActivator;
     });
     [
         { commandCount: 1, preserveFocus: false },

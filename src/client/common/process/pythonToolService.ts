@@ -9,7 +9,7 @@ import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, IPyth
 
 @injectable()
 export class PythonToolExecutionService implements IPythonToolExecutionService {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     public async execObservable(executionInfo: ExecutionInfo, options: SpawnOptions, resource: Uri): Promise<ObservableExecutionResult<string>> {
         if (options.env) {
             throw new Error('Environment variables are not supported');

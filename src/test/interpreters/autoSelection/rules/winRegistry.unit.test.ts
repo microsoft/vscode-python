@@ -50,12 +50,11 @@ suite('Interpreters - Auto Selection - Windows Registry Rule', () => {
         platform = mock(PlatformService);
 
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new WindowsRegistryInterpretersAutoSelectionRuleTest(instance(fs), instance(helper),
-            instance(stateFactory), instance(platform), instance(locator));
+        rule = new WindowsRegistryInterpretersAutoSelectionRuleTest(instance(fs), instance(helper), instance(stateFactory), instance(platform), instance(locator));
     });
 
     getNamesAndValues<OSType>(OSType).forEach(osType => {
-        test(`Invoke next rule if platform is not windows (${osType.name})`, async function () {
+        test(`Invoke next rule if platform is not windows (${osType.name})`, async function() {
             const manager = mock(InterpreterAutoSelectionService);
             if (osType.value === OSType.Windows) {
                 return this.skip();

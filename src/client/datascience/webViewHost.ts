@@ -36,7 +36,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() protected themeFinder: IThemeFinder,
         @unmanaged() protected workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
-        @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
+        @unmanaged()
+        messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
         @unmanaged() private mainScriptPath: string,
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn
@@ -178,7 +179,7 @@ export class WebViewHost<IMapping> implements IDisposable {
                     fontLigatures: this.getValue(editor, 'fontLigatures', false)
                 },
                 fontSize: this.getValue(editor, 'fontSize', 14),
-                fontFamily: this.getValue(editor, 'fontFamily', 'Consolas, \'Courier New\', monospace'),
+                fontFamily: this.getValue(editor, 'fontFamily', "Consolas, 'Courier New', monospace"),
                 theme: theme
             },
             intellisenseOptions: {
@@ -216,7 +217,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.onViewStateChanged(isVisible, isActive);
         this.viewState.visible = isVisible;
         this.viewState.active = isActive;
-    }
+    };
 
     @captureTelemetry(Telemetry.WebviewStyleUpdate)
     private async handleCssRequest(request: IGetCssRequest): Promise<void> {
@@ -250,7 +251,8 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     // Post a message to our webpanel and update our new datascience settings
     private onPossibleSettingsChange = (event: ConfigurationChangeEvent) => {
-        if (event.affectsConfiguration('workbench.colorTheme') ||
+        if (
+            event.affectsConfiguration('workbench.colorTheme') ||
             event.affectsConfiguration('editor.fontSize') ||
             event.affectsConfiguration('editor.fontFamily') ||
             event.affectsConfiguration('editor.cursorStyle') ||
@@ -262,7 +264,8 @@ export class WebViewHost<IMapping> implements IDisposable {
             event.affectsConfiguration('editor.fontLigatures') ||
             event.affectsConfiguration('files.autoSave') ||
             event.affectsConfiguration('files.autoSaveDelay') ||
-            event.affectsConfiguration('python.dataScience.enableGather')) {
+            event.affectsConfiguration('python.dataScience.enableGather')
+        ) {
             // See if the theme changed
             const newSettings = this.generateDataScienceExtraSettings();
             if (newSettings) {
@@ -270,21 +273,20 @@ export class WebViewHost<IMapping> implements IDisposable {
                 this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
             }
         }
-    }
+    };
 
     // Post a message to our webpanel and update our new datascience settings
     private onDataScienceSettingsChanged = () => {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    }
+    };
 
     private loadWebPanel() {
         traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
 
         // Create our web panel (it's the UI that shows up for the history)
         if (this.webPanel === undefined) {
-
             // Get our settings to pass along to the react control
             const settings = this.generateDataScienceExtraSettings();
 

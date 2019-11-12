@@ -14,12 +14,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IConnection,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IConnection, IJupyterSessionManagerFactory, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { GuestJupyterSessionManagerFactory } from './guestJupyterSessionManagerFactory';
@@ -43,7 +38,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        serviceContainer: IServiceContainer) {
+        serviceContainer: IServiceContainer
+    ) {
         super(
             liveShare,
             executionFactory,
@@ -56,7 +52,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             new GuestJupyterSessionManagerFactory(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
-            serviceContainer);
+            serviceContainer
+        );
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem, interpreterService);
     }
@@ -95,10 +92,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         const service = await this.waitForService();
         if (service) {
             const purpose = options ? options.purpose : uuid();
-            const connection: IConnection = await service.request(
-                LiveShareCommands.connectToNotebookServer,
-                [options],
-                cancelToken);
+            const connection: IConnection = await service.request(LiveShareCommands.connectToNotebookServer, [options], cancelToken);
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
@@ -110,7 +104,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
                         workingDir: options ? options.workingDir : undefined,
                         purpose
                     },
-                    cancelToken);
+                    cancelToken
+                );
                 // Save in our cache
                 if (result) {
                     await this.serverCache.set(result, noop, options);

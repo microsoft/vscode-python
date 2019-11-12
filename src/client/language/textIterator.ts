@@ -44,9 +44,7 @@ export class DocumentTextIterator implements ITextIterator {
 
     public charCodeAt(index: number): number {
         const position = this.document.positionAt(index);
-        return this.document
-            .getText(new Range(position, position.translate(0, 1)))
-            .charCodeAt(position.character);
+        return this.document.getText(new Range(position, position.translate(0, 1))).charCodeAt(position.character);
     }
 
     public getText(): string {

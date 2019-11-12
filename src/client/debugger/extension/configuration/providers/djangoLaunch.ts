@@ -23,9 +23,11 @@ const workspaceFolderToken = '${workspaceFolder}';
 
 @injectable()
 export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurationProvider {
-    constructor(@inject(IFileSystem) private fs: IFileSystem,
+    constructor(
+        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPathUtils) private pathUtils: IPathUtils) { }
+        @inject(IPathUtils) private pathUtils: IPathUtils
+    ) {}
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const program = await this.getManagePyPath(state.folder);
         let manuallyEnteredAValue: boolean | undefined;
@@ -35,10 +37,7 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             type: DebuggerTypeName,
             request: 'launch',
             program: program || defaultProgram,
-            args: [
-                'runserver',
-                '--noreload'
-            ],
+            args: ['runserver', '--noreload'],
             django: true
         };
         if (!program) {
@@ -54,7 +53,11 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             }
         }
 
-        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchDjango, autoDetectedDjangoManagePyPath: !!program, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
+            configurationType: DebugConfigurationType.launchDjango,
+            autoDetectedDjangoManagePyPath: !!program,
+            manuallyEnteredAValue
+        });
         Object.assign(state.config, config);
     }
     public async validateManagePy(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {
@@ -63,10 +66,15 @@ export class DjangoLaunchDebugConfigurationProvider implements IDebugConfigurati
             return error;
         }
         const resolvedPath = this.resolveVariables(selected, folder ? folder.uri : undefined);
-        if (selected !== defaultValue && !await this.fs.fileExists(resolvedPath)) {
+        if (selected !== defaultValue && !(await this.fs.fileExists(resolvedPath))) {
             return error;
         }
-        if (!resolvedPath.trim().toLowerCase().endsWith('.py')) {
+        if (
+            !resolvedPath
+                .trim()
+                .toLowerCase()
+                .endsWith('.py')
+        ) {
             return error;
         }
         return;

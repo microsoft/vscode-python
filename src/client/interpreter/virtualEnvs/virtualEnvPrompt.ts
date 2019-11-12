@@ -24,13 +24,18 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly locator: IInterpreterLocatorService,
         @inject(IDisposableRegistry) private readonly disposableRegistry: Disposable[],
-        @inject(IApplicationShell) private readonly appShell: IApplicationShell) { }
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell
+    ) {}
 
     public async activate(resource: Uri): Promise<void> {
         const watcher = await this.builder.getWorkspaceVirtualEnvInterpreterWatcher(resource);
-        watcher.onDidCreate(() => {
-            this.handleNewEnvironment(resource).ignoreErrors();
-        }, this, this.disposableRegistry);
+        watcher.onDidCreate(
+            () => {
+                this.handleNewEnvironment(resource).ignoreErrors();
+            },
+            this,
+            this.disposableRegistry
+        );
     }
 
     @traceDecorators.error('Error in event handler for detection of new environment')
@@ -52,7 +57,9 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.doNotShowAgain()];
         const telemetrySelections: ['Yes', 'No', 'Ignore'] = ['Yes', 'No', 'Ignore'];
         const selection = await this.appShell.showInformationMessage(Interpreters.environmentPromptMessage(), ...prompts);
-        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
+        sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATE_ENVIRONMENT_PROMPT, undefined, {
+            selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined
+        });
         if (!selection) {
             return;
         }

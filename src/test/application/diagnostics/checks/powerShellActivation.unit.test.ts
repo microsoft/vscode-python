@@ -9,10 +9,7 @@ import { BaseDiagnosticsService } from '../../../../client/application/diagnosti
 import { PowerShellActivationHackDiagnosticsService } from '../../../../client/application/diagnostics/checks/powerShellActivation';
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
-import {
-    DiagnosticCommandPromptHandlerServiceId,
-    MessageCommandPrompt
-} from '../../../../client/application/diagnostics/promptHandler';
+import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
 import {
     DiagnosticScope,
     IDiagnostic,
@@ -47,12 +44,7 @@ suite('Application Diagnostics - PowerShell Activation', () => {
 
         messageHandler = typemoq.Mock.ofType<IDiagnosticHandlerService<MessageCommandPrompt>>();
         serviceContainer
-            .setup(s =>
-                s.get(
-                    typemoq.It.isValue(IDiagnosticHandlerService),
-                    typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)
-                )
-            )
+            .setup(s => s.get(typemoq.It.isValue(IDiagnosticHandlerService), typemoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)))
             .returns(() => messageHandler.object);
 
         appEnv = typemoq.Mock.ofType<IApplicationEnvironment>();
@@ -60,14 +52,10 @@ suite('Application Diagnostics - PowerShell Activation', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationEnvironment))).returns(() => appEnv.object);
 
         filterService = typemoq.Mock.ofType<IDiagnosticFilterService>();
-        serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IDiagnosticFilterService)))
-            .returns(() => filterService.object);
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IDiagnosticFilterService))).returns(() => filterService.object);
 
         commandFactory = typemoq.Mock.ofType<IDiagnosticsCommandFactory>();
-        serviceContainer
-            .setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory)))
-            .returns(() => commandFactory.object);
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
 
         const currentProc = typemoq.Mock.ofType<ICurrentProcess>();
         procEnv = typemoq.Mock.ofType<EnvironmentVariables>();
@@ -79,18 +67,16 @@ suite('Application Diagnostics - PowerShell Activation', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
 
         const workspaceService = typemoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspaceService.object);
-        workspaceService.setup(w => w.getWorkspaceFolder(typemoq.It.isAny()))
-            .returns(() => undefined);
+        serviceContainer.setup(s => s.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        workspaceService.setup(w => w.getWorkspaceFolder(typemoq.It.isAny())).returns(() => undefined);
 
-        diagnosticService = new class extends PowerShellActivationHackDiagnosticsService {
+        diagnosticService = new (class extends PowerShellActivationHackDiagnosticsService {
             public _clear() {
                 while (BaseDiagnosticsService.handledDiagnosticCodeKeys.length > 0) {
                     BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
                 }
             }
-        }(serviceContainer.object, []);
+        })(serviceContainer.object, []);
         (diagnosticService as any)._clear();
     });
 
@@ -107,7 +93,8 @@ suite('Application Diagnostics - PowerShell Activation', () => {
     });
     test('Can not handle non-EnvPathVariable diagnostics', async () => {
         const diagnostic = typemoq.Mock.ofType<IDiagnostic>();
-        diagnostic.setup(d => d.code)
+        diagnostic
+            .setup(d => d.code)
             .returns(() => 'Something Else' as any)
             .verifiable(typemoq.Times.atLeastOnce());
 

@@ -10,14 +10,7 @@ import { InteractiveWindowProvider } from '../../client/datascience/interactive-
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
-import {
-    ICodeCssGenerator,
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IJupyterExecution,
-    INotebookImporter,
-    INotebookServer
-} from '../../client/datascience/types';
+import { ICodeCssGenerator, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution, INotebookImporter, INotebookServer } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from '../../client/testing/common/constants';
 import { TestContextService } from '../../client/testing/common/services/contextService';
@@ -55,9 +48,7 @@ import { TestManager as PyTestTestManager } from '../../client/testing/pytest/ma
 import { TestDiscoveryService as PytestTestDiscoveryService } from '../../client/testing/pytest/services/discoveryService';
 import { ITestDiagnosticService } from '../../client/testing/types';
 import { TestManager as UnitTestTestManager } from '../../client/testing/unittest/main';
-import {
-    TestDiscoveryService as UnitTestTestDiscoveryService
-} from '../../client/testing/unittest/services/discoveryService';
+import { TestDiscoveryService as UnitTestTestDiscoveryService } from '../../client/testing/unittest/services/discoveryService';
 import { TestsParser as UnitTestTestsParser } from '../../client/testing/unittest/services/parserService';
 import { getPythonSemVer } from '../common';
 import { IocContainer } from '../serviceRegistry';
@@ -115,7 +106,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagers() {
-        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
+        this.serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
             return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -138,7 +129,7 @@ export class UnitTestIocContainer extends IocContainer {
     }
 
     public registerTestManagerService() {
-        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
+        this.serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
             return (workspaceFolder: Uri) => {
                 const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
                 const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

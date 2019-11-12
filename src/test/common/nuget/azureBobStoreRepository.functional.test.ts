@@ -30,13 +30,10 @@ suite('Nuget Azure Storage Repository', () => {
         httpClient = typeMoq.Mock.ofType<IHttpClient>();
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IHttpClient))).returns(() => httpClient.object);
         cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>();
-        cfg.setup(c => c.get('proxyStrictSSL', true))
-            .returns(() => true);
+        cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => true);
         workspace = typeMoq.Mock.ofType<IWorkspaceService>();
-        workspace.setup(w => w.getConfiguration('http', undefined))
-            .returns(() => cfg.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspace.object);
+        workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
 
         const nugetService = typeMoq.Mock.ofType<INugetService>();
         nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
@@ -46,7 +43,7 @@ suite('Nuget Azure Storage Repository', () => {
         repo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
     });
 
-    test('Get all packages', async function () {
+    test('Get all packages', async function() {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const platformService = new PlatformService();

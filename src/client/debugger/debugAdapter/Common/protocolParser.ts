@@ -44,7 +44,7 @@ export class ProtocolParser extends EventEmitter implements IProtocolParser {
     }
     private dataCallbackHandler = (data: string | Buffer) => {
         this.handleData(data as Buffer);
-    }
+    };
     private dispatch(body: string): void {
         const message = JSON.parse(body) as DebugProtocol.ProtocolMessage;
 

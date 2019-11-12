@@ -13,11 +13,11 @@ export const KeyCodes = {
 };
 
 export function getOSType() {
-    if (window.navigator.platform.startsWith('Mac')){
+    if (window.navigator.platform.startsWith('Mac')) {
         return OSType.OSX;
-    } else if (window.navigator.platform.startsWith('Win')){
+    } else if (window.navigator.platform.startsWith('Win')) {
         return OSType.Windows;
-    } else if (window.navigator.userAgent.indexOf('Linux') > 0){
+    } else if (window.navigator.userAgent.indexOf('Linux') > 0) {
         return OSType.Linux;
     } else {
         return OSType.Unknown;

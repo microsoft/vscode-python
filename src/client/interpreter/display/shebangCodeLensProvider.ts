@@ -9,13 +9,14 @@ import { IShebangCodeLensProvider } from '../contracts';
 @injectable()
 export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
     public readonly onDidChangeCodeLenses: Event<void>;
-    constructor(@inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+    constructor(
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IWorkspaceService) workspaceService: IWorkspaceService) {
+        @inject(IWorkspaceService) workspaceService: IWorkspaceService
+    ) {
         // tslint:disable-next-line:no-any
-        this.onDidChangeCodeLenses = workspaceService.onDidChangeConfiguration as any as Event<void>;
-
+        this.onDidChangeCodeLenses = (workspaceService.onDidChangeConfiguration as any) as Event<void>;
     }
     public async detectShebang(document: TextDocument): Promise<string | undefined> {
         const firstLine = document.lineAt(0);
@@ -39,12 +40,16 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
         let args = ['-c', 'import sys;print(sys.executable)'];
         if (pythonPath.indexOf('bin/env ') >= 0 && !this.platformService.isWindows) {
             // In case we have pythonPath as '/usr/bin/env python'.
-            const parts = pythonPath.split(' ').map(part => part.trim()).filter(part => part.length > 0);
+            const parts = pythonPath
+                .split(' ')
+                .map(part => part.trim())
+                .filter(part => part.length > 0);
             cmdFile = parts.shift()!;
             args = parts.concat(args);
         }
         const processService = await this.processServiceFactory.create(resource);
-        return processService.exec(cmdFile, args)
+        return processService
+            .exec(cmdFile, args)
             .then(output => output.stdout.trim())
             .catch(() => '');
     }
@@ -68,6 +73,6 @@ export class ShebangCodeLensProvider implements IShebangCodeLensProvider {
             title: 'Set as interpreter'
         };
 
-        return [(new CodeLens(shebangRange, cmd))];
+        return [new CodeLens(shebangRange, cmd)];
     }
 }

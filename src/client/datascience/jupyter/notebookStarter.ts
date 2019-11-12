@@ -64,7 +64,11 @@ export class NotebookStarter implements Disposable {
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
-            const [args, kernelSpec, notebookCommand] = await Promise.all([this.generateArguments(useDefaultConfig, tempDirPromise), this.kernelService.getMatchingKernelSpec(undefined, cancelToken), notebookCommandPromise]);
+            const [args, kernelSpec, notebookCommand] = await Promise.all([
+                this.generateArguments(useDefaultConfig, tempDirPromise),
+                this.kernelService.getMatchingKernelSpec(undefined, cancelToken),
+                notebookCommandPromise
+            ]);
 
             // Make sure we haven't canceled already.
             if (cancelToken && cancelToken.isCancellationRequested) {
@@ -73,7 +77,10 @@ export class NotebookStarter implements Disposable {
 
             // Then use this to launch our notebook process.
             const stopWatch = new StopWatch();
-            const [launchResult, tempDir] = await Promise.all([notebookCommand!.command!.execObservable(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }), tempDirPromise]);
+            const [launchResult, tempDir] = await Promise.all([
+                notebookCommand!.command!.execObservable(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }),
+                tempDirPromise
+            ]);
 
             // Watch for premature exits
             if (launchResult.proc) {
@@ -111,7 +118,7 @@ export class NotebookStarter implements Disposable {
         }
     }
 
-    private async generateArguments(useDefaultConfig: boolean, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]>{
+    private async generateArguments(useDefaultConfig: boolean, tempDirPromise: Promise<TemporaryDirectory>): Promise<string[]> {
         // Parallelize as much as possible.
         const promisedArgs: Promise<string>[] = [];
         promisedArgs.push(Promise.resolve('--no-browser'));
@@ -127,7 +134,7 @@ export class NotebookStarter implements Disposable {
         // Check for the debug environment variable being set. Setting this
         // causes Jupyter to output a lot more information about what it's doing
         // under the covers and can be used to investigate problems with Jupyter.
-        const debugArgs = (process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER) ? ['--debug'] : [];
+        const debugArgs = process.env && process.env.VSCODE_PYTHON_DEBUG_JUPYTER ? ['--debug'] : [];
 
         // Use this temp file and config file to generate a list of args for our command
         return [...args, ...dockerArgs, ...debugArgs];
@@ -242,5 +249,5 @@ export class NotebookStarter implements Disposable {
         }
 
         return undefined;
-    }
+    };
 }

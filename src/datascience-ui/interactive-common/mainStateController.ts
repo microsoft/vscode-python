@@ -13,34 +13,17 @@ import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, generateMarkdownFromCodeLines } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages, IGetCssResponse } from '../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../client/datascience/monacoMessages';
-import {
-    CellState,
-    ICell,
-    IDataScienceExtraSettings,
-    IInteractiveWindowInfo,
-    IJupyterVariable,
-    IJupyterVariablesResponse
-} from '../../client/datascience/types';
+import { CellState, ICell, IDataScienceExtraSettings, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../../client/datascience/types';
 import { arePathsSame } from '../react-common/arePathsSame';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { getSettings, updateSettings } from '../react-common/settingsReactSide';
 import { detectBaseTheme } from '../react-common/themeDetector';
 import { InputHistory } from './inputHistory';
 import { IntellisenseProvider } from './intellisenseProvider';
-import {
-    createCellVM,
-    createEditableCellVM,
-    extractInputText,
-    generateTestState,
-    ICellViewModel,
-    IMainState
-} from './mainState';
+import { createCellVM, createEditableCellVM, extractInputText, generateTestState, ICellViewModel, IMainState } from './mainState';
 import { initializeTokenizer, registerMonacoLanguage } from './tokenizer';
 
 export interface IMainStateControllerProps {
@@ -90,7 +73,7 @@ export class MainStateController implements IMessageHandler {
             isAtBottom: true,
             font: {
                 size: 14,
-                family: 'Consolas, \'Courier New\', monospace'
+                family: "Consolas, 'Courier New', monospace"
             }
         };
 
@@ -264,7 +247,7 @@ export class MainStateController implements IMessageHandler {
         if (this.pendingState.busy) {
             this.setState({ busy: false });
         }
-    }
+    };
 
     public redo = () => {
         // Pop one off of our redo stack and update our undo
@@ -278,7 +261,7 @@ export class MainStateController implements IMessageHandler {
             redoStack: redoStack,
             skipNextScroll: true
         });
-    }
+    };
 
     public undo = () => {
         // Pop one off of our undo stack and update our redo
@@ -292,7 +275,7 @@ export class MainStateController implements IMessageHandler {
             redoStack: redoStack,
             skipNextScroll: true
         });
-    }
+    };
 
     public deleteCell = (cellId: string) => {
         const index = this.findCellIndex(cellId);
@@ -322,22 +305,22 @@ export class MainStateController implements IMessageHandler {
                 skipNextScroll: true
             });
         }
-    }
+    };
 
     public collapseAll = () => {
         this.sendMessage(InteractiveWindowMessages.CollapseAll);
         this.collapseAllSilent();
-    }
+    };
 
     public expandAll = () => {
         this.sendMessage(InteractiveWindowMessages.ExpandAll);
         this.expandAllSilent();
-    }
+    };
 
     public clearAll = () => {
         this.sendMessage(InteractiveWindowMessages.DeleteAllCells);
         this.clearAllSilent();
-    }
+    };
 
     public save = () => {
         // We have to take the current value of each cell to make sure we have the correct text.
@@ -354,43 +337,43 @@ export class MainStateController implements IMessageHandler {
 
         // Then send the save with the new state.
         this.sendMessage(InteractiveWindowMessages.SaveAll, { cells: newVMs.map(cvm => cvm.cell) });
-    }
+    };
 
     public showPlot = (imageHtml: string) => {
         this.sendMessage(InteractiveWindowMessages.ShowPlot, imageHtml);
-    }
+    };
 
     public showDataViewer = (targetVariable: string, numberOfColumns: number) => {
         this.sendMessage(InteractiveWindowMessages.ShowDataViewer, { variableName: targetVariable, columnSize: numberOfColumns });
-    }
+    };
 
     public openLink = (uri: monacoEditor.Uri) => {
         this.sendMessage(InteractiveWindowMessages.OpenLink, uri.toString());
-    }
+    };
 
     public canCollapseAll = () => {
         return this.getNonEditCellVMs().length > 0;
-    }
+    };
 
     public canExpandAll = () => {
         return this.getNonEditCellVMs().length > 0;
-    }
+    };
 
     public canExport = () => {
         return this.getNonEditCellVMs().length > 0;
-    }
+    };
 
     public canRedo = () => {
         return this.pendingState.redoStack.length > 0;
-    }
+    };
 
     public canUndo = () => {
         return this.pendingState.undoStack.length > 0;
-    }
+    };
 
     public canClearAllOutputs = () => {
         return this.getNonEditCellVMs().length > 0;
-    }
+    };
 
     public clearAllOutputs = () => {
         const newList = this.pendingState.cellVMs.map(cellVM => {
@@ -400,7 +383,7 @@ export class MainStateController implements IMessageHandler {
         this.setState({
             cellVMs: newList
         });
-    }
+    };
 
     public gotoCellCode = (cellId: string) => {
         // Find our cell
@@ -410,7 +393,7 @@ export class MainStateController implements IMessageHandler {
         if (cellVM) {
             this.sendMessage(InteractiveWindowMessages.GotoCodeCell, { file: cellVM.cell.file, line: cellVM.cell.line });
         }
-    }
+    };
 
     public copyCellCode = (cellId: string) => {
         // Find our cell. This is also supported on the edit cell
@@ -423,34 +406,36 @@ export class MainStateController implements IMessageHandler {
         if (cellVM) {
             this.sendMessage(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, getSettings()) });
         }
-    }
+    };
 
     public gatherCell = (cellVM: ICellViewModel | undefined) => {
         if (cellVM) {
             this.sendMessage(InteractiveWindowMessages.GatherCodeRequest, cellVM.cell);
         }
-    }
+    };
 
     public restartKernel = () => {
         // Send a message to the other side to restart the kernel
         this.sendMessage(InteractiveWindowMessages.RestartKernel);
-    }
+    };
 
     public interruptKernel = () => {
         // Send a message to the other side to restart the kernel
         this.sendMessage(InteractiveWindowMessages.Interrupt);
-    }
+    };
 
     public export = () => {
         // Send a message to the other side to export our current list
-        const cellContents: ICell[] = this.pendingState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
+        const cellContents: ICell[] = this.pendingState.cellVMs.map((cellVM: ICellViewModel, _index: number) => {
+            return cellVM.cell;
+        });
         this.sendMessage(InteractiveWindowMessages.Export, cellContents);
-    }
+    };
 
     // When the variable explorer wants to refresh state (say if it was expanded)
     public refreshVariables = (newExecutionCount?: number) => {
         this.sendMessage(InteractiveWindowMessages.GetVariablesRequest, newExecutionCount === undefined ? this.pendingState.currentExecutionCount : newExecutionCount);
-    }
+    };
 
     public toggleVariableExplorer = () => {
         this.sendMessage(InteractiveWindowMessages.VariableExplorerToggle, !this.pendingState.variablesVisible);
@@ -458,7 +443,7 @@ export class MainStateController implements IMessageHandler {
         if (this.pendingState.variablesVisible) {
             this.refreshVariables();
         }
-    }
+    };
 
     public codeChange = (changes: monacoEditor.editor.IModelContentChange[], id: string, modelId: string) => {
         // If the model id doesn't match, skip sending this edit. This happens
@@ -472,7 +457,7 @@ export class MainStateController implements IMessageHandler {
             // Just a normal edit. Pass this onto the completion provider running in the extension
             this.sendMessage(InteractiveWindowMessages.EditCell, { changes, id });
         }
-    }
+    };
 
     public readOnlyCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
         const cell = this.pendingState.cellVMs.find(c => c.cell.id === id);
@@ -488,13 +473,13 @@ export class MainStateController implements IMessageHandler {
         // Save in our map of monaco id to cell id
         this.monacoIdToCellId.set(monacoId, id);
         this.cellIdToMonacoId.set(id, monacoId);
-    }
+    };
 
     public editableCodeCreated = (_text: string, _file: string, id: string, monacoId: string) => {
         // Save in our map of monaco id to cell id
         this.monacoIdToCellId.set(monacoId, id);
         this.cellIdToMonacoId.set(id, monacoId);
-    }
+    };
 
     public codeLostFocus = (cellId: string) => {
         this.onCodeLostFocus(cellId);
@@ -508,7 +493,7 @@ export class MainStateController implements IMessageHandler {
             // Only unfocus if we haven't switched somewhere else yet
             this.setState({ focusedCellId: undefined, cellVMs: newVMs });
         }
-    }
+    };
 
     public codeGotFocus = (cellId: string | undefined) => {
         // Skip if already has focus
@@ -534,7 +519,7 @@ export class MainStateController implements IMessageHandler {
         if (this.props.testMode && cellId) {
             this.sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId });
         }
-    }
+    };
 
     public selectCell = (cellId: string, focusedCellId?: string) => {
         // Skip if already the same cell
@@ -555,7 +540,7 @@ export class MainStateController implements IMessageHandler {
             // Save the whole thing in our state.
             this.setState({ selectedCellId: cellId, focusedCellId, cellVMs: newVMs });
         }
-    }
+    };
 
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
         const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
@@ -563,17 +548,26 @@ export class MainStateController implements IMessageHandler {
             const cellVMs = [...this.pendingState.cellVMs];
             const current = this.pendingState.cellVMs[index];
             const newSource = current.focused ? this.getMonacoEditorContents(cellId) : concatMultilineStringInput(current.cell.data.source);
-            const newCell = { ...current, inputBlockText: newSource, cell: { ...current.cell, state: CellState.finished, data: { ...current.cell.data, cell_type: newType, source: newSource } } };
+            const newCell = {
+                ...current,
+                inputBlockText: newSource,
+                cell: { ...current.cell, state: CellState.finished, data: { ...current.cell.data, cell_type: newType, source: newSource } }
+            };
             // tslint:disable-next-line: no-any
-            cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
+            cellVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here. But message cells can't change type
             this.setState({ cellVMs });
             if (newType === 'code') {
-                this.sendMessage(InteractiveWindowMessages.InsertCell, { cell: cellVMs[index].cell, index, code: concatMultilineStringInput(cellVMs[index].cell.data.source), codeCellAboveId: this.firstCodeCellAbove(cellId) });
+                this.sendMessage(InteractiveWindowMessages.InsertCell, {
+                    cell: cellVMs[index].cell,
+                    index,
+                    code: concatMultilineStringInput(cellVMs[index].cell.data.source),
+                    codeCellAboveId: this.firstCodeCellAbove(cellId)
+                });
             } else {
                 this.sendMessage(InteractiveWindowMessages.RemoveCell, { id: cellId });
             }
         }
-    }
+    };
 
     public submitInput = (code: string, inputCell: ICellViewModel) => {
         // noop if the submitted code is just a cell marker
@@ -661,7 +655,7 @@ export class MainStateController implements IMessageHandler {
                 });
             }
         }
-    }
+    };
 
     public findCell(cellId?: string): ICellViewModel | undefined {
         const nonEdit = this.pendingState.cellVMs.find(cvm => cvm.cell.id === cellId);
@@ -686,7 +680,7 @@ export class MainStateController implements IMessageHandler {
             newVMs[index] = immutable.merge(newVMs[index], { showLineNumbers: !newVMs[index].showLineNumbers });
             this.setState({ cellVMs: newVMs });
         }
-    }
+    };
 
     public toggleOutput = (cellId: string) => {
         const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
@@ -695,7 +689,7 @@ export class MainStateController implements IMessageHandler {
             newVMs[index] = immutable.merge(newVMs[index], { hideOutput: !newVMs[index].hideOutput });
             this.setState({ cellVMs: newVMs });
         }
-    }
+    };
 
     public setState(newState: {}, callback?: () => void) {
         // Add to writable state (it should always reflect the current conditions)
@@ -752,7 +746,6 @@ export class MainStateController implements IMessageHandler {
         if (this.renderedState.pendingVariableCount === 0 && oldCount !== 0) {
             setTimeout(() => this.sendMessage(InteractiveWindowMessages.VariablesComplete), 1);
         }
-
     }
 
     public getState(): IMainState {
@@ -832,7 +825,7 @@ export class MainStateController implements IMessageHandler {
 
         // Just assume it's the edit cell if not found.
         return Identifiers.EditCellId;
-    }
+    };
 
     protected addCell(cell: ICell) {
         this.insertCell(cell);
@@ -883,12 +876,11 @@ export class MainStateController implements IMessageHandler {
                 this.setState(this.pendingState); // This should cause an update
             }
         }
-
     }
 
     protected sendMessage = <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => {
         this.postOffice.sendMessage<M, T>(type, payload);
-    }
+    };
 
     protected pushStack = (stack: ICellViewModel[][], cells: ICellViewModel[]) => {
         // Get the undo stack up to the maximum length
@@ -897,7 +889,7 @@ export class MainStateController implements IMessageHandler {
         // make a copy of the cells so that further changes don't modify them.
         const copy = cloneDeep(cells);
         return [...slicedUndo, copy];
-    }
+    };
 
     protected firstCodeCellAbove(cellId: string): string | undefined {
         const codeCells = this.pendingState.cellVMs.filter(c => c.cell.data.cell_type === 'code');
@@ -970,7 +962,9 @@ export class MainStateController implements IMessageHandler {
         // When we restart, reset all code cells to indicate they haven't been run in the new kernel.
         // Also make sure to turn off all executing cells as they aren't executing anymore.
         const executableCells = newVMs
-            .map((cvm, i) => { return { cvm, i }; })
+            .map((cvm, i) => {
+                return { cvm, i };
+            })
             .filter(s => s.cvm.cell.data.cell_type === 'code');
 
         if (executableCells) {
@@ -996,25 +990,21 @@ export class MainStateController implements IMessageHandler {
         // update our base theme if allowed. Don't do this
         // during testing as it will mess up the expected render count.
         if (!this.props.testMode) {
-            this.setState(
-                {
-                    baseTheme: newDark ? 'vscode-dark' : 'vscode-light'
-                }
-            );
+            this.setState({
+                baseTheme: newDark ? 'vscode-dark' : 'vscode-light'
+            });
         }
-    }
+    };
 
     private monacoThemeChanged = (theme: string) => {
         // update our base theme if allowed. Don't do this
         // during testing as it will mess up the expected render count.
         if (!this.props.testMode) {
-            this.setState(
-                {
-                    monacoTheme: theme
-                }
-            );
+            this.setState({
+                monacoTheme: theme
+            });
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private updateSettings = (payload?: any) => {
@@ -1055,7 +1045,7 @@ export class MainStateController implements IMessageHandler {
                 });
             }
         }
-    }
+    };
 
     private getAllCells = () => {
         // Send all of our cells back to the other side
@@ -1064,7 +1054,7 @@ export class MainStateController implements IMessageHandler {
         });
 
         this.sendMessage(InteractiveWindowMessages.ReturnAllCells, cells);
-    }
+    };
 
     private getNonEditCellVMs(): ICellViewModel[] {
         return this.pendingState.cellVMs;
@@ -1078,7 +1068,7 @@ export class MainStateController implements IMessageHandler {
             skipNextScroll: true,
             busy: false // No more progress on delete all
         });
-    }
+    };
 
     private inputBlockToggled = (id: string) => {
         // Create a shallow copy of the array, let not const as this is the shallow array copy that we will be changing
@@ -1099,23 +1089,23 @@ export class MainStateController implements IMessageHandler {
                 cellVMs: cellVMArray
             });
         }
-    }
+    };
 
     private toggleCellInputVisibility = (visible: boolean, collapse: boolean) => {
         this.alterAllCellVMs(visible, !collapse);
-    }
+    };
 
     private collapseAllSilent = () => {
         if (getSettings().showCellInputCode) {
             this.alterAllCellVMs(true, false);
         }
-    }
+    };
 
     private expandAllSilent = () => {
         if (getSettings().showCellInputCode) {
             this.alterAllCellVMs(true, true);
         }
-    }
+    };
 
     private alterAllCellVMs = (visible: boolean, expanded: boolean) => {
         const newCells = this.pendingState.cellVMs.map((value: ICellViewModel) => {
@@ -1126,7 +1116,7 @@ export class MainStateController implements IMessageHandler {
             skipNextScroll: true,
             cellVMs: newCells
         });
-    }
+    };
 
     private sendInfo = () => {
         const info: IInteractiveWindowInfo = {
@@ -1136,20 +1126,18 @@ export class MainStateController implements IMessageHandler {
             selectedCell: this.pendingState.selectedCellId
         };
         this.sendMessage(InteractiveWindowMessages.SendInfo, info);
-    }
+    };
 
     private updateOrAdd = (cell: ICell, allowAdd?: boolean) => {
         const index = this.pendingState.cellVMs.findIndex((c: ICellViewModel) => {
-            return c.cell.id === cell.id &&
-                c.cell.line === cell.line &&
-                arePathsSame(c.cell.file, cell.file);
+            return c.cell.id === cell.id && c.cell.line === cell.line && arePathsSame(c.cell.file, cell.file);
         });
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.
             // Use its execution count to update our execution count.
-            const newExecutionCount = cell.data.execution_count ?
-                Math.max(this.pendingState.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10)) :
-                this.pendingState.currentExecutionCount;
+            const newExecutionCount = cell.data.execution_count
+                ? Math.max(this.pendingState.currentExecutionCount, parseInt(cell.data.execution_count.toString(), 10))
+                : this.pendingState.currentExecutionCount;
             if (newExecutionCount !== this.pendingState.currentExecutionCount && this.pendingState.variablesVisible) {
                 // We also need to update our variable explorer when the execution count changes
                 // Use the ref here to maintain var explorer independence
@@ -1184,12 +1172,11 @@ export class MainStateController implements IMessageHandler {
                 cellVMs: newVMs,
                 currentExecutionCount: newExecutionCount
             });
-
         } else if (allowAdd) {
             // This is an entirely new cell (it may have started out as finished)
             this.addCell(cell);
         }
-    }
+    };
 
     private isCellSupported(cell: ICell): boolean {
         return !this.props.testMode || cell.data.cell_type !== 'messages';
@@ -1203,7 +1190,7 @@ export class MainStateController implements IMessageHandler {
                 this.updateOrAdd(cell, true);
             }
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private startCell = (payload?: any) => {
@@ -1213,7 +1200,7 @@ export class MainStateController implements IMessageHandler {
                 this.updateOrAdd(cell, true);
             }
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private updateCell = (payload?: any) => {
@@ -1223,12 +1210,12 @@ export class MainStateController implements IMessageHandler {
                 this.updateOrAdd(cell, false);
             }
         }
-    }
+    };
 
     // Find the display value for one specific variable
     private refreshVariable = (targetVar: IJupyterVariable) => {
         this.sendMessage(InteractiveWindowMessages.GetVariableValueRequest, targetVar);
-    }
+    };
 
     // When we get a variable value back use the ref to pass to the variable explorer
     // tslint:disable-next-line:no-any
@@ -1249,7 +1236,7 @@ export class MainStateController implements IMessageHandler {
                 }
             }
         }
-    }
+    };
 
     // When we get our new set of variables back use the ref to pass to the variable explorer
     // tslint:disable-next-line:no-any
@@ -1268,12 +1255,12 @@ export class MainStateController implements IMessageHandler {
                 variablesResponse.variables.forEach(this.refreshVariable);
             }
         }
-    }
+    };
 
     // tslint:disable-next-line: no-any
     private tokenizerLoaded = (_e?: any) => {
         this.setState({ tokenizerLoaded: true });
-    }
+    };
 
     private loadOnigasm = (): Promise<ArrayBuffer> => {
         if (!this.onigasmPromise) {
@@ -1282,7 +1269,7 @@ export class MainStateController implements IMessageHandler {
             this.sendMessage(InteractiveWindowMessages.LoadOnigasmAssemblyRequest);
         }
         return this.onigasmPromise.promise;
-    }
+    };
 
     private loadTmlanguage = (): Promise<string> => {
         if (!this.tmlangugePromise) {
@@ -1291,7 +1278,7 @@ export class MainStateController implements IMessageHandler {
             this.sendMessage(InteractiveWindowMessages.LoadTmLanguageRequest);
         }
         return this.tmlangugePromise.promise;
-    }
+    };
 
     // tslint:disable-next-line: no-any
     private handleOnigasmResponse(payload: any) {
@@ -1316,7 +1303,6 @@ export class MainStateController implements IMessageHandler {
     private handleCssResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
-
             // Recompute our known dark value from the class name in the body
             // VS code should update this dynamically when the theme changes
             const computedKnownDark = this.computeKnownDark();
@@ -1329,7 +1315,7 @@ export class MainStateController implements IMessageHandler {
             }
 
             let fontSize: number = 14;
-            let fontFamily: string = 'Consolas, \'Courier New\', monospace';
+            let fontFamily: string = "Consolas, 'Courier New', monospace";
             const sizeSetting = '--code-font-size: ';
             const familySetting = '--code-font-family: ';
             const fontSizeIndex = response.css.indexOf(sizeSetting);
@@ -1361,7 +1347,6 @@ export class MainStateController implements IMessageHandler {
     private handleMonacoThemeResponse(payload?: any) {
         const response = payload as IGetMonacoThemeResponse;
         if (response && response.theme) {
-
             // Tell monaco we have a new theme. THis is like a state update for monaco
             monacoEditor.editor.defineTheme('interactiveWindow', response.theme);
             this.monacoThemeChanged('interactiveWindow');

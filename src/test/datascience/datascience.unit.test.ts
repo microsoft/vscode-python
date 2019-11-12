@@ -28,7 +28,7 @@ suite('Data Science Tests', () => {
     });
 
     // tslint:disable: no-invalid-template-strings
-    test('expanding file variables', async function () {
+    test('expanding file variables', async function() {
         // tslint:disable-next-line: no-invalid-this
         this.timeout(10000);
         const uri = Uri.file('test/bar');
@@ -123,19 +123,19 @@ suite('Data Science Tests', () => {
         cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown split wrong');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        cells = generateCells(undefined, '#%% [markdown]\n\'\'\'\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\"\"\"', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
@@ -258,5 +258,4 @@ class Pizza(object):
         nonComments = stripComments(multilineQuoteInFunc);
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
     });
-
 });

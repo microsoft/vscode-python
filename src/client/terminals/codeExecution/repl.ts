@@ -20,7 +20,6 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) platformService: IPlatformService
     ) {
-
         super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
         this.terminalTitle = 'REPL';
     }

@@ -66,7 +66,7 @@ suite('Crypto Utils', async () => {
             }
         }
         // Total number of words = wordList.length * 10, because we added ten variants of each word above.
-        const expectedHitsPerBucket = wordList.length * 10 / 100;
+        const expectedHitsPerBucket = (wordList.length * 10) / 100;
         for (const hit of buckets) {
             expect(hit).to.be.lessThan(1.25 * expectedHitsPerBucket);
             expect(hit).to.be.greaterThan(0.75 * expectedHitsPerBucket);

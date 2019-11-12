@@ -26,9 +26,9 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
     }
 
     public render() {
-        return(
-                <div id='variable-panel'>
-                    <div id='variable-panel-padding'>
+        return (
+            <div id="variable-panel">
+                <div id="variable-panel-padding">
                     <VariableExplorer
                         pendingVariableCount={this.props.pendingVariableCount}
                         variables={this.props.variables}
@@ -36,10 +36,11 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                         baseTheme={this.props.baseTheme}
                         skipDefault={this.props.skipDefault}
                         showDataExplorer={this.props.showDataExplorer}
-                        closeVariableExplorer={this.props.closeVariableExplorer} />
-                    </div>
-                    <div id='variable-divider'/>
+                        closeVariableExplorer={this.props.closeVariableExplorer}
+                    />
                 </div>
+                <div id="variable-divider" />
+            </div>
         );
     }
 }

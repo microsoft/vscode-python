@@ -43,7 +43,7 @@ suite('DataScience Intellisense tests', () => {
     //     asyncDump();
     // });
 
-    function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
+    function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): string[] {
         assert.ok(wrapper);
         const editor = getInteractiveEditor(wrapper);
         assert.ok(editor);
@@ -72,7 +72,7 @@ suite('DataScience Intellisense tests', () => {
         assert.ok(!innerTexts.includes(expectedSpan), 'Intellisense row was found when not expected');
     }
 
-    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
+    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): { disposable: IDisposable; promise: Promise<void> } {
         const editorEnzyme = getInteractiveEditor(wrapper);
         const reactEditor = editorEnzyme.instance() as MonacoEditor;
         const editor = reactEditor.state.editor;
@@ -100,23 +100,9 @@ suite('DataScience Intellisense tests', () => {
         };
     }
 
-    runMountedTest('Simple autocomplete', async (wrapper) => {
-        // Create an interactive window so that it listens to the results.
-        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-        await interactiveWindow.show();
-
-        // Then enter some code. Don't submit, we're just testing that autocomplete appears
-        const suggestion = waitForSuggestion(wrapper);
-        typeCode(wrapper, 'print');
-        await suggestion.promise;
-        suggestion.disposable.dispose();
-        verifyIntellisenseVisible(wrapper, 'print');
-    }, () => { return ioc; });
-
-    runMountedTest('Jupyter autocomplete', async (wrapper) => {
-        if (ioc.mockJupyter) {
-            // This test only works when mocking.
-
+    runMountedTest(
+        'Simple autocomplete',
+        async wrapper => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -126,27 +112,59 @@ suite('DataScience Intellisense tests', () => {
             typeCode(wrapper, 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
-            verifyIntellisenseVisible(wrapper, 'printly');
+            verifyIntellisenseVisible(wrapper, 'print');
+        },
+        () => {
+            return ioc;
         }
-    }, () => { return ioc; });
+    );
 
-    runMountedTest('Jupyter autocomplete timeout', async (wrapper) => {
-        if (ioc.mockJupyter) {
-            // This test only works when mocking.
+    runMountedTest(
+        'Jupyter autocomplete',
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
 
-            // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-            await interactiveWindow.show();
+                // Create an interactive window so that it listens to the results.
+                const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+                await interactiveWindow.show();
 
-            // Force a timeout on the jupyter completions
-            ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
-
-            // Then enter some code. Don't submit, we're just testing that autocomplete appears
-            const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
-            await suggestion.promise;
-            suggestion.disposable.dispose();
-            verifyIntellisenseMissing(wrapper, 'printly');
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(wrapper, 'print');
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseVisible(wrapper, 'printly');
+            }
+        },
+        () => {
+            return ioc;
         }
-    }, () => { return ioc; });
+    );
+
+    runMountedTest(
+        'Jupyter autocomplete timeout',
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
+
+                // Create an interactive window so that it listens to the results.
+                const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+                await interactiveWindow.show();
+
+                // Force a timeout on the jupyter completions
+                ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
+
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(wrapper, 'print');
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseMissing(wrapper, 'printly');
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
 });

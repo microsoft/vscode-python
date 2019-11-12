@@ -45,9 +45,7 @@ function makeStackTraceMessage(): any {
         type: 'response',
         command: 'stackTrace',
         body: {
-            stackFrames: [
-                { line: 1, column: 1, source: { path: 'testpath' } }
-            ]
+            stackFrames: [{ line: 1, column: 1, source: { path: 'testpath' } }]
         }
     };
 }

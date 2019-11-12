@@ -33,7 +33,7 @@ suite('REPL Provider', () => {
         try {
             replProvider.dispose();
             // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {}
     });
 
     test('Ensure command is registered', () => {
@@ -51,13 +51,15 @@ suite('REPL Provider', () => {
         disposable.verify(d => d.dispose(), TypeMoq.Times.once());
     });
 
-    test('Ensure resource is \'undefined\' if there\s no active document nor a workspace', () => {
+    test("Ensure resource is 'undefined' if theres no active document nor a workspace", () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
 
         replProvider = new ReplProvider(serviceContainer.object);
@@ -71,10 +73,12 @@ suite('REPL Provider', () => {
     test('Ensure resource is uri of the active document', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         const documentUri = Uri.file('a');
         const editor = TypeMoq.Mock.ofType<TextEditor>();
         const document = TypeMoq.Mock.ofType<TextDocument>();
@@ -91,13 +95,15 @@ suite('REPL Provider', () => {
         codeExecutionService.verify(c => c.initializeRepl(TypeMoq.It.isValue(documentUri)), TypeMoq.Times.once());
     });
 
-    test('Ensure resource is \'undefined\' if the active document is not used if it is untitled (new document)', () => {
+    test("Ensure resource is 'undefined' if the active document is not used if it is untitled (new document)", () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         const editor = TypeMoq.Mock.ofType<TextEditor>();
         const document = TypeMoq.Mock.ofType<TextDocument>();
         document.setup(d => d.isUntitled).returns(() => true);
@@ -115,10 +121,12 @@ suite('REPL Provider', () => {
     test('Ensure first available workspace folder is used if there no document', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
 
         const workspaceUri = Uri.file('a');

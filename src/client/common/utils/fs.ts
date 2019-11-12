@@ -39,9 +39,9 @@ export function getSubDirectories(rootDir: string): Promise<string[]> {
                     if (fs.statSync(fullPath).isDirectory()) {
                         subDirs.push(fullPath);
                     }
+                } catch (ex) {
+                    // tslint:disable-next-line:no-empty one-line
                 }
-                // tslint:disable-next-line:no-empty one-line
-                catch (ex) { }
             });
             resolve(subDirs);
         });

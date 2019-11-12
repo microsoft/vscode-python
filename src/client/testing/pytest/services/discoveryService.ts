@@ -28,14 +28,16 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             };
             return this.discoverTestsInTestDirectory(opts);
         }
-        const results = await Promise.all(testDirectories.map(testDir => {
-            // Add test directory as a positional argument.
-            const opts = {
-                ...options,
-                args: [...args, testDir]
-            };
-            return this.discoverTestsInTestDirectory(opts);
-        }));
+        const results = await Promise.all(
+            testDirectories.map(testDir => {
+                // Add test directory as a positional argument.
+                const opts = {
+                    ...options,
+                    args: [...args, testDir]
+                };
+                return this.discoverTestsInTestDirectory(opts);
+            })
+        );
 
         return this.helper.mergeTests(results);
     }

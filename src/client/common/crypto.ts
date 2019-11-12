@@ -21,7 +21,9 @@ export class CryptoUtils implements ICryptoUtils {
             const fnv = require('@enonic/fnv-plus');
             hash = fnv.fast1a32hex(data) as string;
         } else {
-            hash = createHash('sha512').update(data).digest('hex');
+            hash = createHash('sha512')
+                .update(data)
+                .digest('hex');
         }
         if (hashFormat === 'number') {
             const result = parseInt(hash, 16);

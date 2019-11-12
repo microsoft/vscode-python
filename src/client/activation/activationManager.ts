@@ -27,7 +27,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) { }
+    ) {}
 
     public dispose() {
         while (this.disposables.length > 0) {
@@ -42,10 +42,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     public async activate(): Promise<void> {
         await this.initialize();
         // Activate all activation services together.
-        await Promise.all([
-            Promise.all(this.singleActivationServices.map(item => item.activate())),
-            this.activateWorkspace(this.getActiveResource())
-        ]);
+        await Promise.all([Promise.all(this.singleActivationServices.map(item => item.activate())), this.activateWorkspace(this.getActiveResource())]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
     @traceDecorators.error('Failed to activate a workspace')
@@ -118,8 +115,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         if (this.documentManager.activeTextEditor && !this.documentManager.activeTextEditor.document.isUntitled) {
             return this.documentManager.activeTextEditor.document.uri;
         }
-        return Array.isArray(this.workspaceService.workspaceFolders) && workspace.workspaceFolders!.length > 0
-            ? workspace.workspaceFolders![0].uri
-            : undefined;
+        return Array.isArray(this.workspaceService.workspaceFolders) && workspace.workspaceFolders!.length > 0 ? workspace.workspaceFolders![0].uri : undefined;
     }
 }

@@ -17,6 +17,6 @@ const baseTheme = detectBaseTheme();
 
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
-  <NativeEditor baseTheme={baseTheme} codeTheme={Identifiers.GeneratedThemeName} skipDefault={typeof acquireVsCodeApi !== 'undefined'}/>,
-  document.getElementById('root') as HTMLElement
+    <NativeEditor baseTheme={baseTheme} codeTheme={Identifiers.GeneratedThemeName} skipDefault={typeof acquireVsCodeApi !== 'undefined'} />,
+    document.getElementById('root') as HTMLElement
 );

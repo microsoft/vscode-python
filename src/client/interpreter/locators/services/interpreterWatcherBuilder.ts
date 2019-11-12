@@ -22,9 +22,7 @@ export class InterpreterWatcherBuilder implements IInterpreterWatcherBuilder {
      * @param {IServiceContainer} serviceContainer
      * @memberof InterpreterWatcherBuilder
      */
-    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer
-    ) { }
+    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService, @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
     @traceDecorators.verbose('Build the workspace interpreter watcher')
     public async getWorkspaceVirtualEnvInterpreterWatcher(resource: Uri | undefined): Promise<IInterpreterWatcher> {

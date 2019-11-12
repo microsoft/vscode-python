@@ -15,12 +15,8 @@ export class LiveShareProxy implements vsls.LiveShare {
     private currentRole: vsls.Role = vsls.Role.None;
     private guestChecker: vsls.SharedService | vsls.SharedServiceProxy | null = null;
     private pendingGuestCheckCount = 0;
-    private peerCheckPromise : Deferred<boolean> | undefined;
-    constructor(
-        private applicationShell: IApplicationShell,
-        private peerTimeout: number | undefined,
-        private realApi : vsls.LiveShare
-        ) {
+    private peerCheckPromise: Deferred<boolean> | undefined;
+    constructor(private applicationShell: IApplicationShell, private peerTimeout: number | undefined, private realApi: vsls.LiveShare) {
         this.realApi.onDidChangePeers(this.onPeersChanged, this);
         this.realApi.onDidChangeSession(this.onSessionChanged, this);
         this.onSessionChanged({ session: this.realApi.session }).ignoreErrors();
@@ -53,7 +49,11 @@ export class LiveShareProxy implements vsls.LiveShare {
         // Create a proxy for the shared service. This allows us to wait for the next request/response
         // on the shared service to cause a failure when the guest doesn't have the python extension installed.
         if (realService) {
-            return new ServiceProxy(realService, () => this.peersAreOkay(), () => this.forceShutdown());
+            return new ServiceProxy(
+                realService,
+                () => this.peersAreOkay(),
+                () => this.forceShutdown()
+            );
         }
 
         return realService;
@@ -86,7 +86,7 @@ export class LiveShareProxy implements vsls.LiveShare {
         return this.realApi.getContacts(emails);
     }
 
-    private async onSessionChanged(ev: vsls.SessionChangeEvent) : Promise<void> {
+    private async onSessionChanged(ev: vsls.SessionChangeEvent): Promise<void> {
         const newRole = ev.session ? ev.session.role : vsls.Role.None;
         if (this.currentRole !== newRole) {
             // Setup our guest checker service.
@@ -102,7 +102,7 @@ export class LiveShareProxy implements vsls.LiveShare {
                     this.guestChecker.onNotify(LiveShareCommands.guestCheck, (_args: object) => this.onGuestResponse());
                 }
 
-            // If guest, we need to list for requests.
+                // If guest, we need to list for requests.
             } else if (this.currentRole === vsls.Role.Guest) {
                 this.guestChecker = await this.realApi.getSharedService(LiveShare.GuestCheckerService);
                 if (this.guestChecker) {
@@ -120,7 +120,7 @@ export class LiveShareProxy implements vsls.LiveShare {
         }
     }
 
-    private peersAreOkay() : Promise<boolean> {
+    private peersAreOkay(): Promise<boolean> {
         // If already asking, just use that promise
         if (this.peerCheckPromise) {
             return this.peerCheckPromise.promise;
@@ -163,10 +163,13 @@ export class LiveShareProxy implements vsls.LiveShare {
 
     private forceShutdown() {
         // One or more guests doesn't have the python extension installed. Force our live share session to disconnect
-        this.realApi.end().then(() => {
-            this.pendingGuestCheckCount = 0;
-            this.peerCheckPromise = undefined;
-            this.applicationShell.showErrorMessage(localize.DataScience.liveShareInvalid());
-        }).ignoreErrors();
+        this.realApi
+            .end()
+            .then(() => {
+                this.pendingGuestCheckCount = 0;
+                this.peerCheckPromise = undefined;
+                this.applicationShell.showErrorMessage(localize.DataScience.liveShareInvalid());
+            })
+            .ignoreErrors();
     }
 }

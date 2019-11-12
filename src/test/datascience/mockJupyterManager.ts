@@ -20,13 +20,7 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { CodeSnippits, Identifiers } from '../../client/datascience/constants';
-import {
-    ICell,
-    IConnection,
-    IJupyterKernelSpec,
-    IJupyterSession,
-    IJupyterSessionManager
-} from '../../client/datascience/types';
+import { ICell, IConnection, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../client/datascience/types';
 import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceManager } from '../../client/ioc/types';
 import { noop, sleep } from '../core';
@@ -45,7 +39,7 @@ export enum SupportedCommands {
     nbconvert = 2,
     notebook = 4,
     kernelspec = 8,
-    all = 0xFFFF
+    all = 0xffff
 }
 
 // This class is used to mock talking to jupyter. It mocks
@@ -77,13 +71,15 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => this.changedInterpreterEvent.event);
         this.interpreterService.setup(i => i.getActiveInterpreter()).returns(() => Promise.resolve(this.activeInterpreter));
         this.interpreterService.setup(i => i.getInterpreters()).returns(() => Promise.resolve(this.installedInterpreters));
-        this.interpreterService.setup(i => i.getInterpreterDetails(TypeMoq.It.isAnyString())).returns((p) => {
-            const found = this.installedInterpreters.find(i => i.path === p);
-            if (found) {
-                return Promise.resolve(found);
-            }
-            return Promise.reject('Unknown interpreter');
-        });
+        this.interpreterService
+            .setup(i => i.getInterpreterDetails(TypeMoq.It.isAnyString()))
+            .returns(p => {
+                const found = this.installedInterpreters.find(i => i.path === p);
+                if (found) {
+                    return Promise.resolve(found);
+                }
+                return Promise.reject('Unknown interpreter');
+            });
         // Listen to configuration changes like the real interpreter service does so that we fire our settings changed event
         const configService = serviceManager.get<IConfigurationService>(IConfigurationService);
         if (configService && configService !== null) {
@@ -97,14 +93,17 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         // Setup our default kernel spec (this is just a dummy value)
         // tslint:disable-next-line:no-octal-literal
-        this.kernelSpecs.push({ name: '0e8519db-0895-416c-96df-fa80131ecea0', dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' });
+        this.kernelSpecs.push({
+            name: '0e8519db-0895-416c-96df-fa80131ecea0',
+            dir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'
+        });
 
         // Setup our default cells that happen for everything
         this.addCell(CodeSnippits.MatplotLibInitSvg);
         this.addCell(CodeSnippits.MatplotLibInitPng);
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
         this.addCell(`import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
-        this.addCell('matplotlib.style.use(\'dark_background\')');
+        this.addCell("matplotlib.style.use('dark_background')");
         this.addCell(`matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         this.addCell(`%cd "${path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')}"`);
         // When we have windows file names, we replace `\` with `\\`.
@@ -152,12 +151,24 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Add the python calls first.
         const pythonService = new MockPythonService(interpreter);
         this.pythonServices.push(pythonService);
-        this.pythonExecutionFactory.setup(f => f.create(TypeMoq.It.is(o => {
-            return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
-        }))).returns(() => Promise.resolve(pythonService));
-        this.pythonExecutionFactory.setup(f => f.createActivatedEnvironment(TypeMoq.It.is(o => {
-            return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
-        }))).returns(() => Promise.resolve(pythonService));
+        this.pythonExecutionFactory
+            .setup(f =>
+                f.create(
+                    TypeMoq.It.is(o => {
+                        return o && o.pythonPath ? o.pythonPath === interpreter.path : false;
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(pythonService));
+        this.pythonExecutionFactory
+            .setup(f =>
+                f.createActivatedEnvironment(
+                    TypeMoq.It.is(o => {
+                        return !o || JSON.stringify(o.interpreter) === JSON.stringify(interpreter);
+                    })
+                )
+            )
+            .returns(() => Promise.resolve(pythonService));
         this.setupSupportedPythonService(pythonService, interpreter, supportedCommands, notebookStdErr, notebookProc);
 
         // Then the process calls
@@ -186,7 +197,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     public addContinuousOutputCell(code: string, resultGenerator: (cancelToken: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {
-            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
+            const key = concatMultilineStringInput(c.data.source)
+                .replace(LineFeedRegEx, '')
+                .toLowerCase();
             if (c.data.cell_type === 'code') {
                 const taggedResult = {
                     output_type: 'generator'
@@ -214,11 +227,18 @@ export class MockJupyterManager implements IJupyterSessionManager {
         });
     }
 
-    public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
+    public addCell(
+        code: string,
+        result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
+        mimeType?: string
+    ) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {
             const cellMatcher = new CellMatcher();
-            const key = cellMatcher.stripFirstMarker(concatMultilineStringInput(c.data.source)).replace(LineFeedRegEx, '').toLowerCase();
+            const key = cellMatcher
+                .stripFirstMarker(concatMultilineStringInput(c.data.source))
+                .replace(LineFeedRegEx, '')
+                .toLowerCase();
             if (c.data.cell_type === 'code') {
                 const massagedResult = this.massageCellResult(result, mimeType);
                 const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
@@ -270,7 +290,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     private onConfigChanged = () => {
         this.changedInterpreterEvent.fire();
-    }
+    };
 
     private createNewSession(): MockJupyterSession {
         this.currentSession = new MockJupyterSession(this.cellDictionary, MockJupyterTimeDelay);
@@ -287,9 +307,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     private massageCellResult(
         result: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError,
-        mimeType?: string):
-        nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError {
-
+        mimeType?: string
+    ): nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError {
         // See if undefined or string or number
         if (!result) {
             // This is an empty execute result
@@ -325,18 +344,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
         const subDir = uuid();
         const filePath = path.join(tempDir, subDir, 'kernel.json');
         fs.ensureDirSync(path.dirname(filePath));
-        fs.writeJSONSync(filePath,
-            {
-                display_name: 'Python 3',
-                language: 'python',
-                argv: [
-                    pythonPath,
-                    '-m',
-                    'ipykernel_launcher',
-                    '-f',
-                    '{connection_file}'
-                ]
-            });
+        fs.writeJSONSync(filePath, {
+            display_name: 'Python 3',
+            language: 'python',
+            argv: [pythonPath, '-m', 'ipykernel_launcher', '-f', '{connection_file}']
+        });
         return filePath;
     }
 
@@ -389,7 +401,13 @@ export class MockJupyterManager implements IJupyterSessionManager {
         });
     }
 
-    private setupSupportedPythonService(service: MockPythonService, workingPython: PythonInterpreter, supportedCommands: SupportedCommands, notebookStdErr?: string[], notebookProc?: ChildProcess) {
+    private setupSupportedPythonService(
+        service: MockPythonService,
+        workingPython: PythonInterpreter,
+        supportedCommands: SupportedCommands,
+        notebookStdErr?: string[],
+        notebookProc?: ChildProcess
+    ) {
         if ((supportedCommands & SupportedCommands.ipykernel) === SupportedCommands.ipykernel) {
             this.setupPythonServiceExec(service, 'ipykernel', ['--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
             this.setupPythonServiceExec(service, 'ipykernel', ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
@@ -408,18 +426,33 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         if ((supportedCommands & SupportedCommands.notebook) === SupportedCommands.notebook) {
             this.setupPythonServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
-            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
-            this.setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'], notebookProc);
+            this.setupPythonServiceExecObservable(
+                service,
+                'jupyter',
+                ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'],
+                notebookProc
+            );
+            this.setupPythonServiceExecObservable(
+                service,
+                'jupyter',
+                ['notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198'],
+                notebookProc
+            );
         }
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
             this.setupPythonServiceExec(service, 'jupyter', ['kernelspec', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
             this.setupPythonServiceExec(service, 'jupyter', ['kernelspec', 'list'], () => {
-                const results = this.kernelSpecs.map(k => {
-                    return `  ${k.name}  ${k.dir}`;
-                }).join(os.EOL);
+                const results = this.kernelSpecs
+                    .map(k => {
+                        return `  ${k.name}  ${k.dir}`;
+                    })
+                    .join(os.EOL);
                 return Promise.resolve({ stdout: results });
             });
-
         }
     }
 
@@ -433,32 +466,65 @@ export class MockJupyterManager implements IJupyterSessionManager {
         if ((supportedCommands & SupportedCommands.ipykernel) === SupportedCommands.ipykernel) {
             // Don't mind the goofy path here. It's supposed to not find the item on your box. It's just testing the internal regex works
             this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], () => {
-                const results = this.kernelSpecs.map(k => {
-                    return `  ${k.name}  ${k.dir}`;
-                }).join(os.EOL);
+                const results = this.kernelSpecs
+                    .map(k => {
+                        return `  ${k.name}  ${k.dir}`;
+                    })
+                    .join(os.EOL);
                 return Promise.resolve({ stdout: results });
             });
-            this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
-                const spec = this.addKernelSpec(workingPython.path);
-                return Promise.resolve({ stdout: `somename ${path.dirname(spec)}` });
-            });
+            this.setupProcessServiceExec(
+                this.processService,
+                workingPython.path,
+                ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`],
+                () => {
+                    const spec = this.addKernelSpec(workingPython.path);
+                    return Promise.resolve({ stdout: `somename ${path.dirname(spec)}` });
+                }
+            );
             const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () => Promise.resolve({ stdout: 'failure to get server infos' }));
             this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(
+                this.processService,
+                workingPython.path,
+                ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
+            );
+            this.setupProcessServiceExecObservable(
+                this.processService,
+                workingPython.path,
+                ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
+            );
         } else if ((supportedCommands & SupportedCommands.notebook) === SupportedCommands.notebook) {
             this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], () => {
-                const results = this.kernelSpecs.map(k => {
-                    return `  ${k.name}  ${k.dir}`;
-                }).join(os.EOL);
+                const results = this.kernelSpecs
+                    .map(k => {
+                        return `  ${k.name}  ${k.dir}`;
+                    })
+                    .join(os.EOL);
                 return Promise.resolve({ stdout: results });
             });
             const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
             this.setupProcessServiceExec(this.processService, workingPython.path, [getServerInfoPath], () => Promise.resolve({ stdout: 'failure to get server infos' }));
             this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list'], [], []);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
-            this.setupProcessServiceExecObservable(this.processService, workingPython.path, ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(
+                this.processService,
+                workingPython.path,
+                ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
+            );
+            this.setupProcessServiceExecObservable(
+                this.processService,
+                workingPython.path,
+                ['-m', 'jupyter', 'notebook', '--no-browser', /--notebook-dir=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
+            );
         }
         if ((supportedCommands & SupportedCommands.nbconvert) === SupportedCommands.nbconvert) {
             this.setupProcessServiceExec(this.processService, workingPython.path, ['-m', 'jupyter', 'nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/], () => {
@@ -472,9 +538,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private setupPathProcessService(jupyterPath: string, service: MockProcessService, supportedCommands: SupportedCommands, notebookStdErr?: string[]) {
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
             this.setupProcessServiceExec(service, jupyterPath, ['kernelspec', 'list'], () => {
-                const results = this.kernelSpecs.map(k => {
-                    return `  ${k.name}  ${k.dir}`;
-                }).join(os.EOL);
+                const results = this.kernelSpecs
+                    .map(k => {
+                        return `  ${k.name}  ${k.dir}`;
+                    })
+                    .join(os.EOL);
                 return Promise.resolve({ stdout: results });
             });
             this.setupProcessServiceExecObservable(service, jupyterPath, ['kernelspec', 'list'], [], []);
@@ -490,7 +558,13 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
         if ((supportedCommands & SupportedCommands.kernelspec) === SupportedCommands.kernelspec) {
             this.setupProcessServiceExec(service, jupyterPath, ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
-            this.setupProcessServiceExecObservable(service, jupyterPath, ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
+            this.setupProcessServiceExecObservable(
+                service,
+                jupyterPath,
+                ['notebook', '--no-browser', /--notebook-dir=.*/, /.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'],
+                [],
+                notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']
+            );
             this.setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
         } else {
             this.setupProcessServiceExec(service, 'jupyter', ['notebook', '--version'], () => Promise.reject());

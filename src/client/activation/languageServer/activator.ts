@@ -10,12 +10,7 @@ import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import {
-    ILanguageServerActivator,
-    ILanguageServerDownloader,
-    ILanguageServerFolderService,
-    ILanguageServerManager
-} from '../types';
+import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -34,13 +29,11 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) { }
+    ) {}
     @traceDecorators.error('Failed to activate language server')
     public async activate(resource: Resource): Promise<void> {
         if (!resource) {
-            resource = this.workspace.hasWorkspaceFolders
-                ? this.workspace.workspaceFolders![0].uri
-                : undefined;
+            resource = this.workspace.hasWorkspaceFolders ? this.workspace.workspaceFolders![0].uri : undefined;
         }
         this.resource = resource;
         await this.ensureLanguageServerIsAvailable(resource);
@@ -70,8 +63,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         if (await this.fs.fileExists(targetJsonFile)) {
             try {
                 content = JSON.parse(await this.fs.readFile(targetJsonFile));
-                if (content.runtimeOptions && content.runtimeOptions.configProperties &&
-                    content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
+                if (content.runtimeOptions && content.runtimeOptions.configProperties && content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
                     return;
                 }
             } catch {

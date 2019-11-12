@@ -25,7 +25,7 @@ export class NonDebugClientV2 extends LocalDebugClientV2 {
             try {
                 this.pyProc!.kill();
                 // tslint:disable-next-line:no-empty
-            } catch { }
+            } catch {}
             this.pyProc = undefined;
         }
     }

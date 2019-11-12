@@ -38,10 +38,12 @@ export async function continueDebugging(debugClient: DebugClient) {
 }
 
 export type ExpectedVariable = { type: string; name: string; value: string };
-export async function validateVariablesInFrame(debugClient: DebugClient,
+export async function validateVariablesInFrame(
+    debugClient: DebugClient,
     stackTrace: DebugProtocol.StackTraceResponse,
-    expectedVariables: ExpectedVariable[], numberOfScopes?: number) {
-
+    expectedVariables: ExpectedVariable[],
+    numberOfScopes?: number
+) {
     const frameId = stackTrace.body.stackFrames[0].id;
 
     const scopes = await debugClient.scopesRequest({ frameId });

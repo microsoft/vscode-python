@@ -48,26 +48,26 @@ suite('Telemetry', () => {
         rewiremock.disable();
     });
 
-    const testsForisTelemetryDisabled =
-        [
-            {
-                testName: 'Returns true when globalValue is set to false',
-                settings: { globalValue: false },
-                expectedResult: true
-            },
-            {
-                testName: 'Returns false otherwise',
-                settings: {},
-                expectedResult: false
-            }
-        ];
+    const testsForisTelemetryDisabled = [
+        {
+            testName: 'Returns true when globalValue is set to false',
+            settings: { globalValue: false },
+            expectedResult: true
+        },
+        {
+            testName: 'Returns false otherwise',
+            settings: {},
+            expectedResult: false
+        }
+    ];
 
     suite('Function isTelemetryDisabled()', () => {
         testsForisTelemetryDisabled.forEach(testParams => {
             test(testParams.testName, async () => {
                 const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
                 when(workspaceService.getConfiguration('telemetry')).thenReturn(workspaceConfig.object);
-                workspaceConfig.setup(c => c.inspect<string>('enableTelemetry'))
+                workspaceConfig
+                    .setup(c => c.inspect<string>('enableTelemetry'))
                     .returns(() => testParams.settings as any)
                     .verifiable(TypeMoq.Times.once());
 
@@ -131,7 +131,8 @@ suite('Telemetry', () => {
     test('Send Error Telemetry', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        error.stack = ['Error: Boo',
+        error.stack = [
+            'Error: Boo',
             `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
             `at callFn (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:372:21)`,
             `at Test.Runnable.run (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runnable.js:364:7)`,
@@ -148,7 +149,8 @@ suite('Telemetry', () => {
             `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`,
             'at runCallback (timers.js:789:20)',
             'at tryOnImmediate (timers.js:751:5)',
-            'at processImmediate [as _immediateCallback] (timers.js:722:5)'].join('\n\t');
+            'at processImmediate [as _immediateCallback] (timers.js:722:5)'
+        ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
@@ -170,7 +172,8 @@ suite('Telemetry', () => {
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
         expect(stackTrace).to.be.length.greaterThan(1);
 
-        const expectedStack = ['at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23\n\tat callFn <pvsc>/node_modules/mocha/lib/runnable.js:372:21',
+        const expectedStack = [
+            'at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23\n\tat callFn <pvsc>/node_modules/mocha/lib/runnable.js:372:21',
             'at Test.Runnable.run <pvsc>/node_modules/mocha/lib/runnable.js:364:7',
             'at Runner.runTest <pvsc>/node_modules/mocha/lib/runner.js:455:10',
             'at  <pvsc>/node_modules/mocha/lib/runner.js:573:12',
@@ -185,19 +188,22 @@ suite('Telemetry', () => {
             'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5',
             'at runCallback <hidden>/timers.js:789:20',
             'at tryOnImmediate <hidden>/timers.js:751:5',
-            'at processImmediate [as _immediateCallback] <hidden>/timers.js:722:5'].join('\n\t');
+            'at processImmediate [as _immediateCallback] <hidden>/timers.js:722:5'
+        ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);
     });
     test('Ensure non extension file paths are stripped from stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        error.stack = ['Error: Boo',
+        error.stack = [
+            'Error: Boo',
             `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
             'at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)',
             'at Test.Runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)',
-            'at Runner.runTest (\\wow\wee/node_modules/mocha/lib/runner.js:455:10)',
-            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`].join('\n\t');
+            'at Runner.runTest (\\wowwee/node_modules/mocha/lib/runner.js:455:10)',
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`
+        ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
@@ -219,23 +225,27 @@ suite('Telemetry', () => {
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
         expect(stackTrace).to.be.length.greaterThan(1);
 
-        const expectedStack = ['at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23',
+        const expectedStack = [
+            'at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23',
             'at callFn <hidden>/runnable.js:372:21',
             'at Test.Runnable.run <hidden>/runnable.js:364:7',
             'at Runner.runTest <hidden>/runner.js:455:10',
-            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'].join('\n\t');
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'
+        ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);
     });
     test('Ensure non function names containing file names (unlikely, but for sake of completeness) are stripped from stack trace', () => {
         rewiremock.enable();
         const error = new Error('Boo');
-        error.stack = ['Error: Boo',
+        error.stack = [
+            'Error: Boo',
             `at Context.test (${EXTENSION_ROOT_DIR}/src/test/telemetry/index.unit.test.ts:50:23)`,
             'at callFn (c:/one/two/user/node_modules/mocha/lib/runnable.js:372:21)',
             'at Test./usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.run (/usr/Paul/Homer/desktop/node_modules/mocha/lib/runnable.js:364:7)',
-            'at Runner.runTest (\\wow\wee/node_modules/mocha/lib/runner.js:455:10)',
-            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`].join('\n\t');
+            'at Runner.runTest (\\wowwee/node_modules/mocha/lib/runner.js:455:10)',
+            `at Immediate.<anonymous> (${EXTENSION_ROOT_DIR}/node_modules/mocha/lib/runner.js:347:5)`
+        ].join('\n\t');
         rewiremock('vscode-extension-telemetry').with({ default: Reporter });
 
         const eventName = 'Testing';
@@ -257,11 +267,13 @@ suite('Telemetry', () => {
         expect(Reporter.properties).to.deep.equal([expectedErrorProperties, properties]);
         expect(stackTrace).to.be.length.greaterThan(1);
 
-        const expectedStack = ['at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23',
+        const expectedStack = [
+            'at Context.test <pvsc>/src/test/telemetry/index.unit.test.ts:50:23',
             'at callFn <hidden>/runnable.js:372:21',
             'at <hidden>.run <hidden>/runnable.js:364:7',
             'at Runner.runTest <hidden>/runner.js:455:10',
-            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'].join('\n\t');
+            'at Immediate <pvsc>/node_modules/mocha/lib/runner.js:347:5'
+        ].join('\n\t');
 
         expect(stackTrace).to.be.equal(expectedStack);
     });

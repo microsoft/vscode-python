@@ -9,7 +9,7 @@ import { RemoteDebugOptions } from '../debugAdapter/types';
 import { DebugConfigurationArguments } from '../types';
 
 export const IDebugConfigurationService = Symbol('IDebugConfigurationService');
-export interface IDebugConfigurationService extends DebugConfigurationProvider { }
+export interface IDebugConfigurationService extends DebugConfigurationProvider {}
 export const IDebuggerBanner = Symbol('IDebuggerBanner');
 export interface IDebuggerBanner {
     initialize(): void;
@@ -47,4 +47,4 @@ export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: s
 
 export const IDebugSessionLoggingFactory = Symbol('IDebugSessionLoggingFactory');
 
-export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory { }
+export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory {}

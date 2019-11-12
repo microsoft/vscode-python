@@ -10,14 +10,7 @@ import * as sinon from 'sinon';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebPanelProvider } from '../../../client/common/application/webPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -223,7 +216,6 @@ suite('Data Science - Native Editor', () => {
 
         const sessionChangedEvent = new EventEmitter<void>();
         when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
-
     });
 
     teardown(() => {
@@ -286,17 +278,19 @@ suite('Data Science - Native Editor', () => {
         expect(editor.contents).to.be.equal(baseFile);
         expect(editor.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editor.onMessage(InteractiveWindowMessages.EditCell, {
-            changes: [{
-                range: {
-                    startLineNumber: 2,
-                    startColumn: 1,
-                    endLineNumber: 2,
-                    endColumn: 1
-                },
-                rangeOffset: 4,
-                rangeLength: 0,
-                text: 'a'
-            }],
+            changes: [
+                {
+                    range: {
+                        startLineNumber: 2,
+                        startColumn: 1,
+                        endLineNumber: 2,
+                        endColumn: 1
+                    },
+                    rangeOffset: 4,
+                    rangeLength: 0,
+                    text: 'a'
+                }
+            ],
             id: 'NotebookImport#1'
         });
         expect(editor.cells).to.be.lengthOf(3);
@@ -433,7 +427,7 @@ suite('Data Science - Native Editor', () => {
 
         // When a cell is executed, then ensure we store the python version info in the notebook data.
         const version: Version = { build: [], major: 10, minor: 11, patch: 12, prerelease: [], raw: '10.11.12' };
-        when(executionProvider.getUsableJupyterPython()).thenResolve(({ version } as any));
+        when(executionProvider.getUsableJupyterPython()).thenResolve({ version } as any);
 
         try {
             editor.onMessage(InteractiveWindowMessages.SubmitNewCell, { code: 'hello', id: '1' });
@@ -443,14 +437,18 @@ suite('Data Science - Native Editor', () => {
         }
 
         // Wait for the version info to be retrieved (done in the background).
-        await waitForCondition(async () => {
-            try {
-                verify(executionProvider.getUsableJupyterPython()).atLeast(1);
-                return true;
-            } catch {
-                return false;
-            }
-        }, 5_000, 'Timeout');
+        await waitForCondition(
+            async () => {
+                try {
+                    verify(executionProvider.getUsableJupyterPython()).atLeast(1);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            5_000,
+            'Timeout'
+        );
 
         // Verify the version info is in the notbook.
         contents = JSON.parse(editor.contents) as nbformat.INotebookContent;
@@ -501,15 +499,19 @@ suite('Data Science - Native Editor', () => {
         // Make our call to actually export
         editor.onMessage(InteractiveWindowMessages.Export, editor.cells);
 
-        await waitForCondition(async () => {
-            try {
-                // Wait until showTextDocument has been called, that's the signal that export is done
-                verify(docManager.showTextDocument(anything(), anything())).atLeast(1);
-                return true;
-            } catch {
-                return false;
-            }
-        }, 1_000, 'Timeout');
+        await waitForCondition(
+            async () => {
+                try {
+                    // Wait until showTextDocument has been called, that's the signal that export is done
+                    verify(docManager.showTextDocument(anything(), anything())).atLeast(1);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            1_000,
+            'Timeout'
+        );
 
         // Verify that we also opened our text document not exact match as verify doesn't seem to match that
         verify(docManager.openTextDocument(anything())).once();

@@ -43,7 +43,8 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     }
     private isPipAvailable(resource?: Uri): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        return pythonExecutionFactory.create({ resource })
+        return pythonExecutionFactory
+            .create({ resource })
             .then(proc => proc.isModuleInstalled('pip'))
             .catch(() => false);
     }

@@ -7,11 +7,7 @@ import * as TypeMoq from 'typemoq';
 import * as vsls from 'vsls/vscode';
 import { IDocumentManager } from '../../client/common/application/types';
 import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
-import {
-    ICodeWatcher,
-    IInteractiveWindowProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
+import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -50,16 +46,16 @@ suite('DataScience Error Handler Functional Tests', () => {
             }
         ];
 
-        jupyterExecution.setup(jup => jup.getUsableJupyterPython())
-            .returns(() => Promise.resolve(undefined));
-        channels.setup(ch => ch.getInstallationChannels())
+        jupyterExecution.setup(jup => jup.getUsableJupyterPython()).returns(() => Promise.resolve(undefined));
+        channels
+            .setup(ch => ch.getInstallationChannels())
             .returns(() => Promise.resolve(installers))
             .verifiable(TypeMoq.Times.once());
 
         result.serviceManager.rebindInstance<IJupyterExecution>(IJupyterExecution, jupyterExecution.object);
         result.serviceManager.rebindInstance<IInstallationChannelManager>(IInstallationChannelManager, channels.object);
 
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), vsls.Role.None);
+        result.createWebView(() => mount(<InteractivePanel baseTheme="vscode-light" codeTheme="light_vs" testMode={true} skipDefault={true} />), vsls.Role.None);
 
         result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         result.get<IJupyterExecution>(IJupyterExecution);

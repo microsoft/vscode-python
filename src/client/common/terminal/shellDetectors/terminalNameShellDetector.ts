@@ -18,7 +18,9 @@ import { BaseShellDetector } from './baseShellDetector';
  */
 @injectable()
 export class TerminalNameShellDetector extends BaseShellDetector {
-    constructor() { super(4); }
+    constructor() {
+        super(4);
+    }
     public identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined {
         if (!terminal) {
             return;

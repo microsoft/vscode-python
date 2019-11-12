@@ -21,7 +21,8 @@ suite('Terminal Command Prompt', () => {
 
     test('Getting Path Command Prompt executable (32 on 64Win)', async () => {
         const env = { windir: 'windir' };
-        currentProc.setup(p => p.env)
+        currentProc
+            .setup(p => p.env)
             .returns(() => env)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -32,7 +33,8 @@ suite('Terminal Command Prompt', () => {
     });
     test('Getting Path Command Prompt executable (not 32 on 64Win)', async () => {
         const env = { PROCESSOR_ARCHITEW6432: 'x', windir: 'windir' };
-        currentProc.setup(p => p.env)
+        currentProc
+            .setup(p => p.env)
             .returns(() => env)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -43,14 +45,21 @@ suite('Terminal Command Prompt', () => {
     });
     test('Use command prompt as default shell', async () => {
         const env = { windir: 'windir' };
-        currentProc.setup(p => p.env)
+        currentProc
+            .setup(p => p.env)
             .returns(() => env)
             .verifiable(TypeMoq.Times.atLeastOnce());
         const cmdPromptPath = path.join('windir', 'System32', 'cmd.exe');
         configService
-            .setup(c => c.updateSectionSetting(TypeMoq.It.isValue('terminal'), TypeMoq.It.isValue('integrated.shell.windows'),
-                TypeMoq.It.isValue(cmdPromptPath), TypeMoq.It.isAny(),
-                TypeMoq.It.isValue(ConfigurationTarget.Global)))
+            .setup(c =>
+                c.updateSectionSetting(
+                    TypeMoq.It.isValue('terminal'),
+                    TypeMoq.It.isValue('integrated.shell.windows'),
+                    TypeMoq.It.isValue(cmdPromptPath),
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isValue(ConfigurationTarget.Global)
+                )
+            )
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 

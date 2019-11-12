@@ -13,10 +13,11 @@ import { ITerminalActivationHandler, ITerminalHelper, TerminalShellType } from '
 
 @injectable()
 export class PowershellTerminalActivationFailedHandler implements ITerminalActivationHandler {
-    constructor(@inject(ITerminalHelper) private readonly helper: ITerminalHelper,
+    constructor(
+        @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IDiagnosticsService) @named(PowerShellActivationHackDiagnosticsServiceId) private readonly diagnosticService: IDiagnosticsService) {
-    }
+        @inject(IDiagnosticsService) @named(PowerShellActivationHackDiagnosticsServiceId) private readonly diagnosticService: IDiagnosticsService
+    ) {}
     public async handleActivation(terminal: Terminal, resource: Resource, _preserveFocus: boolean, activated: boolean) {
         if (activated || !this.platformService.isWindows) {
             return;
@@ -32,5 +33,4 @@ export class PowershellTerminalActivationFailedHandler implements ITerminalActiv
         }
         this.diagnosticService.handle([new PowershellActivationNotAvailableDiagnostic(resource)]).ignoreErrors();
     }
-
 }

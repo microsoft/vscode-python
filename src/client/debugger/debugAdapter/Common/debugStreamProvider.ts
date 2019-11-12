@@ -11,7 +11,7 @@ import { IDebugStreamProvider } from '../types';
 @injectable()
 export class DebugStreamProvider implements IDebugStreamProvider {
     private server?: Server;
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     public get useDebugSocketStream(): boolean {
         return this.getDebugPort() > 0;
     }
@@ -34,7 +34,7 @@ export class DebugStreamProvider implements IDebugStreamProvider {
                     // tslint:disable-next-line: no-console
                     console.error(`waiting for debug protocol on port ${debugPort}`);
                 }
-                this.server = createServer((socket) => {
+                this.server = createServer(socket => {
                     if (!isTestExecution()) {
                         // tslint:disable-next-line: no-console
                         console.error('>> accepted connection from client');

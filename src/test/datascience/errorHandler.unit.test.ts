@@ -26,12 +26,12 @@ suite('DataScience Error Handler Unit Tests', () => {
     const message = 'Test error message.';
 
     test('Default error', async () => {
-        applicationShell.setup(app => app.showErrorMessage(typemoq.It.isAny()))
+        applicationShell
+            .setup(app => app.showErrorMessage(typemoq.It.isAny()))
             .returns(() => Promise.resolve(message))
             .verifiable(typemoq.Times.once());
 
-        logger.setup(log => log.logError(typemoq.It.isAny()))
-            .verifiable(typemoq.Times.once());
+        logger.setup(log => log.logError(typemoq.It.isAny())).verifiable(typemoq.Times.once());
 
         const err = new Error(message);
         await dataScienceErrorHandler.handleError(err);
@@ -41,8 +41,7 @@ suite('DataScience Error Handler Unit Tests', () => {
     });
 
     test('Jupyter Self Certificates Error', async () => {
-        logger.setup(log => log.logError(typemoq.It.isAny()))
-            .verifiable(typemoq.Times.once());
+        logger.setup(log => log.logError(typemoq.It.isAny())).verifiable(typemoq.Times.once());
 
         const err = new JupyterSelfCertsError(message);
         await dataScienceErrorHandler.handleError(err);
@@ -51,15 +50,19 @@ suite('DataScience Error Handler Unit Tests', () => {
     });
 
     test('Jupyter Install Error', async () => {
-        applicationShell.setup(app => app.showInformationMessage(typemoq.It.isAny(),
-            typemoq.It.isValue(localize.DataScience.jupyterInstall()),
-            typemoq.It.isValue(localize.DataScience.notebookCheckForImportNo()),
-            typemoq.It.isAny()))
+        applicationShell
+            .setup(app =>
+                app.showInformationMessage(
+                    typemoq.It.isAny(),
+                    typemoq.It.isValue(localize.DataScience.jupyterInstall()),
+                    typemoq.It.isValue(localize.DataScience.notebookCheckForImportNo()),
+                    typemoq.It.isAny()
+                )
+            )
             .returns(() => Promise.resolve(localize.DataScience.jupyterInstall()))
             .verifiable(typemoq.Times.once());
 
-        logger.setup(log => log.logError(typemoq.It.isAny()))
-            .verifiable(typemoq.Times.once());
+        logger.setup(log => log.logError(typemoq.It.isAny())).verifiable(typemoq.Times.once());
 
         const installers: IModuleInstaller[] = [
             {
@@ -78,7 +81,8 @@ suite('DataScience Error Handler Unit Tests', () => {
             }
         ];
 
-        channels.setup(ch => ch.getInstallationChannels())
+        channels
+            .setup(ch => ch.getInstallationChannels())
             .returns(() => Promise.resolve(installers))
             .verifiable(typemoq.Times.once());
 

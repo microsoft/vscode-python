@@ -48,10 +48,10 @@ suite('Interpreters - Locators Helper', () => {
         platform.setup(p => p.isWindows).returns(() => false);
         platform.setup(p => p.isLinux).returns(() => false);
         platform
-            .setup(p => p.isMac).returns(() => true)
+            .setup(p => p.isMac)
+            .returns(() => true)
             .verifiable(TypeMoq.Times.never());
-        fs
-            .setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+        fs.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => false)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -88,14 +88,11 @@ suite('Interpreters - Locators Helper', () => {
     });
     getNamesAndValues<OS>(OS).forEach(os => {
         test(`Ensure duplicates are removed (same version and same interpreter directory on ${os.name})`, async () => {
-            interpreterServiceHelper
-                .setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
-                .returns(() => false);
+            interpreterServiceHelper.setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isAny())).returns(() => false);
             platform.setup(p => p.isWindows).returns(() => os.value === OS.Windows);
             platform.setup(p => p.isLinux).returns(() => os.value === OS.Linux);
             platform.setup(p => p.isMac).returns(() => os.value === OS.Mac);
-            fs
-                .setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            fs.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((a, b) => a === b)
                 .verifiable(TypeMoq.Times.atLeastOnce());
 
@@ -156,14 +153,11 @@ suite('Interpreters - Locators Helper', () => {
     });
     getNamesAndValues<OS>(OS).forEach(os => {
         test(`Ensure interpreter types are identified from other locators (${os.name})`, async () => {
-            interpreterServiceHelper
-                .setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isAny()))
-                .returns(() => false);
+            interpreterServiceHelper.setup(i => i.isMacDefaultPythonPath(TypeMoq.It.isAny())).returns(() => false);
             platform.setup(p => p.isWindows).returns(() => os.value === OS.Windows);
             platform.setup(p => p.isLinux).returns(() => os.value === OS.Linux);
             platform.setup(p => p.isMac).returns(() => os.value === OS.Mac);
-            fs
-                .setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            fs.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((a, b) => a === b && a === path.join('users', 'python', 'bin'))
                 .verifiable(TypeMoq.Times.atLeastOnce());
 

@@ -42,8 +42,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
         when(workspace.onDidChangeConfiguration).thenReturn(noop as any);
-        provider = new EnvironmentVariablesProvider(instance(envVarsService), [], instance(platform),
-            instance(workspace), instance(configuration), instance(currentProcess));
+        provider = new EnvironmentVariablesProvider(instance(envVarsService), [], instance(platform), instance(workspace), instance(configuration), instance(currentProcess));
 
         clearCache();
     });
@@ -55,7 +54,7 @@ suite('Multiroot Environment Variables Provider', () => {
 
         provider.trackedWorkspaceFolders.add(workspaceFolder1Uri.fsPath);
         provider.trackedWorkspaceFolders.add(workspaceFolder2Uri.fsPath);
-        provider.onDidEnvironmentVariablesChange(uri => affectedWorkspace = uri);
+        provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(setting: string, uri?: Uri) {
                 return setting === 'python.envFile' && uri!.fsPath === workspaceFolder1Uri.fsPath;
@@ -72,7 +71,7 @@ suite('Multiroot Environment Variables Provider', () => {
         const workspaceFolderUri = Uri.file('workspace1');
 
         provider.trackedWorkspaceFolders.add(workspaceFolderUri.fsPath);
-        provider.onDidEnvironmentVariablesChange(uri => affectedWorkspace = uri);
+        provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(_setting: string, _uri?: Uri) {
                 return false;
@@ -85,7 +84,7 @@ suite('Multiroot Environment Variables Provider', () => {
     });
     test('Event is not fired when workspace is not tracked', () => {
         let affectedWorkspace: Uri | undefined;
-        provider.onDidEnvironmentVariablesChange(uri => affectedWorkspace = uri);
+        provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
         const changedEvent: ConfigurationChangeEvent = {
             affectsConfiguration(_setting: string, _uri?: Uri) {
                 return true;
@@ -107,10 +106,10 @@ suite('Multiroot Environment Variables Provider', () => {
 
             fileSystemWatcher
                 .setup(fs => fs.onDidChange(typemoq.It.isAny()))
-                .callback(cb => onChangeHandler = cb)
+                .callback(cb => (onChangeHandler = cb))
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange(uri => affectedWorkspace = uri);
+            provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
 
             provider.createFileWatcher(envFile, workspaceUri);
 
@@ -130,10 +129,10 @@ suite('Multiroot Environment Variables Provider', () => {
 
             fileSystemWatcher
                 .setup(fs => fs.onDidDelete(typemoq.It.isAny()))
-                .callback(cb => onDeleted = cb)
+                .callback(cb => (onDeleted = cb))
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange(uri => affectedWorkspace = uri);
+            provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
 
             provider.createFileWatcher(envFile, workspaceUri);
 
@@ -153,10 +152,10 @@ suite('Multiroot Environment Variables Provider', () => {
 
             fileSystemWatcher
                 .setup(fs => fs.onDidCreate(typemoq.It.isAny()))
-                .callback(cb => onCreated = cb)
+                .callback(cb => (onCreated = cb))
                 .verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
-            provider.onDidEnvironmentVariablesChange(uri => affectedWorkspace = uri);
+            provider.onDidEnvironmentVariablesChange(uri => (affectedWorkspace = uri));
 
             provider.createFileWatcher(envFile, workspaceUri);
 
@@ -171,15 +170,9 @@ suite('Multiroot Environment Variables Provider', () => {
             const envFile = path.join('a', 'b', 'env.file');
             const fileSystemWatcher = typemoq.Mock.ofType<FileSystemWatcher>();
 
-            fileSystemWatcher
-                .setup(fs => fs.onDidChange(typemoq.It.isAny()))
-                .verifiable(typemoq.Times.once());
-            fileSystemWatcher
-                .setup(fs => fs.onDidCreate(typemoq.It.isAny()))
-                .verifiable(typemoq.Times.once());
-            fileSystemWatcher
-                .setup(fs => fs.onDidDelete(typemoq.It.isAny()))
-                .verifiable(typemoq.Times.once());
+            fileSystemWatcher.setup(fs => fs.onDidChange(typemoq.It.isAny())).verifiable(typemoq.Times.once());
+            fileSystemWatcher.setup(fs => fs.onDidCreate(typemoq.It.isAny())).verifiable(typemoq.Times.once());
+            fileSystemWatcher.setup(fs => fs.onDidDelete(typemoq.It.isAny())).verifiable(typemoq.Times.once());
             when(workspace.createFileSystemWatcher(envFile)).thenReturn(fileSystemWatcher.object);
 
             provider.createFileWatcher(envFile);

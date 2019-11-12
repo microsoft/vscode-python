@@ -124,15 +124,14 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         isAtBottom: true,
         font: {
             size: 14,
-            family: 'Consolas, \'Courier New\', monospace'
+            family: "Consolas, 'Courier New', monospace"
         }
     };
 }
 
 export function createEmptyCell(id: string | undefined, executionCount: number | null): ICell {
     return {
-        data:
-        {
+        data: {
             cell_type: 'code', // We should eventually allow this to change to entering of markdown?
             execution_count: executionCount,
             metadata: {},
@@ -196,7 +195,7 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockOpen: true,
         inputBlockShow: true,
         inputBlockText: inputText,
-        inputBlockCollapseNeeded: (inputLinesCount > 1),
+        inputBlockCollapseNeeded: inputLinesCount > 1,
         inputBlockToggled: inputBlockToggled,
         selected: false,
         focused: false,
@@ -233,7 +232,6 @@ export function generateCells(filePath: string, repetitions: number): ICell[] {
 
 //tslint:disable:max-func-body-length
 function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] {
-
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
         {
@@ -261,7 +259,8 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 {
                     data: {
                         // tslint:disable-next-line: no-multiline-string
-                        'text/html': [`
+                        'text/html': [
+                            `
                             <div style="
                             overflow: auto;
                         ">
@@ -460,7 +459,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 }
             ],
             source: [
-                'myvar = \"\"\" # Lorem Ipsum\n',
+                'myvar = """ # Lorem Ipsum\n',
                 '\n',
                 'Lorem ipsum dolor sit amet, consectetur adipiscing elit.\n',
                 'Nullam eget varius ligula, eget fermentum mauris.\n',
@@ -468,18 +467,13 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                 'Nunc quis orci ante. Vivamus vel blandit velit.\n","Sed mattis dui diam, et blandit augue mattis vestibulum.\n',
                 'Suspendisse ornare interdum velit. Suspendisse potenti.\n',
                 'Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.\n',
-                '\"\"\"'
+                '"""'
             ]
         },
         {
             cell_type: 'markdown',
             metadata: {},
-            source: [
-                '## Cell 3\n',
-                'Here\'s some markdown\n',
-                '- A List\n',
-                '- Of Items'
-            ]
+            source: ['## Cell 3\n', "Here's some markdown\n", '- A List\n', '- Of Items']
         },
         {
             cell_type: 'code',
@@ -498,9 +492,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                     ]
                 }
             ],
-            source: [
-                'df'
-            ]
+            source: ['df']
         },
         {
             cell_type: 'code',
@@ -519,9 +511,7 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
                     ]
                 }
             ],
-            source: [
-                'df'
-            ]
+            source: ['df']
         }
     ];
 }

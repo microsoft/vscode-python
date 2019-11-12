@@ -8,7 +8,14 @@
 import { assert } from 'chai';
 import { instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule, frequencyForDailyInsidersCheck, frequencyForWeeklyInsidersCheck, lastLookUpTimeKey } from '../../../client/common/insidersBuild/downloadChannelRules';
+import {
+    ExtensionInsidersDailyChannelRule,
+    ExtensionInsidersOffChannelRule,
+    ExtensionInsidersWeeklyChannelRule,
+    frequencyForDailyInsidersCheck,
+    frequencyForWeeklyInsidersCheck,
+    lastLookUpTimeKey
+} from '../../../client/common/insidersBuild/downloadChannelRules';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IPersistentState, IPersistentStateFactory } from '../../../client/common/types';
 

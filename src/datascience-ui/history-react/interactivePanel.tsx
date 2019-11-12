@@ -44,13 +44,13 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         this.stateController = new InteractivePanelStateController({
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode ? true : false,
-            baseTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : this.props.baseTheme,
+            baseTheme: getSettings && getSettings().ignoreVscodeTheme ? 'vscode-light' : this.props.baseTheme,
             setState: this.setState.bind(this),
             activate: this.activated.bind(this),
             scrollToCell: this.scrollToCell.bind(this),
             defaultEditable: false,
             hasEdit: getSettings && getSettings().allowInput,
-            enableGather: (getSettings && getSettings().enableGather) ? true : false
+            enableGather: getSettings && getSettings().enableGather ? true : false
         });
 
         // Default our state.
@@ -82,23 +82,21 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         }
 
         return (
-            <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
-                <div className='styleSetter'>
-                    <style>
-                        {this.state.rootCss}
-                    </style>
+            <div id="main-panel" ref={this.mainPanelRef} role="Main" style={dynamicFont}>
+                <div className="styleSetter">
+                    <style>{this.state.rootCss}</style>
                 </div>
-                <header id='main-panel-toolbar'>
+                <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.state.baseTheme)}
                 </section>
-                <main id='main-panel-content' onScroll={this.handleScroll}>
+                <main id="main-panel-content" onScroll={this.handleScroll}>
                     {this.renderContentPanel(this.state.baseTheme)}
                 </main>
-                <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
+                <section id="main-panel-footer" aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
                     {this.renderFooterPanel(this.state.baseTheme)}
                 </section>
             </div>
@@ -112,7 +110,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             setTimeout(() => {
                 // First we have to give ourselves focus (so that focus actually ends up in the code cell)
                 if (this.mainPanelRef && this.mainPanelRef.current) {
-                    this.mainPanelRef.current.focus({preventScroll: true});
+                    this.mainPanelRef.current.focus({ preventScroll: true });
                 }
 
                 if (this.editCellRef && this.editCellRef.current) {
@@ -120,7 +118,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 }
             }, 100);
         }
-    }
+    };
 
     private scrollToCell(id: string) {
         const ref = this.cellRefs.get(id);
@@ -130,40 +128,73 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderToolbarPanel() {
-        const variableExplorerTooltip = this.state.variablesVisible ?
-            getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
-            getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+        const variableExplorerTooltip = this.state.variablesVisible
+            ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
+            : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
         return (
-            <div id='toolbar-panel'>
-                <div className='toolbar-menu-bar'>
-                    <div className='toolbar-menu-bar-child'>
+            <div id="toolbar-panel">
+                <div className="toolbar-menu-bar">
+                    <div className="toolbar-menu-bar-child">
                         <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Cancel} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.redo} disabled={!this.stateController.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Redo} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.redo}
+                            disabled={!this.stateController.canRedo()}
+                            tooltip={getLocString('DataScience.redo', 'Redo')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Redo} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.undo} disabled={!this.stateController.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Undo} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.undo}
+                            disabled={!this.stateController.canUndo()}
+                            tooltip={getLocString('DataScience.undo', 'Undo')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Undo} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.interruptKernel}
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Restart} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.restartKernel}
+                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Restart} />
                         </ImageButton>
                         <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.export}
+                            disabled={!this.stateController.canExport()}
+                            tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.expandAll} disabled={!this.stateController.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ExpandAll} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.expandAll}
+                            disabled={!this.stateController.canExpandAll()}
+                            tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.ExpandAll} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.collapseAll} disabled={!this.stateController.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.CollapseAll} />
+                        <ImageButton
+                            baseTheme={this.state.baseTheme}
+                            onClick={this.stateController.collapseAll}
+                            disabled={!this.stateController.canCollapseAll()}
+                            tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}
+                        >
+                            <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.CollapseAll} />
                         </ImageButton>
                     </div>
                 </div>
@@ -234,9 +265,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         );
     }
 
-    private getInputExecutionCount = () : number => {
+    private getInputExecutionCount = (): number => {
         return this.state.currentExecutionCount + 1;
-    }
+    };
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
@@ -252,26 +283,26 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             renderCell: this.renderCell,
             scrollToBottom: this.scrollDiv
         };
-    }
+    };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
-       return {
-        variables: this.state.variables,
-        pendingVariableCount: this.state.pendingVariableCount,
-        debugging: this.state.debugging,
-        busy: this.state.busy,
-        showDataExplorer: this.stateController.showDataViewer,
-        skipDefault: this.props.skipDefault,
-        testMode: this.props.testMode,
-        closeVariableExplorer: this.stateController.toggleVariableExplorer,
-        baseTheme: baseTheme
-       };
-    }
+        return {
+            variables: this.state.variables,
+            pendingVariableCount: this.state.pendingVariableCount,
+            debugging: this.state.debugging,
+            busy: this.state.busy,
+            showDataExplorer: this.stateController.showDataViewer,
+            skipDefault: this.props.skipDefault,
+            testMode: this.props.testMode,
+            closeVariableExplorer: this.stateController.toggleVariableExplorer,
+            baseTheme: baseTheme
+        };
+    };
 
     private clickEditCell = () => {
         if (this.editCellRef && this.editCellRef.current) {
             this.editCellRef.current.giveFocus(true);
         }
-    }
+    };
 
     private editCellKeyDown = (_cellId: string, e: IKeyboardEvent) => {
         if (e.code === 'Escape') {
@@ -279,7 +310,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         } else if (e.code === 'Enter' && e.shiftKey) {
             this.editCellSubmit(e);
         }
-    }
+    };
 
     private editCellSubmit(e: IKeyboardEvent) {
         if (e.editorInfo && e.editorInfo.contents && this.state.editCellVM) {
@@ -312,9 +343,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 nextTabStop.focus();
             }
         }
-    }
+    };
 
-    private findTabStop(direction: number, element: Element) : HTMLElement | undefined {
+    private findTabStop(direction: number, element: Element): HTMLElement | undefined {
         if (element) {
             const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
             if (allFocusable) {
@@ -333,7 +364,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 <ErrorBoundary>
                     <InteractiveCell
                         ref={cellRef}
-                        role='listitem'
+                        role="listitem"
                         editorOptions={this.state.editorOptions}
                         history={undefined}
                         maxTextSize={getSettings().maxOutputSize}
@@ -353,8 +384,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                         font={this.state.font}
                     />
                 </ErrorBoundary>
-            </div>);
-    }
+            </div>
+        );
+    };
 
     private renderCellToolbar = (cellId: string) => {
         const gotoCode = () => this.stateController.gotoCellCode(cellId);
@@ -365,29 +397,32 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         const hasNoSource = !cell || !cell.cell.file || cell.cell.file === Identifiers.EmptyFileName;
         const gatherHidden = !cell || !this.state.enableGather || cell.cell.data.cell_type !== 'code';
 
-        return (
-            [
-                <div className='cell-toolbar' key={0}>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={gatherCode} hidden={gatherHidden} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} >
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={copyCode} tooltip={getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file')} hidden={!hasNoSource}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Copy} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={deleteCode} tooltip={getLocString('DataScience.deleteButtonTooltip', 'Remove Cell')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                    </ImageButton>
-                </div>
-            ]
-        );
-    }
+        return [
+            <div className="cell-toolbar" key={0}>
+                <ImageButton baseTheme={this.state.baseTheme} onClick={gatherCode} hidden={gatherHidden} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')}>
+                    <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.GatherCode} />
+                </ImageButton>
+                <ImageButton baseTheme={this.state.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
+                    <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.GoToSourceCode} />
+                </ImageButton>
+                <ImageButton
+                    baseTheme={this.state.baseTheme}
+                    onClick={copyCode}
+                    tooltip={getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file')}
+                    hidden={!hasNoSource}
+                >
+                    <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Copy} />
+                </ImageButton>
+                <ImageButton baseTheme={this.state.baseTheme} onClick={deleteCode} tooltip={getLocString('DataScience.deleteButtonTooltip', 'Remove Cell')}>
+                    <Image baseTheme={this.state.baseTheme} class="image-button-image" image={ImageName.Cancel} />
+                </ImageButton>
+            </div>
+        ];
+    };
 
     private renderEditCellToolbar = (_cellId: string) => {
         return null;
-    }
+    };
 
     // This handles the scrolling. Its called from the props of contentPanel.
     // We only scroll when the state indicates we are at the bottom of the interactive window,
@@ -399,7 +434,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             // from elsewhere (and keeping track of these would make this hard to maintain)
             div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
         }
-    }
+    };
 
     private handleScroll = (e: React.UIEvent<HTMLDivElement>) => {
         if (this.internalScrollCount > 0) {
@@ -411,6 +446,5 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                 isAtBottom
             });
         }
-    }
-
+    };
 }

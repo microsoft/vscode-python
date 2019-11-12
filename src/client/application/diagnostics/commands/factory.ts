@@ -13,7 +13,7 @@ import { CommandOptions, IDiagnosticsCommandFactory } from './types';
 
 @injectable()
 export class DiagnosticsCommandFactory implements IDiagnosticsCommandFactory {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     public createCommand(diagnostic: IDiagnostic, options: CommandOptions): IDiagnosticCommand {
         const commandType = options.type;
         switch (options.type) {

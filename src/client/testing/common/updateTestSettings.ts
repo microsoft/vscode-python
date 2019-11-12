@@ -15,10 +15,11 @@ import { swallowExceptions } from '../../common/utils/decorators';
 
 @injectable()
 export class UpdateTestSettingService implements IExtensionActivationService {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem,
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService) {
-    }
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+    ) {}
     public async activate(resource: Resource): Promise<void> {
         this.updateTestSettings(resource).ignoreErrors();
     }
@@ -40,10 +41,12 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     }
     public async getFilesToBeFixed(resource: Resource) {
         const files = this.getSettingsFiles(resource);
-        const result = await Promise.all(files.map(async file => {
-            const needsFixing = await this.doesFileNeedToBeFixed(file);
-            return { file, needsFixing };
-        }));
+        const result = await Promise.all(
+            files.map(async file => {
+                const needsFixing = await this.doesFileNeedToBeFixed(file);
+                return { file, needsFixing };
+            })
+        );
         return result.filter(item => item.needsFixing).map(item => item.file);
     }
     @swallowExceptions('Failed to update settings.json')
@@ -79,11 +82,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
     public async doesFileNeedToBeFixed(filePath: string) {
         try {
             const contents = await this.fs.readFile(filePath);
-            return (
-                contents.indexOf('python.unitTest.') > 0 ||
-                contents.indexOf('.pyTest') > 0 ||
-                contents.indexOf('.pep8') > 0
-            );
+            return contents.indexOf('python.unitTest.') > 0 || contents.indexOf('.pyTest') > 0 || contents.indexOf('.pep8') > 0;
         } catch (ex) {
             traceError('Failed to check if file needs to be fixed', ex);
             return false;

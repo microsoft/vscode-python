@@ -7,7 +7,7 @@ import { interfaces } from 'inversify';
 // tslint:disable-next-line:interface-name
 export interface Newable<T> {
     // tslint:disable-next-line:no-any
-    new(...args: any[]): T;
+    new (...args: any[]): T;
 }
 //tslint:enable:callable-types
 
@@ -19,7 +19,7 @@ export interface Abstract<T> {
 //tslint:disable:callable-types
 export type ClassType<T> = {
     // tslint:disable-next-line:no-any
-    new(...args: any[]): T;
+    new (...args: any[]): T;
 };
 //tslint:enable:callable-types
 

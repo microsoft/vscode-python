@@ -16,12 +16,14 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     private fileWatchers = new Map<string, FileSystemWatcher>();
     private disposables: Disposable[] = [];
     private changeEventEmitter: EventEmitter<Uri | undefined>;
-    constructor(@inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
+    constructor(
+        @inject(IEnvironmentVariablesService) private envVarsService: IEnvironmentVariablesService,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) private platformService: IPlatformService,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ICurrentProcess) private process: ICurrentProcess) {
+        @inject(ICurrentProcess) private process: ICurrentProcess
+    ) {
         disposableRegistry.push(this);
         this.changeEventEmitter = new EventEmitter();
         const disposable = this.workspaceService.onDidChangeConfiguration(this.configurationChanged, this);

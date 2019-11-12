@@ -10,8 +10,7 @@ import { IInterpreterComparer } from './types';
 
 @injectable()
 export class InterpreterComparer implements IInterpreterComparer {
-    constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {
-    }
+    constructor(@inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {}
     public compare(a: PythonInterpreter, b: PythonInterpreter): number {
         const nameA = this.getSortName(a);
         const nameB = this.getSortName(b);
@@ -51,8 +50,7 @@ export class InterpreterComparer implements IInterpreterComparer {
             envSuffixParts.push(info.envName);
         }
 
-        const envSuffix = envSuffixParts.length === 0 ? '' :
-            `(${envSuffixParts.join(': ')})`;
+        const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
         return `${sortNameParts.join(' ')} ${envSuffix}`.trim();
     }
 }

@@ -16,8 +16,7 @@ export class NotInstalledErrorHandler extends BaseErrorHandler {
             return this.nextHandler ? this.nextHandler.handleError(error, resource, execInfo) : false;
         }
 
-        this.installer.promptToInstall(this.product, resource)
-            .catch(this.logger.logError.bind(this, 'NotInstalledErrorHandler.promptToInstall'));
+        this.installer.promptToInstall(this.product, resource).catch(this.logger.logError.bind(this, 'NotInstalledErrorHandler.promptToInstall'));
 
         const linterManager = this.serviceContainer.get<ILinterManager>(ILinterManager);
         const info = linterManager.getLinterInfo(execInfo.product!);

@@ -77,7 +77,7 @@ export class DocStringFoldingProvider implements FoldingRangeProvider {
         if (startLine.firstNonWhitespaceCharacterIndex !== startPosition.character) {
             return;
         }
-        const startIndex1 = startLine.text.indexOf('\'\'\'');
+        const startIndex1 = startLine.text.indexOf("'''");
         const startIndex2 = startLine.text.indexOf('"""');
         if (startIndex1 !== startPosition.character && startIndex2 !== startPosition.character) {
             return;

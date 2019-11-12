@@ -4,15 +4,11 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import {
-    ITestsHelper, ITestsParser, TestFile,
-    TestFunction, Tests, TestStatus,
-    UnitTestParserOptions
-} from '../../common/types';
+import { ITestsHelper, ITestsParser, TestFile, TestFunction, Tests, TestStatus, UnitTestParserOptions } from '../../common/types';
 
 @injectable()
 export class TestsParser implements ITestsParser {
-    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
+    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) {}
     public parse(content: string, options: UnitTestParserOptions): Tests {
         const testIds = this.getTestIds(content);
         let testsDirectory = options.cwd;
@@ -23,7 +19,8 @@ export class TestsParser implements ITestsParser {
     }
     private getTestIds(content: string): string[] {
         let startedCollecting = false;
-        return content.split(/\r?\n/g)
+        return content
+            .split(/\r?\n/g)
             .map(line => {
                 if (!startedCollecting) {
                     if (line === 'start') {

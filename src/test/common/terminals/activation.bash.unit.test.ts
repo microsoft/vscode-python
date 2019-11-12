@@ -58,8 +58,9 @@ suite('Terminal Environment Activation (bash)', () => {
                                 isScriptFileSupported = false;
                             }
                         }
-                        const titleTitle = isScriptFileSupported ? `Ensure bash Activation command returns activation command (Shell: ${shellType.name})` :
-                            `Ensure bash Activation command returns undefined (Shell: ${shellType.name})`;
+                        const titleTitle = isScriptFileSupported
+                            ? `Ensure bash Activation command returns activation command (Shell: ${shellType.name})`
+                            : `Ensure bash Activation command returns undefined (Shell: ${shellType.name})`;
 
                         test(titleTitle, async () => {
                             const bash = new Bash(serviceContainer.object);

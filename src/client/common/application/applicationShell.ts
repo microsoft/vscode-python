@@ -5,7 +5,33 @@
 // tslint:disable:no-var-requires no-any unified-signatures
 
 import { injectable } from 'inversify';
-import { CancellationToken, Disposable, env, Event, InputBox, InputBoxOptions, MessageItem, MessageOptions, OpenDialogOptions, OutputChannel, Progress, ProgressOptions, QuickPick, QuickPickItem, QuickPickOptions, SaveDialogOptions, StatusBarAlignment, StatusBarItem, TreeView, TreeViewOptions, Uri, window, WindowState, WorkspaceFolder, WorkspaceFolderPickOptions } from 'vscode';
+import {
+    CancellationToken,
+    Disposable,
+    env,
+    Event,
+    InputBox,
+    InputBoxOptions,
+    MessageItem,
+    MessageOptions,
+    OpenDialogOptions,
+    OutputChannel,
+    Progress,
+    ProgressOptions,
+    QuickPick,
+    QuickPickItem,
+    QuickPickOptions,
+    SaveDialogOptions,
+    StatusBarAlignment,
+    StatusBarItem,
+    TreeView,
+    TreeViewOptions,
+    Uri,
+    window,
+    WindowState,
+    WorkspaceFolder,
+    WorkspaceFolderPickOptions
+} from 'vscode';
 import { IApplicationShell } from './types';
 
 @injectable()

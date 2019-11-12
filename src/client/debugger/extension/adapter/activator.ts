@@ -19,7 +19,7 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         @inject(IDebugSessionLoggingFactory) private debugSessionLoggingFactory: IDebugSessionLoggingFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
             this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory));

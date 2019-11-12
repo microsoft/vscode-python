@@ -91,11 +91,7 @@ export class LanguageServer implements ILanguageServer {
         }
         this.extensionLoadedArgs.add(args || '');
         this.startupCompleted.promise
-            .then(() =>
-                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex =>
-                    traceError('Request python/loadExtension failed', ex)
-                )
-            )
+            .then(() => this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex => traceError('Request python/loadExtension failed', ex)))
             .ignoreErrors();
     }
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)
@@ -117,8 +113,6 @@ export class LanguageServer implements ILanguageServer {
         this.disposables.push(disposable);
     }
     private onClearAnalysisCache() {
-        this.languageClient!.sendRequest('python/clearAnalysisCache').then(noop, ex =>
-            traceError('Request python/clearAnalysisCache failed', ex)
-        );
+        this.languageClient!.sendRequest('python/clearAnalysisCache').then(noop, ex => traceError('Request python/clearAnalysisCache failed', ex));
     }
 }

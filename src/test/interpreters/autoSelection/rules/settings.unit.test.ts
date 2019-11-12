@@ -37,8 +37,7 @@ suite('Interpreters - Auto Selection - Settings Rule', () => {
         workspaceService = mock(WorkspaceService);
 
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
-        rule = new SettingsInterpretersAutoSelectionRuleTest(instance(fs),
-            instance(stateFactory), instance(workspaceService));
+        rule = new SettingsInterpretersAutoSelectionRuleTest(instance(fs), instance(stateFactory), instance(workspaceService));
     });
 
     test('Invoke next rule if python Path in user settings is default', async () => {

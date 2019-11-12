@@ -7,9 +7,11 @@ import { ITestManager, ITestManagerService, ITestManagerServiceFactory, IWorkspa
 @injectable()
 export class WorkspaceTestManagerService implements IWorkspaceTestManagerService, Disposable {
     private workspaceTestManagers = new Map<string, ITestManagerService>();
-    constructor(@inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
+    constructor(
+        @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private outChannel: OutputChannel,
         @inject(ITestManagerServiceFactory) private testManagerServiceFactory: ITestManagerServiceFactory,
-        @inject(IDisposableRegistry) disposables: Disposable[]) {
+        @inject(IDisposableRegistry) disposables: Disposable[]
+    ) {
         disposables.push(this);
     }
     public dispose() {

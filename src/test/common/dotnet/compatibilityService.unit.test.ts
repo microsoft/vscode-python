@@ -28,9 +28,13 @@ suite('DOT.NET', () => {
                 mappedServices.set(OSType.Windows, winService);
                 mappedServices.set(OSType.Linux, linuxService);
 
-                const service = new DotNetCompatibilityService(instance(unknownService), instance(macService),
-                    instance(winService), instance(linuxService),
-                    instance(platformService));
+                const service = new DotNetCompatibilityService(
+                    instance(unknownService),
+                    instance(macService),
+                    instance(winService),
+                    instance(linuxService),
+                    instance(platformService)
+                );
 
                 when(platformService.osType).thenReturn(osType.value);
                 const osService = mappedServices.get(osType.value)!;

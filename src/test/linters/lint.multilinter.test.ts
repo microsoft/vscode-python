@@ -8,9 +8,7 @@ import { ConfigurationTarget, DiagnosticCollection, Uri, window, workspace } fro
 import { ICommandManager } from '../../client/common/application/types';
 import { Product } from '../../client/common/installer/productInstaller';
 import { PythonToolExecutionService } from '../../client/common/process/pythonToolService';
-import {
-    ExecutionResult, IPythonToolExecutionService, SpawnOptions
-} from '../../client/common/process/types';
+import { ExecutionResult, IPythonToolExecutionService, SpawnOptions } from '../../client/common/process/types';
 import { ExecutionInfo, IConfigurationService } from '../../client/common/types';
 import { ILinterManager } from '../../client/linters/types';
 import { deleteFile, IExtensionTestApi, PythonSettingKeys, rootWorkspaceUri } from '../common';
@@ -21,10 +19,10 @@ const pythoFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'py
 
 // Mocked out python tool execution (all we need is mocked linter return values).
 class MockPythonToolExecService extends PythonToolExecutionService {
-
     // Mocked samples of linter messages from flake8 and pylint:
     public flake8Msg: string = '1,1,W,W391:blank line at end of file\ns:142:13), <anonymous>:1\n1,7,E,E999:SyntaxError: invalid syntax\n';
-    public pylintMsg: string = '************* Module print\ns:142:13), <anonymous>:1\n1,0,error,syntax-error:Missing parentheses in call to \'print\'. Did you mean print(x)? (<unknown>, line 1)\n';
+    public pylintMsg: string =
+        "************* Module print\ns:142:13), <anonymous>:1\n1,0,error,syntax-error:Missing parentheses in call to 'print'. Did you mean print(x)? (<unknown>, line 1)\n";
 
     // Depending on moduleName being exec'd, return the appropriate sample.
     public async exec(executionInfo: ExecutionInfo, _options: SpawnOptions, _resource: Uri): Promise<ExecutionResult<string>> {
@@ -75,7 +73,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
         await configService.updateSetting('linting.lintOnSave', false, rootWorkspaceUri, target);
         await configService.updateSetting('linting.pylintUseMinimalCheckers', false, workspaceUri);
 
-        linterManager.getAllLinterInfos().forEach(async (x) => {
+        linterManager.getAllLinterInfos().forEach(async x => {
             await configService.updateSetting(makeSettingKey(x.product), false, rootWorkspaceUri, target);
         });
     }
@@ -95,7 +93,7 @@ suite('Linting - Multiple Linters Enabled Test', () => {
 
         const commands = api.serviceContainer.get<ICommandManager>(ICommandManager);
 
-        const collection = await commands.executeCommand('python.runLinting') as DiagnosticCollection;
+        const collection = (await commands.executeCommand('python.runLinting')) as DiagnosticCollection;
         assert.notEqual(collection, undefined, 'python.runLinting did not return valid diagnostics collection.');
 
         const messages = collection!.get(document.uri);

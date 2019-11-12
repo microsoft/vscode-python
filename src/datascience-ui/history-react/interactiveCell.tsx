@@ -60,9 +60,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     public render() {
-
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
-            return <InformationMessages messages={this.props.cellVM.cell.data.messages}/>;
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages} />;
         } else {
             return this.renderNormalCell();
         }
@@ -114,15 +113,15 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private toggleInputBlock = () => {
         const cellId: string = this.getCell().id;
         this.props.cellVM.inputBlockToggled(cellId);
-    }
+    };
 
     private getCell = () => {
         return this.props.cellVM.cell;
-    }
+    };
 
     private isCodeCell = () => {
         return this.props.cellVM.cell.data.cell_type === 'code';
-    }
+    };
 
     private renderNormalCell() {
         const allowsPlainInput = getSettings().showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
@@ -134,11 +133,19 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onCellKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
+                <div
+                    className={cellWrapperClass}
+                    role={this.props.role}
+                    ref={this.wrapperRef}
+                    tabIndex={0}
+                    onKeyDown={this.onCellKeyDown}
+                    onClick={this.onMouseClick}
+                    onDoubleClick={this.onMouseDoubleClick}
+                >
                     <div className={cellOuterClass}>
                         {this.renderControls()}
-                        <div className='content-div'>
-                            <div className='cell-result-container'>
+                        <div className="content-div">
+                            <div className="cell-result-container">
                                 {this.renderInput()}
                                 <CellOutput
                                     cellVM={this.props.cellVM}
@@ -165,7 +172,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             ev.stopPropagation();
             this.props.onClick(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         // When we receive double click, propagate upwards. Might change our state
@@ -173,27 +180,35 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             ev.stopPropagation();
             this.props.onDoubleClick(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private renderControls = () => {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
-        const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell());
-        const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
-            this.props.cellVM.cell.data.execution_count.toString() : '-';
+        const collapseVisible = this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell();
+        const executionCount =
+            this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count
+                ? this.props.cellVM.cell.data.execution_count.toString()
+                : '-';
         const isEditOnlyCell = this.props.cellVM.cell.id === Identifiers.EditCellId;
 
         return (
-            <div className='controls-div'>
-                <ExecutionCount isBusy={busy} count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount} visible={this.isCodeCell()} />
-                <CollapseButton theme={this.props.baseTheme}
+            <div className="controls-div">
+                <ExecutionCount
+                    isBusy={busy}
+                    count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount}
+                    visible={this.isCodeCell()}
+                />
+                <CollapseButton
+                    theme={this.props.baseTheme}
                     visible={collapseVisible}
                     open={this.props.cellVM.inputBlockOpen}
                     onClick={this.toggleInputBlock}
-                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')} />
+                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}
+                />
                 {this.props.renderCellToolbar(this.props.cellVM.cell.id)}
             </div>
         );
-    }
+    };
 
     private renderInput = () => {
         if (this.isCodeCell()) {
@@ -221,27 +236,27 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             );
         }
         return null;
-    }
+    };
 
     private onCodeFocused = () => {
         if (this.props.focused) {
             this.props.focused(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onCodeUnfocused = () => {
         if (this.props.unfocused) {
             this.props.unfocused(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private hasOutput = () => {
         return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
-    }
+    };
 
     private getCodeCell = () => {
         return this.props.cellVM.cell.data as nbformat.ICodeCell;
-    }
+    };
 
     private shouldRenderResults(): boolean {
         return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.cellVM.hideOutput;
@@ -250,19 +265,16 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private onCellKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
         // Handle keydown events for the entire cell
         if (this.props.keyDown && event.key !== 'Tab') {
-            this.props.keyDown(
-                this.props.cellVM.cell.id,
-                {
-                    code: event.key,
-                    shiftKey: event.shiftKey,
-                    ctrlKey: event.ctrlKey,
-                    metaKey: event.metaKey,
-                    altKey: event.altKey,
-                    target: event.target as HTMLDivElement,
-                    stopPropagation: () => event.stopPropagation(),
-                    preventDefault: () => event.preventDefault()
-                });
+            this.props.keyDown(this.props.cellVM.cell.id, {
+                code: event.key,
+                shiftKey: event.shiftKey,
+                ctrlKey: event.ctrlKey,
+                metaKey: event.metaKey,
+                altKey: event.altKey,
+                target: event.target as HTMLDivElement,
+                stopPropagation: () => event.stopPropagation(),
+                preventDefault: () => event.preventDefault()
+            });
         }
-    }
-
+    };
 }

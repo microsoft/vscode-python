@@ -184,7 +184,7 @@ export class InvalidMacPythonInterpreterService extends BaseDiagnosticsService {
                 ];
             }
             default: {
-                throw new Error('Invalid diagnostic for \'InvalidMacPythonInterpreterService\'');
+                throw new Error("Invalid diagnostic for 'InvalidMacPythonInterpreterService'");
             }
         }
     }

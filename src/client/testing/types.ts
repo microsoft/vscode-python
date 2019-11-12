@@ -4,17 +4,22 @@
 'use strict';
 
 // tslint:disable-next-line:ordered-imports
-import {
-    DiagnosticSeverity, Disposable, DocumentSymbolProvider,
-    Event, Location, ProviderResult, TextDocument,
-    TreeDataProvider, TreeItem, Uri, WorkspaceFolder
-} from 'vscode';
+import { DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Location, ProviderResult, TextDocument, TreeDataProvider, TreeItem, Uri, WorkspaceFolder } from 'vscode';
 import { Product, Resource } from '../common/types';
 import { CommandSource } from './common/constants';
 import {
-    FlattenedTestFunction, ITestManager, ITestResultsService,
-    TestFile, TestFolder, TestFunction, TestRunOptions, Tests,
-    TestStatus, TestsToRun, TestSuite, UnitTestProduct
+    FlattenedTestFunction,
+    ITestManager,
+    ITestResultsService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    TestRunOptions,
+    Tests,
+    TestStatus,
+    TestsToRun,
+    TestSuite,
+    UnitTestProduct
 } from './common/types';
 
 export const ITestConfigurationService = Symbol('ITestConfigurationService');
@@ -173,7 +178,7 @@ export class TestWorkspaceFolder {
     public functionsFailed?: number;
     public functionsDidNotRun?: number;
     public passed?: boolean;
-    constructor(public readonly workspaceFolder: WorkspaceFolder) { }
+    constructor(public readonly workspaceFolder: WorkspaceFolder) {}
     public get resource(): Uri {
         return this.workspaceFolder.uri;
     }

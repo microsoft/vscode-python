@@ -13,14 +13,16 @@ export class Bash extends BaseActivationCommandProvider {
         super(serviceContainer);
     }
     public isShellSupported(targetShell: TerminalShellType): boolean {
-        return targetShell === TerminalShellType.bash ||
+        return (
+            targetShell === TerminalShellType.bash ||
             targetShell === TerminalShellType.gitbash ||
             targetShell === TerminalShellType.wsl ||
             targetShell === TerminalShellType.ksh ||
             targetShell === TerminalShellType.zsh ||
             targetShell === TerminalShellType.cshell ||
             targetShell === TerminalShellType.tcshell ||
-            targetShell === TerminalShellType.fish;
+            targetShell === TerminalShellType.fish
+        );
     }
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
         const scriptFile = await this.findScriptFile(pythonPath, this.getScriptsInOrderOfPreference(targetShell));

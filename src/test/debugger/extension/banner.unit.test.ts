@@ -9,8 +9,7 @@ import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { DebugSession } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../../client/common/application/types';
-import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../../client/common/types';
+import { IBrowserService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory, IRandom } from '../../../client/common/types';
 import { DebuggerTypeName } from '../../../client/debugger/constants';
 import { DebuggerBanner, PersistentStateKeys } from '../../../client/debugger/extension/banner';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -49,15 +48,11 @@ suite('Debugging - Banner', () => {
         factory
             .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchCounter), typemoq.It.isAny()))
             .returns(() => launchCounterState.object);
-        factory
-            .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.ShowBanner), typemoq.It.isAny()))
-            .returns(() => showBannerState.object);
+        factory.setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.ShowBanner), typemoq.It.isAny())).returns(() => showBannerState.object);
         factory
             .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.DebuggerLaunchThresholdCounter), typemoq.It.isAny()))
             .returns(() => launchThresholdCounterState.object);
-        factory
-            .setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny()))
-            .returns(() => userSelectedState.object);
+        factory.setup(f => f.createGlobalPersistentState(typemoq.It.isValue(PersistentStateKeys.UserSelected), typemoq.It.isAny())).returns(() => userSelectedState.object);
 
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IBrowserService))).returns(() => browser.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IPersistentStateFactory))).returns(() => factory.object);
@@ -66,17 +61,19 @@ suite('Debugging - Banner', () => {
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IDisposableRegistry))).returns(() => []);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
         serviceContainer.setup(s => s.get(typemoq.It.isValue(IRandom))).returns(() => runtime.object);
-        userSelectedState.setup(s => s.value)
-            .returns(() => userSelected);
+        userSelectedState.setup(s => s.value).returns(() => userSelected);
 
         banner = new DebuggerBanner(serviceContainer.object);
     });
     test('Browser is displayed when launching service along with debugger launch counter', async () => {
         const debuggerLaunchCounter = 1234;
-        launchCounterState.setup(l => l.value).returns(() => debuggerLaunchCounter).verifiable(typemoq.Times.once());
-        browser.setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`)))
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => debuggerLaunchCounter)
             .verifiable(typemoq.Times.once());
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
+        browser.setup(b => b.launch(typemoq.It.isValue(`https://www.research.net/r/N7B25RV?n=${debuggerLaunchCounter}`))).verifiable(typemoq.Times.once());
+        appShell
+            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .returns(() => Promise.resolve(yes));
 
         await banner.show();
@@ -92,9 +89,9 @@ suite('Debugging - Banner', () => {
             launchCounterState.setup(l => l.value).returns(() => 10);
             launchThresholdCounterState.setup(t => t.value).returns(() => 10);
             userSelected = undefined;
-            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100)))
-                .returns(() => randomSample);
-            userSelectedState.setup(u => u.updateValue(typemoq.It.isValue(expected)))
+            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100))).returns(() => randomSample);
+            userSelectedState
+                .setup(u => u.updateValue(typemoq.It.isValue(expected)))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
 
@@ -111,9 +108,9 @@ suite('Debugging - Banner', () => {
             launchCounterState.setup(l => l.value).returns(() => 10);
             launchThresholdCounterState.setup(t => t.value).returns(() => 10);
             userSelected = undefined;
-            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100)))
-                .returns(() => randomSample);
-            userSelectedState.setup(u => u.updateValue(typemoq.It.isValue(expected)))
+            runtime.setup(r => r.getRandomInt(typemoq.It.isValue(0), typemoq.It.isValue(100))).returns(() => randomSample);
+            userSelectedState
+                .setup(u => u.updateValue(typemoq.It.isValue(expected)))
                 .returns(() => Promise.resolve())
                 .verifiable(typemoq.Times.once());
 
@@ -128,16 +125,20 @@ suite('Debugging - Banner', () => {
     }
     test('Increment Debugger Launch Counter when debug session starts', async () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
-        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
-            .callback(cb => onDidTerminateDebugSessionCb = cb)
+        debugService
+            .setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
+            .callback(cb => (onDidTerminateDebugSessionCb = cb))
             .verifiable(typemoq.Times.once());
 
         const debuggerLaunchCounter = 1234;
-        launchCounterState.setup(l => l.value).returns(() => debuggerLaunchCounter)
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => debuggerLaunchCounter)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1)))
-            .verifiable(typemoq.Times.once());
-        showBannerState.setup(s => s.value).returns(() => true)
+        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1))).verifiable(typemoq.Times.once());
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => true)
             .verifiable(typemoq.Times.atLeastOnce());
 
         banner.initialize();
@@ -149,15 +150,17 @@ suite('Debugging - Banner', () => {
         showBannerState.verifyAll();
     });
     test('Do not Increment Debugger Launch Counter when debug session starts and Banner is disabled', async () => {
-        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
-            .verifiable(typemoq.Times.never());
+        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny())).verifiable(typemoq.Times.never());
 
         const debuggerLaunchCounter = 1234;
-        launchCounterState.setup(l => l.value).returns(() => debuggerLaunchCounter)
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => debuggerLaunchCounter)
             .verifiable(typemoq.Times.never());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1)))
-            .verifiable(typemoq.Times.never());
-        showBannerState.setup(s => s.value).returns(() => false)
+        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(debuggerLaunchCounter + 1))).verifiable(typemoq.Times.never());
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => false)
             .verifiable(typemoq.Times.atLeastOnce());
 
         banner.initialize();
@@ -168,7 +171,9 @@ suite('Debugging - Banner', () => {
         showBannerState.verifyAll();
     });
     test('shouldShow must return false when Banner is disabled', async () => {
-        showBannerState.setup(s => s.value).returns(() => false)
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => false)
             .verifiable(typemoq.Times.once());
 
         expect(await banner.shouldShow()).to.be.equal(false, 'Incorrect value');
@@ -176,11 +181,17 @@ suite('Debugging - Banner', () => {
         showBannerState.verifyAll();
     });
     test('shouldShow must return false when Banner is enabled and debug counter is not same as threshold', async () => {
-        showBannerState.setup(s => s.value).returns(() => true)
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => true)
             .verifiable(typemoq.Times.once());
-        launchCounterState.setup(l => l.value).returns(() => 1)
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => 1)
             .verifiable(typemoq.Times.once());
-        launchThresholdCounterState.setup(t => t.value).returns(() => 10)
+        launchThresholdCounterState
+            .setup(t => t.value)
+            .returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
 
         expect(await banner.shouldShow()).to.be.equal(false, 'Incorrect value');
@@ -190,11 +201,17 @@ suite('Debugging - Banner', () => {
         launchThresholdCounterState.verifyAll();
     });
     test('shouldShow must return true when Banner is enabled and debug counter is same as threshold', async () => {
-        showBannerState.setup(s => s.value).returns(() => true)
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => true)
             .verifiable(typemoq.Times.once());
-        launchCounterState.setup(l => l.value).returns(() => 10)
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => 10)
             .verifiable(typemoq.Times.once());
-        launchThresholdCounterState.setup(t => t.value).returns(() => 10)
+        launchThresholdCounterState
+            .setup(t => t.value)
+            .returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
 
         expect(await banner.shouldShow()).to.be.equal(true, 'Incorrect value');
@@ -207,20 +224,29 @@ suite('Debugging - Banner', () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         const currentLaunchCounter = 50;
 
-        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
-            .callback(cb => onDidTerminateDebugSessionCb = cb)
+        debugService
+            .setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
+            .callback(cb => (onDidTerminateDebugSessionCb = cb))
             .verifiable(typemoq.Times.atLeastOnce());
-        showBannerState.setup(s => s.value).returns(() => true)
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => true)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.value).returns(() => currentLaunchCounter)
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => currentLaunchCounter)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchThresholdCounterState.setup(t => t.value).returns(() => 10)
+        launchThresholdCounterState
+            .setup(t => t.value)
+            .returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isValue(currentLaunchCounter + 1)))
+        launchCounterState
+            .setup(l => l.updateValue(typemoq.It.isValue(currentLaunchCounter + 1)))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.atLeastOnce());
 
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
+        appShell
+            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .verifiable(typemoq.Times.once());
         banner.initialize();
         await onDidTerminateDebugSessionCb!({ type: DebuggerTypeName } as any);
@@ -234,19 +260,26 @@ suite('Debugging - Banner', () => {
         let onDidTerminateDebugSessionCb: (e: DebugSession) => Promise<void>;
         let currentLaunchCounter = 50;
 
-        debugService.setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
-            .callback(cb => onDidTerminateDebugSessionCb = cb)
+        debugService
+            .setup(d => d.onDidTerminateDebugSession(typemoq.It.isAny()))
+            .callback(cb => (onDidTerminateDebugSessionCb = cb))
             .verifiable(typemoq.Times.atLeastOnce());
-        showBannerState.setup(s => s.value).returns(() => true)
+        showBannerState
+            .setup(s => s.value)
+            .returns(() => true)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.value).returns(() => currentLaunchCounter)
+        launchCounterState
+            .setup(l => l.value)
+            .returns(() => currentLaunchCounter)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchThresholdCounterState.setup(t => t.value).returns(() => 10)
+        launchThresholdCounterState
+            .setup(t => t.value)
+            .returns(() => 10)
             .verifiable(typemoq.Times.atLeastOnce());
-        launchCounterState.setup(l => l.updateValue(typemoq.It.isAny()))
-            .callback(() => currentLaunchCounter = currentLaunchCounter + 1);
+        launchCounterState.setup(l => l.updateValue(typemoq.It.isAny())).callback(() => (currentLaunchCounter = currentLaunchCounter + 1));
 
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
+        appShell
+            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .returns(() => Promise.resolve(undefined))
             .verifiable(typemoq.Times.once());
         banner.initialize();
@@ -261,9 +294,8 @@ suite('Debugging - Banner', () => {
         launchThresholdCounterState.verifyAll();
         expect(currentLaunchCounter).to.be.equal(54);
     });
-    test('Disabling banner must store value of \'false\' in global store', async () => {
-        showBannerState.setup(s => s.updateValue(typemoq.It.isValue(false)))
-            .verifiable(typemoq.Times.once());
+    test("Disabling banner must store value of 'false' in global store", async () => {
+        showBannerState.setup(s => s.updateValue(typemoq.It.isValue(false))).verifiable(typemoq.Times.once());
 
         await banner.disable();
 

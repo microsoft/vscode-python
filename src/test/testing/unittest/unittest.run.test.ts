@@ -33,13 +33,7 @@ import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initiali
 const testFilesPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
 const unitTestSpecificTestFilesPath = path.join(testFilesPath, 'specificTest');
-const defaultUnitTestArgs = [
-    '-v',
-    '-s',
-    '.',
-    '-p',
-    '*test*.py'
-];
+const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - unittest - run with mocked process output', () => {
@@ -98,7 +92,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
 
     async function ignoreTestLauncher() {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         // When running the python test launcher, just return.
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.length > 1 && args[0].endsWith('visualstudio_py_testlauncher.py')) {
@@ -107,12 +101,15 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         });
     }
     async function injectTestDiscoveryOutput(output: string) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
                 callback({
                     // Ensure any spaces added during code formatting or the like are removed
-                    out: output.split(/\r?\n/g).map(item => item.trim()).join(EOL),
+                    out: output
+                        .split(/\r?\n/g)
+                        .map(item => item.trim())
+                        .join(EOL),
                     source: 'stdout'
                 });
             }
@@ -143,11 +140,26 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
             { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
             { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_two.Test_test2.test_A2'
+            },
             { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
+                message: '1 != 2 : Not equal',
+                test: 'test_unittest_two.Test_test2.test_C2'
+            },
             { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_two.Test_test2a.test_222A2'
+            },
             { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
         ];
         injectTestSocketServerResults(resultsToSend);
@@ -178,14 +190,34 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             `);
 
         const resultsToSend = [
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_one.Test_test1.test_A'
+            },
             { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
             { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_two.Test_test2.test_A2'
+            },
             { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
+                message: '1 != 2 : Not equal',
+                test: 'test_unittest_two.Test_test2.test_C2'
+            },
             { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_two.Test_test2a.test_222A2'
+            },
             { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
         ];
         injectTestSocketServerResults(resultsToSend);
@@ -199,11 +231,31 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         assert.equal(results.summary.skipped, 1, 'skipped');
 
         const failedResultsToSend = [
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_one.Test_test1.test_A'
+            },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_two.Test_test2.test_A2'
+            },
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
+                message: '1 != 2 : Not equal',
+                test: 'test_unittest_two.Test_test2.test_C2'
+            },
             { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' }
+            {
+                outcome: 'failed',
+                traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                message: 'Not implemented',
+                test: 'test_unittest_two.Test_test2a.test_222A2'
+            }
         ];
         injectTestSocketServerResults(failedResultsToSend);
 
@@ -304,9 +356,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         test_unittest_two.Test_test2a.test_222B2
         `);
 
-        const resultsToSend = [
-            { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' }
-        ];
+        const resultsToSend = [{ outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' }];
         injectTestSocketServerResults(resultsToSend);
 
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);

@@ -25,7 +25,7 @@ const debuggerType = DebuggerTypeName;
 // tslint:disable-next-line:max-func-body-length
 suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     let debugClient: DebugClient;
-    setup(async function () {
+    setup(async function() {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -41,7 +41,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
         try {
             debugClient.stop().catch(noop);
             // tslint:disable-next-line:no-empty
-        } catch (ex) { }
+        } catch (ex) {}
     });
 
     function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, port?: number, host?: string, showReturnValue: boolean = true): LaunchRequestArguments {
@@ -55,7 +55,8 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
             pythonPath: PYTHON_PATH,
             args: [],
             envFile: '',
-            host, port,
+            host,
+            port,
             type: debuggerType,
             name: '',
             request: 'launch'
@@ -105,7 +106,7 @@ suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     });
     test('Confirm debuggig fails when provided port is in use', async () => {
         const server = net.createServer(noop);
-        const port = await new Promise<number>(resolve => server.listen({ host: 'localhost', port: 0 }, () => resolve((server.address() as net.AddressInfo) .port)));
+        const port = await new Promise<number>(resolve => server.listen({ host: 'localhost', port: 0 }, () => resolve((server.address() as net.AddressInfo).port)));
         let exception: Error | undefined;
         try {
             await testDebuggingWithProvidedPort(port);

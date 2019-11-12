@@ -13,7 +13,7 @@ import { ITestCodeNavigator, ITestNavigatorHelper } from './types';
 
 @injectable()
 export class TestFileCodeNavigator implements ITestCodeNavigator {
-    constructor(@inject(ITestNavigatorHelper) private readonly helper: ITestNavigatorHelper) { }
+    constructor(@inject(ITestNavigatorHelper) private readonly helper: ITestNavigatorHelper) {}
     @swallowExceptions('Navigate to test file')
     @captureTelemetry(EventName.UNITTEST_NAVIGATE, { byFile: true })
     public async navigateTo(_: Uri, item: TestFile, __: boolean): Promise<void> {

@@ -32,12 +32,15 @@ suite('Unit Tests - Common Discovery', () => {
     });
     test('Use parser to parse results', async () => {
         const options: TestDiscoveryOptions = {
-            args: [], cwd: __dirname, workspaceFolder: Uri.file(__dirname),
-            ignoreCache: false, token: new CancellationTokenSource().token,
+            args: [],
+            cwd: __dirname,
+            workspaceFolder: Uri.file(__dirname),
+            ignoreCache: false,
+            token: new CancellationTokenSource().token,
             outChannel: new MockOutputChannel('Test')
         };
         const discoveredTests: DiscoveredTests[] = [{ hello: 1 } as any];
-        const parsedResult = { done: true } as any as Tests;
+        const parsedResult = ({ done: true } as any) as Tests;
         const json = JSON.stringify(discoveredTests);
         discovery.exec = () => Promise.resolve({ stdout: json });
         when(parser.parse(options.workspaceFolder, deepEqual(discoveredTests))).thenResolve(parsedResult as any);
@@ -48,8 +51,11 @@ suite('Unit Tests - Common Discovery', () => {
     });
     test('Invoke Python Code to discover tests', async () => {
         const options: TestDiscoveryOptions = {
-            args: ['1', '2', '3'], cwd: __dirname, workspaceFolder: Uri.file(__dirname),
-            ignoreCache: false, token: new CancellationTokenSource().token,
+            args: ['1', '2', '3'],
+            cwd: __dirname,
+            workspaceFolder: Uri.file(__dirname),
+            ignoreCache: false,
+            token: new CancellationTokenSource().token,
             outChannel: new MockOutputChannel('Test')
         };
         const discoveredTests = '[1]';

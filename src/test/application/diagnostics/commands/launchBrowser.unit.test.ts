@@ -22,11 +22,11 @@ suite('Application Diagnostics - Commands Launch Browser', () => {
 
     test('Invoking Command should launch the browser', async () => {
         const browser = typemoq.Mock.ofType<IBrowserService>();
-        serviceContainer.setup(s => s.get(typemoq.It.isValue(IBrowserService)))
+        serviceContainer
+            .setup(s => s.get(typemoq.It.isValue(IBrowserService)))
             .returns(() => browser.object)
             .verifiable(typemoq.Times.once());
-        browser.setup(s => s.launch(typemoq.It.isValue(url)))
-            .verifiable(typemoq.Times.once());
+        browser.setup(s => s.launch(typemoq.It.isValue(url))).verifiable(typemoq.Times.once());
 
         await cmd.invoke();
         serviceContainer.verifyAll();

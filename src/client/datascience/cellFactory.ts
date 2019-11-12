@@ -45,7 +45,6 @@ function generateCodeCell(code: string[], file: string, line: number, id: string
         line: line,
         state: CellState.init
     };
-
 }
 
 function generateMarkdownCell(code: string[], file: string, line: number, id: string): ICell {
@@ -60,7 +59,6 @@ function generateMarkdownCell(code: string[], file: string, line: number, id: st
             metadata: {}
         }
     };
-
 }
 
 export function generateCells(settings: IDataScienceSettings | undefined, code: string, file: string, line: number, splitMarkdown: boolean, id: string): ICell[] {
@@ -73,12 +71,16 @@ export function generateCells(settings: IDataScienceSettings | undefined, code: 
         // We have at least one markdown. We might have to split it if there any lines that don't begin
         // with # or are inside a multiline comment
         let firstNonMarkdown = -1;
-        parseForComments(split, (_s, _i) => noop(), (s, i) => {
-            // Make sure there's actually some code.
-            if (s && s.length > 0 && firstNonMarkdown === -1) {
-                firstNonMarkdown = splitMarkdown ? i : -1;
+        parseForComments(
+            split,
+            (_s, _i) => noop(),
+            (s, i) => {
+                // Make sure there's actually some code.
+                if (s && s.length > 0 && firstNonMarkdown === -1) {
+                    firstNonMarkdown = splitMarkdown ? i : -1;
+                }
             }
-        });
+        );
         if (firstNonMarkdown >= 0) {
             // Make sure if we split, the second cell has a new id. It's a new submission.
             return [
@@ -148,9 +150,11 @@ export function generateCellsFromString(source: string, settings?: IDataScienceS
     }
 
     // For each one, get its text and turn it into a cell
-    return Array.prototype.concat(...starts.map(s => {
-        return generateCells(settings, s.code, '', s.startLine, false, uuid());
-    }));
+    return Array.prototype.concat(
+        ...starts.map(s => {
+            return generateCells(settings, s.code, '', s.startLine, false, uuid());
+        })
+    );
 }
 
 export function generateCellRangesFromDocument(document: TextDocument, settings?: IDataScienceSettings): ICellRange[] {
@@ -189,8 +193,10 @@ export function generateCellsFromDocument(document: TextDocument, settings?: IDa
     const ranges = generateCellRangesFromDocument(document, settings);
 
     // For each one, get its text and turn it into a cell
-    return Array.prototype.concat(...ranges.map(cr => {
-        const code = document.getText(cr.range);
-        return generateCells(settings, code, '', cr.range.start.line, false, uuid());
-    }));
+    return Array.prototype.concat(
+        ...ranges.map(cr => {
+            const code = document.getText(cr.range);
+            return generateCells(settings, code, '', cr.range.start.line, false, uuid());
+        })
+    );
 }

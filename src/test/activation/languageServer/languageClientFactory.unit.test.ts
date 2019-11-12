@@ -42,7 +42,13 @@ suite('Language Server - LanguageClient Factory', () => {
         const simpleFactory = mock(SimpleLanguageClientFactory);
         const envVarProvider = mock(EnvironmentVariablesProvider);
         const activationService = mock(EnvironmentActivationService);
-        const factory = new BaseLanguageClientFactory(instance(downloadFactory), instance(simpleFactory), instance(configurationService), instance(envVarProvider), instance(activationService));
+        const factory = new BaseLanguageClientFactory(
+            instance(downloadFactory),
+            instance(simpleFactory),
+            instance(configurationService),
+            instance(envVarProvider),
+            instance(activationService)
+        );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const env = { FOO: 'bar' };
@@ -61,7 +67,13 @@ suite('Language Server - LanguageClient Factory', () => {
         const simpleFactory = mock(SimpleLanguageClientFactory);
         const envVarProvider = mock(EnvironmentVariablesProvider);
         const activationService = mock(EnvironmentActivationService);
-        const factory = new BaseLanguageClientFactory(instance(downloadFactory), instance(simpleFactory), instance(configurationService), instance(envVarProvider), instance(activationService));
+        const factory = new BaseLanguageClientFactory(
+            instance(downloadFactory),
+            instance(simpleFactory),
+            instance(configurationService),
+            instance(envVarProvider),
+            instance(activationService)
+        );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const env = { FOO: 'bar' };
@@ -83,8 +95,7 @@ suite('Language Server - LanguageClient Factory', () => {
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
         const languageServerFolder = 'some folder name';
         const engineDllName = 'xyz.dll';
-        when(lsFolderService.getLanguageServerFolderName(anything()))
-            .thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything())).thenResolve(languageServerFolder);
         when(platformData.engineExecutableName).thenReturn(engineDllName);
 
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, engineDllName);

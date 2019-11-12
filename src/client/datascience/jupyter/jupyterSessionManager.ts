@@ -8,30 +8,18 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import {
-    IConnection,
-    IJupyterKernelSpec,
-    IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
-    IJupyterSession,
-    IJupyterSessionManager
-} from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession, IJupyterSessionManager } from '../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 
 export class JupyterSessionManager implements IJupyterSessionManager {
-
     private sessionManager: SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
     private connInfo: IConnection | undefined;
     private serverSettings: ServerConnection.ISettings | undefined;
 
-    constructor(
-        private jupyterPasswordConnect: IJupyterPasswordConnect,
-        private config: IConfigurationService
-    ) {
-    }
+    constructor(private jupyterPasswordConnect: IJupyterPasswordConnect, private config: IConfigurationService) {}
 
     public async dispose() {
         if (this.contentsManager) {
@@ -99,8 +87,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
-        let serverSettings: Partial<ServerConnection.ISettings> =
-        {
+        let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             pageUrl: '',
             // A web socket is required to allow token authentication
@@ -143,7 +130,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // See _createSocket here:
         // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
         // tslint:disable-next-line:no-any
-        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any };
+        serverSettings = {
+            ...serverSettings,
+            init: requestInit,
+            WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any
+        };
 
         return ServerConnection.makeSettings(serverSettings);
     }

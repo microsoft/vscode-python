@@ -57,15 +57,24 @@ suite('JupyterVariables', () => {
         fakeNotebook = createTypeMoq<INotebook>('Fake Notebook');
 
         fileSystem = typemoq.Mock.ofType<IFileSystem>();
-        fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString()))
-            .returns(() => Promise.resolve('test'));
+        fileSystem.setup(fs => fs.readFile(typemoq.It.isAnyString())).returns(() => Promise.resolve('test'));
 
         jupyterVariables = new JupyterVariables(fileSystem.object);
     });
 
     // No cells, no output, no text/plain
     test('getVariables no cells', async () => {
-        fakeNotebook.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
+        fakeNotebook
+            .setup(fs =>
+                fs.execute(
+                    typemoq.It.isValue('test'),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
+            )
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
 
@@ -81,7 +90,17 @@ suite('JupyterVariables', () => {
     });
 
     test('getVariables no output', async () => {
-        fakeNotebook.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
+        fakeNotebook
+            .setup(fs =>
+                fs.execute(
+                    typemoq.It.isValue('test'),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
+            )
             .returns(() => Promise.resolve(generateCells('', 'stream', false)))
             .verifiable(typemoq.Times.once());
 
@@ -97,11 +116,18 @@ suite('JupyterVariables', () => {
     });
 
     test('getVariables bad output type', async () => {
-        fakeNotebook.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
-            .returns(() => Promise.resolve(generateCells(
-                'bogus string',
-                'bogus output type'
-            )))
+        fakeNotebook
+            .setup(fs =>
+                fs.execute(
+                    typemoq.It.isValue('test'),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
+            )
+            .returns(() => Promise.resolve(generateCells('bogus string', 'bogus output type')))
             .verifiable(typemoq.Times.once());
 
         let exceptionThrown = false;
@@ -116,11 +142,25 @@ suite('JupyterVariables', () => {
     });
 
     test('getVariables fake data', async () => {
-        fakeNotebook.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
-            .returns(() => Promise.resolve(generateCells(
-                '[{"name": "big_dataframe", "type": "DataFrame", "size": 62}, {"name": "big_dict", "type": "dict", "size": 57}, {"name": "big_int", "type": "int", "size": 56}, {"name": "big_list", "type": "list", "size": 57}, {"name": "big_nparray", "type": "ndarray", "size": 60}, {"name": "big_string", "type": "str", "size": 59}]',
-                'stream'
-            )))
+        fakeNotebook
+            .setup(fs =>
+                fs.execute(
+                    typemoq.It.isValue('test'),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
+            )
+            .returns(() =>
+                Promise.resolve(
+                    generateCells(
+                        '[{"name": "big_dataframe", "type": "DataFrame", "size": 62}, {"name": "big_dict", "type": "dict", "size": 57}, {"name": "big_int", "type": "int", "size": 56}, {"name": "big_list", "type": "list", "size": 57}, {"name": "big_nparray", "type": "ndarray", "size": 60}, {"name": "big_string", "type": "str", "size": 59}]',
+                        'stream'
+                    )
+                )
+            )
             .verifiable(typemoq.Times.once());
 
         const results = await jupyterVariables.getVariables(fakeNotebook.object);
@@ -141,11 +181,18 @@ suite('JupyterVariables', () => {
 
     // getValue failure paths are shared with getVariables, so no need to test them here
     test('getValue fake data', async () => {
-        fakeNotebook.setup(fs => fs.execute(typemoq.It.isValue('test'), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true)))
-            .returns(() => Promise.resolve(generateCells(
-                '{"name": "big_complex", "type": "complex", "size": 60, "value": "(1+1j)"}',
-                'stream'
-            )))
+        fakeNotebook
+            .setup(fs =>
+                fs.execute(
+                    typemoq.It.isValue('test'),
+                    typemoq.It.isValue(Identifiers.EmptyFileName),
+                    typemoq.It.isValue(0),
+                    typemoq.It.isAnyString(),
+                    undefined,
+                    typemoq.It.isValue(true)
+                )
+            )
+            .returns(() => Promise.resolve(generateCells('{"name": "big_complex", "type": "complex", "size": 60, "value": "(1+1j)"}', 'stream')))
             .verifiable(typemoq.Times.once());
 
         const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };

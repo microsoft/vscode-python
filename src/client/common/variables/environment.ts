@@ -16,7 +16,7 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         this.pathVariable = pathUtils.getPathVariableName();
     }
     public async parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined> {
-        if (!filePath || !await fs.pathExists(filePath)) {
+        if (!filePath || !(await fs.pathExists(filePath))) {
             return;
         }
         if (!fs.lstatSync(filePath).isFile()) {
@@ -63,19 +63,19 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
     }
 }
 
-export function parseEnvFile(
-    lines: string | Buffer,
-    baseVars?: EnvironmentVariables
-): EnvironmentVariables {
+export function parseEnvFile(lines: string | Buffer, baseVars?: EnvironmentVariables): EnvironmentVariables {
     const globalVars = baseVars ? baseVars : {};
-    const vars : EnvironmentVariables = {};
-    lines.toString().split('\n').forEach((line, _idx) => {
-        const [name, value] = parseEnvLine(line);
-        if (name === '') {
-            return;
-        }
-        vars[name] = substituteEnvVars(value, vars, globalVars);
-    });
+    const vars: EnvironmentVariables = {};
+    lines
+        .toString()
+        .split('\n')
+        .forEach((line, _idx) => {
+            const [name, value] = parseEnvLine(line);
+            if (name === '') {
+                return;
+            }
+            vars[name] = substituteEnvVars(value, vars, globalVars);
+        });
     return vars;
 }
 
@@ -92,7 +92,7 @@ function parseEnvLine(line: string): [string, string] {
     const name = match[1];
     let value = match[2];
     if (value && value !== '') {
-        if (value[0] === '\'' && value[value.length - 1] === '\'') {
+        if (value[0] === "'" && value[value.length - 1] === "'") {
             value = value.substring(1, value.length - 1);
             value = value.replace(/\\n/gm, '\n');
         } else if (value[0] === '"' && value[value.length - 1] === '"') {
@@ -108,12 +108,7 @@ function parseEnvLine(line: string): [string, string] {
 
 const SUBST_REGEX = /\${([a-zA-Z]\w*)?([^}\w].*)?}/g;
 
-function substituteEnvVars(
-    value: string,
-    localVars: EnvironmentVariables,
-    globalVars: EnvironmentVariables,
-    missing = ''
-): string {
+function substituteEnvVars(value: string, localVars: EnvironmentVariables, globalVars: EnvironmentVariables, missing = ''): string {
     // Substitution here is inspired a little by dotenv-expand:
     //   https://github.com/motdotla/dotenv-expand/blob/master/lib/main.js
 

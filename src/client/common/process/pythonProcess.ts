@@ -12,25 +12,13 @@ import { IFileSystem } from '../platform/types';
 import { waitForPromise } from '../utils/async';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
-import {
-    ExecutionResult,
-    InterpreterInfomation,
-    IProcessService,
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    PythonVersionInfo,
-    SpawnOptions
-} from './types';
+import { ExecutionResult, InterpreterInfomation, IProcessService, IPythonExecutionService, ObservableExecutionResult, PythonVersionInfo, SpawnOptions } from './types';
 
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
     private readonly fileSystem: IFileSystem;
 
-    constructor(
-        serviceContainer: IServiceContainer,
-        private readonly procService: IProcessService,
-        protected readonly pythonPath: string
-    ) {
+    constructor(serviceContainer: IServiceContainer, private readonly procService: IProcessService, protected readonly pythonPath: string) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -41,8 +29,9 @@ export class PythonExecutionService implements IPythonExecutionService {
             // See these two bugs:
             // https://github.com/microsoft/vscode-python/issues/7569
             // https://github.com/microsoft/vscode-python/issues/7760
-            const jsonValue = await waitForPromise(this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true }), 5000)
-                .then(output => output ? output.stdout.trim() : '--timed out--'); // --timed out-- should cause an exception
+            const jsonValue = await waitForPromise(this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true }), 5000).then(output =>
+                output ? output.stdout.trim() : '--timed out--'
+            ); // --timed out-- should cause an exception
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {
@@ -51,14 +40,14 @@ export class PythonExecutionService implements IPythonExecutionService {
                 traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
                 return;
             }
-                const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
-                return {
-                    architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                    path: this.pythonPath,
-                    version: parsePythonVersion(versionValue),
-                    sysVersion: json.sysVersion,
-                    sysPrefix: json.sysPrefix
-                };
+            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+            return {
+                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
+                path: this.pythonPath,
+                version: parsePythonVersion(versionValue),
+                sysVersion: json.sysVersion,
+                sysPrefix: json.sysPrefix
+            };
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }
@@ -69,12 +58,13 @@ export class PythonExecutionService implements IPythonExecutionService {
         if (await this.fileSystem.fileExists(this.pythonPath)) {
             return this.pythonPath;
         }
-        return this.procService.exec(this.pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true })
-            .then(output => output.stdout.trim());
+        return this.procService.exec(this.pythonPath, ['-c', 'import sys;print(sys.executable)'], { throwOnStdErr: true }).then(output => output.stdout.trim());
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        return this.procService.exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
-            .then(() => true).catch(() => false);
+        return this.procService
+            .exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
+            .then(() => true)
+            .catch(() => false);
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {

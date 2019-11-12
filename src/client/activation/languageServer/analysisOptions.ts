@@ -3,40 +3,13 @@
 'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
-import {
-    CancellationToken,
-    CompletionContext,
-    ConfigurationChangeEvent,
-    Diagnostic,
-    Disposable,
-    Event,
-    EventEmitter,
-    Position,
-    TextDocument,
-    Uri,
-    WorkspaceFolder
-} from 'vscode';
-import {
-    DocumentFilter,
-    DocumentSelector,
-    HandleDiagnosticsSignature,
-    LanguageClientOptions,
-    ProvideCompletionItemsSignature,
-    RevealOutputChannelOn
-} from 'vscode-languageclient';
+import { CancellationToken, CompletionContext, ConfigurationChangeEvent, Diagnostic, Disposable, Event, EventEmitter, Position, TextDocument, Uri, WorkspaceFolder } from 'vscode';
+import { DocumentFilter, DocumentSelector, HandleDiagnosticsSignature, LanguageClientOptions, ProvideCompletionItemsSignature, RevealOutputChannelOn } from 'vscode-languageclient';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import {
-    BANNER_NAME_LS_SURVEY,
-    IConfigurationService,
-    IExtensionContext,
-    IOutputChannel,
-    IPathUtils,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
+import { BANNER_NAME_LS_SURVEY, IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -52,7 +25,8 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     private resource: Resource;
     private output: IOutputChannel;
     private readonly didChange = new EventEmitter<void>();
-    constructor(@inject(IExtensionContext) private readonly context: IExtensionContext,
+    constructor(
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -165,7 +139,13 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 asyncStartup: true
             },
             middleware: {
-                provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
+                provideCompletionItem: (
+                    document: TextDocument,
+                    position: Position,
+                    context: CompletionContext,
+                    token: CancellationToken,
+                    next: ProvideCompletionItemsSignature
+                ) => {
                     this.surveyBanner.showBanner().ignoreErrors();
                     return next(document, position, context, token);
                 },
@@ -213,9 +193,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         const pythonSettings = this.configuration.getSettings(this.resource);
         const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
         if (paths && Array.isArray(paths)) {
-            paths
-                .filter(p => p && p.length > 0)
-                .forEach(p => list.push(p));
+            paths.filter(p => p && p.length > 0).forEach(p => list.push(p));
         }
     }
     protected getTypeshedPaths(): string[] {
@@ -226,8 +204,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     protected getCacheFolderPath(): string | null {
         const settings = this.configuration.getSettings(this.resource);
-        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0
-            ? settings.analysis.cacheFolderPath : null;
+        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0 ? settings.analysis.cacheFolderPath : null;
     }
     protected async onSettingsChangedHandler(e?: ConfigurationChangeEvent): Promise<void> {
         if (e && !e.affectsConfiguration('python', this.resource)) {

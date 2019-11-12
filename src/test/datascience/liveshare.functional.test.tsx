@@ -8,22 +8,10 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Uri } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    ILiveShareTestingApi
-} from '../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, ILiveShareTestingApi } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
-import {
-    ICodeWatcher,
-    IDataScienceCommandListener,
-    IInteractiveWindow,
-    IInteractiveWindowProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
+import { ICodeWatcher, IDataScienceCommandListener, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -38,7 +26,7 @@ suite('DataScience LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
-    let lastErrorMessage : string | undefined;
+    let lastErrorMessage: string | undefined;
 
     setup(() => {
         hostContainer = createContainer(vsls.Role.Host);
@@ -71,19 +59,23 @@ suite('DataScience LiveShare tests', () => {
 
         // Rebind the appshell so we can change what happens on an error
         const dummyDisposable = {
-            dispose: () => { return; }
+            dispose: () => {
+                return;
+            }
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => lastErrorMessage = e);
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(e => (lastErrorMessage = e));
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell
+            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
+        result.createWebView(() => mount(<InteractivePanel baseTheme="vscode-light" codeTheme="light_vs" testMode={true} skipDefault={true} />), role);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.
@@ -104,7 +96,11 @@ suite('DataScience LiveShare tests', () => {
         return api.isSessionStarted;
     }
 
-    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    async function waitForResults(
+        role: vsls.Role,
+        resultGenerator: (both: boolean) => Promise<void>,
+        expectedRenderCount: number = 5
+    ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
 
         // If just the host session has started or nobody, just run the host.
@@ -134,23 +130,27 @@ suite('DataScience LiveShare tests', () => {
     }
 
     async function addCodeToRole(role: vsls.Role, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        return waitForResults(role, async (both: boolean) => {
-            if (!both) {
-                const history = await getOrCreateInteractiveWindow(role);
-                await history.addCode(code, Uri.file('foo.py').fsPath, 2);
-            } else {
-                // Add code to the apropriate container
-                const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
-
-                // Make sure guest is still creatable
-                if (isSessionStarted(vsls.Role.Guest)) {
-                    const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                    (role === vsls.Role.Host ? await host.addCode(code, Uri.file('foo.py').fsPath, 2) : await guest.addCode(code, Uri.file('foo.py').fsPath, 2));
+        return waitForResults(
+            role,
+            async (both: boolean) => {
+                if (!both) {
+                    const history = await getOrCreateInteractiveWindow(role);
+                    await history.addCode(code, Uri.file('foo.py').fsPath, 2);
                 } else {
-                    await host.addCode(code, Uri.file('foo.py').fsPath, 2);
+                    // Add code to the apropriate container
+                    const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
+
+                    // Make sure guest is still creatable
+                    if (isSessionStarted(vsls.Role.Guest)) {
+                        const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
+                        role === vsls.Role.Host ? await host.addCode(code, Uri.file('foo.py').fsPath, 2) : await guest.addCode(code, Uri.file('foo.py').fsPath, 2);
+                    } else {
+                        await host.addCode(code, Uri.file('foo.py').fsPath, 2);
+                    }
                 }
-            }
-        }, expectedRenderCount);
+            },
+            expectedRenderCount
+        );
     }
 
     function startSession(role: vsls.Role): Promise<void> {
@@ -202,21 +202,21 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host starts LiveShare after starting Jupyter', async() => {
-       addMockData(hostContainer!, 'a=1\na', 1);
-       addMockData(hostContainer!, 'b=2\nb', 2);
-       await getOrCreateInteractiveWindow(vsls.Role.Host);
-       let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-       verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    test('Host starts LiveShare after starting Jupyter', async () => {
+        addMockData(hostContainer!, 'a=1\na', 1);
+        addMockData(hostContainer!, 'b=2\nb', 2);
+        await getOrCreateInteractiveWindow(vsls.Role.Host);
+        let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-       await startSession(vsls.Role.Host);
-       await getOrCreateInteractiveWindow(vsls.Role.Guest);
-       await startSession(vsls.Role.Guest);
+        await startSession(vsls.Role.Host);
+        await getOrCreateInteractiveWindow(vsls.Role.Guest);
+        await startSession(vsls.Role.Guest);
 
-       wrapper = await addCodeToRole(vsls.Role.Host, 'b=2\nb');
+        wrapper = await addCodeToRole(vsls.Role.Host, 'b=2\nb');
 
-       assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
-       verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
+        assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
+        verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
     });
 
     test('Host Shutdown and Run', async () => {
@@ -301,12 +301,13 @@ suite('DataScience LiveShare tests', () => {
         let outputContents: string | undefined;
         const fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         guestContainer!.serviceManager.rebindInstance<IFileSystem>(IFileSystem, fileSystem.object);
-        fileSystem.setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_f, c) => {
-            outputContents = c.toString();
-            return Promise.resolve();
-        });
-        fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => true);
+        fileSystem
+            .setup(f => f.writeFile(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_f, c) => {
+                outputContents = c.toString();
+                return Promise.resolve();
+            });
+        fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => true);
         fileSystem.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve([]));
 
         // Need to register commands as our extension isn't actually loading.
@@ -353,5 +354,4 @@ suite('DataScience LiveShare tests', () => {
         assert.equal(isSessionStarted(vsls.Role.Guest), false, 'Guest should have exited session');
         assert.ok(lastErrorMessage, 'Error was not set during session shutdown');
     });
-
 });

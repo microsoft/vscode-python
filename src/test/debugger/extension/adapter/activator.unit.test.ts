@@ -127,7 +127,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterExperiment.experiment }]);
     });
 
-    test('Don\'t register the Adapter Factory if not inside the DA experiment', async () => {
+    test("Don't register the Adapter Factory if not inside the DA experiment", async () => {
         when(spiedInstance.inExperiment(DebugAdapterExperiment.experiment)).thenReturn(false);
 
         await activator.activate();
@@ -136,7 +136,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         verify(debugService.registerDebugAdapterDescriptorFactory('python', instance(descriptorFactory))).never();
     });
 
-    test('Don\'t register a disposable item if not inside the DA experiment', async () => {
+    test("Don't register a disposable item if not inside the DA experiment", async () => {
         when(spiedInstance.inExperiment(DebugAdapterExperiment.experiment)).thenReturn(false);
 
         await activator.activate();
@@ -153,7 +153,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterExperiment.control }]);
     });
 
-    test('Don\'t send any telemetry if not inside the DA experiment nor control group', async () => {
+    test("Don't send any telemetry if not inside the DA experiment nor control group", async () => {
         when(spiedInstance.userExperiments).thenReturn([]);
 
         await activator.activate();

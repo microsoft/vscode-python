@@ -33,11 +33,7 @@ suite('Source Map Support', () => {
                             return isEnabled;
                         },
                         update: (prop: string, value: boolean, scope: ConfigurationTarget) => {
-                            if (
-                                prop === 'sourceMapsEnabled' &&
-                                value === false &&
-                                scope === ConfigurationTarget.Global
-                            ) {
+                            if (prop === 'sourceMapsEnabled' && value === false && scope === ConfigurationTarget.Global) {
                                 stubInfo.configValueUpdated = true;
                             }
                         }
@@ -77,11 +73,11 @@ suite('Source Map Support', () => {
         expect(await fileSystem.fileExists(mapFile)).to.be.true;
 
         const stub = createVSCStub(true, true);
-        const instance = new class extends SourceMapSupport {
+        const instance = new (class extends SourceMapSupport {
             public async enableSourceMap(enable: boolean, sourceFile: string) {
                 return super.enableSourceMap(enable, sourceFile);
             }
-        }(stub.vscode as any);
+        })(stub.vscode as any);
 
         await instance.enableSourceMap(false, jsFile.filePath);
 

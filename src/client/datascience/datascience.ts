@@ -12,14 +12,7 @@ import { IApplicationShell, ICommandManager, IDebugService, IDocumentManager, IW
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { traceError } from '../common/logger';
-import {
-    BANNER_NAME_DS_SURVEY,
-    IConfigurationService,
-    IDisposable,
-    IDisposableRegistry,
-    IExtensionContext,
-    IPythonExtensionBanner
-} from '../common/types';
+import { BANNER_NAME_DS_SURVEY, IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext, IPythonExtensionBanner } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
 import { IServiceContainer } from '../ioc/types';
@@ -34,7 +27,8 @@ export class DataScience implements IDataScience {
     private readonly dataScienceSurveyBanner: IPythonExtensionBanner;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
@@ -57,11 +51,7 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.registerCommands();
 
-        this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(
-                PYTHON_ALLFILES, this.dataScienceCodeLensProvider
-            )
-        );
+        this.extensionContext.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider));
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
@@ -220,7 +210,9 @@ export class DataScience implements IDataScience {
     public async selectJupyterURI(): Promise<void> {
         const userURI = await this.appShell.showInputBox({
             prompt: localize.DataScience.jupyterSelectURIPrompt(),
-            placeHolder: localize.DataScience.jupyterSelectWatermarkFormat().format('local', 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe'), validateInput: this.validateSelectJupyterURI, ignoreFocusOut: true
+            placeHolder: localize.DataScience.jupyterSelectWatermarkFormat().format('local', 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe'),
+            validateInput: this.validateSelectJupyterURI,
+            ignoreFocusOut: true
         });
 
         if (userURI && userURI.toUpperCase() === 'LOCAL') {
@@ -286,7 +278,7 @@ export class DataScience implements IDataScience {
 
         // Return null tells the dialog that our string is valid
         return null;
-    }
+    };
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
@@ -324,8 +316,7 @@ export class DataScience implements IDataScience {
         if (activeEditor && activeCodeWatcher) {
             // Find the cell that matches
             return activeCodeWatcher.getCodeLenses().find((c: vscode.CodeLens) => {
-                if (c.range.end.line >= activeEditor.selection.anchor.line &&
-                    c.range.start.line <= activeEditor.selection.anchor.line) {
+                if (c.range.end.line >= activeEditor.selection.anchor.line && c.range.start.line <= activeEditor.selection.anchor.line) {
                     return true;
                 }
                 return false;
@@ -383,7 +374,7 @@ export class DataScience implements IDataScience {
         const ownsSelection = settings.datascience.sendSelectionToInteractiveWindow;
         editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
         editorContext.set(ownsSelection && enabled).catch();
-    }
+    };
 
     private getCodeWatcher(file: string): ICodeWatcher | undefined {
         const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);

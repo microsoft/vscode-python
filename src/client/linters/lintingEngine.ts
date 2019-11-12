@@ -68,7 +68,7 @@ export class LintingEngine implements ILintingEngine {
         this.diagnosticCollection.set(document.uri, []);
 
         // Check if we need to lint this document
-        if (!await this.shouldLintDocument(document)) {
+        if (!(await this.shouldLintDocument(document))) {
             return;
         }
 
@@ -87,19 +87,13 @@ export class LintingEngine implements ILintingEngine {
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
 
         const activeLinters = await this.linterManager.getActiveLinters(false, document.uri);
-        const promises: Promise<ILintMessage[]>[] = activeLinters
-            .map(async (info: ILinterInfo) => {
-                const stopWatch = new StopWatch();
-                const linter = await this.linterManager.createLinter(
-                    info.product,
-                    this.outputChannel,
-                    this.serviceContainer,
-                    document.uri
-                );
-                const promise = linter.lint(document, cancelToken.token);
-                this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
-                return promise;
-            });
+        const promises: Promise<ILintMessage[]>[] = activeLinters.map(async (info: ILinterInfo) => {
+            const stopWatch = new StopWatch();
+            const linter = await this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer, document.uri);
+            const promise = linter.lint(document, cancelToken.token);
+            this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
+            return promise;
+        });
 
         // linters will resolve asynchronously - keep a track of all
         // diagnostics reported as them come in.
@@ -152,7 +146,7 @@ export class LintingEngine implements ILintingEngine {
     }
 
     private async shouldLintDocument(document: vscode.TextDocument): Promise<boolean> {
-        if (!await this.linterManager.isLintingEnabled(false, document.uri)) {
+        if (!(await this.linterManager.isLintingEnabled(false, document.uri))) {
             this.diagnosticCollection.set(document.uri, []);
             return false;
         }
@@ -162,7 +156,7 @@ export class LintingEngine implements ILintingEngine {
         }
 
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-        const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
+        const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
 
         const settings = this.configurationService.getSettings(document.uri);

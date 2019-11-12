@@ -20,31 +20,15 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         @unmanaged() protected readonly azureBlobStorageContainer: string,
         @unmanaged() protected readonly azureCDNBlobStorageAccount: string,
         private getBlobStore: (uri: string) => Promise<IAZBlobStore> = _getAZBlobStore
-    ) { }
+    ) {}
     public async getPackages(packageName: string, resource: Resource): Promise<NugetPackage[]> {
-        return this.listPackages(
-            this.azureBlobStorageAccount,
-            this.azureBlobStorageContainer,
-            packageName,
-            this.azureCDNBlobStorageAccount,
-            resource
-        );
+        return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName, this.azureCDNBlobStorageAccount, resource);
     }
 
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_LIST_BLOB_STORE_PACKAGES)
     @traceDecorators.verbose('Listing Nuget Packages')
-    protected async listPackages(
-        azureBlobStorageAccount: string,
-        azureBlobStorageContainer: string,
-        packageName: string,
-        azureCDNBlobStorageAccount: string,
-        resource: Resource
-    ) {
-        const results = await this.listBlobStoreCatalog(
-            this.fixBlobStoreURI(azureBlobStorageAccount, resource),
-            azureBlobStorageContainer,
-            packageName
-        );
+    protected async listPackages(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string, azureCDNBlobStorageAccount: string, resource: Resource) {
+        const results = await this.listBlobStoreCatalog(this.fixBlobStoreURI(azureBlobStorageAccount, resource), azureBlobStorageContainer, packageName);
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         return results.map(item => {
             return {
@@ -55,23 +39,18 @@ export class AzureBlobStoreNugetRepository implements INugetRepository {
         });
     }
 
-    private async listBlobStoreCatalog(
-        azureBlobStorageAccount: string,
-        azureBlobStorageContainer: string,
-        packageName: string
-    ): Promise<IBlobResult[]> {
+    private async listBlobStoreCatalog(azureBlobStorageAccount: string, azureBlobStorageContainer: string, packageName: string): Promise<IBlobResult[]> {
         const blobStore = await this.getBlobStore(azureBlobStorageAccount);
         return new Promise<IBlobResult[]>((resolve, reject) => {
             // We must pass undefined according to docs, but type definition doesn't all it to be undefined or null!!!
             // tslint:disable-next-line:no-any
             const token = undefined as any;
-            blobStore.listBlobsSegmentedWithPrefix(azureBlobStorageContainer, packageName, token,
-                (error, result) => {
-                    if (error) {
-                        return reject(error);
-                    }
-                    resolve(result.entries);
-                });
+            blobStore.listBlobsSegmentedWithPrefix(azureBlobStorageContainer, packageName, token, (error, result) => {
+                if (error) {
+                    return reject(error);
+                }
+                resolve(result.entries);
+            });
         });
     }
     private fixBlobStoreURI(uri: string, resource: Resource) {
@@ -116,6 +95,6 @@ interface IAZBlobStore {
 
 async function _getAZBlobStore(uri: string): Promise<IAZBlobStore> {
     // tslint:disable-next-line:no-require-imports
-    const az = await import('azure-storage') as typeof import('azure-storage');
+    const az = (await import('azure-storage')) as typeof import('azure-storage');
     return az.createBlobServiceAnonymous(uri);
 }

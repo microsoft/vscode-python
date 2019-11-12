@@ -8,9 +8,7 @@ import { IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
-import {
-    IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom
-} from '../common/types';
+import { IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom } from '../common/types';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -34,7 +32,8 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IRandom) private random: IRandom,
         @inject(IExperimentsManager) private experiments: IExperimentsManager,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
-        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY) { }
+        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY
+    ) {}
 
     public async activate(): Promise<void> {
         if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {

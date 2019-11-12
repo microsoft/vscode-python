@@ -14,13 +14,14 @@ import { BaseRuleService, NextAction } from './baseRule';
 @injectable()
 export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
     protected readonly rules: IInterpreterAutoSelectionRule[];
-    constructor(@inject(IFileSystem) fs: IFileSystem,
+    constructor(
+        @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.systemWide) systemInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.currentPath) currentPathInterpreter: IInterpreterAutoSelectionRule,
-        @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.windowsRegistry) winRegInterpreter: IInterpreterAutoSelectionRule) {
-
+        @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.windowsRegistry) winRegInterpreter: IInterpreterAutoSelectionRule
+    ) {
         super(AutoSelectionRule.cachedInterpreters, fs, stateFactory);
         this.rules = [systemInterpreter, currentPathInterpreter, winRegInterpreter];
     }
@@ -31,6 +32,6 @@ export class CachedInterpretersAutoSelectionRule extends BaseRuleService {
             .map(item => item!);
         const bestInterpreter = this.helper.getBestInterpreter(cachedInterpreters);
         traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
-        return await this.setGlobalInterpreter(bestInterpreter, manager) ? NextAction.exit : NextAction.runNextRule;
+        return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;
     }
 }

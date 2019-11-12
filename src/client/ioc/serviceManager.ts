@@ -8,11 +8,14 @@ type identifier<T> = string | symbol | Newable<T> | Abstract<T>;
 
 @injectable()
 export class ServiceManager implements IServiceManager {
-    constructor(private container: Container) { }
+    constructor(private container: Container) {}
     // tslint:disable-next-line:no-any
     public add<T>(serviceIdentifier: identifier<T>, constructor: new (...args: any[]) => T, name?: string | number | symbol | undefined): void {
         if (name) {
-            this.container.bind<T>(serviceIdentifier).to(constructor).whenTargetNamed(name);
+            this.container
+                .bind<T>(serviceIdentifier)
+                .to(constructor)
+                .whenTargetNamed(name);
         } else {
             this.container.bind<T>(serviceIdentifier).to(constructor);
         }
@@ -30,15 +33,25 @@ export class ServiceManager implements IServiceManager {
     // tslint:disable-next-line:no-any
     public addSingleton<T>(serviceIdentifier: identifier<T>, constructor: new (...args: any[]) => T, name?: string | number | symbol | undefined): void {
         if (name) {
-            this.container.bind<T>(serviceIdentifier).to(constructor).inSingletonScope().whenTargetNamed(name);
+            this.container
+                .bind<T>(serviceIdentifier)
+                .to(constructor)
+                .inSingletonScope()
+                .whenTargetNamed(name);
         } else {
-            this.container.bind<T>(serviceIdentifier).to(constructor).inSingletonScope();
+            this.container
+                .bind<T>(serviceIdentifier)
+                .to(constructor)
+                .inSingletonScope();
         }
     }
     // tslint:disable-next-line:no-any
     public addSingletonInstance<T>(serviceIdentifier: identifier<T>, instance: T, name?: string | number | symbol | undefined): void {
         if (name) {
-            this.container.bind<T>(serviceIdentifier).toConstantValue(instance).whenTargetNamed(name);
+            this.container
+                .bind<T>(serviceIdentifier)
+                .toConstantValue(instance)
+                .whenTargetNamed(name);
         } else {
             this.container.bind<T>(serviceIdentifier).toConstantValue(instance);
         }
@@ -52,7 +65,10 @@ export class ServiceManager implements IServiceManager {
 
     public rebind<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, constructor: ClassType<T>, name?: string | number | symbol): void {
         if (name) {
-            this.container.rebind<T>(serviceIdentifier).to(constructor).whenTargetNamed(name);
+            this.container
+                .rebind<T>(serviceIdentifier)
+                .to(constructor)
+                .whenTargetNamed(name);
         } else {
             this.container.rebind<T>(serviceIdentifier).to(constructor);
         }
@@ -60,10 +76,12 @@ export class ServiceManager implements IServiceManager {
 
     public rebindInstance<T>(serviceIdentifier: interfaces.ServiceIdentifier<T>, instance: T, name?: string | number | symbol): void {
         if (name) {
-            this.container.rebind<T>(serviceIdentifier).toConstantValue(instance).whenTargetNamed(name);
+            this.container
+                .rebind<T>(serviceIdentifier)
+                .toConstantValue(instance)
+                .whenTargetNamed(name);
         } else {
             this.container.rebind<T>(serviceIdentifier).toConstantValue(instance);
         }
     }
-
 }

@@ -44,19 +44,13 @@ suite('Language.TextRange', () => {
         assert.equal(r.contains(10), false);
     });
     test('Exceptions', async () => {
-        assert.throws(
-            () => {
-                // @ts-ignore
-                const e = new TextRange(0, -1);
-            },
-            Error
-        );
-        assert.throws(
-            () => {
-                // @ts-ignore
-                const e = TextRange.fromBounds(3, 1);
-            },
-            Error
-        );
+        assert.throws(() => {
+            // @ts-ignore
+            const e = new TextRange(0, -1);
+        }, Error);
+        assert.throws(() => {
+            // @ts-ignore
+            const e = TextRange.fromBounds(3, 1);
+        }, Error);
     });
 });

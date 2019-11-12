@@ -18,9 +18,7 @@ suite('Application Diagnostics - Exec VSC Commands', () => {
     setup(() => {
         const serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         commandManager = typemoq.Mock.ofType<ICommandManager>();
-        serviceContainer
-            .setup(svc => svc.get<ICommandManager>(typemoq.It.isValue(ICommandManager), typemoq.It.isAny()))
-            .returns(() => commandManager.object);
+        serviceContainer.setup(svc => svc.get<ICommandManager>(typemoq.It.isValue(ICommandManager), typemoq.It.isAny())).returns(() => commandManager.object);
         commandFactory = new DiagnosticsCommandFactory(serviceContainer.object);
     });
 

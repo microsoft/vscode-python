@@ -106,7 +106,7 @@ suite('Debugging - Session Logging', () => {
         const logs: string[] = [];
 
         when(fsService.createWriteStream(filePath)).thenReturn(instance(writeStream));
-        when(writeStream.write(anything())).thenCall((msg) => logs.push(msg));
+        when(writeStream.write(anything())).thenCall(msg => logs.push(msg));
 
         const message = new TestMessage(1, 1, 'test-message');
         const logger = await loggerFactory.createDebugAdapterTracker(session);

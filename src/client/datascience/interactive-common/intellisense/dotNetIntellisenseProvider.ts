@@ -22,7 +22,6 @@ import { IntellisenseDocument } from './intellisenseDocument';
 // tslint:disable:no-any
 @injectable()
 export class DotNetIntellisenseProvider extends BaseIntellisenseProvider implements IInteractiveWindowListener {
-
     private languageClientPromise: Deferred<vscodeLanguageClient.LanguageClient> | undefined;
     private sentOpenDocument: boolean = false;
     private active: boolean = false;
@@ -48,14 +47,19 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
 
         // Listen for updates to settings to change this flag. Don't bother disposing the config watcher. It lives
         // till the extension dies anyway.
-        this.configService.getSettings().onDidChange(() => this.active = isLsActive());
+        this.configService.getSettings().onDidChange(() => (this.active = isLsActive()));
     }
 
     protected get isActive(): boolean {
         return this.active;
     }
 
-    protected async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
+    protected async provideCompletionItems(
+        position: monacoEditor.Position,
+        context: monacoEditor.languages.CompletionContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionList> {
         const languageClient = await this.getLanguageClient();
         const document = await this.getDocument();
         if (languageClient && document) {
@@ -63,7 +67,8 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.CompletionRequest.type,
                 languageClient.code2ProtocolConverter.asCompletionParams(document, docPos, context),
-                token);
+                token
+            );
             return convertToMonacoCompletionList(result, true);
         }
 
@@ -80,7 +85,8 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.HoverRequest.type,
                 languageClient.code2ProtocolConverter.asTextDocumentPositionParams(document, docPos),
-                token);
+                token
+            );
             return convertToMonacoHover(result);
         }
 
@@ -88,7 +94,12 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
             contents: []
         };
     }
-    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp> {
+    protected async provideSignatureHelp(
+        position: monacoEditor.Position,
+        _context: monacoEditor.languages.SignatureHelpContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.SignatureHelp> {
         const languageClient = await this.getLanguageClient();
         const document = await this.getDocument();
         if (languageClient && document) {
@@ -96,7 +107,8 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
             const result = await languageClient.sendRequest(
                 vscodeLanguageClient.SignatureHelpRequest.type,
                 languageClient.code2ProtocolConverter.asTextDocumentPositionParams(document, docPos),
-                token);
+                token
+            );
             return convertToMonacoSignatureHelp(result);
         }
 
@@ -110,7 +122,6 @@ export class DotNetIntellisenseProvider extends BaseIntellisenseProvider impleme
     protected async handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void> {
         // Then see if we can talk to our language client
         if (this.active && document) {
-
             // Cache our document state as it may change after we get our language client. Async call may allow a change to
             // come in before we send the first doc open.
             const docItem = document.textDocumentItem;

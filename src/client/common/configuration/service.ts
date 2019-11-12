@@ -33,10 +33,12 @@ export class ConfigurationService implements IConfigurationService {
         const configSection = workspace.getConfiguration(section, settingsInfo.uri ? settingsInfo.uri : null);
         const currentValue = configSection.inspect(setting);
 
-        if (currentValue !== undefined &&
+        if (
+            currentValue !== undefined &&
             ((settingsInfo.target === ConfigurationTarget.Global && currentValue.globalValue === value) ||
                 (settingsInfo.target === ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-                (settingsInfo.target === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))) {
+                (settingsInfo.target === ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))
+        ) {
             return;
         }
 
@@ -62,9 +64,12 @@ export class ConfigurationService implements IConfigurationService {
                 }
                 if (setting && value !== undefined) {
                     // Both specified
-                    const actual = target === ConfigurationTarget.Global
-                        ? setting.globalValue
-                        : target === ConfigurationTarget.Workspace ? setting.workspaceValue : setting.workspaceFolderValue;
+                    const actual =
+                        target === ConfigurationTarget.Global
+                            ? setting.globalValue
+                            : target === ConfigurationTarget.Workspace
+                            ? setting.workspaceValue
+                            : setting.workspaceFolderValue;
                     if (actual === value) {
                         break;
                     }

@@ -24,11 +24,25 @@ import { TestsHelper } from './common/testUtils';
 import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
-    ITestCollectionStorageService, ITestContextService,
-    ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory,
-    ITestManagerService, ITestManagerServiceFactory, ITestMessageService, ITestResultsService,
-    ITestRunner, ITestsHelper, ITestsParser, ITestsStatusUpdaterService, ITestVisitor,
-    IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
+    ITestCollectionStorageService,
+    ITestContextService,
+    ITestDebugLauncher,
+    ITestDiscoveryService,
+    ITestManager,
+    ITestManagerFactory,
+    ITestManagerService,
+    ITestManagerServiceFactory,
+    ITestMessageService,
+    ITestResultsService,
+    ITestRunner,
+    ITestsHelper,
+    ITestsParser,
+    ITestsStatusUpdaterService,
+    ITestVisitor,
+    IUnitTestSocketServer,
+    IWorkspaceTestManagerService,
+    IXUnitParser,
+    TestProvider
 } from './common/types';
 import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
@@ -54,11 +68,19 @@ import { ArgumentsService as PyTestArgumentsService } from './pytest/services/ar
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
-    IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
-    ITestConfigurationManagerFactory, ITestConfigurationService, ITestDataItemResource,
-    ITestDiagnosticService, ITestDisplay, ITestManagementService,
+    IArgumentsHelper,
+    IArgumentsService,
+    ITestConfigSettingsService,
+    ITestConfigurationManagerFactory,
+    ITestConfigurationService,
+    ITestDataItemResource,
+    ITestDiagnosticService,
+    ITestDisplay,
+    ITestManagementService,
     ITestManagerRunner,
-    ITestResultDisplay, ITestTreeViewProvider, IUnitTestHelper
+    ITestResultDisplay,
+    ITestTreeViewProvider,
+    IUnitTestHelper
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -122,7 +144,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, EnablementTracker);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 
-    serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
+    serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -143,7 +165,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         };
     });
 
-    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
+    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
         return (workspaceFolder: Uri) => {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
             const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

@@ -84,9 +84,9 @@ async function testInnerLoop(
 export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+        testInnerLoop(name, ioc => mountWebView(ioc, <InteractivePanel baseTheme="vscode-light" codeTheme="light_vs" testMode={true} skipDefault={true} />), testFunc, getIOC));
     test(`${name} (native)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+        testInnerLoop(name, ioc => mountWebView(ioc, <NativeEditor baseTheme="vscode-light" codeTheme="light_vs" testMode={true} skipDefault={true} />), testFunc, getIOC));
 }
 
 export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -115,9 +115,13 @@ export function addContinuousMockData(ioc: DataScienceIocContainer, code: string
     }
 }
 
-export function getOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
+export function getOutputCell(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    cellType: string,
+    cellIndex: number | CellPosition
+): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
     const foundResult = wrapper.find(cellType);
-    let targetCell: ReactWrapper | undefined ;
+    let targetCell: ReactWrapper | undefined;
     // Get the correct result that we are dealing with
     if (typeof cellIndex === 'number') {
         if (cellIndex >= 0 && cellIndex <= foundResult.length - 1) {
@@ -154,7 +158,7 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     wrapper.update();
 
     const foundResult = wrapper.find(cellType);
-    assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+    assert.ok(foundResult.length >= 1, "Didn't find any cells being rendered");
 
     let targetCell: ReactWrapper;
     // Get the correct result that we are dealing with
@@ -180,7 +184,7 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     }
 
     // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
-    assert.ok(targetCell!, 'Target cell doesn\'t exist');
+    assert.ok(targetCell!, "Target cell doesn't exist");
 
     // If html is specified, check it
     if (html) {
@@ -270,7 +274,7 @@ function verifyCell(
     cellIndex: number | CellPosition
 ) {
     const foundResult = wrapper.find(cellType);
-    assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+    assert.ok(foundResult.length >= 1, "Didn't find any cells being rendered");
 
     let targetCell: ReactWrapper;
     // Get the correct result that we are dealing with
@@ -296,7 +300,7 @@ function verifyCell(
     }
 
     // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
-    assert.ok(targetCell!, 'Target cell doesn\'t exist');
+    assert.ok(targetCell!, "Target cell doesn't exist");
 
     if (options.shouldNotExist) {
         assert.ok(targetCell!.find(options.selector).length === 0, `Found cells with the matching selector '${options.selector}'`);
@@ -307,7 +311,7 @@ function verifyCell(
 
 export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, state: CellInputState) {
     const lastCell = getLastOutputCell(wrapper, cellType);
-    assert.ok(lastCell, 'Last call doesn\'t exist');
+    assert.ok(lastCell, "Last call doesn't exist");
 
     const inputBlock = lastCell.find('div.cell-input');
     const toggleButton = lastCell.find('polygon.collapse-input-svg');
@@ -485,7 +489,7 @@ export async function enterInput(
     code: string,
     resultClass: string
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    const editor = (resultClass === 'InteractiveCell') ? getInteractiveEditor(wrapper) : getNativeFocusedEditor(wrapper);
+    const editor = resultClass === 'InteractiveCell' ? getInteractiveEditor(wrapper) : getNativeFocusedEditor(wrapper);
 
     // First we have to type the code into the input box
     const textArea = typeCode(editor, code);
@@ -568,7 +572,7 @@ export function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}
 export function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string) {
     // Find the last cell added
     const lastCell = getLastOutputCell(wrapper, cellType);
-    assert.ok(lastCell, 'Last call doesn\'t exist');
+    assert.ok(lastCell, "Last call doesn't exist");
 
     const toggleButton = lastCell.find('button.collapse-input');
     assert.ok(toggleButton);

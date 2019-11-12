@@ -36,10 +36,10 @@ export class ProtocolLogger implements IProtocolLogger {
     }
     private fromDataCallbackHandler = (data: string | Buffer) => {
         this.logMessages(['From Client:', (data as Buffer).toString('utf8')]);
-    }
+    };
     private toDataCallbackHandler = (data: string | Buffer) => {
         this.logMessages(['To Client:', (data as Buffer).toString('utf8')]);
-    }
+    };
     private logMessages(messages: string[]) {
         if (this.logger) {
             messages.forEach(message => this.logger!.verbose(`${message}`));

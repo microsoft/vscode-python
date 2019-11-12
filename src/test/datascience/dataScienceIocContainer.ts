@@ -9,17 +9,7 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import {
-    ConfigurationChangeEvent,
-    Disposable,
-    Event,
-    EventEmitter,
-    FileSystemWatcher,
-    Uri,
-    ViewColumn,
-    WorkspaceConfiguration,
-    WorkspaceFolder
-} from 'vscode';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri, ViewColumn, WorkspaceConfiguration, WorkspaceFolder } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
@@ -55,31 +45,15 @@ import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import {
-    IBufferDecoder,
-    IProcessLogger,
-    IProcessServiceFactory,
-    IPythonExecutionFactory
-} from '../../client/common/process/types';
+import { IBufferDecoder, IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { Bash } from '../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../client/common/terminal/environmentActivationProviders/commandPrompt';
-import {
-    CondaActivationCommandProvider
-} from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
-import {
-    PipEnvActivationCommandProvider
-} from '../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
-import {
-    PyEnvActivationCommandProvider
-} from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
+import { CondaActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import { PipEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
+import { PyEnvActivationCommandProvider } from '../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
-import {
-    IShellDetector,
-    ITerminalActivationCommandProvider,
-    ITerminalHelper,
-    TerminalActivationProviders
-} from '../../client/common/terminal/types';
+import { IShellDetector, ITerminalActivationCommandProvider, ITerminalHelper, TerminalActivationProviders } from '../../client/common/terminal/types';
 import {
     IAsyncDisposableRegistry,
     IConfigurationService,
@@ -108,16 +82,12 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { GatherExecution } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
-import {
-    DotNetIntellisenseProvider
-} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import { DotNetIntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
-import {
-    InteractiveWindowCommandListener
-} from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
@@ -173,11 +143,7 @@ import { IEnvironmentActivationService } from '../../client/interpreter/activati
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
-import {
-    IInterpreterComparer,
-    IPythonPathUpdaterServiceFactory,
-    IPythonPathUpdaterServiceManager
-} from '../../client/interpreter/configuration/types';
+import { IInterpreterComparer, IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -210,33 +176,19 @@ import { PythonInterpreterLocatorService } from '../../client/interpreter/locato
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import {
-    CurrentPathService,
-    PythonInPathCommandProvider
-} from '../../client/interpreter/locators/services/currentPathService';
-import {
-    GlobalVirtualEnvironmentsSearchPathProvider,
-    GlobalVirtualEnvService
-} from '../../client/interpreter/locators/services/globalVirtualEnvService';
+import { CurrentPathService, PythonInPathCommandProvider } from '../../client/interpreter/locators/services/currentPathService';
+import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from '../../client/interpreter/locators/services/globalVirtualEnvService';
 import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from '../../client/interpreter/locators/services/interpreterWatcherBuilder';
-import {
-    KnownPathsService,
-    KnownSearchPathsForInterpreters
-} from '../../client/interpreter/locators/services/KnownPathsService';
+import { KnownPathsService, KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { PipEnvService } from '../../client/interpreter/locators/services/pipEnvService';
 import { PipEnvServiceHelper } from '../../client/interpreter/locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from '../../client/interpreter/locators/services/windowsRegistryService';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
-import {
-    WorkspaceVirtualEnvironmentsSearchPathProvider,
-    WorkspaceVirtualEnvService
-} from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
-import {
-    WorkspaceVirtualEnvWatcherService
-} from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
+import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from '../../client/interpreter/locators/services/workspaceVirtualEnvService';
+import { WorkspaceVirtualEnvWatcherService } from '../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
@@ -260,7 +212,6 @@ import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
-
     public webPanelListener: IWebPanelMessageListener | undefined;
     public wrapper: ReactWrapper<any, Readonly<{}>, React.Component> | undefined;
     public wrapperCreatedPromise: Deferred<boolean> | undefined;
@@ -269,11 +220,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
     private missedMessages: any[] = [];
-    private pythonSettings = new class extends PythonSettings {
+    private pythonSettings = new (class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
         }
-    }(undefined, new MockAutoSelectionService());
+    })(undefined, new MockAutoSelectionService());
     private commandManager: MockCommandManager = new MockCommandManager();
     private setContexts: Record<string, boolean> = {};
     private contextSetEvent: EventEmitter<{ name: string; value: boolean }> = new EventEmitter<{ name: string; value: boolean }>();
@@ -288,7 +239,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
-        architecture: Architecture.x64,
+        architecture: Architecture.x64
     };
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
@@ -384,16 +335,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
+            ITerminalActivationCommandProvider,
+            CommandPromptAndPowerShell,
+            TerminalActivationProviders.commandPromptAndPowerShell
+        );
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
+        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, CommandPromptAndPowerShell, TerminalActivationProviders.commandPromptAndPowerShell);
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
-        this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-            ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
+            ITerminalActivationCommandProvider,
+            PipEnvActivationCommandProvider,
+            TerminalActivationProviders.pipenv
+        );
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
         this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
@@ -431,7 +385,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Also setup a mock execution service and interpreter service
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
-        const appShell = this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        const appShell = (this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>());
         // const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const workspaceService = mock(WorkspaceService);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -470,7 +424,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             debugJustMyCode: true
         };
 
-        const workspaceConfig = this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration);
+        const workspaceConfig = (this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration));
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
         when(workspaceConfig.get(anything(), anything())).thenCall((_, defaultValue) => defaultValue);
         when(workspaceConfig.has(anything())).thenReturn(false);
@@ -528,7 +482,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, EnvironmentVariablesProvider);
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global');
-        this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
+        this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
+            IVirtualEnvironmentsSearchPathProvider,
+            WorkspaceVirtualEnvironmentsSearchPathProvider,
+            'workspace'
+        );
         this.serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
 
         this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
@@ -587,13 +545,23 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
 
         const dummyDisposable = {
-            dispose: () => { return; }
+            dispose: () => {
+                return;
+            }
         };
 
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
+        appShell
+            .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
+            .returns(e => {
+                throw e;
+            });
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+        appShell
+            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell
+            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
         appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve('Python'));
@@ -606,7 +574,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     // tslint:disable:any
     public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, role: vsls.Role = vsls.Role.None) {
-
         // Force the container to mock actual live share if necessary
         if (role !== vsls.Role.None) {
             const liveShareTest = this.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
@@ -622,8 +589,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
-            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
+        this.webPanelProvider
+            .setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+            .returns((_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
                 // Keep track of the current listener. It listens to messages through the vscode api
                 this.webPanelListener = listener;
 
@@ -634,7 +602,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     // This needs to be async because we are being called in the ctor of the webpanel. It can't
                     // handle some messages during the ctor.
                     setTimeout(() => {
-                        this.missedMessages.forEach(m => this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop());
+                        this.missedMessages.forEach(m => (this.webPanelListener ? this.webPanelListener.onMessage(m.type, m.payload) : noop()));
                     }, 0);
 
                     // Note, you might think we should clean up the messages. However since the mount only occurs once, we might
@@ -645,14 +613,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 // Return our dummy web panel
                 return webPanel.object;
             });
-        webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
-            const message = createMessageEvent(m);
-            if (this.postMessage) {
-                this.postMessage(message);
-            } else {
-                throw new Error('postMessage callback not defined');
-            }
-        });
+        webPanel
+            .setup(p => p.postMessage(TypeMoq.It.isAny()))
+            .callback((m: WebPanelMessage) => {
+                const message = createMessageEvent(m);
+                if (this.postMessage) {
+                    this.postMessage(message);
+                } else {
+                    throw new Error('postMessage callback not defined');
+                }
+            });
         webPanel.setup(p => p.show(TypeMoq.It.isAny())).returns(() => Promise.resolve());
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
@@ -764,9 +734,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     this.postMessageToWebPanel(msg);
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {
-
-                },
+                setState: (_msg: any) => {},
                 // tslint:disable-next-line:no-any no-empty
                 getState: () => {
                     return {};

@@ -6,9 +6,7 @@ import { EventEmitter, Extension } from 'vscode';
 import { ICommandManager } from '../../client/common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../../client/common/constants';
 import { IExtensions } from '../../client/common/types';
-import {
-    ExtensionActivationForTerminalActivation
-} from '../../client/terminals/activation';
+import { ExtensionActivationForTerminalActivation } from '../../client/terminals/activation';
 
 suite('Terminal - Activation', () => {
     let commands: TypeMoq.IMock<ICommandManager>;
@@ -19,9 +17,7 @@ suite('Terminal - Activation', () => {
         commands = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         extensions = TypeMoq.Mock.ofType<IExtensions>(undefined, TypeMoq.MockBehavior.Strict);
         extensionsChangeEvent = new EventEmitter<void>();
-        extensions
-            .setup(e => e.onDidChange)
-            .returns(() => extensionsChangeEvent.event);
+        extensions.setup(e => e.onDidChange).returns(() => extensionsChangeEvent.event);
     });
 
     teardown(() => {
@@ -33,18 +29,14 @@ suite('Terminal - Activation', () => {
         extensions.verifyAll();
     }
 
-    test('If code runner extension is installed, don\'t show the play icon', async () => {
+    test("If code runner extension is installed, don't show the play icon", async () => {
         // tslint:disable-next-line:no-any
         const extension = TypeMoq.Mock.ofType<Extension<any>>(undefined, TypeMoq.MockBehavior.Strict);
         extensions
             .setup(e => e.getExtension(CODE_RUNNER_EXTENSION_ID))
             .returns(() => extension.object)
             .verifiable(TypeMoq.Times.once());
-        activation = new ExtensionActivationForTerminalActivation(
-            commands.object,
-            extensions.object,
-            []
-        );
+        activation = new ExtensionActivationForTerminalActivation(commands.object, extensions.object, []);
 
         commands
             .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))
@@ -65,11 +57,7 @@ suite('Terminal - Activation', () => {
             .setup(e => e.getExtension(CODE_RUNNER_EXTENSION_ID))
             .returns(() => undefined)
             .verifiable(TypeMoq.Times.once());
-        activation = new ExtensionActivationForTerminalActivation(
-            commands.object,
-            extensions.object,
-            []
-        );
+        activation = new ExtensionActivationForTerminalActivation(commands.object, extensions.object, []);
 
         commands
             .setup(c => c.executeCommand('setContext', 'python.showPlayIcon', true))

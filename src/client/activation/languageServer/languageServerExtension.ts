@@ -17,7 +17,7 @@ export class LanguageServerExtension implements ILanguageServerExtension {
     public loadExtensionArgs?: {};
     protected readonly _invoked = new EventEmitter<void>();
     private disposable?: IDisposable;
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) { }
+    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager) {}
     public dispose() {
         if (this.disposable) {
             this.disposable.dispose();

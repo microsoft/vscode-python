@@ -112,93 +112,86 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
         const { range, cell_type } = cellRange;
         switch (commandName) {
             case Commands.RunCurrentCellAndAddBelow:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunCurrentCellAndAddBelow,
-                    localize.DataScience.runCurrentCellAndAddBelow());
+                return this.generateCodeLens(range, Commands.RunCurrentCellAndAddBelow, localize.DataScience.runCurrentCellAndAddBelow());
             case Commands.AddCellBelow:
-                return this.generateCodeLens(
-                    range,
-                    Commands.AddCellBelow,
-                    localize.DataScience.addCellBelowCommandTitle(),
-                    [document.fileName, range.start.line]);
+                return this.generateCodeLens(range, Commands.AddCellBelow, localize.DataScience.addCellBelowCommandTitle(), [document.fileName, range.start.line]);
             case Commands.DebugCurrentCellPalette:
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugCurrentCellPalette,
-                    localize.DataScience.debugCellCommandTitle());
+                return this.generateCodeLens(range, Commands.DebugCurrentCellPalette, localize.DataScience.debugCellCommandTitle());
 
             case Commands.DebugCell:
                 // If it's not a code cell (e.g. markdown), don't add the "Debug cell" action.
-                if (cell_type !== 'code') { break; }
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugCell,
-                    localize.DataScience.debugCellCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
+                if (cell_type !== 'code') {
+                    break;
+                }
+                return this.generateCodeLens(range, Commands.DebugCell, localize.DataScience.debugCellCommandTitle(), [
+                    document.fileName,
+                    range.start.line,
+                    range.start.character,
+                    range.end.line,
+                    range.end.character
+                ]);
 
             case Commands.DebugStepOver:
                 // Only code cells get debug actions
-                if (cell_type !== 'code') { break; }
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugStepOver,
-                    localize.DataScience.debugStepOverCommandTitle());
+                if (cell_type !== 'code') {
+                    break;
+                }
+                return this.generateCodeLens(range, Commands.DebugStepOver, localize.DataScience.debugStepOverCommandTitle());
 
             case Commands.DebugContinue:
                 // Only code cells get debug actions
-                if (cell_type !== 'code') { break; }
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugContinue,
-                    localize.DataScience.debugContinueCommandTitle());
+                if (cell_type !== 'code') {
+                    break;
+                }
+                return this.generateCodeLens(range, Commands.DebugContinue, localize.DataScience.debugContinueCommandTitle());
 
             case Commands.DebugStop:
                 // Only code cells get debug actions
-                if (cell_type !== 'code') { break; }
-                return this.generateCodeLens(
-                    range,
-                    Commands.DebugStop,
-                    localize.DataScience.debugStopCommandTitle());
+                if (cell_type !== 'code') {
+                    break;
+                }
+                return this.generateCodeLens(range, Commands.DebugStop, localize.DataScience.debugStopCommandTitle());
 
             case Commands.RunCurrentCell:
             case Commands.RunCell:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunCell,
-                    localize.DataScience.runCellLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character, range.end.line, range.end.character]);
+                return this.generateCodeLens(range, Commands.RunCell, localize.DataScience.runCellLensCommandTitle(), [
+                    document.fileName,
+                    range.start.line,
+                    range.start.character,
+                    range.end.line,
+                    range.end.character
+                ]);
 
             case Commands.RunAllCells:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunAllCells,
-                    localize.DataScience.runAllCellsLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character]);
+                return this.generateCodeLens(range, Commands.RunAllCells, localize.DataScience.runAllCellsLensCommandTitle(), [
+                    document.fileName,
+                    range.start.line,
+                    range.start.character
+                ]);
 
             case Commands.RunAllCellsAbovePalette:
             case Commands.RunAllCellsAbove:
                 if (!isFirst) {
-                    return this.generateCodeLens(
-                        range,
-                        Commands.RunAllCellsAbove,
-                        localize.DataScience.runAllCellsAboveLensCommandTitle(),
-                        [document.fileName, range.start.line, range.start.character]);
+                    return this.generateCodeLens(range, Commands.RunAllCellsAbove, localize.DataScience.runAllCellsAboveLensCommandTitle(), [
+                        document.fileName,
+                        range.start.line,
+                        range.start.character
+                    ]);
                 } else {
-                    return this.generateCodeLens(
-                        range,
-                        Commands.RunCellAndAllBelow,
-                        localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                        [document.fileName, range.start.line, range.start.character]);
+                    return this.generateCodeLens(range, Commands.RunCellAndAllBelow, localize.DataScience.runCellAndAllBelowLensCommandTitle(), [
+                        document.fileName,
+                        range.start.line,
+                        range.start.character
+                    ]);
                 }
                 break;
             case Commands.RunCellAndAllBelowPalette:
             case Commands.RunCellAndAllBelow:
-                return this.generateCodeLens(
-                    range,
-                    Commands.RunCellAndAllBelow,
-                    localize.DataScience.runCellAndAllBelowLensCommandTitle(),
-                    [document.fileName, range.start.line, range.start.character]);
+                return this.generateCodeLens(range, Commands.RunCellAndAllBelow, localize.DataScience.runCellAndAllBelowLensCommandTitle(), [
+                    document.fileName,
+                    range.start.line,
+                    range.start.character
+                ]);
 
             default:
                 traceWarning(`Invalid command for code lens ${commandName}`);
@@ -216,11 +209,14 @@ export class CodeLensFactory implements ICodeLensFactory, IInteractiveWindowList
             if (rangeMatches && rangeMatches.length) {
                 const rangeMatch = rangeMatches[rangeMatches.length - 1];
                 if (this.cellExecutionCounts.has(rangeMatch.id)) {
-                    codeLens.push(this.generateCodeLens(
-                        range,
-                        Commands.ScrollToCell,
-                        localize.DataScience.scrollToCellTitleFormatMessage().format(this.cellExecutionCounts.get(rangeMatch.id)!),
-                        [document.fileName, rangeMatch.id]));
+                    codeLens.push(
+                        this.generateCodeLens(
+                            range,
+                            Commands.ScrollToCell,
+                            localize.DataScience.scrollToCellTitleFormatMessage().format(this.cellExecutionCounts.get(rangeMatch.id)!),
+                            [document.fileName, rangeMatch.id]
+                        )
+                    );
                 }
             }
         }

@@ -10,8 +10,7 @@ export class TestCollectionStorageService implements ITestCollectionStorageServi
     private readonly _onDidChange = new EventEmitter<{ uri: Uri; data?: TestDataItem }>();
     private readonly testsIndexedByWorkspaceUri = new Map<string, Tests | undefined>();
 
-    constructor(@inject(IDisposableRegistry) disposables: Disposable[],
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
+    constructor(@inject(IDisposableRegistry) disposables: Disposable[], @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         disposables.push(this);
     }
     public get onDidChange(): Event<{ uri: Uri; data?: TestDataItem }> {

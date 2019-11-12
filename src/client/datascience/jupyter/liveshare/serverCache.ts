@@ -21,7 +21,7 @@ export class ServerCache implements IAsyncDisposable {
         private workspace: IWorkspaceService,
         private fileSystem: IFileSystem,
         private interpreterService: IInterpreterService
-    ) { }
+    ) {}
 
     public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
@@ -125,5 +125,4 @@ export class ServerCache implements IAsyncDisposable {
         }
         return workingDir;
     }
-
 }

@@ -6,10 +6,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import {
-    ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner,
-    IXUnitParser, LaunchOptions, TestRunOptions, Tests
-} from '../common/types';
+import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IXUnitParser, LaunchOptions, TestRunOptions, Tests } from '../common/types';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
 const WITH_XUNIT = '--with-xunit';
@@ -65,7 +62,13 @@ export class TestManagerRunner implements ITestManagerRunner {
             if (options.debug === true) {
                 const debugLauncher = this.serviceContainer.get<ITestDebugLauncher>(ITestDebugLauncher);
                 const debuggerArgs = [options.cwd, 'nose'].concat(testArgs);
-                const launchOptions: LaunchOptions = { cwd: options.cwd, args: debuggerArgs, token: options.token, outChannel: options.outChannel, testProvider: NOSETEST_PROVIDER };
+                const launchOptions: LaunchOptions = {
+                    cwd: options.cwd,
+                    args: debuggerArgs,
+                    token: options.token,
+                    outChannel: options.outChannel,
+                    testProvider: NOSETEST_PROVIDER
+                };
                 await debugLauncher.launchDebugger(launchOptions);
             } else {
                 const runOptions: Options = {

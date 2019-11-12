@@ -45,9 +45,7 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             .setup(r => r.getRandomInt(0, 100))
             .returns(() => 10)
             .verifiable(TypeMoq.Times.never());
-        doNotShowAgain
-            .setup(d => d.value)
-            .returns(() => true);
+        doNotShowAgain.setup(d => d.value).returns(() => true);
 
         const result = extensionSurveyPrompt.shouldShowBanner();
 
@@ -61,12 +59,8 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
             .setup(r => r.getRandomInt(0, 100))
             .returns(() => 10)
             .verifiable(TypeMoq.Times.never());
-        disableSurveyForTime
-            .setup(d => d.value)
-            .returns(() => true);
-        doNotShowAgain
-            .setup(d => d.value)
-            .returns(() => false);
+        disableSurveyForTime.setup(d => d.value).returns(() => true);
+        doNotShowAgain.setup(d => d.value).returns(() => false);
 
         const result = extensionSurveyPrompt.shouldShowBanner();
 
@@ -76,34 +70,22 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
         random.verifyAll();
     });
     test('Returns false if user is not in the random sampling', async () => {
-        disableSurveyForTime
-            .setup(d => d.value)
-            .returns(() => false);
-        doNotShowAgain
-            .setup(d => d.value)
-            .returns(() => false);
+        disableSurveyForTime.setup(d => d.value).returns(() => false);
+        doNotShowAgain.setup(d => d.value).returns(() => false);
         // Default sample size is 10
         for (let i = 10; i < 100; i = i + 1) {
-            random
-                .setup(r => r.getRandomInt(0, 100))
-                .returns(() => i);
+            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(false, 'Banner should not be shown');
         }
         random.verifyAll();
     });
     test('Returns true if user is in the random sampling', async () => {
-        disableSurveyForTime
-            .setup(d => d.value)
-            .returns(() => false);
-        doNotShowAgain
-            .setup(d => d.value)
-            .returns(() => false);
+        disableSurveyForTime.setup(d => d.value).returns(() => false);
+        doNotShowAgain.setup(d => d.value).returns(() => false);
         // Default sample size is 10
         for (let i = 0; i < 10; i = i + 1) {
-            random
-                .setup(r => r.getRandomInt(0, 100))
-                .returns(() => i);
+            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(true, 'Banner should be shown');
         }
@@ -111,16 +93,10 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
 
     test('Always return true if sample size is 100', async () => {
         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 100);
-        disableSurveyForTime
-            .setup(d => d.value)
-            .returns(() => false);
-        doNotShowAgain
-            .setup(d => d.value)
-            .returns(() => false);
+        disableSurveyForTime.setup(d => d.value).returns(() => false);
+        doNotShowAgain.setup(d => d.value).returns(() => false);
         for (let i = 0; i < 100; i = i + 1) {
-            random
-                .setup(r => r.getRandomInt(0, 100))
-                .returns(() => i);
+            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(true, 'Banner should be shown');
         }
@@ -128,16 +104,10 @@ suite('Extension survey prompt - shouldShowBanner()', () => {
 
     test('Always return false if sample size is 0', async () => {
         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 0);
-        disableSurveyForTime
-            .setup(d => d.value)
-            .returns(() => false);
-        doNotShowAgain
-            .setup(d => d.value)
-            .returns(() => false);
+        disableSurveyForTime.setup(d => d.value).returns(() => false);
+        doNotShowAgain.setup(d => d.value).returns(() => false);
         for (let i = 0; i < 100; i = i + 1) {
-            random
-                .setup(r => r.getRandomInt(0, 100))
-                .returns(() => i);
+            random.setup(r => r.getRandomInt(0, 100)).returns(() => i);
             const result = extensionSurveyPrompt.shouldShowBanner();
             expect(result).to.equal(false, 'Banner should not be shown');
         }
@@ -168,7 +138,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         extensionSurveyPrompt = new ExtensionSurveyPrompt(appShell.object, browserService.object, instance(persistentStateFactory), random.object, experiments.object, 10);
     });
 
-    test('Launch survey if \'Yes\' option is clicked', async () => {
+    test("Launch survey if 'Yes' option is clicked", async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
         appShell
             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -195,7 +165,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         doNotShowAgain.verifyAll();
     });
 
-    test('Do nothing if \'Maybe later\' option is clicked', async () => {
+    test("Do nothing if 'Maybe later' option is clicked", async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
         appShell
             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -249,7 +219,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         doNotShowAgain.verifyAll();
     });
 
-    test('Disable prompt if \'Do not show again\' option is clicked', async () => {
+    test("Disable prompt if 'Do not show again' option is clicked", async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
         appShell
             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -299,7 +269,7 @@ suite('Extension survey prompt - activate()', () => {
         sinon.restore();
     });
 
-    test('If user is not in \'ShowExtensionPrompt\' experiment, send telemetry if in control group & return', async () => {
+    test("If user is not in 'ShowExtensionPrompt' experiment, send telemetry if in control group & return", async () => {
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => false);
         showSurvey = sinon.stub(ExtensionSurveyPrompt.prototype, 'showSurvey');
@@ -317,7 +287,7 @@ suite('Extension survey prompt - activate()', () => {
         experiments.verifyAll();
     });
 
-    test('No survey is shown if shouldShowBanner() returns false and user is in \'ShowExtensionPrompt\' experiment', async () => {
+    test("No survey is shown if shouldShowBanner() returns false and user is in 'ShowExtensionPrompt' experiment", async () => {
         const deferred = createDeferred<true>();
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => false);
@@ -345,7 +315,7 @@ suite('Extension survey prompt - activate()', () => {
         experiments.verifyAll();
     });
 
-    test('Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in \'ShowExtensionPrompt\' experiment', async () => {
+    test("Survey is shown after waitTimeToShowSurvey if shouldShowBanner() returns true and user is in 'ShowExtensionPrompt' experiment", async () => {
         const deferred = createDeferred<true>();
         shouldShowBanner = sinon.stub(ExtensionSurveyPrompt.prototype, 'shouldShowBanner');
         shouldShowBanner.callsFake(() => true);

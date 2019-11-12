@@ -17,7 +17,12 @@ export function fixLatexEquations(input: string): string {
                 // Normal case, if the latex formula starts with a '$' we don't do anything.
                 // Otherwise, we insert the block at the beginning and ending of the latex formula.
             } else if (input[beginIndexes[i] - 1] !== '$') {
-                input = input.slice(0, beginIndexes[i] + block.length * 2 * i) + block + input.slice(beginIndexes[i] + block.length * 2 * i, endOfEnd + 1) + block + input.slice(endOfEnd + 1, input.length);
+                input =
+                    input.slice(0, beginIndexes[i] + block.length * 2 * i) +
+                    block +
+                    input.slice(beginIndexes[i] + block.length * 2 * i, endOfEnd + 1) +
+                    block +
+                    input.slice(endOfEnd + 1, input.length);
             }
         }
     }

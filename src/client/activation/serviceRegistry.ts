@@ -24,12 +24,36 @@ import { LanguageServer } from './languageServer/languageServer';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from './languageServer/languageServerExtension';
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
+import {
+    BetaLanguageServerPackageRepository,
+    DailyLanguageServerPackageRepository,
+    LanguageServerDownloadChannel,
+    StableLanguageServerPackageRepository
+} from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
-import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerOutputChannel, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
+import {
+    IDownloadChannelRule,
+    IExtensionActivationManager,
+    IExtensionActivationService,
+    IExtensionSingleActivationService,
+    ILanguageClientFactory,
+    ILanguageServer,
+    ILanguageServerActivator,
+    ILanguageServerAnalysisOptions,
+    ILanguageServerCompatibilityService as ILanagueServerCompatibilityService,
+    ILanguageServerDownloader,
+    ILanguageServerExtension,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    ILanguageServerOutputChannel,
+    ILanguageServerPackageService,
+    IPlatformData,
+    LanguageClientFactory,
+    LanguageServerActivator
+} from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);

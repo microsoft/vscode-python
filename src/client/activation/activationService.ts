@@ -34,16 +34,15 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private readonly lsNotSupportedDiagnosticService: IDiagnosticsService;
     private resource!: Resource;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager) {
+        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+    ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-            IDiagnosticsService,
-            LSNotSupportedDiagnosticServiceId
-        );
+        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
@@ -128,7 +127,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
             return false;
         }
-        return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
+        return settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined;
     }
 
     /**
@@ -163,9 +162,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     private async logStartup(isJedi: boolean): Promise<void> {
-        const outputLine = isJedi
-            ? 'Starting Jedi Python language engine.'
-            : 'Starting Microsoft Python language server.';
+        const outputLine = isJedi ? 'Starting Jedi Python language engine.' : 'Starting Microsoft Python language server.';
         this.output.appendLine(outputLine);
     }
 
@@ -181,10 +178,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             return;
         }
 
-        const item = await this.appShell.showInformationMessage(
-            'Please reload the window switching between language engines.',
-            'Reload'
-        );
+        const item = await this.appShell.showInformationMessage('Please reload the window switching between language engines.', 'Reload');
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }

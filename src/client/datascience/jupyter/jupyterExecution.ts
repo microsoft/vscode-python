@@ -17,15 +17,7 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, Telemetry } from '../constants';
-import {
-    IConnection,
-    IJupyterExecution,
-    IJupyterKernelSpec,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerLaunchInfo,
-    INotebookServerOptions
-} from '../types';
+import { IConnection, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebookServer, INotebookServerLaunchInfo, INotebookServerOptions } from '../types';
 import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
@@ -34,7 +26,6 @@ import { KernelService } from './kernelService';
 import { NotebookStarter } from './notebookStarter';
 
 export class JupyterExecutionBase implements IJupyterExecution {
-
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private disposed: boolean = false;
@@ -57,10 +48,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly serviceContainer: IServiceContainer
     ) {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
-        this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
-            processServiceFactory, interpreterService, fileSystem);
-        this.notebookStarter = new NotebookStarter(executionFactory, this, this.commandFinder,
-            this.kernelService, fileSystem, serviceContainer);
+        this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry, processServiceFactory, interpreterService, fileSystem);
+        this.notebookStarter = new NotebookStarter(executionFactory, this, this.commandFinder, this.kernelService, fileSystem, serviceContainer);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -242,7 +231,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startOrConnect(
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         let connection: IConnection | undefined;
         let kernelSpec: IJupyterKernelSpec | undefined;
 
@@ -301,14 +293,19 @@ export class JupyterExecutionBase implements IJupyterExecution {
             hostName: url.hostname,
             localLaunch: false,
             localProcExitCode: undefined,
-            disconnected: (_l) => { return { dispose: noop }; },
+            disconnected: _l => {
+                return { dispose: noop };
+            },
             dispose: noop
         };
-    }
+    };
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startNotebookServer(
+        useDefaultConfig: boolean,
+        cancelToken?: CancellationToken
+    ): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
@@ -323,7 +320,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         return undefined;
-    }
+    };
 
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
@@ -339,5 +336,5 @@ export class JupyterExecutionBase implements IJupyterExecution {
             this.logger.logWarning(err);
             return false;
         }
-    }
+    };
 }

@@ -16,12 +16,7 @@ import { IProcessServiceFactory, Output } from '../../client/common/process/type
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import {
-    IDataScienceCodeLensProvider,
-    IDebugLocationTracker,
-    IInteractiveWindowProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
+import { IDataScienceCodeLensProvider, IDebugLocationTracker, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
@@ -37,17 +32,17 @@ suite('DataScience Debugger tests', () => {
     const postDisposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
     let processFactory: IProcessServiceFactory;
-    let lastErrorMessage : string | undefined;
-    let mockDebuggerService : MockDebuggerService | undefined;
+    let lastErrorMessage: string | undefined;
+    let mockDebuggerService: MockDebuggerService | undefined;
 
-    suiteSetup(function () {
+    suiteSetup(function() {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
         // Currently these test fail on Mac / Python 3.7 so disable for that
         // https://github.com/microsoft/ptvsd/issues/1587
-        const isMac = process.env ? (process.env.VMIMAGENAME !== undefined && process.env.VMIMAGENAME === 'macos-10.13') : false;
-        const py37 = process.env ? (process.env.PYTHONVERSION !== undefined && process.env.PYTHONVERSION === '3.7') : false;
+        const isMac = process.env ? process.env.VMIMAGENAME !== undefined && process.env.VMIMAGENAME === 'macos-10.13' : false;
+        const py37 = process.env ? process.env.PYTHONVERSION !== undefined && process.env.PYTHONVERSION === '3.7' : false;
 
         if (isMac && py37) {
             // tslint:disable-next-line:no-console
@@ -99,7 +94,7 @@ suite('DataScience Debugger tests', () => {
     });
 
     suiteTeardown(() => {
-//        asyncDump();
+        //        asyncDump();
     });
 
     function createContainer(): DataScienceIocContainer {
@@ -108,19 +103,23 @@ suite('DataScience Debugger tests', () => {
 
         // Rebind the appshell so we can change what happens on an error
         const dummyDisposable = {
-            dispose: () => { return; }
+            dispose: () => {
+                return;
+            }
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => lastErrorMessage = e);
+        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(e => (lastErrorMessage = e));
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+        appShell
+            .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
         appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
 
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), vsls.Role.None);
+        result.createWebView(() => mount(<InteractivePanel baseTheme="vscode-light" codeTheme="light_vs" testMode={true} skipDefault={true} />), vsls.Role.None);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.
@@ -130,7 +129,7 @@ suite('DataScience Debugger tests', () => {
         return result;
     }
 
-    async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string, expectError?: boolean) : Promise<void> {
+    async function debugCell(code: string, breakpoint?: Range, breakpointFile?: string, expectError?: boolean): Promise<void> {
         // Create a dummy document with just this code
         const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
         const fileName = path.join(EXTENSION_ROOT_DIR, 'foo.py');
@@ -138,7 +137,7 @@ suite('DataScience Debugger tests', () => {
 
         if (breakpoint) {
             const sourceFile = breakpointFile ? path.join(EXTENSION_ROOT_DIR, breakpointFile) : fileName;
-            const sb : SourceBreakpoint = {
+            const sb: SourceBreakpoint = {
                 location: {
                     uri: Uri.file(sourceFile),
                     range: breakpoint
@@ -293,5 +292,4 @@ suite('DataScience Debugger tests', () => {
         assert.ok(cellResults, 'No cell results after finishing debugging');
         await history.dispose();
     });
-
 });

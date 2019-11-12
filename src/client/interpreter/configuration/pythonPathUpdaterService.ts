@@ -30,24 +30,24 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
         } catch (reason) {
             failed = true;
             // tslint:disable-next-line:no-unsafe-any prefer-type-cast
-            const message = reason && typeof reason.message === 'string' ? reason.message as string : '';
+            const message = reason && typeof reason.message === 'string' ? (reason.message as string) : '';
             window.showErrorMessage(`Failed to set 'pythonPath'. Error: ${message}`);
             traceError(reason);
         }
         // do not wait for this to complete
-        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath)
-            .catch(ex => traceError('Python Extension: sendTelemetry', ex));
+        this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath).catch(ex => traceError('Python Extension: sendTelemetry', ex));
     }
     private async sendTelemetry(duration: number, failed: boolean, trigger: 'ui' | 'shebang' | 'load', pythonPath: string) {
         const telemtryProperties: PythonInterpreterTelemetry = {
-            failed, trigger
+            failed,
+            trigger
         };
         if (!failed) {
             const processService = await this.executionFactory.create({ pythonPath });
-            const infoPromise = processService.getInterpreterInformation()
-                .catch<InterpreterInfomation | undefined>(() => undefined);
-            const pipVersionPromise = this.interpreterVersionService.getPipVersion(pythonPath)
-                .then(value => value.length === 0 ? undefined : value)
+            const infoPromise = processService.getInterpreterInformation().catch<InterpreterInfomation | undefined>(() => undefined);
+            const pipVersionPromise = this.interpreterVersionService
+                .getPipVersion(pythonPath)
+                .then(value => (value.length === 0 ? undefined : value))
                 .catch<string>(() => '');
             const [info, pipVersion] = await Promise.all([infoPromise, pipVersionPromise]);
             if (info && info.version) {

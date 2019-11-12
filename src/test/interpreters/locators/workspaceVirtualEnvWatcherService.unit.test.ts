@@ -20,7 +20,7 @@ import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/l
 
 suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
     let disposables: Disposable[] = [];
-    setup(function () {
+    setup(function() {
         if (!isUnitTestExecution()) {
             return this.skip();
         }
@@ -29,7 +29,9 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         disposables.forEach(d => {
             try {
                 d.dispose();
-            } catch { noop(); }
+            } catch {
+                noop();
+            }
         });
         disposables = [];
     });
@@ -58,7 +60,7 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         }
 
         const fsWatcher = mock(FSWatcher);
-        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(instance(fsWatcher as any as FileSystemWatcher));
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(instance((fsWatcher as any) as FileSystemWatcher));
 
         await watcher.register(resource);
 
@@ -101,10 +103,10 @@ suite('Interpreters - Workspace VirtualEnv Watcher Service', () => {
         }
         const fsWatcher = new FSWatcher();
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(undefined);
-        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(fsWatcher as any as FileSystemWatcher);
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn((fsWatcher as any) as FileSystemWatcher);
         await watcher.register(undefined);
         let invoked = false;
-        watcher.onDidCreate(() => invoked = true, watcher);
+        watcher.onDidCreate(() => (invoked = true), watcher);
 
         fsWatcher.invokeListener(Uri.file(''));
         // We need this sleep, as we have a debounce (so lets wait).

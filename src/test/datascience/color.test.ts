@@ -35,15 +35,18 @@ suite('Theme colors', () => {
         themeFinder = new ThemeFinder(extensions, currentProcess, logger);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceConfig.setup(ws => ws.has(TypeMoq.It.isAnyString()))
+        workspaceConfig
+            .setup(ws => ws.has(TypeMoq.It.isAnyString()))
             .returns(() => {
                 return false;
             });
-        workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString()))
+        workspaceConfig
+            .setup(ws => ws.get(TypeMoq.It.isAnyString()))
             .returns(() => {
                 return undefined;
             });
-        workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+        workspaceConfig
+            .setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((_s, d) => {
                 return d;
             });
@@ -91,16 +94,23 @@ suite('Theme colors', () => {
                 const actuallyDark = await themeFinder.isThemeDark(themeName);
                 assert.equal(actuallyDark, isDark, `Theme ${themeName} darkness is not ${isDark}`);
                 workspaceConfig.reset();
-                workspaceConfig.setup(ws => ws.get<string>(TypeMoq.It.isValue('colorTheme'))).returns(() => {
-                    return themeName;
-                });
-                workspaceConfig.setup(ws => ws.get<string>(TypeMoq.It.isValue('fontFamily'))).returns(() => {
-                    return 'Arial';
-                });
-                workspaceConfig.setup(ws => ws.get<number>(TypeMoq.It.isValue('fontSize'))).returns(() => {
-                    return 16;
-                });
-                workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                workspaceConfig
+                    .setup(ws => ws.get<string>(TypeMoq.It.isValue('colorTheme')))
+                    .returns(() => {
+                        return themeName;
+                    });
+                workspaceConfig
+                    .setup(ws => ws.get<string>(TypeMoq.It.isValue('fontFamily')))
+                    .returns(() => {
+                        return 'Arial';
+                    });
+                workspaceConfig
+                    .setup(ws => ws.get<number>(TypeMoq.It.isValue('fontSize')))
+                    .returns(() => {
+                        return 16;
+                    });
+                workspaceConfig
+                    .setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
                     .returns((_s, d) => {
                         return d;
                     });
@@ -157,5 +167,4 @@ suite('Theme colors', () => {
         assert.equal(matches!.length, 2, 'Wrong number of matches for for string color');
         assert.ok(matches![1].includes('#'), 'String color not found');
     });
-
 });

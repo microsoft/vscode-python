@@ -22,7 +22,7 @@ export class LanguageServerManager implements ILanguageServerManager {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension
-    ) { }
+    ) {}
     public dispose() {
         if (this.languageServer) {
             this.languageServer.dispose();

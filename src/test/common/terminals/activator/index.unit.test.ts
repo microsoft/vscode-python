@@ -19,21 +19,23 @@ suite('Terminal Activator', () => {
         baseActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
         handler1 = TypeMoq.Mock.ofType<ITerminalActivationHandler>();
         handler2 = TypeMoq.Mock.ofType<ITerminalActivationHandler>();
-        activator = new class extends TerminalActivator {
+        activator = new (class extends TerminalActivator {
             protected initialize() {
                 this.baseActivator = baseActivator.object;
             }
-        }(TypeMoq.Mock.ofType<ITerminalHelper>().object, [handler1.object, handler2.object]);
+        })(TypeMoq.Mock.ofType<ITerminalHelper>().object, [handler1.object, handler2.object]);
     });
     async function testActivationAndHandlers(activationSuccessful: boolean) {
         baseActivator
             .setup(b => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(activationSuccessful))
             .verifiable(TypeMoq.Times.once());
-        handler1.setup(h => h.handleActivation(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(activationSuccessful)))
+        handler1
+            .setup(h => h.handleActivation(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(activationSuccessful)))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
-        handler2.setup(h => h.handleActivation(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(activationSuccessful)))
+        handler2
+            .setup(h => h.handleActivation(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isValue(activationSuccessful)))
             .returns(() => Promise.resolve())
             .verifiable(TypeMoq.Times.once());
 

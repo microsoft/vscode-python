@@ -55,7 +55,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
     }
     // tslint:disable-next-line:no-any
     private displayError(error: any) {
-        const errorMsg = typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
+        const errorMsg = typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
         if (errorMsg.length > 0) {
             this.debugSession.sendEvent(new OutputEvent(errorMsg, 'stderr'));
         }
@@ -79,7 +79,9 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                 case 'externalTerminal':
                 case 'integratedTerminal': {
                     const isSudo = Array.isArray(this.args.debugOptions) && this.args.debugOptions.some(opt => opt === 'Sudo');
-                    this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, envVars).then(resolve).catch(reject);
+                    this.launchExternalTerminal(isSudo, processCwd, pythonPath, args, envVars)
+                        .then(resolve)
+                        .catch(reject);
                     break;
                 }
                 default: {
@@ -88,8 +90,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
 
                     // Here we wait for the application to connect to the socket server.
                     // Only once connected do we know that the application has successfully launched.
-                    this.debugServer!.DebugClientConnected
-                        .then(resolve)
+                    this.debugServer!.DebugClientConnected.then(resolve)
                         // tslint:disable-next-line: no-console
                         .catch(ex => console.error('Python Extension: debugServer.DebugClientConnected', ex));
                 }
@@ -105,7 +106,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
             if (status === DebugServerStatus.Running) {
                 return;
             }
-            if (status === DebugServerStatus.NotRunning && typeof (error) === 'object' && error !== null) {
+            if (status === DebugServerStatus.NotRunning && typeof error === 'object' && error !== null) {
                 return failedToLaunch(error);
             }
             // This could happen when the debugger didn't launch at all, e.g. python doesn't exist.
@@ -153,7 +154,7 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     args: [command].concat(commandArgs),
                     env
                 };
-                this.debugSession.runInTerminalRequest(termArgs, 5000, (response) => {
+                this.debugSession.runInTerminalRequest(termArgs, 5000, response => {
                     if (response.success) {
                         resolve();
                     } else {
@@ -161,15 +162,18 @@ export class LocalDebugClient extends DebugClient<LaunchRequestArguments> {
                     }
                 });
             } else {
-                open({ wait: false, app: [pythonPath].concat(args), cwd, env, sudo: sudo }).then(proc => {
-                    this.pyProc = proc;
-                    resolve();
-                }, error => {
-                    if (this.debugServerStatus === DebugServerStatus.Running) {
-                        return;
+                open({ wait: false, app: [pythonPath].concat(args), cwd, env, sudo: sudo }).then(
+                    proc => {
+                        this.pyProc = proc;
+                        resolve();
+                    },
+                    error => {
+                        if (this.debugServerStatus === DebugServerStatus.Running) {
+                            return;
+                        }
+                        reject(error);
                     }
-                    reject(error);
-                });
+                );
             }
         });
     }

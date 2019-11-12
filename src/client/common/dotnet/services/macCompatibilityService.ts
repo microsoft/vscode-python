@@ -13,7 +13,7 @@ const minVersion = '16.0.0';
 
 @injectable()
 export class MacDotNetCompatibilityService implements IOSDotNetCompatibilityService {
-    constructor(@inject(IPlatformService) private readonly platformService: IPlatformService) { }
+    constructor(@inject(IPlatformService) private readonly platformService: IPlatformService) {}
     public async isSupported() {
         const version = await this.platformService.getVersion();
         return version.compare(minVersion) >= 0;

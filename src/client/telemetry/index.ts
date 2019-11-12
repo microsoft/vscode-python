@@ -92,7 +92,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
         const props: Record<string, string> = {};
         props.stackTrace = getStackTrace(ex);
-        props.originalEventName = eventName as any as string;
+        props.originalEventName = (eventName as any) as string;
         reporter.sendTelemetryEvent('ERROR', props, measures);
     }
     const customProperties: Record<string, string> = {};
@@ -114,17 +114,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(
-    eventName: E,
-    properties?: P[E],
-    captureDuration: boolean = true,
-    failureEventName?: E
-) {
+export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(eventName: E, properties?: P[E], captureDuration: boolean = true, failureEventName?: E) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function(...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -149,12 +144,7 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
                         // tslint:disable-next-line:no-any
                         properties = properties || ({} as any);
                         (properties as any).failed = true;
-                        sendTelemetryEvent(
-                            failureEventName ? failureEventName : eventName,
-                            stopWatch.elapsedTime,
-                            properties,
-                            ex
-                        );
+                        sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties, ex);
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);

@@ -21,8 +21,7 @@ import { BaseShellDetector } from './baseShellDetector';
  */
 @injectable()
 export class SettingsShellDetector extends BaseShellDetector {
-    constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPlatformService) private readonly platform: IPlatformService) {
+    constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService, @inject(IPlatformService) private readonly platform: IPlatformService) {
         super(2);
     }
     public getTerminalShellPath(): string | undefined {

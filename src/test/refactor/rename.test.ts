@@ -46,16 +46,27 @@ suite('Refactor Rename', () => {
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny())).returns(() => configService.object);
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny())).returns(() => processServiceFactory.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
-            .returns(() => envActivationService.object);
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny())).returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         serviceContainer
             .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
-            .returns(() => new PythonExecutionFactory(serviceContainer.object,
-                undefined as any, processServiceFactory.object,
-                configService.object, undefined as any, instance(windowsStoreInterpreter)));
+            .returns(
+                () =>
+                    new PythonExecutionFactory(
+                        serviceContainer.object,
+                        undefined as any,
+                        processServiceFactory.object,
+                        configService.object,
+                        undefined as any,
+                        instance(windowsStoreInterpreter)
+                    )
+            );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();
-        processLogger.setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => { return; });
+        processLogger
+            .setup(p => p.logProcess(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny()))
+            .returns(() => {
+                return;
+            });
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessLogger), typeMoq.It.isAny())).returns(() => processLogger.object);
         await initializeTest();
     });
@@ -64,8 +75,11 @@ suite('Refactor Rename', () => {
 
     test('Rename function in source without a trailing empty line', async () => {
         const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'without empty line.py');
-        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`
-            .splitLines({ removeEmptyEntries: false, trim: false });
+        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(
+            sourceFile
+        )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
+            { removeEmptyEntries: false, trim: false }
+        );
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
         const textDocument = await workspace.openTextDocument(sourceFile);
@@ -77,8 +91,11 @@ suite('Refactor Rename', () => {
     });
     test('Rename function in source with a trailing empty line', async () => {
         const sourceFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'refactoring', 'source folder', 'with empty line.py');
-        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(sourceFile)}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`
-            .splitLines({ removeEmptyEntries: false, trim: false });
+        const expectedDiff = `--- a/${path.basename(sourceFile)}${EOL}+++ b/${path.basename(
+            sourceFile
+        )}${EOL}@@ -1,8 +1,8 @@${EOL} import os${EOL} ${EOL}-def one():${EOL}+def three():${EOL}     return True${EOL} ${EOL} def two():${EOL}-    if one():${EOL}-        print(\"A\" + one())${EOL}+    if three():${EOL}+        print(\"A\" + three())${EOL}`.splitLines(
+            { removeEmptyEntries: false, trim: false }
+        );
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings.object, path.dirname(sourceFile), serviceContainer.object);
         const textDocument = await workspace.openTextDocument(sourceFile);

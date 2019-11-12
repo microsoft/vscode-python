@@ -16,7 +16,7 @@ suite('Configuration Settings', () => {
     test('Check Values', done => {
         const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot);
         // tslint:disable-next-line:no-any
-        const pythonConfig = vscode.workspace.getConfiguration('python', null as any as vscode.Uri);
+        const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as vscode.Uri);
         const pythonSettings = getExtensionSettings(vscode.Uri.file(workspaceRoot));
         Object.keys(pythonSettings).forEach(key => {
             let settingValue = pythonConfig.get(key, 'Not a config');
@@ -27,17 +27,17 @@ suite('Configuration Settings', () => {
                 settingValue = systemVariables.resolve(settingValue);
             }
             // tslint:disable-next-line:no-any
-            const pythonSettingValue = ((pythonSettings as any)[key] as string);
+            const pythonSettingValue = (pythonSettings as any)[key] as string;
             if (key.endsWith('Path') && IS_WINDOWS) {
                 assert.equal(settingValue.toUpperCase(), pythonSettingValue.toUpperCase(), `Setting ${key} not the same`);
             } else if (key === 'workspaceSymbols' && IS_WINDOWS) {
-                const workspaceSettings = (pythonSettingValue as {} as IWorkspaceSymbolSettings);
-                const workspaceSttings = (settingValue as {} as IWorkspaceSymbolSettings);
+                const workspaceSettings = (pythonSettingValue as {}) as IWorkspaceSymbolSettings;
+                const workspaceSttings = (settingValue as {}) as IWorkspaceSymbolSettings;
                 assert.equal(workspaceSettings.tagFilePath.toUpperCase(), workspaceSttings.tagFilePath.toUpperCase(), `Setting ${key} not the same`);
 
                 const workspaceSettingsWithoutPath = { ...workspaceSettings };
                 delete workspaceSettingsWithoutPath.tagFilePath;
-                const pythonSettingValueWithoutPath = { ...(pythonSettingValue as {} as IWorkspaceSymbolSettings) };
+                const pythonSettingValueWithoutPath = { ...((pythonSettingValue as {}) as IWorkspaceSymbolSettings) };
                 delete pythonSettingValueWithoutPath.tagFilePath;
                 assert.deepEqual(workspaceSettingsWithoutPath, pythonSettingValueWithoutPath, `Setting ${key} not the same`);
             }

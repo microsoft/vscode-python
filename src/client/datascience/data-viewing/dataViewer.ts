@@ -47,7 +47,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             (c, v, d) => new DataViewerMessageListener(c, v, d),
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'data-explorer', 'index_bundle.js'),
             localize.DataScience.dataExplorerTitle(),
-            ViewColumn.One);
+            ViewColumn.One
+        );
     }
 
     public async showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void> {

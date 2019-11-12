@@ -18,7 +18,9 @@ import { BaseShellDetector } from './baseShellDetector';
  * @extends {BaseShellDetector}
  */
 export class VSCEnvironmentShellDetector extends BaseShellDetector {
-    constructor(@inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) { super(3); }
+    constructor(@inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment) {
+        super(3);
+    }
     public identify(telemetryProperties: ShellIdentificationTelemetry, _terminal?: Terminal): TerminalShellType | undefined {
         if (!this.appEnv.shell) {
             return;

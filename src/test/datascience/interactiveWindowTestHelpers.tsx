@@ -12,7 +12,11 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, mountWebView } from './testHelpers';
 
 // tslint:disable-next-line: no-any
-export function getInteractiveCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export function getInteractiveCellResults(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    expectedRenders: number,
+    updater: () => Promise<void>
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     return getCellResults(wrapper, InteractivePanel, 'InteractiveCell', expectedRenders, updater);
 }
 
@@ -28,7 +32,7 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
         const jupyterExecution = ioc.get<IJupyterExecution>(IJupyterExecution);
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
-            const wrapper = mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />);
+            const wrapper = mountWebView(ioc, <InteractivePanel baseTheme="vscode-light" codeTheme="light_vs" testMode={true} skipDefault={true} />);
             await testFunc(wrapper);
         } else {
             // tslint:disable-next-line:no-console
@@ -38,7 +42,13 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
 }
 
 // tslint:disable-next-line: no-any
-export async function addCode(ioc: DataScienceIocContainer, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function addCode(
+    ioc: DataScienceIocContainer,
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    code: string,
+    expectedRenderCount: number = 4,
+    expectError: boolean = false
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
     // 1) Input
     // 2) Status ready

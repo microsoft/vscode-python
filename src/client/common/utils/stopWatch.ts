@@ -8,7 +8,7 @@ export class StopWatch {
     public get elapsedTime() {
         return new Date().getTime() - this.started;
     }
-    public reset(){
+    public reset() {
         this.started = new Date().getTime();
     }
 }

@@ -3,13 +3,12 @@
 'use strict';
 
 export class InputHistory {
-
-    private historyStack: string [] = [];
+    private historyStack: string[] = [];
     private up: number | undefined;
     private down: number | undefined;
     private last: number | undefined;
 
-    public completeUp(code: string) : string {
+    public completeUp(code: string): string {
         // If going up, only move if anything in the history
         if (this.historyStack.length > 0) {
             if (this.up === undefined) {
@@ -24,7 +23,7 @@ export class InputHistory {
         return code;
     }
 
-    public completeDown(code: string) : string {
+    public completeDown(code: string): string {
         // If going down, move and then return something if we have a position
         if (this.historyStack.length > 0 && this.down !== undefined) {
             const result = this.historyStack[this.down];
@@ -41,8 +40,7 @@ export class InputHistory {
 
         // Only skip adding a dupe if it's the same as the top item. Otherwise
         // add it as normal.
-        this.historyStack = this.last === 0 && this.historyStack.length > 0 && this.historyStack[this.last] === code ?
-            this.historyStack : [code, ...this.historyStack];
+        this.historyStack = this.last === 0 && this.historyStack.length > 0 && this.historyStack[this.last] === code ? this.historyStack : [code, ...this.historyStack];
 
         // Position is more complicated. If we typed something start over
         if (typed) {

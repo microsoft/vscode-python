@@ -23,9 +23,11 @@ const workspaceFolderToken = '${workspaceFolder}';
 
 @injectable()
 export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurationProvider {
-    constructor(@inject(IFileSystem) private fs: IFileSystem,
+    constructor(
+        @inject(IFileSystem) private fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPathUtils) private pathUtils: IPathUtils) { }
+        @inject(IPathUtils) private pathUtils: IPathUtils
+    ) {}
     public async buildConfiguration(input: MultiStepInput<DebugConfigurationState>, state: DebugConfigurationState) {
         const iniPath = await this.getDevelopmentIniPath(state.folder);
         const defaultIni = `${workspaceFolderToken}${this.pathUtils.separator}development.ini`;
@@ -36,9 +38,7 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             type: DebuggerTypeName,
             request: 'launch',
             module: 'pyramid.scripts.pserve',
-            args: [
-                iniPath || defaultIni
-            ],
+            args: [iniPath || defaultIni],
             pyramid: true,
             jinja: true
         };
@@ -56,7 +56,11 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             }
         }
 
-        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchPyramid, autoDetectedPyramidIniPath: !!iniPath, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
+            configurationType: DebugConfigurationType.launchPyramid,
+            autoDetectedPyramidIniPath: !!iniPath,
+            manuallyEnteredAValue
+        });
         Object.assign(state.config, config);
     }
     public async validateIniPath(folder: WorkspaceFolder | undefined, defaultValue: string, selected?: string): Promise<string | undefined> {
@@ -68,10 +72,15 @@ export class PyramidLaunchDebugConfigurationProvider implements IDebugConfigurat
             return error;
         }
         const resolvedPath = this.resolveVariables(selected, folder.uri);
-        if (selected !== defaultValue && !await this.fs.fileExists(resolvedPath)) {
+        if (selected !== defaultValue && !(await this.fs.fileExists(resolvedPath))) {
             return error;
         }
-        if (!resolvedPath.trim().toLowerCase().endsWith('.ini')) {
+        if (
+            !resolvedPath
+                .trim()
+                .toLowerCase()
+                .endsWith('.ini')
+        ) {
             return error;
         }
     }

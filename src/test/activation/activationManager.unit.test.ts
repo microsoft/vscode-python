@@ -53,7 +53,8 @@ suite('Activation - ActivationManager', () => {
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
-            [instance(activationService1), instance(activationService2)], [],
+            [instance(activationService1), instance(activationService2)],
+            [],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,
@@ -68,7 +69,10 @@ suite('Activation - ActivationManager', () => {
         when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
-        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        documentManager
+            .setup(d => d.onDidOpenTextDocument)
+            .returns(() => eventDef)
+            .verifiable(typemoq.Times.once());
 
         await managerTest.initialize();
 
@@ -93,7 +97,10 @@ suite('Activation - ActivationManager', () => {
         when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
-        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        documentManager
+            .setup(d => d.onDidOpenTextDocument)
+            .returns(() => eventDef)
+            .verifiable(typemoq.Times.once());
         disposable.setup(d => d.dispose());
         disposable2.setup(d => d.dispose());
 
@@ -208,7 +215,10 @@ suite('Activation - ActivationManager', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup(d => d.uri).returns(() => documentUri);
 
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => { workspaceFoldersChangedHandler = cb; return disposable1.object; });
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => {
+            workspaceFoldersChangedHandler = cb;
+            return disposable1.object;
+        });
         documentManager
             .setup(w => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
             .callback(cb => (docOpenedHandler = cb))

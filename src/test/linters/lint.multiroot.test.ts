@@ -2,7 +2,14 @@ import * as assert from 'assert';
 import * as path from 'path';
 import { CancellationTokenSource, ConfigurationTarget, OutputChannel, Uri, workspace } from 'vscode';
 import { PythonSettings } from '../../client/common/configSettings';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import {
+    CTagsProductPathService,
+    DataScienceProductPathService,
+    FormatterProductPathService,
+    LinterProductPathService,
+    RefactoringLibraryProductPathService,
+    TestFrameworkProductPathService
+} from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IProductPathService, IProductService } from '../../client/common/installer/types';
 import { IConfigurationService, IOutputChannel, Product, ProductType } from '../../client/common/types';
@@ -20,7 +27,7 @@ suite('Multiroot Linting', () => {
     const flake8Setting = 'linting.flake8Enabled';
 
     let ioc: UnitTestIocContainer;
-    suiteSetup(function () {
+    suiteSetup(function() {
         if (!IS_MULTI_ROOT_TEST) {
             this.skip();
         }

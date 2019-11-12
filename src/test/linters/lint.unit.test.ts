@@ -5,36 +5,16 @@
 import * as assert from 'assert';
 import * as os from 'os';
 import * as TypeMoq from 'typemoq';
-import {
-    CancellationTokenSource,
-    TextDocument,
-    TextLine
-} from 'vscode';
+import { CancellationTokenSource, TextDocument, TextLine } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
 import { ProductNames } from '../../client/common/installer/productNames';
 import { ProductService } from '../../client/common/installer/productService';
-import {
-    IFileSystem,
-    IPlatformService
-} from '../../client/common/platform/types';
-import {
-    IPythonExecutionFactory,
-    IPythonExecutionService,
-    IPythonToolExecutionService
-} from '../../client/common/process/types';
+import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
+import { IPythonExecutionFactory, IPythonExecutionService, IPythonToolExecutionService } from '../../client/common/process/types';
 import { ProductType } from '../../client/common/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
-import {
-    ILintMessage,
-    LintMessageSeverity
-} from '../../client/linters/types';
-import {
-    BaseTestFixture,
-    getLinterID,
-    getProductName,
-    linterMessageAsLine,
-    throwUnknownProduct
-} from './common';
+import { ILintMessage, LintMessageSeverity } from '../../client/linters/types';
+import { BaseTestFixture, getLinterID, getProductName, linterMessageAsLine, throwUnknownProduct } from './common';
 
 const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 24, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
@@ -48,15 +28,15 @@ const pylintMessagesToBeReturned: ILintMessage[] = [
     { line: 70, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
     { line: 84, column: 0, severity: LintMessageSeverity.Information, code: 'I0011', message: 'Locally disabling no-member (E1101)', provider: '', type: 'warning' },
     { line: 87, column: 0, severity: LintMessageSeverity.Hint, code: 'C0304', message: 'Final newline missing', provider: '', type: 'warning' },
-    { line: 11, column: 20, severity: LintMessageSeverity.Warning, code: 'W0613', message: 'Unused argument \'arg\'', provider: '', type: 'warning' },
-    { line: 26, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blop\' member', provider: '', type: 'warning' },
-    { line: 36, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
-    { line: 46, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
-    { line: 61, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
-    { line: 72, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
-    { line: 75, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
-    { line: 77, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' },
-    { line: 83, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: 'Instance of \'Foo\' has no \'blip\' member', provider: '', type: 'warning' }
+    { line: 11, column: 20, severity: LintMessageSeverity.Warning, code: 'W0613', message: "Unused argument 'arg'", provider: '', type: 'warning' },
+    { line: 26, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blop' member", provider: '', type: 'warning' },
+    { line: 36, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
+    { line: 46, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
+    { line: 61, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
+    { line: 72, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
+    { line: 75, column: 18, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
+    { line: 77, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' },
+    { line: 83, column: 14, severity: LintMessageSeverity.Error, code: 'E1101', message: "Instance of 'Foo' has no 'blip' member", provider: '', type: 'warning' }
 ];
 const flake8MessagesToBeReturned: ILintMessage[] = [
     { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
@@ -77,26 +57,98 @@ const pycodestyleMessagesToBeReturned: ILintMessage[] = [
     { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
 ];
 const pydocstyleMessagesToBeReturned: ILintMessage[] = [
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'e\')', column: 0, line: 1, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'t\')', column: 0, line: 5, type: '', provider: 'pydocstyle' },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'e')", column: 0, line: 1, type: '', provider: 'pydocstyle' },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 't')", column: 0, line: 5, type: '', provider: 'pydocstyle' },
     { code: 'D102', severity: LintMessageSeverity.Information, message: 'Missing docstring in public method', column: 4, line: 8, type: '', provider: 'pydocstyle' },
-    { code: 'D401', severity: LintMessageSeverity.Information, message: 'First line should be in imperative mood (\'thi\', not \'this\')', column: 4, line: 11, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'This\', not \'this\')', column: 4, line: 11, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'e\')', column: 4, line: 11, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'And\', not \'and\')', column: 4, line: 15, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'t\')', column: 4, line: 15, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'Test\', not \'test\')', column: 4, line: 21, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 21, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'Test\', not \'test\')', column: 4, line: 28, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 28, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'Test\', not \'test\')', column: 4, line: 38, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 38, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'Test\', not \'test\')', column: 4, line: 53, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 53, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'Test\', not \'test\')', column: 4, line: 68, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 68, type: '', provider: 'pydocstyle' },
-    { code: 'D403', severity: LintMessageSeverity.Information, message: 'First word of the first line should be properly capitalized (\'Test\', not \'test\')', column: 4, line: 80, type: '', provider: 'pydocstyle' },
-    { code: 'D400', severity: LintMessageSeverity.Information, message: 'First line should end with a period (not \'g\')', column: 4, line: 80, type: '', provider: 'pydocstyle' }
+    {
+        code: 'D401',
+        severity: LintMessageSeverity.Information,
+        message: "First line should be in imperative mood ('thi', not 'this')",
+        column: 4,
+        line: 11,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('This', not 'this')",
+        column: 4,
+        line: 11,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'e')", column: 4, line: 11, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('And', not 'and')",
+        column: 4,
+        line: 15,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 't')", column: 4, line: 15, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('Test', not 'test')",
+        column: 4,
+        line: 21,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 21, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('Test', not 'test')",
+        column: 4,
+        line: 28,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 28, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('Test', not 'test')",
+        column: 4,
+        line: 38,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 38, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('Test', not 'test')",
+        column: 4,
+        line: 53,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 53, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('Test', not 'test')",
+        column: 4,
+        line: 68,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 68, type: '', provider: 'pydocstyle' },
+    {
+        code: 'D403',
+        severity: LintMessageSeverity.Information,
+        message: "First word of the first line should be properly capitalized ('Test', not 'test')",
+        column: 4,
+        line: 80,
+        type: '',
+        provider: 'pydocstyle'
+    },
+    { code: 'D400', severity: LintMessageSeverity.Information, message: "First line should end with a period (not 'g')", column: 4, line: 80, type: '', provider: 'pydocstyle' }
 ];
 
 class TestFixture extends BaseTestFixture {
@@ -106,25 +158,12 @@ class TestFixture extends BaseTestFixture {
     public pythonExecService: TypeMoq.IMock<IPythonExecutionService>;
     public pythonExecFactory: TypeMoq.IMock<IPythonExecutionFactory>;
 
-    constructor(
-        workspaceDir = '.',
-        printLogs = false
-    ) {
+    constructor(workspaceDir = '.', printLogs = false) {
         const platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
         const filesystem = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         const pythonToolExecService = TypeMoq.Mock.ofType<IPythonToolExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
         const pythonExecFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>(undefined, TypeMoq.MockBehavior.Strict);
-        super(
-            platformService.object,
-            filesystem.object,
-            pythonToolExecService.object,
-            pythonExecFactory.object,
-            undefined,
-            undefined,
-            true,
-            workspaceDir,
-            printLogs
-        );
+        super(platformService.object, filesystem.object, pythonToolExecService.object, pythonExecFactory.object, undefined, undefined, true, workspaceDir, printLogs);
 
         this.platformService = platformService;
         this.filesystem = filesystem;
@@ -132,27 +171,21 @@ class TestFixture extends BaseTestFixture {
         this.pythonExecService = TypeMoq.Mock.ofType<IPythonExecutionService>(undefined, TypeMoq.MockBehavior.Strict);
         this.pythonExecFactory = pythonExecFactory;
 
-        this.filesystem.setup(f => f.fileExists(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(true));
+        this.filesystem.setup(f => f.fileExists(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
 
         // tslint:disable-next-line:no-any
-        this.pythonExecService.setup((s: any) => s.then)
-            .returns(() => undefined);
-        this.pythonExecService.setup(s => s.isModuleInstalled(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(true));
+        this.pythonExecService.setup((s: any) => s.then).returns(() => undefined);
+        this.pythonExecService.setup(s => s.isModuleInstalled(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
 
-        this.pythonExecFactory.setup(f => f.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(this.pythonExecService.object));
+        this.pythonExecFactory.setup(f => f.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(this.pythonExecService.object));
     }
 
     public makeDocument(product: Product, filename: string): TextDocument {
         const doc = this.newMockDocument(filename);
         if (product === Product.pydocstyle) {
             const dummyLine = TypeMoq.Mock.ofType<TextLine>(undefined, TypeMoq.MockBehavior.Strict);
-            dummyLine.setup(d => d.text)
-                .returns(() => '    ...');
-            doc.setup(s => s.lineAt(TypeMoq.It.isAny()))
-                .returns(() => dummyLine.object);
+            dummyLine.setup(d => d.text).returns(() => '    ...');
+            doc.setup(s => s.lineAt(TypeMoq.It.isAny())).returns(() => dummyLine.object);
         }
         return doc.object;
     }
@@ -178,7 +211,7 @@ class TestFixture extends BaseTestFixture {
             }
             default: {
                 throwUnknownProduct(product);
-                return [];  // to quiet tslint
+                return []; // to quiet tslint
             }
         }
         this.setMessages(messages, product);
@@ -203,8 +236,7 @@ class TestFixture extends BaseTestFixture {
     }
 
     public setStdout(stdout: string) {
-        this.pythonToolExecService.setup(s => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: stdout }));
+        this.pythonToolExecService.setup(s => s.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: stdout }));
     }
 }
 
@@ -220,10 +252,7 @@ suite('Linting Scenarios', () => {
         fixture.setDefaultMessages(product);
         const linter = await fixture.getEnabledLinter(product);
 
-        const messages = await linter.lint(
-            fixture.makeDocument(product, 'spam.py'),
-            (new CancellationTokenSource()).token
-        );
+        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
 
         assert.equal(messages.length, 0, `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`);
     });
@@ -236,19 +265,12 @@ suite('Linting Scenarios', () => {
         fixture.setDefaultMessages(Product.pylint);
         const linter = await fixture.getDisabledLinter(product);
 
-        const messages = await linter.lint(
-            fixture.makeDocument(product, 'spam.py'),
-            (new CancellationTokenSource()).token
-        );
+        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
 
         assert.equal(messages.length, 0, `Unexpected linter errors when linting is disabled, Output - ${fixture.output}`);
     });
 
-    async function testEnablingDisablingOfLinter(
-        fixture: TestFixture,
-        product: Product,
-        enabled: boolean
-    ) {
+    async function testEnablingDisablingOfLinter(fixture: TestFixture, product: Product, enabled: boolean) {
         fixture.lintingSettings.enabled = true;
         fixture.setDefaultMessages(product);
         if (enabled) {
@@ -256,10 +278,7 @@ suite('Linting Scenarios', () => {
         }
         const linter = await fixture.getLinter(product, enabled);
 
-        const messages = await linter.lint(
-            fixture.makeDocument(product, 'spam.py'),
-            (new CancellationTokenSource()).token
-        );
+        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
 
         if (enabled) {
             assert.notEqual(messages.length, 0, `Expected linter errors when linter is enabled, Output - ${fixture.output}`);
@@ -269,7 +288,7 @@ suite('Linting Scenarios', () => {
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
         for (const enabled of [false, true]) {
-            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function () {
+            test(`${enabled ? 'Enable' : 'Disable'} ${getProductName(product)} and run linter`, async function() {
                 // tslint:disable-next-line:no-suspicious-comment
                 // TODO: Add coverage for these linters.
                 if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
@@ -292,17 +311,11 @@ suite('Linting Scenarios', () => {
         }
     }
 
-    async function testLinterMessages(
-        fixture: TestFixture,
-        product: Product
-    ) {
+    async function testLinterMessages(fixture: TestFixture, product: Product) {
         const messagesToBeReceived = fixture.setDefaultMessages(product);
         const linter = await fixture.getEnabledLinter(product);
 
-        const messages = await linter.lint(
-            fixture.makeDocument(product, 'spam.py'),
-            (new CancellationTokenSource()).token
-        );
+        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
 
         if (messagesToBeReceived.length === 0) {
             assert.equal(messages.length, 0, `No errors in linter, Output - ${fixture.output}`);
@@ -315,7 +328,7 @@ suite('Linting Scenarios', () => {
         }
     }
     for (const product of LINTERID_BY_PRODUCT.keys()) {
-        test(`Check ${getProductName(product)} messages`, async function () {
+        test(`Check ${getProductName(product)} messages`, async function() {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: Add coverage for these linters.
             if ([Product.bandit, Product.mypy, Product.pylama, Product.prospector].some(p => p === product)) {
@@ -328,18 +341,11 @@ suite('Linting Scenarios', () => {
         });
     }
 
-    async function testLinterMessageCount(
-        fixture: TestFixture,
-        product: Product,
-        messageCountToBeReceived: number
-    ) {
+    async function testLinterMessageCount(fixture: TestFixture, product: Product, messageCountToBeReceived: number) {
         fixture.setDefaultMessages(product);
         const linter = await fixture.getEnabledLinter(product);
 
-        const messages = await linter.lint(
-            fixture.makeDocument(product, 'spam.py'),
-            (new CancellationTokenSource()).token
-        );
+        const messages = await linter.lint(fixture.makeDocument(product, 'spam.py'), new CancellationTokenSource().token);
 
         assert.equal(messages.length, messageCountToBeReceived, `Expected number of lint errors does not match lint error count, Output - ${fixture.output}`);
     }

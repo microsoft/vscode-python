@@ -17,15 +17,20 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
     if (!stdout) {
         return '';
     }
-    const lines = stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+    const lines = stdout
+        .split(/\r?\n/g)
+        .map(line => line.trim())
+        .filter(line => line.length > 0);
     return lines.length > 0 ? lines[0] : '';
 }
 
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
     private readonly persistentFactory: IPersistentStateFactory;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory) {
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory
+    ) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
     }
     public getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined {
@@ -53,12 +58,13 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
-        const fileHash = await this.hashProviderFactory.create({pythonPath})
-                            .then(provider => provider.getInterpreterHash(pythonPath))
-                            .catch(ex => {
-                                traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
-                                return '';
-                            });
+        const fileHash = await this.hashProviderFactory
+            .create({ pythonPath })
+            .then(provider => provider.getInterpreterHash(pythonPath))
+            .catch(ex => {
+                traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
+                return '';
+            });
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v3`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
@@ -71,7 +77,7 @@ export class InterpreterHelper implements IInterpreterHelper {
                 return;
             }
             const details = {
-                ...(info),
+                ...info,
                 fileHash
             };
             await store.updateValue(details);
@@ -114,7 +120,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             return interpreters[0];
         }
         const sorted = interpreters.slice();
-        sorted.sort((a, b) => (a.version && b.version) ? compare(a.version.raw, b.version.raw) : 0);
+        sorted.sort((a, b) => (a.version && b.version ? compare(a.version.raw, b.version.raw) : 0));
         return sorted[sorted.length - 1];
     }
 }

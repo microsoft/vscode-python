@@ -24,9 +24,11 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
     private readonly handlersAddedToResource = new Set<string>();
     private readonly cacheKeyPrefix: string;
     private readonly locating = new EventEmitter<Promise<PythonInterpreter[]>>();
-    constructor(@unmanaged() private readonly name: string,
+    constructor(
+        @unmanaged() private readonly name: string,
         @unmanaged() protected readonly serviceContainer: IServiceContainer,
-        @unmanaged() private cachePerWorkspace: boolean = false) {
+        @unmanaged() private cachePerWorkspace: boolean = false
+    ) {
         this._hasInterpreters = createDeferred<boolean>();
         this.cacheKeyPrefix = `INTERPRETERS_CACHE_v3_${name}`;
     }
@@ -46,8 +48,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             deferred = createDeferred<PythonInterpreter[]>();
             this.promisesPerResource.set(cacheKey, deferred);
 
-            this.addHandlersForInterpreterWatchers(cacheKey, resource)
-                .ignoreErrors();
+            this.addHandlersForInterpreterWatchers(cacheKey, resource).ignoreErrors();
 
             const stopWatch = new StopWatch();
             this.getInterpretersImplementation(resource)
@@ -55,7 +56,10 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
                     await this.cacheInterpreters(items, resource);
                     traceVerbose(`Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`);
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
-                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, { locator: this.name, interpreters: Array.isArray(items) ? items.length : 0 });
+                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, {
+                        locator: this.name,
+                        interpreters: Array.isArray(items) ? items.length : 0
+                    });
                     deferred!.resolve(items);
                 })
                 .catch(ex => {
@@ -65,9 +69,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
 
             this.locating.fire(deferred.promise);
         }
-        deferred.promise
-            .then(items => this._hasInterpreters.resolve(items.length > 0))
-            .catch(_ => this._hasInterpreters.resolve(false));
+        deferred.promise.then(items => this._hasInterpreters.resolve(items.length > 0)).catch(_ => this._hasInterpreters.resolve(false));
 
         if (deferred.completed) {
             return deferred.promise;
@@ -84,11 +86,15 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         const watchers = await this.getInterpreterWatchers(resource);
         const disposableRegisry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         watchers.forEach(watcher => {
-            watcher.onDidCreate(() => {
-                Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
-                this.promisesPerResource.delete(cacheKey);
-                this.getInterpreters(resource).ignoreErrors();
-            }, this, disposableRegisry);
+            watcher.onDidCreate(
+                () => {
+                    Logger.verbose(`Interpreter Watcher change handler for ${this.cacheKeyPrefix}`);
+                    this.promisesPerResource.delete(cacheKey);
+                    this.getInterpreters(resource).ignoreErrors();
+                },
+                this,
+                disposableRegisry
+            );
         });
     }
     protected async getInterpreterWatchers(_resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
@@ -104,7 +110,6 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         } else {
             return persistentFactory.createGlobalPersistentState<PythonInterpreter[]>(cacheKey, undefined as any);
         }
-
     }
     protected getCachedInterpreters(resource?: Uri): PythonInterpreter[] | undefined {
         const persistence = this.createPersistenceStore(resource);

@@ -21,15 +21,42 @@ suite('Import Tracker', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let openedEventEmitter: EventEmitter<TextDocument>;
     let savedEventEmitter: EventEmitter<TextDocument>;
-    const pandasHash: string = hashJs.sha256().update('pandas').digest('hex');
-    const elephasHash: string = hashJs.sha256().update('elephas').digest('hex');
-    const kerasHash: string = hashJs.sha256().update('keras').digest('hex');
-    const pysparkHash: string = hashJs.sha256().update('pyspark').digest('hex');
-    const sparkdlHash: string = hashJs.sha256().update('sparkdl').digest('hex');
-    const numpyHash: string = hashJs.sha256().update('numpy').digest('hex');
-    const scipyHash: string = hashJs.sha256().update('scipy').digest('hex');
-    const sklearnHash: string = hashJs.sha256().update('sklearn').digest('hex');
-    const randomHash: string = hashJs.sha256().update('random').digest('hex');
+    const pandasHash: string = hashJs
+        .sha256()
+        .update('pandas')
+        .digest('hex');
+    const elephasHash: string = hashJs
+        .sha256()
+        .update('elephas')
+        .digest('hex');
+    const kerasHash: string = hashJs
+        .sha256()
+        .update('keras')
+        .digest('hex');
+    const pysparkHash: string = hashJs
+        .sha256()
+        .update('pyspark')
+        .digest('hex');
+    const sparkdlHash: string = hashJs
+        .sha256()
+        .update('sparkdl')
+        .digest('hex');
+    const numpyHash: string = hashJs
+        .sha256()
+        .update('numpy')
+        .digest('hex');
+    const scipyHash: string = hashJs
+        .sha256()
+        .update('scipy')
+        .digest('hex');
+    const sklearnHash: string = hashJs
+        .sha256()
+        .update('sklearn')
+        .digest('hex');
+    const randomHash: string = hashJs
+        .sha256()
+        .update('random')
+        .digest('hex');
 
     class Reporter {
         public static eventNames: string[] = [];
@@ -42,7 +69,7 @@ suite('Import Tracker', () => {
                 expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
             }
 
-            Reporter.properties.pop();  // HASHED_PACKAGE_PERF
+            Reporter.properties.pop(); // HASHED_PACKAGE_PERF
             expect(Reporter.properties).to.deep.equal(hashes.map(hash => ({ hashedName: hash })));
         }
 
@@ -76,7 +103,6 @@ suite('Import Tracker', () => {
         Reporter.eventNames = [];
         Reporter.measures = [];
         rewiremock.disable();
-
     });
 
     function emitDocEvent(code: string, ev: EventEmitter<TextDocument>) {

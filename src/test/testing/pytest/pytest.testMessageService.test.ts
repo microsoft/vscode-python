@@ -33,7 +33,9 @@ import { ITestDetails, testScenarios } from './pytest_run_tests_data';
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'standard');
 const PYTEST_RESULTS_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'pytestFiles', 'results');
 
-const filterdTestScenarios = testScenarios.filter((ts) => { return !ts.shouldRunFailed; });
+const filterdTestScenarios = testScenarios.filter(ts => {
+    return !ts.shouldRunFailed;
+});
 
 async function testMessageProperties(message: IPythonTestMessage, expectedMessage: IPythonTestMessage, imported: boolean = false, status: TestStatus) {
     assert.equal(message.code, expectedMessage.code, 'IPythonTestMessage code');
@@ -75,26 +77,20 @@ async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails
     const expectedSourceTestFileUri = vscode.Uri.file(expectedSourceTestFilePath);
     if (testDetails.imported) {
         // Stack should include the class furthest down the chain from the file that was executed.
-        locationStack.push(
-            {
-                location: new vscode.Location(testFileUri, testDetails.classDefRange!),
-                lineText: testDetails.simpleClassName!
-            }
-        );
+        locationStack.push({
+            location: new vscode.Location(testFileUri, testDetails.classDefRange!),
+            lineText: testDetails.simpleClassName!
+        });
     }
-    locationStack.push(
-        {
-            location: new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
-            lineText: testDetails.sourceTestName
-        }
-    );
+    locationStack.push({
+        location: new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
+        lineText: testDetails.sourceTestName
+    });
     if (testDetails.status !== TestStatus.Skipped) {
-        locationStack.push(
-            {
-                location: new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
-                lineText: testDetails.issueLineText!
-            }
-        );
+        locationStack.push({
+            location: new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
+            lineText: testDetails.issueLineText!
+        });
     }
     return locationStack;
 }
@@ -119,7 +115,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
     }
     // Build tests for the test data that is relevant for this platform.
-    filterdTestScenarios.forEach((scenario) => {
+    filterdTestScenarios.forEach(scenario => {
         suite(scenario.scenarioName, async () => {
             let testMessages: IPythonTestMessage[];
             suiteSetup(async () => {
@@ -141,7 +137,10 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 // Setup the parser.
                 const workspaceService = ioc.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
                 const parser = new TestDiscoveredTestParser(workspaceService);
-                const discoveryOutput = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8').replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH)).replace(/\\/g, '/');
+                const discoveryOutput = fs
+                    .readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8')
+                    .replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH))
+                    .replace(/\\/g, '/');
                 const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
                 options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
                 const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
@@ -156,7 +155,7 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 await ioc.dispose();
                 await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
             });
-            scenario.testDetails!.forEach((td) => {
+            scenario.testDetails!.forEach(td => {
                 suite(td.nameToRun, () => {
                     let testMessage: IPythonTestMessage;
                     let expectedMessage: IPythonTestMessage;

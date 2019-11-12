@@ -95,10 +95,8 @@ export class MockJupyterSession implements IJupyterSession {
                 msg_id: '1',
                 msg_type: 'complete'
             },
-            parent_header: {
-            },
-            metadata: {
-            }
+            parent_header: {},
+            metadata: {}
         };
     }
 
@@ -126,5 +124,5 @@ export class MockJupyterSession implements IJupyterSession {
         // tslint:disable-next-line:no-console
         console.log(`Dict has these keys ${Object.keys(this.dict).join('","')}`);
         throw new Error(`Cell '${code}' not found in mock`);
-    }
+    };
 }

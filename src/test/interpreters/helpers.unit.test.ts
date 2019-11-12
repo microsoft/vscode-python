@@ -82,7 +82,11 @@ suite('Interpreters Display Helper', () => {
         document.setup(d => d.uri).returns(() => documentUri);
         documentManager.setup(d => d.activeTextEditor).returns(() => textEditor.object);
         // tslint:disable-next-line:no-any
-        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(documentUri))).returns(() => { return { uri: documentWorkspaceFolderUri } as any; });
+        workspaceService
+            .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(documentUri)))
+            .returns(() => {
+                return { uri: documentWorkspaceFolderUri } as any;
+            });
 
         const workspace = helper.getActiveWorkspaceUri(undefined);
         expect(workspace).to.be.not.equal(undefined, 'incorrect value');

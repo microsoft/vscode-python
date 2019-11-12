@@ -33,5 +33,4 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
     public getConnInfo(): IConnection {
         return this.connInfo!;
     }
-
 }

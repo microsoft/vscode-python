@@ -79,9 +79,7 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private breakpointsChangedEvent: EventEmitter<BreakpointsChangeEvent> = new EventEmitter<BreakpointsChangeEvent>();
     private _breakpoints: Breakpoint[] = [];
     private _stoppedThreadId: number | undefined;
-    constructor(
-        @inject(IProtocolParser) private protocolParser: IProtocolParser
-    ) {
+    constructor(@inject(IProtocolParser) private protocolParser: IProtocolParser) {
         noop();
     }
 
@@ -132,7 +130,11 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     }
     public registerDebugAdapterTrackerFactory(_debugType: string, _provider: DebugAdapterTrackerFactory): Disposable {
         this.debugAdapterTrackerFactory = _provider;
-        return { dispose: () => { noop(); } };
+        return {
+            dispose: () => {
+                noop();
+            }
+        };
     }
 
     public startDebugging(_folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, _parentSession?: DebugSession | undefined): Thenable<boolean> {
@@ -206,37 +208,36 @@ export class MockDebuggerService implements IDebugService, IDisposable {
     private sendBreakpoints(): Promise<void> {
         // Only supporting a single file now
         const sbs = this._breakpoints.map(b => b as SourceBreakpoint);
-        const file = (sbs[0]).location.uri.fsPath;
+        const file = sbs[0].location.uri.fsPath;
         return this.sendMessage('setBreakpoints', {
             source: {
                 name: path.basename(file),
                 path: file
             },
             lines: sbs.map(sb => sb.location.range.start.line),
-            breakpoints: sbs.map(sb => { return { line: sb.location.range.start.line }; }),
+            breakpoints: sbs.map(sb => {
+                return { line: sb.location.range.start.line };
+            }),
             sourceModified: true
         });
     }
 
     private sendAttach(port: number, sessionId: string): Promise<void> {
         // Send our attach request
-        return this.sendMessage(
-            'attach',
-            {
-                name: 'IPython',
-                request: 'attach',
-                type: 'python',
-                port,
-                host: 'localhost',
-                justMyCode: true,
-                logToFile: true,
-                debugOptions: ['RedirectOutput', 'FixFilePathCase', 'WindowsClient', 'ShowReturnValue'],
-                showReturnValue: true,
-                workspaceFolder: EXTENSION_ROOT_DIR,
-                pathMappings: [{ localRoot: EXTENSION_ROOT_DIR, remoteRoot: EXTENSION_ROOT_DIR }],
-                __sessionId: sessionId
-            }
-        );
+        return this.sendMessage('attach', {
+            name: 'IPython',
+            request: 'attach',
+            type: 'python',
+            port,
+            host: 'localhost',
+            justMyCode: true,
+            logToFile: true,
+            debugOptions: ['RedirectOutput', 'FixFilePathCase', 'WindowsClient', 'ShowReturnValue'],
+            showReturnValue: true,
+            workspaceFolder: EXTENSION_ROOT_DIR,
+            pathMappings: [{ localRoot: EXTENSION_ROOT_DIR, remoteRoot: EXTENSION_ROOT_DIR }],
+            __sessionId: sessionId
+        });
     }
 
     private sendConfigurationDone(): Promise<void> {
@@ -245,27 +246,24 @@ export class MockDebuggerService implements IDebugService, IDisposable {
 
     private async sendInitialize(): Promise<void> {
         // Send our initialize request. (Got this by dumping debugAdapter output during real run. Set logToFile to true to generate)
-        await this.sendMessage(
-            'initialize',
-            {
-                clientID: 'vscode',
-                clientName: 'Visual Studio Code',
-                adapterID: 'python',
-                pathFormat: 'path',
-                linesStartAt1: true,
-                columnsStartAt1: true,
-                supportsVariableType: true,
-                supportsVariablePaging: true,
-                supportsRunInTerminalRequest: true,
-                locale: 'en-us'
-            }
-        );
+        await this.sendMessage('initialize', {
+            clientID: 'vscode',
+            clientName: 'Visual Studio Code',
+            adapterID: 'python',
+            pathFormat: 'path',
+            linesStartAt1: true,
+            columnsStartAt1: true,
+            supportsVariableType: true,
+            supportsVariablePaging: true,
+            supportsRunInTerminalRequest: true,
+            locale: 'en-us'
+        });
     }
 
     private async sendMessage(command: string, args?: any): Promise<void> {
         const response = createDeferred();
         this.protocolParser.once(`response_${command}`, () => response.resolve());
-        this.socket!.on('error', (err) => response.reject(err));
+        this.socket!.on('error', err => response.reject(err));
         await this.emitMessage(command, args);
         await response.promise;
     }

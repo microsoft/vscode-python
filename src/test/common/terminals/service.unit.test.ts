@@ -52,11 +52,13 @@ suite('Terminal Service', () => {
         const os: string = 'windows';
         service = new TerminalService(mockServiceContainer.object);
         const shellPath = 'powershell.exe';
-        workspaceService.setup(w => w.getConfiguration(TypeMoq.It.isValue('terminal.integrated.shell'))).returns(() => {
-            const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-            workspaceConfig.setup(c => c.get(os)).returns(() => shellPath);
-            return workspaceConfig.object;
-        });
+        workspaceService
+            .setup(w => w.getConfiguration(TypeMoq.It.isValue('terminal.integrated.shell')))
+            .returns(() => {
+                const workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
+                workspaceConfig.setup(c => c.get(os)).returns(() => shellPath);
+                return workspaceConfig.object;
+            });
 
         platformService.setup(p => p.isWindows).returns(() => os === 'windows');
         platformService.setup(p => p.isLinux).returns(() => os === 'linux');
@@ -130,7 +132,8 @@ suite('Terminal Service', () => {
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         terminalManager
-            .setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object)
+            .setup(t => t.createTerminal(TypeMoq.It.isAny()))
+            .returns(() => terminal.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         await service.show();
@@ -151,7 +154,8 @@ suite('Terminal Service', () => {
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         terminalManager
-            .setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object)
+            .setup(t => t.createTerminal(TypeMoq.It.isAny()))
+            .returns(() => terminal.object)
             .verifiable(TypeMoq.Times.atLeastOnce());
 
         await service.sendText(textToSend);
@@ -168,13 +172,15 @@ suite('Terminal Service', () => {
         terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let eventFired = false;
         let eventHandler: undefined | (() => void);
-        terminalManager.setup(m => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
-            eventHandler = handler;
-            // tslint:disable-next-line:no-empty
-            return { dispose: () => { } };
-        });
+        terminalManager
+            .setup(m => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(handler => {
+                eventHandler = handler;
+                // tslint:disable-next-line:no-empty
+                return { dispose: () => {} };
+            });
         service = new TerminalService(mockServiceContainer.object);
-        service.onDidCloseTerminal(() => eventFired = true, service);
+        service.onDidCloseTerminal(() => (eventFired = true), service);
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);
 
@@ -190,13 +196,15 @@ suite('Terminal Service', () => {
         terminalHelper.setup(helper => helper.getEnvironmentActivationCommands(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         let eventFired = false;
         let eventHandler: undefined | ((t: VSCodeTerminal) => void);
-        terminalManager.setup(m => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
-            eventHandler = handler;
-            // tslint:disable-next-line:no-empty
-            return { dispose: () => { } };
-        });
+        terminalManager
+            .setup(m => m.onDidCloseTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(handler => {
+                eventHandler = handler;
+                // tslint:disable-next-line:no-empty
+                return { dispose: () => {} };
+            });
         service = new TerminalService(mockServiceContainer.object);
-        service.onDidCloseTerminal(() => eventFired = true);
+        service.onDidCloseTerminal(() => (eventFired = true));
 
         terminalHelper.setup(h => h.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => TerminalShellType.bash);
         terminalManager.setup(t => t.createTerminal(TypeMoq.It.isAny())).returns(() => terminal.object);

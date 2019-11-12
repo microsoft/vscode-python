@@ -22,8 +22,7 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         @inject(INotebookEditorProvider) private provider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(IFileSystem) private fileSystem: IFileSystem
-    ) {
-    }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorUndoCells, () => this.undoCells()));
@@ -31,7 +30,9 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRemoveAllCells, () => this.removeAllCells()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorInterruptKernel, () => this.interruptKernel()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRestartKernel, () => this.restartKernel()));
-        this.disposableRegistry.push(commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file)));
+        this.disposableRegistry.push(
+            commandManager.registerCommand(Commands.OpenNotebook, (file?: Uri, _cmdSource: CommandSource = CommandSource.commandPalette) => this.openNotebook(file))
+        );
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunAllCells, () => this.runAllCells()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorRunSelectedCell, () => this.runSelectedCell()));
         this.disposableRegistry.push(commandManager.registerCommand(Commands.NotebookEditorAddCellBelow, () => this.addCellBelow()));
@@ -105,5 +106,4 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
             }
         }
     }
-
 }

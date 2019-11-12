@@ -9,12 +9,7 @@ import { JupyterSessionManager } from './jupyterSessionManager';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
-
-    constructor(
-        @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
-        @inject(IConfigurationService) private config: IConfigurationService
-    ) {
-    }
+    constructor(@inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect, @inject(IConfigurationService) private config: IConfigurationService) {}
 
     public async create(connInfo: IConnection): Promise<IJupyterSessionManager> {
         const result = new JupyterSessionManager(this.jupyterPasswordConnect, this.config);

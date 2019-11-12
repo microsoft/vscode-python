@@ -10,9 +10,16 @@ import { TestCollectionStorageService } from '../../../../client/testing/common/
 import { TestsStatusUpdaterService } from '../../../../client/testing/common/services/testsStatusService';
 import { visitRecursive } from '../../../../client/testing/common/testVisitors/visitor';
 import {
-    FlattenedTestFunction, FlattenedTestSuite, ITestCollectionStorageService,
-    ITestsStatusUpdaterService, TestFile, TestFolder, TestFunction, Tests,
-    TestStatus, TestSuite
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestCollectionStorageService,
+    ITestsStatusUpdaterService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite
 } from '../../../../client/testing/common/types';
 import { TestDataItem, TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
@@ -178,12 +185,7 @@ suite('Unit Tests - Tests Status Updater', () => {
                 updatedItems.push(item);
             }
         };
-        const failedItems = [
-            tests.testFunctions[2].testFunction,
-            tests.testFunctions[3].testFunction,
-            tests.testSuites[1].testSuite,
-            tests.testSuites[2].testSuite
-        ];
+        const failedItems = [tests.testFunctions[2].testFunction, tests.testFunctions[3].testFunction, tests.testSuites[1].testSuite, tests.testSuites[2].testSuite];
         failedItems.forEach(failedItem => visitRecursive(tests, failedItem, visitor));
 
         for (const item of updatedItems) {

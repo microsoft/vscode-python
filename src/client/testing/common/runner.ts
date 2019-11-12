@@ -2,13 +2,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ErrorUtils } from '../../common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../common/errors/moduleNotInstalledError';
-import {
-    IPythonExecutionFactory,
-    IPythonExecutionService,
-    IPythonToolExecutionService,
-    ObservableExecutionResult,
-    SpawnOptions
-} from '../../common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService, IPythonToolExecutionService, ObservableExecutionResult, SpawnOptions } from '../../common/process/types';
 import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './constants';
@@ -17,7 +11,7 @@ export { Options } from './types';
 
 @injectable()
 export class TestRunner implements ITestRunner {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     public run(testProvider: TestProvider, options: Options): Promise<string> {
         return run(this.serviceContainer, testProvider, options);
     }
@@ -43,7 +37,9 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
     };
 
     if (testProvider === UNITTEST_PROVIDER) {
-        promise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment({ resource: options.workspaceFolder })
+        promise = serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .createActivatedEnvironment({ resource: options.workspaceFolder })
             .then(executionService => executionService.execObservable(options.args, { ...spawnOptions }));
     } else if (typeof executionInfo.moduleName === 'string' && executionInfo.moduleName.length > 0) {
         pythonExecutionServicePromise = serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).createActivatedEnvironment({ resource: options.workspaceFolder });
@@ -57,27 +53,31 @@ export async function run(serviceContainer: IServiceContainer, testProvider: Tes
         return new Promise<string>((resolve, reject) => {
             let stdOut = '';
             let stdErr = '';
-            result.out.subscribe(output => {
-                stdOut += output.out;
-                // If the test runner python module is not installed we'll have something in stderr.
-                // Hence track that separately and check at the end.
-                if (output.source === 'stderr') {
-                    stdErr += output.out;
-                }
-                if (options.outChannel) {
-                    options.outChannel.append(output.out);
-                }
-            }, reject, async () => {
-                // If the test runner python module is not installed we'll have something in stderr.
-                if (moduleName && pythonExecutionServicePromise && ErrorUtils.outputHasModuleNotInstalledError(moduleName, stdErr)) {
-                    const pythonExecutionService = await pythonExecutionServicePromise;
-                    const isInstalled = await pythonExecutionService.isModuleInstalled(moduleName);
-                    if (!isInstalled) {
-                        return reject(new ModuleNotInstalledError(moduleName));
+            result.out.subscribe(
+                output => {
+                    stdOut += output.out;
+                    // If the test runner python module is not installed we'll have something in stderr.
+                    // Hence track that separately and check at the end.
+                    if (output.source === 'stderr') {
+                        stdErr += output.out;
                     }
+                    if (options.outChannel) {
+                        options.outChannel.append(output.out);
+                    }
+                },
+                reject,
+                async () => {
+                    // If the test runner python module is not installed we'll have something in stderr.
+                    if (moduleName && pythonExecutionServicePromise && ErrorUtils.outputHasModuleNotInstalledError(moduleName, stdErr)) {
+                        const pythonExecutionService = await pythonExecutionServicePromise;
+                        const isInstalled = await pythonExecutionService.isModuleInstalled(moduleName);
+                        if (!isInstalled) {
+                            return reject(new ModuleNotInstalledError(moduleName));
+                        }
+                    }
+                    resolve(stdOut);
                 }
-                resolve(stdOut);
-            });
+            );
         });
     });
 }

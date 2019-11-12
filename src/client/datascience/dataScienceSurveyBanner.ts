@@ -6,10 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import {
-    IBrowserService, IPersistentStateFactory,
-    IPythonExtensionBanner
-} from '../common/types';
+import { IBrowserService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import * as localize from '../common/utils/localize';
 
 export enum DSSurveyStateKeys {
@@ -36,7 +33,8 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IBrowserService) private browserService: IBrowserService,
         commandThreshold: number = 500,
-        surveyLink: string = 'https://aka.ms/pyaisurvey') {
+        surveyLink: string = 'https://aka.ms/pyaisurvey'
+    ) {
         this.commandThreshold = commandThreshold;
         this.surveyLink = surveyLink;
         this.initialize();
@@ -65,12 +63,11 @@ export class DataScienceSurveyBanner implements IPythonExtensionBanner {
 
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
-            case this.bannerLabels[DSSurveyLabelIndex.Yes]:
-                {
-                    await this.launchSurvey();
-                    await this.disable();
-                    break;
-                }
+            case this.bannerLabels[DSSurveyLabelIndex.Yes]: {
+                await this.launchSurvey();
+                await this.disable();
+                break;
+            }
             case this.bannerLabels[DSSurveyLabelIndex.No]: {
                 await this.disable();
                 break;

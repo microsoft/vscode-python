@@ -26,12 +26,7 @@ import { WorkspaceVirtualEnvInterpretersAutoSelectionRule } from '../../../../cl
 import { IInterpreterAutoSelectionService } from '../../../../client/interpreter/autoSelection/types';
 import { PythonPathUpdaterService } from '../../../../client/interpreter/configuration/pythonPathUpdaterService';
 import { IPythonPathUpdaterServiceManager } from '../../../../client/interpreter/configuration/types';
-import {
-    IInterpreterHelper,
-    IInterpreterLocatorService,
-    PythonInterpreter,
-    WorkspacePythonPath
-} from '../../../../client/interpreter/contracts';
+import { IInterpreterHelper, IInterpreterLocatorService, PythonInterpreter, WorkspacePythonPath } from '../../../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../../../client/interpreter/helpers';
 import { KnownPathsService } from '../../../../client/interpreter/locators/services/KnownPathsService';
 
@@ -47,10 +42,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
     let pythonPathUpdaterService: IPythonPathUpdaterServiceManager;
     let workspaceService: IWorkspaceService;
     class WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest extends WorkspaceVirtualEnvInterpretersAutoSelectionRule {
-        public async setGlobalInterpreter(
-            interpreter?: PythonInterpreter,
-            manager?: IInterpreterAutoSelectionService
-        ): Promise<boolean> {
+        public async setGlobalInterpreter(interpreter?: PythonInterpreter, manager?: IInterpreterAutoSelectionService): Promise<boolean> {
             return super.setGlobalInterpreter(interpreter, manager);
         }
         public async next(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<void> {
@@ -74,9 +66,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         virtualEnvLocator = mock(KnownPathsService);
         pythonPathUpdaterService = mock(PythonPathUpdaterService);
 
-        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(
-            instance(state)
-        );
+        when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(anything(), undefined)).thenReturn(instance(state));
         rule = new WorkspaceVirtualEnvInterpretersAutoSelectionRuleTest(
             instance(fs),
             instance(helper),
@@ -169,14 +159,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
 
         await rule.cacheSelectedInterpreter(resource, { path: pythonPath } as any);
 
-        verify(
-            pythonPathUpdaterService.updatePythonPath(
-                pythonPath,
-                workspacePythonPath.configTarget,
-                'load',
-                workspacePythonPath.folderUri
-            )
-        ).once();
+        verify(pythonPathUpdaterService.updatePythonPath(pythonPath, workspacePythonPath.configTarget, 'load', workspacePythonPath.folderUri)).once();
         verify(helper.getActiveWorkspaceUri(resource)).once();
     });
     test('getWorkspaceVirtualEnvInterpreters will not return any interpreters if there is no workspace ', async () => {
@@ -211,11 +194,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         const workspaceFolder: WorkspaceFolder = { name: '', index: 0, uri: folderUri };
         const resource = Uri.file('x');
 
-        when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([
-            interpreter1,
-            interpreter2,
-            interpreter3
-        ] as any);
+        when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([interpreter1, interpreter2, interpreter3] as any);
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
         when(platform.osType).thenReturn(OSType.Windows);
 
@@ -246,11 +225,7 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
             const workspaceFolder: WorkspaceFolder = { name: '', index: 0, uri: folderUri };
             const resource = Uri.file('x');
 
-            when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([
-                interpreter1,
-                interpreter2,
-                interpreter3
-            ] as any);
+            when(virtualEnvLocator.getInterpreters(resource, true)).thenResolve([interpreter1, interpreter2, interpreter3] as any);
             when(workspaceService.getWorkspaceFolder(resource)).thenReturn(workspaceFolder);
             when(platform.osType).thenReturn(osType);
 

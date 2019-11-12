@@ -14,7 +14,7 @@ suite('Debugging - Protocol Parser', () => {
         const protocolParser = new ProtocolParser();
         protocolParser.connect(stream);
         let messagesDetected = 0;
-        protocolParser.on('data', () => messagesDetected += 1);
+        protocolParser.on('data', () => (messagesDetected += 1));
         const requestDetected = new Promise<boolean>(resolve => {
             protocolParser.on('request_initialize', () => resolve(true));
         });
@@ -25,10 +25,14 @@ suite('Debugging - Protocol Parser', () => {
             protocolParser.on('event_initialized', () => resolve(true));
         });
 
-        stream.write('Content-Length: 289\r\n\r\n{"command":"initialize","arguments":{"clientID":"vscode","adapterID":"pythonExperiment","pathFormat":"path","linesStartAt1":true,"columnsStartAt1":true,"supportsVariableType":true,"supportsVariablePaging":true,"supportsRunInTerminalRequest":true,"locale":"en-us"},"type":"request","seq":1}');
+        stream.write(
+            'Content-Length: 289\r\n\r\n{"command":"initialize","arguments":{"clientID":"vscode","adapterID":"pythonExperiment","pathFormat":"path","linesStartAt1":true,"columnsStartAt1":true,"supportsVariableType":true,"supportsVariablePaging":true,"supportsRunInTerminalRequest":true,"locale":"en-us"},"type":"request","seq":1}'
+        );
         await expect(requestDetected).to.eventually.equal(true, 'request not parsed');
 
-        stream.write('Content-Length: 265\r\n\r\n{"seq":1,"type":"response","request_seq":1,"command":"initialize","success":true,"body":{"supportsEvaluateForHovers":false,"supportsConditionalBreakpoints":true,"supportsConfigurationDoneRequest":true,"supportsFunctionBreakpoints":false,"supportsSetVariable":true}}');
+        stream.write(
+            'Content-Length: 265\r\n\r\n{"seq":1,"type":"response","request_seq":1,"command":"initialize","success":true,"body":{"supportsEvaluateForHovers":false,"supportsConditionalBreakpoints":true,"supportsConfigurationDoneRequest":true,"supportsFunctionBreakpoints":false,"supportsSetVariable":true}}'
+        );
         await expect(responseDetected).to.eventually.equal(true, 'response not parsed');
 
         stream.write('Content-Length: 63\r\n\r\n{"type": "event", "seq": 1, "event": "initialized", "body": {}}');
@@ -42,11 +46,13 @@ suite('Debugging - Protocol Parser', () => {
         const protocolParser = new ProtocolParser();
         protocolParser.connect(stream);
         let messagesDetected = 0;
-        protocolParser.on('data', () => messagesDetected += 1);
+        protocolParser.on('data', () => (messagesDetected += 1));
         const requestDetected = new Promise<boolean>(resolve => {
             protocolParser.on('request_initialize', () => resolve(true));
         });
-        stream.write('Content-Length: 289\r\n\r\n{"command":"initialize","arguments":{"clientID":"vscode","adapterID":"pythonExperiment","pathFormat":"path","linesStartAt1":true,"columnsStartAt1":true,"supportsVariableType":true,"supportsVariablePaging":true,"supportsRunInTerminalRequest":true,"locale":"en-us"},"type":"request","seq":1}');
+        stream.write(
+            'Content-Length: 289\r\n\r\n{"command":"initialize","arguments":{"clientID":"vscode","adapterID":"pythonExperiment","pathFormat":"path","linesStartAt1":true,"columnsStartAt1":true,"supportsVariableType":true,"supportsVariablePaging":true,"supportsRunInTerminalRequest":true,"locale":"en-us"},"type":"request","seq":1}'
+        );
         await expect(requestDetected).to.eventually.equal(true, 'request not parsed');
 
         protocolParser.dispose();
@@ -54,7 +60,9 @@ suite('Debugging - Protocol Parser', () => {
         const responseDetected = createDeferred<boolean>();
         protocolParser.on('response_initialize', () => responseDetected.resolve(true));
 
-        stream.write('Content-Length: 265\r\n\r\n{"seq":1,"type":"response","request_seq":1,"command":"initialize","success":true,"body":{"supportsEvaluateForHovers":false,"supportsConditionalBreakpoints":true,"supportsConfigurationDoneRequest":true,"supportsFunctionBreakpoints":false,"supportsSetVariable":true}}');
+        stream.write(
+            'Content-Length: 265\r\n\r\n{"seq":1,"type":"response","request_seq":1,"command":"initialize","success":true,"body":{"supportsEvaluateForHovers":false,"supportsConditionalBreakpoints":true,"supportsConfigurationDoneRequest":true,"supportsFunctionBreakpoints":false,"supportsSetVariable":true}}'
+        );
         // Wait for messages to go through and get parsed (unnecenssary, but add for testing edge cases).
         await sleep(1000);
         expect(responseDetected.completed).to.be.equal(false, 'Promise should not have resolved');

@@ -28,12 +28,10 @@ export class CollapseButton extends React.Component<ICollapseButtonProps> {
         // Comment here just because the (boolean && statement) was new to me
         return (
             <button className={collapseInputClassNames} title={tooltip} onClick={this.props.onClick} aria-expanded={ariaExpanded}>
-                <svg version='1.1' baseProfile='full' width='8px' height='11px'>
-                    <polygon points='0,0 0,10 5,5' className={collapseInputPolygonClassNames} fill='black' />
+                <svg version="1.1" baseProfile="full" width="8px" height="11px">
+                    <polygon points="0,0 0,10 5,5" className={collapseInputPolygonClassNames} fill="black" />
                 </svg>
-                {this.props.label &&
-                    <label className='collapseInputLabel'>{this.props.label}</label>
-                }
+                {this.props.label && <label className="collapseInputLabel">{this.props.label}</label>}
             </button>
         );
     }

@@ -32,7 +32,7 @@ export class PythonObjectDefinitionProvider {
         }
         const range = new vscode.Range(0, startColumn, 0, source.length - 1);
         // tslint:disable-next-line:no-any
-        const doc = <vscode.TextDocument><any>{
+        const doc = <vscode.TextDocument>(<any>{
             fileName: 'test.py',
             lineAt: (_line: number) => {
                 return { text: source };
@@ -40,7 +40,7 @@ export class PythonObjectDefinitionProvider {
             getWordRangeAtPosition: (_position: vscode.Position) => range,
             isDirty: true,
             getText: () => source
-        };
+        });
 
         const tokenSource = new vscode.CancellationTokenSource();
         const defs = await this._defProvider.provideDefinition(doc, range.start, tokenSource.token);

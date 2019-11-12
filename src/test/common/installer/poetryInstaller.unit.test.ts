@@ -39,9 +39,13 @@ suite('Module Installer - Poetry', () => {
         fileSystem = mock(FileSystem);
         processServiceFactory = mock(ProcessServiceFactory);
 
-        poetryInstaller = new TestInstaller(instance(serviceContainer), instance(workspaceService),
-            instance(configurationService), instance(fileSystem),
-            instance(processServiceFactory));
+        poetryInstaller = new TestInstaller(
+            instance(serviceContainer),
+            instance(workspaceService),
+            instance(configurationService),
+            instance(fileSystem),
+            instance(processServiceFactory)
+        );
     });
     test('Is not supported when there is no resource', async () => {
         const supported = await poetryInstaller.isSupported();

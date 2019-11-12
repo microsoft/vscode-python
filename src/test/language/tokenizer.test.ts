@@ -359,20 +359,9 @@ suite('Language.Tokenizer', () => {
         assert.equal(tokens.getItemAt(3).length, 1);
     });
     test('Operators', () => {
-        const text = '< <> << <<= ' +
-            '== != > >> >>= >= <=' +
-            '+ - ~ %' +
-            '* ** / /= //=' +
-            '*= += -= ~= %= **= ' +
-            '& &= | |= ^ ^= ->';
+        const text = '< <> << <<= ' + '== != > >> >>= >= <=' + '+ - ~ %' + '* ** / /= //=' + '*= += -= ~= %= **= ' + '& &= | |= ^ ^= ->';
         const tokens = new Tokenizer().tokenize(text);
-        const lengths = [
-            1, 2, 2, 3,
-            2, 2, 1, 2, 3, 2, 2,
-            1, 1, 1, 1,
-            1, 2, 1, 2, 3,
-            2, 2, 2, 2, 2, 3,
-            1, 2, 1, 2, 1, 2, 2];
+        const lengths = [1, 2, 2, 3, 2, 2, 1, 2, 3, 2, 2, 1, 1, 1, 1, 1, 2, 1, 2, 3, 2, 2, 2, 2, 2, 3, 1, 2, 1, 2, 1, 2, 2];
         assert.equal(tokens.count, lengths.length);
         for (let i = 0; i < tokens.count; i += 1) {
             const t = tokens.getItemAt(i);

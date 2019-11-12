@@ -10,11 +10,10 @@ import { WebPanel } from './webPanel';
 
 @injectable()
 export class WebPanelProvider implements IWebPanelProvider {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-    }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     // tslint:disable-next-line:no-any
-    public create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any) : IWebPanel {
+    public create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel {
         return new WebPanel(viewColumn, this.serviceContainer, listener, title, mainScriptPath, embeddedCss, settings);
     }
 }

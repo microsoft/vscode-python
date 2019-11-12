@@ -17,8 +17,7 @@ type UnitTestDiscoveryOptions = TestDiscoveryOptions & {
 export class TestDiscoveryService implements ITestDiscoveryService {
     private readonly argsHelper: IArgumentsHelper;
     private readonly runner: ITestRunner;
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(ITestsParser) @named(UNITTEST_PROVIDER) private testParser: ITestsParser) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer, @inject(ITestsParser) @named(UNITTEST_PROVIDER) private testParser: ITestsParser) {
         this.argsHelper = serviceContainer.get<IArgumentsHelper>(IArgumentsHelper);
         this.runner = serviceContainer.get<ITestRunner>(ITestRunner);
     }

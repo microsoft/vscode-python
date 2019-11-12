@@ -130,7 +130,10 @@ suite('Linting - Linter Manager', () => {
 
         test(`setActiveLintersAsync with invalid products does nothing ${testResourceSuffix}`, async () => {
             let getActiveLintersInvoked = false;
-            linterManager.getActiveLinters = async () => { getActiveLintersInvoked = true; return []; };
+            linterManager.getActiveLinters = async () => {
+                getActiveLintersInvoked = true;
+                return [];
+            };
 
             await linterManager.setActiveLintersAsync([Product.ctags, Product.pytest], resource);
 

@@ -4,7 +4,7 @@
 'use strict';
 
 export async function sleep(timeout: number): Promise<void> {
-    return new Promise<void>((resolve) => {
+    return new Promise<void>(resolve => {
         setTimeout(resolve, timeout);
     });
 }
@@ -13,15 +13,17 @@ export async function waitForPromise<T>(promise: Promise<T>, timeout: number): P
     // Set a timer that will resolve with null
     return new Promise<T | null>((resolve, reject) => {
         const timer = setTimeout(() => resolve(null), timeout);
-        promise.then(result => {
-            // When the promise resolves, make sure to clear the timer or
-            // the timer may stick around causing tests to wait
-            clearTimeout(timer);
-            resolve(result);
-        }).catch(e => {
-            clearTimeout(timer);
-            reject(e);
-        });
+        promise
+            .then(result => {
+                // When the promise resolves, make sure to clear the timer or
+                // the timer may stick around causing tests to wait
+                clearTimeout(timer);
+                resolve(result);
+            })
+            .catch(e => {
+                clearTimeout(timer);
+                reject(e);
+            });
     });
 }
 
@@ -95,8 +97,6 @@ export function createDeferredFrom<T>(...promises: Promise<T>[]): Deferred<T> {
 }
 export function createDeferredFromPromise<T>(promise: Promise<T>): Deferred<T> {
     const deferred = createDeferred<T>();
-    promise
-        .then(deferred.resolve.bind(deferred))
-        .catch(deferred.reject.bind(deferred));
+    promise.then(deferred.resolve.bind(deferred)).catch(deferred.reject.bind(deferred));
     return deferred;
 }

@@ -52,12 +52,15 @@ export class ProgressReporting implements Disposable {
     private beginProgress(): void {
         this.progressDeferred = createDeferred<void>();
 
-        window.withProgress({
-            location: ProgressLocation.Window,
-            title: ''
-        }, progress => {
-            this.progress = progress;
-            return this.progressDeferred!.promise;
-        });
+        window.withProgress(
+            {
+                location: ProgressLocation.Window,
+                title: ''
+            },
+            progress => {
+                this.progress = progress;
+                return this.progressDeferred!.promise;
+            }
+        );
     }
 }

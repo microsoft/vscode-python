@@ -44,31 +44,14 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
         context.subscriptions.push(jediFactory);
-        context.subscriptions.push(
-            languages.registerRenameProvider(this.documentSelector, new PythonRenameProvider(this.serviceManager))
-        );
+        context.subscriptions.push(languages.registerRenameProvider(this.documentSelector, new PythonRenameProvider(this.serviceManager)));
         const definitionProvider = new PythonDefinitionProvider(jediFactory);
 
         context.subscriptions.push(languages.registerDefinitionProvider(this.documentSelector, definitionProvider));
-        context.subscriptions.push(
-            languages.registerHoverProvider(this.documentSelector, new PythonHoverProvider(jediFactory))
-        );
-        context.subscriptions.push(
-            languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory))
-        );
-        context.subscriptions.push(
-            languages.registerCompletionItemProvider(
-                this.documentSelector,
-                new PythonCompletionItemProvider(jediFactory, this.serviceManager),
-                '.'
-            )
-        );
-        context.subscriptions.push(
-            languages.registerCodeLensProvider(
-                this.documentSelector,
-                this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)
-            )
-        );
+        context.subscriptions.push(languages.registerHoverProvider(this.documentSelector, new PythonHoverProvider(jediFactory)));
+        context.subscriptions.push(languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory)));
+        context.subscriptions.push(languages.registerCompletionItemProvider(this.documentSelector, new PythonCompletionItemProvider(jediFactory, this.serviceManager), '.'));
+        context.subscriptions.push(languages.registerCodeLensProvider(this.documentSelector, this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)));
 
         const onTypeDispatcher = new OnTypeFormattingDispatcher({
             '\n': new OnEnterFormatter(),
@@ -76,14 +59,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         });
         const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
         if (onTypeTriggers) {
-            context.subscriptions.push(
-                languages.registerOnTypeFormattingEditProvider(
-                    PYTHON,
-                    onTypeDispatcher,
-                    onTypeTriggers.first,
-                    ...onTypeTriggers.more
-                )
-            );
+            context.subscriptions.push(languages.registerOnTypeFormattingEditProvider(PYTHON, onTypeDispatcher, onTypeTriggers.first, ...onTypeTriggers.more));
         }
 
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
@@ -94,24 +70,13 @@ export class JediExtensionActivator implements ILanguageServerActivator {
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
         if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-            context.subscriptions.push(
-                languages.registerSignatureHelpProvider(
-                    this.documentSelector,
-                    new PythonSignatureProvider(jediFactory),
-                    '(',
-                    ','
-                )
-            );
+            context.subscriptions.push(languages.registerSignatureHelpProvider(this.documentSelector, new PythonSignatureProvider(jediFactory), '(', ','));
         }
 
-        context.subscriptions.push(
-            languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer))
-        );
+        context.subscriptions.push(languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer)));
 
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
-        testManagementService
-            .activate(symbolProvider)
-            .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+        testManagementService.activate(symbolProvider).catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
     }
 
     public dispose(): void {

@@ -29,13 +29,7 @@ suite('Terminal Auto Activation', () => {
         activator = mock(TerminalActivator);
         workspaceService = mock(WorkspaceService);
 
-        terminalAutoActivation = new TerminalAutoActivation(
-            instance(terminalManager),
-            [],
-            instance(documentManager),
-            instance(activator),
-            instance(workspaceService)
-        );
+        terminalAutoActivation = new TerminalAutoActivation(instance(terminalManager), [], instance(documentManager), instance(activator), instance(workspaceService));
     });
 
     test('New Terminals should be activated', async () => {

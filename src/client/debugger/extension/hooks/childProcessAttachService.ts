@@ -22,9 +22,11 @@ import { ChildProcessLaunchData, IChildProcessAttachService } from './types';
  */
 @injectable()
 export class ChildProcessAttachService implements IChildProcessAttachService {
-    constructor(@inject(IApplicationShell) private readonly appShell: IApplicationShell,
+    constructor(
+        @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) { }
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+    ) {}
 
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
     public async attach(data: ChildProcessLaunchData, parentSession: DebugSession): Promise<void> {
@@ -45,7 +47,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     public getAttachConfiguration(data: ChildProcessLaunchData): AttachRequestArguments & DebugConfiguration {
         const args = data.rootStartRequest.arguments;
         // tslint:disable-next-line:no-any
-        const config = JSON.parse(JSON.stringify(args)) as any as (AttachRequestArguments & DebugConfiguration);
+        const config = (JSON.parse(JSON.stringify(args)) as any) as AttachRequestArguments & DebugConfiguration;
         // tslint:disable-next-line: no-any
         this.fixPathMappings(config as any);
         config.host = args.request === 'attach' ? args.host! : 'localhost';
@@ -75,8 +77,6 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         // a child process or not.
         const systemVariables = new SystemVariables(undefined, config.workspaceFolder);
         const localRoot = config.cwd && config.cwd.length > 0 ? systemVariables.resolveAny(config.cwd) : config.workspaceFolder;
-        config.pathMappings = [
-            { remoteRoot: '.', localRoot }
-        ];
+        config.pathMappings = [{ remoteRoot: '.', localRoot }];
     }
 }

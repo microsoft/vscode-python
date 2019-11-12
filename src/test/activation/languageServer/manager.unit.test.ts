@@ -34,11 +34,7 @@ suite('Language Server - Manager', () => {
         analysisOptions = mock(LanguageServerAnalysisOptions);
         languageServer = mock(LanguageServer);
         lsExtension = mock(LanguageServerExtension);
-        manager = new LanguageServerManager(
-            instance(serviceContainer),
-            instance(analysisOptions),
-            instance(lsExtension)
-        );
+        manager = new LanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension));
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {

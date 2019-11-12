@@ -59,7 +59,7 @@ export class JupyterServerBase implements INotebookServer {
 
         // Listen to the process going down
         if (this.launchInfo && this.launchInfo.connectionInfo) {
-            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
+            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected(c => {
                 traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
                 this.serverExitCode = c;
                 this.shutdown().ignoreErrors();
@@ -189,7 +189,8 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _loggers: INotebookExecutionLogger[],
-        _cancelToken?: CancellationToken): Promise<INotebook> {
+        _cancelToken?: CancellationToken
+    ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
     }
 

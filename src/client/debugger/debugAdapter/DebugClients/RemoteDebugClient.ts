@@ -25,5 +25,4 @@ export class RemoteDebugClient<T extends AttachRequestArguments | LaunchRequestA
             this.debugServer = undefined;
         }
     }
-
 }

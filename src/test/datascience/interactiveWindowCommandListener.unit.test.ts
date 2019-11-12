@@ -22,20 +22,12 @@ import { generateCells } from '../../client/datascience/cellFactory';
 import { Commands } from '../../client/datascience/constants';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import {
-    InteractiveWindowCommandListener
-} from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
+import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { InteractiveWindowProvider } from '../../client/datascience/interactive-window/interactiveWindowProvider';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../client/datascience/jupyter/jupyterImporter';
-import {
-    IInteractiveWindow,
-    IJupyterExecution,
-    INotebook,
-    INotebookEditorProvider,
-    INotebookServer
-} from '../../client/datascience/types';
+import { IInteractiveWindow, IJupyterExecution, INotebook, INotebookEditorProvider, INotebookServer } from '../../client/datascience/types';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -156,7 +148,15 @@ suite('Interactive window command listener', async () => {
         };
         when(fileSystem.createTemporaryFile(anything())).thenResolve(tempFile);
         when(fileSystem.deleteDirectory(anything())).thenResolve();
-        when(fileSystem.writeFile(anything(), argThat(o => { lastFileContents = o; return true; }))).thenResolve();
+        when(
+            fileSystem.writeFile(
+                anything(),
+                argThat(o => {
+                    lastFileContents = o;
+                    return true;
+                })
+            )
+        ).thenResolve();
         when(fileSystem.arePathsSame(anything(), anything())).thenReturn(true);
 
         when(interactiveWindowProvider.getActive()).thenReturn(interactiveWindow.object);
@@ -178,14 +178,12 @@ suite('Interactive window command listener', async () => {
             pygments_lexer: `ipython${3}`,
             version: 3
         };
-        when(notebookExporter.translateToNotebook(anything())).thenResolve(
-            {
-                cells: [],
-                nbformat: 4,
-                nbformat_minor: 2,
-                metadata: metadata
-            }
-        );
+        when(notebookExporter.translateToNotebook(anything())).thenResolve({
+            cells: [],
+            nbformat: 4,
+            nbformat_minor: 2,
+            metadata: metadata
+        });
 
         when(jupyterExecution.isNotebookSupported()).thenResolve(true);
 
@@ -207,7 +205,8 @@ suite('Interactive window command listener', async () => {
             statusProvider,
             instance(notebookImporter),
             instance(dataScienceErrorHandler),
-            instance(notebookEditorProvider));
+            instance(notebookEditorProvider)
+        );
         result.register(commandManager);
 
         return result;
@@ -245,9 +244,11 @@ suite('Interactive window command listener', async () => {
         when(jupyterExecution.connectToNotebookServer(anything(), anything())).thenResolve(server.object);
         const notebook = createTypeMoq<INotebook>('jupyter notebook');
         server.setup(s => s.createNotebook(TypeMoq.It.isAny())).returns(() => Promise.resolve(notebook.object));
-        notebook.setup(n => n.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-            return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
-        });
+        notebook
+            .setup(n => n.execute(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                return Promise.resolve(generateCells(undefined, 'a=1', 'bar.py', 0, false, uuid()));
+            });
 
         when(applicationShell.showSaveDialog(argThat(o => o.saveLabel && o.saveLabel.includes('Export')))).thenReturn(Promise.resolve(Uri.file('foo')));
         when(applicationShell.showInformationMessage(anything(), anything())).thenReturn(Promise.resolve('moo'));

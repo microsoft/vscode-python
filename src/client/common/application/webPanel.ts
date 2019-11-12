@@ -13,7 +13,6 @@ import { IDisposableRegistry } from '../types';
 import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from './types';
 
 export class WebPanel implements IWebPanel {
-
     private listener: IWebPanelMessageListener;
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
@@ -28,7 +27,8 @@ export class WebPanel implements IWebPanel {
         mainScriptPath: string,
         embeddedCss?: string,
         // tslint:disable-next-line:no-any
-        settings?: any) {
+        settings?: any
+    ) {
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
         this.rootPath = path.dirname(mainScriptPath);
@@ -40,7 +40,8 @@ export class WebPanel implements IWebPanel {
                 enableScripts: true,
                 retainContextWhenHidden: true,
                 localResourceRoots: [Uri.file(this.rootPath)]
-            });
+            }
+        );
         this.loadPromise = this.load(mainScriptPath, embeddedCss, settings);
     }
 
@@ -85,26 +86,31 @@ export class WebPanel implements IWebPanel {
     private async load(mainScriptPath: string, embeddedCss?: string, settings?: any) {
         if (this.panel) {
             if (await fs.pathExists(mainScriptPath)) {
-
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
                 this.panel.webview.html = this.generateReactHtml(mainScriptPath, this.panel.webview, embeddedCss, settings);
 
                 // Reset when the current panel is closed
-                this.disposableRegistry.push(this.panel.onDidDispose(() => {
-                    this.panel = undefined;
-                    this.listener.dispose().ignoreErrors();
-                }));
+                this.disposableRegistry.push(
+                    this.panel.onDidDispose(() => {
+                        this.panel = undefined;
+                        this.listener.dispose().ignoreErrors();
+                    })
+                );
 
-                this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
-                    // Pass the message onto our listener
-                    this.listener.onMessage(message.type, message.payload);
-                }));
+                this.disposableRegistry.push(
+                    this.panel.webview.onDidReceiveMessage(message => {
+                        // Pass the message onto our listener
+                        this.listener.onMessage(message.type, message.payload);
+                    })
+                );
 
-                this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
-                    // Pass the state change onto our listener
-                    this.listener.onChangeViewState(this);
-                }));
+                this.disposableRegistry.push(
+                    this.panel.onDidChangeViewState(_e => {
+                        // Pass the state change onto our listener
+                        this.listener.onChangeViewState(this);
+                    })
+                );
 
                 // Set initial state
                 this.listener.onChangeViewState(this);

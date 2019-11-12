@@ -15,10 +15,14 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticFilterService, IDiagnosticsSer
 
 @injectable()
 export abstract class BaseDiagnostic implements IDiagnostic {
-    constructor(public readonly code: DiagnosticCodes, public readonly message: string,
-        public readonly severity: DiagnosticSeverity, public readonly scope: DiagnosticScope,
+    constructor(
+        public readonly code: DiagnosticCodes,
+        public readonly message: string,
+        public readonly severity: DiagnosticSeverity,
+        public readonly scope: DiagnosticScope,
         public readonly resource: Resource,
-        public readonly invokeHandler: 'always' | 'default' = 'default') { }
+        public readonly invokeHandler: 'always' | 'default' = 'default'
+    ) {}
 }
 
 @injectable()

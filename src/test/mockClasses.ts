@@ -1,8 +1,5 @@
 import * as vscode from 'vscode';
-import {
-    Flake8CategorySeverity, ILintingSettings, IMypyCategorySeverity,
-    IPycodestyleCategorySeverity, IPylintCategorySeverity
-} from '../client/common/types';
+import { Flake8CategorySeverity, ILintingSettings, IMypyCategorySeverity, IPycodestyleCategorySeverity, IPylintCategorySeverity } from '../client/common/types';
 
 export class MockOutputChannel implements vscode.OutputChannel {
     public name: string;
@@ -15,9 +12,12 @@ export class MockOutputChannel implements vscode.OutputChannel {
     public append(value: string) {
         this.output += value;
     }
-    public appendLine(value: string) { this.append(value); this.append('\n'); }
+    public appendLine(value: string) {
+        this.append(value);
+        this.append('\n');
+    }
     // tslint:disable-next-line:no-empty
-    public clear() { }
+    public clear() {}
     public show(preservceFocus?: boolean): void;
     public show(column?: vscode.ViewColumn, preserveFocus?: boolean): void;
     // tslint:disable-next-line:no-any
@@ -28,7 +28,7 @@ export class MockOutputChannel implements vscode.OutputChannel {
         this.isShown = false;
     }
     // tslint:disable-next-line:no-empty
-    public dispose() { }
+    public dispose() {}
 }
 
 export class MockStatusBarItem implements vscode.StatusBarItem {
@@ -39,14 +39,11 @@ export class MockStatusBarItem implements vscode.StatusBarItem {
     public color!: string;
     public command!: string;
     // tslint:disable-next-line:no-empty
-    public show(): void {
-    }
+    public show(): void {}
     // tslint:disable-next-line:no-empty
-    public hide(): void {
-    }
+    public hide(): void {}
     // tslint:disable-next-line:no-empty
-    public dispose(): void {
-    }
+    public dispose(): void {}
 }
 
 export class MockLintingSettings implements ILintingSettings {

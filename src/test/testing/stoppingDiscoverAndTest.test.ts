@@ -57,7 +57,11 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
 
     test('Running tests should not stop existing discovery', async () => {
         const mockTestManager = new MockTestManagerWithRunningTests(UNITTEST_PROVIDER, Product.unittest, Uri.file(testFilesPath), testFilesPath, ioc.serviceContainer);
-        ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(ITestDiscoveryService, new MockDiscoveryService(mockTestManager.discoveryDeferred.promise), UNITTEST_PROVIDER);
+        ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(
+            ITestDiscoveryService,
+            new MockDiscoveryService(mockTestManager.discoveryDeferred.promise),
+            UNITTEST_PROVIDER
+        );
 
         const discoveryPromise = mockTestManager.discoverTests(CommandSource.auto);
         mockTestManager.discoveryDeferred.resolve(EmptyTests);
@@ -65,24 +69,28 @@ suite('Unit Tests Stopping Discovery and Runner', () => {
         const deferred = createDeferred<string>();
 
         // This promise should never resolve nor reject.
-        runningPromise
-            .then(() => Promise.reject('Debugger stopped when it shouldn\'t have'))
-            .catch(error =>  deferred.reject(error));
+        runningPromise.then(() => Promise.reject("Debugger stopped when it shouldn't have")).catch(error => deferred.reject(error));
 
-       discoveryPromise.then(result => {
-            if (result === EmptyTests) {
-                deferred.resolve('');
-            } else {
-                deferred.reject('tests not empty');
-            }
-        }).catch(error => deferred.reject(error));
+        discoveryPromise
+            .then(result => {
+                if (result === EmptyTests) {
+                    deferred.resolve('');
+                } else {
+                    deferred.reject('tests not empty');
+                }
+            })
+            .catch(error => deferred.reject(error));
 
         await deferred.promise;
     });
 
     test('Discovering tests should stop running tests', async () => {
         const mockTestManager = new MockTestManagerWithRunningTests(UNITTEST_PROVIDER, Product.unittest, Uri.file(testFilesPath), testFilesPath, ioc.serviceContainer);
-        ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(ITestDiscoveryService, new MockDiscoveryService(mockTestManager.discoveryDeferred.promise), UNITTEST_PROVIDER);
+        ioc.serviceManager.addSingletonInstance<ITestDiscoveryService>(
+            ITestDiscoveryService,
+            new MockDiscoveryService(mockTestManager.discoveryDeferred.promise),
+            UNITTEST_PROVIDER
+        );
         mockTestManager.discoveryDeferred.resolve(EmptyTests);
         await mockTestManager.discoverTests(CommandSource.auto);
         const runPromise = mockTestManager.runTest(CommandSource.ui);

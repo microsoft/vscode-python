@@ -6,7 +6,16 @@ import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { IServiceContainer } from '../../client/ioc/types';
 import { CANCELLATION_REASON } from '../../client/testing/common/constants';
 import { BaseTestManager } from '../../client/testing/common/managers/baseTestManager';
-import { ITestDebugLauncher, ITestDiscoveryService, IUnitTestSocketServer, LaunchOptions, TestDiscoveryOptions, TestProvider, Tests, TestsToRun } from '../../client/testing/common/types';
+import {
+    ITestDebugLauncher,
+    ITestDiscoveryService,
+    IUnitTestSocketServer,
+    LaunchOptions,
+    TestDiscoveryOptions,
+    TestProvider,
+    Tests,
+    TestsToRun
+} from '../../client/testing/common/types';
 
 @injectable()
 export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
@@ -46,7 +55,7 @@ export class MockDebugLauncher implements ITestDebugLauncher, Disposable {
                 this._promise.reject('Mock-User Cancelled');
             }
         });
-        return this._promise.promise as {} as Promise<void>;
+        return (this._promise.promise as {}) as Promise<void>;
     }
     public dispose() {
         this._promise = undefined;
@@ -60,8 +69,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
     public readonly enabled = true;
     // tslint:disable-next-line:no-any
     public readonly discoveryDeferred = createDeferred<Tests>();
-    constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string,
-        serviceContainer: IServiceContainer) {
+    constructor(testProvider: TestProvider, product: Product, workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
         super(testProvider, product, workspaceFolder, rootDirectory, serviceContainer);
     }
     protected getDiscoveryOptions(_ignoreCache: boolean) {
@@ -87,7 +95,7 @@ export class MockTestManagerWithRunningTests extends BaseTestManager {
 
 @injectable()
 export class MockDiscoveryService implements ITestDiscoveryService {
-    constructor(private discoverPromise: Promise<Tests>) { }
+    constructor(private discoverPromise: Promise<Tests>) {}
     public async discoverTests(_options: TestDiscoveryOptions): Promise<Tests> {
         return this.discoverPromise;
     }
@@ -111,7 +119,7 @@ export class MockUnitTestSocketServer extends EventEmitter implements IUnitTestS
         return typeof options.port === 'number' ? options.port! : 0;
     }
     // tslint:disable-next-line:no-empty
-    public stop(): void { }
+    public stop(): void {}
     // tslint:disable-next-line:no-empty
-    public dispose() { }
+    public dispose() {}
 }

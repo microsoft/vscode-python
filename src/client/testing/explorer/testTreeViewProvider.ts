@@ -13,10 +13,7 @@ import { EventName } from '../../telemetry/constants';
 import { CommandSource } from '../common/constants';
 import { getChildren, getParent, getTestDataItemType } from '../common/testUtils';
 import { ITestCollectionStorageService, Tests, TestStatus } from '../common/types';
-import {
-    ITestDataItemResource, ITestManagementService, ITestTreeViewProvider,
-    TestDataItem, TestDataItemType, TestWorkspaceFolder, WorkspaceTestStatus
-} from '../types';
+import { ITestDataItemResource, ITestManagementService, ITestTreeViewProvider, TestDataItem, TestDataItemType, TestWorkspaceFolder, WorkspaceTestStatus } from '../types';
 import { TestTreeItem } from './testTreeViewItem';
 
 @injectable()
@@ -76,7 +73,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
      * @return [TreeItem](#TreeItem) representation of the element
      */
     public async getTreeItem(element: TestDataItem): Promise<TreeItem> {
-        const defaultCollapsibleState = await this.shouldElementBeExpandedByDefault(element) ? TreeItemCollapsibleState.Expanded : undefined;
+        const defaultCollapsibleState = (await this.shouldElementBeExpandedByDefault(element)) ? TreeItemCollapsibleState.Expanded : undefined;
         return new TestTreeItem(element.resource, element, defaultCollapsibleState);
     }
 
@@ -114,8 +111,7 @@ export class TestTreeViewProvider implements ITestTreeViewProvider, ITestDataIte
 
         // If we are in a mult-root workspace, then nest the test data within a
         // virtual node, represending the workspace folder.
-        return this.workspace.workspaceFolders
-            .map(workspaceFolder => new TestWorkspaceFolder(workspaceFolder));
+        return this.workspace.workspaceFolders.map(workspaceFolder => new TestWorkspaceFolder(workspaceFolder));
     }
 
     /**

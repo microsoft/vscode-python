@@ -6,10 +6,7 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { TestResultsService } from '../../../../client/testing/common/services/testResultsService';
-import {
-    FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile,
-    TestFolder, TestFunction, Tests, TestStatus, TestSuite
-} from '../../../../client/testing/common/types';
+import { FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite } from '../../../../client/testing/common/types';
 import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
@@ -19,7 +16,16 @@ suite('Unit Tests - Tests Results Service', () => {
     let resultResetVisitor: typemoq.IMock<ITestVisitor>;
     let tests!: Tests;
     // tslint:disable:one-variable-per-declaration
-    let folder1: TestFolder, folder2: TestFolder, folder3: TestFolder, folder4: TestFolder, folder5: TestFolder, suite1: TestSuite, suite2: TestSuite, suite3: TestSuite, suite4: TestSuite, suite5: TestSuite;
+    let folder1: TestFolder,
+        folder2: TestFolder,
+        folder3: TestFolder,
+        folder4: TestFolder,
+        folder5: TestFolder,
+        suite1: TestSuite,
+        suite2: TestSuite,
+        suite3: TestSuite,
+        suite4: TestSuite,
+        suite5: TestSuite;
     let file1: TestFile, file2: TestFile, file3: TestFile, file4: TestFile, file5: TestFile;
     setup(() => {
         resultResetVisitor = typemoq.Mock.ofType<ITestVisitor>();

@@ -7,9 +7,7 @@
 
 import { expect } from 'chai';
 
-import {
-    verboseRegExp
-} from '../../../client/common/utils/regexp';
+import { verboseRegExp } from '../../../client/common/utils/regexp';
 
 suite('Utils for regular expressions - verboseRegExp()', () => {
     test('whitespace removed in multiline pattern (example of typical usage)', () => {
@@ -29,12 +27,18 @@ suite('Utils for regular expressions - verboseRegExp()', () => {
 
     const whitespaceTests = [
         ['spam eggs', 'spameggs'],
-        [`spam
-          eggs`, 'spameggs'],
+        [
+            `spam
+          eggs`,
+            'spameggs'
+        ],
         // empty
         ['  ', '(?:)'],
-        [`
-         `, '(?:)']
+        [
+            `
+         `,
+            '(?:)'
+        ]
     ];
     for (const [pat, expected] of whitespaceTests) {
         test(`whitespace removed ("${pat}")`, () => {
@@ -44,13 +48,7 @@ suite('Utils for regular expressions - verboseRegExp()', () => {
         });
     }
 
-    const noopPatterns = [
-        '^(?:spam\\b.*)$',
-        'spam',
-        '^spam$',
-        'spam$',
-        '^spam'
-    ];
+    const noopPatterns = ['^(?:spam\\b.*)$', 'spam', '^spam$', 'spam$', '^spam'];
     for (const pat of noopPatterns) {
         test(`pattern not changed ("${pat}")`, () => {
             const regex = verboseRegExp(pat);

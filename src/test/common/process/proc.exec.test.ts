@@ -35,10 +35,10 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should output print unicode characters', async function () {
+    test('exec should output print unicode characters', async function() {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2546. (unicode under Py2.7 is tough!)
-        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+        if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -52,96 +52,144 @@ suite('ProcessService Observable', () => {
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should wait for completion of program with new lines', async function () {
+    test('exec should wait for completion of program with new lines', async function() {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time',
-            'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'print("3")'];
+        const pythonCode = ['import sys', 'import time', 'print("1")', 'sys.stdout.flush()', 'time.sleep(1)', 'print("2")', 'sys.stdout.flush()', 'time.sleep(1)', 'print("3")'];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['1', '2', '3'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        const values = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+        const values = result.stdout
+            .split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
         expect(values).to.deep.equal(outputs, 'Output values are incorrect');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should wait for completion of program without new lines', async function () {
+    test('exec should wait for completion of program without new lines', async function() {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(5000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time',
-            'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stdout.write("3")'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'sys.stdout.write("1")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stdout.write("2")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stdout.write("3")'
+        ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const outputs = ['123'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        const values = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+        const values = result.stdout
+            .split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
         expect(values).to.deep.equal(outputs, 'Output values are incorrect');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should end when cancellationToken is cancelled', async function () {
+    test('exec should end when cancellationToken is cancelled', async function() {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(15000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time',
-            'print("1")', 'sys.stdout.flush()', 'time.sleep(10)',
-            'print("2")', 'sys.stdout.flush()'];
+        const pythonCode = ['import sys', 'import time', 'print("1")', 'sys.stdout.flush()', 'time.sleep(10)', 'print("2")', 'sys.stdout.flush()'];
         const cancellationToken = new CancellationTokenSource();
         setTimeout(() => cancellationToken.cancel(), 3000);
 
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], { token: cancellationToken.token });
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        const values = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+        const values = result.stdout
+            .split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
         expect(values).to.deep.equal(['1'], 'Output values are incorrect');
         expect(result.stderr).to.equal(undefined, 'stderr not undefined');
     });
 
-    test('exec should stream stdout and stderr separately', async function () {
+    test('exec should stream stdout and stderr separately', async function() {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time',
-            'print("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("a")', 'sys.stderr.flush()', 'time.sleep(1)',
-            'print("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
-            'print("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("c")', 'sys.stderr.flush()'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'print("1")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stderr.write("a")',
+            'sys.stderr.flush()',
+            'time.sleep(1)',
+            'print("2")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stderr.write("b")',
+            'sys.stderr.flush()',
+            'time.sleep(1)',
+            'print("3")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stderr.write("c")',
+            'sys.stderr.flush()'
+        ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')]);
         const expectedStdout = ['1', '2', '3'];
         const expectedStderr = ['abc'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        const stdouts = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+        const stdouts = result.stdout
+            .split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
         expect(stdouts).to.deep.equal(expectedStdout, 'stdout values are incorrect');
-        const stderrs = result.stderr!.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+        const stderrs = result
+            .stderr!.split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
         expect(stderrs).to.deep.equal(expectedStderr, 'stderr values are incorrect');
     });
 
-    test('exec should merge stdout and stderr streams', async function () {
+    test('exec should merge stdout and stderr streams', async function() {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(7000);
         const procService = new ProcessService(new BufferDecoder());
-        const pythonCode = ['import sys', 'import time',
-            'sys.stdout.write("1")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("a")', 'sys.stderr.flush()', 'time.sleep(1)',
-            'sys.stdout.write("2")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("b")', 'sys.stderr.flush()', 'time.sleep(1)',
-            'sys.stdout.write("3")', 'sys.stdout.flush()', 'time.sleep(1)',
-            'sys.stderr.write("c")', 'sys.stderr.flush()'];
+        const pythonCode = [
+            'import sys',
+            'import time',
+            'sys.stdout.write("1")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stderr.write("a")',
+            'sys.stderr.flush()',
+            'time.sleep(1)',
+            'sys.stdout.write("2")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stderr.write("b")',
+            'sys.stderr.flush()',
+            'time.sleep(1)',
+            'sys.stdout.write("3")',
+            'sys.stdout.flush()',
+            'time.sleep(1)',
+            'sys.stderr.write("c")',
+            'sys.stderr.flush()'
+        ];
         const result = await procService.exec(pythonPath, ['-c', pythonCode.join(';')], { mergeStdOutErr: true });
         const expectedOutput = ['1a2b3c'];
 
         expect(result).not.to.be.an('undefined', 'result is undefined');
-        const outputs = result.stdout.split(/\r?\n/g).map(line => line.trim()).filter(line => line.length > 0);
+        const outputs = result.stdout
+            .split(/\r?\n/g)
+            .map(line => line.trim())
+            .filter(line => line.length > 0);
         expect(outputs).to.deep.equal(expectedOutput, 'Output values are incorrect');
     });
 

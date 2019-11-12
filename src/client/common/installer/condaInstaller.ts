@@ -16,9 +16,7 @@ import { IModuleInstaller } from './types';
 export class CondaInstaller extends ModuleInstaller implements IModuleInstaller {
     private isCondaAvailable: boolean | undefined;
 
-    constructor(
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
-    ) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
 

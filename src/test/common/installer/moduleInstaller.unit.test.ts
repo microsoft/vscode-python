@@ -43,10 +43,15 @@ suite('Module Installer', () => {
         proxyServers.forEach(proxyServer => {
             [undefined, Uri.file('/users/dev/xyz')].forEach(resource => {
                 // Conda info is relevant only for CondaInstaller.
-                const condaEnvs = installerClass === CondaInstaller ? [
-                    { name: 'My-Env01', path: '' }, { name: '', path: path.join('conda', 'path') },
-                    { name: 'My-Env01 With Spaces', path: '' }, { name: '', path: path.join('conda with spaces', 'path') }
-                ] : [];
+                const condaEnvs =
+                    installerClass === CondaInstaller
+                        ? [
+                              { name: 'My-Env01', path: '' },
+                              { name: '', path: path.join('conda', 'path') },
+                              { name: 'My-Env01 With Spaces', path: '' },
+                              { name: '', path: path.join('conda with spaces', 'path') }
+                          ]
+                        : [];
                 [undefined, ...condaEnvs].forEach(condaEnvInfo => {
                     const testProxySuffix = proxyServer.length === 0 ? 'without proxy info' : 'with proxy info';
                     const testCondaEnv = condaEnvInfo ? (condaEnvInfo.name ? 'without conda name' : 'with conda path') : 'without conda';
@@ -112,7 +117,8 @@ suite('Module Installer', () => {
                         getModuleNamesForTesting().forEach(product => {
                             const moduleName = product.moduleName;
                             async function installModuleAndVerifyCommand(command: string, expectedArgs: string[]) {
-                                terminalService.setup(t => t.sendCommand(TypeMoq.It.isValue(command), TypeMoq.It.isValue(expectedArgs)))
+                                terminalService
+                                    .setup(t => t.sendCommand(TypeMoq.It.isValue(command), TypeMoq.It.isValue(expectedArgs)))
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
 

@@ -15,13 +15,7 @@ import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import {
-    ExecutionFactoryCreationOptions,
-    IBufferDecoder,
-    IProcessLogger,
-    IProcessServiceFactory,
-    IPythonExecutionService
-} from '../../../client/common/process/types';
+import { ExecutionFactoryCreationOptions, IBufferDecoder, IProcessLogger, IProcessServiceFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
@@ -46,7 +40,12 @@ function title(resource?: Uri, interpreter?: PythonInterpreter) {
     return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
 }
 
-async function verifyCreateActivated(factory: PythonExecutionFactory, activationHelper: IEnvironmentActivationService, resource?: Uri, interpreter?: PythonInterpreter): Promise<IPythonExecutionService> {
+async function verifyCreateActivated(
+    factory: PythonExecutionFactory,
+    activationHelper: IEnvironmentActivationService,
+    resource?: Uri,
+    interpreter?: PythonInterpreter
+): Promise<IPythonExecutionService> {
     when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve();
 
     const service = await factory.createActivatedEnvironment({ resource, interpreter });
@@ -83,14 +82,22 @@ suite('Process - PythonExecutionFactory', () => {
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = mock(ProcessService);
-                when(processService.on('exec', () => { return; })).thenReturn(processService);
+                when(
+                    processService.on('exec', () => {
+                        return;
+                    })
+                ).thenReturn(processService);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
-                factory = new PythonExecutionFactory(instance(serviceContainer),
-                    instance(activationHelper), instance(procecssFactory),
-                    instance(configService), instance(bufferDecoder),
-                    instance(windowsStoreInterpreter));
+                factory = new PythonExecutionFactory(
+                    instance(serviceContainer),
+                    instance(activationHelper),
+                    instance(procecssFactory),
+                    instance(configService),
+                    instance(bufferDecoder),
+                    instance(windowsStoreInterpreter)
+                );
             });
 
             test('Ensure PythonExecutionService is created', async () => {
@@ -111,7 +118,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -123,7 +130,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -135,7 +142,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const pythonSettings = mock(PythonSettings);

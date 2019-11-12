@@ -21,7 +21,11 @@ import { IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsServic
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
-    serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
+    serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
+        IDiagnosticHandlerService,
+        DiagnosticCommandPromptHandlerService,
+        DiagnosticCommandPromptHandlerServiceId
+    );
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId);
     serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId);

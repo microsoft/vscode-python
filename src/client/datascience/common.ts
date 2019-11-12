@@ -4,8 +4,8 @@
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import { noop } from '../common/utils/misc';
 
-const SingleQuoteMultiline = '\'\'\'';
-const DoubleQuoteMultiline = '\"\"\"';
+const SingleQuoteMultiline = "'''";
+const DoubleQuoteMultiline = '"""';
 
 function concatMultilineString(str: nbformat.MultilineString, trim: boolean): string {
     const nonLineFeedWhiteSpaceTrim = /(^[\t\f\v\r ]+|[\t\f\v\r ]+$)/g; // Local var so don't have to reset the lastIndex.
@@ -42,12 +42,14 @@ export function splitMultilineString(source: nbformat.MultilineString): string[]
     if (str.length > 0) {
         // Each line should be a separate entry, but end with a \n if not last entry
         const arr = str.split('\n');
-        return arr.map((s, i) => {
-            if (i < arr.length - 1) {
-                return `${s}\n`;
-            }
-            return s;
-        }).filter(s => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
+        return arr
+            .map((s, i) => {
+                if (i < arr.length - 1) {
+                    return `${s}\n`;
+                }
+                return s;
+            })
+            .filter(s => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
     }
     return [];
 }
@@ -57,8 +59,9 @@ export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
         str.splitLines({ trim: false, removeEmptyEntries: false }),
-        (_s) => noop,
-        (s) => result = result.concat(`${s}\n`));
+        _s => noop,
+        s => (result = result.concat(`${s}\n`))
+    );
     return result;
 }
 
@@ -91,7 +94,7 @@ function fixCarriageReturn(str: string): string {
             // See if this is a line feed. If so, leave alone. This is goofy windows \r\n
             if (i < str.length - 1 && str[i + 1] === '\n') {
                 // This line is legit, output it and convert to '\n' only.
-                result += str.substr(previousLinePos, (i - previousLinePos));
+                result += str.substr(previousLinePos, i - previousLinePos);
                 result += '\n';
                 previousLinePos = i + 2;
                 i += 1;
@@ -101,7 +104,7 @@ function fixCarriageReturn(str: string): string {
             }
         } else if (str[i] === '\n') {
             // This line is legit, output it. (Single linefeed)
-            result += str.substr(previousLinePos, (i - previousLinePos) + 1);
+            result += str.substr(previousLinePos, i - previousLinePos + 1);
             previousLinePos = i + 1;
         }
     }
@@ -127,10 +130,7 @@ export function generateMarkdownFromCodeLines(lines: string[]) {
 }
 
 // tslint:disable-next-line: cyclomatic-complexity
-export function parseForComments(
-    lines: string[],
-    foundCommentLine: (s: string, i: number) => void,
-    foundNonCommentLine: (s: string, i: number) => void) {
+export function parseForComments(lines: string[], foundCommentLine: (s: string, i: number) => void, foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
     let insideMultilineComment: string | undefined;
     let insideMultilineQuote: string | undefined;
@@ -138,10 +138,8 @@ export function parseForComments(
     for (const l of lines) {
         const trim = l.trim();
         // Multiline is triple quotes of either kind
-        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) ?
-            SingleQuoteMultiline : trim.startsWith(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
-        const isMultilineQuote = trim.includes(SingleQuoteMultiline) ?
-            SingleQuoteMultiline : trim.includes(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+        const isMultilineComment = trim.startsWith(SingleQuoteMultiline) ? SingleQuoteMultiline : trim.startsWith(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
+        const isMultilineQuote = trim.includes(SingleQuoteMultiline) ? SingleQuoteMultiline : trim.includes(DoubleQuoteMultiline) ? DoubleQuoteMultiline : undefined;
 
         // Check for ending quotes of multiline string
         if (insideMultilineQuote) {
@@ -188,6 +186,10 @@ export function parseForComments(
 
 function extractComments(lines: string[]): string[] {
     const result: string[] = [];
-    parseForComments(lines, (s) => result.push(s), (_s) => noop());
+    parseForComments(
+        lines,
+        s => result.push(s),
+        _s => noop()
+    );
     return result;
 }

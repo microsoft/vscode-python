@@ -9,26 +9,31 @@ import { JediFactory } from '../languageServices/jediProxyFactory';
 import * as proxy from './jediProxy';
 
 export class LanguageItemInfo {
-    constructor(
-        public tooltip: vscode.MarkdownString,
-        public detail: string,
-        public signature: vscode.MarkdownString) { }
+    constructor(public tooltip: vscode.MarkdownString, public detail: string, public signature: vscode.MarkdownString) {}
 }
 
 export interface IItemInfoSource {
-    getItemInfoFromText(documentUri: vscode.Uri, fileName: string,
-        range: vscode.Range, sourceText: string,
-        token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined>;
-    getItemInfoFromDocument(document: vscode.TextDocument, position: vscode.Position,
-        token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined>;
+    getItemInfoFromText(
+        documentUri: vscode.Uri,
+        fileName: string,
+        range: vscode.Range,
+        sourceText: string,
+        token: vscode.CancellationToken
+    ): Promise<LanguageItemInfo[] | undefined>;
+    getItemInfoFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined>;
 }
 
 export class ItemInfoSource implements IItemInfoSource {
     private textConverter = new RestTextConverter();
-    constructor(private jediFactory: JediFactory) { }
+    constructor(private jediFactory: JediFactory) {}
 
-    public async getItemInfoFromText(documentUri: vscode.Uri, fileName: string, range: vscode.Range, sourceText: string, token: vscode.CancellationToken)
-        : Promise<LanguageItemInfo[] | undefined> {
+    public async getItemInfoFromText(
+        documentUri: vscode.Uri,
+        fileName: string,
+        range: vscode.Range,
+        sourceText: string,
+        token: vscode.CancellationToken
+    ): Promise<LanguageItemInfo[] | undefined> {
         const result = await this.getHoverResultFromTextRange(documentUri, fileName, range, sourceText, token);
         if (!result || !result.items.length) {
             return;
@@ -36,8 +41,7 @@ export class ItemInfoSource implements IItemInfoSource {
         return this.getItemInfoFromHoverResult(result, '');
     }
 
-    public async getItemInfoFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
-        : Promise<LanguageItemInfo[] | undefined> {
+    public async getItemInfoFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<LanguageItemInfo[] | undefined> {
         const range = document.getWordRangeAtPosition(position);
         if (!range || range.isEmpty) {
             return;
@@ -50,8 +54,7 @@ export class ItemInfoSource implements IItemInfoSource {
         return this.getItemInfoFromHoverResult(result, word);
     }
 
-    private async getHoverResultFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
-        : Promise<proxy.IHoverResult | undefined> {
+    private async getHoverResultFromDocument(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<proxy.IHoverResult | undefined> {
         if (position.character <= 0 || document.lineAt(position.line).text.match(/^\s*\/\//)) {
             return;
         }
@@ -62,8 +65,7 @@ export class ItemInfoSource implements IItemInfoSource {
         return this.getHoverResultFromDocumentRange(document, range, token);
     }
 
-    private async getHoverResultFromDocumentRange(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken)
-        : Promise<proxy.IHoverResult | undefined> {
+    private async getHoverResultFromDocumentRange(document: vscode.TextDocument, range: vscode.Range, token: vscode.CancellationToken): Promise<proxy.IHoverResult | undefined> {
         const cmd: proxy.ICommand = {
             command: proxy.CommandType.Hover,
             fileName: document.fileName,
@@ -76,8 +78,13 @@ export class ItemInfoSource implements IItemInfoSource {
         return this.jediFactory.getJediProxyHandler<proxy.IHoverResult>(document.uri).sendCommand(cmd, token);
     }
 
-    private async getHoverResultFromTextRange(documentUri: vscode.Uri, fileName: string, range: vscode.Range, sourceText: string, token: vscode.CancellationToken)
-        : Promise<proxy.IHoverResult | undefined> {
+    private async getHoverResultFromTextRange(
+        documentUri: vscode.Uri,
+        fileName: string,
+        range: vscode.Range,
+        sourceText: string,
+        token: vscode.CancellationToken
+    ): Promise<proxy.IHoverResult | undefined> {
         const cmd: proxy.ICommand = {
             command: proxy.CommandType.Hover,
             fileName: fileName,
@@ -130,10 +137,9 @@ export class ItemInfoSource implements IItemInfoSource {
                 return;
             }
 
-            if (item.text) { // Most probably variable type
-                const code = currentWord && currentWord.length > 0
-                    ? `${currentWord}: ${item.text}`
-                    : item.text;
+            if (item.text) {
+                // Most probably variable type
+                const code = currentWord && currentWord.length > 0 ? `${currentWord}: ${item.text}` : item.text;
                 tooltip.appendMarkdown(['```python', code, '```', ''].join(EOL));
                 infos.push(new LanguageItemInfo(tooltip, '', new vscode.MarkdownString()));
             }

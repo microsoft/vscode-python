@@ -22,8 +22,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.specFile = file;
     }
     public dispose = async () => {
-        if (this.specFile &&
-            IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
+        if (this.specFile && IsGuidRegEx.test(path.basename(path.dirname(this.specFile)))) {
             // There is more than one location for the spec file directory
             // to be cleaned up. If one fails, the other likely deleted it already.
             try {
@@ -33,5 +32,5 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
             }
             this.specFile = undefined;
         }
-    }
+    };
 }

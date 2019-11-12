@@ -18,13 +18,13 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     protected terminalTitle!: string;
     private _terminalService!: ITerminalService;
     private replActive?: Promise<boolean>;
-    constructor(@inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
+    constructor(
+        @inject(ITerminalServiceFactory) protected readonly terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
-        @inject(IPlatformService) protected readonly platformService: IPlatformService) {
-
-    }
+        @inject(IPlatformService) protected readonly platformService: IPlatformService
+    ) {}
     public async executeFile(file: Uri) {
         const pythonSettings = this.configurationService.getSettings(file);
 
@@ -45,7 +45,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.getTerminalService(resource).sendText(code);
     }
     public async initializeRepl(resource?: Uri) {
-        if (this.replActive && await this.replActive!) {
+        if (this.replActive && (await this.replActive!)) {
             await this._terminalService!.show();
             return;
         }
@@ -68,9 +68,11 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private getTerminalService(resource?: Uri): ITerminalService {
         if (!this._terminalService) {
             this._terminalService = this.terminalServiceFactory.getTerminalService(resource, this.terminalTitle);
-            this.disposables.push(this._terminalService.onDidCloseTerminal(() => {
-                this.replActive = undefined;
-            }));
+            this.disposables.push(
+                this._terminalService.onDidCloseTerminal(() => {
+                    this.replActive = undefined;
+                })
+            );
         }
         return this._terminalService;
     }

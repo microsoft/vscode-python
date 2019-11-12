@@ -14,9 +14,7 @@ export class CommandPromptAndPowerShell extends BaseActivationCommandProvider {
         super(serviceContainer);
     }
     public isShellSupported(targetShell: TerminalShellType): boolean {
-        return targetShell === TerminalShellType.commandPrompt ||
-            targetShell === TerminalShellType.powershell ||
-            targetShell === TerminalShellType.powershellCore;
+        return targetShell === TerminalShellType.commandPrompt || targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore;
     }
     public async getActivationCommandsForInterpreter(pythonPath: string, targetShell: TerminalShellType): Promise<string[] | undefined> {
         // Dependending on the target shell, look for the preferred script file.

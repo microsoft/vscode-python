@@ -103,11 +103,7 @@ suite('Debugging - Adapter Factory', () => {
         when(interpreterService.getInterpreterDetails(pythonPath)).thenResolve(interpreter);
         when(interpreterService.getInterpreters(anything())).thenResolve([interpreter]);
 
-        factory = new DebugAdapterDescriptorFactory(
-            instance(interpreterService),
-            instance(appShell),
-            experimentsManager
-        );
+        factory = new DebugAdapterDescriptorFactory(instance(interpreterService), instance(appShell), experimentsManager);
     });
 
     teardown(() => {
@@ -261,7 +257,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test('Don\'t pass the --log-dir argument to PTVSD is configuration.logToFile is not set', async () => {
+    test("Don't pass the --log-dir argument to PTVSD is configuration.logToFile is not set", async () => {
         const session = createSession({});
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
@@ -272,7 +268,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test('Don\'t pass the --log-dir argument to PTVSD is configuration.logToFile is set but false', async () => {
+    test("Don't pass the --log-dir argument to PTVSD is configuration.logToFile is set but false", async () => {
         const session = createSession({ logToFile: false });
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPath]);
 
@@ -303,7 +299,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.control }]);
     });
 
-    test('Don\'t send any telemetry if not inside the DA experiment nor control group', async () => {
+    test("Don't send any telemetry if not inside the DA experiment nor control group", async () => {
         const session = createSession({});
         when(spiedInstance.userExperiments).thenReturn([]);
 

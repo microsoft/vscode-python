@@ -64,16 +64,12 @@ suite('Extension build installer - Insiders build installer', async () => {
         when(output.appendLine(ExtensionChannels.startingDownloadOutputMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.downloadCompletedOutputMessage())).thenReturn();
         when(output.appendLine(ExtensionChannels.installationCompleteMessage())).thenReturn();
-        when(
-            fileDownloader.downloadFile(developmentBuildUri, anything())
-        ).thenCall((_, downloadOptions: DownloadOptions) => {
+        when(fileDownloader.downloadFile(developmentBuildUri, anything())).thenCall((_, downloadOptions: DownloadOptions) => {
             expect(downloadOptions.extension).to.equal(options.extension, 'Incorrect file extension');
             expect(downloadOptions.progressMessagePrefix).to.equal(options.progressMessagePrefix);
             return Promise.resolve(vsixFilePath);
         });
-        when(
-            cmdManager.executeCommand('workbench.extensions.installExtension', anything())
-        ).thenCall((_, cb) => {
+        when(cmdManager.executeCommand('workbench.extensions.installExtension', anything())).thenCall((_, cb) => {
             assert.deepEqual(cb, Uri.file(vsixFilePath), 'Wrong VSIX installed');
         });
         when(fs.deleteFile(vsixFilePath)).thenResolve();

@@ -255,7 +255,9 @@ suite('Debug - Attach to Child Process', () => {
             request: 'launch',
             type: 'python',
             name: '',
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);
@@ -274,7 +276,9 @@ suite('Debug - Attach to Child Process', () => {
             type: 'python',
             name: '',
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: '',
+            pythonPath: '',
+            args: [],
+            envFile: '',
             pathMappings: pathMappings
         };
 
@@ -294,7 +298,9 @@ suite('Debug - Attach to Child Process', () => {
             type: 'python',
             name: '',
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);
@@ -314,7 +320,9 @@ suite('Debug - Attach to Child Process', () => {
             name: '',
             cwd: path.join('hello', 'world'),
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);
@@ -335,7 +343,9 @@ suite('Debug - Attach to Child Process', () => {
             // tslint:disable-next-line: no-invalid-template-strings
             cwd: path.join('${workspaceFolder}', 'hello', 'world'),
             workspaceFolder: __dirname,
-            pythonPath: '', args: [], envFile: ''
+            pythonPath: '',
+            args: [],
+            envFile: ''
         };
 
         service.fixPathMappings(args);

@@ -11,7 +11,7 @@ import * as proxy from './jediProxy';
 import { isPositionInsideStringOrComment } from './providerUtilities';
 
 class DocumentPosition {
-    constructor(public document: vscode.TextDocument, public position: vscode.Position) { }
+    constructor(public document: vscode.TextDocument, public position: vscode.Position) {}
 
     public static fromObject(item: object): DocumentPosition {
         // tslint:disable-next-line:no-any
@@ -27,13 +27,11 @@ class DocumentPosition {
 export class CompletionSource {
     private jediFactory: JediFactory;
 
-    constructor(jediFactory: JediFactory, private serviceContainer: IServiceContainer,
-        private itemInfoSource: IItemInfoSource) {
+    constructor(jediFactory: JediFactory, private serviceContainer: IServiceContainer, private itemInfoSource: IItemInfoSource) {
         this.jediFactory = jediFactory;
     }
 
-    public async getVsCodeCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
-        : Promise<vscode.CompletionItem[]> {
+    public async getVsCodeCompletionItems(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<vscode.CompletionItem[]> {
         const result = await this.getCompletionResult(document, position, token);
         if (result === undefined) {
             return Promise.resolve([]);
@@ -52,9 +50,7 @@ export class CompletionSource {
         const position = documentPosition.position;
         const wordRange = document.getWordRangeAtPosition(position);
 
-        const leadingRange = wordRange !== undefined
-            ? new vscode.Range(new vscode.Position(0, 0), wordRange.start)
-            : new vscode.Range(new vscode.Position(0, 0), position);
+        const leadingRange = wordRange !== undefined ? new vscode.Range(new vscode.Position(0, 0), wordRange.start) : new vscode.Range(new vscode.Position(0, 0), position);
 
         const itemString = completionItem.label;
         const sourceText = `${document.getText(leadingRange)}${itemString}`;
@@ -63,10 +59,8 @@ export class CompletionSource {
         return this.itemInfoSource.getItemInfoFromText(document.uri, document.fileName, range, sourceText, token);
     }
 
-    private async getCompletionResult(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken)
-        : Promise<proxy.ICompletionResult | undefined> {
-        if (position.character <= 0 ||
-            isPositionInsideStringOrComment(document, position)) {
+    private async getCompletionResult(document: vscode.TextDocument, position: vscode.Position, token: vscode.CancellationToken): Promise<proxy.ICompletionResult | undefined> {
+        if (position.character <= 0 || isPositionInsideStringOrComment(document, position)) {
             return undefined;
         }
 
@@ -94,12 +88,14 @@ export class CompletionSource {
         completionItem.kind = item.type;
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const pythonSettings = configurationService.getSettings(resource);
-        if (pythonSettings.autoComplete.addBrackets === true &&
-            (item.kind === vscode.SymbolKind.Function || item.kind === vscode.SymbolKind.Method)) {
-            completionItem.insertText = new vscode.SnippetString(item.text).appendText('(').appendTabstop().appendText(')');
+        if (pythonSettings.autoComplete.addBrackets === true && (item.kind === vscode.SymbolKind.Function || item.kind === vscode.SymbolKind.Method)) {
+            completionItem.insertText = new vscode.SnippetString(item.text)
+                .appendText('(')
+                .appendTabstop()
+                .appendText(')');
         }
         // Ensure the built in members are at the bottom.
-        completionItem.sortText = (completionItem.label.startsWith('__') ? 'z' : (completionItem.label.startsWith('_') ? 'y' : '__')) + completionItem.label;
+        completionItem.sortText = (completionItem.label.startsWith('__') ? 'z' : completionItem.label.startsWith('_') ? 'y' : '__') + completionItem.label;
         documentPosition.attachTo(completionItem);
         return completionItem;
     }

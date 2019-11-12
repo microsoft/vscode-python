@@ -15,15 +15,12 @@ interface IRelativeImageProps {
 }
 
 export class RelativeImage extends React.Component<IRelativeImageProps> {
-
     constructor(props: IRelativeImageProps) {
         super(props);
     }
 
     public render() {
-        return (
-            <img src={this.getImageSource()} className={this.props.class} alt={path.basename(this.props.path)} />
-        );
+        return <img src={this.getImageSource()} className={this.props.class} alt={path.basename(this.props.path)} />;
     }
 
     private getImageSource = () => {
@@ -33,5 +30,5 @@ export class RelativeImage extends React.Component<IRelativeImageProps> {
         } else {
             return resolvePath(this.props.path);
         }
-    }
+    };
 }

@@ -18,7 +18,7 @@ import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventH
  */
 @injectable()
 export class ChildProcessAttachEventHandler implements IDebugSessionEventHandlers {
-    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) { }
+    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) {}
 
     @swallowExceptions('Handle child process launch')
     public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {

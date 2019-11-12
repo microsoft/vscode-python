@@ -10,14 +10,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
 
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
@@ -29,24 +22,9 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineStringInput, splitMultilineString } from '../common';
-import {
-    EditorContexts,
-    Identifiers,
-    NativeKeyboardCommandTelemetryLookup,
-    NativeMouseCommandTelemetryLookup,
-    Telemetry
-} from '../constants';
+import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import {
-    IEditCell,
-    IInsertCell,
-    INativeCommand,
-    InteractiveWindowMessages,
-    IRemoveCell,
-    ISaveAll,
-    ISubmitNewCell,
-    ISwapCells
-} from '../interactive-common/interactiveWindowTypes';
+import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRemoveCell, ISaveAll, ISubmitNewCell, ISwapCells } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import {
     CellState,
@@ -478,7 +456,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async loadContents(contents: string | undefined, forceDirty: boolean): Promise<void> {
         // tslint:disable-next-line: no-any
-        const json = contents ? JSON.parse(contents) as any : undefined;
+        const json = contents ? (JSON.parse(contents) as any) : undefined;
 
         // Double check json (if we have any)
         if (json && !json.cells) {
@@ -523,19 +501,21 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
 
         // Extract cells from the json
-        const cells = contents ? json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[] : [];
+        const cells = contents ? (json.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[]) : [];
 
         // Then parse the cells
-        return this.loadCells(cells.map((c, index) => {
-            return {
-                id: `NotebookImport#${index}`,
-                file: Identifiers.EmptyFileName,
-                line: 0,
-                state: CellState.finished,
-                data: c
-            };
-        }), forceDirty);
-
+        return this.loadCells(
+            cells.map((c, index) => {
+                return {
+                    id: `NotebookImport#${index}`,
+                    file: Identifiers.EmptyFileName,
+                    line: 0,
+                    state: CellState.finished,
+                    data: c
+                };
+            }),
+            forceDirty
+        );
     }
 
     private async loadCells(cells: ICell[], forceDirty: boolean): Promise<void> {
@@ -743,8 +723,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async setDirty(): Promise<void> {
         // Always update storage. Don't wait for results.
-        this.storeContents(this.generateNotebookContent(this.visibleCells))
-            .catch(ex => traceError('Failed to generate notebook content to store in state', ex));
+        this.storeContents(this.generateNotebookContent(this.visibleCells)).catch(ex => traceError('Failed to generate notebook content to store in state', ex));
 
         // Then update dirty flag.
         if (!this._dirty) {
@@ -761,8 +740,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async setClean(): Promise<void> {
         // Always update storage
-        this.storeContents(undefined)
-            .catch(ex => traceError('Failed to clear notebook store', ex));
+        this.storeContents(undefined).catch(ex => traceError('Failed to clear notebook store', ex));
 
         if (this._dirty) {
             this._dirty = false;
@@ -812,12 +790,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async extractPythonMainVersion(notebookData: Partial<nbformat.INotebookContent>): Promise<number> {
-        if (notebookData && notebookData.metadata &&
+        if (
+            notebookData &&
+            notebookData.metadata &&
             notebookData.metadata.language_info &&
             notebookData.metadata.language_info.codemirror_mode &&
             // tslint:disable-next-line: no-any
-            typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number') {
-
+            typeof (notebookData.metadata.language_info.codemirror_mode as any).version === 'number'
+        ) {
             // tslint:disable-next-line: no-any
             return (notebookData.metadata.language_info.codemirror_mode as any).version;
         }

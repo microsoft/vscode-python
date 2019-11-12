@@ -15,7 +15,7 @@ export class TestNavigatorHelper implements ITestNavigatorHelper {
     constructor(
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
         @inject(IDocumentSymbolProvider) @named('test') private readonly symbolProvider: IDocumentSymbolProvider
-    ) { }
+    ) {}
     public async openFile(file?: Uri): Promise<[TextDocument, TextEditor]> {
         if (!file) {
             throw new Error('Unable to navigate to an undefined test file');

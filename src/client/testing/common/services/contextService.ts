@@ -41,11 +41,13 @@ export class TestContextService implements ITestContextService {
         if (tests && tests.summary) {
             promises.push(this.hasFailedTests.set(tests.summary.failures > 0));
         }
-        promises.push(...[
-            this.runningTests.set(status.status === TestStatus.Running),
-            this.discoveringTests.set(status.status === TestStatus.Discovering),
-            this.busyTests.set(status.status === TestStatus.Running || status.status === TestStatus.Discovering)
-        ]);
+        promises.push(
+            ...[
+                this.runningTests.set(status.status === TestStatus.Running),
+                this.discoveringTests.set(status.status === TestStatus.Discovering),
+                this.busyTests.set(status.status === TestStatus.Running || status.status === TestStatus.Discovering)
+            ]
+        );
 
         await Promise.all(promises);
     }

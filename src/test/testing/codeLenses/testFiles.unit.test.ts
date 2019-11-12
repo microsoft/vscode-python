@@ -32,12 +32,8 @@ suite('Code lenses - Test files', () => {
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         symbolProvider = mock(LanguageServerSymbolProvider);
         onDidChange = new EventEmitter<void>();
-        serviceContainer
-            .setup(c => c.get(typemoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspaceService.object);
-        serviceContainer
-            .setup(c => c.get(typemoq.It.isValue(IFileSystem)))
-            .returns(() => fileSystem.object);
+        serviceContainer.setup(c => c.get(typemoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        serviceContainer.setup(c => c.get(typemoq.It.isValue(IFileSystem))).returns(() => fileSystem.object);
         codeLensProvider = new TestFileCodeLensProvider(onDidChange, symbolProvider, testCollectionStorage.object, serviceContainer.object);
     });
 
@@ -107,12 +103,8 @@ suite('Code lenses - Test files', () => {
             .setup(w => w.getTests(workspaceUri))
             .returns(() => tests as any)
             .verifiable(typemoq.Times.once());
-        fileSystem
-            .setup(f => f.arePathsSame('path/to/document1', 'path/to/document5'))
-            .returns(() => false);
-        fileSystem
-            .setup(f => f.arePathsSame('path/to/document2', 'path/to/document5'))
-            .returns(() => false);
+        fileSystem.setup(f => f.arePathsSame('path/to/document1', 'path/to/document5')).returns(() => false);
+        fileSystem.setup(f => f.arePathsSame('path/to/document2', 'path/to/document5')).returns(() => false);
         const files = codeLensProvider.getTestFileWhichNeedsCodeLens(document as any);
         expect(files).to.equal(undefined, 'No files should be returned');
         workspaceService.verifyAll();
@@ -144,12 +136,8 @@ suite('Code lenses - Test files', () => {
             .setup(w => w.getTests(typemoq.It.isValue(workspaceUri)))
             .returns(() => tests as any)
             .verifiable(typemoq.Times.once());
-        fileSystem
-            .setup(f => f.arePathsSame(Uri.file('/path/to/document1').fsPath, Uri.file('/path/to/document2').fsPath))
-            .returns(() => false);
-        fileSystem
-            .setup(f => f.arePathsSame(Uri.file('/path/to/document2').fsPath, Uri.file('/path/to/document2').fsPath))
-            .returns(() => true);
+        fileSystem.setup(f => f.arePathsSame(Uri.file('/path/to/document1').fsPath, Uri.file('/path/to/document2').fsPath)).returns(() => false);
+        fileSystem.setup(f => f.arePathsSame(Uri.file('/path/to/document2').fsPath, Uri.file('/path/to/document2').fsPath)).returns(() => true);
         const files = codeLensProvider.getTestFileWhichNeedsCodeLens(document as any);
         assert.deepEqual(files, testFile2 as any);
         workspaceService.verifyAll();

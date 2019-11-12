@@ -26,6 +26,6 @@ export class IPlotViewerMapping {
     public [PlotViewerMessages.CopyPlot]: string;
     public [PlotViewerMessages.ExportPlot]: IExportPlotRequest;
     public [PlotViewerMessages.RemovePlot]: number;
-    public [CssMessages.GetCssRequest] : IGetCssRequest;
-    public [CssMessages.GetCssResponse] : IGetCssResponse;
+    public [CssMessages.GetCssRequest]: IGetCssRequest;
+    public [CssMessages.GetCssResponse]: IGetCssResponse;
 }

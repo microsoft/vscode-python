@@ -1,11 +1,8 @@
-import {
-    FormattingOptions, Position, Range, TextDocument, TextEdit, TextLine
-} from 'vscode';
+import { FormattingOptions, Position, Range, TextDocument, TextEdit, TextLine } from 'vscode';
 import { BlockRegEx } from './contracts';
 
 export class CodeBlockFormatProvider {
-    constructor(private blockRegExp: BlockRegEx, private previousBlockRegExps: BlockRegEx[], private boundaryRegExps: BlockRegEx[]) {
-    }
+    constructor(private blockRegExp: BlockRegEx, private previousBlockRegExps: BlockRegEx[], private boundaryRegExps: BlockRegEx[]) {}
     public canProvideEdits(line: string): boolean {
         return this.blockRegExp.test(line);
     }
@@ -47,9 +44,7 @@ export class CodeBlockFormatProvider {
             }
 
             if (options.insertSpaces) {
-                return [
-                    TextEdit.delete(new Range(startPosition, endPosition))
-                ];
+                return [TextEdit.delete(new Range(startPosition, endPosition))];
             } else {
                 // Delete everything before the block and insert the same characters we have in the previous block
                 const prefixOfPreviousBlock = prevLineText.substring(0, startOfBlockInLine);
@@ -57,10 +52,7 @@ export class CodeBlockFormatProvider {
                 const startDeletePosition = new Position(position.line, 0);
                 const endDeletePosition = new Position(position.line, line.firstNonWhitespaceCharacterIndex);
 
-                return [
-                    TextEdit.delete(new Range(startDeletePosition, endDeletePosition)),
-                    TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)
-                ];
+                return [TextEdit.delete(new Range(startDeletePosition, endDeletePosition)), TextEdit.insert(startDeletePosition, prefixOfPreviousBlock)];
             }
         }
 

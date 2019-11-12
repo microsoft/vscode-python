@@ -37,8 +37,7 @@ suite('Shebang detection', () => {
         processService.setup(p => (p as any).then).returns(() => undefined);
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         when(factory.create(anything())).thenResolve(processService.object);
-        provider = new ShebangCodeLensProvider(instance(factory), instance(configurationService),
-            platformService.object, instance(workspaceService));
+        provider = new ShebangCodeLensProvider(instance(factory), instance(configurationService), platformService.object, instance(workspaceService));
     });
     function createDocument(firstLine: string, uri = Uri.parse('xyz.py')): [typemoq.IMock<TextDocument>, typemoq.IMock<TextLine>] {
         const doc = typemoq.Mock.ofType<TextDocument>();
@@ -47,14 +46,12 @@ suite('Shebang detection', () => {
         line.setup(l => l.isEmptyOrWhitespace)
             .returns(() => firstLine.length === 0)
             .verifiable(typemoq.Times.once());
-        line.setup(l => l.text)
-            .returns(() => firstLine);
+        line.setup(l => l.text).returns(() => firstLine);
 
         doc.setup(d => d.lineAt(typemoq.It.isValue(0)))
             .returns(() => line.object)
             .verifiable(typemoq.Times.once());
-        doc.setup(d => d.uri)
-            .returns(() => uri);
+        doc.setup(d => d.uri).returns(() => uri);
 
         return [doc, line];
     }
@@ -70,7 +67,8 @@ suite('Shebang detection', () => {
     test('Shebang should be empty when python path is invalid in shebang', async () => {
         const [document, line] = createDocument('#!HELLO');
 
-        processService.setup(p => p.exec(typemoq.It.isValue('HELLO'), typemoq.It.isAny()))
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('HELLO'), typemoq.It.isAny()))
             .returns(() => Promise.reject())
             .verifiable(typemoq.Times.once());
 
@@ -84,7 +82,8 @@ suite('Shebang detection', () => {
     test('Shebang should be returned when python path is valid', async () => {
         const [document, line] = createDocument('#!HELLO');
 
-        processService.setup(p => p.exec(typemoq.It.isValue('HELLO'), typemoq.It.isAny()))
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('HELLO'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'THIS_IS_IT' }))
             .verifiable(typemoq.Times.once());
 
@@ -95,10 +94,14 @@ suite('Shebang detection', () => {
         expect(shebang).to.be.equal('THIS_IS_IT');
         processService.verifyAll();
     });
-    test('Shebang should be returned when python path is valid and text is\'/usr/bin/env python\'', async () => {
+    test("Shebang should be returned when python path is valid and text is'/usr/bin/env python'", async () => {
         const [document, line] = createDocument('#!/usr/bin/env python');
-        platformService.setup(p => p.isWindows).returns(() => false).verifiable(typemoq.Times.once());
-        processService.setup(p => p.exec(typemoq.It.isValue('/usr/bin/env'), typemoq.It.isAny()))
+        platformService
+            .setup(p => p.isWindows)
+            .returns(() => false)
+            .verifiable(typemoq.Times.once());
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('/usr/bin/env'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'THIS_IS_IT' }))
             .verifiable(typemoq.Times.once());
 
@@ -110,10 +113,14 @@ suite('Shebang detection', () => {
         processService.verifyAll();
         platformService.verifyAll();
     });
-    test('Shebang should be returned when python path is valid and text is\'/usr/bin/env python\' and is windows', async () => {
+    test("Shebang should be returned when python path is valid and text is'/usr/bin/env python' and is windows", async () => {
         const [document, line] = createDocument('#!/usr/bin/env python');
-        platformService.setup(p => p.isWindows).returns(() => true).verifiable(typemoq.Times.once());
-        processService.setup(p => p.exec(typemoq.It.isValue('/usr/bin/env python'), typemoq.It.isAny()))
+        platformService
+            .setup(p => p.isWindows)
+            .returns(() => true)
+            .verifiable(typemoq.Times.once());
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('/usr/bin/env python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'THIS_IS_IT' }))
             .verifiable(typemoq.Times.once());
 
@@ -126,10 +133,11 @@ suite('Shebang detection', () => {
         platformService.verifyAll();
     });
 
-    test('No code lens when there\'s no shebang', async () => {
+    test("No code lens when there's no shebang", async () => {
         const [document] = createDocument('');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
-        processService.setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'python' }))
             .verifiable(typemoq.Times.once());
 
@@ -142,7 +150,8 @@ suite('Shebang detection', () => {
     test('No code lens when shebang is an empty string', async () => {
         const [document] = createDocument('#!');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
-        processService.setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'python' }))
             .verifiable(typemoq.Times.once());
 
@@ -155,7 +164,8 @@ suite('Shebang detection', () => {
     test('No code lens when python path in settings is the same as that in shebang', async () => {
         const [document] = createDocument('#!python');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
-        processService.setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('python'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'python' }))
             .verifiable(typemoq.Times.once());
 
@@ -168,7 +178,8 @@ suite('Shebang detection', () => {
     test('Code lens returned when python path in settings is different to one in shebang', async () => {
         const [document] = createDocument('#!python');
         pythonSettings.setup(p => p.pythonPath).returns(() => 'different');
-        processService.setup(p => p.exec(typemoq.It.isValue('different'), typemoq.It.isAny()))
+        processService
+            .setup(p => p.exec(typemoq.It.isValue('different'), typemoq.It.isAny()))
             .returns(() => Promise.resolve({ stdout: 'different' }))
             .verifiable(typemoq.Times.once());
 

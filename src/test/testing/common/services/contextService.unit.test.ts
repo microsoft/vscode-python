@@ -31,7 +31,7 @@ suite('Unit Tests - Context Service', () => {
 
     test('register will add event handler', () => {
         let invoked = false;
-        const fn = () => invoked = true;
+        const fn = () => (invoked = true);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
 
         contextService.register();
@@ -40,7 +40,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change without tests does not update hasFailedTests', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(workspaceUri)).thenReturn();
         contextService.register();
@@ -51,7 +51,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change without a summary does not update hasFailedTests', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(workspaceUri)).thenReturn({} as any);
         contextService.register();
@@ -62,7 +62,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change with a summary updates hasFailedTests to false ', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(anything())).thenReturn({ summary: { failures: 0 } } as any);
         contextService.register();
@@ -73,7 +73,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change with a summary and failures updates hasFailedTests to false', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(anything())).thenReturn({ summary: { failures: 1 } } as any);
         contextService.register();
@@ -84,7 +84,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change with status of running', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(anything())).thenReturn({} as any);
         contextService.register();
@@ -97,7 +97,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change with status of discovering', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(anything())).thenReturn({} as any);
         contextService.register();
@@ -110,7 +110,7 @@ suite('Unit Tests - Context Service', () => {
     });
     test('Status change with status of others', async () => {
         let handler!: StatusChangeHandler;
-        const fn = (cb: StatusChangeHandler) => handler = cb;
+        const fn = (cb: StatusChangeHandler) => (handler = cb);
         when(mgr.onDidStatusChange).thenReturn(fn as any);
         when(storage.getTests(anything())).thenReturn({} as any);
         contextService.register();

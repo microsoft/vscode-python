@@ -23,7 +23,6 @@ import { IntellisenseDocument } from './intellisenseDocument';
 // tslint:disable:no-any
 @injectable()
 export class JediIntellisenseProvider extends BaseIntellisenseProvider implements IInteractiveWindowListener {
-
     private active: boolean = false;
     private pythonHoverProvider: PythonHoverProvider | undefined;
     private pythonCompletionItemProvider: PythonCompletionItemProvider | undefined;
@@ -54,7 +53,7 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         this.active = isJediActive();
 
         // Listen for updates to settings to change this flag
-        disposables.push(this.configService.getSettings().onDidChange(() => this.active = isJediActive()));
+        disposables.push(this.configService.getSettings().onDidChange(() => (this.active = isJediActive())));
 
         // Create our jedi wrappers if necessary
         if (this.active) {
@@ -71,7 +70,12 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
     protected get isActive(): boolean {
         return this.active;
     }
-    protected async provideCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
+    protected async provideCompletionItems(
+        position: monacoEditor.Position,
+        _context: monacoEditor.languages.CompletionContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionList> {
         const document = await this.getDocument();
         if (this.pythonCompletionItemProvider && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -96,7 +100,12 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
             contents: []
         };
     }
-    protected async provideSignatureHelp(position: monacoEditor.Position, _context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp> {
+    protected async provideSignatureHelp(
+        position: monacoEditor.Position,
+        _context: monacoEditor.languages.SignatureHelpContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.SignatureHelp> {
         const document = await this.getDocument();
         if (this.pythonSignatureHelpProvider && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
@@ -115,5 +124,4 @@ export class JediIntellisenseProvider extends BaseIntellisenseProvider implement
         // We don't need to forward these to jedi. It always uses the entire document
         return Promise.resolve();
     }
-
 }

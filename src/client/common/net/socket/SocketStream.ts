@@ -88,7 +88,7 @@ export class SocketStream {
     }
 
     private isSufficientDataAvailable(length: number): boolean {
-        if (this.buffer.length < (this.bytesRead + length)) {
+        if (this.buffer.length < this.bytesRead + length) {
             this.hasInsufficientDataForReading = true;
         }
 
@@ -183,7 +183,7 @@ export class SocketStream {
         const stringBuffer = this.buffer.slice(this.bytesRead, this.bytesRead + length);
         if (this.isInTransaction) {
             this.bytesRead = this.bytesRead + length;
-        }        else {
+        } else {
             this.buffer = this.buffer.slice(length);
         }
         return stringBuffer.toString('ascii');

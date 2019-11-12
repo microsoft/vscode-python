@@ -11,9 +11,9 @@ import { CharCode } from './charCode';
 export namespace vscUri {
     const isWindows = /^win/.test(process.platform);
     /*---------------------------------------------------------------------------------------------
-    *  Copyright (c) Microsoft Corporation. All rights reserved.
-    *  Licensed under the MIT License. See License.txt in the project root for license information.
-    *--------------------------------------------------------------------------------------------*/
+     *  Copyright (c) Microsoft Corporation. All rights reserved.
+     *  Licensed under the MIT License. See License.txt in the project root for license information.
+     *--------------------------------------------------------------------------------------------*/
 
     const _schemePattern = /^\w[\w\d+.-]*$/;
     const _singleSlashStart = /^\//;
@@ -31,7 +31,6 @@ export namespace vscUri {
     }
 
     function _validateUri(ret: URI, _strict?: boolean): void {
-
         // scheme, must be set
         // if (!ret.scheme) {
         //     // if (_strict || _throwOnMissingSchema) {
@@ -83,7 +82,6 @@ export namespace vscUri {
 
     // implements a bit of https://tools.ietf.org/html/rfc3986#section-5
     function _referenceResolution(scheme: string, path: string): string {
-
         // the slash-character is our 'default base' as we don't
         // support constructing URIs relative to other URIs. This
         // also means that we alter and potentially break paths.
@@ -122,7 +120,6 @@ export namespace vscUri {
      */
     // tslint:disable-next-line: no-use-before-declare
     export class URI implements UriComponents {
-
         static isUri(thing: any): thing is URI {
             if (thing instanceof URI) {
                 return true;
@@ -130,14 +127,16 @@ export namespace vscUri {
             if (!thing) {
                 return false;
             }
-            return typeof (<URI>thing).authority === 'string'
-                && typeof (<URI>thing).fragment === 'string'
-                && typeof (<URI>thing).path === 'string'
-                && typeof (<URI>thing).query === 'string'
-                && typeof (<URI>thing).scheme === 'string'
-                && typeof (<URI>thing).fsPath === 'function'
-                && typeof (<URI>thing).with === 'function'
-                && typeof (<URI>thing).toString === 'function';
+            return (
+                typeof (<URI>thing).authority === 'string' &&
+                typeof (<URI>thing).fragment === 'string' &&
+                typeof (<URI>thing).path === 'string' &&
+                typeof (<URI>thing).query === 'string' &&
+                typeof (<URI>thing).scheme === 'string' &&
+                typeof (<URI>thing).fsPath === 'function' &&
+                typeof (<URI>thing).with === 'function' &&
+                typeof (<URI>thing).toString === 'function'
+            );
         }
 
         /**
@@ -181,7 +180,6 @@ export namespace vscUri {
          * @internal
          */
         protected constructor(schemeOrData: string | UriComponents, authority?: string, path?: string, query?: string, fragment?: string, _strict: boolean = false) {
-
             if (typeof schemeOrData === 'object') {
                 this.scheme = schemeOrData.scheme || _empty;
                 this.authority = schemeOrData.authority || _empty;
@@ -238,7 +236,6 @@ export namespace vscUri {
         // ---- modify to new -------------------------
 
         with(change: { scheme?: string; authority?: string | null; path?: string | null; query?: string | null; fragment?: string | null }): URI {
-
             if (!change) {
                 return this;
             }
@@ -270,12 +267,7 @@ export namespace vscUri {
                 fragment = _empty;
             }
 
-            if (scheme === this.scheme
-                && authority === this.authority
-                && path === this.path
-                && query === this.query
-                && fragment === this.fragment) {
-
+            if (scheme === this.scheme && authority === this.authority && path === this.path && query === this.query && fragment === this.fragment) {
                 return this;
             }
 
@@ -327,7 +319,6 @@ export namespace vscUri {
         * @param path A file system path (see `URI#fsPath`)
         */
         static file(path: string): URI {
-
             let authority = _empty;
 
             // normalize to fwd-slashes on windows,
@@ -354,13 +345,7 @@ export namespace vscUri {
         }
 
         static from(components: { scheme: string; authority?: string; path?: string; query?: string; fragment?: string }): URI {
-            return new _URI(
-                components.scheme,
-                components.authority,
-                components.path,
-                components.query,
-                components.fragment,
-            );
+            return new _URI(components.scheme, components.authority, components.path, components.query, components.fragment);
         }
 
         // ---- printing/externalize ---------------------------
@@ -421,7 +406,6 @@ export namespace vscUri {
 
     // tslint:disable-next-line:class-name
     class _URI extends URI {
-
         _formatted: string | null = null;
         _fsPath: string | null = null;
         constructor(schemeOrData: string | UriComponents, authority?: string, path?: string, query?: string, fragment?: string, _strict: boolean = false) {
@@ -454,7 +438,7 @@ export namespace vscUri {
             // cached state
             if (this._fsPath) {
                 res.fsPath = this._fsPath;
-                if (_pathSepMarker){
+                if (_pathSepMarker) {
                     res._sep = _pathSepMarker;
                 }
             }
@@ -503,7 +487,7 @@ export namespace vscUri {
         [CharCode.Semicolon]: '%3B',
         [CharCode.Equals]: '%3D',
 
-        [CharCode.Space]: '%20',
+        [CharCode.Space]: '%20'
     };
 
     function encodeURIComponentFast(uriComponent: string, allowSlash: boolean): string {
@@ -515,14 +499,14 @@ export namespace vscUri {
 
             // unreserved characters: https://tools.ietf.org/html/rfc3986#section-2.3
             if (
-                (code >= CharCode.a && code <= CharCode.z)
-                || (code >= CharCode.A && code <= CharCode.Z)
-                || (code >= CharCode.Digit0 && code <= CharCode.Digit9)
-                || code === CharCode.Dash
-                || code === CharCode.Period
-                || code === CharCode.Underline
-                || code === CharCode.Tilde
-                || (allowSlash && code === CharCode.Slash)
+                (code >= CharCode.a && code <= CharCode.z) ||
+                (code >= CharCode.A && code <= CharCode.Z) ||
+                (code >= CharCode.Digit0 && code <= CharCode.Digit9) ||
+                code === CharCode.Dash ||
+                code === CharCode.Period ||
+                code === CharCode.Underline ||
+                code === CharCode.Tilde ||
+                (allowSlash && code === CharCode.Slash)
             ) {
                 // check if we are delaying native encode
                 if (nativeEncodePos !== -1) {
@@ -533,7 +517,6 @@ export namespace vscUri {
                 if (res !== undefined) {
                     res += uriComponent.charAt(pos);
                 }
-
             } else {
                 // encoding needed, we need to allocate a new string
                 if (res === undefined) {
@@ -543,7 +526,6 @@ export namespace vscUri {
                 // check with default table first
                 const escaped = encodeTable[code];
                 if (escaped !== undefined) {
-
                     // check if we are delaying native encode
                     if (nativeEncodePos !== -1) {
                         res += encodeURIComponent(uriComponent.substring(nativeEncodePos, pos));
@@ -552,7 +534,6 @@ export namespace vscUri {
 
                     // append escaped variant to result
                     res += escaped;
-
                 } else if (nativeEncodePos === -1) {
                     // use native encode only when needed
                     nativeEncodePos = pos;
@@ -589,15 +570,14 @@ export namespace vscUri {
      * Compute `fsPath` for the given uri
      */
     function _makeFsPath(uri: URI): string {
-
         let value: string;
         if (uri.authority && uri.path.length > 1 && uri.scheme === 'file') {
             // unc path: file://shares/c$/far/boo
             value = `//${uri.authority}${uri.path}`;
         } else if (
-            uri.path.charCodeAt(0) === CharCode.Slash
-            && (uri.path.charCodeAt(1) >= CharCode.A && uri.path.charCodeAt(1) <= CharCode.Z || uri.path.charCodeAt(1) >= CharCode.a && uri.path.charCodeAt(1) <= CharCode.z)
-            && uri.path.charCodeAt(2) === CharCode.Colon
+            uri.path.charCodeAt(0) === CharCode.Slash &&
+            ((uri.path.charCodeAt(1) >= CharCode.A && uri.path.charCodeAt(1) <= CharCode.Z) || (uri.path.charCodeAt(1) >= CharCode.a && uri.path.charCodeAt(1) <= CharCode.z)) &&
+            uri.path.charCodeAt(2) === CharCode.Colon
         ) {
             // windows drive letter: file:///c:/far/boo
             value = uri.path[1].toLowerCase() + uri.path.substr(2);
@@ -615,10 +595,7 @@ export namespace vscUri {
      * Create the external version of a uri
      */
     function _asFormatted(uri: URI, skipEncoding: boolean): string {
-
-        const encoder = !skipEncoding
-            ? encodeURIComponentFast
-            : encodeURIComponentMinimal;
+        const encoder = !skipEncoding ? encodeURIComponentFast : encodeURIComponentMinimal;
 
         let res = '';
         let { scheme, authority, path, query, fragment } = uri;

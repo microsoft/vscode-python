@@ -43,7 +43,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
             path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'plot', 'index_bundle.js'),
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One);
+            ViewColumn.One
+        );
     }
 
     public get closed(): Event<IPlotViewer> {
@@ -69,7 +70,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             // Send a message with our data
             this.postMessage(PlotViewerMessages.SendPlot, imageHtml).ignoreErrors();
         }
-    }
+    };
 
     public dispose() {
         super.dispose();
@@ -157,13 +158,10 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                         await this.fileSystem.writeFile(file.fsPath, payload.svg);
                         break;
                 }
-
             }
-
         } catch (e) {
             traceError(e);
             this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
-
 }

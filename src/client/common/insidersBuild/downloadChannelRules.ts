@@ -28,9 +28,7 @@ export class ExtensionInsidersOffChannelRule implements IExtensionChannelRule {
 }
 @injectable()
 export class ExtensionInsidersDailyChannelRule implements IExtensionChannelRule {
-    constructor(
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
-    ) { }
+    constructor(@inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory) {}
     @traceDecorators.error('Error in checking if insiders build is to be for daily channel rule')
     public async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);
@@ -49,9 +47,7 @@ export class ExtensionInsidersDailyChannelRule implements IExtensionChannelRule 
 }
 @injectable()
 export class ExtensionInsidersWeeklyChannelRule implements IExtensionChannelRule {
-    constructor(
-        @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory
-    ) { }
+    constructor(@inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory) {}
     @traceDecorators.error('Error in checking if insiders build is to be for daily channel rule')
     public async shouldLookForInsidersBuild(isChannelRuleNew: boolean): Promise<boolean> {
         const lastLookUpTime = this.persistentStateFactory.createGlobalPersistentState(lastLookUpTimeKey, -1);

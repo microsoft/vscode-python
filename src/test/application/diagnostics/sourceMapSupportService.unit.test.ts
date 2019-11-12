@@ -35,14 +35,14 @@ suite('Diagnostisc - Source Maps', () => {
     });
     test('Display prompt and do not enable', async () => {
         const shell = mock(ApplicationShell);
-        const service = new class extends SourceMapSupportService {
+        const service = new (class extends SourceMapSupportService {
             public async enable() {
                 throw new Error('Should not be invokved');
             }
             public async onEnable() {
                 await super.onEnable();
             }
-        }(undefined as any, [], undefined as any, instance(shell));
+        })(undefined as any, [], undefined as any, instance(shell));
         when(shell.showWarningMessage(anything(), anything())).thenResolve();
 
         await service.onEnable();
@@ -51,11 +51,11 @@ suite('Diagnostisc - Source Maps', () => {
         const commandManager = mock(CommandManager);
         const configService = mock(ConfigurationService);
         const shell = mock(ApplicationShell);
-        const service = new class extends SourceMapSupportService {
+        const service = new (class extends SourceMapSupportService {
             public async onEnable() {
                 await super.onEnable();
             }
-        }(instance(commandManager), [], instance(configService), instance(shell));
+        })(instance(commandManager), [], instance(configService), instance(shell));
 
         when(configService.updateSetting('diagnostics.sourceMapsEnabled', true, undefined, ConfigurationTarget.Global)).thenResolve();
         when(shell.showWarningMessage(anything(), anything())).thenResolve(Diagnostics.enableSourceMapsAndReloadVSC() as any);

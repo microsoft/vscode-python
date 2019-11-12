@@ -52,7 +52,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
             workspaceFolder: Uri.file(__dirname)
         };
         const args = ['1', '2', '3'];
-        const discoveredTests = 'Hello World' as any as Tests;
+        const discoveredTests = ('Hello World' as any) as Tests;
         discoveryService.buildTestCollectionArgs = () => args;
         discoveryService.discoverTestsInTestDirectory = () => Promise.resolve(discoveredTests);
         when(argsService.getTestFolders(deepEqual(options.args))).thenReturn([]);
@@ -73,13 +73,13 @@ suite('Unit Tests - PyTest - Discovery', () => {
         const args = ['1', '2', '3'];
         discoveryService.buildTestCollectionArgs = () => args;
         const directories = ['a', 'b'];
-        discoveryService.discoverTestsInTestDirectory = async (opts) => {
+        discoveryService.discoverTestsInTestDirectory = async opts => {
             const dir = opts.args[opts.args.length - 1];
             if (dir === 'a') {
-                return 'Result A' as any as Tests;
+                return ('Result A' as any) as Tests;
             }
             if (dir === 'b') {
-                return 'Result B' as any as Tests;
+                return ('Result B' as any) as Tests;
             }
             throw new Error('Unrecognized directory');
         };
@@ -102,11 +102,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = [
-            '--rootdir', Uri.file(__dirname).fsPath,
-            '-s',
-            ...filteredArgs
-        ];
+        const expectedArgs = ['--rootdir', Uri.file(__dirname).fsPath, '-s', ...filteredArgs];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -125,11 +121,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = [
-            '--rootdir', Uri.file(__dirname).fsPath,
-            '-s',
-            ...filteredArgs
-        ];
+        const expectedArgs = ['--rootdir', Uri.file(__dirname).fsPath, '-s', ...filteredArgs];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -148,12 +140,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = [
-            '--rootdir', Uri.file(__dirname).fsPath,
-            '-s',
-            '--cache-clear',
-            ...filteredArgs
-        ];
+        const expectedArgs = ['--rootdir', Uri.file(__dirname).fsPath, '-s', '--cache-clear', ...filteredArgs];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -175,7 +162,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         discoveryOptions.args = expectedDiscoveryArgs;
 
         const commonDiscoveryService = mock(TestsDiscoveryService);
-        const discoveredTests = 'Hello' as any as Tests;
+        const discoveredTests = ('Hello' as any) as Tests;
         when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, 'common')).thenReturn(instance(commonDiscoveryService));
         when(commonDiscoveryService.discoverTests(deepEqual(discoveryOptions))).thenResolve(discoveredTests);
 

@@ -1,7 +1,5 @@
 export class BlockRegEx {
-    constructor(private regEx: RegExp, public startWord: String) {
-
-    }
+    constructor(private regEx: RegExp, public startWord: String) {}
     public test(value: string): boolean {
         // Clear the cache
         this.regEx.lastIndex = -1;

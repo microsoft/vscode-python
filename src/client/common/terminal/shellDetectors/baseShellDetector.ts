@@ -50,19 +50,18 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
 @injectable()
 export abstract class BaseShellDetector implements IShellDetector {
-    constructor(@unmanaged() public readonly priority: number) { }
+    constructor(@unmanaged() public readonly priority: number) {}
     public abstract identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
-        const shell = Array.from(detectableShells.keys())
-            .reduce((matchedShell, shellToDetect) => {
-                if (matchedShell === TerminalShellType.other) {
-                    const pat = detectableShells.get(shellToDetect);
-                    if (pat && pat.test(shellPath)) {
-                        return shellToDetect;
-                    }
+        const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {
+            if (matchedShell === TerminalShellType.other) {
+                const pat = detectableShells.get(shellToDetect);
+                if (pat && pat.test(shellPath)) {
+                    return shellToDetect;
                 }
-                return matchedShell;
-            }, TerminalShellType.other);
+            }
+            return matchedShell;
+        }, TerminalShellType.other);
 
         traceVerbose(`Shell path '${shellPath}'`);
         traceVerbose(`Shell path identified as shell '${shell}'`);

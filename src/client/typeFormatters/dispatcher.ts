@@ -12,7 +12,13 @@ export class OnTypeFormattingDispatcher implements OnTypeFormattingEditProvider 
         this.providers = providers;
     }
 
-    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, cancellationToken: CancellationToken): ProviderResult<TextEdit[]> {
+    public provideOnTypeFormattingEdits(
+        document: TextDocument,
+        position: Position,
+        ch: string,
+        options: FormattingOptions,
+        cancellationToken: CancellationToken
+    ): ProviderResult<TextEdit[]> {
         const provider = this.providers[ch];
 
         if (provider) {

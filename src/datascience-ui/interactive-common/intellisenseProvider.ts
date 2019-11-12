@@ -21,13 +21,17 @@ interface IRequestData<T> {
     cancelDisposable: monacoEditor.IDisposable;
 }
 
-export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
+export class IntellisenseProvider
+    implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
     public triggerCharacters?: string[] | undefined = ['.'];
     public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
     public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
     private completionRequests: Map<string, IRequestData<monacoEditor.languages.CompletionList>> = new Map<string, IRequestData<monacoEditor.languages.CompletionList>>();
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
-    private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>>();
+    private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>> = new Map<
+        string,
+        IRequestData<monacoEditor.languages.SignatureHelpResult>
+    >();
     private registerDisposables: monacoEditor.IDisposable[] = [];
     constructor(private postOffice: PostOffice, private getCellId: (modelId: string) => string) {
         // Register a completion provider
@@ -41,8 +45,8 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         context: monacoEditor.languages.CompletionContext,
-        token: monacoEditor.CancellationToken): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionList> {
-
+        token: monacoEditor.CancellationToken
+    ): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionList> {
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.CompletionList>();
@@ -61,7 +65,8 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     public provideHover(
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
-        token: monacoEditor.CancellationToken): monacoEditor.languages.ProviderResult<monacoEditor.languages.Hover> {
+        token: monacoEditor.CancellationToken
+    ): monacoEditor.languages.ProviderResult<monacoEditor.languages.Hover> {
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.Hover>();
@@ -81,7 +86,8 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         token: monacoEditor.CancellationToken,
-        context: monacoEditor.languages.SignatureHelpContext): monacoEditor.languages.ProviderResult<monacoEditor.languages.SignatureHelpResult> {
+        context: monacoEditor.languages.SignatureHelpContext
+    ): monacoEditor.languages.ProviderResult<monacoEditor.languages.SignatureHelpResult> {
         // Emit a new request
         const requestId = uuid();
         const promise = createDeferred<monacoEditor.languages.SignatureHelpResult>();
@@ -144,7 +150,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
                 this.completionRequests.delete(response.requestId);
             }
         }
-    }
+    };
     // Handle hover response
     // tslint:disable-next-line:no-any
     private handleHoverResponse = (payload?: any) => {
@@ -158,7 +164,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
                 this.hoverRequests.delete(response.requestId);
             }
         }
-    }
+    };
 
     // Handle hover response
     // tslint:disable-next-line:no-any
@@ -176,7 +182,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
                 this.signatureHelpRequests.delete(response.requestId);
             }
         }
-    }
+    };
 
     private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);

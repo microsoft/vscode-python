@@ -11,18 +11,17 @@ import { ICell } from '../../types';
 import { IExecuteObservableResponse, IServerResponse } from './types';
 
 export class ResponseQueue {
-    private responseQueue : IServerResponse [] = [];
-    private waitingQueue : { deferred: Deferred<IServerResponse>; predicate(r: IServerResponse) : boolean }[] = [];
+    private responseQueue: IServerResponse[] = [];
+    private waitingQueue: { deferred: Deferred<IServerResponse>; predicate(r: IServerResponse): boolean }[] = [];
 
-    public waitForObservable(code: string, id: string) : Observable<ICell[]> {
+    public waitForObservable(code: string, id: string): Observable<ICell[]> {
         // Create a wrapper observable around the actual server
         return new Observable<ICell[]>(subscriber => {
             // Wait for the observable responses to come in
-            this.waitForResponses(subscriber, code, id)
-                .catch(e => {
-                    subscriber.error(e);
-                    subscriber.complete();
-                });
+            this.waitForResponses(subscriber, code, id).catch(e => {
+                subscriber.error(e);
+                subscriber.complete();
+            });
         });
     }
 
@@ -39,15 +38,13 @@ export class ResponseQueue {
         this.responseQueue = [];
     }
 
-    private async waitForResponses(subscriber: Subscriber<ICell[]>, code: string, id: string) : Promise<void> {
+    private async waitForResponses(subscriber: Subscriber<ICell[]>, code: string, id: string): Promise<void> {
         let pos = 0;
         let cells: ICell[] | undefined = [];
         while (cells !== undefined) {
             // Find all matches in order
             const response = await this.waitForSpecificResponse<IExecuteObservableResponse>(r => {
-                return (r.pos === pos) &&
-                    (id === r.id) &&
-                    (code === r.code);
+                return r.pos === pos && id === r.id && code === r.code;
             });
             if (response.cells) {
                 subscriber.next(response.cells);
@@ -64,7 +61,7 @@ export class ResponseQueue {
         });
     }
 
-    private waitForSpecificResponse<T extends IServerResponse>(predicate: (response: T) => boolean) : Promise<T> {
+    private waitForSpecificResponse<T extends IServerResponse>(predicate: (response: T) => boolean): Promise<T> {
         // See if we have any responses right now with this type
         const index = this.responseQueue.findIndex(r => predicate(r as T));
         if (index >= 0) {

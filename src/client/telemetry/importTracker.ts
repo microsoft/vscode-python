@@ -93,7 +93,10 @@ export class ImportTracker implements IImportTracker {
             this.checkDocument(document);
         } else {
             // Wait five seconds to make sure we don't already have this document pending.
-            this.pendingDocs.set(document.fileName, setTimeout(() => this.checkDocument(document), 5000));
+            this.pendingDocs.set(
+                document.fileName,
+                setTimeout(() => this.checkDocument(document), 5000)
+            );
         }
     }
 

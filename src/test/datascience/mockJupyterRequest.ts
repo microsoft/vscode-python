@@ -48,12 +48,8 @@ class SimpleMessageProducer implements IMessageProducer {
                 msg_id: '1.1',
                 msg_type: msgType
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
+            parent_header: {},
+            metadata: {},
             content: result
         };
     }
@@ -118,15 +114,9 @@ export class MockJupyterRequest implements Kernel.IFuture {
                 msg_id: '1.1',
                 msg_type: 'shell'
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
-            content: {
-
-            }
+            parent_header: {},
+            metadata: {},
+            content: {}
         };
         this.onIOPub = noop;
         this.onReply = noop;
@@ -184,28 +174,34 @@ export class MockJupyterRequest implements Kernel.IFuture {
             const producer = producers[0];
             setTimeout(() => {
                 // Produce the next message
-                producer.produceNextMessage().then(r => {
-                    // If there's a message, send it.
-                    if (r.message && this.onIOPub) {
-                        this.onIOPub(r.message);
-                    }
-
-                    // Move onto the next producer if allowed
-                    if (!this.cancelToken.isCancellationRequested) {
-                        if (r.haveMore) {
-                            this.sendMessages(producers, delay);
-                        } else {
-                            this.sendMessages(producers.slice(1), delay);
+                producer
+                    .produceNextMessage()
+                    .then(r => {
+                        // If there's a message, send it.
+                        if (r.message && this.onIOPub) {
+                            this.onIOPub(r.message);
                         }
-                    }
-                }).ignoreErrors();
+
+                        // Move onto the next producer if allowed
+                        if (!this.cancelToken.isCancellationRequested) {
+                            if (r.haveMore) {
+                                this.sendMessages(producers, delay);
+                            } else {
+                                this.sendMessages(producers.slice(1), delay);
+                            }
+                        }
+                    })
+                    .ignoreErrors();
             }, delay);
         } else {
             // No more messages, create a simple producer for our shell message
             const shellProducer = new SimpleMessageProducer('done', { status: 'success' }, 'shell');
-            shellProducer.produceNextMessage().then((r) => {
-                this.deferred.resolve(<any>r.message as KernelMessage.IShellMessage);
-            }).ignoreErrors();
+            shellProducer
+                .produceNextMessage()
+                .then(r => {
+                    this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
+                })
+                .ignoreErrors();
         }
     }
 }

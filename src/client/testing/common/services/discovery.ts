@@ -24,7 +24,7 @@ export class TestsDiscoveryService implements ITestDiscoveryService {
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(ITestDiscoveredTestParser) private readonly parser: ITestDiscoveredTestParser,
         @inject(IOutputChannel) @named(TEST_OUTPUT_CHANNEL) private readonly outChannel: OutputChannel
-    ) { }
+    ) {}
     @captureTelemetry(EventName.UNITTEST_DISCOVER_WITH_PYCODE, undefined, true)
     public async discoverTests(options: TestDiscoveryOptions): Promise<Tests> {
         let output: ExecutionResult<string> | undefined;

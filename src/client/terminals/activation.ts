@@ -6,14 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { Terminal, Uri } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
-import {
-    ICommandManager, IDocumentManager, ITerminalManager, IWorkspaceService
-} from '../common/application/types';
+import { ICommandManager, IDocumentManager, ITerminalManager, IWorkspaceService } from '../common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../common/constants';
 import { ITerminalActivator } from '../common/terminal/types';
-import {
-    IDisposable, IDisposableRegistry, IExtensions
-} from '../common/types';
+import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -32,8 +28,7 @@ export class ExtensionActivationForTerminalActivation implements IExtensionSingl
     public async activate(): Promise<void> {
         const isInstalled = this.isCodeRunnerInstalled();
         // Hide the play icon if code runner is installed, otherwise display the play icon.
-        this.commands.executeCommand('setContext', 'python.showPlayIcon', !isInstalled)
-            .then(noop, noop);
+        this.commands.executeCommand('setContext', 'python.showPlayIcon', !isInstalled).then(noop, noop);
         sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: isInstalled });
     }
 
@@ -78,6 +73,8 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
             return this.documentManager.activeTextEditor.document.uri;
         }
 
-        return Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0 ? this.workspaceService.workspaceFolders[0].uri : undefined;
+        return Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0
+            ? this.workspaceService.workspaceFolders[0].uri
+            : undefined;
     }
 }

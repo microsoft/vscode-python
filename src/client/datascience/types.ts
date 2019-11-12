@@ -5,18 +5,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import {
-    CancellationToken,
-    CodeLens,
-    CodeLensProvider,
-    DebugSession,
-    Disposable,
-    Event,
-    Range,
-    TextDocument,
-    TextEditor,
-    Uri
-} from 'vscode';
+import { CancellationToken, CodeLens, CodeLensProvider, DebugSession, Disposable, Event, Range, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
@@ -518,7 +507,7 @@ export interface ICellHash {
     runtimeLine: number; // Line in the jupyter source to start at
     hash: string;
     executionCount: number;
-    id: string;         // Cell id as sent to jupyter
+    id: string; // Cell id as sent to jupyter
 }
 
 export interface IFileHashes {
@@ -547,5 +536,4 @@ export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker {
     updated: Event<void>;
     getLocation(debugSession: DebugSession): IDebugLocation | undefined;
-
 }

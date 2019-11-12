@@ -9,15 +9,12 @@ import { Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import * as nose from './nosetest/testConfigurationManager';
 import * as pytest from './pytest/testConfigurationManager';
-import {
-    ITestConfigSettingsService, ITestConfigurationManager,
-    ITestConfigurationManagerFactory
-} from './types';
+import { ITestConfigSettingsService, ITestConfigurationManager, ITestConfigurationManagerFactory } from './types';
 import * as unittest from './unittest/testConfigurationManager';
 
 @injectable()
 export class TestConfigurationManagerFactory implements ITestConfigurationManagerFactory {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     public create(wkspace: Uri, product: Product, cfg?: ITestConfigSettingsService): ITestConfigurationManager {
         switch (product) {
             case Product.unittest: {
@@ -34,5 +31,4 @@ export class TestConfigurationManagerFactory implements ITestConfigurationManage
             }
         }
     }
-
 }

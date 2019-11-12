@@ -65,16 +65,16 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 
 // Left side is the vscode value.
 const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
-    [0, 9],  // No value for zero in vscode
+    [0, 9], // No value for zero in vscode
     [1, 18], // Text
-    [2, 0],  // Method
-    [3, 1],  // Function
-    [4, 2],  // Constructor
-    [5, 3],  // Field
-    [6, 4],  // Variable
-    [7, 5],  // Class
-    [8, 7],  // Interface
-    [9, 8],  // Module
+    [2, 0], // Method
+    [3, 1], // Function
+    [4, 2], // Constructor
+    [5, 3], // Field
+    [6, 4], // Variable
+    [7, 5], // Class
+    [8, 7], // Interface
+    [9, 8], // Module
     [10, 9], // Property
     [11, 12], // Unit
     [12, 13], // Value
@@ -90,7 +90,7 @@ const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [22, 6], // Struct
     [23, 10], // Event
     [24, 11], // Operator
-    [25, 24]  // TypeParameter
+    [25, 24] // TypeParameter
 ]);
 
 const mapJupyterKind: Map<string, number> = new Map<string, number>([
@@ -173,7 +173,8 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
 
 export function convertToMonacoCompletionList(
     result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null,
-    requiresKindConversion: boolean): monacoEditor.languages.CompletionList {
+    requiresKindConversion: boolean
+): monacoEditor.languages.CompletionList {
     if (result) {
         if (result.hasOwnProperty('items')) {
             const list = result as vscodeLanguageClient.CompletionList;
@@ -197,7 +198,9 @@ export function convertToMonacoCompletionList(
     };
 }
 
-function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]): monacoEditor.IMarkdownString[] {
+function convertToMonacoMarkdown(
+    strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]
+): monacoEditor.IMarkdownString[] {
     if (strings.hasOwnProperty('kind')) {
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
@@ -263,8 +266,7 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
     });
 }
 
-export function convertToMonacoSignatureHelp(
-    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null): monacoEditor.languages.SignatureHelp {
+export function convertToMonacoSignatureHelp(result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null): monacoEditor.languages.SignatureHelp {
     if (result) {
         return result as monacoEditor.languages.SignatureHelp;
     }

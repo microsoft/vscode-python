@@ -3,16 +3,16 @@
 
 'use strict';
 
-let canvas : HTMLCanvasElement | undefined;
+let canvas: HTMLCanvasElement | undefined;
 
-function getCanvas() : HTMLCanvasElement {
+function getCanvas(): HTMLCanvasElement {
     if (!canvas) {
         canvas = document.createElement('canvas');
     }
     return canvas;
 }
 
-export function measureText(text: string, font: string | null) : number {
+export function measureText(text: string, font: string | null): number {
     const context = getCanvas().getContext('2d');
     if (context) {
         if (font) {
