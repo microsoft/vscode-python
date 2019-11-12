@@ -24,6 +24,7 @@ import {
 
 const ENCODING: string = 'utf8';
 
+// Determine the file type from the given file info.
 function getFileType(stat: FileStat): FileType {
     if (stat.isFile()) {
         return FileType.File;
@@ -36,6 +37,7 @@ function getFileType(stat: FileStat): FileType {
     }
 }
 
+// The parts of node's 'path' module used by FileSystemPath.
 interface INodePath {
     join(...filenames: string[]): string;
     normalize(filename: string): string;
@@ -43,6 +45,7 @@ interface INodePath {
 
 // Eventually we will merge PathUtils into FileSystemPath.
 
+// The file path operations used by the extension.
 export class FileSystemPath implements IFileSystemPath {
     constructor(
         private readonly isWindows = (getOSType() === OSType.Windows),
@@ -61,10 +64,12 @@ export class FileSystemPath implements IFileSystemPath {
 
 //tslint:disable-next-line:no-any
 type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
+// The parts of the 'tmp' module used by TempFileSystem.
 interface IRawTmp {
     file(options: tmpMod.Options, cb: TempCallback): void;
 }
 
+// The operations on tempporary files/directoryes used by the extension.
 export class TempFileSystem {
     constructor(
         private readonly raw: IRawTmp = tmpMod
@@ -90,6 +95,7 @@ export class TempFileSystem {
     }
 }
 
+// This is the parts of node's 'fs' module that we use in RawFileSystem.
 interface IRawFS {
     //tslint:disable-next-line:no-any
     unlink(filename: string, callback: any): void;
@@ -98,6 +104,7 @@ interface IRawFS {
     createWriteStream(filePath: string): fs.WriteStream;
 }
 
+// This is the parts of the 'fs-extra' module that we use in RawFileSystem.
 interface IRawFSExtra {
     chmod(filePath: string, mode: string | number): Promise<void>;
     readFile(path: string, encoding: string): Promise<string>;
@@ -118,6 +125,7 @@ interface IRawFSExtra {
     createWriteStream(dest: string): fsextra.WriteStream;
 }
 
+// The parts of FileSystemPath used by RawFileSystem.
 interface IRawPath {
     join(...filenames: string[]): string;
 }
@@ -125,6 +133,7 @@ interface IRawPath {
 // Later we will drop "FileSystem", switching usage to
 // "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
+// The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
         private readonly path: IRawPath = new FileSystemPath(),
@@ -172,8 +181,7 @@ export class RawFileSystem implements IRawFileSystem {
         return this.fsExtra.lstat(filename);
     }
 
-    // Once we move to the VS Code API, this method becomes a trivial
-    // wrapper and The "path" parameter can go away.
+    // Once we move to the VS Code API, this method becomes a trivial wrapper.
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const names: string[] = await this.fsExtra.readdir(dirname);
         const promises = names
@@ -186,6 +194,7 @@ export class RawFileSystem implements IRawFileSystem {
         return Promise.all(promises);
     }
 
+    // Once we move to the VS Code API, this method becomes a trivial wrapper.
     public async copyFile(src: string, dest: string): Promise<void> {
         const deferred = createDeferred<void>();
         const rs = this.fsExtra.createReadStream(src)
@@ -230,6 +239,7 @@ function getHashString(data: string): string {
 
 type GlobCallback = (err: Error | null, matches: string[]) => void;
 
+// High-level filesystem operations used by the extension.
 @injectable()
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
