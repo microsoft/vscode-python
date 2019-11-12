@@ -16,7 +16,7 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
+import { JupyterCommands, RegExpValues, Telemetry, PythonDaemonModule } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 export enum ModuleExistsStatus {
@@ -364,7 +364,7 @@ export class JupyterCommandFinderImpl {
             return pythonService!;
         }
 
-        return this.executionFactory.createDaemon({ daemonModule: 'datascience.jupyter_daemon', pythonPath: interpreter.path });
+        return this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
     }
     private async doesModuleExist(moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IModuleExistsResult> {
         const result: IModuleExistsResult = {

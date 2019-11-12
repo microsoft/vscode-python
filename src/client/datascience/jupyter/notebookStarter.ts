@@ -18,7 +18,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, Telemetry } from '../constants';
+import { JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
 import { IConnection, IJupyterKernelSpec } from '../types';
 import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
@@ -237,7 +237,7 @@ export class NotebookStarter implements Disposable {
         if (!interpreter){
             return;
         }
-        const daemon = await this.executionFactory.createDaemon({ daemonModule: 'datascience.jupyter_daemon', pythonPath: interpreter.path });
+        const daemon = await this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');

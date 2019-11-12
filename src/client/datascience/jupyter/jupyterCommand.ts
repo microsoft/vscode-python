@@ -14,7 +14,7 @@ import {
 } from '../../common/process/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
-import { JupyterCommands } from '../constants';
+import { JupyterCommands, PythonDaemonModule } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 // JupyterCommand objects represent some process that can be launched that should be guaranteed to work because it
@@ -70,7 +70,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
 
     constructor(protected readonly moduleName: string, protected args: string[], protected readonly pythonExecutionFactory: IPythonExecutionFactory, private readonly _interpreter: PythonInterpreter) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = this.interpreterPromise.then(interpreter => pythonExecutionFactory.createDaemon({ daemonModule: 'datascience.jupyter_daemon', pythonPath: interpreter!.path }));
+        this.pythonLauncher = this.interpreterPromise.then(interpreter => pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path }));
     }
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
