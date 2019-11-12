@@ -80,7 +80,7 @@ suite('Daemon - Python Daemon Pool', () => {
             const data: string[] = [];
             output.out.subscribe(out => data.push(out.out.trim()), reject, () => resolve(data.join('')));
         });
-    };
+    }
 
     async function createPythonFile(source: string): Promise<string> {
         const tmpFile = await createTemporaryFile('.py');
