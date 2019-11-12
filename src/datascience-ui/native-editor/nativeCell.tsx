@@ -482,7 +482,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
         let content: string | undefined ;
 
         // If inside editor, submit this code
-        if (possibleContents) {
+        if (possibleContents !== undefined) {
             content = possibleContents;
         } else {
             // Outside editor, just use the cell
@@ -558,8 +558,8 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private renderMiddleToolbar = () => {
         const cellId = this.props.cellVM.cell.id;
         const runCell = () => {
-            this.props.stateController.updateCellSource(cellId);
-            this.runAndMove(concatMultilineStringInput(this.props.cellVM.cell.data.source));
+            const contents = this.props.stateController.getMonacoEditorContents(cellId);
+            this.runAndMove(contents);
             this.props.stateController.sendCommand(NativeCommandType.Run, 'mouse');
         };
         const gatherCell = () => {

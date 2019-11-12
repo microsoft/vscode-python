@@ -339,26 +339,21 @@ export class MainStateController implements IMessageHandler {
         this.clearAllSilent();
     }
 
-    public updateCellSource = (cellId: string) => {
-        const models = monacoEditor.editor.getModels();
-        const cvm = this.findCell(cellId);
-        if (cvm) {
-            const modelId = this.getMonacoId(cvm.cell.id);
-            if (modelId) {
-                const model = models.find(m => m.id === modelId);
-                if (model) {
-                    cvm.cell.data.source = cvm.inputBlockText = model.getValue().replace(/\r/g, '');
-                }
-            }
-        }
-    }
-
     public save = () => {
         // We have to take the current value of each cell to make sure we have the correct text.
-        this.pendingState.cellVMs.forEach(c => this.updateCellSource(c.cell.id));
+        const newVMs = [...this.pendingState.cellVMs];
+        for (let i = 0; i < newVMs.length; i += 1) {
+            const text = this.getMonacoEditorContents(newVMs[i].cell.id);
+            if (text !== undefined) {
+                newVMs[i] = { ...newVMs[i], inputBlockText: text, cell: { ...newVMs[i].cell, data: { ...newVMs[i].cell.data, source: text } } };
+            }
+        }
+        this.setState({
+            cellVMs: newVMs
+        });
 
         // Then send the save with the new state.
-        this.sendMessage(InteractiveWindowMessages.SaveAll, { cells: this.getNonEditCellVMs().map(cvm => cvm.cell) });
+        this.sendMessage(InteractiveWindowMessages.SaveAll, { cells: newVMs.map(cvm => cvm.cell) });
     }
 
     public showPlot = (imageHtml: string) => {
@@ -764,6 +759,20 @@ export class MainStateController implements IMessageHandler {
         return this.pendingState;
     }
 
+    public getMonacoEditorContents(cellId: string): string | undefined {
+        const index = this.findCellIndex(cellId);
+        if (index >= 0) {
+            // Get the model for the monaco editor
+            const monacoId = this.getMonacoId(cellId);
+            if (monacoId) {
+                const model = monacoEditor.editor.getModels().find(m => m.id === monacoId);
+                if (model) {
+                    return model.getValue().replace(/\r/g, '');
+                }
+            }
+        }
+    }
+
     // Adjust the visibility or collapsed state of a cell
     protected alterCellVM(cellVM: ICellViewModel, visible: boolean, expanded: boolean): ICellViewModel {
         if (cellVM.cell.data.cell_type === 'code') {
@@ -809,20 +818,6 @@ export class MainStateController implements IMessageHandler {
         }
 
         return cellVM;
-    }
-
-    protected getMonacoEditorContents(cellId: string): string | undefined {
-        const index = this.findCellIndex(cellId);
-        if (index >= 0) {
-            // Get the model for the monaco editor
-            const monacoId = this.getMonacoId(cellId);
-            if (monacoId) {
-                const model = monacoEditor.editor.getModels().find(m => m.id === monacoId);
-                if (model) {
-                    return model.getValue().replace(/\r/g, '');
-                }
-            }
-        }
     }
 
     protected onCodeLostFocus(_cellId: string) {

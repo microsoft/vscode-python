@@ -58,8 +58,8 @@ three3                   /Users/donjayamanne/anaconda3/envs/three
             { name: 'one1', path: '/Users/donjayamanne/anaconda3/envs/one' },
             { name: 'two2 2', path: '/Users/donjayamanne/anaconda3/envs/two 2' },
             { name: 'three3', path: '/Users/donjayamanne/anaconda3/envs/three' },
-            { name: 'four', path: '/Users/donjayamanne/anaconda3/envs/four' },
-            { name: 'five 5', path: '/Users/donjayamanne/anaconda3/envs/five 5' }
+            { name: '', path: '/Users/donjayamanne/anaconda3/envs/four' },
+            { name: '', path: '/Users/donjayamanne/anaconda3/envs/five 5' }
         ];
 
         const list = condaHelper.parseCondaEnvironmentNames(environments);

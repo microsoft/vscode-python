@@ -102,12 +102,11 @@ export class JupyterCommandFinderImpl {
 
         // Only log telemetry if not already found (meaning the first time)
         const timer = new StopWatch();
-        const promise = this.findBestCommandImpl(command, cancelToken)
-        .finally(() => sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command }));
+        const promise = this.findBestCommandImpl(command, cancelToken).finally(() => sendTelemetryEvent(Telemetry.FindJupyterCommand, timer.elapsedTime, { command }));
 
         if (cancelToken) {
             let promiseCompleted = false;
-            promise.finally(() => promiseCompleted = true).ignoreErrors();
+            promise.finally(() => (promiseCompleted = true)).ignoreErrors();
 
             // If the promise is not pending, then remove the item from cache.
             // As the promise would not complete correctly, as its been cancelled.
@@ -144,12 +143,11 @@ export class JupyterCommandFinderImpl {
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
             findResult = await this.doesModuleExist(command, interpreter, cancelToken);
             if (findResult.status === ModuleExistsStatus.FoundJupyter) {
-                findResult.command = this.commandFactory.createInterpreterCommand(['-m', 'jupyter', command], interpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
             } else if (findResult.status === ModuleExistsStatus.Found) {
-                findResult.command = this.commandFactory.createInterpreterCommand(['-m', command], interpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
             }
         }
-
         return findResult;
     }
 
@@ -248,7 +246,7 @@ export class JupyterCommandFinderImpl {
                 if (found.status === ModuleExistsStatus.NotFound) {
                     progress.report({ message: localize.DataScience.findJupyterCommandProgressSearchCurrentPath() });
                     found = await this.findPathCommand(command, cancelToken);
-                    if (found.status !== ModuleExistsStatus.NotFound){
+                    if (found.status !== ModuleExistsStatus.NotFound) {
                         this.sendSearchTelemetry(command, 'path', stopWatch.elapsedTime, cancelToken);
                     }
                 } else {
@@ -265,17 +263,22 @@ export class JupyterCommandFinderImpl {
             found.error = firstError;
         }
 
-        if (found.status === ModuleExistsStatus.NotFound){
+        if (found.status === ModuleExistsStatus.NotFound) {
             this.sendSearchTelemetry(command, 'nowhere', stopWatch.elapsedTime, cancelToken);
         }
 
         return found;
     }
-    private sendSearchTelemetry(command: JupyterCommands, where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere', elapsedTime: number, cancelToken?: CancellationToken){
-        if (Cancellation.isCanceled(cancelToken)){
+    private sendSearchTelemetry(
+        command: JupyterCommands,
+        where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere',
+        elapsedTime: number,
+        cancelToken?: CancellationToken
+    ) {
+        if (Cancellation.isCanceled(cancelToken)) {
             return;
         }
-        sendTelemetryEvent(Telemetry.JupyterCommandSearch, elapsedTime, {where, command});
+        sendTelemetryEvent(Telemetry.JupyterCommandSearch, elapsedTime, { where, command });
     }
     private async searchOtherInterpretersForCommand(
         command: JupyterCommands,
@@ -442,9 +445,10 @@ type CacheInfo = {
  * @extends {JupyterCommandFinderImpl}
  */
 @injectable()
- export class JupyterCommandFinder extends JupyterCommandFinderImpl {
+export class JupyterCommandFinder extends JupyterCommandFinderImpl {
     private readonly workspaceJupyterInterpreter: CacheInfo;
     private readonly globalJupyterInterpreter: CacheInfo;
+    private findNotebookCommandPromise?: Promise<IFindCommandResult>;
     constructor(
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory,
@@ -459,25 +463,36 @@ type CacheInfo = {
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IPersistentStateFactory) persistentStateFactory: IPersistentStateFactory
     ) {
-        super(interpreterService, executionFactory,
-            configuration, knownSearchPaths,
-            disposableRegistry, fileSystem,
-            logger, processServiceFactory,
-            commandFactory, workspace,
-            appShell);
+        super(
+            interpreterService,
+            executionFactory,
+            configuration,
+            knownSearchPaths,
+            disposableRegistry,
+            fileSystem,
+            logger,
+            processServiceFactory,
+            commandFactory,
+            workspace,
+            appShell
+        );
 
         // Cache stores to keep track of jupyter interpreters found.
         const workspaceState = persistentStateFactory.createWorkspacePersistentState<string>('DS-VSC-JupyterInterpreter');
         const globalState = persistentStateFactory.createGlobalPersistentState<string>('DS-VSC-JupyterInterpreter');
-        this.workspaceJupyterInterpreter = {state: workspaceState };
-        this.globalJupyterInterpreter = {state: globalState };
+        this.workspaceJupyterInterpreter = { state: workspaceState };
+        this.globalJupyterInterpreter = { state: globalState };
     }
     private get cacheStore(): CacheInfo {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
     public async findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
-        if (command === JupyterCommands.NotebookCommand) {
-            return this.findBestNotebookCommand(token);
+        if (command === JupyterCommands.NotebookCommand && this.findNotebookCommandPromise) {
+            // Use previously seached item, also possible the promise has not yet resolve.
+            // I.e. use same search.
+            return this.findNotebookCommandPromise;
+        } else if (command === JupyterCommands.NotebookCommand) {
+            return (this.findNotebookCommandPromise = this.findBestNotebookCommand(token));
         } else {
             return super.findBestCommand(command, token);
         }
@@ -485,6 +500,7 @@ type CacheInfo = {
     public async clearCache(): Promise<void> {
         this.cacheStore.checked = undefined;
         this.cacheStore.sessionState = undefined;
+        this.findNotebookCommandPromise = undefined;
         await this.cacheStore.state.updateValue(undefined);
         await super.clearCache();
     }
@@ -498,13 +514,13 @@ type CacheInfo = {
 
         const cancellationTokenSource = new CancellationTokenSource();
         const wrappedToken = wrapCancellationTokens(token, cancellationTokenSource.token);
-        const searchPromise = super.findBestCommand(command, wrappedToken).then(cmd => ({cmd, source: 'search'}));
-        const cachePromise = this.getCachedNotebookInterpreter(wrappedToken).then(cmd => ({cmd, source: 'cache'}));
+        const searchPromise = super.findBestCommand(command, wrappedToken).then(cmd => ({ cmd, source: 'search' }));
+        const cachePromise = this.getCachedNotebookInterpreter(wrappedToken).then(cmd => ({ cmd, source: 'cache' }));
 
         // Take which ever comes first.
         // Searching cache will certainly be faster, use that.
         const result = await Promise.race([searchPromise, cachePromise]);
-        if (result.source === 'cache' && result.cmd){
+        if (result.source === 'cache' && result.cmd) {
             // No need to search any more, cancel it as the cache came back earlier.
             cancellationTokenSource.cancel();
             return result.cmd;
@@ -521,7 +537,7 @@ type CacheInfo = {
         return searchResult.cmd;
     }
     private updateCacheWithInterpreter(result?: IFindCommandResult, cancelToken?: CancellationToken) {
-        if (!result || result.status === ModuleExistsStatus.NotFound){
+        if (!result || result.status === ModuleExistsStatus.NotFound) {
             // Ensure we remove this so others don't try using this.
             // Possible we don't have any interpeter, or the one
             // that was available has been uninstalled.
@@ -542,28 +558,28 @@ type CacheInfo = {
         new Promise(async resolve => {
             try {
                 const interpreter = await result.command!.interpreter();
-                if (!interpreter || (cancelToken && cancelToken.isCancellationRequested)){
+                if (!interpreter || (cancelToken && cancelToken.isCancellationRequested)) {
                     return;
                 }
                 await this.cacheStore.state.updateValue(interpreter ? interpreter.path : undefined);
-            } catch (ex){
+            } catch (ex) {
                 traceError('Failed to update Jupyter Command', ex);
             } finally {
                 resolve();
             }
         }).ignoreErrors();
     }
-    private async getCachedNotebookInterpreter(cancelToken: CancellationToken): Promise<IFindCommandResult | undefined>{
+    private async getCachedNotebookInterpreter(cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
         // We have already checked in current session.
-        if (this.cacheStore.checked){
+        if (this.cacheStore.checked) {
             return this.cacheStore.sessionState;
         }
         // Nohting cached from another VSC session.
-        if (!this.cacheStore.state.value){
+        if (!this.cacheStore.state.value) {
             return;
         }
         const result = await this.getNotebookCommand(this.cacheStore.state.value, cancelToken);
-        if (!result || !result.command){
+        if (!result || !result.command) {
             this.cacheStore.checked = true;
             return;
         }
@@ -572,11 +588,11 @@ type CacheInfo = {
     }
 
     private async getNotebookCommand(pythonPath: string, cancelToken: CancellationToken): Promise<IFindCommandResult | undefined> {
-        if (cancelToken.isCancellationRequested || !(await this.fileSystem.fileExists(pythonPath))){
+        if (cancelToken.isCancellationRequested || !(await this.fileSystem.fileExists(pythonPath))) {
             return;
         }
         const interpreterInfo = await this.interpreterService.getInterpreterDetails(pythonPath);
-        if (!interpreterInfo || cancelToken.isCancellationRequested){
+        if (!interpreterInfo || cancelToken.isCancellationRequested) {
             return;
         }
         const result = await this.findInterpreterCommand(JupyterCommands.NotebookCommand, interpreterInfo, cancelToken);
