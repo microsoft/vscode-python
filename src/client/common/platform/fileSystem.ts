@@ -185,7 +185,6 @@ export class RawFileSystem implements IRawFileSystem {
     public async rmtree(dirname: string): Promise<void> {
         return this.fsExtra.stat(dirname)
             .then(() => this.fsExtra.remove(dirname));
-            //.catch((err) => this.fsExtra.rmdir(dirname));
     }
 
     public async rmfile(filename: string): Promise<void> {
