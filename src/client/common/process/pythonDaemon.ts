@@ -50,8 +50,9 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
     ) {
         // tslint:disable-next-line: no-any
         this.connectionClosedDeferred = createDeferred<any>();
-        // We don't want any unhandled exceptions from this promise.
-        this.connectionClosedDeferred.promise.ignoreErrors();
+        // This promise gets used conditionally, if it doesn't get used, and the promise is rejected,
+        // then node logs errors. We don't want that, hence add a dummy error handler.
+        this.connectionClosedDeferred.promise.catch(noop);
         this.monitorConnection();
     }
     public dispose() {
