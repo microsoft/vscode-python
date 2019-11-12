@@ -60,10 +60,10 @@ suite('Daemon - Python Daemon Pool', () => {
             const pythonProc = spawn(fullyQualifiedPythonPath, ['-m', 'datascience.daemon'], { env });
             const connection = createMessageConnection(new StreamMessageReader(pythonProc.stdout), new StreamMessageWriter(pythonProc.stdin));
             connection.listen();
-            disposables.push({dispose: () => pythonProc.kill()});
-            disposables.push({dispose: () => connection.dispose()});
-                // tslint:disable-next-line: no-any
-            return {proc: pythonProc, dispose: noop, out: undefined as any};
+            disposables.push({ dispose: () => pythonProc.kill() });
+            disposables.push({ dispose: () => connection.dispose() });
+            // tslint:disable-next-line: no-any
+            return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
         const options = { pythonPath: fullyQualifiedPythonPath, daemonModule: PythonDaemonModule, daemonCount: 2, observableDaemonCount: 1 };
         pythonDaemonPool = new DaemonPool(options, instance(pythonExecutionService), {}, 100);
@@ -78,7 +78,11 @@ suite('Daemon - Python Daemon Pool', () => {
     async function getStdOutFromObservable(output: ObservableExecutionResult<string>) {
         return new Promise<string>((resolve, reject) => {
             const data: string[] = [];
-            output.out.subscribe(out => data.push(out.out.trim()), reject, () => resolve(data.join('')));
+            output.out.subscribe(
+                out => data.push(out.out.trim()),
+                reject,
+                () => resolve(data.join(''))
+            );
         });
     }
 
@@ -120,9 +124,9 @@ suite('Daemon - Python Daemon Pool', () => {
         await assert.eventually.equal(pythonDaemonPool.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
 
-    test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
-    test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
-    test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'pip' module is installed", async () => testModuleInstalled('pip', true));
+    test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
+    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`
@@ -242,7 +246,10 @@ suite('Daemon - Python Daemon Pool', () => {
         await new Promise((resolve, reject) => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
         });
-        assert.deepEqual(outputsReceived.filter(item => item.length > 0), ['0', '1', '2', '3', '4']);
+        assert.deepEqual(
+            outputsReceived.filter(item => item.length > 0),
+            ['0', '1', '2', '3', '4']
+        );
     }).timeout(1_000);
 
     test('Execute a file and throw exception if stderr is not empty', async () => {
@@ -279,21 +286,18 @@ suite('Daemon - Python Daemon Pool', () => {
         // When using the python execution service, return a bogus value.
         when(pythonExecutionService.execObservable(deepEqual([fileToExecute]), anything())).thenCall(() => {
             const observable = new Observable<Output<string>>(s => {
-                s.next({out: 'mypid', source: 'stdout'});
+                s.next({ out: 'mypid', source: 'stdout' });
                 s.complete();
             });
-                // tslint:disable-next-line: no-any
-            return {proc: new EventEmitter() as any, dispose: noop, out: observable};
+            // tslint:disable-next-line: no-any
+            return { proc: new EventEmitter() as any, dispose: noop, out: observable };
         });
         // This will use a damon.
-        const output1 = pythonDaemonPool.execObservable([fileToExecute], { });
+        const output1 = pythonDaemonPool.execObservable([fileToExecute], {});
         // These two will use a python execution service.
-        const output2 = pythonDaemonPool.execObservable([fileToExecute], { });
-        const output3 = pythonDaemonPool.execObservable([fileToExecute], { });
-        const [result1, result2, result3] = await Promise.all([
-            getStdOutFromObservable(output1), getStdOutFromObservable(output2),
-            getStdOutFromObservable(output3)
-        ]);
+        const output2 = pythonDaemonPool.execObservable([fileToExecute], {});
+        const output3 = pythonDaemonPool.execObservable([fileToExecute], {});
+        const [result1, result2, result3] = await Promise.all([getStdOutFromObservable(output1), getStdOutFromObservable(output2), getStdOutFromObservable(output3)]);
 
         // Two process ids are used to run the code (one process for a daemon, another for bogus puthon process).
         expect(result1).to.not.equal('mypid');
@@ -308,22 +312,22 @@ suite('Daemon - Python Daemon Pool', () => {
         `;
         const fileToExecute = await createPythonFile(source);
         // This will use a damon.
-        const output1 = await getStdOutFromObservable(pythonDaemonPool.execObservable([fileToExecute], { }));
+        const output1 = await getStdOutFromObservable(pythonDaemonPool.execObservable([fileToExecute], {}));
         // Wait for daemon to go into the pool.
         await sleep(100);
         // This will use a damon.
-        const output2 = await getStdOutFromObservable(pythonDaemonPool.execObservable([fileToExecute], { }));
+        const output2 = await getStdOutFromObservable(pythonDaemonPool.execObservable([fileToExecute], {}));
         // Wait for daemon to go into the pool.
         await sleep(100);
         // This will use a damon.
-        const output3 = await getStdOutFromObservable(pythonDaemonPool.execObservable([fileToExecute], { }));
+        const output3 = await getStdOutFromObservable(pythonDaemonPool.execObservable([fileToExecute], {}));
 
         // The pid for all processes is the same.
         // This means we're re-using the same daemon (process).
         expect(output1).to.equal(output2);
         expect(output1).to.equal(output3);
     }).timeout(3_000);
-        test('Ensure two different daemons are used to execute code', async () => {
+    test('Ensure two different daemons are used to execute code', async () => {
         const source = dedent`
         import os
         import time
@@ -332,10 +336,7 @@ suite('Daemon - Python Daemon Pool', () => {
         `;
         const fileToExecute = await createPythonFile(source);
 
-        const [output1, output2] = await Promise.all([
-            pythonDaemonPool.exec([fileToExecute], { }),
-            pythonDaemonPool.exec([fileToExecute], { })
-        ]);
+        const [output1, output2] = await Promise.all([pythonDaemonPool.exec([fileToExecute], {}), pythonDaemonPool.exec([fileToExecute], {})]);
 
         // The pid for both processes will be different.
         // This means we're running both in two separate daemons.
@@ -353,8 +354,8 @@ suite('Daemon - Python Daemon Pool', () => {
         const fileToExecute1 = await createPythonFile(source1);
 
         let [pid1, pid2] = await Promise.all([
-            pythonDaemonPool.exec([fileToExecute1], { }).then(out => out.stdout.trim()),
-            pythonDaemonPool.exec([fileToExecute1], { }).then(out => out.stdout.trim())
+            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim()),
+            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim())
         ]);
 
         const processesUsedToRunCode = new Set<string>();
@@ -374,8 +375,14 @@ suite('Daemon - Python Daemon Pool', () => {
         `;
         const fileToExecute2 = await createPythonFile(source2);
         [pid1, pid2] = await Promise.all([
-            pythonDaemonPool.exec([fileToExecute1], { }).then(out => out.stdout.trim()).catch(() => 'FAILED'),
-            pythonDaemonPool.exec([fileToExecute2], { }).then(out => out.stdout.trim()).catch(() => 'FAILED')
+            pythonDaemonPool
+                .exec([fileToExecute1], {})
+                .then(out => out.stdout.trim())
+                .catch(() => 'FAILED'),
+            pythonDaemonPool
+                .exec([fileToExecute2], {})
+                .then(out => out.stdout.trim())
+                .catch(() => 'FAILED')
         ]);
 
         // Confirm that one of the executions failed due to an error.
@@ -386,13 +393,13 @@ suite('Daemon - Python Daemon Pool', () => {
         expect(processesUsedToRunCode.size).to.equal(2);
 
         // Wait for a new daemon to be created.
-        await waitForCondition(async () => (createDaemonServicesSpy.callCount - daemonsCreated) === 1, 5_000, 'Failed to create a new daemon');
+        await waitForCondition(async () => createDaemonServicesSpy.callCount - daemonsCreated === 1, 5_000, 'Failed to create a new daemon');
 
         // Confirm we have two daemons by checking the Pids again.
         // One of them will be new.
         [pid1, pid2] = await Promise.all([
-            pythonDaemonPool.exec([fileToExecute1], { }).then(out => out.stdout.trim()),
-            pythonDaemonPool.exec([fileToExecute1], { }).then(out => out.stdout.trim())
+            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim()),
+            pythonDaemonPool.exec([fileToExecute1], {}).then(out => out.stdout.trim())
         ]);
 
         // Keep track of the pids.
