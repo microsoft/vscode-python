@@ -49,7 +49,6 @@ export class IInteractiveActionMapping {
     public [CommonActionType.SCROLL]: InteractiveReducerFunc<IScrollAction>;
     public [CommonActionType.CLICK_CELL]: InteractiveReducerFunc<ICellAction>;
     public [CommonActionType.UNFOCUS_CELL]: InteractiveReducerFunc<ICellAction>;
-    public [CommonActionType.NEXT_UPDATE]: InteractiveReducerFunc<IMainState>;
     public [CommonActionType.UNMOUNT]: InteractiveReducerFunc<never | undefined>;
 
     // Messages from the extension

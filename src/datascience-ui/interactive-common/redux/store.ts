@@ -5,6 +5,7 @@ import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { CellState } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
@@ -12,6 +13,7 @@ import { combineReducers, createAsyncStore, QueuableAction } from '../../react-c
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
+import { CommonActionType } from './reducers/types';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -82,6 +84,42 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
     };
 }
 
+function createTestMiddleware(): Redux.Middleware<{}, IStore> {
+    return store => next => action => {
+        const prevState = store.getState();
+        const res = next(action);
+        const afterState = store.getState();
+
+        // Special case for focusing a cell
+        if (prevState.main.focusedCellId !== afterState.main.focusedCellId && afterState.main.focusedCellId) {
+            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId })));
+        }
+
+        // Special case for rendering complete
+        const prevFinished = prevState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
+        const afterFinished = afterState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
+        if (afterFinished.length > prevFinished.length) {
+            const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
+            // Send async so happens after the render is actually finished.
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.ExecutionRendered, { ids: diff })));
+        }
+
+        return res;
+    };
+}
+
+function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
+    // Create the update context middle ware. It handles the 'sendInfo' message that
+    // requires sending on every cell vm length change
+    const updateContext = createSendInfoMiddleware();
+
+    // Create the test middle ware. It sends messages that are used for testing only
+    const testMiddleware = testMode ? createTestMiddleware() : undefined;
+
+    return testMiddleware ? [updateContext, testMiddleware] : [updateContext];
+}
+
 export interface IStore {
     main: IMainState;
     monaco: IMonacoState;
@@ -109,15 +147,14 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
         post: postOfficeReducer
     });
 
-    // Create the update context middle ware. It handles the 'sendInfo' message that
-    // requires sending on every cell vm length change
-    const updateContext = createSendInfoMiddleware();
+    // Create our middleware
+    const middleware = createMiddleWare(testMode);
 
     // Use this reducer and middle ware to create a store
     const store = createAsyncStore<IStore, Redux.AnyAction>(
         rootReducer,
-        !testMode,
-        [updateContext]);
+        !testMode || process.env.VSC_PYTHON_FORCE_LOGGING !== undefined,
+        middleware);
 
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.

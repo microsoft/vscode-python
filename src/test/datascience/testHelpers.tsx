@@ -257,6 +257,12 @@ export function isCellFocused(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     }
 }
 
+export function isCellMarkdown(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): boolean {
+    const cell = getOutputCell(wrapper, cellType, cellIndex);
+    assert.ok(cell, 'Could not find output cell');
+    return cell!.props().cellVM.cell.data.cell_type === 'markdown';
+}
+
 export function verifyCellIndex(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellId: string, expectedCellIndex: number) {
     const nativeCell = wrapper
         .find(cellId)
@@ -272,6 +278,7 @@ function verifyCell(
     options: { selector: string; shouldNotExist?: boolean },
     cellIndex: number | CellPosition
 ) {
+    wrapper.update();
     const foundResult = wrapper.find(cellType);
     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 

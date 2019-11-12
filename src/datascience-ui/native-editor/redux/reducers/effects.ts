@@ -1,10 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import { CursorPos, IMainState } from '../../../interactive-common/mainState';
+import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction, ICellAndCursorAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
@@ -14,11 +13,6 @@ import { NativeEditorReducerArg } from '../mapping';
 export namespace Effects {
 
     export function focusCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
-        // Send out a message that we received a focus change (needed for tests)
-        if (arg.prevState.testMode && arg.payload.cellId) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.FocusedCellEditor, { cellId: arg.payload.cellId }));
-        }
-
         // Do nothing if already the focused cell.
         if (arg.prevState.focusedCellId !== arg.payload.cellId) {
             const newVMs = [...arg.prevState.cellVMs];
@@ -153,15 +147,6 @@ export namespace Effects {
                 cellVMs: newVMs
             };
         }
-        return arg.prevState;
-    }
-
-    export function selectNextCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
-        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-        if (index < arg.prevState.cellVMs.length - 1) {
-            return selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Current } });
-        }
-
         return arg.prevState;
     }
 

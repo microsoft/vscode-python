@@ -4,7 +4,6 @@
 import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
-import { Test } from '../../../interactive-common/redux/reducers/test';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
 import { Variables } from '../../../interactive-common/redux/reducers/variables';
@@ -41,7 +40,6 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.SCROLL]: Effects.scrolled,
     [CommonActionType.CLICK_CELL]: Effects.clickCell,
     [CommonActionType.UNFOCUS_CELL]: Effects.unfocusCell,
-    [CommonActionType.NEXT_UPDATE]: Test.nextUpdate,
     [CommonActionType.UNMOUNT]: Creation.unmount,
 
     // Messages from the webview (some are ignored)

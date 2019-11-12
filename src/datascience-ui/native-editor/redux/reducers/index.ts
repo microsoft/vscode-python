@@ -4,7 +4,6 @@
 import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 import { CommonEffects } from '../../../interactive-common/redux/reducers/commonEffects';
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
-import { Test } from '../../../interactive-common/redux/reducers/test';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
 import { Variables } from '../../../interactive-common/redux/reducers/variables';
@@ -37,7 +36,6 @@ export const reducerMap: INativeEditorActionMapping = {
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
     [CommonActionType.SEND_COMMAND]: Transfer.sendCommand,
     [CommonActionType.SELECT_CELL]: Effects.selectCell,
-    [CommonActionType.SELECT_NEXT_CELL]: Effects.selectNextCell,
     [CommonActionType.MOVE_CELL_UP]: Movement.moveCellUp,
     [CommonActionType.MOVE_CELL_DOWN]: Movement.moveCellDown,
     [CommonActionType.DELETE_CELL]: Creation.deleteCell,
@@ -53,7 +51,6 @@ export const reducerMap: INativeEditorActionMapping = {
     [CommonActionType.GATHER_CELL]: Transfer.gather,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,
-    [CommonActionType.NEXT_UPDATE]: Test.nextUpdate,
     [CommonActionType.UNMOUNT]: Creation.unmount,
 
     // Messages from the webview (some are ignored)

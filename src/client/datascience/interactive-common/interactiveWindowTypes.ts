@@ -79,7 +79,7 @@ export enum InteractiveWindowMessages {
     NotebookRunAllCells = 'notebook_run_all_cells',
     NotebookRunSelectedCell = 'notebook_run_selected_cell',
     NotebookAddCellBelow = 'notebook_add_cell_below',
-    RenderComplete = 'finished_rendering_cells',
+    ExecutionRendered = 'rendered_execution',
     FocusedCellEditor = 'focused_cell_editor',
     MonacoReady = 'monaco_ready'
 }
@@ -346,7 +346,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
-    public [InteractiveWindowMessages.RenderComplete]: IRenderComplete;
+    public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.MonacoReady]: never | undefined;
 }

@@ -53,7 +53,6 @@ export enum CommonActionType {
     LOADED_ALL_CELLS = 'action.loaded_all_cells',
     MOVE_CELL_DOWN = 'action.move_cell_down',
     MOVE_CELL_UP = 'action.move_cell_up',
-    NEXT_UPDATE = 'action.next_update',
     OPEN_LINK = 'action.open_link',
     REDO = 'action.redo',
     REFRESH_VARIABLES = 'action.refresh_variables',
@@ -61,7 +60,6 @@ export enum CommonActionType {
     SAVE = 'action.save',
     SCROLL = 'action.scroll',
     SELECT_CELL = 'action.select_cell',
-    SELECT_NEXT_CELL = 'action.select_next_cell',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     SHOW_PLOT = 'action.show_plot',
@@ -103,6 +101,10 @@ export interface IEditCellAction extends ICellAction {
 
 export interface ICodeAction extends ICellAction {
     code: string;
+}
+
+export interface IExecuteAction extends ICodeAction {
+    moveOp: 'add' | 'select' | 'none';
 }
 
 export interface ICodeCreatedAction extends ICellAction {

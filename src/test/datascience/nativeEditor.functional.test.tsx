@@ -23,7 +23,6 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
-import { CellOutput } from '../../datascience-ui/interactive-common/cellOutput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
@@ -37,7 +36,6 @@ import {
     addCell,
     closeNotebook,
     createNewEditor,
-    focusCell,
     getNativeCellResults,
     mountNativeWebView,
     openEditor,
@@ -57,6 +55,7 @@ import {
     getOutputCell,
     injectCode,
     isCellFocused,
+    isCellMarkdown,
     isCellSelected,
     srcDirectory,
     typeCode,
@@ -348,7 +347,7 @@ for _ in range(50):
             assert.equal(imageButtons.length, 6, 'Cell buttons not found');
             const runButton = imageButtons.findWhere(w => w.props().tooltip === 'Run cell');
             assert.equal(runButton.length, 1, 'No run button found');
-            const update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
+            const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
             runButton.simulate('click');
             await update;
             verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 1);
@@ -691,7 +690,7 @@ for _ in range(50):
                 // The 2nd cell should be focused
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
 
-                update = waitForUpdate(wrapper, NativeEditor, 7);
+                update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 simulateKeyPressOnCell(1, { code: 'Enter', shiftKey: true, editorInfo: undefined });
                 await update;
                 wrapper.update();
@@ -708,7 +707,7 @@ for _ in range(50):
                 // Shift+enter on the last cell, it should behave differently. It should be selected and focused
 
                 // First focus the cell.
-                update = waitForUpdate(wrapper, NativeEditor, 2);
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 clickCell(2);
                 simulateKeyPressOnCell(2, { code: 'Enter', editorInfo: undefined });
                 await update;
@@ -716,7 +715,7 @@ for _ in range(50):
                 // The 3rd cell should be focused
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
 
-                update = waitForUpdate(wrapper, NativeEditor, 7);
+                update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 simulateKeyPressOnCell(2, { code: 'Enter', shiftKey: true, editorInfo: undefined });
                 await update;
                 wrapper.update();
@@ -729,7 +728,7 @@ for _ in range(50):
             });
 
             test('Pressing \'Ctrl+Enter\' on a selected cell executes the cell and cell selection is not changed', async () => {
-                const update = waitForUpdate(wrapper, NativeEditor, 7);
+                const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 clickCell(1);
                 simulateKeyPressOnCell(1, { code: 'Enter', ctrlKey: true, editorInfo: undefined });
                 await update;
@@ -745,7 +744,7 @@ for _ in range(50):
                 // Initially 3 cells.
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
-                const update = waitForUpdate(wrapper, NativeEditor, 1);
+                const update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 clickCell(1);
                 simulateKeyPressOnCell(1, { code: 'Enter', altKey: true, editorInfo: undefined });
                 await update;
@@ -834,7 +833,7 @@ for _ in range(50):
 
             test('Toggle visibility of output', async () => {
                 // First execute contents of last cell.
-                let update = waitForUpdate(wrapper, NativeEditor, 7);
+                let update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 clickCell(2);
                 simulateKeyPressOnCell(2, { code: 'Enter', ctrlKey: true, editorInfo: undefined });
                 await update;
@@ -885,16 +884,34 @@ for _ in range(50):
                 clickCell(1);
 
                 // Switch to markdown
+                let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 simulateKeyPressOnCell(1, { code: 'm' });
+                await update;
 
-                // Confirm output cell is rendered and monaco editor is not.
+                // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
                 assert.equal(
                     wrapper
                         .find(NativeCell)
                         .at(1)
-                        .find(CellOutput).length,
+                        .find(MonacoEditor).length,
                     1
                 );
+
+                // Change the markdown
+                let editor = getNativeFocusedEditor(wrapper);
+                injectCode(editor, 'foo');
+
+                // Switch back to code mode.
+                // First lose focus
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                simulateKeyPressOnCell(1, { code: 'Escape' });
+                await update;
+
+                // Confirm markdown output is rendered
+                assert.ok(!isCellFocused(wrapper, 'NativeCell', 1));
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 1));
                 assert.equal(
                     wrapper
                         .find(NativeCell)
@@ -903,15 +920,8 @@ for _ in range(50):
                     0
                 );
 
-                // Force focus so we can change the text. Use special method
-                // because we can't key down on the editor
-                await focusCell(ioc, wrapper, 1);
-
-                // Change the markdown
-                let editor = getNativeFocusedEditor(wrapper);
-                injectCode(editor, 'foo');
-
-                // Switch back to code mode.
+                // Switch to code
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 // At this moment, there's no cell input element, hence send key strokes to the wrapper.
                 const wrapperElement = wrapper
                     .find(NativeCell)
@@ -919,15 +929,10 @@ for _ in range(50):
                     .find('.cell-wrapper')
                     .first();
                 wrapperElement.simulate('keyDown', { key: 'y' });
-                wrapper.update();
+                await update;
 
-                // Confirm editor is rendered .
-                const nativeCell = wrapper.find(NativeCell).at(1);
-                assert.equal(
-                    nativeCell
-                        .find(MonacoEditor).length,
-                    1
-                );
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
+                assert.ok(!isCellMarkdown(wrapper, 'NativeCell', 1));
 
                 // Confirm editor still has the same text
                 editor = getNativeFocusedEditor(wrapper);
@@ -941,7 +946,7 @@ for _ in range(50):
                 // Add, then undo, keep doing at least 3 times and confirm it works as expected.
                 for (let i = 0; i < 3; i += 1) {
                     // Add a new cell
-                    let update = waitForUpdate(wrapper, NativeEditor, 1);
+                    let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                     simulateKeyPressOnCell(0, { code: 'a' });
                     await update;
 

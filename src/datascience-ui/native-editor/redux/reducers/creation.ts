@@ -53,6 +53,7 @@ export namespace Creation {
 
         const result = {
             ...arg.prevState,
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
             cellVMs: newList
         };
 
@@ -78,6 +79,7 @@ export namespace Creation {
 
         const result = {
             ...arg.prevState,
+            undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
             cellVMs: newList
         };
 

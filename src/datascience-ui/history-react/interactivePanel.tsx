@@ -45,10 +45,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
         this.props.editorUnmounted();
     }
 
-    public componentDidUpdate(prevProps: IMainState) {
-        this.props.nextUpdate(prevProps);
-    }
-
     public render() {
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size,

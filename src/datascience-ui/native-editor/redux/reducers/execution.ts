@@ -12,10 +12,12 @@ import {
     CommonActionType,
     ICellAction,
     IChangeCellTypeAction,
-    ICodeAction
+    ICodeAction,
+    IExecuteAction
 } from '../../../interactive-common/redux/reducers/types';
 import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
 import { NativeEditorReducerArg } from '../mapping';
+import { Creation } from './creation';
 import { Effects } from './effects';
 
 export namespace Execution {
@@ -56,10 +58,39 @@ export namespace Execution {
         return arg.prevState;
     }
 
-    export function executeCell(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
+    export function executeCell(arg: NativeEditorReducerArg<IExecuteAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0) {
-            return executeRange(arg.prevState, index, index, [arg.payload.code], arg.queueAction);
+            // Start executing this cell.
+            const executeResult = executeRange(arg.prevState, index, index, [arg.payload.code], arg.queueAction);
+
+            // Modify the execute result if moving
+            switch (arg.payload.moveOp) {
+                case 'add':
+                    // Add a new cell below
+                    return Creation.insertBelow({ ...arg, prevState: executeResult });
+
+                case 'select':
+                    // Select the cell below this one, but don't focus it
+                    if (index < arg.prevState.cellVMs.length - 1) {
+                        return Effects.selectCell({
+                            ...arg,
+                            prevState: {
+                                ...executeResult,
+                                focusedCellId: undefined
+                            },
+                            payload: {
+                                ...arg.payload,
+                                cellId: arg.prevState.cellVMs[index + 1].cell.id,
+                                cursorPos: CursorPos.Current
+                            }
+                        });
+                    }
+                    return executeResult;
+
+                default:
+                    return executeResult;
+            }
         }
         return arg.prevState;
     }
@@ -87,7 +118,7 @@ export namespace Execution {
         // This is the same thing as executing the selected cell
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
         if (arg.prevState.selectedCellId && index >= 0) {
-            return executeCell({ ...arg, payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source) } });
+            return executeCell({ ...arg, payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' } });
         }
 
         return arg.prevState;
@@ -139,6 +170,7 @@ export namespace Execution {
             // Pop one off of our undo stack and update our redo
             const cells = arg.prevState.undoStack[arg.prevState.undoStack.length - 1];
             const undoStack = arg.prevState.undoStack.slice(0, arg.prevState.undoStack.length - 1);
+            const selected = cells.findIndex(c => c.selected);
             const redoStack = Helpers.pushStack(arg.prevState.redoStack, arg.prevState.cellVMs);
             arg.queueAction(createPostableAction(InteractiveWindowMessages.Undo));
             return {
@@ -146,7 +178,9 @@ export namespace Execution {
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
+                selectedCellId: selected >= 0 ? cells[selected].cell.id : undefined,
+                focusedCellId: selected >= 0 && cells[selected].focused ? cells[selected].cell.id : undefined
             };
         }
 
@@ -159,13 +193,16 @@ export namespace Execution {
             const cells = arg.prevState.redoStack[arg.prevState.undoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
+            const selected = cells.findIndex(c => c.selected);
             arg.queueAction(createPostableAction(InteractiveWindowMessages.Redo));
             return {
                 ...arg.prevState,
                 cellVMs: cells,
                 undoStack: undoStack,
                 redoStack: redoStack,
-                skipNextScroll: true
+                skipNextScroll: true,
+                selectedCellId: selected >= 0 ? cells[selected].cell.id : undefined,
+                focusedCellId: selected >= 0 && cells[selected].focused ? cells[selected].cell.id : undefined
             };
         }
 

@@ -352,7 +352,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         // Scroll to the visible line that has our current line
         const visibleLineDivs = this.getVisibleLines();
         const current = this.getCurrentVisibleLine();
-        if (current !== undefined && current >= 0) {
+        if (current !== undefined && current >= 0 && visibleLineDivs[current].scrollIntoView) {
             visibleLineDivs[current].scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
         }
     }

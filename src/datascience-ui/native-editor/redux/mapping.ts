@@ -14,6 +14,7 @@ import {
     IChangeCellTypeAction,
     ICodeAction,
     IEditCellAction,
+    IExecuteAction,
     IOpenLinkAction,
     IRefreshVariablesAction,
     ISendCommandAction,
@@ -33,7 +34,7 @@ export class INativeEditorActionMapping {
     public [CommonActionType.FOCUS_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
     public [CommonActionType.UNFOCUS_CELL]: NativeEditorReducerFunc<ICodeAction>;
     public [CommonActionType.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
-    public [CommonActionType.EXECUTE_CELL]: NativeEditorReducerFunc<ICodeAction>;
+    public [CommonActionType.EXECUTE_CELL]: NativeEditorReducerFunc<IExecuteAction>;
     public [CommonActionType.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.EXECUTE_ABOVE]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.EXECUTE_CELL_AND_BELOW]: NativeEditorReducerFunc<ICodeAction>;
@@ -48,7 +49,6 @@ export class INativeEditorActionMapping {
     public [CommonActionType.SHOW_DATA_VIEWER]: NativeEditorReducerFunc<IShowDataViewerAction>;
     public [CommonActionType.SEND_COMMAND]: NativeEditorReducerFunc<ISendCommandAction>;
     public [CommonActionType.SELECT_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
-    public [CommonActionType.SELECT_NEXT_CELL]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.MOVE_CELL_UP]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.MOVE_CELL_DOWN]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.TOGGLE_LINE_NUMBERS]: NativeEditorReducerFunc<ICellAction>;
@@ -63,7 +63,6 @@ export class INativeEditorActionMapping {
     public [CommonActionType.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.LOADED_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
-    public [CommonActionType.NEXT_UPDATE]: NativeEditorReducerFunc<IMainState>;
     public [CommonActionType.UNMOUNT]: NativeEditorReducerFunc<never | undefined>;
 
     // Messages from the extension

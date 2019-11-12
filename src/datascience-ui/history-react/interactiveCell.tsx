@@ -78,7 +78,9 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     public scrollAndFlash() {
         if (this.wrapperRef && this.wrapperRef.current) {
-            this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            if (this.wrapperRef.current.scrollIntoView) {
+                this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            }
             this.wrapperRef.current.classList.add('flash');
             setTimeout(() => {
                 if (this.wrapperRef.current) {
@@ -101,8 +103,11 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 this.wrapperRef.current.focus();
             }
 
-            // Make sure we're in view
-            this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            // Scroll into view (since we have focus). However this function
+            // is not supported on enzyme
+            if (this.wrapperRef.current.scrollIntoView) {
+                this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            }
         }
     }
 

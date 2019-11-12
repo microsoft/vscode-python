@@ -81,13 +81,16 @@ export async function setupWebview(ioc: DataScienceIocContainer) {
 }
 
 export function focusCell(ioc: DataScienceIocContainer, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, index: number): Promise<void> {
-    const focusChange = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
     const cell = wrapper.find(NativeCell).at(index);
     if (cell) {
         const vm = cell.props().cellVM;
-        cell.props().focusCell(vm.cell.id, CursorPos.Current);
+        if (!vm.focused) {
+            const focusChange = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+            cell.props().focusCell(vm.cell.id, CursorPos.Current);
+            return focusChange;
+        }
     }
-    return focusChange;
+    return Promise.resolve();
 }
 
 // tslint:disable-next-line: no-any
@@ -109,7 +112,7 @@ export async function addCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
         const textArea = injectCode(editorEnzyme, code);
 
         // Then run the cell (use ctrl+enter so we don't add another cell)
-        update = waitForMessage(ioc, InteractiveWindowMessages.RenderComplete);
+        update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
         simulateKey(textArea!, 'Enter', false, true);
 
         return update;

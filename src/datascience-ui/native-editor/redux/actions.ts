@@ -4,7 +4,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import { CursorPos, IMainState } from '../../interactive-common/mainState';
+import { CursorPos } from '../../interactive-common/mainState';
 import {
     CommonAction,
     CommonActionType,
@@ -14,6 +14,7 @@ import {
     ICodeAction,
     ICodeCreatedAction,
     IEditCellAction,
+    IExecuteAction,
     IOpenLinkAction,
     IRefreshVariablesAction,
     ISendCommandAction,
@@ -29,9 +30,8 @@ export const actionCreators = {
     focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({ type: CommonActionType.FOCUS_CELL, payload: { cellId, cursorPos } }),
     unfocusCell: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId, code } }),
     selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({ type: CommonActionType.SELECT_CELL, payload: { cellId, cursorPos } }),
-    selectNextCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.SELECT_NEXT_CELL, payload: { cellId } }),
     addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL }),
-    executeCell: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.EXECUTE_CELL, payload: { cellId, code } }),
+    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => ({ type: CommonActionType.EXECUTE_CELL, payload: { cellId, code, moveOp } }),
     executeAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXECUTE_ALL_CELLS }),
     executeAbove: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.EXECUTE_ABOVE, payload: { cellId } }),
     executeCellAndBelow: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.EXECUTE_CELL_AND_BELOW, payload: { cellId, code } }),
@@ -60,6 +60,5 @@ export const actionCreators = {
     editorLoaded: (): CommonAction<never | undefined> => ({ type: CommonActionType.EDITOR_LOADED }),
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } }),
     loadedAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.LOADED_ALL_CELLS }),
-    nextUpdate: (oldState: IMainState): CommonAction<IMainState> => ({ type: CommonActionType.NEXT_UPDATE, payload: oldState }),
     editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT })
 };

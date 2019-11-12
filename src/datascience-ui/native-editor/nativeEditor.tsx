@@ -64,7 +64,6 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                 });
             });
         }
-        this.props.nextUpdate(prevProps);
     }
 
     public render() {

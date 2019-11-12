@@ -89,8 +89,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 this.wrapperRef.current.focus();
             }
 
-            // Make sure we're in view
-            this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            // Scroll into view (since we have focus). However this function
+            // is not supported on enzyme
+            if (this.wrapperRef.current.scrollIntoView) {
+                this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            }
         }
     }
 
@@ -374,22 +377,12 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private runAndMove(possibleContents?: string) {
         // Submit this cell
-        this.submitCell(possibleContents);
-
-        // Move to the next cell if we have one
-        if (this.props.lastCell) {
-            this.props.insertBelow(this.cellId);
-        } else {
-            this.props.selectNextCell(this.cellId);
-        }
+        this.submitCell(possibleContents, this.props.lastCell ? 'add' : 'select');
     }
 
     private runAndAdd(possibleContents?: string) {
         // Submit this cell
-        this.submitCell(possibleContents);
-
-        // insert a cell below this one
-        this.props.insertBelow(this.cellId);
+        this.submitCell(possibleContents, 'add');
     }
 
     private ctrlEnterCell = (e: IKeyboardEvent) => {
@@ -398,11 +391,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
         e.preventDefault();
 
         // Submit this cell
-        this.submitCell(e.editorInfo ? e.editorInfo.contents : undefined);
+        this.submitCell(e.editorInfo ? e.editorInfo.contents : undefined, 'none');
         this.props.sendCommand(NativeCommandType.Run, 'keyboard');
     }
 
-    private submitCell = (possibleContents?: string) => {
+    private submitCell = (possibleContents: string | undefined, moveOp: 'add' | 'select' | 'none') => {
         let content: string | undefined;
 
         // If inside editor, submit this code
@@ -415,7 +408,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         // Send to jupyter
         if (content) {
-            this.props.executeCell(this.cellId, content);
+            this.props.executeCell(this.cellId, content, moveOp);
         }
     }
 
