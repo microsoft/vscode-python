@@ -10,6 +10,7 @@ import * as glob from 'glob';
 import { injectable } from 'inversify';
 import * as fspath from 'path';
 import * as tmpMod from 'tmp';
+import * as util from 'util';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
@@ -95,7 +96,8 @@ export class TempFileSystem {
             postfix: suffix,
             dir: dir
         };
-        // We could use util.promisify() here.
+        // We could use util.promisify() here.  The tmp.file() callback
+        // makes it a bit complicated though.
         return new Promise<TemporaryFile>((resolve, reject) => {
             this.raw.file(options, (err, tmpFile, _fd, cleanupCallback) => {
                 if (err) {
@@ -251,8 +253,6 @@ export class RawFileSystem implements IRawFileSystem {
     }
 }
 
-type GlobCallback = (err: Error | null, matches: string[]) => void;
-
 // High-level filesystem operations used by the extension.
 @injectable()
 export class FileSystemUtils implements IFileSystemUtils {
@@ -261,7 +261,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         public readonly path: IFileSystemPaths,
         public readonly tmp: ITempFileSystem,
         protected readonly getHash: (data: string) => string,
-        protected readonly globFile: ((pat: string, cb: GlobCallback) => void)
+        protected readonly globFile: (pat: string) => Promise<string[]>
     ) { }
     // Create a new object using common-case default values.
     public static withDefaults(): FileSystemUtils {
@@ -271,7 +271,7 @@ export class FileSystemUtils implements IFileSystemUtils {
             paths,
             TempFileSystem.withDefaults(),
             getHashString,
-            glob
+            util.promisify(glob)
         );
     }
 
@@ -374,15 +374,8 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 
     public async search(globPattern: string): Promise<string[]> {
-        // We could use util.promisify() here.
-        return new Promise<string[]>((resolve, reject) => {
-            this.globFile(globPattern, (ex, files) => {
-                if (ex) {
-                    return reject(ex);
-                }
-                resolve(Array.isArray(files) ? files : []);
-            });
-        });
+        const files = await this.globFile(globPattern);
+        return Array.isArray(files) ? files : [];
     }
 }
 

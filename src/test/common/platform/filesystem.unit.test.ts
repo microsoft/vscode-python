@@ -569,7 +569,7 @@ suite('Raw FileSystem', () => {
 
 interface IDeps {
     getHashString(data: string): string;
-    glob(pattern: string, cb: (err: Error | null, matches: string[]) => void): void;
+    glob(pat: string): Promise<string[]>;
 }
 
 suite('FileSystem Utils', () => {
@@ -590,7 +590,7 @@ suite('FileSystem Utils', () => {
             path.object,
             tmp.object,
             ((data: string) => deps.object.getHashString(data)),
-            ((p, cb) => deps.object.glob(p, cb))
+            ((p: string) => deps.object.glob(p))
         );
 
         // This is necessary because passing "stat.object" to
@@ -1008,10 +1008,8 @@ suite('FileSystem Utils', () => {
                 'x/y/z/spam.pyc',
                 'x/y/z/spam.so'
             ];
-            deps.setup(d => d.glob(pattern, TypeMoq.It.isAny()))
-                .callback((_p, cb) => {
-                    cb(undefined, expected);
-                });
+            deps.setup(d => d.glob(pattern))
+                .returns(() => Promise.resolve(expected));
 
             const files = await utils.search(pattern);
 
@@ -1021,10 +1019,8 @@ suite('FileSystem Utils', () => {
 
         test('no matches (empty)', async () => {
             const pattern = `x/y/z/spam.*`;
-            deps.setup(d => d.glob(pattern, TypeMoq.It.isAny()))
-                .callback((_p, cb) => {
-                    cb(undefined, []);
-                });
+            deps.setup(d => d.glob(pattern))
+                .returns(() => Promise.resolve([]));
 
             const files = await utils.search(pattern);
 
@@ -1034,10 +1030,9 @@ suite('FileSystem Utils', () => {
 
         test('no matches (undefined)', async () => {
             const pattern = `x/y/z/spam.*`;
-            deps.setup(d => d.glob(pattern, TypeMoq.It.isAny()))
-                .callback((_p, cb) => {
-                    cb(undefined, undefined);
-                });
+            deps.setup(d => d.glob(pattern))
+                //tslint:disable-next-line:no-any
+                .returns(() => Promise.resolve(undefined as any as string[]));
 
             const files = await utils.search(pattern);
 
@@ -1048,10 +1043,8 @@ suite('FileSystem Utils', () => {
         test('failed', async () => {
             const pattern = `x/y/z/spam.*`;
             const err = new Error('something went wrong');
-            deps.setup(d => d.glob(pattern, TypeMoq.It.isAny()))
-                .callback((_p, cb) => {
-                    cb(err);
-                });
+            deps.setup(d => d.glob(pattern))
+                .throws(err);
 
             const promise = utils.search(pattern);
 
