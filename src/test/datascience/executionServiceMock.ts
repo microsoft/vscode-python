@@ -67,7 +67,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
 
         return result;
     }
-    public getExecutionInfo(command: string, args: string[]) {
-        return { command, args };
+    public getExecutionInfo(args: string[]) {
+        return { command: this.pythonPath, args };
     }
 }

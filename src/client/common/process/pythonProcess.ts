@@ -42,7 +42,7 @@ export class PythonExecutionService implements IPythonExecutionService {
             // See these two bugs:
             // https://github.com/microsoft/vscode-python/issues/7569
             // https://github.com/microsoft/vscode-python/issues/7760
-            const { command, args } = this.getExecutionInfo(this.pythonPath, [file]);
+            const { command, args } = this.getExecutionInfo([file]);
             const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 5000).then(output =>
                 output ? output.stdout.trim() : '--timed out--'
             ); // --timed out-- should cause an exception
@@ -73,19 +73,19 @@ export class PythonExecutionService implements IPythonExecutionService {
             return this.pythonPath;
         }
 
-        const { command, args } = this.getExecutionInfo(this.pythonPath, ['-c', 'import sys;print(sys.executable)']);
+        const { command, args } = this.getExecutionInfo(['-c', 'import sys;print(sys.executable)']);
         return this.procService.exec(command, args, { throwOnStdErr: true }).then(output => output.stdout.trim());
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        const { command, args } = this.getExecutionInfo(this.pythonPath, ['-c', `import ${moduleName}`]);
+        const { command, args } = this.getExecutionInfo(['-c', `import ${moduleName}`]);
         return this.procService
             .exec(command, args, { throwOnStdErr: true })
             .then(() => true)
             .catch(() => false);
     }
 
-    public getExecutionInfo(command: string, args: string[]): PythonExecutionInfo {
-        return { command, args };
+    public getExecutionInfo(args: string[]): PythonExecutionInfo {
+        return { command: this.pythonPath, args };
     }
 
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
@@ -102,12 +102,12 @@ export class PythonExecutionService implements IPythonExecutionService {
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.getExecutionInfo(this.pythonPath, args);
+        const executable = this.getExecutionInfo(args);
         return this.procService.exec(executable.command, executable.args, opts);
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const opts: SpawnOptions = { ...options };
-        const executable = this.getExecutionInfo(this.pythonPath, ['-m', moduleName, ...args]);
+        const executable = this.getExecutionInfo(['-m', moduleName, ...args]);
         const result = await this.procService.exec(executable.command, executable.args, opts);
 
         // If a module is not installed we'll have something in stderr.

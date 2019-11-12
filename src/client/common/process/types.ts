@@ -113,7 +113,7 @@ export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
-    getExecutionInfo(command: string, args: string[]): PythonExecutionInfo;
+    getExecutionInfo(args: string[]): PythonExecutionInfo;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;

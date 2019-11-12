@@ -81,8 +81,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             return this.pythonExecutionService.getExecutablePath();
         }
     }
-    public getExecutionInfo(command: string, args: string[]): PythonExecutionInfo {
-        return { command, args };
+    public getExecutionInfo(args: string[]): PythonExecutionInfo {
+        return { command: this.pythonPath, args };
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         this.throwIfRPCConnectionIsDead();
