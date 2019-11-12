@@ -35,7 +35,7 @@ import { KernelService } from './kernelService';
 export class NotebookStarter implements Disposable {
     private readonly disposables: IDisposable[] = [];
     constructor(
-        private readonly executionFactory: IPythonExecutionFactory,
+            private readonly executionFactory: IPythonExecutionFactory,
         private readonly commandFinder: JupyterCommandFinder,
         private readonly kernelService: KernelService,
         private readonly fileSystem: IFileSystem,
@@ -56,6 +56,7 @@ export class NotebookStarter implements Disposable {
     }
     // tslint:disable-next-line: max-func-body-length
     public async start(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+        traceInfo('Starting Notebook');
         const notebookCommandPromise = this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
         // Now actually launch it
         let exitCode: number | null = 0;
@@ -76,6 +77,7 @@ export class NotebookStarter implements Disposable {
             }
 
             // Then use this to launch our notebook process.
+            traceInfo('Starting Jupyter Notebook');
             const stopWatch = new StopWatch();
             const [launchResult, tempDir] = await Promise.all([
                 notebookCommand!.command!.execObservable(args || [], { throwOnStdErr: false, encoding: 'utf8', token: cancelToken }),
@@ -95,6 +97,7 @@ export class NotebookStarter implements Disposable {
             }
 
             // Wait for the connection information on this result
+            traceInfo('Waiting for Jupyter Notebook');
             const connection = await JupyterConnection.waitForConnection(tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer, cancelToken);
 
             // Fire off telemetry for the process being talkable

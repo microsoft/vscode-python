@@ -244,6 +244,7 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
+    readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
