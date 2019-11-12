@@ -43,9 +43,8 @@ export class PythonExecutionService implements IPythonExecutionService {
             // https://github.com/microsoft/vscode-python/issues/7569
             // https://github.com/microsoft/vscode-python/issues/7760
             const { command, args } = this.getExecutionInfo([file]);
-            const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 5000).then(output =>
-                output ? output.stdout.trim() : '--timed out--'
-            ); // --timed out-- should cause an exception
+            const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 5000)
+                .then(output => output ? output.stdout.trim() : '--timed out--'); // --timed out-- should cause an exception
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {
@@ -78,10 +77,8 @@ export class PythonExecutionService implements IPythonExecutionService {
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         const { command, args } = this.getExecutionInfo(['-c', `import ${moduleName}`]);
-        return this.procService
-            .exec(command, args, { throwOnStdErr: true })
-            .then(() => true)
-            .catch(() => false);
+        return this.procService.exec(command, args, { throwOnStdErr: true })
+            .then(() => true).catch(() => false);
     }
 
     public getExecutionInfo(args: string[]): PythonExecutionInfo {

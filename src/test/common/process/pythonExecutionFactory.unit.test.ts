@@ -136,7 +136,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
+                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
