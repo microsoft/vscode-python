@@ -8,9 +8,9 @@ import {
     ExecutionResult,
     IProcessService,
     IProcessServiceFactory,
-    ObservableExecutionResult,
+    IPythonExecutionFactory,
     IPythonExecutionService,
-    IPythonExecutionFactory
+    ObservableExecutionResult
 } from '../../common/process/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';

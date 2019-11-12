@@ -16,7 +16,7 @@ import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, RegExpValues, Telemetry, PythonDaemonModule } from '../constants';
+import { JupyterCommands, PythonDaemonModule, RegExpValues, Telemetry } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 export enum ModuleExistsStatus {
