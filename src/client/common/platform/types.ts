@@ -46,7 +46,7 @@ export interface ITempFileSystem {
 
 // Eventually we will merge IPathUtils into IFileSystemPath.
 
-export interface IFileSystemPath {
+export interface IFileSystemPaths {
     join(...filenames: string[]): string;
     normCase(filename: string): string;
 }
@@ -104,7 +104,7 @@ export interface IRawFileSystem {
 export const IFileSystemUtils = Symbol('IFileSystemUtils');
 export interface IFileSystemUtils {
     readonly raw: IRawFileSystem;
-    readonly path: IFileSystemPath;
+    readonly path: IFileSystemPaths;
     readonly tmp: ITempFileSystem;
 
     //***********************

@@ -15,7 +15,7 @@ import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
-    IFileSystem, IFileSystemPath, IFileSystemUtils, IRawFileSystem,
+    IFileSystem, IFileSystemPaths, IFileSystemUtils, IRawFileSystem,
     ITempFileSystem,
     TemporaryFile, WriteStream
 } from './types';
@@ -46,11 +46,20 @@ interface INodePath {
 // Eventually we will merge PathUtils into FileSystemPath.
 
 // The file path operations used by the extension.
-export class FileSystemPath implements IFileSystemPath {
+export class FileSystemPaths implements IFileSystemPaths {
     constructor(
-        private readonly isWindows = (getOSType() === OSType.Windows),
-        private readonly raw: INodePath = fspath
+        protected readonly isCaseSensitive: boolean,
+        protected readonly raw: INodePath
     ) { }
+    // Create a new object using common-case default values.
+    // We do not use an alternate constructor because defaults in the
+    // constructor runs counter to our approach.
+    public static withDefaults(): FileSystemPaths {
+        return new FileSystemPaths(
+            (getOSType() === OSType.Windows),
+            fspath
+        );
+    }
 
     public join(...filenames: string[]): string {
         return this.raw.join(...filenames);
@@ -58,7 +67,7 @@ export class FileSystemPath implements IFileSystemPath {
 
     public normCase(filename: string): string {
         filename = this.raw.normalize(filename);
-        return this.isWindows ? filename.toUpperCase() : filename;
+        return this.isCaseSensitive ? filename.toUpperCase() : filename;
     }
 }
 
@@ -72,8 +81,14 @@ interface IRawTmp {
 // The operations on tempporary files/directoryes used by the extension.
 export class TempFileSystem {
     constructor(
-        private readonly raw: IRawTmp = tmpMod
+        protected readonly raw: IRawTmp
     ) { }
+    // Create a new object using common-case default values.
+    public static withDefaults(): TempFileSystem {
+        return new TempFileSystem(
+            tmpMod
+        );
+    }
 
     public async createFile(suffix?: string, dir?: string): Promise<TemporaryFile> {
         const options = {
@@ -122,7 +137,7 @@ interface IRawFSExtra {
     createWriteStream(dest: string): fsextra.WriteStream;
 }
 
-// The parts of FileSystemPath used by RawFileSystem.
+// The parts of IFileSystemPaths used by RawFileSystem.
 interface IRawPath {
     join(...filenames: string[]): string;
 }
@@ -133,10 +148,19 @@ interface IRawPath {
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
-        private readonly path: IRawPath = new FileSystemPath(),
-        private readonly nodefs: IRawFS = fs,
-        private readonly fsExtra: IRawFSExtra = fsextra
+        protected readonly path: IRawPath,
+        protected readonly nodefs: IRawFS,
+        protected readonly fsExtra: IRawFSExtra
     ) { }
+
+    // Create a new object using common-case default values.
+    public static withDefaults(): RawFileSystem{
+        return new RawFileSystem(
+            FileSystemPaths.withDefaults(),
+            fs,
+            fsextra
+        );
+    }
 
     //****************************
     // fs-extra
@@ -227,26 +251,31 @@ export class RawFileSystem implements IRawFileSystem {
     }
 }
 
-// We *could* use ICryptUtils, but it's a bit overkill.
-function getHashString(data: string): string {
-    const hash = createHash('sha512')
-        .update(data);
-    return hash.digest('hex');
-}
-
 type GlobCallback = (err: Error | null, matches: string[]) => void;
 
 // High-level filesystem operations used by the extension.
-@injectable()
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
-        public readonly raw: IRawFileSystem = new RawFileSystem(),
-        public readonly path: IFileSystemPath = new FileSystemPath(),
-        public readonly tmp: ITempFileSystem = new TempFileSystem(),
-        private readonly getHash = getHashString,
-        // tslint:disable-next-line:no-unnecessary-callback-wrapper
-        private readonly globFile = ((pat: string, cb: GlobCallback) => glob(pat, cb))
+        public readonly raw: IRawFileSystem,
+        public readonly path: IFileSystemPaths,
+        public readonly tmp: ITempFileSystem,
+        protected readonly getHash: (data: string) => string,
+        protected readonly globFile: ((pat: string, cb: GlobCallback) => void)
     ) { }
+    // Create a new object using common-case default values.
+    public static withDefaults(): FileSystemUtils {
+        const paths = FileSystemPaths.withDefaults();
+        return new FileSystemUtils(
+            new RawFileSystem(paths, fs, fsextra),
+            paths,
+            TempFileSystem.withDefaults(),
+            getHashString,
+            glob
+            // XXX
+            // tslint:disable-next-line:no-unnecessary-callback-wrapper
+            //((pat: string, cb: GlobCallback) => glob(pat, cb))
+        );
+    }
 
     //****************************
     // aliases
@@ -359,15 +388,25 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 }
 
+// We *could* use ICryptUtils, but it's a bit overkill.
+function getHashString(data: string): string {
+    const hash = createHash('sha512')
+        .update(data);
+    return hash.digest('hex');
+}
+
 // more aliases (to cause less churn)
 @injectable()
 export class FileSystem extends FileSystemUtils implements IFileSystem {
-    constructor(
-        isWindows: boolean = (getOSType() === OSType.Windows)
-    ) {
+
+    constructor() {
+        const paths = FileSystemPaths.withDefaults();
         super(
-            new RawFileSystem(),
-            new FileSystemPath(isWindows)
+            new RawFileSystem(paths, fs, fsextra),
+            paths,
+            TempFileSystem.withDefaults(),
+            getHashString,
+            glob
         );
     }
 

@@ -6,11 +6,11 @@ import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
 import { Disposable } from 'vscode';
 import {
-    FileSystemPath, FileSystemUtils, RawFileSystem, TempFileSystem
+    FileSystemPaths, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
 import {
     FileStat, FileType,
-    IFileSystemPath, IFileSystemUtils, IRawFileSystem, ITempFileSystem,
+    IFileSystemPaths, IFileSystemUtils, IRawFileSystem, ITempFileSystem,
     TemporaryFile, WriteStream
 } from '../../../client/common/platform/types';
 
@@ -92,10 +92,10 @@ suite('FileSystem - Temporary files', () => {
 
 suite('FileSystem paths', () => {
     let raw: TypeMoq.IMock<IRawFS>;
-    let path: IFileSystemPath;
+    let path: IFileSystemPaths;
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
-        path = new FileSystemPath(
+        path = new FileSystemPaths(
             false, // isWindows
             raw.object
         );
@@ -121,7 +121,7 @@ suite('FileSystem paths', () => {
             const filename = 'x/y/z/spam.py';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
@@ -137,7 +137,7 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
@@ -153,7 +153,7 @@ suite('FileSystem paths', () => {
             const expected = filename;
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
@@ -169,7 +169,7 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
@@ -185,7 +185,7 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
@@ -201,7 +201,7 @@ suite('FileSystem paths', () => {
             const expected = 'x/y/z/spam.py';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
@@ -217,7 +217,7 @@ suite('FileSystem paths', () => {
             const expected = 'X/Y/Z/SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPath(
+            path = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
@@ -576,14 +576,14 @@ interface IDeps {
 suite('FileSystem Utils', () => {
     let stat: TypeMoq.IMock<FileStat>;
     let filesystem: TypeMoq.IMock<IRawFileSystem>;
-    let path: TypeMoq.IMock<IFileSystemPath>;
+    let path: TypeMoq.IMock<IFileSystemPaths>;
     let tmp: TypeMoq.IMock<ITempFileSystem>;
     let deps: TypeMoq.IMock<IDeps>;
     let utils: IFileSystemUtils;
     setup(() => {
         stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
         filesystem = TypeMoq.Mock.ofType<IRawFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
-        path = TypeMoq.Mock.ofType<IFileSystemPath>(undefined, TypeMoq.MockBehavior.Strict);
+        path = TypeMoq.Mock.ofType<IFileSystemPaths>(undefined, TypeMoq.MockBehavior.Strict);
         tmp = TypeMoq.Mock.ofType<ITempFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         deps = TypeMoq.Mock.ofType<IDeps>(undefined, TypeMoq.MockBehavior.Strict);
         utils = new FileSystemUtils(

@@ -11,6 +11,6 @@ import { IFileSystem, IFileSystemUtils, IPlatformService, IRegistry } from './ty
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
     serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
-    serviceManager.addSingleton<IFileSystemUtils>(IFileSystemUtils, FileSystemUtils);
+    serviceManager.addSingletonInstance<IFileSystemUtils>(IFileSystemUtils, FileSystemUtils.withDefaults());
     serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 }

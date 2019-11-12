@@ -7,11 +7,12 @@ import * as net from 'net';
 import * as path from 'path';
 import * as tmpMod from 'tmp';
 import {
-    FileSystem, FileSystemPath, FileSystemUtils, RawFileSystem, TempFileSystem
+    FileSystem, FileSystemPaths, FileSystemUtils, RawFileSystem,
+    TempFileSystem
 } from '../../../client/common/platform/fileSystem';
 import {
     FileType,
-    IFileSystemPath, IFileSystemUtils, IRawFileSystem, ITempFileSystem,
+    IFileSystemPaths, IFileSystemUtils, IRawFileSystem, ITempFileSystem,
     TemporaryFile
 } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -103,7 +104,7 @@ class FSFixture {
 suite('FileSystem - Temporary files', () => {
     let tmp: ITempFileSystem;
     setup(() => {
-        tmp = new TempFileSystem();
+        tmp = TempFileSystem.withDefaults();
     });
 
     suite('createFile', () => {
@@ -125,9 +126,9 @@ suite('FileSystem - Temporary files', () => {
 });
 
 suite('FileSystem paths', () => {
-    let fspath: IFileSystemPath;
+    let fspath: IFileSystemPaths;
     setup(() => {
-        fspath = new FileSystemPath();
+        fspath = FileSystemPaths.withDefaults();
     });
 
     suite('join', () => {
@@ -187,7 +188,7 @@ suite('Raw FileSystem', () => {
     let filesystem: IRawFileSystem;
     let fix: FSFixture;
     setup(() => {
-        filesystem = new RawFileSystem();
+        filesystem = RawFileSystem.withDefaults();
         fix = new FSFixture();
     });
     teardown(async () => {
@@ -674,7 +675,7 @@ suite('FileSystem Utils', () => {
     let utils: IFileSystemUtils;
     let fix: FSFixture;
     setup(() => {
-        utils = new FileSystemUtils();
+        utils = FileSystemUtils.withDefaults();
         fix = new FSFixture();
     });
     teardown(async () => {
