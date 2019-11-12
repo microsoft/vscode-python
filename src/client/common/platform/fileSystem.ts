@@ -135,7 +135,7 @@ export class TempFileSystem {
 // This is the parts of the vscode.workspace.fs API that we use here.
 // See: https://code.visualstudio.com/api/references/vscode-api#FileSystem
 // Note that we have used all the API functions *except* "rename()".
-interface INewAPI {
+interface IVSCodeFileSystemAPI {
     copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     createDirectory(uri: vscode.Uri): Thenable<void>;
     delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
@@ -172,7 +172,7 @@ interface IRawPath {
 export class RawFileSystem implements IRawFileSystem {
     constructor(
         protected readonly path: IRawPath,
-        protected readonly newapi: INewAPI,
+        protected readonly vscfs: IVSCodeFileSystemAPI,
         protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
     ) { }
@@ -193,14 +193,14 @@ export class RawFileSystem implements IRawFileSystem {
     public async readText(filename: string): Promise<string> {
         const uri = vscode.Uri.file(filename);
         const data = Buffer.from(
-            await this.newapi.readFile(uri));
+            await this.vscfs.readFile(uri));
         return data.toString(ENCODING);
     }
 
     public async writeText(filename: string, text: string): Promise<void> {
         const uri = vscode.Uri.file(filename);
         const data = Buffer.from(text);
-        await this.newapi.writeFile(uri, data);
+        await this.vscfs.writeFile(uri, data);
     }
 
     public async rmtree(dirname: string): Promise<void> {
@@ -209,8 +209,8 @@ export class RawFileSystem implements IRawFileSystem {
         //   The docs say "throws - FileNotFound when uri doesn't exist".
         //   However, it happily does nothing (at least for remote-over-SSH).
         //   So we have to manually stat, just to be sure.
-        await this.newapi.stat(uri);
-        return this.newapi.delete(uri, {
+        await this.vscfs.stat(uri);
+        return this.vscfs.delete(uri, {
             recursive: true,
             useTrash: false
         });
@@ -218,7 +218,7 @@ export class RawFileSystem implements IRawFileSystem {
 
     public async rmfile(filename: string): Promise<void> {
         const uri = vscode.Uri.file(filename);
-        return this.newapi.delete(uri, {
+        return this.vscfs.delete(uri, {
             recursive: false,
             useTrash: false
         });
@@ -226,12 +226,12 @@ export class RawFileSystem implements IRawFileSystem {
 
     public async stat(filename: string): Promise<FileStat> {
         const uri = vscode.Uri.file(filename);
-        return this.newapi.stat(uri);
+        return this.vscfs.stat(uri);
     }
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const uri = vscode.Uri.file(dirname);
-        return this.newapi.readDirectory(uri);
+        return this.vscfs.readDirectory(uri);
     }
 
     public async mkdirp(dirname: string): Promise<void> {
@@ -243,7 +243,7 @@ export class RawFileSystem implements IRawFileSystem {
             const current = stack.pop() || '';
             const uri = vscode.Uri.file(current);
             try {
-                await this.newapi.createDirectory(uri);
+                await this.vscfs.createDirectory(uri);
             } catch (err) {
                 if (isFileExistsError(err)) {
                     // already done!
@@ -276,8 +276,8 @@ export class RawFileSystem implements IRawFileSystem {
         //   destination doesn't exist".  However, it happily creates
         //   the parent directory (at least for remote-over-SSH).
         //   So we have to manually stat, just to be sure.
-        await this.newapi.stat(vscode.Uri.file(this.path.dirname(dest)));
-        await this.newapi.copy(srcURI, destURI, {
+        await this.vscfs.stat(vscode.Uri.file(this.path.dirname(dest)));
+        await this.vscfs.copy(srcURI, destURI, {
             overwrite: true
         });
     }
