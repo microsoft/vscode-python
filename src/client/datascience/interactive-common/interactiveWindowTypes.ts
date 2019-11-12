@@ -2,7 +2,6 @@
 // Licensed under the MIT License.
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
-
 import { Uri } from 'vscode';
 import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
@@ -81,6 +80,7 @@ export namespace InteractiveWindowMessages {
     export const NotebookAddCellBelow = 'notebook_add_cell_below';
     export const RenderComplete = 'finished_rendering_cells';
     export const FocusedCellEditor = 'focused_cell_editor';
+    export const ClearAllOutputs = 'clear_all_outputs';
 }
 
 export enum NativeCommandType {
@@ -341,4 +341,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
     public [InteractiveWindowMessages.RenderComplete]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
 }

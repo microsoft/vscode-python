@@ -400,6 +400,8 @@ export class MainStateController implements IMessageHandler {
         this.setState({
             cellVMs: newList
         });
+
+        this.sendMessage(InteractiveWindowMessages.ClearAllOutputs);
     }
 
     public gotoCellCode = (cellId: string) => {

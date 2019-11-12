@@ -1,24 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as detectIndent from 'detect-indent';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
-
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
@@ -29,44 +20,11 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineStringInput, splitMultilineString } from '../common';
-import {
-    EditorContexts,
-    Identifiers,
-    NativeKeyboardCommandTelemetryLookup,
-    NativeMouseCommandTelemetryLookup,
-    Telemetry
-} from '../constants';
+import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import {
-    IEditCell,
-    IInsertCell,
-    INativeCommand,
-    InteractiveWindowMessages,
-    IRemoveCell,
-    ISaveAll,
-    ISubmitNewCell,
-    ISwapCells
-} from '../interactive-common/interactiveWindowTypes';
+import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRemoveCell, ISaveAll, ISubmitNewCell, ISwapCells } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
-import {
-    CellState,
-    ICell,
-    ICodeCssGenerator,
-    IDataScienceErrorHandler,
-    IDataViewerProvider,
-    IInteractiveWindowInfo,
-    IInteractiveWindowListener,
-    IJupyterDebugger,
-    IJupyterExecution,
-    IJupyterVariables,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookExporter,
-    INotebookImporter,
-    INotebookServerOptions,
-    IStatusProvider,
-    IThemeFinder
-} from '../types';
+import { CellState, ICell, ICodeCssGenerator, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindowInfo, IInteractiveWindowListener, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditor, INotebookEditorProvider, INotebookExporter, INotebookImporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
 
 enum AskForSaveResult {
     Yes,
@@ -258,6 +216,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             // call this to update the whole document for intellisense
             case InteractiveWindowMessages.LoadAllCellsComplete:
                 this.handleMessage(message, payload, this.loadCellsComplete);
+                break;
+
+            case InteractiveWindowMessages.ClearAllOutputs:
+                this.handleMessage(message, payload, this.clearAllOutputs);
                 break;
 
             default:
@@ -882,6 +844,53 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         if (!this.loadedAllCells) {
             this.loadedAllCells = true;
             sendTelemetryEvent(Telemetry.NotebookOpenTime, this.startupTimer.elapsedTime);
+        }
+    }
+
+    private async clearAllOutputs() {
+        const clearedCells: ICell[] = [];
+
+        this.visibleCells.forEach(cell => {
+            if (cell.data.cell_type === 'code') {
+                const c: ICell = {
+                    id: cell.id,
+                    file: cell.file,
+                    line: cell.line,
+                    state: cell.state,
+                    data: {
+                        cell_type: cell.data.cell_type,
+                        outputs: [],
+                        execution_count: null,
+                        source: cell.data.source,
+                        metadata: cell.data.metadata
+                    }
+                };
+                clearedCells.push(c);
+            } else {
+                clearedCells.push(cell);
+            }
+        });
+
+        // Reuse our original json except for the cells.
+        const json = {
+            ...(this.notebookJson as nbformat.INotebookContent),
+            cells: clearedCells
+        };
+
+        // Always update storage. Don't wait for results.
+        this.storeContents(JSON.stringify(json, null, this.indentAmount))
+            .catch(ex => traceError('Failed to generate notebook content to store in state', ex));
+
+        // Then update dirty flag.
+        if (!this._dirty) {
+            this._dirty = true;
+            this.setTitle(`${path.basename(this.file.fsPath)}*`);
+
+            // Tell the webview we're dirty
+            await this.postMessage(InteractiveWindowMessages.NotebookDirty);
+
+            // Tell listeners we're dirty
+            this.modifiedEvent.fire(this);
         }
     }
 }

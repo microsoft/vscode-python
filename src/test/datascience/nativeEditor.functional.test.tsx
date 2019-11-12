@@ -265,7 +265,6 @@ for _ in range(50):
             const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
             await openEditor(ioc, JSON.stringify(notebook));
 
-            // Export should cause exportCalled to change to true
             const runAllButton = findButton(wrapper, NativeEditor, 0);
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
 
@@ -274,6 +273,35 @@ for _ in range(50):
             verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
             verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
             verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
+        }, () => { return ioc; });
+
+        runMountedTest('ClearOutputs', async (wrapper) => {
+            // Run all Cells
+            const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
+            {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
+            {id: 'NotebookImport#2', data: {source: 'c=3\nc'}}];
+            const runAllCells =  baseFile.map(cell => {
+                return createFileCell(cell, cell.data);
+            });
+            const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
+            await openEditor(ioc, JSON.stringify(notebook));
+
+            const runAllButton = findButton(wrapper, NativeEditor, 0);
+            await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+
+            await waitForUpdate(wrapper, NativeEditor, 15);
+
+            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
+            verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
+            verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
+
+            // After adding the cells, clear them
+            const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
+            await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
+
+            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 0);
+            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 1);
+            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 2);
         }, () => { return ioc; });
 
         runMountedTest('Startup and shutdown', async (wrapper) => {
