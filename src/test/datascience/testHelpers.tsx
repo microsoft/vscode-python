@@ -12,7 +12,6 @@ import { CancellationToken } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
 import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
@@ -553,16 +552,6 @@ export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainCl
     }
 
     return undefined;
-}
-
-// Update data science settings while running (goes through the UpdateSettings channel)
-export function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}>>, mainClass: React.ComponentClass<any>, newSettings: IDataScienceSettings) {
-    const settingsString = JSON.stringify(newSettings);
-    const mainPanel = getMainPanel(wrapper, mainClass) as any;
-    if (mainPanel) {
-        mainPanel.stateController.handleMessage(InteractiveWindowMessages.UpdateSettings, settingsString);
-    }
-    wrapper.update();
 }
 
 export function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string) {

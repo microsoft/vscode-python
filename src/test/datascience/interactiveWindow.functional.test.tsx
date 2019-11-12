@@ -41,7 +41,6 @@ import {
     getLastOutputCell,
     srcDirectory,
     toggleCellExpansion,
-    updateDataScienceSettings,
     verifyHtmlOnCell,
     verifyLastCellInputState,
     waitForMessageResponse
@@ -147,12 +146,12 @@ suite('DataScience Interactive Window output tests', () => {
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Collapsed);
 
         // Hide the inputs and verify
-        updateDataScienceSettings(wrapper, InteractivePanel, { ...defaultDataScienceSettings(), showCellInputCode: false });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Hidden);
 
         // Show the inputs and verify
-        updateDataScienceSettings(wrapper, InteractivePanel, { ...defaultDataScienceSettings(), showCellInputCode: true });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: true });
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Visible);
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Collapsed);

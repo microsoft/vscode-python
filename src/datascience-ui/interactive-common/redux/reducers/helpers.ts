@@ -95,6 +95,7 @@ export namespace Helpers {
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
+                undoStack: pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
                 currentExecutionCount: newExecutionCount
             };
         }
