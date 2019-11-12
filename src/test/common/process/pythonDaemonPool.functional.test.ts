@@ -254,7 +254,7 @@ suite('Daemon - Python Daemon Pool', () => {
             outputsReceived.filter(item => item.length > 0),
             ['0', '1', '2', '3', '4']
         );
-    }).timeout(1_000);
+    }).timeout(5_000);
 
     test('Execute a file and throw exception if stderr is not empty', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stderr.write("KABOOM")'].join(os.EOL));
@@ -278,7 +278,7 @@ suite('Daemon - Python Daemon Pool', () => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
-    }).timeout(1_000);
+    }).timeout(5_000);
     test('If executing a file takes time, then ensure we use another daemon', async () => {
         const source = dedent`
         import os
