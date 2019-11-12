@@ -291,10 +291,6 @@ for _ in range(50):
 
             await waitForUpdate(wrapper, NativeEditor, 15);
 
-            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
-
             // After adding the cells, clear them
             const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
             await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
