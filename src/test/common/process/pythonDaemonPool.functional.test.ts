@@ -26,7 +26,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { PythonDaemonModule } from '../../../client/datascience/constants';
-import { PYTHON_PATH, waitForCondition } from '../../common';
+import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 use(chaiPromised);
 
 // tslint:disable: max-func-body-length
@@ -53,7 +53,11 @@ suite('Daemon - Python Daemon Pool', () => {
                 .trim();
         }
     });
-    setup(async () => {
+    setup(async function () {
+        if (isPythonVersion('2.7')){
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        }
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
         pythonExecutionService = mock(PythonExecutionService);
         when(pythonExecutionService.execModuleObservable('datascience.daemon', anything(), anything())).thenCall(() => {
