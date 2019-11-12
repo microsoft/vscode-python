@@ -133,13 +133,14 @@ export class TempFileSystem {
 }
 
 // This is the parts of the vscode.workspace.fs API that we use here.
+// See: https://code.visualstudio.com/api/references/vscode-api#FileSystem
+// Note that we have used all the API functions *except* "rename()".
 interface INewAPI {
     copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     createDirectory(uri: vscode.Uri): Thenable<void>;
     delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
     readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
     readFile(uri: vscode.Uri): Thenable<Uint8Array>;
-    //rename(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
     stat(uri: vscode.Uri): Thenable<FileStat>;
     writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 }
