@@ -82,7 +82,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         }
     }
     public getExecutionInfo(args: string[]): PythonExecutionInfo {
-        return { command: this.pythonPath, args };
+        return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         this.throwIfRPCConnectionIsDead();
