@@ -97,9 +97,6 @@ export class TempFileSystem {
 
 // This is the parts of node's 'fs' module that we use in RawFileSystem.
 interface IRawFS {
-    //tslint:disable-next-line:no-any
-    unlink(filename: string, callback: any): void;
-
     // non-async
     createWriteStream(filePath: string): fs.WriteStream;
 }
