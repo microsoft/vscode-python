@@ -7,7 +7,7 @@ import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
 
-export const PythonDaemon = 'datascience.jupyter_daemon';
+export const PythonDaemonModule = 'datascience.jupyter_daemon';
 
 export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';

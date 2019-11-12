@@ -31,13 +31,18 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     private readonly daemons: IPythonDaemonExecutionService[] = [];
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];
     private readonly envVariables: NodeJS.ProcessEnv;
+    private readonly pythonPath: string;
     // private logId: number = 0;
     constructor(
         private readonly options: DaemonExecutionFactoryCreationOptions,
-        private readonly pythonPath: string,
         private readonly pythonExecutionService: IPythonExecutionService,
-        private readonly activatedEnvVariables?: NodeJS.ProcessEnv
+        private readonly activatedEnvVariables?: NodeJS.ProcessEnv,
+        private readonly timeoutWaitingForDaemon: number = 1_000
     ) {
+        if (!options.pythonPath){
+            throw new Error('options.pythonPath is empty when it shoud not be');
+        }
+        this.pythonPath = options.pythonPath;
         // Setup environment variables for the daemon.
         // The daemon must have access to the Python Module that'll run the daemon
         // & also access to a Python package used for the JSON rpc comms.
@@ -87,6 +92,45 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      */
     protected createConnection(proc: ChildProcess){
         return createMessageConnection(new StreamMessageReader(proc.stdout), new StreamMessageWriter(proc.stdin));
+    }
+    @traceDecorators.error('Failed to create daemon')
+    protected async createDaemonServices(): Promise<IPythonDaemonExecutionService> {
+        // const logFileName = `daemon${this.logId += 1}.log`;
+        // const loggingArgs = ['-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, logFileName)}`];
+        const loggingArgs: string[] = [];
+        const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(loggingArgs);
+        const env = this.envVariables;
+        const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
+        if (!daemonProc.proc) {
+            throw new Error('Failed to create Daemon Proc');
+        }
+
+        const connection = this.createConnection(daemonProc.proc);
+        connection.listen();
+        let stdError = '';
+        let procEndEx: Error | undefined;
+        daemonProc.proc.stderr.on('data', (data: string | Buffer) => {
+            data = typeof data === 'string' ? data : data.toString('utf8');
+            stdError += data;
+        });
+        daemonProc.proc.on('error', ex => (procEndEx = ex));
+
+        try {
+            await this.testDaemon(connection);
+
+            const cls = this.options.daemonClass ?? PythonDaemonExecutionService;
+            const instance = new cls(this.pythonExecutionService, this.pythonPath, daemonProc.proc, connection);
+            if (instance instanceof PythonDaemonExecutionService){
+                this.disposables.push(instance);
+                return instance;
+            }
+            throw new Error(`Daemon class ${cls.name} must inherit PythonDaemonExecutionService.`);
+        } catch (ex) {
+            traceError('Failed to start the Daemon, StdErr: ', stdError);
+            traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
+            traceError('Failed  to start the Daemon, Ex', ex);
+            throw ex;
+        }
     }
     /**
      * Wrapper for all promise operations to be performed on a daemon.
@@ -167,7 +211,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      */
     private async popDaemonFromPool(): Promise<IPythonExecutionService> {
         const stopWatch = new StopWatch();
-        while (this.daemons.length === 0 && stopWatch.elapsedTime <= 1_000) {
+        while (this.daemons.length === 0 && stopWatch.elapsedTime <= this.timeoutWaitingForDaemon) {
             await sleep(50);
         }
         return this.daemons.shift() ?? this.pythonExecutionService;
@@ -207,7 +251,9 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const testAndPushIntoPool = async () => {
             const daemonService = (daemon as PythonDaemonExecutionService);
             let procIsDead = false;
-            if (!daemonService.proc.killed && ProcessService.isAlive(daemonService.proc.pid)){
+            if (!daemonService.isAlive || daemonService.proc.killed || !ProcessService.isAlive(daemonService.proc.pid)){
+                procIsDead = true;
+            } else {
                 // Test sending a ping.
                 procIsDead = await this.testDaemon(daemonService.connection).then(() => false).catch(() => true);
             }
@@ -247,44 +293,6 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         clearTimeout(timer);
         if (result.pong !== 'hello') {
             throw new Error(`Daemon did not reply to the ping, received: ${result.pong}`);
-        }
-    }
-    // @traceDecoratorsDaemon - Python Daemon Pool.error('Failed to create daemon')
-    private async createDaemonServices(): Promise<IPythonDaemonExecutionService> {
-        //const logFileName = `daemon${this.logId += 1}.log`;
-        const loggingArgs: string[] = []; //['-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, logFileName)}`];
-        const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(loggingArgs);
-        const env = this.envVariables;
-        const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
-        if (!daemonProc.proc) {
-            throw new Error('Failed to create Daemon Proc');
-        }
-
-        const connection = this.createConnection(daemonProc.proc);
-        connection.listen();
-        let stdError = '';
-        let procEndEx: Error | undefined;
-        daemonProc.proc.stderr.on('data', (data: string | Buffer) => {
-            data = typeof data === 'string' ? data : data.toString('utf8');
-            stdError += data;
-        });
-        daemonProc.proc.on('error', ex => (procEndEx = ex));
-
-        try {
-            await this.testDaemon(connection);
-
-            const cls = this.options.daemonClass ?? PythonDaemonExecutionService;
-            const instance = new cls(this.pythonExecutionService, this.pythonPath, daemonProc.proc, connection);
-            if (instance instanceof PythonDaemonExecutionService){
-                this.disposables.push(instance);
-                return instance;
-            }
-            throw new Error(`Daemon class ${cls.name} must inherit PythonDaemonExecutionService.`);
-        } catch (ex) {
-            traceError('Failed to start the Daemon, StdErr: ', stdError);
-            traceError('Failed to start the Daemon, ProcEndEx', procEndEx || ex);
-            traceError('Failed  to start the Daemon, Ex', ex);
-            throw ex;
         }
     }
 }

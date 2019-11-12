@@ -62,7 +62,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool(options, pythonPath, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool({...options, pythonPath}, activatedProc!, activatedEnvVars);
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;

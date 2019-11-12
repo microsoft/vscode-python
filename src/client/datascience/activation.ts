@@ -12,7 +12,7 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { IInterpreterService } from '../interpreter/contracts';
-import { PythonDaemon } from './constants';
+import { PythonDaemonModule } from './constants';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
@@ -48,6 +48,6 @@ export class Activation implements IExtensionSingleActivationService {
         if (!activeInterpreter) {
             return;
         }
-        await this.factory.createDaemon({ daemonModule: PythonDaemon, pythonPath: activeInterpreter.path });
+        await this.factory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: activeInterpreter.path });
     }
 }
