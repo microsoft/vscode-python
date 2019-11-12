@@ -12,6 +12,8 @@ import { traceVerbose } from '../../../common/logger';
 import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService } from '../../../interpreter/contracts';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { EventName } from '../../../telemetry/constants';
 import { RemoteDebugOptions } from '../../debugAdapter/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 import { IDebugAdapterDescriptorFactory } from '../types';
@@ -24,7 +26,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) { }
+    ) {}
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
 
@@ -37,11 +39,17 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                 return new DebugAdapterServer(port, configuration.host);
             } else {
                 const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-                if (await this.useNewPtvsd(pythonPath)) {
-                    // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
-                    const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                    const ptvsdPathToUse = this.getPtvsdPath();
-                    return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'adapter'), ...logArgs]);
+                // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+                const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+                const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd');
+                if (pythonPath.length !== 0) {
+                    if (await this.useNewPtvsd(pythonPath)) {
+                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
+                        return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'), ...logArgs]);
+                    } else {
+                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: false });
+                        return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'no_wheels', 'ptvsd', 'adapter'), ...logArgs]);
+                    }
                 }
             }
         } else {
@@ -73,7 +81,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
     }
 
     public getPtvsdPath(): string {
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'ptvsd');
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'no_wheels', 'ptvsd');
     }
 
     public getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
