@@ -26,10 +26,16 @@ const WINDOWS = /^win/.test(process.platform);
 
 const DOES_NOT_EXIST = 'this file does not exist';
 
-async function ensureDoesNotExist(filename: string) {
+async function assertDoesNotExist(filename: string) {
     await expect(
         fsextra.stat(filename)
     ).to.eventually.be.rejected;
+}
+
+async function assertExists(filename: string) {
+    await expect(
+        fsextra.stat(filename)
+    ).to.not.eventually.be.rejected;
 }
 
 class FSFixture {
@@ -103,10 +109,10 @@ suite('FileSystem - Temporary files', () => {
     suite('createFile', () => {
         test('TemporaryFile is populated properly', async () => {
             const tempfile = await tmp.createFile('.tmp');
-            await fsextra.stat(tempfile.filePath); // This should not fail.
+            await assertExists(tempfile.filePath);
             tempfile.dispose();
 
-            await ensureDoesNotExist(tempfile.filePath);
+            await assertDoesNotExist(tempfile.filePath);
             expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, `bad suffix on ${tempfile.filePath}`);
         });
 
@@ -230,7 +236,7 @@ suite('Raw FileSystem', () => {
     suite('writeText', () => {
         test('creates the file if missing', async () => {
             const filename = await fix.resolve('x/y/z/spam.py');
-            await ensureDoesNotExist(filename);
+            await assertDoesNotExist(filename);
             const data = 'line1\nline2\n';
 
             await filesystem.writeText(filename, data);
@@ -268,20 +274,20 @@ suite('Raw FileSystem', () => {
             await fix.createDirectory('x');
             // x/y, x/y/z, and x/y/z/spam are all missing.
             const dirname = await fix.resolve('x/y/z/spam', false);
-            await ensureDoesNotExist(dirname);
+            await assertDoesNotExist(dirname);
 
             await filesystem.mkdirp(dirname);
 
-            await fsextra.stat(dirname); // This should not fail.
+            await assertExists(dirname);
         });
 
         test('works if the directory already exists', async () => {
             const dirname = await fix.createDirectory('spam');
-            await fsextra.stat(dirname); // This should not fail.
+            await assertExists(dirname);
 
             await filesystem.mkdirp(dirname);
 
-            await fsextra.stat(dirname); // This should not fail.
+            await assertExists(dirname);
         });
     });
 
@@ -289,11 +295,11 @@ suite('Raw FileSystem', () => {
         test('deletes the directory and everything in it', async () => {
             const dirname = await fix.createDirectory('x');
             const filename = await fix.createFile('x/y/z/spam.py');
-            await fsextra.stat(filename); // This should not fail.
+            await assertExists(filename);
 
             await filesystem.rmtree(dirname);
 
-            await ensureDoesNotExist(dirname);
+            await assertDoesNotExist(dirname);
         });
 
         test('fails if the directory does not exist', async () => {
@@ -306,11 +312,11 @@ suite('Raw FileSystem', () => {
     suite('rmfile', () => {
         test('deletes the file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
-            await fsextra.stat(filename); // This should not fail.
+            await assertExists(filename);
 
             await filesystem.rmfile(filename);
 
-            await ensureDoesNotExist(filename);
+            await assertDoesNotExist(filename);
         });
 
         test('fails if the file does not exist', async () => {
@@ -503,7 +509,7 @@ suite('Raw FileSystem', () => {
             const data = '<content>';
             const src = await fix.createFile('x/y/z/spam.py', data);
             const dest = await fix.resolve('x/y/z/spam.py.bak');
-            await ensureDoesNotExist(dest);
+            await assertDoesNotExist(dest);
 
             await filesystem.copyFile(src, dest);
 
@@ -519,7 +525,7 @@ suite('Raw FileSystem', () => {
             const data = '<content>';
             const src = await fix.createFile('x/y/z/spam.py', data);
             const dest = await fix.resolve('x/y/eggs.py');
-            await ensureDoesNotExist(dest);
+            await assertDoesNotExist(dest);
 
             await filesystem.copyFile(src, dest);
 
@@ -542,7 +548,7 @@ suite('Raw FileSystem', () => {
         test('fails if the target parent directory does not exist', async () => {
             const src = await fix.createFile('x/spam.py', '...');
             const dest = await fix.resolve('y/eggs.py', false);
-            await ensureDoesNotExist(path.dirname(dest));
+            await assertDoesNotExist(path.dirname(dest));
 
             const promise = filesystem.copyFile(src, dest);
 
@@ -624,7 +630,7 @@ suite('Raw FileSystem', () => {
 
         test('creates the file if missing', async () => {
             const filename = await fix.resolve('x/y/z/spam.py');
-            await ensureDoesNotExist(filename);
+            await assertDoesNotExist(filename);
             const data = 'line1\nline2\n';
 
             const stream = filesystem.createWriteStream(filename);
@@ -1134,7 +1140,7 @@ suite('FileSystem - legacy aliases', () => {
 
             const tempfile = await filesystem.createTemporaryFile('.tmp');
 
-            await fsextra.stat(tempfile.filePath); // This should not fail.
+            await assertExists(tempfile.filePath);
             tempfile.dispose();
             expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, tempfile.filePath);
         });
@@ -1167,7 +1173,9 @@ suite('FileSystem - legacy aliases', () => {
 
             const tempfile = await filesystem.createTemporaryFile('.tmp');
 
-            await fsextra.chmod(tempfile.filePath, '7777'); // This should not fail.
+            await expect(
+                fsextra.chmod(tempfile.filePath, '7777')
+            ).to.not.eventually.be.rejected;
         });
     });
 });
