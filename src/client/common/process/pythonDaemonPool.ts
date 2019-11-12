@@ -283,7 +283,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      */
     @traceDecorators.error('Pinging Daemon Failed')
     private async testDaemon(connection: MessageConnection){
-        // If we don't get a reply to the ping in 5 minutes assume it will never work. Bomb out.
+        // If we don't get a reply to the ping in 5 seconds assume it will never work. Bomb out.
         // At this point there should be some information logged in stderr of the daemon process.
         const fail = createDeferred<{pong: string}>();
         const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
