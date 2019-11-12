@@ -300,23 +300,25 @@ suite('Raw FileSystem', () => {
         if (stat.type === FileType.File) {
             old!.setup(s => s.isFile())
                 .returns(() => true);
+        } else if (stat.type === FileType.Directory) {
+            old!.setup(s => s.isFile())
+                .returns(() => false);
+            old!.setup(s => s.isDirectory())
+                .returns(() => true);
+        } else if (stat.type === FileType.SymbolicLink) {
+            old!.setup(s => s.isFile())
+                .returns(() => false);
+            old!.setup(s => s.isDirectory())
+                .returns(() => false);
+            old!.setup(s => s.isSymbolicLink())
+                .returns(() => true);
         } else {
             old!.setup(s => s.isFile())
                 .returns(() => false);
-            if (stat.type === FileType.Directory) {
-                old!.setup(s => s.isDirectory())
-                    .returns(() => true);
-            } else {
-                old!.setup(s => s.isDirectory())
-                    .returns(() => false);
-                if (stat.type === FileType.SymbolicLink) {
-                    old!.setup(s => s.isSymbolicLink())
-                        .returns(() => true);
-                } else {
-                    old!.setup(s => s.isSymbolicLink())
-                        .returns(() => false);
-                }
-            }
+            old!.setup(s => s.isDirectory())
+                .returns(() => false);
+            old!.setup(s => s.isSymbolicLink())
+                .returns(() => false);
         }
         old!.setup(s => s.size)
             .returns(() => stat.size);
