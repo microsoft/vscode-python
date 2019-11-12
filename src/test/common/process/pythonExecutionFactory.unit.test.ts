@@ -5,6 +5,7 @@ import * as assert from 'assert';
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -12,7 +13,6 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
-import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { CONDA_RUN_VERSION, PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
@@ -20,6 +20,7 @@ import {
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
     IProcessLogger,
+    IProcessService,
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
@@ -76,7 +77,7 @@ suite('Process - PythonExecutionFactory', () => {
             let configService: IConfigurationService;
             let condaService: ICondaService;
             let processLogger: IProcessLogger;
-            let processService: ProcessService;
+            let processService: typemoq.IMock<IProcessService>;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
@@ -87,8 +88,15 @@ suite('Process - PythonExecutionFactory', () => {
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
-                processService = mock(ProcessService);
-                when(processService.on('exec', () => { return; })).thenReturn(processService);
+                processService = typemoq.Mock.ofType<IProcessService>();
+                processService
+                    .setup(p =>
+                        p.on('exec', () => {
+                            return;
+                        })
+                    )
+                    .returns(() => processService.object);
+                processService.setup((p: any) => p.then).returns(() => undefined);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
@@ -105,7 +113,7 @@ suite('Process - PythonExecutionFactory', () => {
 
             test('Ensure PythonExecutionService is created', async () => {
                 const pythonSettings = mock(PythonSettings);
-                when(processFactory.create(resource)).thenResolve(instance(processService));
+                when(processFactory.create(resource)).thenResolve(processService.object);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
@@ -117,11 +125,18 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(PythonExecutionService);
             });
             test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
+                const pythonPath = 'path/to/python';
+                const pythonSettings = mock(PythonSettings);
+
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(pythonSettings.pythonPath).thenReturn(pythonPath);
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
                 let createInvoked = false;
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -129,6 +144,13 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.equal(createInvoked, true);
             });
             test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
+                const pythonPath = 'path/to/python';
+                const pythonSettings = mock(PythonSettings);
+
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(pythonSettings.pythonPath).thenReturn(pythonPath);
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
                 let createInvoked = false;
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
@@ -166,7 +188,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
-                when(processFactory.create(resource)).thenResolve(instance(processService));
+                when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
@@ -183,7 +205,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
-                when(processFactory.create(resource)).thenResolve(instance(processService));
+                when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
@@ -203,7 +225,7 @@ suite('Process - PythonExecutionFactory', () => {
             test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
-                when(processFactory.create(resource)).thenResolve(instance(processService));
+                when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer('1.0.0'));
@@ -219,16 +241,10 @@ suite('Process - PythonExecutionFactory', () => {
             });
 
             test('Ensure `createActivatedEnvironment` returns a CondaExecutionService instance if createCondaExecutionService() returns a valid object', async () => {
-                let createInvoked = false;
                 const pythonPath = 'path/to/python';
-                const mockExecService = 'mockService';
-                factory.create = async (_options: ExecutionFactoryCreationOptions) => {
-                    createInvoked = true;
-                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
-                };
-
                 const pythonSettings = mock(PythonSettings);
-                when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
+
+                when(processFactory.create(resource)).thenResolve(processService.object);
                 when(pythonSettings.pythonPath).thenReturn(pythonPath);
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
@@ -238,7 +254,6 @@ suite('Process - PythonExecutionFactory', () => {
                 const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
                 verify(condaService.getCondaFile()).once();
-                verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
                 if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.getCondaEnvironment(pythonPath)).once();
@@ -247,7 +262,6 @@ suite('Process - PythonExecutionFactory', () => {
                 }
 
                 expect(service).instanceOf(CondaExecutionService);
-                assert.equal(createInvoked, false);
             });
 
             test('Ensure `createActivatedEnvironment` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async () => {
@@ -284,9 +298,25 @@ suite('Process - PythonExecutionFactory', () => {
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
                 when(condaService.getCondaFile()).thenResolve('conda');
 
-                const result = await factory.createCondaExecutionService(pythonPath, processService, resource);
+                const result = await factory.createCondaExecutionService(pythonPath, processService.object, resource);
 
                 expect(result).instanceOf(CondaExecutionService);
+                verify(condaService.getCondaVersion()).once();
+                verify(condaService.getCondaEnvironment(pythonPath)).once();
+                verify(condaService.getCondaFile()).once();
+            });
+
+            test('Ensure `createCondaExecutionService` instantiates a ProcessService instance if the process argument is undefined', async () => {
+                const pythonPath = 'path/to/python';
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(condaService.getCondaEnvironment(pythonPath)).thenResolve({ name: 'foo', path: 'path/to/foo/env' });
+                when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
+                when(condaService.getCondaFile()).thenResolve('conda');
+
+                const result = await factory.createCondaExecutionService(pythonPath, undefined, resource);
+
+                expect(result).instanceOf(CondaExecutionService);
+                verify(processFactory.create(resource)).once();
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
                 verify(condaService.getCondaFile()).once();
@@ -297,19 +327,19 @@ suite('Process - PythonExecutionFactory', () => {
                 when(condaService.getCondaEnvironment(pythonPath)).thenResolve(undefined);
                 when(condaService.getCondaVersion()).thenResolve(new SemVer(CONDA_RUN_VERSION));
 
-                const result = await factory.createCondaExecutionService(pythonPath, processService);
+                const result = await factory.createCondaExecutionService(pythonPath, processService.object);
 
                 expect(result).to.be.equal(undefined, 'createCondaExecutionService should return undefined if not in a conda environment');
                 verify(condaService.getCondaVersion()).once();
                 verify(condaService.getCondaEnvironment(pythonPath)).once();
-                verify(condaService.getCondaFile()).never();
+                verify(condaService.getCondaFile()).once();
             });
 
             test('Ensure `createCondaExecutionService` returns undefined if the conda version does not support conda run', async () => {
                 const pythonPath = 'path/to/python';
                 when(condaService.getCondaVersion()).thenResolve(new SemVer('1.0.0'));
 
-                const result = await factory.createCondaExecutionService(pythonPath, processService);
+                const result = await factory.createCondaExecutionService(pythonPath, processService.object);
 
                 expect(result).to.be.equal(undefined, 'createCondaExecutionService should return undefined if not in a conda environment');
                 verify(condaService.getCondaVersion()).once();

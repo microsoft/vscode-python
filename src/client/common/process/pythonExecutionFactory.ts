@@ -119,7 +119,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath);
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, undefined, options.resource);
         if (condaExecutionService) {
             return condaExecutionService;
         }
@@ -150,6 +150,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             processServicePromise
         ]);
         if (condaEnvironment && condaFile && procService) {
+            // Add logging to the newly created process service
+            if (!processService) {
+                const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+                procService.on('exec', processLogger.logProcess.bind(processLogger));
+                this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
+            }
             return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
         }
 
