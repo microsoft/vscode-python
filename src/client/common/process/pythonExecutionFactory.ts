@@ -63,6 +63,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             ]);
 
             const daemon = new PythonDaemonExecutionServicePool(options, pythonPath, activatedProc!, activatedEnvVars);
+            await daemon.initialize();
             disposables.push(daemon);
             return daemon;
         };
