@@ -265,6 +265,17 @@ export interface IEventNamePropertyMapping {
         enabled: boolean;
     };
     /**
+     * Telemetry event captured when debug adapter executable is created
+     */
+    [EventName.DEBUG_ADAPTER_USING_WHEELS_PATH]: {
+        /**
+         * Carries boolean
+         * - `true` if path used for the adapter is the debugger with wheels.
+         * - `false` if path used for the adapter is the source only version of the debugger.
+         */
+        usingWheels: boolean;
+    };
+    /**
      * Telemetry captured before starting debug session.
      */
     [EventName.DEBUG_SESSION_START]: {
