@@ -54,7 +54,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const seen: string[] = [];
         const dirs: [string, boolean][] = [];
         for (const regValue of regValues) {
-            const exists = ! skipKeys.includes(regValue.key);
+            const exists = !skipKeys.includes(regValue.key);
             if (regValue.name === undefined) {
                 if (regValue.value) {
                     dirs.push([regValue.value, exists]);
