@@ -130,7 +130,11 @@ class LegacyFileSystem extends FileSystem {
 }
 
 export class IocContainer {
-    public vscode = true;
+    // This may be set (before any registration happens) to indicate
+    // whether or not IOC should depend on the VS Code API (e.g. the
+    // "vscode" module).  So in "functional" tests, this should be set
+    // to "false".
+    public useVSCodeAPI = true;
 
     public readonly serviceManager: IServiceManager;
     public readonly serviceContainer: IServiceContainer;
@@ -180,7 +184,7 @@ export class IocContainer {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
         this.serviceManager.addSingleton<IFileSystem>(
             IFileSystem,
-            this.vscode ? FileSystem : LegacyFileSystem
+            this.useVSCodeAPI ? FileSystem : LegacyFileSystem
         );
     }
     public registerProcessTypes() {
