@@ -27,7 +27,15 @@
         "editor.formatOnSave": true
     },
     "[typescript]": {
-        "editor.formatOnSave": true
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "[javascript]": {
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode"
+    },
+    "editor.codeActionsOnSave": {
+        "source.fixAll.tslint": true
     },
     "typescript.tsdk": "./node_modules/typescript/lib", // we want to use the TS server from our node_modules folder to control its version
     "tslint.enable": true,
@@ -38,9 +46,6 @@
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.tslintIntegration": true,
-    "prettier.printWidth": 180,
-    "prettier.singleQuote": true,
     "python.jediEnabled": false,
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
@@ -50,5 +55,6 @@
     "python.linting.flake8Args": [
         "--max-line-length=120"
     ],
-    "typescript.preferences.importModuleSpecifier": "relative"
+    "typescript.preferences.importModuleSpecifier": "relative",
+    "python.pythonPath": ".venv/bin/python3"
 }
