@@ -272,9 +272,6 @@ export class FileSystemUtils implements IFileSystemUtils {
             TempFileSystem.withDefaults(),
             getHashString,
             glob
-            // XXX
-            // tslint:disable-next-line:no-unnecessary-callback-wrapper
-            //((pat: string, cb: GlobCallback) => glob(pat, cb))
         );
     }
 

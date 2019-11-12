@@ -36,10 +36,9 @@ interface IRawFS {
     createReadStream(src: string): fsextra.ReadStream;
     createWriteStream(dest: string): fsextra.WriteStream;
 
-    // node "path"
+    // fs paths (IFileSystemPaths)
     join(...filenames: string[]): string;
     normalize(filename: string): string;
-    dirname(filename: string): string;
 
     // "tmp"
     file(options: { }, cb: TempCallback): void;
