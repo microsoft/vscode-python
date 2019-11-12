@@ -487,7 +487,7 @@ for _ in range(50):
                 // This is used in some tests (saving).
                 notebookFile = await createTemporaryFile('.ipynb');
                 await fs.writeFile(notebookFile.filePath, baseFile);
-                await openEditor(ioc, baseFile, notebookFile.filePath);
+                await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, baseFile, notebookFile.filePath)]);
             } else {
                 // tslint:disable-next-line: no-invalid-this
                 this.skip();
