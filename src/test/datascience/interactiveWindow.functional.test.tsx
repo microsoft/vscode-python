@@ -10,11 +10,13 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -43,11 +45,11 @@ import {
     toggleCellExpansion,
     verifyHtmlOnCell,
     verifyLastCellInputState,
+    waitForMessage,
     waitForMessageResponse
 } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
-import { IDataScienceSettings } from '../../client/common/types';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window output tests', () => {
     const disposables: Disposable[] = [];
@@ -76,6 +78,7 @@ suite('DataScience Interactive Window output tests', () => {
     async function forceSettingsChange(newSettings: IDataScienceSettings) {
         await getOrCreateInteractiveWindow(ioc);
         ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
+        return waitForMessage(ioc, InteractiveWindowMessages.UpdateSettings);
     }
 
     // Uncomment this to debug hangs on exit

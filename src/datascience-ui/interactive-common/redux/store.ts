@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 
 import { Identifiers } from '../../../client/datascience/constants';
@@ -13,7 +14,6 @@ import { combineReducers, createAsyncStore, QueuableAction } from '../../react-c
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
-import { CommonActionType } from './reducers/types';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -94,6 +94,22 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         if (prevState.main.focusedCellId !== afterState.main.focusedCellId && afterState.main.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId })));
+        }
+
+        // Indicate settings updates
+        if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {
+            // Send async so happens after render state changes (so our enzyme wrapper is up to date)
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.UpdateSettings)));
+        }
+
+        // Indicate clean changes
+        if (prevState.main.dirty && !afterState.main.dirty) {
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.NotebookClean)));
+        }
+
+        // Indicate dirty changes
+        if (!prevState.main.dirty && afterState.main.dirty) {
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.NotebookDirty)));
         }
 
         // Special case for rendering complete

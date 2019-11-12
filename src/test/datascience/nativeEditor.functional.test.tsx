@@ -7,6 +7,8 @@ import { ReactWrapper } from 'enzyme';
 import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as path from 'path';
+import { Provider } from 'react-redux';
+import * as Redux from 'redux';
 import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -24,6 +26,7 @@ import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } 
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
+import { IStore } from '../../datascience-ui/interactive-common/redux/store';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -484,7 +487,7 @@ for _ in range(50):
                 // This is used in some tests (saving).
                 notebookFile = await createTemporaryFile('.ipynb');
                 await fs.writeFile(notebookFile.filePath, baseFile);
-                await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, baseFile, notebookFile.filePath)]);
+                await openEditor(ioc, baseFile, notebookFile.filePath);
             } else {
                 // tslint:disable-next-line: no-invalid-this
                 this.skip();
@@ -1054,6 +1057,7 @@ for _ in range(50):
 
         suite('Auto Save', () => {
             let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
+            let store: Redux.Store<IStore, Redux.AnyAction>;
             setup(async function() {
                 initIoc();
 
@@ -1063,20 +1067,11 @@ for _ in range(50):
 
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
+
+                store = wrapper.find(Provider).props().store;
+
             });
             teardown(() => sinon.restore());
-
-            /**
-             * Wait for a particular message to be received by the editor component.
-             * If message isn't reiceived within a time out, then reject with a timeout error message.
-             *
-             * @param {string} message
-             * @param {number} timeout
-             * @returns {Promise<void>}
-             */
-            async function waitForMessageReceivedEditorComponent(message: string, timeout: number = 5000): Promise<void> {
-                return waitForMessage(ioc, message, timeout);
-            }
 
             /**
              * Wait for notebook to be marked as dirty (within a timeout of 5s).
@@ -1085,10 +1080,8 @@ for _ in range(50):
              * @returns {Promise<void>}
              */
             async function waitForNotebookToBeDirty(): Promise<void> {
-                // Wait for the notebook to be marked as dirty (the NotebookDirty message will be sent).
-                await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookDirty, 5_000);
                 // Wait for the state to get updated.
-                //await waitForCondition(async () => controller.getState().dirty === true, 1_000, `Timeout waiting for dirty state to get updated to true`);
+                await waitForCondition(async () => store.getState().main.dirty === true, 1_000, `Timeout waiting for dirty state to get updated to true`);
             }
 
             /**
@@ -1098,11 +1091,8 @@ for _ in range(50):
              * @returns {Promise<void>}
              */
             async function waitForNotebookToBeClean(): Promise<void> {
-                // Wait for the notebook to be marked as dirty (the NotebookDirty message will be sent).
-                await waitForMessageReceivedEditorComponent(InteractiveWindowMessages.NotebookClean, 5_000);
-
                 // Wait for the state to get updated.
-                //await waitForCondition(async () => controller.getState().dirty === false, 2_000, `Timeout waiting for dirty state to get updated to false`);
+                await waitForCondition(async () => store.getState().main.dirty === false, 2_000, `Timeout waiting for dirty state to get updated to false`);
             }
 
             /**
@@ -1111,7 +1101,7 @@ for _ in range(50):
              * @param {number} cellIndex
              */
             async function modifyNotebook() {
-                // (Add a cell into the UI and wait for it to render)
+                // (Add a cell into the UI)
                 await addCell(wrapper, ioc, 'a', false);
             }
 
@@ -1174,7 +1164,7 @@ for _ in range(50):
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('off');
                 when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1000);
                 // Update the settings and wait for the component to receive it and process it.
-                const promise = waitForMessageReceivedEditorComponent(InteractiveWindowMessages.UpdateSettings, 1_000);
+                const promise = waitForMessage(ioc, InteractiveWindowMessages.UpdateSettings);
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
                 await promise;
 

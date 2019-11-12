@@ -39,16 +39,25 @@ export namespace Creation {
         return cellVM;
     }
 
+    function findFirstCodeCellAbove(cellVMs: ICellViewModel[], start: number): string | undefined {
+        for (let index = start; index >= 0; index -= 1) {
+            if (cellVMs[index].cell.data.cell_type === 'code') {
+                return cellVMs[index].cell.id;
+            }
+        }
+    }
+
     export function insertAbove(arg: NativeEditorReducerArg<ICellAction>): IMainState {
         const newVM = prepareCellVM(createEmptyCell(uuid(), null), false, arg.prevState.settings);
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        const position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (position >= 0) {
             newList.splice(position, 0, newVM);
         } else {
-            newList.push(newVM);
+            newList.splice(0, 0, newVM);
+            position = 0;
         }
 
         const result = {
@@ -56,6 +65,9 @@ export namespace Creation {
             undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
             cellVMs: newList
         };
+
+        // Send a messsage that we inserted a cell
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index: position, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) }));
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
@@ -70,11 +82,15 @@ export namespace Creation {
         const newList = [...arg.prevState.cellVMs];
 
         // Find the position where we want to insert
-        const position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        let position = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        let index = 0;
         if (position >= 0) {
             newList.splice(position + 1, 0, newVM);
+            index = position + 1;
         } else {
             newList.push(newVM);
+            position = newList.length - 2;
+            index = newList.length - 1;
         }
 
         const result = {
@@ -82,6 +98,9 @@ export namespace Creation {
             undoStack: Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs),
             cellVMs: newList
         };
+
+        // Send a messsage that we inserted a cell
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) }));
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
