@@ -16,6 +16,7 @@ import { IDisposable } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
@@ -23,7 +24,6 @@ import { IConnection, IJupyterKernelSpec } from '../types';
 import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { KernelService } from './kernelService';
-import { IInterpreterService } from '../../interpreter/contracts';
 
 /**
  * Responsible for starting a notebook.

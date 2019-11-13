@@ -3,6 +3,7 @@
 import { inject, injectable } from 'inversify';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -26,7 +27,6 @@ import {
     IPythonExecutionService
 } from './types';
 import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
-import { IInterpreterService } from '../../interpreter/contracts';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {

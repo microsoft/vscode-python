@@ -136,7 +136,7 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
         if (command === JupyterCommands.NotebookCommand){
             return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
         }
-        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter, isActiveInterpreter);
+        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
     }
 
     public createProcessCommand(exe: string, args: string[]): IJupyterCommand {
