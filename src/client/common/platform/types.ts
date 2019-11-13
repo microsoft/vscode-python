@@ -145,7 +145,20 @@ export interface IFileSystemUtils {
 
 // more aliases (to cause less churn)
 export const IFileSystem = Symbol('IFileSystem');
-export interface IFileSystem extends IFileSystemUtils {
+export interface IFileSystem {
+    createDirectory(dirname: string): Promise<void>;
+    deleteDirectory(dirname: string): Promise<void>;
+    deleteFile(filename: string): Promise<void>;
+    pathExists(filename: string, fileType?: FileType): Promise<boolean>;
+    fileExists(filename: string): Promise<boolean>;
+    directoryExists(dirname: string): Promise<boolean>;
+    getSubDirectories(dirname: string): Promise<string[]>;
+    getFiles(dirname: string): Promise<string[]>;
+    isDirReadonly(dirname: string): Promise<boolean>;
+    getFileHash(filename: string): Promise<string>;
+    search(globPattern: string): Promise<string[]>;
+    arePathsSame(path1: string, path2: string): boolean;
+
     stat(filePath: string): Promise<vscode.FileStat>;
     readFile(filename: string): Promise<string>;
     writeFile(filename: string, data: {}): Promise<void>;

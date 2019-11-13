@@ -1160,7 +1160,7 @@ suite('FileSystem - legacy aliases', () => {
         test('Ensure writing to a temp file is supported via file stream', async () => {
             const filesystem = new FileSystem();
             const tempfile = await filesystem.createTemporaryFile('.tmp');
-            const stream = filesystem.raw.createWriteStream(tempfile.filePath);
+            const stream = filesystem.createWriteStream(tempfile.filePath);
             const data = '...';
 
             stream.write(data, 'utf8');

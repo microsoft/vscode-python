@@ -254,6 +254,7 @@ export class RawFileSystem implements IRawFileSystem {
 type GlobCallback = (err: Error | null, matches: string[]) => void;
 
 // High-level filesystem operations used by the extension.
+@injectable()
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
         public readonly raw: IRawFileSystem,
@@ -397,17 +398,53 @@ function getHashString(data: string): string {
 
 // more aliases (to cause less churn)
 @injectable()
-export class FileSystem extends FileSystemUtils implements IFileSystem {
-
+export class FileSystem implements IFileSystem {
+    private readonly utils: FileSystemUtils;
     constructor() {
-        const paths = FileSystemPaths.withDefaults();
-        super(
-            new RawFileSystem(paths, fs, fsextra),
-            paths,
-            TempFileSystem.withDefaults(),
-            getHashString,
-            glob
-        );
+        this.utils = FileSystemUtils.withDefaults();
+    }
+
+    //****************************
+    // wrappers
+
+    public async createDirectory(dirname: string): Promise<void> {
+        return this.utils.createDirectory(dirname);
+    }
+    public async deleteDirectory(dirname: string): Promise<void> {
+        return this.utils.deleteDirectory(dirname);
+    }
+    public async deleteFile(filename: string): Promise<void> {
+        return this.utils.deleteFile(filename);
+    }
+    public arePathsSame(path1: string, path2: string): boolean {
+        return this.utils.arePathsSame(path1, path2);
+    }
+    public async pathExists(filename: string): Promise<boolean> {
+        return this.utils.pathExists(filename);
+    }
+    public async fileExists(filename: string): Promise<boolean> {
+        return this.utils.fileExists(filename);
+    }
+    public async directoryExists(dirname: string): Promise<boolean> {
+        return this.utils.directoryExists(dirname);
+    }
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        return this.utils.listdir(dirname);
+    }
+    public async getSubDirectories(dirname: string): Promise<string[]> {
+        return this.utils.getSubDirectories(dirname);
+    }
+    public async getFiles(dirname: string): Promise<string[]> {
+        return this.utils.getFiles(dirname);
+    }
+    public async isDirReadonly(dirname: string): Promise<boolean> {
+        return this.utils.isDirReadonly(dirname);
+    }
+    public async getFileHash(filename: string): Promise<string> {
+        return this.utils.getFileHash(filename);
+    }
+    public async search(globPattern: string): Promise<string[]> {
+        return this.utils.search(globPattern);
     }
 
     //****************************
@@ -422,34 +459,34 @@ export class FileSystem extends FileSystemUtils implements IFileSystem {
     }
 
     public async readFile(filename: string): Promise<string> {
-        return this.raw.readText(filename);
+        return this.utils.raw.readText(filename);
     }
 
     public async writeFile(filename: string, data: {}): Promise<void> {
-        return this.raw.writeText(filename, data);
+        return this.utils.raw.writeText(filename, data);
     }
 
     public async chmod(filename: string, mode: string): Promise<void> {
-        return this.raw.chmod(filename, mode);
+        return this.utils.raw.chmod(filename, mode);
     }
 
     public async copyFile(src: string, dest: string): Promise<void> {
-        return this.raw.copyFile(src, dest);
+        return this.utils.raw.copyFile(src, dest);
     }
 
     public fileExistsSync(filename: string): boolean {
-        return this.pathExistsSync(filename);
+        return this.utils.pathExistsSync(filename);
     }
 
     public readFileSync(filename: string): string {
-        return this.raw.readTextSync(filename);
+        return this.utils.raw.readTextSync(filename);
     }
 
     public createWriteStream(filename: string): WriteStream {
-        return this.raw.createWriteStream(filename);
+        return this.utils.raw.createWriteStream(filename);
     }
 
     public async createTemporaryFile(suffix: string): Promise<TemporaryFile> {
-        return this.tmp.createFile(suffix);
+        return this.utils.tmp.createFile(suffix);
     }
 }
