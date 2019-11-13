@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.11.0-rc (7 November 2019)
+## 2019.11.0 (13 November 2019)
 
 ### Enhancements
 
@@ -113,6 +113,12 @@
    ([#8296](https://github.com/Microsoft/vscode-python/issues/8296))
 1. Correctly transition markdown cells into code cells.
    ([#8386](https://github.com/Microsoft/vscode-python/issues/8386))
+1. Fix cells being erased when saving and then changing focus to another cell.
+   ([#8399](https://github.com/Microsoft/vscode-python/issues/8399))
+1. Add a white background for most non-text mimetypes. This lets stuff like Atlair look good in dark mode.
+   ([#8423](https://github.com/Microsoft/vscode-python/issues/8423))
+1. Export to python button is blue in native editor.
+   ([#8424](https://github.com/Microsoft/vscode-python/issues/8424))
 
 ### Code Health
 
