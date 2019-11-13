@@ -5,7 +5,7 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction } from '../../../interactive-common/redux/reducers/types';
+import { ICellAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { NativeEditorReducerArg } from '../mapping';
 import { Effects } from './effects';
 
@@ -42,19 +42,31 @@ export namespace Movement {
         return arg.prevState;
     }
 
-    export function arrowUp(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+    export function arrowUp(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index > 0) {
-            return Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } });
+            const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } });
+            const newVMs = [...newState.cellVMs];
+            newVMs[index] = { ...newVMs[index], inputBlockText: arg.payload.code, cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } } };
+            return {
+                ...newState,
+                cellVMs: newVMs
+            };
         }
 
         return arg.prevState;
     }
 
-    export function arrowDown(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+    export function arrowDown(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index < arg.prevState.cellVMs.length - 1) {
-            return Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } });
+            const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } });
+            const newVMs = [...newState.cellVMs];
+            newVMs[index] = { ...newVMs[index], inputBlockText: arg.payload.code, cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } } };
+            return {
+                ...newState,
+                cellVMs: newVMs
+            };
         }
 
         return arg.prevState;

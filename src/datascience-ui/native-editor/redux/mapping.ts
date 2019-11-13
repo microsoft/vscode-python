@@ -54,8 +54,8 @@ export class INativeEditorActionMapping {
     public [CommonActionType.TOGGLE_LINE_NUMBERS]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.TOGGLE_OUTPUT]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.DELETE_CELL]: NativeEditorReducerFunc<ICellAction>;
-    public [CommonActionType.ARROW_UP]: NativeEditorReducerFunc<ICellAction>;
-    public [CommonActionType.ARROW_DOWN]: NativeEditorReducerFunc<ICellAction>;
+    public [CommonActionType.ARROW_UP]: NativeEditorReducerFunc<ICodeAction>;
+    public [CommonActionType.ARROW_DOWN]: NativeEditorReducerFunc<ICodeAction>;
     public [CommonActionType.CHANGE_CELL_TYPE]: NativeEditorReducerFunc<IChangeCellTypeAction>;
     public [CommonActionType.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
     public [CommonActionType.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;

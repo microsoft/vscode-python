@@ -333,14 +333,14 @@ export class NativeCell extends React.Component<INativeCellProps> {
     private arrowUpFromCell = (e: IKeyboardEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        this.props.arrowUp(this.cellId);
+        this.props.arrowUp(this.cellId, this.getCurrentCode());
         this.props.sendCommand(NativeCommandType.ArrowUp, 'keyboard');
     }
 
     private arrowDownFromCell = (e: IKeyboardEvent) => {
         e.stopPropagation();
         e.preventDefault();
-        this.props.arrowDown(this.cellId);
+        this.props.arrowDown(this.cellId, this.getCurrentCode());
         this.props.sendCommand(NativeCommandType.ArrowDown, 'keyboard');
     }
 
