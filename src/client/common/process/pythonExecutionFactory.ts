@@ -120,7 +120,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
         const condaVersion = await this.condaService.getCondaVersion();
         if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
-            return;
+            return Promise.resolve(undefined);
         }
 
         // const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
@@ -139,6 +139,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         //     return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
         // }
 
-        return;
+        return Promise.resolve(undefined);
     }
 }
