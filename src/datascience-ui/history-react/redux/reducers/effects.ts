@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { Identifiers } from '../../../../client/datascience/constants';
+import { IScrollToCell } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../../client/datascience/messages';
 import { IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
@@ -85,11 +86,22 @@ export namespace Effects {
         };
     }
 
-    export function scrollToCell(arg: InteractiveReducerArg<ICellAction>): IMainState {
-        return {
-            ...arg.prevState,
-            scrolledCellId: arg.payload.cellId
-        };
+    export function scrollToCell(arg: InteractiveReducerArg<IScrollToCell>): IMainState {
+        // Up the scroll count on the necessary cell
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.id);
+        if (index >= 0) {
+            const newVMs = [...arg.prevState.cellVMs];
+
+            // Scroll one cell and unscroll another.
+            newVMs[index] = { ...newVMs[index], scrollCount: newVMs[index].scrollCount + 1 };
+            return {
+                ...arg.prevState,
+                cellVMs: newVMs,
+                isAtBottom: false
+            };
+        }
+
+        return arg.prevState;
     }
 
     export function scrolled(arg: InteractiveReducerArg<IScrollAction>): IMainState {

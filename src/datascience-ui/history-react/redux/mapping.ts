@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IRefreshVariablesRequest, IScrollToCell } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
@@ -71,5 +71,5 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.UPDATESETTINGS]: InteractiveReducerFunc<string>;
     public [IncomingMessageActions.STARTDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.STOPDEBUGGING]: InteractiveReducerFunc<never | undefined>;
-    public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<ICellAction>;
+    public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<IScrollToCell>;
 }

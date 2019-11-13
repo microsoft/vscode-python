@@ -257,9 +257,9 @@ strc = 'c'`;
 function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
     const nodes = wrapper.find(Provider);
     if (nodes.length > 0) {
-        const provider: Provider = nodes.instance() as Provider;
-        if (provider) {
-            provider.props.store.dispatch(({type: CommonActionType.TOGGLE_VARIABLE_EXPLORER}));
+        const store = nodes.at(0).props().store;
+        if (store) {
+            store.dispatch(({type: CommonActionType.TOGGLE_VARIABLE_EXPLORER}));
         }
     }
 }

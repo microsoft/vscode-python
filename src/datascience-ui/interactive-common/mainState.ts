@@ -33,6 +33,7 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
+    scrollCount: number;
     cursorPos: CursorPos;
     hasBeenRun: boolean;
 }
@@ -61,7 +62,6 @@ export type IMainState = {
     dirty?: boolean;
     selectedCellId?: string;
     focusedCellId?: string;
-    scrolledCellId?: string;
     isAtBottom: boolean;
     newCellId?: string;
     loadTotal?: number;
@@ -167,7 +167,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
         selected: false,
         focused: false,
         cursorPos: CursorPos.Current,
-        hasBeenRun: false
+        hasBeenRun: false,
+        scrollCount: 0
     };
 }
 
@@ -211,7 +212,8 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         selected: false,
         focused: false,
         cursorPos: CursorPos.Current,
-        hasBeenRun: false
+        hasBeenRun: false,
+        scrollCount: 0
     };
 }
 

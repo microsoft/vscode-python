@@ -3,6 +3,7 @@
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
+import { logger } from 'redux-logger';
 
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -10,7 +11,7 @@ import { CellState } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
-import { combineReducers, createAsyncStore, QueuableAction } from '../../react-common/reduxUtils';
+import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
@@ -112,6 +113,11 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.NotebookDirty)));
         }
 
+        // Indicate variables complete
+        if (prevState.main.pendingVariableCount !== 0 && afterState.main.pendingVariableCount === 0) {
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.VariablesComplete)));
+        }
+
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
         const afterFinished = afterState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
@@ -126,6 +132,9 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
 }
 
 function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
+    // Create the middleware that modifies actions to queue new actions
+    const queueableActions = createQueueableActionMiddleware();
+
     // Create the update context middle ware. It handles the 'sendInfo' message that
     // requires sending on every cell vm length change
     const updateContext = createSendInfoMiddleware();
@@ -133,7 +142,21 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     // Create the test middle ware. It sends messages that are used for testing only
     const testMiddleware = testMode ? createTestMiddleware() : undefined;
 
-    return testMiddleware ? [updateContext, testMiddleware] : [updateContext];
+    // Create the logger if we're not in production mode or we're forcing logging
+    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode)
+        ? logger : undefined;
+
+    const results: Redux.Middleware<{}, IStore>[] = [];
+    results.push(queueableActions);
+    results.push(updateContext);
+    if (testMiddleware) {
+        results.push(testMiddleware);
+    }
+    if (loggerMiddleware) {
+        results.push(loggerMiddleware);
+    }
+
+    return results;
 }
 
 export interface IStore {
@@ -167,10 +190,9 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const middleware = createMiddleWare(testMode);
 
     // Use this reducer and middle ware to create a store
-    const store = createAsyncStore<IStore, Redux.AnyAction>(
+    const store = Redux.createStore(
         rootReducer,
-        !testMode || process.env.VSC_PYTHON_FORCE_LOGGING !== undefined,
-        middleware);
+        Redux.applyMiddleware(...middleware));
 
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.

@@ -28,7 +28,7 @@ export namespace Variables {
 
         // If going visible for the first time, refresh our variables
         if (newState.variablesVisible) {
-            return refreshVariables({ ...arg, payload: { newExecutionCount: undefined } });
+            return refreshVariables({ ...arg, prevState: newState, payload: { newExecutionCount: undefined } });
         } else {
             return newState;
         }

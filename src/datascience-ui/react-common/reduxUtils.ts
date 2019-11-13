@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { Action, AnyAction, applyMiddleware, createStore, Middleware, Reducer } from 'redux';
-import { logger } from 'redux-logger';
+import { Action, AnyAction, Middleware, Reducer } from 'redux';
 
 // tslint:disable-next-line: interface-name
 interface TypedAnyAction<T> extends Action<T> {
@@ -57,44 +56,36 @@ export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, Queua
 //
 // Careful when using the queueAction though. Don't store it past the point of a reducer as
 // the local state inside of this middleware function will be wrong.
-const queueableDispatcher: Middleware = store => next => action => {
-    let pendingActions: Action[] = [];
-    let complete = false;
+export function createQueueableActionMiddleware(): Middleware {
+    return store => next => action => {
+        let pendingActions: Action[] = [];
+        let complete = false;
 
-    function flush() {
-        pendingActions.forEach(a => store.dispatch(a));
-        pendingActions = [];
-    }
-
-    function queueAction(nextAction: AnyAction) {
-        pendingActions.push(nextAction);
-
-        // If already done, run the pending actions (this means
-        // this was pushed async)
-        if (complete) {
-            flush();
+        function flush() {
+            pendingActions.forEach(a => store.dispatch(a));
+            pendingActions = [];
         }
-    }
 
-    // Add queue to the action
-    const modifiedAction = { ...action, queueAction };
+        function queueAction(nextAction: AnyAction) {
+            pendingActions.push(nextAction);
 
-    // Call the next item in the middle ware chain
-    const res = next(modifiedAction);
+            // If already done, run the pending actions (this means
+            // this was pushed async)
+            if (complete) {
+                flush();
+            }
+        }
 
-    // When done, run all the queued actions
-    complete = true;
-    flush();
+        // Add queue to the action
+        const modifiedAction = { ...action, queueAction };
 
-    return res;
-};
+        // Call the next item in the middle ware chain
+        const res = next(modifiedAction);
 
-export function createAsyncStore<S, A extends Action>(reducers: Reducer<S, A>, applyLogger: boolean, otherMiddleware?: Middleware<{}, S>[]) {
-    const others = otherMiddleware ? [...otherMiddleware] : [];
-    const middleWare = applyLogger ? [logger, queueableDispatcher, ...others] : [queueableDispatcher, ...others];
+        // When done, run all the queued actions
+        complete = true;
+        flush();
 
-    return createStore(
-        reducers,
-        applyMiddleware(...middleWare)
-    );
+        return res;
+    };
 }

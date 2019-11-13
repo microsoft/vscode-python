@@ -150,7 +150,8 @@ export namespace Creation {
             selected: false,
             focused: false,
             cursorPos: CursorPos.Current,
-            hasBeenRun: false
+            hasBeenRun: false,
+            scrollCount: 0
         };
 
         arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, code: '', index: 0, codeCellAboveId: undefined }));
@@ -178,7 +179,8 @@ export namespace Creation {
                 selected: cells[0].selected,
                 focused: cells[0].focused,
                 cursorPos: CursorPos.Current,
-                hasBeenRun: false
+                hasBeenRun: false,
+                scrollCount: 0
             };
 
             // Send messages to other side to indicate the new add

@@ -70,13 +70,16 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         if (this.props.cellVM.selected && !prevProps.cellVM.selected && !this.props.cellVM.focused) {
             this.giveFocus();
         }
+        if (this.props.cellVM.scrollCount !== prevProps.cellVM.scrollCount) {
+            this.scrollAndFlash();
+        }
     }
 
     public shouldComponentUpdate(nextProps: IInteractiveCellProps): boolean {
         return !fastDeepEqual(this.props, nextProps);
     }
 
-    public scrollAndFlash() {
+    private scrollAndFlash() {
         if (this.wrapperRef && this.wrapperRef.current) {
             if (this.wrapperRef.current.scrollIntoView) {
                 this.wrapperRef.current.scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
@@ -90,12 +93,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     }
 
-    // Public for testing
-    public getUnknownMimeTypeFormatString() {
-        return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
-    }
-
-    public giveFocus() {
+    private giveFocus() {
         // Start out with ourselves
         if (this.wrapperRef && this.wrapperRef.current) {
             // Give focus to the cell if not already owning focus
