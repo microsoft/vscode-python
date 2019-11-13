@@ -13,10 +13,11 @@ import {
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { IntellisenseProvider } from '../../../interactive-common/intellisenseProvider';
-import { createPostableAction, IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
+import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
 import { CommonActionType, ICodeCreatedAction, IEditCellAction } from '../../../interactive-common/redux/reducers/types';
 import { initializeTokenizer, registerMonacoLanguage } from '../../../interactive-common/tokenizer';
 import { logMessage } from '../../../react-common/logger';
+import { PostOffice } from '../../../react-common/postOffice';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
 
 export interface IMonacoState {
@@ -24,6 +25,7 @@ export interface IMonacoState {
     tmLanguageData: string | undefined;
     testMode: boolean;
     intellisenseProvider: IntellisenseProvider | undefined;
+    postOffice: PostOffice;
 }
 
 type MonacoReducerFunc<T> = ReducerFunc<IMonacoState, IncomingMessageActions, T>;
@@ -37,10 +39,16 @@ function handleStarted(arg: MonacoReducerArg): IMonacoState {
     }
 
     // When the window is first starting up, create our intellisense provider
-    if (!arg.prevState.intellisenseProvider) {
+    //
+    // Note: We're not using arg.queueAction to send messages because of two reasons
+    // 1) The queueAction would be used outside of a reducer. This is a no no because its state would be off
+    // 2) A reducer can cause an IntellisenseProvider update, this would mean we'd be dispatching inside of a reducer
+    //   and that's not allowed in redux.
+    // So instead, just post messages directly.
+    if (!arg.prevState.intellisenseProvider && arg.prevState.postOffice) {
         return {
             ...arg.prevState,
-            intellisenseProvider: new IntellisenseProvider((t, p) => arg.queueAction(createPostableAction(t, p)))
+            intellisenseProvider: new IntellisenseProvider(arg.prevState.postOffice.sendMessage.bind(arg.prevState.postOffice))
         };
     }
 
@@ -165,14 +173,15 @@ const reducerMap: IMonacoActionMapping = {
     [CommonActionType.UNMOUNT]: handleUnmount
 };
 
-export function generateMonacoReducer(testMode: boolean):
+export function generateMonacoReducer(testMode: boolean, postOffice: PostOffice):
     Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
     // First create our default state.
     const defaultState: IMonacoState = {
         onigasmData: undefined,
         tmLanguageData: undefined,
         testMode,
-        intellisenseProvider: undefined
+        intellisenseProvider: undefined,
+        postOffice
     };
 
     // Then combine that with our map of state change message to reducer

@@ -54,6 +54,9 @@ export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, Queua
 
 // Got this idea from here:
 // https://stackoverflow.com/questions/36730793/can-i-dispatch-an-action-in-reducer
+//
+// Careful when using the queueAction though. Don't store it past the point of a reducer as
+// the local state inside of this middleware function will be wrong.
 const queueableDispatcher: Middleware = store => next => action => {
     let pendingActions: Action[] = [];
     let complete = false;

@@ -154,7 +154,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const postOfficeReducer = generatePostOfficeSendReducer(postOffice);
 
     // Create another reducer for handling monaco state
-    const monacoReducer = generateMonacoReducer(testMode);
+    const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({
