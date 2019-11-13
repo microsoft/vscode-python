@@ -26,7 +26,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { PythonDaemonModule } from '../../../client/datascience/constants';
-import { PYTHON_PATH, waitForCondition } from '../../common';
+import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 use(chaiPromised);
 
 // tslint:disable: max-func-body-length
@@ -53,7 +53,11 @@ suite('Daemon - Python Daemon Pool', () => {
                 .trim();
         }
     });
-    setup(async () => {
+    setup(async function () {
+        if (isPythonVersion('2.7')){
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        }
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
         pythonExecutionService = mock(PythonExecutionService);
         when(pythonExecutionService.execModuleObservable('datascience.daemon', anything(), anything())).thenCall(() => {
@@ -250,7 +254,7 @@ suite('Daemon - Python Daemon Pool', () => {
             outputsReceived.filter(item => item.length > 0),
             ['0', '1', '2', '3', '4']
         );
-    }).timeout(1_000);
+    }).timeout(5_000);
 
     test('Execute a file and throw exception if stderr is not empty', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stderr.write("KABOOM")'].join(os.EOL));
@@ -274,7 +278,7 @@ suite('Daemon - Python Daemon Pool', () => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
-    }).timeout(1_000);
+    }).timeout(5_000);
     test('If executing a file takes time, then ensure we use another daemon', async () => {
         const source = dedent`
         import os
@@ -409,5 +413,5 @@ suite('Daemon - Python Daemon Pool', () => {
         // Confirm we have a total of three process ids (for 3 daemons).
         // 2 for earlier, then one died and a new one was created.
         expect(processesUsedToRunCode.size).to.be.greaterThan(2);
-    }).timeout(5_000);
+    }).timeout(10_000);
 });
