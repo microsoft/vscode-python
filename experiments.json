@@ -33,25 +33,25 @@
         "name": "DebugAdapterFactory - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 0
+        "max": 20
     },
     {
         "name": "DebugAdapterFactory - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
+        "min": 80,
+        "max": 100
     },
     {
         "name": "PtvsdWheels37 - control",
         "salt": "DebugAdapterFactory",
         "min": 0,
-        "max": 0
+        "max": 7
     },
     {
         "name": "PtvsdWheels37 - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
+        "min": 93,
+        "max": 100
     },
     {
         "name": "LS - enabled",
