@@ -266,7 +266,6 @@ for _ in range(50):
             const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
             await openEditor(ioc, JSON.stringify(notebook));
 
-            // Export should cause exportCalled to change to true
             const runAllButton = findButton(wrapper, NativeEditor, 0);
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
 

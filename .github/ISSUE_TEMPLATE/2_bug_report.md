@@ -25,6 +25,8 @@ XXX
 XXX
 
 ## Steps to reproduce:
+[**NOTE**: Self-contained, minimal reproducing code samples are **extremely** helpful and will expedite addressing your issue]
+
 1. XXX
 
 <!--

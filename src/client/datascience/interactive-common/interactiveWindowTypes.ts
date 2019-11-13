@@ -81,7 +81,8 @@ export enum InteractiveWindowMessages {
     NotebookAddCellBelow = 'notebook_add_cell_below',
     ExecutionRendered = 'rendered_execution',
     FocusedCellEditor = 'focused_cell_editor',
-    MonacoReady = 'monaco_ready'
+    MonacoReady = 'monaco_ready',
+    ClearAllOutputs = 'clear_all_outputs'
 }
 
 export enum NativeCommandType {
@@ -349,4 +350,5 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
     public [InteractiveWindowMessages.MonacoReady]: never | undefined;
+    public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
 }

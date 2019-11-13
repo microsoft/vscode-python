@@ -129,6 +129,9 @@ export namespace Execution {
         const newList = arg.prevState.cellVMs.map(cellVM => {
             return { ...cellVM, cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } } };
         });
+
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.ClearAllOutputs));
+
         return {
             ...arg.prevState,
             cellVMs: newList
