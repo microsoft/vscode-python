@@ -23,6 +23,7 @@ import { IConnection, IJupyterKernelSpec } from '../types';
 import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 import { KernelService } from './kernelService';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 /**
  * Responsible for starting a notebook.
@@ -236,11 +237,18 @@ export class NotebookStarter implements Disposable {
         if (!notebookCommand.command){
             return;
         }
-        const interpreter = await notebookCommand.command.interpreter();
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const [interpreter, activeInterpreter] = await Promise.all([notebookCommand.command.interpreter(), interpreterService.getActiveInterpreter(undefined)]);
         if (!interpreter){
             return;
         }
-        const daemon = await this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
+        // Create a daemon only when using the current interpreter.
+        // We dont' want to create daemons for all interpreters.
+        const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
+        const daemon = await (isActiveInterpreter ?
+            this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }) :
+            this.executionFactory.createActivatedEnvironment({allowEnvironmentFetchExceptions: true, interpreter})
+        );
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
