@@ -139,8 +139,6 @@ export interface IFileSystemUtils {
 
     // Decide if the two filenames are equivalent.
     arePathsSame(path1: string, path2: string): boolean;  // Move to IPathUtils.
-    // Determine if the file or directory exists.
-    pathExistsSync(filename: string): boolean;
 }
 
 // more aliases (to cause less churn)

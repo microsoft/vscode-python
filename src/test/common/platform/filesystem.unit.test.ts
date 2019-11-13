@@ -815,30 +815,6 @@ suite('FileSystem Utils', () => {
         });
     });
 
-    suite('pathExistsSync', () => {
-        test('exists', async () => {
-            const filename = 'x/y/z/spam.py';
-            filesystem.setup(f => f.statSync(filename))
-                .returns(() => stat.object);
-
-            const exists = utils.pathExistsSync(filename);
-
-            expect(exists).to.equal(true);
-            verifyAll();
-        });
-
-        test('not found', async () => {
-            const filename = 'x/y/z/spam.py';
-            filesystem.setup(f => f.statSync(filename))
-                .throws(new Error('file not found'));
-
-            const exists = utils.pathExistsSync(filename);
-
-            expect(exists).to.equal(false);
-            verifyAll();
-        });
-    });
-
     suite('getSubDirectories', () => {
         test('mixed types', async () => {
             const dirname = 'x/y/z/spam';

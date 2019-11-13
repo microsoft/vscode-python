@@ -327,14 +327,6 @@ export class FileSystemUtils implements IFileSystemUtils {
     public async directoryExists(dirname: string): Promise<boolean> {
         return this.pathExists(dirname, FileType.Directory);
     }
-    public pathExistsSync(filename: string): boolean {
-        try {
-            this.raw.statSync(filename);
-        } catch {
-            return false;
-        }
-        return true;
-    }
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         try {
@@ -436,6 +428,15 @@ export class FileSystem implements IFileSystem {
         return this.utils.search(globPattern);
     }
 
+    public fileExistsSync(filename: string): boolean {
+        try {
+            this.utils.raw.statSync(filename);
+        } catch {
+            return false;
+        }
+        return true;
+    }
+
     //****************************
     // aliases
 
@@ -461,10 +462,6 @@ export class FileSystem implements IFileSystem {
 
     public async copyFile(src: string, dest: string): Promise<void> {
         return this.utils.raw.copyFile(src, dest);
-    }
-
-    public fileExistsSync(filename: string): boolean {
-        return this.utils.pathExistsSync(filename);
     }
 
     public readFileSync(filename: string): string {

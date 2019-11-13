@@ -816,22 +816,6 @@ suite('FileSystem Utils', () => {
         });
     });
 
-    suite('pathExistsSync', () => {
-        test('exists', async () => {
-            const filename = await fix.createFile('x/y/z/spam.py');
-
-            const exists = utils.pathExistsSync(filename);
-
-            expect(exists).to.equal(true);
-        });
-
-        test('not found', async () => {
-            const exists = utils.pathExistsSync(DOES_NOT_EXIST);
-
-            expect(exists).to.equal(false);
-        });
-    });
-
     suite('getSubDirectories', () => {
         test('mixed types', async () => {
             const symlinkSource = await fix.createFile('x/info.py');
