@@ -52,10 +52,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        // const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-        // if (condaExecutionService) {
-        //     return condaExecutionService;
-        // }
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
+        }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
@@ -116,27 +116,28 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
 
+    // @ts-ignore
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
         const condaVersion = await this.condaService.getCondaVersion();
         if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
             return;
         }
 
-        const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
-        const [condaEnvironment, condaFile, procService] = await Promise.all([
-            this.condaService.getCondaEnvironment(pythonPath),
-            this.condaService.getCondaFile(),
-            processServicePromise
-        ]);
-        if (condaEnvironment && condaFile && procService) {
-            // Add logging to the newly created process service
-            if (!processService) {
-                const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-                procService.on('exec', processLogger.logProcess.bind(processLogger));
-                this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
-            }
-            return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
-        }
+        // const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
+        // const [condaEnvironment, condaFile, procService] = await Promise.all([
+        //     this.condaService.getCondaEnvironment(pythonPath),
+        //     this.condaService.getCondaFile(),
+        //     processServicePromise
+        // ]);
+        // if (condaEnvironment && condaFile && procService) {
+        //     // Add logging to the newly created process service
+        //     if (!processService) {
+        //         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        //         procService.on('exec', processLogger.logProcess.bind(processLogger));
+        //         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
+        //     }
+        //     return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
+        // }
 
         return;
     }
