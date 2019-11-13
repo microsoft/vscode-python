@@ -171,126 +171,126 @@ suite('DataScience LiveShare tests', () => {
         api.disableGuestChecker();
     }
 
-    test('Host alone', async () => {
-        // Should only need mock data in host
-        addMockData(hostContainer!, 'a=1\na', 1);
+    //test('Host alone', async () => {
+        //// Should only need mock data in host
+        //addMockData(hostContainer!, 'a=1\na', 1);
 
-        // Start the host session first
-        await startSession(vsls.Role.Host);
+        //// Start the host session first
+        //await startSession(vsls.Role.Host);
 
-        // Just run some code in the host
-        const wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-    });
+        //// Just run some code in the host
+        //const wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    //});
 
-    test('Host & Guest Simple', async () => {
-        // Should only need mock data in host
-        addMockData(hostContainer!, 'a=1\na', 1);
+    //test('Host & Guest Simple', async () => {
+        //// Should only need mock data in host
+        //addMockData(hostContainer!, 'a=1\na', 1);
 
-        // Create the host history and then the guest history
-        await getOrCreateInteractiveWindow(vsls.Role.Host);
-        await startSession(vsls.Role.Host);
-        await getOrCreateInteractiveWindow(vsls.Role.Guest);
-        await startSession(vsls.Role.Guest);
+        //// Create the host history and then the guest history
+        //await getOrCreateInteractiveWindow(vsls.Role.Host);
+        //await startSession(vsls.Role.Host);
+        //await getOrCreateInteractiveWindow(vsls.Role.Guest);
+        //await startSession(vsls.Role.Guest);
 
-        // Send code through the host
-        const wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //// Send code through the host
+        //const wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-        // Verify it ended up on the guest too
-        assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
-        verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-    });
+        //// Verify it ended up on the guest too
+        //assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
+        //verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    //});
 
-    test('Host starts LiveShare after starting Jupyter', async() => {
-       addMockData(hostContainer!, 'a=1\na', 1);
-       addMockData(hostContainer!, 'b=2\nb', 2);
-       await getOrCreateInteractiveWindow(vsls.Role.Host);
-       let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-       verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    //test('Host starts LiveShare after starting Jupyter', async() => {
+       //addMockData(hostContainer!, 'a=1\na', 1);
+       //addMockData(hostContainer!, 'b=2\nb', 2);
+       //await getOrCreateInteractiveWindow(vsls.Role.Host);
+       //let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+       //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-       await startSession(vsls.Role.Host);
-       await getOrCreateInteractiveWindow(vsls.Role.Guest);
-       await startSession(vsls.Role.Guest);
+       //await startSession(vsls.Role.Host);
+       //await getOrCreateInteractiveWindow(vsls.Role.Guest);
+       //await startSession(vsls.Role.Guest);
 
-       wrapper = await addCodeToRole(vsls.Role.Host, 'b=2\nb');
+       //wrapper = await addCodeToRole(vsls.Role.Host, 'b=2\nb');
 
-       assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
-       verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
-    });
+       //assert.ok(guestContainer.wrapper, 'Guest wrapper not created');
+       //verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
+    //});
 
-    test('Host Shutdown and Run', async () => {
-        // Should only need mock data in host
-        addMockData(hostContainer!, 'a=1\na', 1);
+    //test('Host Shutdown and Run', async () => {
+        //// Should only need mock data in host
+        //addMockData(hostContainer!, 'a=1\na', 1);
 
-        // Create the host history and then the guest history
-        await getOrCreateInteractiveWindow(vsls.Role.Host);
-        await startSession(vsls.Role.Host);
+        //// Create the host history and then the guest history
+        //await getOrCreateInteractiveWindow(vsls.Role.Host);
+        //await startSession(vsls.Role.Host);
 
-        // Send code through the host
-        let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //// Send code through the host
+        //let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-        // Stop the session
-        await stopSession(vsls.Role.Host);
+        //// Stop the session
+        //await stopSession(vsls.Role.Host);
 
-        // Send code again. It should still work.
-        wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-    });
+        //// Send code again. It should still work.
+        //wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    //});
 
-    test('Host startup and guest restart', async () => {
-        // Should only need mock data in host
-        addMockData(hostContainer!, 'a=1\na', 1);
+    //test('Host startup and guest restart', async () => {
+        //// Should only need mock data in host
+        //addMockData(hostContainer!, 'a=1\na', 1);
 
-        // Start the host, and add some data
-        const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
-        await startSession(vsls.Role.Host);
+        //// Start the host, and add some data
+        //const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
+        //await startSession(vsls.Role.Host);
 
-        // Send code through the host
-        let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //// Send code through the host
+        //let wrapper = await addCodeToRole(vsls.Role.Host, 'a=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-        // Shutdown the host
-        await host.dispose();
+        //// Shutdown the host
+        //await host.dispose();
 
-        // Startup a guest and run some code.
-        await startSession(vsls.Role.Guest);
-        wrapper = await addCodeToRole(vsls.Role.Guest, 'a=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //// Startup a guest and run some code.
+        //await startSession(vsls.Role.Guest);
+        //wrapper = await addCodeToRole(vsls.Role.Guest, 'a=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-        assert.ok(hostContainer.wrapper, 'Host wrapper not created');
-        verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-    });
+        //assert.ok(hostContainer.wrapper, 'Host wrapper not created');
+        //verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    //});
 
-    test('Going through codewatcher', async () => {
-        // Should only need mock data in host
-        addMockData(hostContainer!, '#%%\na=1\na', 1);
+    //test('Going through codewatcher', async () => {
+        //// Should only need mock data in host
+        //addMockData(hostContainer!, '#%%\na=1\na', 1);
 
-        // Start both the host and the guest
-        await startSession(vsls.Role.Host);
-        await startSession(vsls.Role.Guest);
+        //// Start both the host and the guest
+        //await startSession(vsls.Role.Host);
+        //await startSession(vsls.Role.Guest);
 
-        // Setup a document and text
-        const fileName = 'test.py';
-        const version = 1;
-        const inputText = '#%%\na=1\na';
-        const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
-        document.setup(doc => doc.getText(TypeMoq.It.isAny())).returns(() => inputText);
+        //// Setup a document and text
+        //const fileName = 'test.py';
+        //const version = 1;
+        //const inputText = '#%%\na=1\na';
+        //const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
+        //document.setup(doc => doc.getText(TypeMoq.It.isAny())).returns(() => inputText);
 
-        const codeWatcher = guestContainer!.get<ICodeWatcher>(ICodeWatcher);
-        codeWatcher.setDocument(document.object);
+        //const codeWatcher = guestContainer!.get<ICodeWatcher>(ICodeWatcher);
+        //codeWatcher.setDocument(document.object);
 
-        // Send code using a codewatcher instead (we're sending it through the guest)
-        const wrapper = await waitForResults(vsls.Role.Guest, async (both: boolean) => {
-            // Should always be both
-            assert.ok(both, 'Expected both guest and host to be used');
-            await codeWatcher.runAllCells();
-        });
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-        assert.ok(hostContainer.wrapper, 'Host wrapper not created for some reason');
-        verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-    });
+        //// Send code using a codewatcher instead (we're sending it through the guest)
+        //const wrapper = await waitForResults(vsls.Role.Guest, async (both: boolean) => {
+            //// Should always be both
+            //assert.ok(both, 'Expected both guest and host to be used');
+            //await codeWatcher.runAllCells();
+        //});
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //assert.ok(hostContainer.wrapper, 'Host wrapper not created for some reason');
+        //verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+    //});
 
     test('Export from guest', async () => {
         // tslint:disable-next-line:no-console
@@ -344,26 +344,26 @@ suite('DataScience LiveShare tests', () => {
         assert.ok(outputContents!.includes('data'), 'Output is empty');
     });
 
-    test('Guest does not have extension', async () => {
-        // Should only need mock data in host
-        addMockData(hostContainer!, '#%%\na=1\na', 1);
+    //test('Guest does not have extension', async () => {
+        //// Should only need mock data in host
+        //addMockData(hostContainer!, '#%%\na=1\na', 1);
 
-        // Start just the host and verify it works
-        await startSession(vsls.Role.Host);
-        let wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //// Start just the host and verify it works
+        //await startSession(vsls.Role.Host);
+        //let wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
-        // Disable guest checking on the guest (same as if the guest doesn't have the python extension)
-        await startSession(vsls.Role.Guest);
-        disableGuestChecker(vsls.Role.Guest);
+        //// Disable guest checking on the guest (same as if the guest doesn't have the python extension)
+        //await startSession(vsls.Role.Guest);
+        //disableGuestChecker(vsls.Role.Guest);
 
-        // Host should now be in a state that if any code runs, the session should end. However
-        // the code should still run
-        wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
-        assert.equal(isSessionStarted(vsls.Role.Host), false, 'Host should have exited session');
-        assert.equal(isSessionStarted(vsls.Role.Guest), false, 'Guest should have exited session');
-        assert.ok(lastErrorMessage, 'Error was not set during session shutdown');
-    });
+        //// Host should now be in a state that if any code runs, the session should end. However
+        //// the code should still run
+        //wrapper = await addCodeToRole(vsls.Role.Host, '#%%\na=1\na');
+        //verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
+        //assert.equal(isSessionStarted(vsls.Role.Host), false, 'Host should have exited session');
+        //assert.equal(isSessionStarted(vsls.Role.Guest), false, 'Guest should have exited session');
+        //assert.ok(lastErrorMessage, 'Error was not set during session shutdown');
+    //});
 
 });

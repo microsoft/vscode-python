@@ -55,6 +55,11 @@ suite('DataScience Interactive Window output tests', () => {
     let ioc: DataScienceIocContainer;
     const defaultCellMarker = '# %%';
 
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();

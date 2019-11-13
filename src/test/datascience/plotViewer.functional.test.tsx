@@ -21,6 +21,11 @@ suite('DataScience PlotViewer tests', () => {
     let plotViewerProvider: IPlotViewerProvider;
     let ioc: DataScienceIocContainer;
 
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();

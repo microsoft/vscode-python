@@ -25,6 +25,8 @@ suite('DataScience Interactive Window variable explorer tests', () => {
     let createdNotebook = false;
 
     suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
         // These test require python, so only run with a non-mocked jupyter
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         if (!isRollingBuild) {

@@ -63,6 +63,11 @@ suite('DataScience notebook tests', () => {
     let ioc: DataScienceIocContainer;
     let modifiedConfig = false;
 
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();

@@ -35,6 +35,8 @@ suite('DataScience DataViewer tests', () => {
     let notebook: INotebook | undefined;
 
     suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
         // DataViewer tests require jupyter to run. Othewrise can't
         // run any of our variable execution code
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;

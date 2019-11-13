@@ -16,7 +16,8 @@ import { EventName } from '../telemetry/constants';
 import {
     IInterpreterDisplay, IInterpreterHelper, IInterpreterLocatorService,
     IInterpreterService, INTERPRETER_LOCATOR_SERVICE,
-    InterpreterType, PythonInterpreter} from './contracts';
+    InterpreterType, PythonInterpreter
+} from './contracts';
 import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
 import { IInterpreterHashProviderFactory } from './locators/types';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
@@ -94,6 +95,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
     }
 
     public async getActiveInterpreter(resource?: Uri): Promise<PythonInterpreter | undefined> {
+        // tslint:disable-next-line:no-console
+        console.log('**** Get Active Interpreter ****');
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const pythonExecutionService = await pythonExecutionFactory.create({ resource });
         const fullyQualifiedPath = await pythonExecutionService.getExecutablePath().catch(() => undefined);
@@ -105,6 +108,8 @@ export class InterpreterService implements Disposable, IInterpreterService {
         return this.getInterpreterDetails(fullyQualifiedPath, resource);
     }
     public async getInterpreterDetails(pythonPath: string, resource?: Uri): Promise<PythonInterpreter | undefined> {
+        // tslint:disable-next-line:no-console
+        console.log('**** Get Interpreter Details ****');
         // If we don't have the fully qualified path, then get it.
         if (path.basename(pythonPath) === pythonPath) {
             const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
@@ -203,11 +208,11 @@ export class InterpreterService implements Disposable, IInterpreterService {
         }
         return store;
     }
-    protected async getInterepreterFileHash(pythonPath: string): Promise<string>{
-        return this.hashProviderFactory.create({pythonPath})
+    protected async getInterepreterFileHash(pythonPath: string): Promise<string> {
+        return this.hashProviderFactory.create({ pythonPath })
             .then(provider => provider.getInterpreterHash(pythonPath));
     }
-    protected async updateCachedInterpreterInformation(info: PythonInterpreter, resource: Resource): Promise<void>{
+    protected async updateCachedInterpreterInformation(info: PythonInterpreter, resource: Resource): Promise<void> {
         const key = JSON.stringify(info);
         if (this.updatedInterpreters.has(key)) {
             return;
@@ -224,7 +229,7 @@ export class InterpreterService implements Disposable, IInterpreterService {
         await state.updateValue({ fileHash: state.value.fileHash, info });
         this.didChangeInterpreterInformation.fire(info);
     }
-    protected async buildInterpreterDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string>{
+    protected async buildInterpreterDisplayName(info: Partial<PythonInterpreter>, resource?: Uri): Promise<string> {
         const displayNameParts: string[] = ['Python'];
         const envSuffixParts: string[] = [];
 

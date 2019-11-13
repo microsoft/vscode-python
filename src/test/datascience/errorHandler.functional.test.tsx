@@ -19,6 +19,11 @@ import { MockDocumentManager } from './mockDocumentManager';
 suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
 
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         ioc = createContainer();
     });

@@ -34,6 +34,11 @@ suite('DataScience gotocell tests', () => {
     let documentManager: MockDocumentManager;
     let visibleCells: ICell[] = [];
 
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();

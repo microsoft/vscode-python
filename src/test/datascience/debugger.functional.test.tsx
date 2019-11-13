@@ -41,6 +41,8 @@ suite('DataScience Debugger tests', () => {
     let mockDebuggerService : MockDebuggerService | undefined;
 
     suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 

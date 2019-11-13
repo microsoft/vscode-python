@@ -216,6 +216,8 @@ export class JupyterCommandFinderImpl {
 
         // First we look in the current interpreter
         const current = await this.interpreterService.getActiveInterpreter();
+        // tslint:disable-next-line:no-console
+        console.log(`***** Find Best Command Impl - ${current ? current.path : 'undefined'} ***** `);
         const stopWatch = new StopWatch();
 
         if (isCommandFinderCancelled(command, cancelToken)) {
@@ -226,7 +228,7 @@ export class JupyterCommandFinderImpl {
         // tslint:disable-next-line:no-console
         console.log('***** Find Best Command Impl - interpreter found *****');
         if (found.status === ModuleExistsStatus.NotFound) {
-            traceInfo(`Active interpreter does not support ${command} because of error ${found.error}. Interpreter is ${current ? current.displayName : 'undefined'}.`);
+            traceInfo(`Active interpreter does not support ${command} because of error ${found.error}.Interpreter is ${current ? current.displayName : 'undefined'}.`);
 
             // Save our error information. This should propagate out as the error information for the command
             firstError = found.error;
@@ -299,6 +301,8 @@ export class JupyterCommandFinderImpl {
         let found: IFindCommandResult = {
             status: ModuleExistsStatus.NotFound
         };
+        // tslint:disable-next-line:no-console
+        console.log('***** Search Other Interpreters *****');
 
         // Look through all of our interpreters (minus the active one at the same time)
         const cancelGetInterpreters = createPromiseFromCancellation<PythonInterpreter[]>({ defaultValue: [], cancelAction: 'resolve', token: cancelToken });
@@ -355,7 +359,9 @@ export class JupyterCommandFinderImpl {
             }
         } else {
             // Just pick the first one
-            found = foundList.find(f => f.status !== ModuleExistsStatus.NotFound) || found;
+            // tslint:disable-next-line:no-console
+            console.log('***** Found List Filter *****');
+            found = foundList.filter(f => !!f).find(f => f.status !== ModuleExistsStatus.NotFound) || found;
         }
 
         return found;
@@ -403,7 +409,7 @@ export class JupyterCommandFinderImpl {
                 }
             }
         } else {
-            this.logger.logWarning(`Interpreter not found. ${moduleName} cannot be loaded.`);
+            this.logger.logWarning(`Interpreter not found.${moduleName} cannot be loaded.`);
             result.status = ModuleExistsStatus.NotFound;
         }
 

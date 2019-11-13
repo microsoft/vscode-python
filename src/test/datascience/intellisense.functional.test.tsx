@@ -18,6 +18,11 @@ suite('DataScience Intellisense tests', () => {
     const disposables: Disposable[] = [];
     let ioc: DataScienceIocContainer;
 
+    suiteSetup(function () {
+        // tslint:disable-next-line:no-invalid-this
+        this.skip();
+    });
+
     setup(() => {
         ioc = new DataScienceIocContainer();
         // For this test, jedi is turned off so we use our mock language server
