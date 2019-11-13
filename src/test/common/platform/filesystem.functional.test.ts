@@ -1038,28 +1038,48 @@ suite('FileSystem - legacy aliases', () => {
         await expect(readPromise).to.be.rejectedWith();
     });
 
-    test('Case sensitivity', () => {
+    suite('Case sensitivity', () => {
         const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
         const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
         const path3 = 'c:\\USERS\\Peter Smith\\my documents\\test.exe';
-        const filesystem = new FileSystem();
+        let filesystem: FileSystem;
+        setup(() => {
+            filesystem = new FileSystem();
+        });
 
-        const same12 = filesystem.arePathsSame(path1, path2);
-        const same11 = filesystem.arePathsSame(path1, path1);
-        const same22 = filesystem.arePathsSame(path2, path2);
-        const same13 = filesystem.arePathsSame(path1, path3);
+        test('windows', function() {
+            if (!WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
 
-        if (WINDOWS) {
+            const same12 = filesystem.arePathsSame(path1, path2);
+            const same11 = filesystem.arePathsSame(path1, path1);
+            const same22 = filesystem.arePathsSame(path2, path2);
+            const same13 = filesystem.arePathsSame(path1, path3);
+
             expect(same12).to.be.equal(true, 'file paths do not match (windows)');
             expect(same11).to.be.equal(true, '1. file paths do not match');
             expect(same22).to.be.equal(true, '2. file paths do not match');
             expect(same13).to.be.equal(false, '2. file paths do not match');
-        } else {
+        });
+
+        test('non-windows', function() {
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+
+            const same12 = filesystem.arePathsSame(path1, path2);
+            const same11 = filesystem.arePathsSame(path1, path1);
+            const same22 = filesystem.arePathsSame(path2, path2);
+            const same13 = filesystem.arePathsSame(path1, path3);
+
             expect(same12).to.be.equal(false, 'file match (non windows)');
             expect(same11).to.be.equal(true, '1. file paths do not match');
             expect(same22).to.be.equal(true, '2. file paths do not match');
             expect(same13).to.be.equal(false, '2. file paths do not match');
-        }
+        });
     });
 
     test('Check existence of files synchronously', async () => {
