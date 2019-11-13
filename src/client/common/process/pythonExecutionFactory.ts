@@ -42,7 +42,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        // @ts-ignore
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
@@ -53,10 +52,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-        if (condaExecutionService) {
-            return condaExecutionService;
-        }
+        // const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        // if (condaExecutionService) {
+        //     return condaExecutionService;
+        // }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
@@ -99,10 +98,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath, undefined, options.resource);
-        if (condaExecutionService) {
-            return condaExecutionService;
-        }
+        // const condaExecutionService = await this.createCondaExecutionService(pythonPath, undefined, options.resource);
+        // if (condaExecutionService) {
+        //     return condaExecutionService;
+        // }
 
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
@@ -116,7 +115,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    
+
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
         const condaVersion = await this.condaService.getCondaVersion();
         if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
