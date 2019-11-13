@@ -33,14 +33,15 @@ export namespace Execution {
                 if (orig.cell.data.cell_type === 'code') {
                     // Update our input cell to be in progress again and clear outputs
                     newVMs[pos] = { ...orig, inputBlockText: code, cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code, outputs: [] } } };
+
+                    // Send a message if a code cell
+                    queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
                 } else {
                     // Update our input to be our new code
                     newVMs[pos] = { ...orig, inputBlockText: code, cell: { ...orig.cell, data: { ...orig.cell.data, source: code } } };
                 }
             }
 
-            // Send a message for each
-            queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
         }
 
         return {
