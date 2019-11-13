@@ -38,6 +38,7 @@ suite('Interactive Shift Enter Banner', () => {
     }
 
     setup(() => {
+        clearTelemetryReporter();
         process.env.VSC_PYTHON_UNIT_TEST = undefined;
         process.env.VSC_PYTHON_CI_TEST = undefined;
         appShell = typemoq.Mock.ofType<IApplicationShell>();

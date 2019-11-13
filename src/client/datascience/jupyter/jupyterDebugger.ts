@@ -17,16 +17,7 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { concatMultilineStringOutput } from '../common';
 import { Identifiers, Telemetry } from '../constants';
-import {
-    CellState,
-    ICell,
-    ICellHashListener,
-    IConnection,
-    IFileHashes,
-    IJupyterDebugger,
-    INotebook,
-    ISourceMapRequest
-} from '../types';
+import { CellState, ICell, ICellHashListener, IConnection, IFileHashes, IJupyterDebugger, INotebook, ISourceMapRequest } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';
 import { JupyterDebuggerRemoteNotSupported } from './jupyterDebuggerRemoteNotSupported';
 import { ILiveShareHasRole } from './liveshare/types';
@@ -45,8 +36,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) {
-    }
+    ) {}
 
     public async startDebugging(notebook: INotebook): Promise<void> {
         traceInfo('start debugging');
@@ -114,9 +104,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     public async hashesUpdated(hashes: IFileHashes[]): Promise<void> {
         // Make sure that we have an active debugging session at this point
         if (this.debugService.activeDebugSession) {
-            await Promise.all(hashes.map((fileHash) => {
-                return this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
-            }));
+            await Promise.all(
+                hashes.map(fileHash => {
+                    return this.debugService.activeDebugSession!.customRequest('setPydevdSourceMap', this.buildSourceMap(fileHash));
+                })
+            );
         }
     }
 
@@ -184,18 +176,19 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      */
     private async getPtvsdPath(notebook: INotebook): Promise<string> {
         const oldPtvsd = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
-        if (!this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) ||
-            !this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)){
+        if (!this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) || !this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             return oldPtvsd;
         }
         const pythonVersion = await this.getKernelPythonVersion(notebook);
-        // The new debug adapter is only supported in 3.7
+        // The new debug adapter with wheels is only supported in 3.7
         // Code can be found here (src/client/debugger/extension/adapter/factory.ts).
-        if (!pythonVersion || pythonVersion.major < 3 || pythonVersion.minor < 7){
-            return oldPtvsd;
+        if (pythonVersion && pythonVersion.major === 3 && pythonVersion.minor === 7) {
+            // Return debugger with wheels
+            return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'wheels');
         }
 
-        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python');
+        // We are here so this is NOT python 3.7, return debugger without wheels
+        return path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd', 'no_wheels');
     }
     private async calculatePtvsdPathList(notebook: INotebook): Promise<string | undefined> {
         const extraPaths: string[] = [];
@@ -311,7 +304,12 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 const minor = parseInt(packageVersionMatch[2], 10);
                 const patch = parseInt(packageVersionMatch[3], 10);
                 return {
-                    major, minor, patch, build: [], prerelease: [], raw: `${major}.${minor}.${patch}`
+                    major,
+                    minor,
+                    patch,
+                    build: [],
+                    prerelease: [],
+                    raw: `${major}.${minor}.${patch}`
                 };
             }
         }
@@ -335,7 +333,11 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
     @captureTelemetry(Telemetry.PtvsdPromptToInstall)
     private async promptToInstallPtvsd(notebook: INotebook, oldVersion: Version | undefined): Promise<void> {
         const promptMessage = oldVersion ? localize.DataScience.jupyterDebuggerInstallPtvsdUpdate() : localize.DataScience.jupyterDebuggerInstallPtvsdNew();
-        const result = await this.appShell.showInformationMessage(promptMessage, localize.DataScience.jupyterDebuggerInstallPtvsdYes(), localize.DataScience.jupyterDebuggerInstallPtvsdNo());
+        const result = await this.appShell.showInformationMessage(
+            promptMessage,
+            localize.DataScience.jupyterDebuggerInstallPtvsdYes(),
+            localize.DataScience.jupyterDebuggerInstallPtvsdNo()
+        );
 
         if (result === localize.DataScience.jupyterDebuggerInstallPtvsdYes()) {
             await this.installPtvsd(notebook);
@@ -424,7 +426,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
                 const data = outputs[0].data;
                 if (data && data.hasOwnProperty('text/plain')) {
                     // tslint:disable-next-line:no-any
-                    return ((data as any)['text/plain']);
+                    return (data as any)['text/plain'];
                 }
                 if (outputs[0].output_type === 'stream') {
                     const stream = outputs[0] as nbformat.IStream;
