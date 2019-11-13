@@ -4,7 +4,7 @@ import { inject, injectable } from 'inversify';
 // import { lt } from 'semver';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-// import { ICondaService } from '../../interpreter/contracts';
+import { ICondaService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -41,7 +41,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        // @inject(ICondaService) private readonly condaService: ICondaService,
+        // @ts-ignore
+        @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
     ) {}

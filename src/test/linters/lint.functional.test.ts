@@ -263,7 +263,7 @@ class TestFixture extends BaseTestFixture {
             envActivationService.object,
             procServiceFactory,
             configService,
-            // condaService.object,
+            condaService.object,
             decoder,
             instance(windowsStoreInterpreter)
         );

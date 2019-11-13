@@ -10,7 +10,6 @@ import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-// import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
@@ -30,8 +29,8 @@ import { IConfigurationService, IDisposableRegistry } from '../../../client/comm
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { /*ICondaService, */InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
-// import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { ICondaService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -76,7 +75,7 @@ suite('Process - PythonExecutionFactory', () => {
             let bufferDecoder: IBufferDecoder;
             let processFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
-            // let condaService: ICondaService;
+            let condaService: ICondaService;
             let processLogger: IProcessLogger;
             let processService: typemoq.IMock<IProcessService>;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
@@ -85,7 +84,7 @@ suite('Process - PythonExecutionFactory', () => {
                 activationHelper = mock(EnvironmentActivationService);
                 processFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
-                // condaService = mock(CondaService);
+                condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
@@ -106,7 +105,7 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(activationHelper),
                     instance(processFactory),
                     instance(configService),
-                    // instance(condaService),
+                    instance(condaService),
                     instance(bufferDecoder),
                     instance(windowsStoreInterpreter)
                 );
