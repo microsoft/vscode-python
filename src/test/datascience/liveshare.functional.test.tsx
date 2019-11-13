@@ -2,7 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount, ReactWrapper } from 'enzyme';
+import { mount
+    //, ReactWrapper
+} from 'enzyme';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri } from 'vscode';
@@ -18,18 +20,21 @@ import {
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
 import {
-    ICodeWatcher,
+    //ICodeWatcher,
     IDataScienceCommandListener,
-    IInteractiveWindow,
+    //IInteractiveWindow,
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { createDocument } from './editor-integration/helpers';
-import { waitForUpdate } from './reactHelpers';
-import { addMockData, CellPosition, verifyHtmlOnCell } from './testHelpers';
+//import { createDocument } from './editor-integration/helpers';
+//import { waitForUpdate } from './reactHelpers';
+import { addMockData
+    //, CellPosition
+    //, verifyHtmlOnCell
+} from './testHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 
@@ -38,7 +43,7 @@ suite('DataScience LiveShare tests', () => {
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
-    let lastErrorMessage : string | undefined;
+    //let lastErrorMessage : string | undefined;
 
     setup(() => {
         hostContainer = createContainer(vsls.Role.Host);
@@ -58,7 +63,7 @@ suite('DataScience LiveShare tests', () => {
         }
         await hostContainer.dispose();
         await guestContainer.dispose();
-        lastErrorMessage = undefined;
+        //lastErrorMessage = undefined;
     });
 
     suiteTeardown(() => {
@@ -74,7 +79,7 @@ suite('DataScience LiveShare tests', () => {
             dispose: () => { return; }
         };
         const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => lastErrorMessage = e);
+        //appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => lastErrorMessage = e);
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
         appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('test.ipynb')));
@@ -92,66 +97,66 @@ suite('DataScience LiveShare tests', () => {
         return result;
     }
 
-    function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
-        // Get the container to use based on the role.
-        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        return container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
-    }
+    //function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
+        //// Get the container to use based on the role.
+        //const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        //return container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
+    //}
 
-    function isSessionStarted(role: vsls.Role): boolean {
-        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
-        return api.isSessionStarted;
-    }
+    //function isSessionStarted(role: vsls.Role): boolean {
+        //const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        //const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        //return api.isSessionStarted;
+    //}
 
-    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+    //async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+        //const container = role === vsls.Role.Host ? hostContainer : guestContainer;
 
-        // If just the host session has started or nobody, just run the host.
-        const guestStarted = isSessionStarted(vsls.Role.Guest);
-        if (!guestStarted) {
-            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
+        //// If just the host session has started or nobody, just run the host.
+        //const guestStarted = isSessionStarted(vsls.Role.Guest);
+        //if (!guestStarted) {
+            //const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
 
-            // Generate our results
-            await resultGenerator(false);
+            //// Generate our results
+            //await resultGenerator(false);
 
-            // Wait for all of the renders to go through
-            await hostRenderPromise;
-        } else {
-            // Otherwise more complicated. We have to wait for renders on both
+            //// Wait for all of the renders to go through
+            //await hostRenderPromise;
+        //} else {
+            //// Otherwise more complicated. We have to wait for renders on both
 
-            // Get a render promise with the expected number of renders for both wrappers
-            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
-            const guestRenderPromise = waitForUpdate(guestContainer.wrapper!, InteractivePanel, expectedRenderCount);
+            //// Get a render promise with the expected number of renders for both wrappers
+            //const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
+            //const guestRenderPromise = waitForUpdate(guestContainer.wrapper!, InteractivePanel, expectedRenderCount);
 
-            // Generate our results
-            await resultGenerator(true);
+            //// Generate our results
+            //await resultGenerator(true);
 
-            // Wait for all of the renders to go through. Guest may have been shutdown by now.
-            await Promise.all([hostRenderPromise, isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()]);
-        }
-        return container.wrapper!;
-    }
+            //// Wait for all of the renders to go through. Guest may have been shutdown by now.
+            //await Promise.all([hostRenderPromise, isSessionStarted(vsls.Role.Guest) ? guestRenderPromise : Promise.resolve()]);
+        //}
+        //return container.wrapper!;
+    //}
 
-    async function addCodeToRole(role: vsls.Role, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        return waitForResults(role, async (both: boolean) => {
-            if (!both) {
-                const history = await getOrCreateInteractiveWindow(role);
-                await history.addCode(code, Uri.file('foo.py').fsPath, 2);
-            } else {
-                // Add code to the apropriate container
-                const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
+    //async function addCodeToRole(role: vsls.Role, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+        //return waitForResults(role, async (both: boolean) => {
+            //if (!both) {
+                //const history = await getOrCreateInteractiveWindow(role);
+                //await history.addCode(code, Uri.file('foo.py').fsPath, 2);
+            //} else {
+                //// Add code to the apropriate container
+                //const host = await getOrCreateInteractiveWindow(vsls.Role.Host);
 
-                // Make sure guest is still creatable
-                if (isSessionStarted(vsls.Role.Guest)) {
-                    const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
-                    (role === vsls.Role.Host ? await host.addCode(code, Uri.file('foo.py').fsPath, 2) : await guest.addCode(code, Uri.file('foo.py').fsPath, 2));
-                } else {
-                    await host.addCode(code, Uri.file('foo.py').fsPath, 2);
-                }
-            }
-        }, expectedRenderCount);
-    }
+                //// Make sure guest is still creatable
+                //if (isSessionStarted(vsls.Role.Guest)) {
+                    //const guest = await getOrCreateInteractiveWindow(vsls.Role.Guest);
+                    //(role === vsls.Role.Host ? await host.addCode(code, Uri.file('foo.py').fsPath, 2) : await guest.addCode(code, Uri.file('foo.py').fsPath, 2));
+                //} else {
+                    //await host.addCode(code, Uri.file('foo.py').fsPath, 2);
+                //}
+            //}
+        //}, expectedRenderCount);
+    //}
 
     function startSession(role: vsls.Role): Promise<void> {
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
@@ -159,17 +164,17 @@ suite('DataScience LiveShare tests', () => {
         return api.startSession();
     }
 
-    function stopSession(role: vsls.Role): Promise<void> {
-        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
-        return api.stopSession();
-    }
+    //function stopSession(role: vsls.Role): Promise<void> {
+        //const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        //const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        //return api.stopSession();
+    //}
 
-    function disableGuestChecker(role: vsls.Role) {
-        const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
-        api.disableGuestChecker();
-    }
+    //function disableGuestChecker(role: vsls.Role) {
+        //const container = role === vsls.Role.Host ? hostContainer : guestContainer;
+        //const api = container!.get<ILiveShareApi>(ILiveShareApi) as ILiveShareTestingApi;
+        //api.disableGuestChecker();
+    //}
 
     //test('Host alone', async () => {
         //// Should only need mock data in host
