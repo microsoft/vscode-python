@@ -403,7 +403,7 @@ export interface IJupyterCommand {
 
 export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
 export interface IJupyterCommandFactory {
-    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter): IJupyterCommand;
+    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand;
     createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 

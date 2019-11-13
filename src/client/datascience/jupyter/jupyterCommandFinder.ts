@@ -141,11 +141,13 @@ export class JupyterCommandFinderImpl {
 
         // If the module is found on this interpreter, then we found it.
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
-            findResult = await this.doesModuleExist(command, interpreter, cancelToken);
+            const [result, activeInterpreter] = await Promise.all([this.doesModuleExist(command, interpreter, cancelToken), this.interpreterService.getActiveInterpreter(undefined)]);
+            findResult = result!;
+            const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
             if (findResult.status === ModuleExistsStatus.FoundJupyter) {
-                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter, isActiveInterpreter);
             } else if (findResult.status === ModuleExistsStatus.Found) {
-                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter, isActiveInterpreter);
             }
         }
         return findResult;

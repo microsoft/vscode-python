@@ -26,6 +26,7 @@ import {
     IPythonExecutionService
 } from './types';
 import { WindowsStorePythonProcess } from './windowsStorePythonProcess';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
@@ -52,14 +53,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
-
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
+        const interpreterInfoPromise = interpreterService.getInterpreterDetails(pythonPath);
         // Ensure we do not start multiple daemons for the same interpreter.
         // Cache the promise.
         const start = async () => {
+            const interpreter = await interpreterInfoPromise;
             const [activatedProc, activatedEnvVars] = await Promise.all([
                 activatedProcPromise,
-                this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
+                this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
             const daemon = new PythonDaemonExecutionServicePool({...options, pythonPath}, activatedProc!, activatedEnvVars);

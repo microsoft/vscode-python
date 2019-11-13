@@ -68,9 +68,18 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonInterpreter | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
 
-    constructor(protected readonly moduleName: string, protected args: string[], protected readonly pythonExecutionFactory: IPythonExecutionFactory, private readonly _interpreter: PythonInterpreter) {
+    constructor(protected readonly moduleName: string, protected args: string[], protected readonly pythonExecutionFactory: IPythonExecutionFactory,
+        private readonly _interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = this.interpreterPromise.then(interpreter => pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path }));
+        this.pythonLauncher = this.interpreterPromise.then(interpreter => {
+            // Create a daemon only if the interpreter is the same as the current interpreter.
+            // We don't want too many daemons (one for each of the users interpreter on their machine).
+            if (isActiveInterpreter) {
+                return pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path });
+            } else {
+                return pythonExecutionFactory.createActivatedEnvironment({interpreter: this._interpreter});
+            }
+        });
     }
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
@@ -105,8 +114,8 @@ class InterpreterJupyterCommand implements IJupyterCommand {
  * @implements {IJupyterCommand}
  */
 class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
-    constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter) {
-        super(moduleName, args, pythonExecutionFactory, interpreter);
+    constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
+        super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }
 }
 
@@ -123,11 +132,11 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
 
     }
 
-    public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter): IJupyterCommand {
+    public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand){
-            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter);
+            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
         }
-        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter);
+        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter, isActiveInterpreter);
     }
 
     public createProcessCommand(exe: string, args: string[]): IJupyterCommand {
