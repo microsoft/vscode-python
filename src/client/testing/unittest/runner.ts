@@ -9,11 +9,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { UNITTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import {
-    ITestDebugLauncher, ITestManager, ITestResultsService,
-    ITestRunner, IUnitTestSocketServer, LaunchOptions,
-    TestRunOptions, Tests, TestStatus
-} from '../common/types';
+import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IUnitTestSocketServer, LaunchOptions, TestRunOptions, Tests, TestStatus } from '../common/types';
 import { IArgumentsHelper, ITestManagerRunner, IUnitTestHelper } from '../types';
 
 type TestStatusMap = {
@@ -169,7 +165,6 @@ export class TestManagerRunner implements ITestManagerRunner {
 
                 await this.removeListenersAfter(Promise.resolve());
             }
-
         }
 
         testResultsService.updateResults(options.tests);
@@ -184,7 +179,7 @@ export class TestManagerRunner implements ITestManagerRunner {
     private async removeListenersAfter(after: Promise<any>): Promise<any> {
         return after
             .then(() => this.server.removeAllListeners())
-            .catch((err) => {
+            .catch(err => {
                 this.server.removeAllListeners();
                 throw err; // keep propagating this downward
             });
@@ -194,7 +189,7 @@ export class TestManagerRunner implements ITestManagerRunner {
         const startTestDiscoveryDirectory = this.helper.getStartDirectory(args);
         let pattern = 'test*.py';
         const shortValue = this.argsHelper.getOptionValues(args, '-p');
-        const longValueValue = this.argsHelper.getOptionValues(args, '-pattern');
+        const longValueValue = this.argsHelper.getOptionValues(args, '--pattern');
         if (typeof shortValue === 'string') {
             pattern = shortValue;
         } else if (typeof longValueValue === 'string') {
