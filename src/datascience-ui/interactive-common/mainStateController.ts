@@ -395,7 +395,7 @@ export class MainStateController implements IMessageHandler {
     public clearAllOutputs = () => {
         const newList = this.pendingState.cellVMs.map(cellVM => {
             const updatedVm = immutable.updateIn(cellVM, ['cell', 'data', 'outputs'], () => []);
-            return immutable.removeIn(updatedVm, ['cell', 'data', 'execution_count']);
+            return immutable.updateIn(updatedVm, ['cell', 'data', 'execution_count'], () => null);
         });
         this.setState({
             cellVMs: newList

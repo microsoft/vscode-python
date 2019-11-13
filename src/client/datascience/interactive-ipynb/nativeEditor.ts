@@ -3,7 +3,6 @@
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
 import * as detectIndent from 'detect-indent';
-import * as immutable from 'immutable';
 import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -849,29 +848,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async clearAllOutputs() {
-        let clearedCells = immutable.updateIn(this.visibleCells, ['cell', 'data', 'outputs'], () => []);
-        clearedCells = immutable.removeIn(clearedCells, ['cell', 'data', 'execution_count']);
+        this.visibleCells.forEach(cell => {
+            cell.data.execution_count = null;
+            cell.data.outputs = [];
+        });
 
-        // Reuse our original json except for the cells.
-        const json = {
-            ...(this.notebookJson as nbformat.INotebookContent),
-            cells: clearedCells
-        };
-
-        // Always update storage. Don't wait for results.
-        this.storeContents(JSON.stringify(json, null, this.indentAmount))
-            .catch(ex => traceError('Failed to generate notebook content to store in state', ex));
-
-        // Then update dirty flag.
-        if (!this._dirty) {
-            this._dirty = true;
-            this.setTitle(`${path.basename(this.file.fsPath)}*`);
-
-            // Tell the webview we're dirty
-            await this.postMessage(InteractiveWindowMessages.NotebookDirty);
-
-            // Tell listeners we're dirty
-            this.modifiedEvent.fire(this);
-        }
+        await this.setDirty();
     }
 }

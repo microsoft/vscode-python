@@ -275,41 +275,6 @@ for _ in range(50):
             verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
         }, () => { return ioc; });
 
-        runMountedTest('ClearOutputs', async (wrapper) => {
-            // Run all Cells
-            const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
-            {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
-            {id: 'NotebookImport#2', data: {source: 'c=3\nc'}}];
-            const runAllCells =  baseFile.map(cell => {
-                return createFileCell(cell, cell.data);
-            });
-
-            console.log('create notebook');
-            const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
-            console.log('open editor');
-            await openEditor(ioc, JSON.stringify(notebook));
-
-            console.log('click run');
-            const runAllButton = findButton(wrapper, NativeEditor, 0);
-            await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-
-            console.log('wait for update');
-            await waitForUpdate(wrapper, NativeEditor, 15);
-
-            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
-
-            // After adding the cells, clear them
-            console.log('click clear');
-            const clearAllOutputButton = findButton(wrapper, NativeEditor, 6);
-            await waitForMessageResponse(ioc, () => clearAllOutputButton!.simulate('click'));
-
-            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 0);
-            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 1);
-            verifyHtmlOnCell(wrapper, 'NativeCell', undefined, 2);
-        }, () => { return ioc; });
-
         runMountedTest('Startup and shutdown', async (wrapper) => {
             // Stub the `stat` method to return a dummy value.
             sinon.stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat').resolves({mtime: 0} as any);
