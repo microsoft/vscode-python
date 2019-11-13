@@ -31,7 +31,8 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     private registerDisposables: monacoEditor.IDisposable[] = [];
     private monacoIdToCellId: Map<string, string> = new Map<string, string>();
     private cellIdToMonacoId: Map<string, string> = new Map<string, string>();
-    constructor(private sendMessage: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void) {
+    private disposed = false;
+    constructor(private messageSender: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void) {
         // Register a completion provider
         this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
@@ -99,6 +100,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     }
 
     public dispose() {
+        this.disposed = true;
         this.registerDisposables.forEach(r => r.dispose());
         this.completionRequests.forEach(r => r.promise.resolve());
         this.hoverRequests.forEach(r => r.promise.resolve());
@@ -154,6 +156,12 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
 
         // Just assume it's the edit cell if not found.
         return Identifiers.EditCellId;
+    }
+
+    private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void {
+        if (!this.disposed) {
+            this.messageSender(type, payload);
+        }
     }
 
 }

@@ -279,7 +279,12 @@ for _ in range(50):
 
         runMountedTest('Startup and shutdown', async (wrapper) => {
             // Stub the `stat` method to return a dummy value.
-            sinon.stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat').resolves({mtime: 0} as any);
+            try {
+                sinon.stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat').resolves({mtime: 0} as any);
+            } catch (e) {
+                // tslint:disable-next-line: no-console
+                console.log(`Stub failure ${e}`);
+            }
 
             addMockData(ioc, 'b=2\nb', 2);
             addMockData(ioc, 'c=3\nc', 3);
