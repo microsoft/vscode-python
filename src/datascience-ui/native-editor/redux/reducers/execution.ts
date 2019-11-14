@@ -194,7 +194,7 @@ export namespace Execution {
     export function redo(arg: NativeEditorReducerArg): IMainState {
         if (arg.prevState.redoStack.length > 0) {
             // Pop one off of our redo stack and update our undo
-            const cells = arg.prevState.redoStack[arg.prevState.undoStack.length - 1];
+            const cells = arg.prevState.redoStack[arg.prevState.redoStack.length - 1];
             const redoStack = arg.prevState.redoStack.slice(0, arg.prevState.redoStack.length - 1);
             const undoStack = Helpers.pushStack(arg.prevState.undoStack, arg.prevState.cellVMs);
             const selected = cells.findIndex(c => c.selected);
