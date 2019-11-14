@@ -194,17 +194,14 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "Variable explorer - Exclude \\(interactive\\)",
-                "--timeout=60000"
+                //"--grep", "<suite name>",
+                "--timeout=300000"
             ],
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"],
-            "env": {
-                "VSCODE_PYTHON_ROLLING": "1"
-            }
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "type": "node",
