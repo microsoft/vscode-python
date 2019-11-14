@@ -263,7 +263,7 @@ suite('Data Science - Native Editor', () => {
     test('Create new editor and add some cells', async () => {
         const editor = createEditor();
         await editor.load(baseFile, Uri.parse('file:///foo.ipynb'));
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
         expect(editor.isDirty).to.be.equal(true, 'Editor should be dirty');
@@ -273,7 +273,7 @@ suite('Data Science - Native Editor', () => {
     test('Move cells around', async () => {
         const editor = createEditor();
         await editor.load(baseFile, Uri.parse('file:///foo.ipynb'));
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
         editor.onMessage(InteractiveWindowMessages.SwapCells, { firstCellId: 'NotebookImport#0', secondCellId: 'NotebookImport#1' });
         expect(editor.cells).to.be.lengthOf(3);
         expect(editor.isDirty).to.be.equal(true, 'Editor should be dirty');
@@ -283,7 +283,7 @@ suite('Data Science - Native Editor', () => {
     test('Edit/delete cells', async () => {
         const editor = createEditor();
         await editor.load(baseFile, Uri.parse('file:///foo.ipynb'));
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
         expect(editor.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editor.onMessage(InteractiveWindowMessages.EditCell, {
             changes: [{
@@ -313,7 +313,7 @@ suite('Data Science - Native Editor', () => {
     async function loadEditorAddCellAndWaitForMementoUpdate(file: Uri) {
         const editor = createEditor();
         await editor.load(baseFile, file);
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
         storageUpdateSpy.resetHistory();
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
@@ -325,7 +325,7 @@ suite('Data Science - Native Editor', () => {
 
         // Confirm contents were saved.
         expect(storage.get(`notebook-storage-${file.toString()}`)).not.to.be.undefined;
-        expect(editor.contents).not.to.be.equal(baseFile);
+        expect(await editor.getContents()).not.to.be.equal(baseFile);
 
         return editor;
     }
@@ -359,8 +359,8 @@ suite('Data Science - Native Editor', () => {
 
         // Verify contents are different.
         // Meaning it was not loaded from file, but loaded from our storage.
-        expect(newEditor.contents).not.to.be.equal(baseFile);
-        const notebook = JSON.parse(newEditor.contents);
+        expect(await newEditor.getContents()).not.to.be.equal(baseFile);
+        const notebook = JSON.parse(await newEditor.getContents());
         // 4 cells (1 extra for what was added)
         expect(notebook.cells).to.be.lengthOf(4);
     });
@@ -387,8 +387,8 @@ suite('Data Science - Native Editor', () => {
 
         // Verify contents are different.
         // Meaning it was not loaded from file, but loaded from our storage.
-        expect(newEditor.contents).not.to.be.equal(baseFile);
-        const notebook = JSON.parse(newEditor.contents);
+        expect(await newEditor.getContents()).not.to.be.equal(baseFile);
+        const notebook = JSON.parse(await newEditor.getContents());
         // 4 cells (1 extra for what was added)
         expect(notebook.cells).to.be.lengthOf(4);
     });
@@ -417,8 +417,26 @@ suite('Data Science - Native Editor', () => {
 
         // Verify contents are different.
         // Meaning it was not loaded from file, but loaded from our storage.
-        expect(newEditor.contents).to.be.equal(baseFile);
+        expect(await newEditor.getContents()).to.be.equal(baseFile);
         expect(newEditor.cells).to.be.lengthOf(3);
+    });
+
+    test('Python version info is not queried on creating a blank editor', async () => {
+        const file = Uri.parse('file:///Untitled1.ipynb');
+
+        // When a cell is executed, then ensure we store the python version info in the notebook data.
+        when(executionProvider.getUsableJupyterPython()).thenReject();
+
+        const editor = createEditor();
+        await editor.load('', file);
+
+        try {
+            await editor.getContents();
+            expect(false, 'Did not throw an error');
+        } catch {
+            // This should throw an error
+            noop();
+        }
     });
 
     test('Pyton version info will be updated in notebook when a cell has been executed', async () => {
@@ -426,9 +444,9 @@ suite('Data Science - Native Editor', () => {
 
         const editor = createEditor();
         await editor.load(baseFile, file);
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
         // At the begining version info is NOT in the file (at least not the same as what we are using to run cells).
-        let contents = JSON.parse(editor.contents) as nbformat.INotebookContent;
+        let contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
         expect(contents.metadata!.language_info!.version).to.not.equal('10.11.12');
 
         // When a cell is executed, then ensure we store the python version info in the notebook data.
@@ -453,7 +471,7 @@ suite('Data Science - Native Editor', () => {
         }, 5_000, 'Timeout');
 
         // Verify the version info is in the notbook.
-        contents = JSON.parse(editor.contents) as nbformat.INotebookContent;
+        contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
         expect(contents.metadata!.language_info!.version).to.equal('10.11.12');
     });
 
@@ -471,7 +489,7 @@ suite('Data Science - Native Editor', () => {
         await editor.load('', file);
 
         // It should load with that value
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
         expect(editor.cells).to.be.lengthOf(3);
     });
 
@@ -496,7 +514,7 @@ suite('Data Science - Native Editor', () => {
 
         const editor = createEditor();
         await editor.load(baseFile, file);
-        expect(editor.contents).to.be.equal(baseFile);
+        expect(await editor.getContents()).to.be.equal(baseFile);
 
         // Make our call to actually export
         editor.onMessage(InteractiveWindowMessages.Export, editor.cells);
