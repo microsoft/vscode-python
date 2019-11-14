@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-// @ts-ignore
 import { lt } from 'semver';
 import { Uri } from 'vscode';
 
@@ -43,7 +42,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        // @ts-ignore
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
@@ -78,7 +76,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool({...options, pythonPath}, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool({ ...options, pythonPath }, activatedProc!, activatedEnvVars);
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;
@@ -118,29 +116,27 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
 
-    // @ts-ignore
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
-        // @ts-ignore
         const condaVersion = await this.condaService.getCondaVersion();
-        // if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
-        //     return Promise.resolve(undefined);
-        // }
+        if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
+            return Promise.resolve(undefined);
+        }
 
-        // const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
-        // const [condaEnvironment, condaFile, procService] = await Promise.all([
-        //     this.condaService.getCondaEnvironment(pythonPath),
-        //     this.condaService.getCondaFile(),
-        //     processServicePromise
-        // ]);
-        // if (condaEnvironment && condaFile && procService) {
-        //     // Add logging to the newly created process service
-        //     if (!processService) {
-        //         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        //         procService.on('exec', processLogger.logProcess.bind(processLogger));
-        //         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
-        //     }
-        //     return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
-        // }
+        const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
+        const [condaEnvironment, condaFile, procService] = await Promise.all([
+            this.condaService.getCondaEnvironment(pythonPath),
+            this.condaService.getCondaFile(),
+            processServicePromise
+        ]);
+        if (condaEnvironment && condaFile && procService) {
+            // Add logging to the newly created process service
+            if (!processService) {
+                const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+                procService.on('exec', processLogger.logProcess.bind(processLogger));
+                this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
+            }
+            return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
+        }
 
         return Promise.resolve(undefined);
     }
