@@ -54,7 +54,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
-import { InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
@@ -670,6 +670,7 @@ suite('Jupyter Execution', async () => {
             instance(application),
             instance(persistentSateFactory));
         when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(commandFinder);
+        when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
         return {
             workingPythonExecutionService: workingService,
             jupyterExecutionFactory: new JupyterExecutionFactory(

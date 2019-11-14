@@ -238,7 +238,7 @@ export class NotebookStarter implements Disposable {
             return;
         }
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const [interpreter, activeInterpreter] = await Promise.all([notebookCommand.command.interpreter(), interpreterService.getActiveInterpreter(undefined)]);
+        const [interpreter, activeInterpreter] = await Promise.all([notebookCommand.command.interpreter(), interpreterService.getActiveInterpreter()]);
         if (!interpreter){
             return;
         }
