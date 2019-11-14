@@ -61,18 +61,6 @@ def error_decorator(func):
     return _decorator
 
 
-class OutputLogHandler(logging.StreamHandler):
-    """ Logger used to send all log info back to RPC client.
-    Easy way to log everything using the extension logger.
-    """
-    def __init__(self, server):
-        super().__init__(self)
-        self.server = server
-    def emit(self, record):
-        msg = self.format(record)
-        self.server._endpoint.notify("log", {"msg": msg})
-
-
 class PythonDaemon(MethodDispatcher):
     """ Base Python Daemon with simple methods to check if a module exists, get version info and the like.
     To add additional methods, please create a separate class based off this and pass in the arg `--daemon-module` to `datascience.daemon`.
@@ -222,7 +210,7 @@ class PythonDaemon(MethodDispatcher):
             return {"exists": False}
 
     @classmethod
-    def start_daemon(cls):
+    def start_daemon(cls, logging_queue_handler=None):
         """ Starts the daemon. """
         if not issubclass(cls, PythonDaemon):
             raise ValueError("Handler class must be an instance of PythonDaemon")
@@ -236,11 +224,8 @@ class PythonDaemon(MethodDispatcher):
 
         stdin, stdout = get_io_buffers()
         server = cls(stdin, stdout)
-        # Send logs over to RPC client as a `log` event.
-        handler = OutputLogHandler(server)
-        handler.setLevel(logging.DEBUG)
-        formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
-        handler.setFormatter(formatter)
         redirect_output(on_write_stdout, on_write_stderr)
-        server.log.addHandler(handler)
+        # Set up the queue handler that'll send log messages over to the client.
+        if logging_queue_handler is not None:
+            logging_queue_handler.set_server(server)
         server.start()

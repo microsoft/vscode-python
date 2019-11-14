@@ -33,7 +33,6 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];
     private readonly envVariables: NodeJS.ProcessEnv;
     private readonly pythonPath: string;
-    // private logId: number = 0;
     constructor(
         private readonly logger: IProcessLogger,
         private readonly options: DaemonExecutionFactoryCreationOptions,
@@ -104,9 +103,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     @traceDecorators.error('Failed to create daemon')
     protected async createDaemonServices(): Promise<IPythonDaemonExecutionService> {
-        // const logFileName = `daemon${this.logId += 1}.log`;
-        // const loggingArgs = ['-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, logFileName)}`];
-        const loggingArgs: string[] = ['-v'];
+        const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
         const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(loggingArgs);
         const env = this.envVariables;
         const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });

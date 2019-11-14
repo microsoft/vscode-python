@@ -8,7 +8,7 @@ import * as os from 'os';
 import { Subject } from 'rxjs/Subject';
 import * as util from 'util';
 import { MessageConnection, NotificationType, RequestType, RequestType0 } from 'vscode-jsonrpc';
-import { traceError, traceInfo, traceWarning } from '../logger';
+import { traceError, traceInfo, traceVerbose, traceWarning } from '../logger';
 import { IDisposable } from '../types';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
@@ -274,8 +274,18 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         // Wire up stdout/stderr.
         const OuputNotification = new NotificationType<Output<string>, void>('output');
         this.connection.onNotification(OuputNotification, output => this.outputObservale.next(output));
-        const logNotification = new NotificationType<{msg: string}, void>('log');
-        this.connection.onNotification(logNotification, output => traceInfo(output.msg));
+        const logNotification = new NotificationType<{level: 'WARN'|'WARNING'|'INFO'|'DEBUG'|'NOTSET'; msg: string}, void>('log');
+        this.connection.onNotification(logNotification, output => {
+            if (output.level === 'DEBUG' || output.level === 'NOTSET'){
+                traceVerbose(output.msg);
+            } else if (output.level === 'INFO'){
+                traceInfo(output.msg);
+            } else if (output.level === 'WARN' || output.level === 'WARNING') {
+                traceWarning(output.msg);
+            } else {
+                traceError(output.msg);
+            }
+        });
         this.connection.onUnhandledNotification(traceError);
     }
     private throwIfRPCConnectionIsDead() {
