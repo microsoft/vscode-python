@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-import { lt } from 'semver';
+import { gte } from 'semver';
 import { Uri } from 'vscode';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -117,18 +117,15 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
 
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
-        const condaVersion = await this.condaService.getCondaVersion();
-        if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
-            return Promise.resolve(undefined);
-        }
-
         const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
-        const [condaEnvironment, condaFile, procService] = await Promise.all([
+        const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
+            this.condaService.getCondaVersion(),
             this.condaService.getCondaEnvironment(pythonPath),
             this.condaService.getCondaFile(),
             processServicePromise
         ]);
-        if (condaEnvironment && condaFile && procService) {
+
+        if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
             // Add logging to the newly created process service
             if (!processService) {
                 const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
