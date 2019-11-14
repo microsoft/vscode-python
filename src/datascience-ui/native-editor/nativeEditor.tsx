@@ -365,6 +365,18 @@ export class NativeEditor extends React.Component<INativeEditorProps, IMainState
                 }
                 break;
             }
+            case 'z':
+            case 'Z':
+                if (event.shiftKey && !event.ctrlKey && !event.altKey && this.stateController.canRedo()) {
+                    event.stopPropagation();
+                    this.stateController.redo();
+                    this.stateController.sendCommand(NativeCommandType.Redo, 'keyboard');
+                } else if (!event.shiftKey && !event.altKey && !event.ctrlKey && this.stateController.canUndo()) {
+                    event.stopPropagation();
+                    this.stateController.undo();
+                    this.stateController.sendCommand(NativeCommandType.Undo, 'keyboard');
+                }
+                break;
             default:
                 break;
         }

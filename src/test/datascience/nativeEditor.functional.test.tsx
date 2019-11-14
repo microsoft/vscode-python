@@ -14,7 +14,7 @@ import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
-import { createDeferred } from '../../client/common/utils/async';
+import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { createTemporaryFile } from '../../client/common/utils/fs';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
@@ -939,9 +939,13 @@ for _ in range(50):
                 // Add, then undo, keep doing at least 3 times and confirm it works as expected.
                 for (let i = 0; i < 3; i += 1) {
                     // Add a new cell
-                    let update = waitForUpdate(wrapper, NativeEditor, 1);
+                    let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                     simulateKeyPressOnCell(0, { code: 'a' });
                     await update;
+
+                    // Wait a bit for the time out to try and set focus a second time (this will be
+                    // fixed when we switch to redux)
+                    await sleep(100);
 
                     // There should be 4 cells and first cell is focused.
                     assert.equal(isCellSelected(wrapper, 'NativeCell', 0), false);
@@ -955,6 +959,40 @@ for _ in range(50):
                     simulateKeyPressOnCell(0, { code: 'Escape' });
                     await update;
                     assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
+
+                    // Press 'ctrl+z'. This should do nothing
+                    update = waitForUpdate(wrapper, NativeEditor, 1);
+                    simulateKeyPressOnCell(0, { code: 'z', ctrlKey: true });
+                    await waitForPromise(update, 100);
+
+                    // There should be 4 cells and first cell is selected.
+                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
+                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
+                    assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
+                    assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
+                    assert.equal(wrapper.find('NativeCell').length, 4);
+
+                    // Press 'z' to undo.
+                    update = waitForUpdate(wrapper, NativeEditor, 1);
+                    simulateKeyPressOnCell(0, { code: 'z' });
+                    await update;
+
+                    // There should be 3 cells and first cell is selected & nothing focused.
+                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
+                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
+                    assert.equal(wrapper.find('NativeCell').length, 3);
+
+                    // Press 'shift+z' to redo
+                    update = waitForUpdate(wrapper, NativeEditor, 1);
+                    simulateKeyPressOnCell(0, { code: 'z', shiftKey: true });
+                    await update;
+
+                    // There should be 4 cells and first cell is selected.
+                    assert.equal(isCellSelected(wrapper, 'NativeCell', 0), true);
+                    assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
+                    assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
+                    assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
+                    assert.equal(wrapper.find('NativeCell').length, 4);
 
                     // Press 'z' to undo.
                     update = waitForUpdate(wrapper, NativeEditor, 1);

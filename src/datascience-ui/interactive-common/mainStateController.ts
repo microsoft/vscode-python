@@ -267,31 +267,35 @@ export class MainStateController implements IMessageHandler {
     }
 
     public redo = () => {
-        // Pop one off of our redo stack and update our undo
-        const cells = this.pendingState.redoStack[this.pendingState.redoStack.length - 1];
-        const redoStack = this.pendingState.redoStack.slice(0, this.pendingState.redoStack.length - 1);
-        const undoStack = this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs);
-        this.sendMessage(InteractiveWindowMessages.Redo);
-        this.setState({
-            cellVMs: cells,
-            undoStack: undoStack,
-            redoStack: redoStack,
-            skipNextScroll: true
-        });
+        if (this.pendingState.redoStack.length > 0) {
+            // Pop one off of our redo stack and update our undo
+            const cells = this.pendingState.redoStack[this.pendingState.redoStack.length - 1];
+            const redoStack = this.pendingState.redoStack.slice(0, this.pendingState.redoStack.length - 1);
+            const undoStack = this.pushStack(this.pendingState.undoStack, this.pendingState.cellVMs);
+            this.sendMessage(InteractiveWindowMessages.Redo);
+            this.setState({
+                cellVMs: cells,
+                undoStack: undoStack,
+                redoStack: redoStack,
+                skipNextScroll: true
+            });
+        }
     }
 
     public undo = () => {
-        // Pop one off of our undo stack and update our redo
-        const cells = this.pendingState.undoStack[this.pendingState.undoStack.length - 1];
-        const undoStack = this.pendingState.undoStack.slice(0, this.pendingState.undoStack.length - 1);
-        const redoStack = this.pushStack(this.pendingState.redoStack, this.pendingState.cellVMs);
-        this.sendMessage(InteractiveWindowMessages.Undo);
-        this.setState({
-            cellVMs: cells,
-            undoStack: undoStack,
-            redoStack: redoStack,
-            skipNextScroll: true
-        });
+        if (this.pendingState.undoStack.length > 0) {
+            // Pop one off of our undo stack and update our redo
+            const cells = this.pendingState.undoStack[this.pendingState.undoStack.length - 1];
+            const undoStack = this.pendingState.undoStack.slice(0, this.pendingState.undoStack.length - 1);
+            const redoStack = this.pushStack(this.pendingState.redoStack, this.pendingState.cellVMs);
+            this.sendMessage(InteractiveWindowMessages.Undo);
+            this.setState({
+                cellVMs: cells,
+                undoStack: undoStack,
+                redoStack: redoStack,
+                skipNextScroll: true
+            });
+        }
     }
 
     public deleteCell = (cellId: string) => {

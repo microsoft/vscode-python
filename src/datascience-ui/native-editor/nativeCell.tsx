@@ -325,10 +325,17 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 'z':
-                if (!this.isFocused() && this.props.stateController.canUndo()) {
-                    e.stopPropagation();
-                    this.props.stateController.undo();
-                    this.props.stateController.sendCommand(NativeCommandType.Undo, 'keyboard');
+            case 'Z':
+                if (!this.isFocused()) {
+                    if (e.shiftKey && !e.ctrlKey && !e.altKey && this.props.stateController.canRedo()) {
+                        e.stopPropagation();
+                        this.props.stateController.redo();
+                        this.props.stateController.sendCommand(NativeCommandType.Redo, 'keyboard');
+                    } else if (!e.shiftKey && !e.altKey && !e.ctrlKey && this.props.stateController.canUndo()) {
+                        e.stopPropagation();
+                        this.props.stateController.undo();
+                        this.props.stateController.sendCommand(NativeCommandType.Undo, 'keyboard');
+                    }
                 }
                 break;
 
