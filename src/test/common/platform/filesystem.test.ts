@@ -12,7 +12,7 @@ import {
     IFileSystemUtils, IRawFileSystem
 } from '../../../client/common/platform/types';
 import {
-    DOES_NOT_EXIST, assertDoesNotExist, assertExists, FSFixture, WINDOWS
+    assertDoesNotExist, assertExists, DOES_NOT_EXIST, FSFixture, WINDOWS
 } from './filesystem.functional.test';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
