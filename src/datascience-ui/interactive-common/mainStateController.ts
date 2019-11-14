@@ -559,6 +559,18 @@ export class MainStateController implements IMessageHandler {
         }
     }
 
+    public updateCode = (cellId: string, code: string) => {
+        const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
+        if (index > 0) {
+            const cellVMs = [...this.pendingState.cellVMs];
+            const current = this.pendingState.cellVMs[index];
+            const newCell = { ...current, inputBlockText: code, cell: { ...current.cell, data: { ...current.cell.data, source: code } } };
+            // tslint:disable-next-line: no-any
+            cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
+            this.setState({ cellVMs });
+        }
+    }
+
     public changeCellType = (cellId: string, newType: 'code' | 'markdown') => {
         const index = this.pendingState.cellVMs.findIndex(c => c.cell.id === cellId);
         if (index >= 0 && this.pendingState.cellVMs[index].cell.data.cell_type !== newType) {
