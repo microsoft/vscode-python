@@ -59,10 +59,8 @@ def _configure_logger(verbose=0, log_config=None, log_file=None):
                 encoding=None,
                 delay=0,
             )
-        else:
-            log_handler = logging.StreamHandler()
-        log_handler.setFormatter(formatter)
-        root_logger.addHandler(log_handler)
+            log_handler.setFormatter(formatter)
+            root_logger.addHandler(log_handler)
 
     if verbose == 0:
         level = logging.WARNING
