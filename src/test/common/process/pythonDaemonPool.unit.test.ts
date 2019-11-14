@@ -55,6 +55,7 @@ suite('Daemon - Python Daemon Pool', () => {
             onDispose: noop,
             onError: noop,
             onNotification: noop
+            onUnhandledNotification: noop
         } as any) as MessageConnection;
         const daemonProc = (new EventEmitter() as any) as ChildProcess;
         daemonProc.killed = false;
