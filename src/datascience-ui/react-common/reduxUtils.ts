@@ -51,6 +51,9 @@ export function combineReducers<S, M>(defaultState: S, map: M): Reducer<S, Queua
     };
 }
 
+// This middleware allows a reducer to dispatch another action after the reducer
+// has returned state (it queues up the dispatch).
+//
 // Got this idea from here:
 // https://stackoverflow.com/questions/36730793/can-i-dispatch-an-action-in-reducer
 //
