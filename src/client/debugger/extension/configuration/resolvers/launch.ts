@@ -51,7 +51,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
 
         await this.provideLaunchDefaults(workspaceFolder, config);
 
-        this.configExperiment.setExperimentConfiguration(config);
+        this.configExperiment.modifyConfigurationBasedOnExperiment(config);
 
         const isValid = await this.validateLaunchConfiguration(folder, config);
         if (!isValid) {

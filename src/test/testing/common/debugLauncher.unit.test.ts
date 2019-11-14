@@ -82,7 +82,7 @@ suite('Unit Tests - Debug Launcher', () => {
         const validator = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>(undefined, TypeMoq.MockBehavior.Strict);
         validator.setup(v => v.validatePythonPath(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
         configExperiment
-            .setup(c => c.setExperimentConfiguration(TypeMoq.It.isAny()))
+            .setup(c => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny()))
             .returns(() => {
                 return;
             });

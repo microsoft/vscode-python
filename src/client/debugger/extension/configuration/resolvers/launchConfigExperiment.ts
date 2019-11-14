@@ -14,32 +14,35 @@ import { ILaunchDebugConfigurationResolverExperiment } from '../types';
 
 @injectable()
 export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigurationResolverExperiment {
-    constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) {}
+    constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) { }
 
-    public setExperimentConfiguration(debugConfiguration: LaunchRequestArguments): void {
-        if (
-            this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) &&
-            this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment) &&
-            this.experimentsManager.inExperiment(WebAppReload.experiment) &&
-            this.isWebAppConfiguration(debugConfiguration)
-        ) {
-            traceInfo(`Configuration used for Web App Reload experiment (before):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
+    public modifyConfigurationBasedOnExperiment(debugConfiguration: LaunchRequestArguments): void {
+        if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) &&
+            this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+            if (this.experimentsManager.inExperiment(WebAppReload.experiment)) {
+                if (this.isWebAppConfiguration(debugConfiguration)) {
+                    traceInfo(`Configuration used for Web App Reload experiment (before):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
 
-            let subProcessModified: boolean = false;
-            if (!debugConfiguration.subProcess) {
-                subProcessModified = true;
-                debugConfiguration.subProcess = true;
+                    let subProcessModified: boolean = false;
+                    if (!debugConfiguration.subProcess) {
+                        subProcessModified = true;
+                        debugConfiguration.subProcess = true;
+                    }
+
+                    let argsModified: boolean = false;
+                    const args = debugConfiguration.args.filter(arg => arg !== '--noreload' && arg !== '--no-reload');
+                    if (args.length !== debugConfiguration.args.length) {
+                        argsModified = true;
+                        debugConfiguration.args = args;
+                    }
+
+                    traceInfo(`Configuration used for Web App Reload experiment (after):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
+                    sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, { subProcessModified, argsModified });
+                }
+
+            } else {
+                this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
             }
-
-            let argsModified: boolean = false;
-            const args = debugConfiguration.args.filter(arg => arg !== '--noreload' && arg !== '--no-reload');
-            if (args.length !== debugConfiguration.args.length) {
-                argsModified = true;
-                debugConfiguration.args = args;
-            }
-
-            traceInfo(`Configuration used for Web App Reload experiment (after):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
-            sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, { subProcessModified, argsModified });
         }
     }
 
