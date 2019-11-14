@@ -25,6 +25,7 @@ import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRemoveCell, ISaveAll, ISubmitNewCell, ISwapCells } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { CellState, ICell, ICodeCssGenerator, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindowInfo, IInteractiveWindowListener, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditor, INotebookEditorProvider, INotebookExporter, INotebookImporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
+import { debounceAsync } from '../../common/utils/decorators';
 
 enum AskForSaveResult {
     Yes,
@@ -797,6 +798,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return JSON.stringify(json, null, this.indentAmount);
     }
 
+    @debounceAsync(500)
     @captureTelemetry(Telemetry.Save, undefined, true)
     private async saveToDisk(): Promise<void> {
         try {
