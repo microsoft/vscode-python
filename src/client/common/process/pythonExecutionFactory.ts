@@ -120,7 +120,8 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
     // @ts-ignore
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
-        // const condaVersion = await this.condaService.getCondaVersion();
+        // @ts-ignore
+        const condaVersion = await this.condaService.getCondaVersion();
         // if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
         //     return Promise.resolve(undefined);
         // }
