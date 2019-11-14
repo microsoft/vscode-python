@@ -73,7 +73,7 @@ suite('Daemon - Python Daemon Pool', () => {
             return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
         const options = { pythonPath: fullyQualifiedPythonPath, daemonModule: PythonDaemonModule, daemonCount: 2, observableDaemonCount: 1 };
-        pythonDaemonPool = new DaemonPool(logger, options, instance(pythonExecutionService), {}, 100);
+        pythonDaemonPool = new DaemonPool(logger, [], options, instance(pythonExecutionService), {}, 100);
         await pythonDaemonPool.initialize();
         disposables.push(pythonDaemonPool);
     });

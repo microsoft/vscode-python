@@ -8,7 +8,7 @@ import * as path from 'path';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { traceDecorators, traceError } from '../logger';
-import { IDisposable } from '../types';
+import { IDisposableRegistry } from '../types';
 import { createDeferred, sleep } from '../utils/async';
 import { noop } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
@@ -28,13 +28,13 @@ import {
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 
 export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionService {
-    private disposables: IDisposable[] = [];
     private readonly daemons: IPythonDaemonExecutionService[] = [];
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];
     private readonly envVariables: NodeJS.ProcessEnv;
     private readonly pythonPath: string;
     constructor(
         private readonly logger: IProcessLogger,
+        private readonly disposables: IDisposableRegistry,
         private readonly options: DaemonExecutionFactoryCreationOptions,
         private readonly pythonExecutionService: IPythonExecutionService,
         private readonly activatedEnvVariables?: NodeJS.ProcessEnv,
@@ -54,14 +54,14 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public async initialize() {
         // tslint:disable-next-line: prefer-array-literal
-        const promises = Promise.all([...new Array(this.options.daemonCount ?? 2).keys()].map(() => this.addDaemonService('StandardDaemon')));
+        const promises = Promise.all([...new Array(this.options.daemonCount ?? 1).keys()].map(() => this.addDaemonService('StandardDaemon')));
         // tslint:disable-next-line: prefer-array-literal
         const promises2 = Promise.all([...new Array(this.options.observableDaemonCount ?? 1).keys()].map(() => this.addDaemonService('ObservableDaemon')));
 
         await Promise.all([promises, promises2]);
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        noop();
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         this.logger.logProcess(`${this.pythonPath} (daemon)`, ['GetPythonVersion']);
@@ -110,8 +110,9 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
-
+        this.disposables.push({dispose: () => daemonProc.proc?.kill()});
         const connection = this.createConnection(daemonProc.proc);
+        this.disposables.push(connection);
         connection.listen();
         let stdError = '';
         let procEndEx: Error | undefined;
