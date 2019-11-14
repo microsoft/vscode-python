@@ -236,8 +236,8 @@ suite('Process - PythonExecutionFactory', () => {
                 verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 verify(condaService.getCondaVersion()).once();
-                verify(condaService.getCondaEnvironment(pythonPath)).never();
-                verify(condaService.getCondaFile()).never();
+                verify(condaService.getCondaEnvironment(pythonPath)).once();
+                verify(condaService.getCondaFile()).once();
                 expect(service).instanceOf(PythonExecutionService);
             });
 
@@ -282,7 +282,7 @@ suite('Process - PythonExecutionFactory', () => {
 
                 const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
-                verify(condaService.getCondaFile()).never();
+                verify(condaService.getCondaFile()).once();
                 verify(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).once();
                 verify(condaService.getCondaVersion()).once();
                 if (!interpreter) {
@@ -344,8 +344,8 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(result).to.be.equal(undefined, 'createCondaExecutionService should return undefined if not in a conda environment');
                 verify(condaService.getCondaVersion()).once();
-                verify(condaService.getCondaEnvironment(pythonPath)).never();
-                verify(condaService.getCondaFile()).never();
+                verify(condaService.getCondaEnvironment(pythonPath)).once();
+                verify(condaService.getCondaFile()).once();
             });
             test('Create Daemon Service an invoke initialize', async () => {
                 const pythonSettings = mock(PythonSettings);
