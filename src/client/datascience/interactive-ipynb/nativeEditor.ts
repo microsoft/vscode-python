@@ -25,7 +25,6 @@ import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRemoveCell, ISaveAll, ISubmitNewCell, ISwapCells } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { CellState, ICell, ICodeCssGenerator, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindowInfo, IInteractiveWindowListener, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditor, INotebookEditorProvider, INotebookExporter, INotebookImporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
-import { debounceAsync } from '../../common/utils/decorators';
 
 enum AskForSaveResult {
     Yes,
@@ -42,6 +41,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
+    private isPromptingToSaveToDisc: boolean = false;
     private visibleCells: ICell[] = [];
     private startupTimer: StopWatch = new StopWatch();
     private loadedAllCells: boolean = false;
@@ -798,15 +798,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return JSON.stringify(json, null, this.indentAmount);
     }
 
-    @debounceAsync(200)
     @captureTelemetry(Telemetry.Save, undefined, true)
     private async saveToDisk(): Promise<void> {
+        // If we're already in the middle of prompting the user to save, then get out of here.
+        // We could add a debounce decorator, unfortunately that slows saving (by waiting for no more save events to get sent).
+        if (this.isPromptingToSaveToDisc && this.isUntitled) {
+            return;
+        }
         try {
             let fileToSaveTo: Uri | undefined = this.file;
             let isDirty = this._dirty;
 
             // Ask user for a save as dialog if no title
             if (this.isUntitled) {
+                this.isPromptingToSaveToDisc = true;
                 const filtersKey = localize.DataScience.dirtyNotebookDialogFilter();
                 const filtersObject: { [name: string]: string[] } = {};
                 filtersObject[filtersKey] = ['ipynb'];
@@ -829,6 +834,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             }
         } catch (e) {
             traceError(e);
+        } finally {
+            this.isPromptingToSaveToDisc = false;
         }
     }
 
