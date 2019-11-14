@@ -51,6 +51,7 @@ export const actionCreators = {
     toggleOutput: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.TOGGLE_OUTPUT, payload: { cellId } }),
     deleteCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.DELETE_CELL, payload: { cellId } }),
     undo: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNDO }),
+    redo: (): CommonAction<never | undefined> => ({ type: CommonActionType.REDO }),
     arrowUp: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.ARROW_UP, payload: { cellId, code } }),
     arrowDown: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.ARROW_DOWN, payload: { cellId, code } }),
     editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({ type: CommonActionType.EDIT_CELL, payload: { cellId, changes, modelId } }),

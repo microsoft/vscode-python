@@ -99,6 +99,7 @@ export enum NativeCommandType {
     InsertBelow,
     MoveCellDown,
     MoveCellUp,
+    Redo,
     Run,
     RunAbove,
     RunAll,

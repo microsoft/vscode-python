@@ -32,6 +32,8 @@ class PythonDaemon(BasePythonDaemon):
             return self._execute_and_capture_output(self._print_kernel_list)
         elif module_name == "jupyter" and args == ["kernelspec", "--version"]:
             return self._execute_and_capture_output(self._print_kernelspec_version)
+        elif module_name == "jupyter" and args[0] == "nbconvert" and args[-1] != "--version":
+            return self._execute_and_capture_output(lambda : self._convert(args))
         else:
             log.info("check base class stuff")
             return super().m_exec_module(module_name, args, cwd, env)
@@ -86,6 +88,13 @@ class PythonDaemon(BasePythonDaemon):
             os.linesep.join(list("{0} {1}".format(k, v) for k, v in specs.items()))
         )
         sys.stdout.flush()
+
+    def _convert(self, args):
+        log.info("nbconvert")
+        from nbconvert import nbconvertapp as app
+
+        sys.argv = [""] + args
+        app.main()
 
     def _start_notebook(self, args):
         from notebook import notebookapp as app

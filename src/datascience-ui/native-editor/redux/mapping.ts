@@ -46,6 +46,7 @@ export class INativeEditorActionMapping {
     public [CommonActionType.EXPORT]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.SAVE]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.UNDO]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.REDO]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.SHOW_DATA_VIEWER]: NativeEditorReducerFunc<IShowDataViewerAction>;
     public [CommonActionType.SEND_COMMAND]: NativeEditorReducerFunc<ISendCommandAction>;
     public [CommonActionType.SELECT_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;

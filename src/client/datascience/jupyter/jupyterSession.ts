@@ -174,7 +174,7 @@ export class JupyterSession implements IJupyterSession {
 
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
-            traceInfo(`Waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
+            traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
             const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => e.newValue && e.newValue.status === 'idle' ? resolve() : undefined));
             const checkStatusPromise = new Promise(async resolve => {
@@ -191,7 +191,7 @@ export class JupyterSession implements IJupyterSession {
                 resolve();
             });
             await Promise.race([statusChangedPromise, checkStatusPromise]);
-            traceInfo(`Finished waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
+            traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
             // If we didn't make it out in ten seconds, indicate an error
             if (session.kernel && session.kernel.status === 'idle') {

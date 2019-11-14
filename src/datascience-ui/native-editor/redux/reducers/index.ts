@@ -43,6 +43,7 @@ export const reducerMap: INativeEditorActionMapping = {
     [CommonActionType.TOGGLE_OUTPUT]: Effects.toggleOutput,
     [CommonActionType.CHANGE_CELL_TYPE]: Execution.changeCellType,
     [CommonActionType.UNDO]: Execution.undo,
+    [CommonActionType.REDO]: Execution.redo,
     [CommonActionType.ARROW_UP]: Movement.arrowUp,
     [CommonActionType.ARROW_DOWN]: Movement.arrowDown,
     [CommonActionType.EDIT_CELL]: Transfer.editCell,

@@ -2365,6 +2365,12 @@
                     "description": "Python launch arguments to use when executing a file in the terminal.",
                     "scope": "resource"
                 },
+                "python.terminal.activateEnvInCurrentTerminal": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Activate Python Environment in the current Terminal on load of the Extension.",
+                    "scope": "resource"
+                },
                 "python.testing.cwd": {
                     "type": "string",
                     "default": null,

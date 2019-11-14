@@ -10,13 +10,13 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
+import { JupyterCommands, PythonDaemonModule, RegExpValues, Telemetry } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 export enum ModuleExistsStatus {
@@ -141,11 +141,13 @@ export class JupyterCommandFinderImpl {
 
         // If the module is found on this interpreter, then we found it.
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
-            findResult = await this.doesModuleExist(command, interpreter, cancelToken);
+            const [result, activeInterpreter] = await Promise.all([this.doesModuleExist(command, interpreter, cancelToken), this.interpreterService.getActiveInterpreter(undefined)]);
+            findResult = result!;
+            const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
             if (findResult.status === ModuleExistsStatus.FoundJupyter) {
-                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(command, 'jupyter', ['-m', 'jupyter', command], interpreter, isActiveInterpreter);
             } else if (findResult.status === ModuleExistsStatus.Found) {
-                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter);
+                findResult.command = this.commandFactory.createInterpreterCommand(command, command, ['-m', command], interpreter, isActiveInterpreter);
             }
         }
         return findResult;
@@ -350,13 +352,29 @@ export class JupyterCommandFinderImpl {
 
         return found;
     }
+    private async createExecutionService(interpreter: PythonInterpreter): Promise<IPythonExecutionService> {
+        const [currentInterpreter, pythonService] = await Promise.all([
+            this.interpreterService.getActiveInterpreter(undefined),
+            this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true })
+        ]);
+
+        // Use daemons for current interpreter, when using any other interpreter, do not use a daemon.
+        // Creating daemons for other interpreters might not be what we want.
+        // E.g. users can have dozens of pipenv or conda environments.
+        // In such cases, we'd end up creating n*3 python processes that are long lived.
+        if (!currentInterpreter || currentInterpreter.path !== interpreter.path){
+            return pythonService!;
+        }
+
+        return this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
+    }
     private async doesModuleExist(moduleName: string, interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IModuleExistsResult> {
         const result: IModuleExistsResult = {
             status: ModuleExistsStatus.NotFound
         };
         if (interpreter && interpreter !== null) {
             const newOptions: SpawnOptions = { throwOnStdErr: false, encoding: 'utf8', token: cancelToken };
-            const pythonService = await this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+            const pythonService = await this.createExecutionService(interpreter);
 
             // For commands not 'ipykernel' first try them as jupyter commands
             if (moduleName !== JupyterCommands.KernelCreateCommand) {

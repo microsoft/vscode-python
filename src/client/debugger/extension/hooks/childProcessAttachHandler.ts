@@ -4,14 +4,15 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugSessionCustomEvent } from 'vscode';
+import { DebugConfiguration, DebugSessionCustomEvent } from 'vscode';
 import { swallowExceptions } from '../../../common/utils/decorators';
+import { AttachRequestArguments } from '../../types';
 import { PTVSDEvents } from './constants';
 import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventHandlers } from './types';
 
 /**
  * This class is responsible for automatically attaching the debugger to any
- * child processes launched. I.e. this is the classs responsible for multi-proc debugging.
+ * child processes launched. I.e. this is the class responsible for multi-proc debugging.
  * @export
  * @class ChildProcessAttachEventHandler
  * @implements {IDebugSessionEventHandlers}
@@ -22,10 +23,19 @@ export class ChildProcessAttachEventHandler implements IDebugSessionEventHandler
 
     @swallowExceptions('Handle child process launch')
     public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
-        if (!event || event.event !== PTVSDEvents.ChildProcessLaunched) {
+        if (!event) { return; }
+
+        let data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration);
+        if (event.event === PTVSDEvents.ChildProcessLaunched) {
+            data = event.body! as ChildProcessLaunchData;
+        } else if (event.event === PTVSDEvents.AttachToSubprocess) {
+            data = event.body! as (AttachRequestArguments & DebugConfiguration);
+        } else {
             return;
         }
-        const data = event.body! as ChildProcessLaunchData;
-        await this.childProcessAttachService.attach(data, event.session);
+
+        if (Object.keys(data).length > 0) {
+            await this.childProcessAttachService.attach(data, event.session);
+        }
     }
 }

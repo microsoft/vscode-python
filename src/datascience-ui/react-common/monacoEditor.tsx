@@ -313,9 +313,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const cursor = this.state.editor.getPosition();
             if (cursor) {
                 const top = this.state.editor.getTopForPosition(cursor.lineNumber, cursor.column);
-                const lines = this.getVisibleLines();
-                const lineTops = lines.length === this.lineTops.length ? this.lineTops : this.computeLineTops();
-                for (let i = 0; i < lines.length; i += 1) {
+                const count = this.getVisibleLineCount();
+                const lineTops = count === this.lineTops.length ? this.lineTops : this.computeLineTops();
+                for (let i = 0; i < count; i += 1) {
                     if (top <= lineTops[i]) {
                         return i;
                     }
@@ -341,10 +341,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
     private computeLineTops(): number[] {
         const lines = this.getVisibleLines();
+
+        // Lines are not sorted by monaco, so we have to sort them by their top value
         this.lineTops = lines.map(l => {
             const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
             return match ? parseInt(match[0], 10) : Infinity;
-        });
+        }).sort((a, b) => a - b);
         return this.lineTops;
     }
 

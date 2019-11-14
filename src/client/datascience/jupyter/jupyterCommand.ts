@@ -14,7 +14,7 @@ import {
 } from '../../common/process/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
-import { JupyterCommands } from '../constants';
+import { JupyterCommands, PythonDaemonModule } from '../constants';
 import { IJupyterCommand, IJupyterCommandFactory } from '../types';
 
 // JupyterCommand objects represent some process that can be launched that should be guaranteed to work because it
@@ -68,9 +68,18 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     protected interpreterPromise: Promise<PythonInterpreter | undefined>;
     private pythonLauncher: Promise<IPythonExecutionService>;
 
-    constructor(protected readonly moduleName: string, protected args: string[], pythonExecutionFactory: IPythonExecutionFactory, private readonly _interpreter: PythonInterpreter) {
+    constructor(protected readonly moduleName: string, protected args: string[], protected readonly pythonExecutionFactory: IPythonExecutionFactory,
+        private readonly _interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = pythonExecutionFactory.createActivatedEnvironment({ resource: undefined, interpreter: _interpreter, allowEnvironmentFetchExceptions: true });
+        this.pythonLauncher = this.interpreterPromise.then(interpreter => {
+            // Create a daemon only if the interpreter is the same as the current interpreter.
+            // We don't want too many daemons (one for each of the users interpreter on their machine).
+            if (isActiveInterpreter) {
+                return pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path });
+            } else {
+                return pythonExecutionFactory.createActivatedEnvironment({interpreter: this._interpreter});
+            }
+        });
     }
     public interpreter() : Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
@@ -80,14 +89,20 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
-        return launcher.execObservable(newArgs, newOptions);
+        const moduleName = newArgs[1];
+        newArgs.shift(); // Remove '-m'
+        newArgs.shift(); // Remove module name
+        return launcher.execModuleObservable(moduleName, newArgs, newOptions);
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
-        return launcher.exec(newArgs, newOptions);
+        const moduleName = newArgs[1];
+        newArgs.shift(); // Remove '-m'
+        newArgs.shift(); // Remove module name
+        return launcher.execModule(moduleName, newArgs, newOptions);
     }
 }
 
@@ -99,8 +114,8 @@ class InterpreterJupyterCommand implements IJupyterCommand {
  * @implements {IJupyterCommand}
  */
 class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
-    constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter) {
-        super(moduleName, args, pythonExecutionFactory, interpreter);
+    constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
+        super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }
 }
 
@@ -109,19 +124,19 @@ class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
 export class JupyterCommandFactory implements IJupyterCommandFactory {
 
     constructor(
-        @inject(IPythonExecutionFactory) private executionFactory: IPythonExecutionFactory,
-        @inject(IEnvironmentActivationService) private activationHelper : IEnvironmentActivationService,
-        @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService
+        @inject(IPythonExecutionFactory) private readonly executionFactory : IPythonExecutionFactory,
+        @inject(IEnvironmentActivationService) private readonly activationHelper : IEnvironmentActivationService,
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
 
     }
 
-    public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter): IJupyterCommand {
+    public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand {
         if (command === JupyterCommands.NotebookCommand){
-            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter);
+            return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
         }
-        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter);
+        return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
     }
 
     public createProcessCommand(exe: string, args: string[]): IJupyterCommand {
