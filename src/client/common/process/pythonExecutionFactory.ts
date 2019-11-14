@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
+// @ts-ignore
 import { lt } from 'semver';
 import { Uri } from 'vscode';
 
