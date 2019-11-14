@@ -798,7 +798,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return JSON.stringify(json, null, this.indentAmount);
     }
 
-    @debounceAsync(500)
+    @debounceAsync(200)
     @captureTelemetry(Telemetry.Save, undefined, true)
     private async saveToDisk(): Promise<void> {
         try {
