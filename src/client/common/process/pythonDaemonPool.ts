@@ -110,9 +110,8 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
-        this.disposables.push({dispose: () => daemonProc.proc?.kill()});
         const connection = this.createConnection(daemonProc.proc);
-        this.disposables.push(connection);
+
         connection.listen();
         let stdError = '';
         let procEndEx: Error | undefined;
