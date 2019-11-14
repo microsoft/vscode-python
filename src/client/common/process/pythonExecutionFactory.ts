@@ -42,6 +42,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
+        // @ts-ignore
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
@@ -118,10 +119,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
     // @ts-ignore
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
-        const condaVersion = await this.condaService.getCondaVersion();
-        if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
-            return Promise.resolve(undefined);
-        }
+        // const condaVersion = await this.condaService.getCondaVersion();
+        // if (!condaVersion || lt(condaVersion, CONDA_RUN_VERSION)) {
+        //     return Promise.resolve(undefined);
+        // }
 
         // const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
         // const [condaEnvironment, condaFile, procService] = await Promise.all([
