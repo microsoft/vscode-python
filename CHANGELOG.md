@@ -1,6 +1,6 @@
 # Changelog
 
-## 2019.11.0 (13 November 2019)
+## 2019.11.0 (18 November 2019)
 
 ### Enhancements
 
