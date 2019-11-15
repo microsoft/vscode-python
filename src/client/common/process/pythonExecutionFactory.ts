@@ -56,10 +56,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         const hasInterpreters = await this.interpreterService.hasInterpreters;
         if (hasInterpreters) {
-            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-            if (condaExecutionService) {
-                return condaExecutionService;
-            }
+        //     const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        //     if (condaExecutionService) {
+        //         return condaExecutionService;
+        //     }
         }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
