@@ -122,7 +122,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.close();
     }
 
-    public get contents(): string {
+    public getContents(): Promise<string> {
         return this.generateNotebookContent(this.visibleCells);
     }
 
@@ -432,6 +432,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      * @memberof NativeEditor
      */
     private async updateVersionInfoInNotebook(): Promise<void> {
+        // Make sure we have notebook json
+        await this.ensureNotebookJson();
+
         // Use the active interpreter
         const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
         if (usableInterpreter && usableInterpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
@@ -439,24 +442,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    private async loadContents(contents: string | undefined, forceDirty: boolean): Promise<void> {
-        // tslint:disable-next-line: no-any
-        const json = contents ? JSON.parse(contents) as any : undefined;
-
-        // Double check json (if we have any)
-        if (json && !json.cells) {
-            throw new InvalidNotebookFileError(this.file.fsPath);
-        }
-
-        // Then compute indent. It's computed from the contents
-        if (contents) {
-            this.indentAmount = detectIndent(contents).indent;
-        }
-
-        // Then save the contents. We'll stick our cells back into this format when we save
-        if (json) {
-            this.notebookJson = json;
-        } else {
+    private async ensureNotebookJson(): Promise<void> {
+        if (!this.notebookJson || !this.notebookJson.metadata) {
             const pythonNumber = await this.extractPythonMainVersion(this.notebookJson);
             // Use this to build our metadata object
             // Use these as the defaults unless we have been given some in the options.
@@ -483,6 +470,26 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 nbformat_minor: 2,
                 metadata: metadata
             };
+        }
+    }
+
+    private async loadContents(contents: string | undefined, forceDirty: boolean): Promise<void> {
+        // tslint:disable-next-line: no-any
+        const json = contents ? JSON.parse(contents) as any : undefined;
+
+        // Double check json (if we have any)
+        if (json && !json.cells) {
+            throw new InvalidNotebookFileError(this.file.fsPath);
+        }
+
+        // Then compute indent. It's computed from the contents
+        if (contents) {
+            this.indentAmount = detectIndent(contents).indent;
+        }
+
+        // Then save the contents. We'll stick our cells back into this format when we save
+        if (json) {
+            this.notebookJson = json;
         }
 
         // Extract cells from the json
@@ -705,9 +712,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async setDirty(): Promise<void> {
-        // Always update storage. Don't wait for results.
-        this.storeContents(this.generateNotebookContent(this.visibleCells))
-            .catch(ex => traceError('Failed to generate notebook content to store in state', ex));
+        // Update storage if not untitled. Don't wait for results.
+        if (!this.isUntitled) {
+            this.generateNotebookContent(this.visibleCells)
+                .then(c => this.storeContents(c).catch(ex => traceError('Failed to generate notebook content to store in state', ex)))
+                .ignoreErrors();
+        }
 
         // Then update dirty flag.
         if (!this._dirty) {
@@ -789,7 +799,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
     }
 
-    private generateNotebookContent(cells: ICell[]): string {
+    private async generateNotebookContent(cells: ICell[]): Promise<string> {
+        // Make sure we have some
+        await this.ensureNotebookJson();
+
         // Reuse our original json except for the cells.
         const json = {
             ...(this.notebookJson as nbformat.INotebookContent),
@@ -825,7 +838,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             if (fileToSaveTo && isDirty) {
                 // Write out our visible cells
-                await this.fileSystem.writeFile(fileToSaveTo.fsPath, this.generateNotebookContent(this.visibleCells));
+                await this.fileSystem.writeFile(fileToSaveTo.fsPath, await this.generateNotebookContent(this.visibleCells));
 
                 // Update our file name and dirty state
                 this._file = fileToSaveTo;
