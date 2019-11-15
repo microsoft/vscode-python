@@ -146,6 +146,12 @@ export class JupyterSession implements IJupyterSession {
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
+    public sendInputReply(content: string) {
+        if (this.session && this.session.kernel) {
+            this.session.kernel.sendInputReply({ value: content });
+        }
+    }
+
     public async connect(cancelToken?: CancellationToken): Promise<void> {
         if (!this.connInfo) {
             throw new Error(localize.DataScience.sessionDisposed());

@@ -22,6 +22,7 @@ export class MockJupyterSession implements IJupyterSession {
     private executes: string[] = [];
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
+    private lastRequest: MockJupyterRequest | undefined;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -71,9 +72,19 @@ export class MockJupyterSession implements IJupyterSession {
         // When it finishes, it should not be an outstanding request anymore
         const removeHandler = () => {
             this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(f => f !== tokenSource);
+            if (this.lastRequest === request) {
+                this.lastRequest = undefined;
+            }
         };
         request.done.then(removeHandler).catch(removeHandler);
+        this.lastRequest = request;
         return request;
+    }
+
+    public sendInputReply(content: string) {
+        if (this.lastRequest) {
+            this.lastRequest.sendInputReply({ value: content });
+        }
     }
 
     public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {

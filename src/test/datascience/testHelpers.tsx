@@ -110,6 +110,20 @@ export function addMockData(ioc: DataScienceIocContainer, code: string, result: 
     }
 }
 
+export function addInputMockData(ioc: DataScienceIocContainer, code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
+    if (ioc.mockJupyter) {
+        if (cellType && cellType === 'error') {
+            ioc.mockJupyter.addError(code, result ? result.toString() : '');
+        } else {
+            if (result) {
+                ioc.mockJupyter.addInputCell(code, result, mimeType);
+            } else {
+                ioc.mockJupyter.addInputCell(code);
+            }
+        }
+    }
+}
+
 export function addContinuousMockData(ioc: DataScienceIocContainer, code: string, resultGenerator: (c: CancellationToken) => Promise<{ result: string; haveMore: boolean }>) {
     if (ioc.mockJupyter) {
         ioc.mockJupyter.addContinuousOutputCell(code, resultGenerator);

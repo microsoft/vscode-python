@@ -170,6 +170,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     waitForIdle(timeout: number): Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined;
     requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+    sendInputReply(content: string): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');

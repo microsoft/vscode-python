@@ -33,6 +33,7 @@ import { MockEditor } from './mockTextEditor';
 import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
+    addInputMockData,
     addMockData,
     CellInputState,
     CellPosition,
@@ -647,5 +648,20 @@ for _ in range(50):
         await addCode(ioc, wrapper, code, 4);
 
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '>are\nyou', CellPosition.Last);
+    }, () => { return ioc; });
+
+    runMountedTest('Type in input', async (wrapper) => {
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => {
+            return Promise.resolve('typed input');
+        });
+        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+        // Send in some special input
+        const code = `b = input('Test')\nb`;
+        addInputMockData(ioc, code, 'typed input');
+        await addCode(ioc, wrapper, code);
+
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', 'typed input', CellPosition.Last);
     }, () => { return ioc; });
 });

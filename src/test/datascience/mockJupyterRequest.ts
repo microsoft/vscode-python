@@ -12,12 +12,13 @@ import { ICell } from '../../client/datascience/types';
 
 //tslint:disable:no-any
 interface IMessageResult {
-    message: KernelMessage.IIOPubMessage;
+    message: KernelMessage.IIOPubMessage | KernelMessage.IInputRequestMsg | KernelMessage.IMessage;
     haveMore: boolean;
 }
 
 interface IMessageProducer {
     produceNextMessage(): Promise<IMessageResult>;
+    receiveInput(value: string): void;
 }
 
 class SimpleMessageProducer implements IMessageProducer {
@@ -36,6 +37,10 @@ class SimpleMessageProducer implements IMessageProducer {
             const message = this.generateMessage(this.type, this.result, this.channel);
             resolve({ message: message, haveMore: false });
         });
+    }
+
+    public receiveInput(_value: string): void {
+        noop();
     }
 
     protected generateMessage(msgType: string, result: any, _channel: string = 'iopub'): KernelMessage.IIOPubMessage {
@@ -57,11 +62,36 @@ class SimpleMessageProducer implements IMessageProducer {
             content: result
         };
     }
+
+    protected generateInputMessage(): KernelMessage.IInputRequestMsg {
+        return {
+            channel: 'stdin',
+            header: {
+                username: 'foo',
+                version: '1.1',
+                session: '1111111111',
+                msg_id: '1.1',
+                msg_type: 'stdin'
+            },
+            parent_header: {
+
+            },
+            metadata: {
+
+            },
+            content: {
+                prompt: 'Type Something',
+                password: false
+            }
+        };
+    }
+
 }
 
 class OutputMessageProducer extends SimpleMessageProducer {
     private output: nbformat.IOutput;
     private cancelToken: CancellationToken;
+    private waitingForInput: Deferred<string> | undefined;
 
     constructor(output: nbformat.IOutput, cancelToken: CancellationToken) {
         super(output.output_type, output);
@@ -82,9 +112,50 @@ class OutputMessageProducer extends SimpleMessageProducer {
                     haveMore: streamResult.haveMore
                 };
             }
+        } else if (this.output.output_type === 'input') {
+            if (this.waitingForInput) {
+                await this.waitingForInput.promise;
+                this.waitingForInput = undefined;
+                return {
+                    message: this.generateDummyMessage(),
+                    haveMore: false
+                };
+            } else {
+                this.waitingForInput = createDeferred<string>();
+                return {
+                    message: this.generateInputMessage(),
+                    haveMore: this.waitingForInput !== undefined
+                };
+            }
         }
 
         return super.produceNextMessage();
+    }
+
+    public receiveInput(value: string) {
+        if (this.waitingForInput) {
+            this.waitingForInput.resolve(value);
+        }
+    }
+
+    private generateDummyMessage(): KernelMessage.IMessage {
+        return {
+            channel: 'shell',
+            header: {
+                username: 'foo',
+                version: '1.1',
+                session: '1111111111',
+                msg_id: '1.1',
+                msg_type: 'stdin'
+            },
+            parent_header: {
+
+            },
+            metadata: {
+
+            },
+            content: {}
+        };
     }
 }
 
@@ -100,6 +171,7 @@ export class MockJupyterRequest implements Kernel.IFuture {
     private executionCount: number;
     private cell: ICell;
     private cancelToken: CancellationToken;
+    private currentProducer: IMessageProducer | undefined;
 
     constructor(cell: ICell, delay: number, executionCount: number, cancelToken: CancellationToken) {
         // Save our execution count, this is like our id
@@ -145,8 +217,10 @@ export class MockJupyterRequest implements Kernel.IFuture {
     public removeMessageHook(_hook: (msg: KernelMessage.IIOPubMessage) => boolean | PromiseLike<boolean>): void {
         noop();
     }
-    public sendInputReply(_content: KernelMessage.IInputReply): void {
-        noop();
+    public sendInputReply(content: KernelMessage.IInputReply): void {
+        if (this.currentProducer) {
+            this.currentProducer.receiveInput(content.value);
+        }
     }
     public dispose(): void {
         if (!this.isDisposed) {
@@ -182,12 +256,15 @@ export class MockJupyterRequest implements Kernel.IFuture {
             // We have another producer, after a delay produce the next
             // message
             const producer = producers[0];
+            this.currentProducer = producer;
             setTimeout(() => {
                 // Produce the next message
                 producer.produceNextMessage().then(r => {
                     // If there's a message, send it.
-                    if (r.message && this.onIOPub) {
-                        this.onIOPub(r.message);
+                    if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
+                        this.onIOPub(r.message as KernelMessage.IIOPubMessage);
+                    } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
+                        this.onStdin(r.message as KernelMessage.IStdinMessage);
                     }
 
                     // Move onto the next producer if allowed
@@ -201,6 +278,7 @@ export class MockJupyterRequest implements Kernel.IFuture {
                 }).ignoreErrors();
             }, delay);
         } else {
+            this.currentProducer = undefined;
             // No more messages, create a simple producer for our shell message
             const shellProducer = new SimpleMessageProducer('done', { status: 'success' }, 'shell');
             shellProducer.produceNextMessage().then((r) => {

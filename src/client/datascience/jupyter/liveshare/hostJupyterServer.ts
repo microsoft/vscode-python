@@ -8,7 +8,7 @@ import * as vscode from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
@@ -47,7 +47,8 @@ export class HostJupyterServer
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManagerFactory,
         private workspaceService: IWorkspaceService,
-        loggers: INotebookExecutionLogger[]) {
+        loggers: INotebookExecutionLogger[],
+        private appService: IApplicationShell) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
 
@@ -175,7 +176,8 @@ export class HostJupyterServer
                 loggers,
                 resource,
                 this.getDisposedError.bind(this),
-                this.workspaceService);
+                this.workspaceService,
+                this.appService);
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle (session) ${this.id}`);
