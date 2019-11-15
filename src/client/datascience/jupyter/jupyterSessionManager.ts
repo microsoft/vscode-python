@@ -102,7 +102,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let serverSettings: Partial<ServerConnection.ISettings> =
         {
             baseUrl: connInfo.baseUrl,
-            pageUrl: '',
+            appUrl: '',
             // A web socket is required to allow token authentication
             wsUrl: connInfo.baseUrl.replace('http', 'ws')
         };
