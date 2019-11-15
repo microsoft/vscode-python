@@ -11,6 +11,7 @@ import {
     InterpreterInfomation,
     IPythonExecutionService,
     ObservableExecutionResult,
+    PythonExecutionInfo,
     SpawnOptions
 } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
@@ -37,6 +38,11 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     public getExecutablePath(): Promise<string> {
         return Promise.resolve(this.pythonPath);
     }
+
+    public getExecutionInfo(args: string[]): PythonExecutionInfo {
+        return { command: this.pythonPath, args };
+    }
+
     public isModuleInstalled(moduleName: string): Promise<boolean> {
         return this.procService.exec(this.pythonPath, ['-c', `import ${moduleName}`], { throwOnStdErr: true })
             .then(() => true).catch(() => false);

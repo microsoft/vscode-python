@@ -6,6 +6,7 @@ import {
     InterpreterInfomation,
     IPythonExecutionService,
     ObservableExecutionResult,
+    PythonExecutionInfo,
     SpawnOptions
 } from '../../client/common/process/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
@@ -25,6 +26,10 @@ export class MockPythonService implements IPythonExecutionService  {
 
     public getExecutablePath(): Promise<string> {
         return Promise.resolve(this.interpreter.path);
+    }
+
+    public getExecutionInfo(args: string[]): PythonExecutionInfo {
+        return { command: this.interpreter.path, args };
     }
 
     public isModuleInstalled(_moduleName: string): Promise<boolean> {
