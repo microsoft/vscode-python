@@ -249,4 +249,12 @@ suite('PythonExecutionService', () => {
 
         expect(result).to.eventually.be.rejectedWith(`Module '${moduleName}' not installed`);
     });
+
+    test('getExecutionInfo should return pythonPath and the execution arguments as is', () => {
+        const args = ['-a', 'b', '-c'];
+
+        const result = executionService.getExecutionInfo(args);
+
+        expect(result).to.deep.equal({ command: pythonPath, args }, 'getExecutionInfo should return pythonPath and the command and execution arguments as is');
+    });
 });

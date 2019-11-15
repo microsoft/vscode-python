@@ -144,6 +144,8 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const standardOutputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
+    // await serviceManager.get<IInterpreterService>(IInterpreterService).hasInterpreters;
+
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
 
@@ -183,10 +185,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     context.subscriptions.push(deprecationMgr);
 
     context.subscriptions.push(new ReplProvider(serviceContainer));
-
-    const terminalProvider = new TerminalProvider(serviceContainer);
-    await terminalProvider.initialize(window.activeTerminal);
-    context.subscriptions.push(terminalProvider);
+    context.subscriptions.push(new TerminalProvider(serviceContainer));
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 

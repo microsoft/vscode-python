@@ -6,12 +6,12 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { ProcessLogger } from '../../../client/common/process/logger';
-import { ProcessService } from '../../../client/common/process/proc';
 import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
@@ -20,6 +20,7 @@ import {
     ExecutionFactoryCreationOptions,
     IBufferDecoder,
     IProcessLogger,
+    IProcessService,
     IProcessServiceFactory,
     IPythonExecutionService
 } from '../../../client/common/process/types';
@@ -27,8 +28,9 @@ import { IConfigurationService, IDisposableRegistry } from '../../../client/comm
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -71,47 +73,68 @@ suite('Process - PythonExecutionFactory', () => {
             let factory: PythonExecutionFactory;
             let activationHelper: IEnvironmentActivationService;
             let bufferDecoder: IBufferDecoder;
-            let procecssFactory: IProcessServiceFactory;
+            let processFactory: IProcessServiceFactory;
             let configService: IConfigurationService;
+            let condaService: ICondaService;
             let processLogger: IProcessLogger;
-            let processService: ProcessService;
+            let processService: typemoq.IMock<IProcessService>;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
+            let interpreterService: IInterpreterService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
-                procecssFactory = mock(ProcessServiceFactory);
+                processFactory = mock(ProcessServiceFactory);
                 configService = mock(ConfigurationService);
+                condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+                interpreterService = mock(InterpreterService);
                 when(processLogger.logProcess('', [], {})).thenReturn();
-                processService = mock(ProcessService);
-                when(processService.on('exec', () => { return; })).thenReturn(processService);
-                const interpreterService = mock(InterpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({} as any);
+                processService = typemoq.Mock.ofType<IProcessService>();
+                processService
+                    .setup(p =>
+                        p.on('exec', () => {
+                            return;
+                        })
+                    )
+                    .returns(() => processService.object);
+                processService.setup((p: any) => p.then).returns(() => undefined);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
-                when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-                factory = new PythonExecutionFactory(instance(serviceContainer),
-                    instance(activationHelper), instance(procecssFactory),
-                    instance(configService), instance(bufferDecoder),
-                    instance(windowsStoreInterpreter));
+                factory = new PythonExecutionFactory(
+                    instance(serviceContainer),
+                    instance(activationHelper),
+                    instance(processFactory),
+                    instance(configService),
+                    instance(condaService),
+                    instance(bufferDecoder),
+                    instance(windowsStoreInterpreter),
+                    instance(interpreterService)
+                );
             });
             teardown(() => sinon.restore());
             test('Ensure PythonExecutionService is created', async () => {
                 const pythonSettings = mock(PythonSettings);
-                when(procecssFactory.create(resource)).thenResolve(instance(processService));
+                when(processFactory.create(resource)).thenResolve(processService.object);
                 when(activationHelper.getActivatedEnvironmentVariables(resource)).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
 
                 const service = await factory.create({ resource });
 
-                verify(procecssFactory.create(resource)).once();
+                verify(processFactory.create(resource)).once();
                 verify(pythonSettings.pythonPath).once();
                 expect(service).instanceOf(PythonExecutionService);
             });
             test('Ensure we use an existing `create` method if there are no environment variables for the activated env', async () => {
+                const pythonPath = 'path/to/python';
+                const pythonSettings = mock(PythonSettings);
+
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(pythonSettings.pythonPath).thenReturn(pythonPath);
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
                 let createInvoked = false;
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
@@ -124,6 +147,13 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.equal(createInvoked, true);
             });
             test('Ensure we use an existing `create` method if there are no environment variables (0 length) for the activated env', async () => {
+                const pythonPath = 'path/to/python';
+                const pythonSettings = mock(PythonSettings);
+
+                when(processFactory.create(resource)).thenResolve(processService.object);
+                when(pythonSettings.pythonPath).thenReturn(pythonPath);
+                when(configService.getSettings(resource)).thenReturn(instance(pythonSettings));
+
                 let createInvoked = false;
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {

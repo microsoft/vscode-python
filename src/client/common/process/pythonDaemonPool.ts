@@ -21,6 +21,7 @@ import {
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
+    PythonExecutionInfo,
     SpawnOptions
 } from './types';
 
@@ -61,6 +62,9 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
+    }
+    public getExecutionInfo(args: string[]): PythonExecutionInfo {
+        return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         return this.wrapCall(daemon => daemon.getInterpreterInformation());

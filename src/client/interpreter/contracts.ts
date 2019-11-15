@@ -43,6 +43,11 @@ export type CondaInfo = {
     conda_version?: string;
 };
 
+export type CondaEnvironmentInfo = {
+    name: string;
+    path: string;
+};
+
 export const ICondaService = Symbol('ICondaService');
 
 export interface ICondaService {
@@ -51,11 +56,11 @@ export interface ICondaService {
     isCondaAvailable(): Promise<boolean>;
     getCondaVersion(): Promise<SemVer | undefined>;
     getCondaInfo(): Promise<CondaInfo | undefined>;
-    getCondaEnvironments(ignoreCache: boolean): Promise<({ name: string; path: string }[]) | undefined>;
+    getCondaEnvironments(ignoreCache: boolean): Promise<CondaEnvironmentInfo[] | undefined>;
     getInterpreterPath(condaEnvironmentPath: string): string;
     getCondaFileFromInterpreter(interpreterPath?: string, envName?: string): Promise<string | undefined>;
     isCondaEnvironment(interpreterPath: string): Promise<boolean>;
-    getCondaEnvironment(interpreterPath: string): Promise<{ name: string; path: string } | undefined>;
+    getCondaEnvironment(interpreterPath: string): Promise<CondaEnvironmentInfo | undefined>;
 }
 
 export enum InterpreterType {

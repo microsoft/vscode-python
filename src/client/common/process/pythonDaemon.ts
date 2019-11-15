@@ -21,6 +21,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult,
     Output,
+    PythonExecutionInfo,
     PythonVersionInfo,
     SpawnOptions,
     StdErrError
@@ -95,6 +96,9 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         } catch {
             return this.pythonExecutionService.getExecutablePath();
         }
+    }
+    public getExecutionInfo(args: string[]): PythonExecutionInfo {
+        return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         this.throwIfRPCConnectionIsDead();

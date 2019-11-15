@@ -5,6 +5,8 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { commands, Position, Range, Selection, TextEditorCursorStyle, TextEditorLineNumbersStyle, TextEditorOptions, Uri, window, workspace } from 'vscode';
 import { getTextEditsFromPatch } from '../../client/common/editor';
+import { ICondaService } from '../../client/interpreter/contracts';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { extractVariable } from '../../client/providers/simpleRefactorProvider';
 import { RefactorProxy } from '../../client/refactor/proxy';
 import { getExtensionSettings, isPythonVersion } from '../common';
@@ -51,6 +53,8 @@ suite('Variable Extraction', () => {
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
+
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
 
     async function testingVariableExtraction(shouldError: boolean, startPos: Position, endPos: Position): Promise<void> {
