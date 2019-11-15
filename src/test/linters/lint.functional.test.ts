@@ -248,9 +248,10 @@ class TestFixture extends BaseTestFixture {
             .returns(() => decoder);
 
         const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
-        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
-        condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
-        condaService.setup(c => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
+        // condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
+        // condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
+        // condaService.setup(c => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
+        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
 
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
