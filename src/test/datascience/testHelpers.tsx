@@ -6,19 +6,20 @@ import { mount, ReactWrapper } from 'enzyme';
 import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
+import { Provider } from 'react-redux';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
+import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
+import { getConnectedNativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
+import * as NativeStore from '../../datascience-ui/native-editor/redux/store';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
-import { updateSettings } from '../../datascience-ui/react-common/settingsReactSide';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
@@ -84,14 +85,14 @@ async function testInnerLoop(
 export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
     test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, <InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+        testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
     test(`${name} (native)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, <NativeEditor baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), testFunc, getIOC));
+        testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
-export function mountWebView(ioc: DataScienceIocContainer, node: React.ReactElement): ReactWrapper<any, Readonly<{}>, React.Component> {
+export function mountWebView(ioc: DataScienceIocContainer, type: 'native' | 'interactive'): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Setup our webview panel
-    ioc.createWebView(() => mount(node));
+    ioc.createWebView(() => mountConnectedMainPanel(type));
     return ioc.wrapper!;
 }
 
@@ -104,6 +105,20 @@ export function addMockData(ioc: DataScienceIocContainer, code: string, result: 
                 ioc.mockJupyter.addCell(code, result, mimeType);
             } else {
                 ioc.mockJupyter.addCell(code);
+            }
+        }
+    }
+}
+
+export function addInputMockData(ioc: DataScienceIocContainer, code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
+    if (ioc.mockJupyter) {
+        if (cellType && cellType === 'error') {
+            ioc.mockJupyter.addError(code, result ? result.toString() : '');
+        } else {
+            if (result) {
+                ioc.mockJupyter.addInputCell(code, result, mimeType);
+            } else {
+                ioc.mockJupyter.addInputCell(code);
             }
         }
     }
@@ -146,6 +161,7 @@ export function getOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
 export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string): ReactWrapper<any, Readonly<{}>, React.Component> {
     // Skip the edit cell if in the interactive window
     const count = cellType === 'InteractiveCell' ? 2 : 1;
+    wrapper.update();
     const foundResult = wrapper.find(cellType);
     return getOutputCell(wrapper, cellType, foundResult.length - count)!;
 }
@@ -215,7 +231,8 @@ export function createKeyboardEventForCell(event: Partial<IKeyboardEvent> & { co
             isDirty: false,
             isFirstLine: false,
             isLastLine: false,
-            isSuggesting: false
+            isSuggesting: false,
+            clear: noop
         },
         metaKey: false,
         preventDefault: noop,
@@ -254,6 +271,12 @@ export function isCellFocused(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     }
 }
 
+export function isCellMarkdown(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): boolean {
+    const cell = getOutputCell(wrapper, cellType, cellIndex);
+    assert.ok(cell, 'Could not find output cell');
+    return cell!.props().cellVM.cell.data.cell_type === 'markdown';
+}
+
 export function verifyCellIndex(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellId: string, expectedCellIndex: number) {
     const nativeCell = wrapper
         .find(cellId)
@@ -269,6 +292,7 @@ function verifyCell(
     options: { selector: string; shouldNotExist?: boolean },
     cellIndex: number | CellPosition
 ) {
+    wrapper.update();
     const foundResult = wrapper.find(cellType);
     assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
 
@@ -307,7 +331,7 @@ function verifyCell(
 
 export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, state: CellInputState) {
     const lastCell = getLastOutputCell(wrapper, cellType);
-    assert.ok(lastCell, 'Last call doesn\'t exist');
+    assert.ok(lastCell, 'Last cell doesn\'t exist');
 
     const inputBlock = lastCell.find('div.cell-input');
     const toggleButton = lastCell.find('polygon.collapse-input-svg');
@@ -461,7 +485,10 @@ export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Co
     // (we can't actually find it with the enzyme wrappers because they only search
     //  React accessible nodes and the monaco html is not react)
     assert.ok(editorControl, 'Editor not defined in order to type code into');
-    const ecDom = editorControl!.getDOMNode();
+    let ecDom = editorControl!.getDOMNode();
+    if ((ecDom as any).length) {
+        ecDom = (ecDom as any)[0];
+    }
     assert.ok(ecDom, 'ec DOM object not found');
     const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
@@ -530,7 +557,6 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
         maxOutputSize: 400,
         errorBackgroundColor: '#FFFFFF',
         sendSelectionToInteractiveWindow: false,
-        showJupyterVariableExplorer: true,
         variableExplorerExclude: 'module;function;builtin_function_or_method',
         codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
         markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
@@ -540,12 +566,6 @@ export function defaultDataScienceSettings(): IDataScienceSettings {
     };
 }
 
-// Set initial data science settings to use for a test (initially loaded via settingsReactSide.ts)
-export function initialDataScienceSettings(newSettings: IDataScienceSettings) {
-    const settingsString = JSON.stringify(newSettings);
-    updateSettings(settingsString);
-}
-
 export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainClass: React.ComponentClass<any>): P | undefined {
     const mainObj = wrapper.find(mainClass);
     if (mainObj) {
@@ -553,16 +573,6 @@ export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainCl
     }
 
     return undefined;
-}
-
-// Update data science settings while running (goes through the UpdateSettings channel)
-export function updateDataScienceSettings(wrapper: ReactWrapper<any, Readonly<{}>>, mainClass: React.ComponentClass<any>, newSettings: IDataScienceSettings) {
-    const settingsString = JSON.stringify(newSettings);
-    const mainPanel = getMainPanel(wrapper, mainClass) as any;
-    if (mainPanel) {
-        mainPanel.stateController.handleMessage(InteractiveWindowMessages.UpdateSettings, settingsString);
-    }
-    wrapper.update();
 }
 
 export function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string) {
@@ -581,4 +591,18 @@ export function escapePath(p: string) {
 
 export function srcDirectory() {
     return path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+}
+
+export function mountConnectedMainPanel(type: 'native' | 'interactive') {
+    const ConnectedMainPanel = type === 'native' ? getConnectedNativeEditor() : getConnectedInteractiveEditor();
+
+    // Create the redux store in test mode.
+    const createStore = type === 'native' ? NativeStore.createStore : InteractiveStore.createStore;
+    const store = createStore(true, 'vs-light', true);
+
+    // Mount this with a react redux provider
+    return mount(
+        <Provider store={store}>
+            <ConnectedMainPanel/>
+        </Provider>);
 }

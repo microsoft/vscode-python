@@ -7,6 +7,7 @@ import * as uuid from 'uuid/v4';
 import { IDisposable } from '../../client/common/types';
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { Identifiers } from '../../client/datascience/constants';
 import {
     IInteractiveWindowMapping,
     InteractiveWindowMessages,
@@ -14,14 +15,13 @@ import {
     IProvideHoverResponse,
     IProvideSignatureHelpResponse
 } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 
 interface IRequestData<T> {
     promise: Deferred<T>;
     cancelDisposable: monacoEditor.IDisposable;
 }
 
-export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable, IMessageHandler {
+export class IntellisenseProvider implements monacoEditor.languages.CompletionItemProvider, monacoEditor.languages.HoverProvider, monacoEditor.languages.SignatureHelpProvider, IDisposable {
     public triggerCharacters?: string[] | undefined = ['.'];
     public readonly signatureHelpTriggerCharacters?: ReadonlyArray<string> = ['(', ',', '<'];
     public readonly signatureHelpRetriggerCharacters?: ReadonlyArray<string> = [')'];
@@ -29,12 +29,14 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     private hoverRequests: Map<string, IRequestData<monacoEditor.languages.Hover>> = new Map<string, IRequestData<monacoEditor.languages.Hover>>();
     private signatureHelpRequests: Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>> = new Map<string, IRequestData<monacoEditor.languages.SignatureHelpResult>>();
     private registerDisposables: monacoEditor.IDisposable[] = [];
-    constructor(private postOffice: PostOffice, private getCellId: (modelId: string) => string) {
+    private monacoIdToCellId: Map<string, string> = new Map<string, string>();
+    private cellIdToMonacoId: Map<string, string> = new Map<string, string>();
+    private disposed = false;
+    constructor(private messageSender: <M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) => void) {
         // Register a completion provider
         this.registerDisposables.push(monacoEditor.languages.registerCompletionItemProvider('python', this));
         this.registerDisposables.push(monacoEditor.languages.registerHoverProvider('python', this));
         this.registerDisposables.push(monacoEditor.languages.registerSignatureHelpProvider('python', this));
-        this.postOffice.addHandler(this);
     }
 
     public provideCompletionItems(
@@ -98,6 +100,7 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
     }
 
     public dispose() {
+        this.disposed = true;
         this.registerDisposables.forEach(r => r.dispose());
         this.completionRequests.forEach(r => r.promise.resolve());
         this.hoverRequests.forEach(r => r.promise.resolve());
@@ -105,80 +108,60 @@ export class IntellisenseProvider implements monacoEditor.languages.CompletionIt
         this.registerDisposables = [];
         this.completionRequests.clear();
         this.hoverRequests.clear();
-
-        this.postOffice.removeHandler(this);
     }
 
-    // tslint:disable-next-line: no-any
-    public handleMessage(type: string, payload?: any): boolean {
-        switch (type) {
-            case InteractiveWindowMessages.ProvideCompletionItemsResponse:
-                this.handleCompletionResponse(payload);
-                return true;
-
-            case InteractiveWindowMessages.ProvideHoverResponse:
-                this.handleHoverResponse(payload);
-                return true;
-
-            case InteractiveWindowMessages.ProvideSignatureHelpResponse:
-                this.handleSignatureHelpResponse(payload);
-                return true;
-
-            default:
-                break;
-        }
-
-        return false;
+    public mapCellIdToModelId(cellId: string, modelId: string) {
+        this.cellIdToMonacoId.set(cellId, modelId);
+        this.monacoIdToCellId.set(modelId, cellId);
     }
 
     // Handle completion response
-    // tslint:disable-next-line:no-any
-    private handleCompletionResponse = (payload?: any) => {
-        if (payload) {
-            const response = payload as IProvideCompletionItemsResponse;
-
-            // Resolve our waiting promise if we have one
-            const waiting = this.completionRequests.get(response.requestId);
-            if (waiting) {
-                waiting.promise.resolve(response.list);
-                this.completionRequests.delete(response.requestId);
-            }
-        }
-    }
-    // Handle hover response
-    // tslint:disable-next-line:no-any
-    private handleHoverResponse = (payload?: any) => {
-        if (payload) {
-            const response = payload as IProvideHoverResponse;
-
-            // Resolve our waiting promise if we have one
-            const waiting = this.hoverRequests.get(response.requestId);
-            if (waiting) {
-                waiting.promise.resolve(response.hover);
-                this.hoverRequests.delete(response.requestId);
-            }
+    public handleCompletionResponse(response: IProvideCompletionItemsResponse) {
+        // Resolve our waiting promise if we have one
+        const waiting = this.completionRequests.get(response.requestId);
+        if (waiting) {
+            waiting.promise.resolve(response.list);
+            this.completionRequests.delete(response.requestId);
         }
     }
 
     // Handle hover response
-    // tslint:disable-next-line:no-any
-    private handleSignatureHelpResponse = (payload?: any) => {
-        if (payload) {
-            const response = payload as IProvideSignatureHelpResponse;
-
-            // Resolve our waiting promise if we have one
-            const waiting = this.signatureHelpRequests.get(response.requestId);
-            if (waiting) {
-                waiting.promise.resolve({
-                    value: response.signatureHelp,
-                    dispose: noop
-                });
-                this.signatureHelpRequests.delete(response.requestId);
-            }
+    public handleHoverResponse(response: IProvideHoverResponse) {
+        // Resolve our waiting promise if we have one
+        const waiting = this.hoverRequests.get(response.requestId);
+        if (waiting) {
+            waiting.promise.resolve(response.hover);
+            this.hoverRequests.delete(response.requestId);
         }
     }
 
-    private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]) {
-        this.postOffice.sendMessage<M, T>(type, payload);
+    // Handle signature response
+    public handleSignatureHelpResponse(response: IProvideSignatureHelpResponse) {
+        // Resolve our waiting promise if we have one
+        const waiting = this.signatureHelpRequests.get(response.requestId);
+        if (waiting) {
+            waiting.promise.resolve({
+                value: response.signatureHelp,
+                dispose: noop
+            });
+            this.signatureHelpRequests.delete(response.requestId);
+        }
     }
+
+    private getCellId(monacoId: string): string {
+        const result = this.monacoIdToCellId.get(monacoId);
+        if (result) {
+            return result;
+        }
+
+        // Just assume it's the edit cell if not found.
+        return Identifiers.EditCellId;
+    }
+
+    private sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void {
+        if (!this.disposed) {
+            this.messageSender(type, payload);
+        }
+    }
+
 }

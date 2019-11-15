@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount } from 'enzyme';
 import * as path from 'path';
-import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
@@ -22,13 +20,13 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
+import { mountConnectedMainPanel } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -120,7 +118,7 @@ suite('DataScience Debugger tests', () => {
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), vsls.Role.None);
+        result.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.

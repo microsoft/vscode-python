@@ -6,13 +6,13 @@ import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
+import { Provider } from 'react-redux';
 import { Disposable } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
 import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
-import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
@@ -255,17 +255,11 @@ strc = 'c'`;
 
 // Open up our variable explorer which also triggers a data fetch
 function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
-    let nodes = wrapper.find('InteractivePanel');
+    const nodes = wrapper.find(Provider);
     if (nodes.length > 0) {
-        const interactivePanel: InteractivePanel = nodes.instance() as InteractivePanel;
-        if (interactivePanel) {
-            interactivePanel.stateController.toggleVariableExplorer();
-        }
-    } else {
-        nodes = wrapper.find('NativeEditor');
-        const nativeEditor: NativeEditor = nodes.instance() as NativeEditor;
-        if (nativeEditor) {
-            nativeEditor.stateController.toggleVariableExplorer();
+        const store = nodes.at(0).props().store;
+        if (store) {
+            store.dispatch(({type: CommonActionType.TOGGLE_VARIABLE_EXPLORER}));
         }
     }
 }

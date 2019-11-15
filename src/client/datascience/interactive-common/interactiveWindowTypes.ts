@@ -3,84 +3,86 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import { Uri } from 'vscode';
-import { CssMessages, IGetCssRequest, IGetCssResponse, SharedMessages } from '../messages';
+import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
+import { IGetMonacoThemeResponse } from '../monacoMessages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
 
-export namespace InteractiveWindowMessages {
-    export const StartCell = 'start_cell';
-    export const FinishCell = 'finish_cell';
-    export const UpdateCell = 'update_cell';
-    export const GotoCodeCell = 'gotocell_code';
-    export const CopyCodeCell = 'copycell_code';
-    export const NotebookExecutionActivated = 'notebook_execution_activated';
-    export const RestartKernel = 'restart_kernel';
-    export const Export = 'export_to_ipynb';
-    export const GetAllCells = 'get_all_cells';
-    export const ReturnAllCells = 'return_all_cells';
-    export const DeleteCell = 'delete_cell';
-    export const DeleteAllCells = 'delete_all_cells';
-    export const Undo = 'undo';
-    export const Redo = 'redo';
-    export const ExpandAll = 'expand_all';
-    export const CollapseAll = 'collapse_all';
-    export const StartProgress = 'start_progress';
-    export const StopProgress = 'stop_progress';
-    export const Interrupt = 'interrupt';
-    export const SubmitNewCell = 'submit_new_cell';
-    export const UpdateSettings = SharedMessages.UpdateSettings;
+export enum InteractiveWindowMessages {
+    StartCell = 'start_cell',
+    FinishCell = 'finish_cell',
+    UpdateCell = 'update_cell',
+    GotoCodeCell = 'gotocell_code',
+    CopyCodeCell = 'copycell_code',
+    NotebookExecutionActivated = 'notebook_execution_activated',
+    RestartKernel = 'restart_kernel',
+    Export = 'export_to_ipynb',
+    GetAllCells = 'get_all_cells',
+    ReturnAllCells = 'return_all_cells',
+    DeleteCell = 'delete_cell',
+    DeleteAllCells = 'delete_all_cells',
+    Undo = 'undo',
+    Redo = 'redo',
+    ExpandAll = 'expand_all',
+    CollapseAll = 'collapse_all',
+    StartProgress = 'start_progress',
+    StopProgress = 'stop_progress',
+    Interrupt = 'interrupt',
+    SubmitNewCell = 'submit_new_cell',
+    UpdateSettings = 'update_settings',
     // Message sent to React component from extension asking it to save the notebook.
-    export const DoSave = 'DoSave';
-    export const SendInfo = 'send_info';
-    export const Started = SharedMessages.Started;
-    export const AddedSysInfo = 'added_sys_info';
-    export const RemoteAddCode = 'remote_add_code';
-    export const RemoteReexecuteCode = 'remote_reexecute_code';
-    export const Activate = 'activate';
-    export const ShowDataViewer = 'show_data_explorer';
-    export const GetVariablesRequest = 'get_variables_request';
-    export const GetVariablesResponse = 'get_variables_response';
-    export const GetVariableValueRequest = 'get_variable_value_request';
-    export const GetVariableValueResponse = 'get_variable_value_response';
-    export const VariableExplorerToggle = 'variable_explorer_toggle';
-    export const ProvideCompletionItemsRequest = 'provide_completion_items_request';
-    export const CancelCompletionItemsRequest = 'cancel_completion_items_request';
-    export const ProvideCompletionItemsResponse = 'provide_completion_items_response';
-    export const ProvideHoverRequest = 'provide_hover_request';
-    export const CancelHoverRequest = 'cancel_hover_request';
-    export const ProvideHoverResponse = 'provide_hover_response';
-    export const ProvideSignatureHelpRequest = 'provide_signature_help_request';
-    export const CancelSignatureHelpRequest = 'cancel_signature_help_request';
-    export const ProvideSignatureHelpResponse = 'provide_signature_help_response';
-    export const AddCell = 'add_cell';
-    export const EditCell = 'edit_cell';
-    export const RemoveCell = 'remove_cell';
-    export const SwapCells = 'swap_cells';
-    export const InsertCell = 'insert_cell';
-    export const LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request';
-    export const LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response';
-    export const LoadTmLanguageRequest = 'load_tmlanguage_request';
-    export const LoadTmLanguageResponse = 'load_tmlanguage_response';
-    export const OpenLink = 'open_link';
-    export const ShowPlot = 'show_plot';
-    export const StartDebugging = 'start_debugging';
-    export const StopDebugging = 'stop_debugging';
-    export const GatherCodeRequest = 'gather_code';
-    export const LoadAllCells = 'load_all_cells';
-    export const LoadAllCellsComplete = 'load_all_cells_complete';
-    export const ScrollToCell = 'scroll_to_cell';
-    export const ReExecuteCell = 'reexecute_cell';
-    export const NotebookIdentity = 'identity';
-    export const NotebookDirty = 'dirty';
-    export const NotebookClean = 'clean';
-    export const SaveAll = 'save_all';
-    export const NativeCommand = 'native_command';
-    export const VariablesComplete = 'variables_complete';
-    export const NotebookRunAllCells = 'notebook_run_all_cells';
-    export const NotebookRunSelectedCell = 'notebook_run_selected_cell';
-    export const NotebookAddCellBelow = 'notebook_add_cell_below';
-    export const RenderComplete = 'finished_rendering_cells';
-    export const FocusedCellEditor = 'focused_cell_editor';
+    DoSave = 'DoSave',
+    SendInfo = 'send_info',
+    Started = 'started',
+    AddedSysInfo = 'added_sys_info',
+    RemoteAddCode = 'remote_add_code',
+    RemoteReexecuteCode = 'remote_reexecute_code',
+    Activate = 'activate',
+    ShowDataViewer = 'show_data_explorer',
+    GetVariablesRequest = 'get_variables_request',
+    GetVariablesResponse = 'get_variables_response',
+    GetVariableValueRequest = 'get_variable_value_request',
+    GetVariableValueResponse = 'get_variable_value_response',
+    VariableExplorerToggle = 'variable_explorer_toggle',
+    ProvideCompletionItemsRequest = 'provide_completion_items_request',
+    CancelCompletionItemsRequest = 'cancel_completion_items_request',
+    ProvideCompletionItemsResponse = 'provide_completion_items_response',
+    ProvideHoverRequest = 'provide_hover_request',
+    CancelHoverRequest = 'cancel_hover_request',
+    ProvideHoverResponse = 'provide_hover_response',
+    ProvideSignatureHelpRequest = 'provide_signature_help_request',
+    CancelSignatureHelpRequest = 'cancel_signature_help_request',
+    ProvideSignatureHelpResponse = 'provide_signature_help_response',
+    AddCell = 'add_cell',
+    EditCell = 'edit_cell',
+    RemoveCell = 'remove_cell',
+    SwapCells = 'swap_cells',
+    InsertCell = 'insert_cell',
+    LoadOnigasmAssemblyRequest = 'load_onigasm_assembly_request',
+    LoadOnigasmAssemblyResponse = 'load_onigasm_assembly_response',
+    LoadTmLanguageRequest = 'load_tmlanguage_request',
+    LoadTmLanguageResponse = 'load_tmlanguage_response',
+    OpenLink = 'open_link',
+    ShowPlot = 'show_plot',
+    StartDebugging = 'start_debugging',
+    StopDebugging = 'stop_debugging',
+    GatherCodeRequest = 'gather_code',
+    LoadAllCells = 'load_all_cells',
+    LoadAllCellsComplete = 'load_all_cells_complete',
+    ScrollToCell = 'scroll_to_cell',
+    ReExecuteCell = 'reexecute_cell',
+    NotebookIdentity = 'identity',
+    NotebookDirty = 'dirty',
+    NotebookClean = 'clean',
+    SaveAll = 'save_all',
+    NativeCommand = 'native_command',
+    VariablesComplete = 'variables_complete',
+    NotebookRunAllCells = 'notebook_run_all_cells',
+    NotebookRunSelectedCell = 'notebook_run_selected_cell',
+    NotebookAddCellBelow = 'notebook_add_cell_below',
+    ExecutionRendered = 'rendered_execution',
+    FocusedCellEditor = 'focused_cell_editor',
+    MonacoReady = 'monaco_ready',
+    ClearAllOutputs = 'clear_all_outputs'
 }
 
 export enum NativeCommandType {
@@ -97,6 +99,7 @@ export enum NativeCommandType {
     InsertBelow,
     MoveCellDown,
     MoveCellUp,
+    Redo,
     Run,
     RunAbove,
     RunAll,
@@ -113,9 +116,9 @@ export enum NativeCommandType {
 // These are the messages that will mirror'd to guest/hosts in
 // a live share session
 export const InteractiveWindowRemoteMessages: string[] = [
-    InteractiveWindowMessages.AddedSysInfo,
-    InteractiveWindowMessages.RemoteAddCode,
-    InteractiveWindowMessages.RemoteReexecuteCode
+    InteractiveWindowMessages.AddedSysInfo.toString(),
+    InteractiveWindowMessages.RemoteAddCode.toString(),
+    InteractiveWindowMessages.RemoteReexecuteCode.toString()
 ];
 
 export interface IGotoCode {
@@ -237,6 +240,10 @@ export interface IShowDataViewer {
     columnSize: number;
 }
 
+export interface IRefreshVariablesRequest {
+    newExecutionCount?: number;
+}
+
 export interface ILoadAllCells {
     cells: ICell[];
 }
@@ -273,7 +280,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.UpdateCell]: ICell;
     public [InteractiveWindowMessages.GotoCodeCell]: IGotoCode;
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
-    public [InteractiveWindowMessages.NotebookExecutionActivated]: Uri;
+    public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;
@@ -303,6 +310,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
+    public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
+    public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
     public [InteractiveWindowMessages.ProvideCompletionItemsRequest]: IProvideCompletionItemsRequest;
     public [InteractiveWindowMessages.CancelCompletionItemsRequest]: ICancelIntellisenseRequest;
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: IProvideCompletionItemsResponse;
@@ -339,6 +348,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookRunAllCells]: never | undefined;
     public [InteractiveWindowMessages.NotebookRunSelectedCell]: never | undefined;
     public [InteractiveWindowMessages.NotebookAddCellBelow]: never | undefined;
-    public [InteractiveWindowMessages.RenderComplete]: IRenderComplete;
+    public [InteractiveWindowMessages.ExecutionRendered]: IRenderComplete;
     public [InteractiveWindowMessages.FocusedCellEditor]: IFocusedCellEditor;
+    public [InteractiveWindowMessages.MonacoReady]: never | undefined;
+    public [InteractiveWindowMessages.ClearAllOutputs]: never | undefined;
 }

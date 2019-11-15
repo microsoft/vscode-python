@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount, ReactWrapper } from 'enzyme';
+import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri } from 'vscode';
@@ -29,7 +29,7 @@ import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { waitForUpdate } from './reactHelpers';
-import { addMockData, CellPosition, verifyHtmlOnCell } from './testHelpers';
+import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 
@@ -83,7 +83,7 @@ suite('DataScience LiveShare tests', () => {
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), role);
+        result.createWebView(() => mountConnectedMainPanel('interactive'), role);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.

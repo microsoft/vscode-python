@@ -187,43 +187,26 @@
     visibility: collapse;
 }
 
-.markdown-toolbar .run-cell-button {
-    display: none;
+.hover-cell-button {
+    visibility: collapse;
 }
 
-// This will be added later
-// .run-cell-button {
-//     visibility: collapse;
-// }
+.cell-wrapper:hover .hover-cell-button {
+    visibility: visible;
+}
 
-// .cell-wrapper:hover .run-cell-button {
-//     visibility: visible;
-// }
+.cell-wrapper-selected .hover-cell-button {
+    visibility: visible;
+}
 
-// .cell-wrapper-selected .run-cell-button {
-//     visibility: visible;
-// }
-
-// .cell-wrapper-focused .run-cell-button {
-//     visibility: visible;
-// }
+.cell-wrapper-focused .hover-cell-button {
+    visibility: visible;
+}
 
 .delete-cell-button {
     right: 2px;
     position: absolute;
     visibility: collapse;
-}
-
-.cell-wrapper:hover .delete-cell-button {
-    visibility: visible;
-}
-
-.cell-wrapper-selected .delete-cell-button {
-    visibility: visible;
-}
-
-.cell-wrapper-focused .delete-cell-button {
-    visibility: visible;
 }
 
 .cell-wrapper:hover .navbar-div {

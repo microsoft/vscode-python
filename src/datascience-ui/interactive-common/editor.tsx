@@ -13,7 +13,6 @@ import { CursorPos, IFont } from './mainState';
 // tslint:disable-next-line: import-name
 export interface IEditorProps {
     content : string;
-    autoFocus?: boolean;
     codeTheme: string;
     readOnly: boolean;
     testMode: boolean;
@@ -26,6 +25,8 @@ export interface IEditorProps {
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
     font: IFont;
+    hasFocus: boolean;
+    cursorPos: CursorPos;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -54,6 +55,12 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         this.subscriptions.forEach(d => d.dispose());
     }
 
+    public componentDidUpdate(prevProps: IEditorProps, prevState: IEditorState) {
+        if (this.props.hasFocus && (!prevProps.hasFocus || !prevState.editor)) {
+            this.giveFocus(this.props.cursorPos);
+        }
+    }
+
     public render() {
         const classes = this.props.readOnly ? 'editor-area' : 'editor-area editor-area-editable';
         const renderEditor = this.state.forceMonaco || this.props.useQuickEdit === undefined || this.props.useQuickEdit === false ? this.renderMonacoEditor : this.renderQuickEditor;
@@ -75,6 +82,13 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             const column = current && current.lineNumber === lineNumber ? current.column : 1;
             this.state.editor.setPosition({ lineNumber, column });
         }
+    }
+
+    public getContents() : string {
+        if (this.state.model) {
+            return this.state.model.getValue().replace(/\r/g, '');
+        }
+        return '';
     }
 
     private renderQuickEditor = (): JSX.Element => {
@@ -169,11 +183,6 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         // Track focus changes
         this.subscriptions.push(editor.onDidFocusEditorWidget(this.props.focused ? this.props.focused : noop));
         this.subscriptions.push(editor.onDidBlurEditorWidget(this.props.unfocused ? this.props.unfocused : noop));
-
-        // Give focus if necessary
-        if (this.props.autoFocus) {
-            setTimeout(() => editor.focus(), 1);
-        }
     }
 
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
@@ -228,7 +237,8 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
                             isLastLine,
                             isDirty,
                             isSuggesting,
-                            contents: this.getContents()
+                            contents: this.getContents(),
+                            clear: this.clear
                         },
                         stopPropagation: () => e.stopPropagation(),
                         preventDefault: () => e.preventDefault()
@@ -245,10 +255,9 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         }
     }
 
-    private getContents() : string {
-        if (this.state.model) {
-            return this.state.model.getValue().replace(/\r/g, '');
+    private clear = () => {
+        if (this.state.editor) {
+            this.state.editor.setValue('');
         }
-        return '';
     }
 }

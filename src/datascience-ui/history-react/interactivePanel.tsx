@@ -1,80 +1,57 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import './interactivePanel.less';
-
 import * as React from 'react';
+import { connect } from 'react-redux';
 
-import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
+import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { ErrorBoundary } from '../react-common/errorBoundary';
-import { IKeyboardEvent } from '../react-common/event';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
-import { getSettings } from '../react-common/settingsReactSide';
-import { InteractiveCell } from './interactiveCell';
-import { InteractivePanelStateController } from './interactivePanelStateController';
+import { getConnectedInteractiveCell } from './interactiveCell';
+import { actionCreators } from './redux/actions';
 
-interface IInteractivePanelProps {
-    skipDefault: boolean;
-    testMode?: boolean;
-    codeTheme: string;
-    baseTheme: string;
+import './interactivePanel.less';
+
+type IInteractivePanelProps = IMainState & typeof actionCreators;
+
+function mapStateToProps(state: IStore): IMainState {
+    return state.main;
 }
 
-export class InteractivePanel extends React.Component<IInteractivePanelProps, IMainState> {
-    // Public for testing
-    public stateController: InteractivePanelStateController;
+const ConnectedInteractiveCell = getConnectedInteractiveCell();
+
+export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private mainPanelRef: React.RefObject<HTMLDivElement> = React.createRef<HTMLDivElement>();
-    private editCellRef: React.RefObject<InteractiveCell> = React.createRef<InteractiveCell>();
     private contentPanelRef: React.RefObject<ContentPanel> = React.createRef<ContentPanel>();
-    private cellRefs: Map<string, React.RefObject<InteractiveCell>> = new Map<string, React.RefObject<InteractiveCell>>();
     private renderCount: number = 0;
     private internalScrollCount: number = 0;
 
     constructor(props: IInteractivePanelProps) {
         super(props);
-
-        // Create our state controller. It manages updating our state.
-        this.stateController = new InteractivePanelStateController({
-            skipDefault: this.props.skipDefault,
-            testMode: this.props.testMode ? true : false,
-            baseTheme: (getSettings && getSettings().ignoreVscodeTheme) ? 'vscode-light' : this.props.baseTheme,
-            setState: this.setState.bind(this),
-            activate: this.activated.bind(this),
-            scrollToCell: this.scrollToCell.bind(this),
-            defaultEditable: false,
-            hasEdit: getSettings && getSettings().allowInput,
-            enableGather: (getSettings && getSettings().enableGather) ? true : false
-        });
-
-        // Default our state.
-        this.state = this.stateController.getState();
     }
 
-    public shouldComponentUpdate(_nextProps: IInteractivePanelProps, nextState: IMainState): boolean {
-        return this.stateController.requiresUpdate(this.state, nextState);
+    public componentDidMount() {
+        this.props.editorLoaded();
     }
 
     public componentWillUnmount() {
-        // Dispose of our state controller so it stops listening
-        this.stateController.dispose();
+        this.props.editorUnmounted();
     }
 
     public render() {
         const dynamicFont: React.CSSProperties = {
-            fontSize: this.state.font.size,
-            fontFamily: this.state.font.family
+            fontSize: this.props.font.size,
+            fontFamily: this.props.font.family
         };
 
-        // Update the state controller with our new state
-        this.stateController.renderUpdate(this.state);
-        const progressBar = this.state.busy && !this.props.testMode ? <Progress /> : undefined;
+        const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
 
         // If in test mode, update our count. Use this to determine how many renders a normal update takes.
         if (this.props.testMode) {
@@ -85,7 +62,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             <div id='main-panel' ref={this.mainPanelRef} role='Main' style={dynamicFont}>
                 <div className='styleSetter'>
                     <style>
-                        {this.state.rootCss}
+                        {this.props.rootCss}
                     </style>
                 </div>
                 <header id='main-panel-toolbar'>
@@ -93,44 +70,20 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
                     {progressBar}
                 </header>
                 <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
-                    {this.renderVariablePanel(this.state.baseTheme)}
+                    {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
                 <main id='main-panel-content' onScroll={this.handleScroll}>
-                    {this.renderContentPanel(this.state.baseTheme)}
+                    {this.renderContentPanel(this.props.baseTheme)}
                 </main>
                 <section id='main-panel-footer' aria-label={getLocString('DataScience.editSection', 'Input new cells here')}>
-                    {this.renderFooterPanel(this.state.baseTheme)}
+                    {this.renderFooterPanel(this.props.baseTheme)}
                 </section>
             </div>
         );
     }
 
-    private activated = () => {
-        // Make sure the input cell gets focus
-        if (getSettings && getSettings().allowInput) {
-            // Delay this so that we make sure the outer frame has focus first.
-            setTimeout(() => {
-                // First we have to give ourselves focus (so that focus actually ends up in the code cell)
-                if (this.mainPanelRef && this.mainPanelRef.current) {
-                    this.mainPanelRef.current.focus({preventScroll: true});
-                }
-
-                if (this.editCellRef && this.editCellRef.current) {
-                    this.editCellRef.current.giveFocus(true);
-                }
-            }, 100);
-        }
-    }
-
-    private scrollToCell(id: string) {
-        const ref = this.cellRefs.get(id);
-        if (ref && ref.current) {
-            ref.current.scrollAndFlash();
-        }
-    }
-
     private renderToolbarPanel() {
-        const variableExplorerTooltip = this.state.variablesVisible ?
+        const variableExplorerTooltip = this.props.variablesVisible ?
             getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
             getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
@@ -138,32 +91,32 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
                     <div className='toolbar-menu-bar-child'>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.clearAll} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.deleteAllCells} tooltip={getLocString('DataScience.clearAll', 'Remove all cells')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.redo} disabled={!this.stateController.canRedo()} tooltip={getLocString('DataScience.redo', 'Redo')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Redo} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.redo} disabled={this.props.redoStack.length === 0} tooltip={getLocString('DataScience.redo', 'Redo')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Redo} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.undo} disabled={!this.stateController.canUndo()} tooltip={getLocString('DataScience.undo', 'Undo')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Undo} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.undo} disabled={this.props.undoStack.length === 0} tooltip={getLocString('DataScience.undo', 'Undo')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Undo} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.interruptKernel} tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Restart} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.restartKernel} tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.toggleVariableExplorer} tooltip={variableExplorerTooltip}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.export} disabled={!this.stateController.canExport()} tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.export} disabled={this.props.cellVMs.length === 0} tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.expandAll} disabled={!this.stateController.canExpandAll()} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.ExpandAll} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.expandAll} disabled={this.props.cellVMs.length === 0} tooltip={getLocString('DataScience.expandAll', 'Expand all cell inputs')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExpandAll} />
                         </ImageButton>
-                        <ImageButton baseTheme={this.state.baseTheme} onClick={this.stateController.collapseAll} disabled={!this.stateController.canCollapseAll()} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
-                            <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.CollapseAll} />
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={this.props.cellVMs.length === 0} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
+                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.CollapseAll} />
                         </ImageButton>
                     </div>
                 </div>
@@ -172,7 +125,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private renderVariablePanel(baseTheme: string) {
-        if (this.state.variablesVisible) {
+        if (this.props.variablesVisible) {
             const variableProps = this.getVariableProps(baseTheme);
             return <VariablePanel {...variableProps} />;
         }
@@ -183,7 +136,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     private renderContentPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.state.tokenizerLoaded && !this.props.testMode) {
+        if (!this.props.monacoReady && !this.props.testMode) {
             return null;
         }
 
@@ -195,39 +148,32 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.state.tokenizerLoaded || !this.state.editCellVM) {
+        if (!this.props.monacoReady || !this.props.editCellVM) {
             return null;
         }
 
-        const maxOutputSize = getSettings().maxOutputSize;
+        const maxOutputSize = this.props.settings.maxOutputSize;
         const maxTextSize = maxOutputSize && maxOutputSize < 10000 && maxOutputSize > 0 ? maxOutputSize : undefined;
         const executionCount = this.getInputExecutionCount();
-        const editPanelClass = getSettings().colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
+        const editPanelClass = this.props.settings.colorizeInputBox ? 'edit-panel-colorized' : 'edit-panel';
 
         return (
             <div className={editPanelClass}>
                 <ErrorBoundary>
-                    <InteractiveCell
-                        editorOptions={this.state.editorOptions}
-                        history={this.state.history}
+                    <ConnectedInteractiveCell
+                        role='form'
+                        editorOptions={this.props.editorOptions}
                         maxTextSize={maxTextSize}
                         autoFocus={document.hasFocus()}
                         testMode={this.props.testMode}
-                        cellVM={this.state.editCellVM}
+                        cellVM={this.props.editCellVM}
                         baseTheme={baseTheme}
                         codeTheme={this.props.codeTheme}
                         showWatermark={true}
                         editExecutionCount={executionCount.toString()}
-                        onCodeCreated={this.stateController.editableCodeCreated}
-                        onCodeChange={this.stateController.codeChange}
-                        monacoTheme={this.state.monacoTheme}
-                        openLink={this.stateController.openLink}
-                        expandImage={noop}
-                        ref={this.editCellRef}
-                        onClick={this.clickEditCell}
-                        keyDown={this.editCellKeyDown}
-                        renderCellToolbar={this.renderEditCellToolbar}
-                        font={this.state.font}
+                        monacoTheme={this.props.monacoTheme}
+                        font={this.props.font}
+                        settings={this.props.settings}
                     />
                 </ErrorBoundary>
             </div>
@@ -235,18 +181,17 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
 
     private getInputExecutionCount = () : number => {
-        return this.state.currentExecutionCount + 1;
+        return this.props.currentExecutionCount + 1;
     }
 
     private getContentProps = (baseTheme: string): IContentPanelProps => {
         return {
             baseTheme: baseTheme,
-            cellVMs: this.state.cellVMs,
-            history: this.state.history,
+            cellVMs: this.props.cellVMs,
             testMode: this.props.testMode,
             codeTheme: this.props.codeTheme,
-            submittedText: this.state.submittedText,
-            skipNextScroll: this.state.skipNextScroll ? true : false,
+            submittedText: this.props.submittedText,
+            skipNextScroll: this.props.skipNextScroll ? true : false,
             editable: false,
             newCellVM: undefined,
             renderCell: this.renderCell,
@@ -255,149 +200,52 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
     }
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
        return {
-        variables: this.state.variables,
-        pendingVariableCount: this.state.pendingVariableCount,
-        debugging: this.state.debugging,
-        busy: this.state.busy,
-        showDataExplorer: this.stateController.showDataViewer,
+        variables: this.props.variables,
+        pendingVariableCount: this.props.pendingVariableCount,
+        debugging: this.props.debugging,
+        busy: this.props.busy,
+        showDataExplorer: this.props.showDataViewer,
         skipDefault: this.props.skipDefault,
         testMode: this.props.testMode,
-        closeVariableExplorer: this.stateController.toggleVariableExplorer,
+        closeVariableExplorer: this.props.toggleVariableExplorer,
         baseTheme: baseTheme
        };
     }
 
-    private clickEditCell = () => {
-        if (this.editCellRef && this.editCellRef.current) {
-            this.editCellRef.current.giveFocus(true);
-        }
-    }
-
-    private editCellKeyDown = (_cellId: string, e: IKeyboardEvent) => {
-        if (e.code === 'Escape') {
-            this.editCellEscape(e);
-        } else if (e.code === 'Enter' && e.shiftKey) {
-            this.editCellSubmit(e);
-        }
-    }
-
-    private editCellSubmit(e: IKeyboardEvent) {
-        if (e.editorInfo && e.editorInfo.contents && this.state.editCellVM) {
-            // Prevent shift+enter from turning into a enter
-            e.stopPropagation();
-            e.preventDefault();
-
-            // Remove empty lines off the end
-            let endPos = e.editorInfo.contents.length - 1;
-            while (endPos >= 0 && e.editorInfo.contents[endPos] === '\n') {
-                endPos -= 1;
-            }
-            const content = e.editorInfo.contents.slice(0, endPos + 1);
-
-            // Send to the input history too if necessary
-            if (this.state.history) {
-                this.state.history.add(content, e.editorInfo.isDirty);
-            }
-
-            // Send to jupyter
-            this.stateController.submitInput(content, this.state.editCellVM);
-        }
-    }
-
-    private editCellEscape = (e: IKeyboardEvent) => {
-        const focusedElement = document.activeElement;
-        if (focusedElement !== null && e.editorInfo && !e.editorInfo.isSuggesting) {
-            const nextTabStop = this.findTabStop(1, focusedElement);
-            if (nextTabStop) {
-                nextTabStop.focus();
-            }
-        }
-    }
-
-    private findTabStop(direction: number, element: Element) : HTMLElement | undefined {
-        if (element) {
-            const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
-            if (allFocusable) {
-                const tabable = Array.prototype.filter.call(allFocusable, (i: HTMLElement) => i.tabIndex >= 0);
-                const self = tabable.indexOf(element);
-                return direction >= 0 ? tabable[self + 1] || tabable[0] : tabable[self - 1] || tabable[0];
-            }
-        }
-    }
-
     private renderCell = (cellVM: ICellViewModel, _index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
-        const cellRef = React.createRef<InteractiveCell>();
-        this.cellRefs.set(cellVM.cell.id, cellRef);
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                 <ErrorBoundary>
-                    <InteractiveCell
-                        ref={cellRef}
+                    <ConnectedInteractiveCell
                         role='listitem'
-                        editorOptions={this.state.editorOptions}
-                        history={undefined}
-                        maxTextSize={getSettings().maxOutputSize}
+                        editorOptions={this.props.editorOptions}
+                        maxTextSize={this.props.settings.maxOutputSize}
                         autoFocus={false}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
-                        baseTheme={this.state.baseTheme}
+                        baseTheme={this.props.baseTheme}
                         codeTheme={this.props.codeTheme}
                         showWatermark={cellVM.cell.id === Identifiers.EditCellId}
                         editExecutionCount={this.getInputExecutionCount().toString()}
-                        onCodeChange={this.stateController.codeChange}
-                        onCodeCreated={this.stateController.readOnlyCodeCreated}
-                        monacoTheme={this.state.monacoTheme}
-                        openLink={this.stateController.openLink}
-                        expandImage={this.stateController.showPlot}
-                        renderCellToolbar={this.renderCellToolbar}
-                        font={this.state.font}
+                        monacoTheme={this.props.monacoTheme}
+                        font={this.props.font}
+                        settings={this.props.settings}
                     />
                 </ErrorBoundary>
             </div>);
-    }
-
-    private renderCellToolbar = (cellId: string) => {
-        const gotoCode = () => this.stateController.gotoCellCode(cellId);
-        const deleteCode = () => this.stateController.deleteCell(cellId);
-        const copyCode = () => this.stateController.copyCellCode(cellId);
-        const cell = this.stateController.findCell(cellId);
-        const gatherCode = () => this.stateController.gatherCell(cell);
-        const hasNoSource = !cell || !cell.cell.file || cell.cell.file === Identifiers.EmptyFileName;
-        const gatherHidden = !cell || !this.state.enableGather || cell.cell.data.cell_type !== 'code';
-
-        return (
-            [
-                <div className='cell-toolbar' key={0}>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={gatherCode} hidden={gatherHidden} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} >
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={copyCode} tooltip={getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file')} hidden={!hasNoSource}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Copy} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.state.baseTheme} onClick={deleteCode} tooltip={getLocString('DataScience.deleteButtonTooltip', 'Remove Cell')}>
-                        <Image baseTheme={this.state.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                    </ImageButton>
-                </div>
-            ]
-        );
-    }
-
-    private renderEditCellToolbar = (_cellId: string) => {
-        return null;
     }
 
     // This handles the scrolling. Its called from the props of contentPanel.
     // We only scroll when the state indicates we are at the bottom of the interactive window,
     // otherwise it sometimes scrolls when the user wasn't at the bottom.
     private scrollDiv = (div: HTMLDivElement) => {
-        if (this.state.isAtBottom) {
+        if (this.props.isAtBottom) {
             this.internalScrollCount += 1;
             // Force auto here as smooth scrolling can be canceled by updates to the window
             // from elsewhere (and keeping track of these would make this hard to maintain)
-            div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            if (div.scrollIntoView) {
+                div.scrollIntoView({ behavior: 'auto', block: 'start', inline: 'nearest' });
+            }
         }
     }
 
@@ -407,10 +255,16 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps, IM
         } else {
             const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
             const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
-            this.setState({
-                isAtBottom
-            });
+            this.props.scroll(isAtBottom);
         }
     }
 
+}
+
+// Main export, return a redux connected editor
+export function getConnectedInteractiveEditor() {
+    return connect(
+        mapStateToProps,
+        actionCreators
+    )(InteractivePanel);
 }

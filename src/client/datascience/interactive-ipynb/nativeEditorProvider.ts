@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument, TextEditor, Uri } from 'vscode';
+import { Event, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { JUPYTER_LANGUAGE } from '../../common/constants';
@@ -20,9 +20,13 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
 
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
     private executedEditors: Set<string> = new Set<string>();
+    private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
     private nextNumber: number = 1;
+    public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
+        return this._onDidOpenNotebookEditor.event;
+    }
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -170,6 +174,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         this.activeEditors.set(e.file.fsPath, e);
         this.disposables.push(e.saved(this.onSavedEditor.bind(this, e.file.fsPath)));
         this.openedNotebookCount += 1;
+        this._onDidOpenNotebookEditor.fire(e);
     }
 
     private onSavedEditor(oldPath: string, e: INotebookEditor) {

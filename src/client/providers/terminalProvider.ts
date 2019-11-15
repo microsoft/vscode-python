@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Disposable, Uri } from 'vscode';
+import { Disposable, Terminal, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { Commands } from '../common/constants';
-import { ITerminalServiceFactory } from '../common/terminal/types';
+import { ITerminalActivator, ITerminalServiceFactory } from '../common/terminal/types';
+import { IConfigurationService } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -13,6 +14,15 @@ export class TerminalProvider implements Disposable {
     private disposables: Disposable[] = [];
     constructor(private serviceContainer: IServiceContainer) {
         this.registerCommands();
+    }
+    public async initialize(currentTerminal: Terminal | undefined) {
+        const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const pythonSettings = configuration.getSettings();
+
+        if (pythonSettings.terminal.activateEnvInCurrentTerminal && currentTerminal) {
+            const terminalActivator = this.serviceContainer.get<ITerminalActivator>(ITerminalActivator);
+            await terminalActivator.activateEnvironmentInTerminal(currentTerminal, undefined, true);
+        }
     }
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());

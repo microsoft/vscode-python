@@ -10,11 +10,13 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, Selection, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { generateCellsFromDocument } from '../../client/datascience/cellFactory';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { EditorContexts } from '../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
@@ -31,6 +33,7 @@ import { MockEditor } from './mockTextEditor';
 import { waitForUpdate } from './reactHelpers';
 import {
     addContinuousMockData,
+    addInputMockData,
     addMockData,
     CellInputState,
     CellPosition,
@@ -39,12 +42,11 @@ import {
     escapePath,
     findButton,
     getLastOutputCell,
-    initialDataScienceSettings,
     srcDirectory,
     toggleCellExpansion,
-    updateDataScienceSettings,
     verifyHtmlOnCell,
     verifyLastCellInputState,
+    waitForMessage,
     waitForMessageResponse
 } from './testHelpers';
 
@@ -74,6 +76,12 @@ suite('DataScience Interactive Window output tests', () => {
         await ioc.dispose();
     });
 
+    async function forceSettingsChange(newSettings: IDataScienceSettings) {
+        await getOrCreateInteractiveWindow(ioc);
+        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, newSettings);
+        return waitForMessage(ioc, InteractiveWindowMessages.UpdateSettings);
+    }
+
     // Uncomment this to debug hangs on exit
     // suiteTeardown(() => {
     //      asyncDump();
@@ -86,7 +94,7 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Hide inputs', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings(), showCellInputCode: false });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
         await addCode(ioc, wrapper, 'a=1\na');
 
@@ -101,7 +109,7 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Show inputs', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings() });
+        await forceSettingsChange({ ...defaultDataScienceSettings() });
 
         await addCode(ioc, wrapper, 'a=1\na');
 
@@ -110,14 +118,14 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Expand inputs', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), collapseCellInputCodeByDefault: false });
         await addCode(ioc, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Expanded);
     }, () => { return ioc; });
 
     runMountedTest('Collapse / expand cell', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings() });
+        await forceSettingsChange({ ...defaultDataScienceSettings() });
         await addCode(ioc, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Visible);
@@ -135,19 +143,19 @@ suite('DataScience Interactive Window output tests', () => {
     }, () => { return ioc; });
 
     runMountedTest('Hide / show cell', async (wrapper) => {
-        initialDataScienceSettings({ ...defaultDataScienceSettings() });
+        await forceSettingsChange({ ...defaultDataScienceSettings() });
         await addCode(ioc, wrapper, 'a=1\na');
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Visible);
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Collapsed);
 
         // Hide the inputs and verify
-        updateDataScienceSettings(wrapper, InteractivePanel, { ...defaultDataScienceSettings(), showCellInputCode: false });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: false });
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Hidden);
 
         // Show the inputs and verify
-        updateDataScienceSettings(wrapper, InteractivePanel, { ...defaultDataScienceSettings(), showCellInputCode: true });
+        await forceSettingsChange({ ...defaultDataScienceSettings(), showCellInputCode: true });
 
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Visible);
         verifyLastCellInputState(wrapper, 'InteractiveCell', CellInputState.Collapsed);
@@ -349,7 +357,7 @@ for _ in range(50):
         assert.equal(exportCalled, true, 'Export is not being called during export');
 
         // Remove the cell
-        const exportButton = findButton(wrapper, InteractivePanel, 5);
+        const exportButton = findButton(wrapper, InteractivePanel, 6);
         const undo = findButton(wrapper, InteractivePanel, 2);
 
         // Now verify if we undo, we have no cells
@@ -640,5 +648,20 @@ for _ in range(50):
         await addCode(ioc, wrapper, code, 4);
 
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '>are\nyou', CellPosition.Last);
+    }, () => { return ioc; });
+
+    runMountedTest('Type in input', async (wrapper) => {
+        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+        appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => {
+            return Promise.resolve('typed input');
+        });
+        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+        // Send in some special input
+        const code = `b = input('Test')\nb`;
+        addInputMockData(ioc, code, 'typed input');
+        await addCode(ioc, wrapper, code);
+
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', 'typed input', CellPosition.Last);
     }, () => { return ioc; });
 });

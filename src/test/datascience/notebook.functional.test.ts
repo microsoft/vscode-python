@@ -479,7 +479,7 @@ suite('DataScience notebook tests', () => {
     runTest('Export/Import', async () => {
         // Get a bunch of test cells (use our test cells from the react controls)
         const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-        const testState = generateTestState(_id => { return; }, testFolderPath);
+        const testState = generateTestState(testFolderPath);
         const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
 
         // Translate this into a notebook

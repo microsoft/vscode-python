@@ -30,11 +30,13 @@ import { IConfigurationService, IDisposableRegistry } from '../../../client/comm
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { ICondaService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
+import { ProcessService } from '../../../client/common/process/proc';
 
 // tslint:disable:no-any max-func-body-length
 
@@ -90,26 +92,17 @@ suite('Process - PythonExecutionFactory', () => {
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
-                processService
-                    .setup(p =>
-                        p.on('exec', () => {
-                            return;
-                        })
-                    )
-                    .returns(() => processService.object);
-                processService.setup((p: any) => p.then).returns(() => undefined);
+                processService.setup(p => p.on('exec', () => { return; })).returns(() => processService.object);
+                const interpreterService = mock(InterpreterService);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({} as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
-                factory = new PythonExecutionFactory(
-                    instance(serviceContainer),
-                    instance(activationHelper),
-                    instance(processFactory),
-                    instance(configService),
-                    instance(condaService),
-                    instance(bufferDecoder),
-                    instance(windowsStoreInterpreter)
-                );
+                when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
+                factory = new PythonExecutionFactory(instance(serviceContainer),
+                    instance(activationHelper), instance(processFactory),
+                    instance(configService), instance(condaService),
+                    instance(bufferDecoder), instance(windowsStoreInterpreter));
             });
             teardown(() => sinon.restore());
             test('Ensure PythonExecutionService is created', async () => {

@@ -3,11 +3,12 @@
 
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
+import { Disposable, Terminal, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { TerminalService } from '../../client/common/terminal/service';
-import { ITerminalServiceFactory } from '../../client/common/terminal/types';
+import { ITerminalActivator, ITerminalServiceFactory } from '../../client/common/terminal/types';
+import { IConfigurationService, IPythonSettings, ITerminalSettings } from '../../client/common/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { TerminalProvider } from '../../client/providers/terminalProvider';
 
@@ -148,5 +149,56 @@ suite('Terminal Provider', () => {
 
         commandHandler!.call(terminalProvider);
         terminalService.verify(t => t.show(false), TypeMoq.Times.once());
+    });
+
+    suite('terminal.activateCurrentTerminal setting', () => {
+
+        let pythonSettings: TypeMoq.IMock<IPythonSettings>;
+        let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
+        let configService: TypeMoq.IMock<IConfigurationService>;
+        let terminalActivator: TypeMoq.IMock<ITerminalActivator>;
+        let terminal: TypeMoq.IMock<Terminal>;
+
+        setup(() => {
+            configService = TypeMoq.Mock.ofType<IConfigurationService>();
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
+            pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
+            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+
+            terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
+            pythonSettings.setup(s => s.terminal).returns(() => terminalSettings.object);
+
+            terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalActivator))).returns(() => terminalActivator.object);
+
+            terminal = TypeMoq.Mock.ofType<Terminal>();
+        });
+
+        test('If terminal.activateCurrentTerminal setting is set, provided terminal should be activated', async () => {
+            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+
+            terminalProvider = new TerminalProvider(serviceContainer.object);
+            await terminalProvider.initialize(terminal.object);
+
+            terminalActivator.verify(a => a.activateEnvironmentInTerminal(terminal.object, undefined, true), TypeMoq.Times.once());
+        });
+
+        test('If terminal.activateCurrentTerminal setting is not set, provided terminal should not be activated', async () => {
+            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => false);
+
+            terminalProvider = new TerminalProvider(serviceContainer.object);
+            await terminalProvider.initialize(terminal.object);
+
+            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), undefined, true), TypeMoq.Times.never());
+        });
+
+        test('terminal.activateCurrentTerminal setting is set but provided terminal is undefined', async () => {
+            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+
+            terminalProvider = new TerminalProvider(serviceContainer.object);
+            await terminalProvider.initialize(undefined);
+
+            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), undefined, true), TypeMoq.Times.never());
+        });
     });
 });

@@ -9,10 +9,9 @@ import * as React from 'react';
 
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { IKeyboardEvent } from '../react-common/event';
-import { getLocString } from '../react-common/locReactSide';
 import { Code } from './code';
 import { InputHistory } from './inputHistory';
-import { CursorPos, ICellViewModel, IFont } from './mainState';
+import { ICellViewModel, IFont } from './mainState';
 import { Markdown } from './markdown';
 
 // tslint:disable-next-line: no-require-importss
@@ -20,7 +19,6 @@ interface ICellInputProps {
     cellVM: ICellViewModel;
     codeTheme: string;
     testMode?: boolean;
-    autoFocus: boolean;
     history: InputHistory | undefined;
     showWatermark: boolean;
     monacoTheme: string | undefined;
@@ -43,7 +41,6 @@ export class CellInput extends React.Component<ICellInputProps> {
 
     constructor(prop: ICellInputProps) {
         super(prop);
-        this.state = { showingMarkdownEditor: false };
     }
 
     public render() {
@@ -54,29 +51,12 @@ export class CellInput extends React.Component<ICellInputProps> {
         }
     }
 
-    public componentDidUpdate(prevProps: ICellInputProps) {
-        if (this.props.cellVM.focused && !prevProps.cellVM.focused) {
-            this.giveFocus(CursorPos.Current);
+    public getContents(): string | undefined {
+        if (this.codeRef.current) {
+            return this.codeRef.current.getContents();
+        } else if (this.markdownRef.current) {
+            return this.markdownRef.current.getContents();
         }
-    }
-
-    public giveFocus(cursorPos: CursorPos) {
-        // This depends upon what type of cell we are.
-        if (this.props.cellVM.cell.data.cell_type === 'code') {
-            if (this.codeRef.current) {
-                this.codeRef.current.giveFocus(cursorPos);
-            }
-        } else {
-            if (this.markdownRef.current) {
-                this.markdownRef.current.giveFocus(cursorPos);
-            }
-            this.setState({ showingMarkdownEditor: true });
-        }
-    }
-
-    // Public for testing
-    public getUnknownMimeTypeFormatString() {
-        return getLocString('DataScience.unknownMimeTypeFormat', 'Unknown Mime Type');
     }
 
     private isCodeCell = () => {
@@ -110,7 +90,6 @@ export class CellInput extends React.Component<ICellInputProps> {
                     <Code
                         editorOptions={this.props.editorOptions}
                         history={this.props.history}
-                        autoFocus={this.props.autoFocus}
                         code={this.getRenderableInputCode()}
                         codeTheme={this.props.codeTheme}
                         testMode={this.props.testMode ? true : false}
@@ -122,6 +101,8 @@ export class CellInput extends React.Component<ICellInputProps> {
                         outermostParentClass='cell-wrapper'
                         monacoTheme={this.props.monacoTheme}
                         openLink={this.props.openLink}
+                        hasFocus={this.props.cellVM.focused}
+                        cursorPos={this.props.cellVM.cursorPos}
                         editorMeasureClassName={this.props.editorMeasureClassName}
                         focused={this.onCodeFocused}
                         unfocused={this.onCodeUnfocused}
@@ -144,13 +125,14 @@ export class CellInput extends React.Component<ICellInputProps> {
                 <div className='cell-input'>
                     <Markdown
                         editorOptions={this.props.editorOptions}
-                        autoFocus={true}
                         markdown={source}
                         codeTheme={this.props.codeTheme}
                         testMode={this.props.testMode ? true : false}
                         onChange={this.onCodeChange}
                         onCreated={this.onCodeCreated}
                         outermostParentClass='cell-wrapper'
+                        hasFocus={this.props.cellVM.focused}
+                        cursorPos={this.props.cellVM.cursorPos}
                         monacoTheme={this.props.monacoTheme}
                         openLink={this.props.openLink}
                         editorMeasureClassName={this.props.editorMeasureClassName}
@@ -196,11 +178,6 @@ export class CellInput extends React.Component<ICellInputProps> {
         if (this.props.unfocused) {
             this.props.unfocused(this.props.cellVM.cell.id);
         }
-
-        // Indicate not showing the editor anymore. The equivalent of this
-        // is not when we receive focus but when we GIVE focus to the markdown editor
-        // otherwise we wouldn't be able to display it.
-        this.setState({showingMarkdownEditor: false});
     }
 
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], modelId: string) => {

@@ -8,12 +8,17 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
-import { noop } from '../../client/common/utils/misc';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
-import { InputHistory } from './inputHistory';
+import { CellState, ICell, IDataScienceExtraSettings, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
+import { loadDefaultSettings } from '../react-common/settingsReactSide';
+
+export enum CursorPos {
+    Top,
+    Bottom,
+    Current
+}
 
 export interface ICellViewModel {
     cell: ICell;
@@ -28,17 +33,12 @@ export interface ICellViewModel {
     useQuickEdit?: boolean;
     selected: boolean;
     focused: boolean;
-    hasBeenRun?: boolean;
-    inputBlockToggled(id: string): void;
+    scrollCount: number;
+    cursorPos: CursorPos;
+    hasBeenRun: boolean;
 }
 
-export enum CursorPos {
-    Top,
-    Bottom,
-    Current
-}
-
-export interface IMainState {
+export type IMainState = {
     cellVMs: ICellViewModel[];
     editCellVM: ICellViewModel | undefined;
     busy: boolean;
@@ -46,16 +46,14 @@ export interface IMainState {
     undoStack: ICellViewModel[][];
     redoStack: ICellViewModel[][];
     submittedText: boolean;
-    history: InputHistory;
     rootStyle?: string;
     rootCss?: string;
     font: IFont;
     vscodeThemeName?: string;
     baseTheme: string;
     monacoTheme?: string;
-    tokenizerLoaded?: boolean;
     knownDark: boolean;
-    editorOptions?: monacoEditor.editor.IEditorOptions;
+    editorOptions: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
     variablesVisible: boolean;
     variables: IJupyterVariable[];
@@ -64,11 +62,17 @@ export interface IMainState {
     dirty?: boolean;
     selectedCellId?: string;
     focusedCellId?: string;
-    enableGather: boolean;
     isAtBottom: boolean;
     newCellId?: string;
     loadTotal?: number;
-}
+    skipDefault?: boolean;
+    testMode?: boolean;
+    codeTheme: string;
+    settings: IDataScienceExtraSettings;
+    activateCount: number;
+    monacoReady: boolean;
+    loaded: boolean;
+};
 
 export interface IFont {
     size: number;
@@ -89,18 +93,19 @@ const darkStyle = `
 `;
 
 // This function generates test state when running under a browser instead of inside of
-export function generateTestState(inputBlockToggled: (id: string) => void, filePath: string = '', editable: boolean = false): IMainState {
+export function generateTestState(filePath: string = '', editable: boolean = false): IMainState {
+    const defaultSettings = loadDefaultSettings();
+    defaultSettings.enableGather = true;
+
     return {
-        cellVMs: generateVMs(inputBlockToggled, filePath, editable),
+        cellVMs: generateTestVMs(filePath, editable),
         editCellVM: createEditableCellVM(1),
         busy: false,
         skipNextScroll: false,
         undoStack: [],
         redoStack: [],
         submittedText: false,
-        history: new InputHistory(),
         rootStyle: darkStyle,
-        tokenizerLoaded: true,
         editorOptions: {},
         currentExecutionCount: 0,
         knownDark: false,
@@ -120,12 +125,17 @@ export function generateTestState(inputBlockToggled: (id: string) => void, fileP
         ],
         pendingVariableCount: 0,
         debugging: false,
-        enableGather: true,
         isAtBottom: true,
         font: {
             size: 14,
             family: 'Consolas, \'Courier New\', monospace'
-        }
+        },
+        codeTheme: 'Foo',
+        settings: defaultSettings,
+        activateCount: 0,
+        monacoReady: true,
+        loaded: false,
+        testMode: true
     };
 }
 
@@ -148,15 +158,17 @@ export function createEmptyCell(id: string | undefined, executionCount: number |
 
 export function createEditableCellVM(executionCount: number): ICellViewModel {
     return {
-        cell: createEmptyCell(undefined, executionCount),
+        cell: createEmptyCell(Identifiers.EditCellId, executionCount),
         editable: true,
         inputBlockOpen: true,
         inputBlockShow: true,
         inputBlockText: '',
         inputBlockCollapseNeeded: false,
-        inputBlockToggled: noop,
         selected: false,
-        focused: false
+        focused: false,
+        cursorPos: CursorPos.Current,
+        hasBeenRun: false,
+        scrollCount: 0
     };
 }
 
@@ -183,7 +195,7 @@ export function extractInputText(inputCell: ICell, settings: IDataScienceSetting
     return concatMultilineStringInput(source);
 }
 
-export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, inputBlockToggled: (id: string) => void, editable: boolean): ICellViewModel {
+export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, editable: boolean): ICellViewModel {
     let inputLinesCount = 0;
     const inputText = inputCell.data.cell_type === 'code' ? extractInputText(inputCell, settings) : '';
     if (inputText) {
@@ -197,23 +209,25 @@ export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | 
         inputBlockShow: true,
         inputBlockText: inputText,
         inputBlockCollapseNeeded: (inputLinesCount > 1),
-        inputBlockToggled: inputBlockToggled,
         selected: false,
         focused: false,
-        hasBeenRun: false
+        cursorPos: CursorPos.Current,
+        hasBeenRun: false,
+        scrollCount: 0
     };
 }
 
-function generateVMs(inputBlockToggled: (id: string) => void, filePath: string, editable: boolean): ICellViewModel[] {
-    const cells = generateCells(filePath, 10);
+function generateTestVMs(filePath: string, editable: boolean): ICellViewModel[] {
+    const cells = generateTestCells(filePath, 10);
     return cells.map((cell: ICell) => {
-        const vm = createCellVM(cell, undefined, inputBlockToggled, editable);
+        const vm = createCellVM(cell, undefined, editable);
         vm.useQuickEdit = false;
+        vm.hasBeenRun = true;
         return vm;
     });
 }
 
-export function generateCells(filePath: string, repetitions: number): ICell[] {
+export function generateTestCells(filePath: string, repetitions: number): ICell[] {
     // Dupe a bunch times for perf reasons
     let cellData: (nbformat.ICodeCell | nbformat.IMarkdownCell | nbformat.IRawCell | IMessageCell)[] = [];
     for (let i = 0; i < repetitions; i += 1) {
@@ -236,19 +250,6 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
 
     // Hopefully new entries here can just be copied out of a jupyter notebook (ipynb)
     return [
-        {
-            // These are special. Sys_info is our own custom cell
-            cell_type: 'messages',
-            messages: [
-                'You have this python data:',
-                'c:\\data\\python.exe',
-                '3.9.9.9 The Uber Version',
-                '(5, 9, 9)',
-                'https:\\localhost\\token?=9343p0843084039483084308430984038403840938409384098304983094803948093848034809384'
-            ],
-            source: [],
-            metadata: {}
-        },
         {
             cell_type: 'code',
             execution_count: 467,

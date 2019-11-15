@@ -11,7 +11,6 @@ import { Editor } from './editor';
 import { CursorPos, IFont } from './mainState';
 
 export interface ICodeProps {
-    autoFocus: boolean;
     code : string;
     codeTheme: string;
     testMode: boolean;
@@ -25,6 +24,8 @@ export interface ICodeProps {
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
     font: IFont;
+    hasFocus: boolean;
+    cursorPos: CursorPos;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
     openLink(uri: monacoEditor.Uri): void;
@@ -68,6 +69,8 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     ref={this.editorRef}
                     editorMeasureClassName={this.props.editorMeasureClassName}
                     keyDown={this.props.keyDown}
+                    hasFocus={this.props.hasFocus}
+                    cursorPos={this.props.cursorPos}
                     focused={this.props.focused}
                     unfocused={this.props.unfocused}
                     showLineNumbers={this.props.showLineNumbers}
@@ -79,11 +82,18 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         );
     }
 
-    public giveFocus(cursorPos: CursorPos) {
+    public getContents(): string | undefined {
+        if (this.editorRef.current) {
+            return this.editorRef.current.getContents();
+        }
+    }
+
+    private giveFocus(cursorPos: CursorPos) {
         if (this.editorRef && this.editorRef.current) {
             this.editorRef.current.giveFocus(cursorPos);
         }
     }
+
     private clickWatermark = (ev: React.MouseEvent<HTMLDivElement>) => {
         ev.stopPropagation();
         // Give focus to the editor

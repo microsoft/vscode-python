@@ -5,7 +5,7 @@ import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { ICondaService } from '../../interpreter/contracts';
+import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -66,17 +66,20 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: options.pythonPath, resource: options.resource });
-
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
+        const interpreterInfoPromise = interpreterService.getInterpreterDetails(pythonPath);
         // Ensure we do not start multiple daemons for the same interpreter.
         // Cache the promise.
         const start = async () => {
+            const interpreter = await interpreterInfoPromise;
             const [activatedProc, activatedEnvVars] = await Promise.all([
                 activatedProcPromise,
-                this.activationHelper.getActivatedEnvironmentVariables(options.resource, undefined, false)
+                this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool({ ...options, pythonPath }, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, {...options, pythonPath}, activatedProc!, activatedEnvVars);
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;

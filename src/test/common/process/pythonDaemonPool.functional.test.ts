@@ -15,9 +15,10 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
+import { IProcessLogger, IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { createTemporaryFile } from '../../../client/common/utils/fs';
@@ -26,7 +27,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { PythonDaemonModule } from '../../../client/datascience/constants';
-import { PYTHON_PATH, waitForCondition } from '../../common';
+import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
 use(chaiPromised);
 
 // tslint:disable: max-func-body-length
@@ -39,6 +40,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
     let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService>>;
+    let logger: IProcessLogger;
     class DaemonPool extends PythonDaemonExecutionServicePool {
         // tslint:disable-next-line: no-unnecessary-override
         public createDaemonServices(): Promise<IPythonDaemonExecutionService> {
@@ -53,7 +55,12 @@ suite('Daemon - Python Daemon Pool', () => {
                 .trim();
         }
     });
-    setup(async () => {
+    setup(async function () {
+        if (isPythonVersion('2.7')){
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        }
+        logger = mock(ProcessLogger);
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
         pythonExecutionService = mock(PythonExecutionService);
         when(pythonExecutionService.execModuleObservable('datascience.daemon', anything(), anything())).thenCall(() => {
@@ -66,7 +73,7 @@ suite('Daemon - Python Daemon Pool', () => {
             return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
         const options = { pythonPath: fullyQualifiedPythonPath, daemonModule: PythonDaemonModule, daemonCount: 2, observableDaemonCount: 1 };
-        pythonDaemonPool = new DaemonPool(options, instance(pythonExecutionService), {}, 100);
+        pythonDaemonPool = new DaemonPool(logger, [], options, instance(pythonExecutionService), {}, 100);
         await pythonDaemonPool.initialize();
         disposables.push(pythonDaemonPool);
     });
@@ -250,7 +257,7 @@ suite('Daemon - Python Daemon Pool', () => {
             outputsReceived.filter(item => item.length > 0),
             ['0', '1', '2', '3', '4']
         );
-    }).timeout(1_000);
+    }).timeout(5_000);
 
     test('Execute a file and throw exception if stderr is not empty', async () => {
         const fileToExecute = await createPythonFile(['import sys', 'sys.stderr.write("KABOOM")'].join(os.EOL));
@@ -274,7 +281,7 @@ suite('Daemon - Python Daemon Pool', () => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
         });
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
-    }).timeout(1_000);
+    }).timeout(5_000);
     test('If executing a file takes time, then ensure we use another daemon', async () => {
         const source = dedent`
         import os
@@ -409,5 +416,5 @@ suite('Daemon - Python Daemon Pool', () => {
         // Confirm we have a total of three process ids (for 3 daemons).
         // 2 for earlier, then one died and a new one was created.
         expect(processesUsedToRunCode.size).to.be.greaterThan(2);
-    }).timeout(5_000);
+    }).timeout(10_000);
 });

@@ -11,10 +11,11 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { MessageConnection } from 'vscode-jsonrpc';
+import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { InterpreterInfomation, IPythonExecutionService, Output } from '../../../client/common/process/types';
+import { InterpreterInfomation, IProcessLogger, IPythonExecutionService, Output } from '../../../client/common/process/types';
 import { sleep } from '../../../client/common/utils/async';
 import { noop } from '../../core';
 use(chaiPromised);
@@ -32,7 +33,9 @@ suite('Daemon - Python Daemon Pool', () => {
     // tslint:disable-next-line: no-any use-default-type-parameter
     let listenStub: sinon.SinonStub<any[], any>;
     let pythonExecService: IPythonExecutionService;
+    let logger: IProcessLogger;
     setup(() => {
+        logger = instance(mock(ProcessLogger));
         pythonExecService = mock(PythonExecutionService);
         (instance(pythonExecService) as any).then = undefined;
         sendRequestStub = sinon.stub();
@@ -51,7 +54,8 @@ suite('Daemon - Python Daemon Pool', () => {
             onClose: noop,
             onDispose: noop,
             onError: noop,
-            onNotification: noop
+            onNotification: noop,
+            onUnhandledNotification: noop
         } as any) as MessageConnection;
         const daemonProc = (new EventEmitter() as any) as ChildProcess;
         daemonProc.killed = false;
@@ -68,16 +72,16 @@ suite('Daemon - Python Daemon Pool', () => {
     }
     test('Create daemons when initializing', async () => {
         // Create and initialize the pool.
-        const pool = new DaemonPool({pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(logger, [], {pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         await setupDaemon(pool);
 
-        // 3 = 2 for standard daemon + 1 observable daemon.
+        // 2 = 2 for standard daemon + 1 observable daemon.
         expect(sendRequestStub.callCount).equal(3);
         expect(listenStub.callCount).equal(3);
     });
     test('Create specific number of daemons when initializing', async () => {
         // Create and initialize the pool.
-        const pool = new DaemonPool({ daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(logger, [], { daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         await setupDaemon(pool);
 
         // 3 = 2 for standard daemon + 1 observable daemon.
@@ -88,7 +92,7 @@ suite('Daemon - Python Daemon Pool', () => {
         sendRequestStub.reset();
         sendRequestStub.returns(sleep(6_000).then(({ pong: 'hello' } as any)));
         // Create and initialize the pool.
-        const pool = new DaemonPool({ daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(logger, [], { daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         const promise = setupDaemon(pool);
 
         expect(promise).to.eventually.be.rejectedWith('Timeout');
@@ -100,7 +104,7 @@ suite('Daemon - Python Daemon Pool', () => {
         getInterpreterInformationStub.resolves(interpreterInfoFromDaemon);
 
         // Create and initialize the pool.
-        const pool = new DaemonPool({ daemonCount: 1, observableDaemonCount: 1, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(logger, [], { daemonCount: 1, observableDaemonCount: 1, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         await setupDaemon(pool);
 
         // 3 = 2 for standard daemon + 1 observable daemon.
@@ -127,7 +131,7 @@ suite('Daemon - Python Daemon Pool', () => {
         when(pythonExecService.getInterpreterInformation()).thenResolve(interpreterInfoFromPythonProc);
 
         // Create and initialize the pool.
-        const pool = new DaemonPool({ daemonCount: 2, observableDaemonCount: 1, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(logger, [], { daemonCount: 2, observableDaemonCount: 1, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         await setupDaemon(pool);
 
         // 3 = 2 for standard daemon + 1 observable daemon.
@@ -160,7 +164,7 @@ suite('Daemon - Python Daemon Pool', () => {
         execModuleObservable.returns({out} as any);
 
         // Create and initialize the pool.
-        const pool = new DaemonPool({ daemonCount: 1, observableDaemonCount: 1, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
+        const pool = new DaemonPool(logger, [], { daemonCount: 1, observableDaemonCount: 1, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         await setupDaemon(pool);
 
         // 3 = 2 for standard daemon + 1 observable daemon.

@@ -49,6 +49,10 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     // localRoot and remoteRoot are deprecated (replaced by pathMappings).
     localRoot?: string;
     remoteRoot?: string;
+
+    // Internal files used to attach to subprocess using python debug adapter
+    subProcessId?: number;
+
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {

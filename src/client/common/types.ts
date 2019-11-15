@@ -276,6 +276,7 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+    readonly activateEnvInCurrentTerminal: boolean;
 }
 
 export interface IExperiments {
@@ -332,7 +333,6 @@ export interface IDataScienceSettings {
     allowLiveShare?: boolean;
     errorBackgroundColor: string;
     ignoreVscodeTheme?: boolean;
-    showJupyterVariableExplorer?: boolean;
     variableExplorerExclude?: string;
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;

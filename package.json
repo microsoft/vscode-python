@@ -1599,6 +1599,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show the variable explorer in the Python Interactive window.",
+                    "deprecationMessage": "This setting no longer applies. It is ignored.",
                     "scope": "resource"
                 },
                 "python.dataScience.variableExplorerExclude": {
@@ -2364,6 +2365,12 @@
                     "description": "Python launch arguments to use when executing a file in the terminal.",
                     "scope": "resource"
                 },
+                "python.terminal.activateEnvInCurrentTerminal": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Activate Python Environment in the current Terminal on load of the Extension.",
+                    "scope": "resource"
+                },
                 "python.testing.cwd": {
                     "type": "string",
                     "default": null,
@@ -2798,7 +2805,9 @@
         "@types/react": "^16.4.14",
         "@types/react-dom": "^16.0.8",
         "@types/react-json-tree": "^0.6.8",
+        "@types/react-redux": "^7.1.5",
         "@types/react-virtualized": "^9.21.2",
+        "@types/redux-logger": "^3.0.7",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
@@ -2827,7 +2836,7 @@
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
-        "codecov": "^3.5.0",
+        "codecov": "^3.6.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
         "cross-spawn": "^6.0.5",
@@ -2880,6 +2889,9 @@
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
+        "react-redux": "^7.1.1",
+        "redux": "^4.0.4",
+        "redux-logger": "^3.0.6",
         "relative": "^3.0.2",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "rewiremock": "^3.13.0",
@@ -2909,7 +2921,7 @@
         "vinyl-fs": "^3.0.3",
         "vsce": "^1.59.0",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "vscode-test": "^1.0.2",
+        "vscode-test": "^1.2.3",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.3.2",
         "webpack-cli": "^3.1.2",

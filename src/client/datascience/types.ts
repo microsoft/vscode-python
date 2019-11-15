@@ -170,6 +170,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     waitForIdle(timeout: number): Promise<void>;
     requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined;
     requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+    sendInputReply(content: string): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -244,6 +245,7 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
+    readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
@@ -402,7 +404,7 @@ export interface IJupyterCommand {
 
 export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
 export interface IJupyterCommandFactory {
-    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter): IJupyterCommand;
+    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand;
     createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 

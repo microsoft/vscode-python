@@ -9,7 +9,6 @@ import { Editor } from './editor';
 import { CursorPos, IFont } from './mainState';
 
 export interface IMarkdownProps {
-    autoFocus: boolean;
     markdown : string;
     codeTheme: string;
     testMode: boolean;
@@ -20,6 +19,8 @@ export interface IMarkdownProps {
     showLineNumbers?: boolean;
     useQuickEdit?: boolean;
     font: IFont;
+    hasFocus: boolean;
+    cursorPos: CursorPos;
     onCreated(code: string, modelId: string): void;
     onChange(changes: monacoEditor.editor.IModelContentChange[], modelId: string): void;
     focused?(): void;
@@ -42,7 +43,6 @@ export class Markdown extends React.Component<IMarkdownProps> {
             <div className={classes}>
                 <Editor
                     codeTheme={this.props.codeTheme}
-                    autoFocus={this.props.autoFocus}
                     readOnly={false}
                     history={undefined}
                     onCreated={this.props.onCreated}
@@ -57,6 +57,8 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     ref={this.editorRef}
                     editorMeasureClassName={this.props.editorMeasureClassName}
                     keyDown={this.props.keyDown}
+                    hasFocus={this.props.hasFocus}
+                    cursorPos={this.props.cursorPos}
                     focused={this.props.focused}
                     unfocused={this.props.unfocused}
                     showLineNumbers={this.props.showLineNumbers}
@@ -67,14 +69,13 @@ export class Markdown extends React.Component<IMarkdownProps> {
         );
     }
 
-    public giveFocus(cursorPos: CursorPos) {
-        if (this.editorRef && this.editorRef.current) {
-            this.editorRef.current.giveFocus(cursorPos);
+    public getContents(): string | undefined {
+        if (this.editorRef.current) {
+            return this.editorRef.current.getContents();
         }
     }
 
     private onModelChanged = (changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel) => {
         this.props.onChange(changes, model.id);
     }
-
 }
