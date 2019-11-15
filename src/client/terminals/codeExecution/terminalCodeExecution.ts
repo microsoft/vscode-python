@@ -64,7 +64,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const command = pythonSettings.pythonPath;
         const launchArgs = pythonSettings.terminal.launchArgs;
 
-        const condaExecutionService = await this.pythonExecFactory.createCondaExecutionService(command);
+        const condaExecutionService = await this.pythonExecFactory.createCondaExecutionService(command, undefined, resource);
 
         if (condaExecutionService) {
             return condaExecutionService.getExecutionInfo([...launchArgs, ...args]);
