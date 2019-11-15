@@ -139,6 +139,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             }
         }
 
-        return Promise.resolve(undefined);
+        return undefined;
     }
 }
