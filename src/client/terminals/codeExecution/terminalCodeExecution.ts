@@ -25,6 +25,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
         @inject(IPlatformService) protected readonly platformService: IPlatformService,
+        // @ts-ignore
         @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
     ) {}
 
