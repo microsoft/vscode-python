@@ -37,6 +37,7 @@ import {
     IEnvironmentActivationService
 } from '../../client/interpreter/activation/types';
 import { ICondaService } from '../../client/interpreter/contracts';
+import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
@@ -258,6 +259,7 @@ class TestFixture extends BaseTestFixture {
             });
         const procServiceFactory = new ProcessServiceFactory(envVarsService.object, processLogger.object, decoder, disposableRegistry);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+        const interpreterService = mock(InterpreterService);
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
@@ -265,7 +267,8 @@ class TestFixture extends BaseTestFixture {
             configService,
             condaService.object,
             decoder,
-            instance(windowsStoreInterpreter)
+            instance(windowsStoreInterpreter),
+            instance(interpreterService)
         );
     }
 

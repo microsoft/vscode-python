@@ -318,8 +318,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
             @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
+            @inject(IInterpreterService) interpreterService: IInterpreterService,
             @inject(IBufferDecoder) decoder: IBufferDecoder) {
-            super(_serviceContainer, activationHelper, processServiceFactory, _configService, condaService, decoder, windowsStoreInterpreter);
+            super(_serviceContainer, activationHelper, processServiceFactory, _configService, condaService, decoder, windowsStoreInterpreter, interpreterService);
         }
         public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
             const pythonPath = options.interpreter ? options.interpreter.path : this._configService.getSettings(options.resource).pythonPath;

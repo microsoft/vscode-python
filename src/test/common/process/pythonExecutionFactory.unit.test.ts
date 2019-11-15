@@ -29,7 +29,8 @@ import { IConfigurationService, IDisposableRegistry } from '../../../client/comm
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
-import { ICondaService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { ICondaService, IInterpreterService, InterpreterType, PythonInterpreter } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
@@ -79,6 +80,7 @@ suite('Process - PythonExecutionFactory', () => {
             let processLogger: IProcessLogger;
             let processService: typemoq.IMock<IProcessService>;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
+            let interpreterService: IInterpreterService;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -87,6 +89,7 @@ suite('Process - PythonExecutionFactory', () => {
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+                interpreterService = mock(InterpreterService);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
@@ -107,7 +110,8 @@ suite('Process - PythonExecutionFactory', () => {
                     instance(configService),
                     instance(condaService),
                     instance(bufferDecoder),
-                    instance(windowsStoreInterpreter)
+                    instance(windowsStoreInterpreter),
+                    instance(interpreterService)
                 );
             });
             teardown(() => sinon.restore());

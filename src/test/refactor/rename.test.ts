@@ -18,6 +18,7 @@ import { IProcessLogger, IProcessServiceFactory, IPythonExecutionFactory } from 
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { ICondaService } from '../../client/interpreter/contracts';
+import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { RefactorProxy } from '../../client/refactor/proxy';
@@ -51,6 +52,7 @@ suite('Refactor Rename', () => {
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IEnvironmentActivationService), typeMoq.It.isAny()))
             .returns(() => envActivationService.object);
         const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+        const interpreterService = mock(InterpreterService);
         serviceContainer
             .setup(s => s.get(typeMoq.It.isValue(IPythonExecutionFactory), typeMoq.It.isAny()))
             .returns(
@@ -62,7 +64,8 @@ suite('Refactor Rename', () => {
                         configService.object,
                         condaService.object,
                         undefined as any,
-                        instance(windowsStoreInterpreter)
+                        instance(windowsStoreInterpreter),
+                        instance(interpreterService)
                     )
             );
         const processLogger = typeMoq.Mock.ofType<IProcessLogger>();

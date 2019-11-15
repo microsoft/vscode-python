@@ -6,7 +6,7 @@ import { gte } from 'semver';
 import { Uri } from 'vscode';
 
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { ICondaService } from '../../interpreter/contracts';
+import { ICondaService, IInterpreterService } from '../../interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
@@ -43,10 +43,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IConfigurationService) private readonly configService: IConfigurationService,
-        // @ts-ignore
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
-        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
+        @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
@@ -54,9 +54,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-        if (condaExecutionService) {
-            return condaExecutionService;
+        const hasInterpreters = await this.interpreterService.hasInterpreters;
+        if (hasInterpreters) {
+            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+            if (condaExecutionService) {
+                return condaExecutionService;
+            }
         }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {

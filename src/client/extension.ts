@@ -144,7 +144,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const standardOutputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
     activateSimplePythonRefactorProvider(context, standardOutputChannel, serviceContainer);
 
-    await serviceManager.get<IInterpreterService>(IInterpreterService).hasInterpreters;
+    // await serviceManager.get<IInterpreterService>(IInterpreterService).hasInterpreters;
 
     const sortImports = serviceContainer.get<ISortImportsEditingProvider>(ISortImportsEditingProvider);
     sortImports.registerCommands();
