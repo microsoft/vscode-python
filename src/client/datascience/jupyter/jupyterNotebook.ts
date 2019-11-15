@@ -544,7 +544,7 @@ export class JupyterNotebookBase implements INotebook {
                     // Remove the cell marker if we have one.
                     code: cellMatcher.stripFirstMarker(code),
                     stop_on_error: false,
-                    allow_stdin: !silent,
+                    allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
                     store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                 },
                 true
