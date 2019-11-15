@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-// @ts-ignore
 import { gte } from 'semver';
 import { Uri } from 'vscode';
 
@@ -46,6 +45,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter,
+        // @ts-ignore
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {}
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
@@ -54,13 +54,13 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        const hasInterpreters = await this.interpreterService.hasInterpreters;
-        if (hasInterpreters) {
+        // const hasInterpreters = await this.interpreterService.hasInterpreters;
+        // if (hasInterpreters) {
         //     const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
         //     if (condaExecutionService) {
         //         return condaExecutionService;
         //     }
-        }
+        // }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
