@@ -75,9 +75,9 @@ suite('Daemon - Python Daemon Pool', () => {
         const pool = new DaemonPool(logger, [], {pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         await setupDaemon(pool);
 
-        // 3 = 2 for standard daemon + 1 observable daemon.
-        expect(sendRequestStub.callCount).equal(3);
-        expect(listenStub.callCount).equal(3);
+        // 2 = 2 for standard daemon + 1 observable daemon.
+        expect(sendRequestStub.callCount).equal(2);
+        expect(listenStub.callCount).equal(2);
     });
     test('Create specific number of daemons when initializing', async () => {
         // Create and initialize the pool.
