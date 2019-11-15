@@ -36,7 +36,6 @@ import { CondaService } from '../../../client/interpreter/locators/services/cond
 import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
-import { ProcessService } from '../../../client/common/process/proc';
 
 // tslint:disable:no-any max-func-body-length
 
@@ -93,6 +92,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService.setup(p => p.on('exec', () => { return; })).returns(() => processService.object);
+                processService.setup((p: any) => p.then).returns(() => undefined);
                 const interpreterService = mock(InterpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({} as any);
                 const serviceContainer = mock(ServiceContainer);

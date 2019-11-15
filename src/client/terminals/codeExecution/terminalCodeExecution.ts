@@ -67,8 +67,8 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         const condaExecutionService = await this.pythonExecFactory.createCondaExecutionService(command);
 
         if (condaExecutionService) {
-            return condaExecutionService.getExecutionInfo(command, [...launchArgs, ...args]);
-            }
+            return condaExecutionService.getExecutionInfo([...launchArgs, ...args]);
+        }
 
         const isWindows = this.platformService.isWindows;
 
