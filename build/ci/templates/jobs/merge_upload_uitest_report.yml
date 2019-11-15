@@ -5,7 +5,7 @@ jobs:
 - job: UI_Test_Report
   timeoutInMinutes: 120
   pool:
-    vmImage: "macos-latest"
+    vmImage: "ubuntu-16.04"
   steps:
     - template: ../steps/initialization.yml
       parameters:
