@@ -66,10 +66,10 @@ export async function run(): Promise<void> {
      * @returns
      */
     function initializationScript() {
-        const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
+        const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
         let timer: NodeJS.Timer | undefined;
         const failed = new Promise((_, reject) => {
-            timer = setTimeout(() => reject(ex), 120_000);
+            timer = setTimeout(() => reject(ex), 180_000);
         });
         const promise = Promise.race([initialize(), failed]);
         promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
