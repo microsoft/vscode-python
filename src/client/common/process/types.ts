@@ -82,7 +82,7 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
     /**
      * Number of daemons to be created for standard synchronous operations such as
      * checking if a module is installed, running a module, running a python file, etc.
-     * Defaults to `1`.
+     * Defaults to `2`.
      *
      */
     daemonCount?: number;

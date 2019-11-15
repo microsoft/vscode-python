@@ -76,8 +76,8 @@ suite('Daemon - Python Daemon Pool', () => {
         await setupDaemon(pool);
 
         // 2 = 2 for standard daemon + 1 observable daemon.
-        expect(sendRequestStub.callCount).equal(2);
-        expect(listenStub.callCount).equal(2);
+        expect(sendRequestStub.callCount).equal(3);
+        expect(listenStub.callCount).equal(3);
     });
     test('Create specific number of daemons when initializing', async () => {
         // Create and initialize the pool.

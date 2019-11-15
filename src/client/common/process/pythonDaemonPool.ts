@@ -54,7 +54,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public async initialize() {
         // tslint:disable-next-line: prefer-array-literal
-        const promises = Promise.all([...new Array(this.options.daemonCount ?? 1).keys()].map(() => this.addDaemonService('StandardDaemon')));
+        const promises = Promise.all([...new Array(this.options.daemonCount ?? 2).keys()].map(() => this.addDaemonService('StandardDaemon')));
         // tslint:disable-next-line: prefer-array-literal
         const promises2 = Promise.all([...new Array(this.options.observableDaemonCount ?? 1).keys()].map(() => this.addDaemonService('ObservableDaemon')));
 
