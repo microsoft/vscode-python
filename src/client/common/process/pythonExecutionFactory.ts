@@ -55,9 +55,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const hasInterpreters = await interpreterService.hasInterpreters;
         if (hasInterpreters) {
-            // const condaVersion = await this.condaService.getCondaVersion();
-            // tslint:disable-next-line: no-console
-            // console.log(`conda version: ${condaVersion ? condaVersion.raw : 'undefinerino'}`);
             const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
             if (condaExecutionService) {
             //     return condaExecutionService;
@@ -125,19 +122,19 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    // @ts-ignore
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
-        const condaVersion = await this.condaService.getCondaVersion();
-        // tslint:disable-next-line: no-console
-        console.log(`conda version: ${condaVersion ? condaVersion.raw : 'undefinerino'}`);
+        const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
+        // @ts-ignore
+        const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
+            this.condaService.getCondaVersion(),
+            this.condaService.getCondaEnvironment(pythonPath),
+            this.condaService.getCondaFile(),
+            processServicePromise
+        ]);
 
-        // const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
-        // const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
-        //     this.condaService.getCondaVersion(),
-        //     this.condaService.getCondaEnvironment(pythonPath),
-        //     this.condaService.getCondaFile(),
-        //     processServicePromise
-        // ]);
+        // tslint:disable no-console
+        console.log(`conda file: ${condaFile || 'no conda file'}`);
+        console.log(`conda version: ${condaVersion?.raw || 'undefinerino'}`);
 
         // if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
         //     // Add logging to the newly created process service
