@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import { inject, injectable } from 'inversify';
-// import { gte } from 'semver';
+import { gte } from 'semver';
 
 import { Uri } from 'vscode';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
@@ -57,7 +57,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         if (hasInterpreters) {
             const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
             if (condaExecutionService) {
-            //     return condaExecutionService;
+                return condaExecutionService;
             }
         }
 
@@ -136,16 +136,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         console.log(`conda file: ${condaFile || 'no conda file'}`);
         console.log(`conda version: ${condaVersion?.raw || 'undefinerino'}`);
 
-        // if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
-        //     // Add logging to the newly created process service
-        //     if (!processService) {
-        //         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        //         procService.on('exec', processLogger.logProcess.bind(processLogger));
-        //         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
-        //     }
-        //     return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
-        // }
+        if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
+            // Add logging to the newly created process service
+            if (!processService) {
+                const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+                procService.on('exec', processLogger.logProcess.bind(processLogger));
+                this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(procService);
+            }
+            return new CondaExecutionService(this.serviceContainer, procService, pythonPath, condaFile, condaEnvironment);
+        }
 
-        return Promise.resolve(undefined);
+        return undefined;
     }
 }
