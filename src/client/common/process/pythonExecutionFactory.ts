@@ -52,9 +52,15 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-        if (condaExecutionService) {
-            return condaExecutionService;
+        // Don't bother getting a conda execution service instance if we haven't fetched the list of interpreters yet.
+        // Also, without this hasInterpreters check smoke tests will time out
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const hasInterpreters = await interpreterService.hasInterpreters;
+        if (hasInterpreters) {
+            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+            if (condaExecutionService) {
+                return condaExecutionService;
+            }
         }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {

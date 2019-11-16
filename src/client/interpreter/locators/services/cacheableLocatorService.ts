@@ -34,7 +34,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         return this.locating.event;
     }
     public get hasInterpreters(): Promise<boolean> {
-        return this._hasInterpreters.promise;
+        return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
     }
     public abstract dispose(): void;
     @traceDecorators.verbose('Get Interpreters in CacheableLocatorService')
