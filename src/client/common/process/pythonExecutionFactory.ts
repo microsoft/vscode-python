@@ -55,6 +55,9 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const hasInterpreters = await interpreterService.hasInterpreters;
         if (hasInterpreters) {
+            const condaVersion = await this.condaService.getCondaVersion();
+            // tslint:disable-next-line: no-console
+            console.log(`conda version: ${condaVersion ? condaVersion.raw : 'undefinerino'}`);
             // const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
             // if (condaExecutionService) {
             //     return condaExecutionService;
