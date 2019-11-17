@@ -26,6 +26,7 @@ import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRem
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { CellState, ICell, ICodeCssGenerator, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindowInfo, IInteractiveWindowListener, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditor, INotebookEditorProvider, INotebookExporter, INotebookImporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
 
+const nativeEditorDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'native-editor');
 enum AskForSaveResult {
     Yes,
     No,
@@ -95,7 +96,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             jupyterDebugger,
             editorProvider,
             errorHandler,
-            path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'native-editor', 'index_bundle.js'),
+            nativeEditorDir,
+            [path.join(nativeEditorDir, 'index_bundle.js')],
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active
         );

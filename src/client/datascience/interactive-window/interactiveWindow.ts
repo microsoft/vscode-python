@@ -44,6 +44,8 @@ import {
     IThemeFinder
 } from '../types';
 
+const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react');
+
 @injectable()
 export class InteractiveWindow extends InteractiveBase implements IInteractiveWindow {
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
@@ -96,7 +98,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             jupyterDebugger,
             editorProvider,
             errorHandler,
-            path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js'),
+            historyReactDir,
+            [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
             ViewColumn.Two);
         // Start the server as soon as we open
