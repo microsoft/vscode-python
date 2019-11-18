@@ -10,7 +10,8 @@ import { IPythonExecutionFactory } from '../common/process/types';
 import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { IInterpreterService } from '../interpreter/contracts';
-import { PythonDaemonModule } from './constants';
+import { sendTelemetryEvent } from '../telemetry';
+import { PythonDaemonModule, Telemetry } from './constants';
 import { INotebookEditor, INotebookEditorProvider } from './types';
 
 @injectable()
@@ -21,7 +22,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
@@ -30,6 +31,7 @@ export class Activation implements IExtensionSingleActivationService {
     private onDidOpenNotebookEditor(_: INotebookEditor) {
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
+        sendTelemetryEvent(Telemetry.OpenNotebookAll);
     }
 
     private onDidChangeInterpreter() {

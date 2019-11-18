@@ -10,7 +10,7 @@ import { Uri } from 'vscode';
 import { ICommandManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
 import { IDisposableRegistry } from '../../common/types';
-import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
+import { captureTelemetry } from '../../telemetry';
 import { CommandSource } from '../../testing/common/constants';
 import { Commands, Telemetry } from '../constants';
 import { IDataScienceCommandListener, IDataScienceErrorHandler, INotebookEditorProvider } from '../types';
@@ -100,7 +100,6 @@ export class NativeEditorCommandListener implements IDataScienceCommandListener 
                 const contents = await this.fileSystem.readFile(file.fsPath);
                 // Then take the contents and load it.
                 await this.provider.open(file, contents);
-                sendTelemetryEvent(Telemetry.OpenNotebookAll);
             } catch (e) {
                 return this.dataScienceErrorHandler.handleError(e);
             }
