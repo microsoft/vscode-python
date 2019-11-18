@@ -155,7 +155,8 @@ export class WebPanel implements IWebPanel {
                         return ${settingsString};
                     }
                 </script>
-            ${uris.map(uri => `<script type="text/javascript" src="${uri}"></script></body>`)}
+                ${uris.map(uri => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
+            </body>
         </html>`;
     }
 }
