@@ -3,7 +3,8 @@
 'use strict';
 import { isTestExecution } from '../../client/common/constants';
 
-const enableLogger = !isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING || process.env.VSC_PYTHON_LOG_FILE;
+// The logs generated here are super massive, hence CI logs are unsable, Azure Pipelines don't even display the test results, just one line in the log stating that it has failed.
+const enableLogger = !process.env.VSCODE_PYTHON_ROLLING && (!isTestExecution() || process.env.VSC_PYTHON_FORCE_LOGGING || process.env.VSC_PYTHON_LOG_FILE);
 
 export function logMessage(message: string) {
     // Might want to post this back to the other side too. This was
