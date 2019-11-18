@@ -135,7 +135,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.pathMappings) {
             let pathMappings = debugConfiguration.pathMappings;
             if (pathMappings.length > 0) {
-                pathMappings = this.fixUpPathMappings(pathMappings || [], workspaceFolder?.fsPath : '');
+                pathMappings = this.fixUpPathMappings(pathMappings || [], workspaceFolder ? workspaceFolder.fsPath : '');
             }
             debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
         }
