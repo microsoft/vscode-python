@@ -30,7 +30,6 @@ export class WebPanel implements IWebPanel {
         settings?: any) {
         this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         this.listener = listener;
-        scripts = Array.isArray(scripts) ? scripts : [scripts];
         this.panel = window.createWebviewPanel(
             title.toLowerCase().replace(' ', ''),
             title,
