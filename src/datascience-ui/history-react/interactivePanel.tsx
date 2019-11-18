@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
+import { handleLinkClick } from '../interactive-common/handlers';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -18,7 +19,6 @@ import { getConnectedInteractiveCell } from './interactiveCell';
 import { actionCreators } from './redux/actions';
 
 import './interactivePanel.less';
-
 type IInteractivePanelProps = IMainState & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainState {
@@ -262,20 +262,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     }
 
     private linkClick = (ev: MouseEvent) => {
-        // If this is an anchor element, forward the click as Jupyter does.
-        let anchor = ev.target as HTMLAnchorElement;
-        if (anchor && anchor.href) {
-            // Href may be redirected to an inner anchor
-            if (anchor.href.startsWith('vscode')) {
-                const inner = anchor.getElementsByTagName('a');
-                if (inner && inner.length > 0) {
-                    anchor = inner[0];
-                }
-            }
-            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
-                this.props.linkClick(anchor.href);
-            }
-        }
+        handleLinkClick(ev, this.props.linkClick);
     }
 
 }
