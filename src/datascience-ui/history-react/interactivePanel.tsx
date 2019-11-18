@@ -38,10 +38,12 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     }
 
     public componentDidMount() {
+        document.addEventListener('click', this.linkClick, true);
         this.props.editorLoaded();
     }
 
     public componentWillUnmount() {
+        document.removeEventListener('click', this.linkClick);
         this.props.editorUnmounted();
     }
 
@@ -256,6 +258,23 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             const currentHeight = e.currentTarget.scrollHeight - e.currentTarget.scrollTop;
             const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
             this.props.scroll(isAtBottom);
+        }
+    }
+
+    private linkClick = (ev: MouseEvent) => {
+        // If this is an anchor element, forward the click as Jupyter does.
+        let anchor = ev.target as HTMLAnchorElement;
+        if (anchor && anchor.href) {
+            // Href may be redirected to an inner anchor
+            if (anchor.href.startsWith('vscode')) {
+                const inner = anchor.getElementsByTagName('a');
+                if (inner && inner.length > 0) {
+                    anchor = inner[0];
+                }
+            }
+            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
+                this.props.linkClick(anchor.href);
+            }
         }
     }
 

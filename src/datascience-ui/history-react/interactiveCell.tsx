@@ -142,7 +142,6 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                                     cellVM={this.props.cellVM}
                                     baseTheme={this.props.baseTheme}
                                     expandImage={this.props.showPlot}
-                                    openLink={this.props.openLink}
                                     maxTextSize={this.props.maxTextSize}
                                     themeMatplotlibPlots={themeMatplotlibPlots}
                                 />
@@ -236,7 +235,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                     showWatermark={this.props.showWatermark}
                     ref={this.codeRef}
                     monacoTheme={this.props.monacoTheme}
-                    openLink={this.props.openLink}
+                    openLink={this.openLink}
                     editorMeasureClassName={this.props.editorMeasureClassName}
                     keyDown={this.isEditCell() ? this.onEditCellKeyDown : undefined}
                     showLineNumbers={this.props.cellVM.showLineNumbers}
@@ -345,6 +344,10 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 nextTabStop.focus();
             }
         }
+    }
+
+    private openLink = (uri: monacoEditor.Uri) => {
+        this.props.linkClick(uri.toString());
     }
 }
 

@@ -1,7 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IRefreshVariablesRequest, IScrollToCell } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import {
+    IRefreshVariablesRequest,
+    IScrollToCell
+} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
@@ -12,7 +15,7 @@ import {
     ICellAction,
     ICodeAction,
     IEditCellAction,
-    IOpenLinkAction,
+    ILinkClickAction,
     IScrollAction,
     IShowDataViewerAction,
     IShowPlotAction
@@ -34,7 +37,7 @@ export class IInteractiveActionMapping {
     public [CommonActionType.REDO]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SHOW_DATA_VIEWER]: InteractiveReducerFunc<IShowDataViewerAction>;
     public [CommonActionType.DELETE_CELL]: InteractiveReducerFunc<ICellAction>;
-    public [CommonActionType.OPEN_LINK]: InteractiveReducerFunc<IOpenLinkAction>;
+    public [CommonActionType.LINK_CLICK]: InteractiveReducerFunc<ILinkClickAction>;
     public [CommonActionType.SHOW_PLOT]: InteractiveReducerFunc<IShowPlotAction>;
     public [CommonActionType.TOGGLE_INPUT_BLOCK]: InteractiveReducerFunc<ICellAction>;
     public [CommonActionType.GOTO_CELL]: InteractiveReducerFunc<ICellAction>;

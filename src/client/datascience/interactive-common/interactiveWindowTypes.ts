@@ -63,6 +63,7 @@ export enum InteractiveWindowMessages {
     LoadTmLanguageResponse = 'load_tmlanguage_response',
     OpenLink = 'open_link',
     ShowPlot = 'show_plot',
+    SavePng = 'save_png',
     StartDebugging = 'start_debugging',
     StopDebugging = 'stop_debugging',
     GatherCodeRequest = 'gather_code',
@@ -332,6 +333,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.LoadTmLanguageResponse]: string | undefined;
     public [InteractiveWindowMessages.OpenLink]: string | undefined;
     public [InteractiveWindowMessages.ShowPlot]: string | undefined;
+    public [InteractiveWindowMessages.SavePng]: string | undefined;
     public [InteractiveWindowMessages.StartDebugging]: never | undefined;
     public [InteractiveWindowMessages.StopDebugging]: never | undefined;
     public [InteractiveWindowMessages.GatherCodeRequest]: ICell;

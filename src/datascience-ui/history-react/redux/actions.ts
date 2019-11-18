@@ -11,7 +11,7 @@ import {
     ICodeAction,
     ICodeCreatedAction,
     IEditCellAction,
-    IOpenLinkAction,
+    ILinkClickAction,
     IScrollAction,
     IShowDataViewerAction,
     IShowPlotAction
@@ -26,7 +26,7 @@ export const actionCreators = {
     deleteCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.DELETE_CELL, payload: { cellId } }),
     undo: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNDO }),
     redo: (): CommonAction<never | undefined> => ({ type: CommonActionType.REDO }),
-    openLink: (uri: monacoEditor.Uri): CommonAction<IOpenLinkAction> => ({ type: CommonActionType.OPEN_LINK, payload: { uri } }),
+    linkClick: (href: string): CommonAction<ILinkClickAction> => ({ type: CommonActionType.LINK_CLICK, payload: { href } }),
     showPlot: (imageHtml: string): CommonAction<IShowPlotAction> => ({ type: CommonActionType.SHOW_PLOT, payload: { imageHtml } }),
     toggleInputBlock: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.TOGGLE_INPUT_BLOCK, payload: { cellId } }),
     gotoCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.GOTO_CELL, payload: { cellId } }),

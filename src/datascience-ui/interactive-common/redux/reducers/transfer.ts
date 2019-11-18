@@ -9,7 +9,7 @@ import {
     CommonReducerArg,
     ICellAction,
     IEditCellAction,
-    IOpenLinkAction,
+    ILinkClickAction,
     ISendCommandAction,
     IShowDataViewerAction,
     IShowPlotAction
@@ -46,8 +46,12 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    export function openLink<T>(arg: CommonReducerArg<T, IOpenLinkAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.OpenLink, arg.payload.uri.toString()));
+    export function linkClick<T>(arg: CommonReducerArg<T, ILinkClickAction>): IMainState {
+        if (arg.payload.href.startsWith('data:image/png')) {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.SavePng, arg.payload.href));
+        } else {
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.OpenLink, arg.payload.href));
+        }
         return arg.prevState;
     }
 

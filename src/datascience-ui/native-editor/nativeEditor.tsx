@@ -43,11 +43,13 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         this.props.editorLoaded();
         window.addEventListener('keydown', this.mainKeyDown);
         window.addEventListener('resize', () => this.forceUpdate(), true);
+        document.addEventListener('click', this.linkClick, true);
     }
 
     public componentWillUnmount() {
         window.removeEventListener('keydown', this.mainKeyDown);
         window.removeEventListener('resize', () => this.forceUpdate());
+        document.removeEventListener('click', this.linkClick);
         this.props.editorUnmounted();
     }
 
@@ -336,6 +338,24 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     private scrollDiv = (_div: HTMLDivElement) => {
         // Doing nothing for now. This should be implemented once redux refactor is done.
     }
+
+    private linkClick = (ev: MouseEvent) => {
+        // If this is an anchor element, forward the click as Jupyter does.
+        let anchor = ev.target as HTMLAnchorElement;
+        if (anchor && anchor.href) {
+            // Href may be redirected to an inner anchor
+            if (anchor.href.startsWith('vscode')) {
+                const inner = anchor.getElementsByTagName('a');
+                if (inner && inner.length > 0) {
+                    anchor = inner[0];
+                }
+            }
+            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
+                this.props.linkClick(anchor.href);
+            }
+        }
+    }
+
 }
 
 // Main export, return a redux connected editor
