@@ -4,7 +4,6 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { workspace } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { Resource } from '../common/types';
 import { IActiveResourceService } from './types';
@@ -20,8 +19,8 @@ export class ActiveResourceService implements IActiveResourceService {
         if (this.documentManager.activeTextEditor && !this.documentManager.activeTextEditor.document.isUntitled) {
             return this.documentManager.activeTextEditor.document.uri;
         }
-        return Array.isArray(this.workspaceService.workspaceFolders) && workspace.workspaceFolders!.length > 0
-            ? workspace.workspaceFolders![0].uri
+        return Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders!.length > 0
+            ? this.workspaceService.workspaceFolders![0].uri
             : undefined;
     }
 }
