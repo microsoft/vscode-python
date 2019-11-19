@@ -1,6 +1,9 @@
 {
     "extends": "@istanbuljs/nyc-config-typescript",
     "all": true,
+    "require": [
+        "ts-node/register"
+    ],
     "include": [
         "src/client/**/*.ts", "src/test/**/*.js",
         "src/datascience-ui/**/*.ts", "src/datascience-ui/**/*.js"
