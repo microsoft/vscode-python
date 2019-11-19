@@ -30,7 +30,6 @@
     "typescript.preferences.quoteStyle": "single",
     "javascript.preferences.quoteStyle": "single",
     "typescriptHero.imports.stringQuoteStyle": "'",
-    "prettier.tslintIntegration": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
     "[javascript]": {
         "editor.formatOnSave": true
