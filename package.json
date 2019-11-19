@@ -2694,7 +2694,7 @@
     "dependencies": {
         "@blueprintjs/select": "3.10.0",
         "@jupyterlab/coreutils": "^3.1.0",
-        "@jupyterlab/services": "^3.2.1",
+        "@jupyterlab/services": "^4.2.0",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
