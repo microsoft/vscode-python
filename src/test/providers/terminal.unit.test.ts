@@ -230,7 +230,9 @@ suite('Terminal Provider', () => {
         });
 
         test('Exceptions are swallowed if initializing terminal provider fails', async () => {
-            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+            terminalSettings
+                .setup(t => t.activateEnvInCurrentTerminal)
+                .returns(() => true);
             configService
                 .setup(c => c.getSettings(resource))
                 .throws(new Error('Kaboom'));
