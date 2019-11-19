@@ -1230,6 +1230,15 @@ export interface IEventNamePropertyMapping {
         failed: boolean;
     };
     /**
+     * Telemetry event sent when `python.terminal.activateEnvInCurrentTerminal` setting is set to `true` and an active terminal is present
+     */
+    [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
+        /**
+         * The name of terminal being activated
+         */
+        terminalName?: string;
+    };
+    /**
      * Telemetry event sent with details when a terminal is created
      */
     [EventName.TERMINAL_CREATE]: {
