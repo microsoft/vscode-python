@@ -624,7 +624,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(
             (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
                 // Keep track of the current listener. It listens to messages through the vscode api
                 this.webPanelListener = listener;

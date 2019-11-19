@@ -967,12 +967,18 @@ export const IWebPanelProvider = Symbol('IWebPanelProvider');
 export interface IWebPanelProvider {
     /**
      * Creates a new webpanel
-     * @param listener for messages from the panel
-     * @param title: title of the panel when it shows
-     * @param: mainScriptPath: full path in the output folder to the script
-     * @return A IWebPanel that can be used to show html pages.
+     *
+     * @param {ViewColumn} viewColumn
+     * @param {IWebPanelMessageListener} listener
+     * @param {string} title
+     * @param {string} rootPath
+     * @param {string[]} scripts
+     * @param {string} [embeddedCss]
+     * @param {*} [settings]
+     * @returns {IWebPanel}
+     * @memberof IWebPanelProvider
      */
-    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): IWebPanel;
 }
 
 // Wraps the vsls liveshare API

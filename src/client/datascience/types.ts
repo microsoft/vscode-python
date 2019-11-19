@@ -168,8 +168,8 @@ export interface IJupyterSession extends IAsyncDisposable {
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
-    requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined;
-    requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+    requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
     sendInputReply(content: string): void;
 }
 

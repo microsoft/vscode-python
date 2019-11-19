@@ -22,11 +22,11 @@ interface IMessageProducer {
 }
 
 class SimpleMessageProducer implements IMessageProducer {
-    private type: string;
+    private type: KernelMessage.IOPubMessageType;
     private result: any;
     private channel: string = 'iopub';
 
-    constructor(type: string, result: any, channel: string = 'iopub') {
+    constructor(type: KernelMessage.IOPubMessageType, result: any, channel: string = 'iopub') {
         this.type = type;
         this.result = result;
         this.channel = channel;
@@ -43,7 +43,7 @@ class SimpleMessageProducer implements IMessageProducer {
         noop();
     }
 
-    protected generateMessage(msgType: string, result: any, _channel: string = 'iopub'): KernelMessage.IIOPubMessage {
+    protected generateMessage(msgType: KernelMessage.IOPubMessageType, result: any, _channel: string = 'iopub'): KernelMessage.IIOPubMessage {
         return {
             channel: 'iopub',
             header: {
@@ -51,7 +51,8 @@ class SimpleMessageProducer implements IMessageProducer {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: msgType
+                msg_type: msgType,
+                date: ''
             },
             parent_header: {
 
@@ -71,7 +72,8 @@ class SimpleMessageProducer implements IMessageProducer {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: 'stdin'
+                msg_type: 'stdin' as any,
+                date: ''
             },
             parent_header: {
 
@@ -94,7 +96,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
     private waitingForInput: Deferred<string> | undefined;
 
     constructor(output: nbformat.IOutput, cancelToken: CancellationToken) {
-        super(output.output_type, output);
+        super(output.output_type as KernelMessage.IOPubMessageType, output);
         this.output = output;
         this.cancelToken = cancelToken;
     }
@@ -146,7 +148,7 @@ class OutputMessageProducer extends SimpleMessageProducer {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: 'stdin'
+                msg_type: 'stdin' as any
             },
             parent_header: {
 
@@ -155,12 +157,12 @@ class OutputMessageProducer extends SimpleMessageProducer {
 
             },
             content: {}
-        };
+        } as any;
     }
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-export class MockJupyterRequest implements Kernel.IFuture {
+export class MockJupyterRequest implements Kernel.IFuture<any, any> {
     public msg: KernelMessage.IShellMessage;
     public onReply: (msg: KernelMessage.IShellMessage) => void | PromiseLike<void>;
     public onStdin: (msg: KernelMessage.IStdinMessage) => void | PromiseLike<void>;
@@ -188,7 +190,8 @@ export class MockJupyterRequest implements Kernel.IFuture {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: 'shell'
+                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
+                date: ''
             },
             parent_header: {
 
@@ -280,7 +283,7 @@ export class MockJupyterRequest implements Kernel.IFuture {
         } else {
             this.currentProducer = undefined;
             // No more messages, create a simple producer for our shell message
-            const shellProducer = new SimpleMessageProducer('done', { status: 'success' }, 'shell');
+            const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
             shellProducer.produceNextMessage().then((r) => {
                 this.deferred.resolve(<any>r.message as KernelMessage.IShellMessage);
             }).ignoreErrors();

@@ -26,7 +26,7 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.UNDO]: Execution.undo,
     [CommonActionType.REDO]: Execution.redo,
     [CommonActionType.SHOW_PLOT]: Transfer.showPlot,
-    [CommonActionType.OPEN_LINK]: Transfer.openLink,
+    [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [CommonActionType.GOTO_CELL]: Transfer.gotoCell,
     [CommonActionType.TOGGLE_INPUT_BLOCK]: Effects.toggleInputBlock,
     [CommonActionType.COPY_CELL_CODE]: Transfer.copyCellCode,

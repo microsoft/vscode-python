@@ -48,7 +48,7 @@ export const reducerMap: INativeEditorActionMapping = {
     [CommonActionType.ARROW_DOWN]: Movement.arrowDown,
     [CommonActionType.EDIT_CELL]: Transfer.editCell,
     [CommonActionType.SHOW_PLOT]: Transfer.showPlot,
-    [CommonActionType.OPEN_LINK]: Transfer.openLink,
+    [CommonActionType.LINK_CLICK]: Transfer.linkClick,
     [CommonActionType.GATHER_CELL]: Transfer.gather,
     [CommonActionType.EDITOR_LOADED]: Transfer.started,
     [CommonActionType.LOADED_ALL_CELLS]: Transfer.loadedAllCells,

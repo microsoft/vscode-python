@@ -6,6 +6,7 @@ import { connect } from 'react-redux';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
+import { handleLinkClick } from '../interactive-common/handlers';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -18,7 +19,6 @@ import { getConnectedInteractiveCell } from './interactiveCell';
 import { actionCreators } from './redux/actions';
 
 import './interactivePanel.less';
-
 type IInteractivePanelProps = IMainState & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainState {
@@ -38,10 +38,12 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     }
 
     public componentDidMount() {
+        document.addEventListener('click', this.linkClick, true);
         this.props.editorLoaded();
     }
 
     public componentWillUnmount() {
+        document.removeEventListener('click', this.linkClick);
         this.props.editorUnmounted();
     }
 
@@ -257,6 +259,10 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             const isAtBottom = currentHeight < e.currentTarget.clientHeight + 2 && currentHeight > e.currentTarget.clientHeight - 2;
             this.props.scroll(isAtBottom);
         }
+    }
+
+    private linkClick = (ev: MouseEvent) => {
+        handleLinkClick(ev, this.props.linkClick);
     }
 
 }

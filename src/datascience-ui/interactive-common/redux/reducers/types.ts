@@ -51,9 +51,9 @@ export enum CommonActionType {
     INSERT_BELOW = 'action.insert_below',
     INTERRUPT_KERNEL = 'action.interrupt_kernel_action',
     LOADED_ALL_CELLS = 'action.loaded_all_cells',
+    LINK_CLICK = 'action.link_click',
     MOVE_CELL_DOWN = 'action.move_cell_down',
     MOVE_CELL_UP = 'action.move_cell_up',
-    OPEN_LINK = 'action.open_link',
     REDO = 'action.redo',
     REFRESH_VARIABLES = 'action.refresh_variables',
     RESTART_KERNEL = 'action.restart_kernel_action',
@@ -77,8 +77,8 @@ export enum CommonActionType {
 export interface IShowDataViewerAction extends IShowDataViewer {
 }
 
-export interface IOpenLinkAction {
-    uri: monacoEditor.Uri;
+export interface ILinkClickAction {
+    href: string;
 }
 
 export interface IShowPlotAction {

@@ -8,6 +8,7 @@ import { OSType } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
+import { handleLinkClick } from '../interactive-common/handlers';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -43,11 +44,13 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         this.props.editorLoaded();
         window.addEventListener('keydown', this.mainKeyDown);
         window.addEventListener('resize', () => this.forceUpdate(), true);
+        document.addEventListener('click', this.linkClick, true);
     }
 
     public componentWillUnmount() {
         window.removeEventListener('keydown', this.mainKeyDown);
         window.removeEventListener('resize', () => this.forceUpdate());
+        document.removeEventListener('click', this.linkClick);
         this.props.editorUnmounted();
     }
 
@@ -336,6 +339,11 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     private scrollDiv = (_div: HTMLDivElement) => {
         // Doing nothing for now. This should be implemented once redux refactor is done.
     }
+
+    private linkClick = (ev: MouseEvent) => {
+        handleLinkClick(ev, this.props.linkClick);
+    }
+
 }
 
 // Main export, return a redux connected editor

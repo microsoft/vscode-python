@@ -37,7 +37,8 @@ export class WebViewHost<IMapping> implements IDisposable {
         @unmanaged() protected workspaceService: IWorkspaceService,
         // tslint:disable-next-line:no-any
         @unmanaged() messageListenerCtor: (callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) => IWebPanelMessageListener,
-        @unmanaged() private mainScriptPath: string,
+        @unmanaged() private rootPath: string,
+        @unmanaged() private scripts: string[],
         @unmanaged() private title: string,
         @unmanaged() private viewColumn: ViewColumn
     ) {
@@ -291,7 +292,7 @@ export class WebViewHost<IMapping> implements IDisposable {
             traceInfo('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this.viewColumn, this.messageListener, this.title, this.mainScriptPath, '', settings);
+            this.webPanel = this.provider.create(this.viewColumn, this.messageListener, this.title, this.rootPath, this.scripts, '', settings);
 
             traceInfo('Web view created.');
         }

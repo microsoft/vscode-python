@@ -22,6 +22,7 @@ import { WebViewHost } from '../webViewHost';
 import { DataViewerMessageListener } from './dataViewerMessageListener';
 import { DataViewerMessages, IDataViewerMapping, IGetRowsRequest } from './types';
 
+const dataExplorereDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'data-explorer');
 @injectable()
 export class DataViewer extends WebViewHost<IDataViewerMapping> implements IDataViewer, IDisposable {
     private notebook: INotebook | undefined;
@@ -45,7 +46,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             themeFinder,
             workspaceService,
             (c, v, d) => new DataViewerMessageListener(c, v, d),
-            path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'data-explorer', 'index_bundle.js'),
+            dataExplorereDir,
+            [path.join(dataExplorereDir, 'index_bundle.js')],
             localize.DataScience.dataExplorerTitle(),
             ViewColumn.One);
     }

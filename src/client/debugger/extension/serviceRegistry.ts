@@ -23,11 +23,19 @@ import { RemoteAttachDebugConfigurationProvider } from './configuration/provider
 import { AttachConfigurationResolver } from './configuration/resolvers/attach';
 import { DebugEnvironmentVariablesHelper, IDebugEnvironmentVariablesService } from './configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from './configuration/resolvers/launch';
-import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from './configuration/types';
+import { LaunchDebugConfigurationExperiment } from './configuration/resolvers/launchConfigExperiment';
+import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver, ILaunchDebugConfigurationResolverExperiment } from './configuration/types';
 import { ChildProcessAttachEventHandler } from './hooks/childProcessAttachHandler';
 import { ChildProcessAttachService } from './hooks/childProcessAttachService';
 import { IChildProcessAttachService, IDebugSessionEventHandlers } from './hooks/types';
-import { DebugConfigurationType, IDebugAdapterDescriptorFactory, IDebugConfigurationProvider, IDebugConfigurationService, IDebuggerBanner, IDebugSessionLoggingFactory } from './types';
+import {
+    DebugConfigurationType,
+    IDebugAdapterDescriptorFactory,
+    IDebugConfigurationProvider,
+    IDebugConfigurationService,
+    IDebuggerBanner,
+    IDebugSessionLoggingFactory
+} from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, LaunchJsonCompletionProvider);
@@ -49,4 +57,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugAdapterActivator);
     serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
     serviceManager.addSingleton<IDebugSessionLoggingFactory>(IDebugSessionLoggingFactory, DebugSessionLoggingFactory);
+    serviceManager.addSingleton<ILaunchDebugConfigurationResolverExperiment>(ILaunchDebugConfigurationResolverExperiment, LaunchDebugConfigurationExperiment);
 }

@@ -200,6 +200,7 @@ export enum Telemetry {
     DebugContinue = 'DATASCIENCE.DEBUG_CONTINUE',
     DebugStop = 'DATASCIENCE.DEBUG_STOP',
     OpenNotebook = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK',
+    OpenNotebookAll = 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL',
     ConvertToPythonFile = 'DATASCIENCE.NATIVE.CONVERT_NOTEBOOK_TO_PYTHON',
     NotebookWorkspaceCount = 'DATASCIENCE.NATIVE.WORKSPACE_NOTEBOOK_COUNT',
     NotebookRunCount = 'DATASCIENCE.NATIVE.NOTEBOOK_RUN_COUNT',
@@ -287,7 +288,7 @@ export namespace HelpLinks {
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
-    export const IntellisenseTimeout = 300;
+    export const IntellisenseTimeout = 30000;
     export const RemoteDebuggerPortBegin = 8889;
     export const RemoteDebuggerPortEnd = 9000;
 }
