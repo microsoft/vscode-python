@@ -32,11 +32,11 @@ const config: Configuration = {
     module: {
         rules: [
             {
-                // JupyterServices imports node-fetch using `eval`.
+                // JupyterServices imports node-fetch.
                 test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
                     {
-                        loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
+                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js')
                     }
                 ]
             },
