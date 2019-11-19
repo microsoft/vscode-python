@@ -15,7 +15,7 @@ steps:
         summaryFileLocation: "$(System.DefaultWorkingDirectory)/coverage/cobertura-coverage.xml"
         reportDirectory: "$(System.DefaultWorkingDirectory)/coverage"
 
-    - bash: cat ./coverage/lcov.info | ./node_modules/.bin/codecov --pipe
+    - bash: cat ./coverage/cobertura-coverage.xml | ./node_modules/.bin/codecov --pipe
       displayName: 'Upload coverage to codecov'
       continueOnError: true
       condition: contains(variables['TestsToRun'], 'testUnitTests')

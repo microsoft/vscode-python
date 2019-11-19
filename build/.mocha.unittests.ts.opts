@@ -1,3 +1,4 @@
+--require ts-node/register
 --require src/test/unittests.ts
 --reporter mocha-multi-reporters
 --reporter-options configFile=build/.mocha-multi-reporters.config
