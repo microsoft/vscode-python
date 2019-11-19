@@ -4,7 +4,6 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 import '../../client/common/extensions';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../../client/datascience/common';
@@ -31,7 +30,6 @@ interface ICellOutputProps {
     maxTextSize?: number;
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
-    openLink(uri: monacoEditor.Uri): void;
     expandImage(imageHtml: string): void;
 }
 
@@ -328,23 +326,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
     }
 
-    private click = (event: React.MouseEvent<HTMLDivElement>) => {
-        // If this is an anchor element, forward the click as Jupyter does.
-        let anchor = event.target as HTMLAnchorElement;
-        if (anchor && anchor.href) {
-            // Href may be redirected to an inner anchor
-            if (anchor.href.startsWith('vscode')) {
-                const inner = anchor.getElementsByTagName('a');
-                if (inner && inner.length > 0) {
-                    anchor = inner[0];
-                }
-            }
-            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
-                this.props.openLink(monacoEditor.Uri.parse(anchor.href));
-            }
-        }
-    }
-
     // tslint:disable-next-line: max-func-body-length
     private renderOutputs(outputs: nbformat.IOutput[]): JSX.Element[] {
         return [this.renderOutput(outputs)];
@@ -368,7 +349,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 // If we are not theming plots then wrap them in a white span
                 if (transformed.outputSpanClassName) {
                     buffer.push(
-                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} className={className}>
                             <span className={transformed.outputSpanClassName}>
                                 {transformed.extraButton}
                                 <Transform data={transformed.data} />
@@ -377,7 +358,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     );
                 } else {
                     buffer.push(
-                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className}>
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} className={className}>
                             {transformed.extraButton}
                             <Transform data={transformed.data} />
                         </div>

@@ -67,6 +67,7 @@ class PythonDaemon(MethodDispatcher):
     """
 
     def __init__(self, rx, tx):
+        self.log = logging.getLogger("{0}.{1}".format(self.__class__.__module__,self.__class__.__name__))
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
         self._endpoint = Endpoint(
@@ -78,10 +79,10 @@ class PythonDaemon(MethodDispatcher):
         """Override getitem to fallback through multiple dispatchers."""
         if self._shutdown and item != "exit":
             # exit is the only allowed method during shutdown
-            log.debug("Ignoring non-exit method during shutdown: %s", item)
+            self.log.debug("Ignoring non-exit method during shutdown: %s", item)
             raise KeyError
 
-        log.info("Execute rpc method %s", item)
+        self.log.info("Execute rpc method %s", item)
         return super().__getitem__(item)
 
     def start(self):
@@ -91,7 +92,7 @@ class PythonDaemon(MethodDispatcher):
 
     def m_ping(self, data):
         """ping & pong (check if daemon is alive)."""
-        log.info("pinged with %s", data)
+        self.log.info("pinged with %s", data)
         return {"pong": data}
 
     def _execute_and_capture_output(self, func):
@@ -110,7 +111,7 @@ class PythonDaemon(MethodDispatcher):
         return output
 
     def close(self):
-        log.info("Closing rpc channel")
+        self.log.info("Closing rpc channel")
         self._shutdown = True
         self._endpoint.shutdown()
         self._jsonrpc_stream_reader.close()
@@ -122,10 +123,10 @@ class PythonDaemon(MethodDispatcher):
     @error_decorator
     def m_exec_file(self, file_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
-        log.info("Exec file %s with args %s", file_name, args)
+        self.log.info("Exec file %s with args %s", file_name, args)
 
         def exec_file():
-            log.info("execute file %s", file_name)
+            self.log.info("execute file %s", file_name)
             runpy.run_path(file_name, globals())
 
         with change_exec_context(args, cwd, env):
@@ -133,7 +134,7 @@ class PythonDaemon(MethodDispatcher):
 
     @error_decorator
     def m_exec_code(self, code):
-        log.info("Exec code %s", code)
+        self.log.info("Exec code %s", code)
 
         def exec_code():
             eval(code, globals())
@@ -144,7 +145,7 @@ class PythonDaemon(MethodDispatcher):
     def m_exec_file_observable(self, file_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
         old_argv, sys.argv = sys.argv, [""] + args
-        log.info("Exec file (observale) %s with args %s", file_name, args)
+        self.log.info("Exec file (observale) %s with args %s", file_name, args)
 
         with change_exec_context(args, cwd, env):
             runpy.run_path(file_name, globals())
@@ -152,13 +153,13 @@ class PythonDaemon(MethodDispatcher):
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
         args = [] if args is None else args
-        log.info("Exec module %s with args %s", module_name, args)
+        self.log.info("Exec module %s with args %s", module_name, args)
         if args[-1] == "--version":
             return self._get_module_version(module_name, args)
 
         def exec_module():
 
-            log.info("execute module %s", module_name)
+            self.log.info("execute module %s", module_name)
             runpy.run_module(module_name, globals(), run_name="__main__")
 
         with change_exec_context(args, cwd, env):
@@ -167,7 +168,7 @@ class PythonDaemon(MethodDispatcher):
     @error_decorator
     def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None):
         args = [] if args is None else args
-        log.info("Exec module (observable) %s with args %s", module_name, args)
+        self.log.info("Exec module (observable) %s with args %s", module_name, args)
 
         with change_exec_context(args, cwd, env):
             runpy.run_module(module_name, globals(), run_name="__main__")
@@ -184,7 +185,7 @@ class PythonDaemon(MethodDispatcher):
             module_name = args[0]
 
         try:
-            log.info("getting module_version %s", module_name)
+            self.log.info("getting module_version %s", module_name)
             m = importlib.import_module(module_name)
             return {"stdout": m.__version__}
         except Exception:
@@ -209,7 +210,7 @@ class PythonDaemon(MethodDispatcher):
             return {"exists": False}
 
     @classmethod
-    def start_daemon(cls):
+    def start_daemon(cls, logging_queue_handler=None):
         """ Starts the daemon. """
         if not issubclass(cls, PythonDaemon):
             raise ValueError("Handler class must be an instance of PythonDaemon")
@@ -224,4 +225,7 @@ class PythonDaemon(MethodDispatcher):
         stdin, stdout = get_io_buffers()
         server = cls(stdin, stdout)
         redirect_output(on_write_stdout, on_write_stderr)
+        # Set up the queue handler that'll send log messages over to the client.
+        if logging_queue_handler is not None:
+            logging_queue_handler.set_server(server)
         server.start()

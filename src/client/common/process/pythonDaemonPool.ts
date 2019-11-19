@@ -8,7 +8,7 @@ import * as path from 'path';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { traceDecorators, traceError } from '../logger';
-import { IDisposable } from '../types';
+import { IDisposableRegistry } from '../types';
 import { createDeferred, sleep } from '../utils/async';
 import { noop } from '../utils/misc';
 import { StopWatch } from '../utils/stopWatch';
@@ -18,6 +18,7 @@ import {
     DaemonExecutionFactoryCreationOptions,
     ExecutionResult,
     InterpreterInfomation,
+    IProcessLogger,
     IPythonDaemonExecutionService,
     IPythonExecutionService,
     ObservableExecutionResult,
@@ -27,13 +28,13 @@ import {
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 
 export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionService {
-    private disposables: IDisposable[] = [];
     private readonly daemons: IPythonDaemonExecutionService[] = [];
     private readonly observableDaemons: IPythonDaemonExecutionService[] = [];
     private readonly envVariables: NodeJS.ProcessEnv;
     private readonly pythonPath: string;
-    // private logId: number = 0;
     constructor(
+        private readonly logger: IProcessLogger,
+        private readonly disposables: IDisposableRegistry,
         private readonly options: DaemonExecutionFactoryCreationOptions,
         private readonly pythonExecutionService: IPythonExecutionService,
         private readonly activatedEnvVariables?: NodeJS.ProcessEnv,
@@ -60,26 +61,33 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         await Promise.all([promises, promises2]);
     }
     public dispose() {
-        this.disposables.forEach(d => d.dispose());
+        noop();
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['GetPythonVersion']);
         return this.wrapCall(daemon => daemon.getInterpreterInformation());
     }
     public async getExecutablePath(): Promise<string> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['getExecutablePath']);
         return this.wrapCall(daemon => daemon.getExecutablePath());
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['-m', moduleName]);
         return this.wrapCall(daemon => daemon.isModuleInstalled(moduleName));
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, args, options);
         return this.wrapCall(daemon => daemon.exec(args, options));
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['-m', moduleName].concat(args), options);
         return this.wrapCall(daemon => daemon.execModule(moduleName, args, options));
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, args, options);
         return this.wrapObservableCall(daemon => daemon.execObservable(args, options));    }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
+        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['-m', moduleName].concat(args), options);
         return this.wrapObservableCall(daemon => daemon.execModuleObservable(moduleName, args, options));
     }
     /**
@@ -95,17 +103,15 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     @traceDecorators.error('Failed to create daemon')
     protected async createDaemonServices(): Promise<IPythonDaemonExecutionService> {
-        // const logFileName = `daemon${this.logId += 1}.log`;
-        // const loggingArgs = ['-v', `--log-file=${path.join(EXTENSION_ROOT_DIR, logFileName)}`];
-        const loggingArgs: string[] = [];
+        const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
         const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(loggingArgs);
         const env = this.envVariables;
         const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }
-
         const connection = this.createConnection(daemonProc.proc);
+
         connection.listen();
         let stdError = '';
         let procEndEx: Error | undefined;

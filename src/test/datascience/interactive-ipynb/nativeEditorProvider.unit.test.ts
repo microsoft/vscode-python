@@ -34,7 +34,7 @@ suite('Data Science - Native Editor Provider', () => {
     let dsErrorHandler: IDataScienceErrorHandler;
     let cmdManager: ICommandManager;
     let svcContainer: IServiceContainer;
-    let eventEmitter: EventEmitter<TextEditor>;
+    let changeActiveTextEditorEventEmitter: EventEmitter<TextEditor>;
     let editor: typemoq.IMock<INotebookEditor>;
     let file: Uri;
 
@@ -46,13 +46,13 @@ suite('Data Science - Native Editor Provider', () => {
         dsErrorHandler = mock(DataScienceErrorHandler);
         cmdManager = mock(CommandManager);
         workspace = mock(WorkspaceService);
-        eventEmitter = new EventEmitter<TextEditor>();
+        changeActiveTextEditorEventEmitter = new EventEmitter<TextEditor>();
     });
 
     function createNotebookProvider(shouldOpenNotebookEditor: boolean) {
         editor = typemoq.Mock.ofType<INotebookEditor>();
         when(configService.getSettings()).thenReturn({ datascience: { useNotebookEditor: true } } as any);
-        when(docManager.onDidChangeActiveTextEditor).thenReturn(eventEmitter.event);
+        when(docManager.onDidChangeActiveTextEditor).thenReturn(changeActiveTextEditorEventEmitter.event);
         when(docManager.visibleTextEditors).thenReturn([]);
         editor.setup(e => e.closed).returns(() => new EventEmitter<INotebookEditor>().event);
         editor.setup(e => e.executed).returns(() => new EventEmitter<INotebookEditor>().event);
@@ -106,7 +106,7 @@ suite('Data Science - Native Editor Provider', () => {
         // Open a text document.
         const textDoc = createTextDocument(uri, 'hello');
         const textEditor = createTextEditor(textDoc);
-        eventEmitter.fire(textEditor);
+        changeActiveTextEditorEventEmitter.fire(textEditor);
 
         // wait for callbacks to get executed.
         await sleep(1);
@@ -119,6 +119,49 @@ suite('Data Science - Native Editor Provider', () => {
     test('Open the notebook editor when an ipynb file is opened', async () => {
         await testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(Uri.file('some file.ipynb'), true);
     });
+    async function openSameIPynbFile(openAnotherRandomFile: boolean){
+        const notebookEditor = createNotebookProvider(true);
+
+        // Open a text document.
+        const textDoc = createTextDocument(Uri.file('some file.ipynb'), 'hello');
+        const textEditor = createTextEditor(textDoc);
+        changeActiveTextEditorEventEmitter.fire(textEditor);
+
+        // wait for callbacks to get executed.
+        await sleep(1);
+
+        // If we're to open the notebook, then there must be 1, else 0.
+        expect(notebookEditor.editors).to.be.lengthOf(1);
+        editor.verifyAll();
+        // Verify we displayed the editor once.
+        editor.verify(e => e.show(), typemoq.Times.exactly(1));
+
+        if (openAnotherRandomFile) {
+            // Next, open another file.
+            const logFile = createTextDocument(Uri.file('some file.log'), 'hello');
+            const logEditor = createTextEditor(logFile);
+            changeActiveTextEditorEventEmitter.fire(logEditor);
+            // wait for callbacks to get executed.
+            await sleep(1);
+
+            // Verify we didn't open another native editor.
+            expect(notebookEditor.editors).to.be.lengthOf(1);
+        }
+
+        // Re-display the old ipynb file(open it again)'
+        changeActiveTextEditorEventEmitter.fire(textEditor);
+
+        // wait for callbacks to get executed.
+        await sleep(1);
+
+        // At this point the notebook should be shown (focused).
+        editor.verify(e => e.show(), typemoq.Times.exactly(2));
+        // Verify we didn't open another native editor (display existing file).
+        expect(notebookEditor.editors).to.be.lengthOf(1);
+    }
+    test('Show the notebook editor when an opening the same ipynb file', async () => openSameIPynbFile(false));
+    test('Show the notebook editor when an opening the same ipynb file (after opening some other random file)', async () => openSameIPynbFile(true));
+
     test('Do not open the notebook editor when a txt file is opened', async () => {
         await testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(Uri.file('some text file.txt'), false);
     });

@@ -212,12 +212,11 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
 
     private openNotebookAndCloseEditor = async (document: TextDocument, closeDocumentBeforeOpeningNotebook: boolean) => {
         // See if this is an ipynb file
-        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor &&
-            !this.activeEditors.has(document.uri.fsPath)) {
+        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor) {
+            const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
             try {
                 const contents = document.getText();
                 const uri = document.uri;
-                const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
 
                 if (closeDocumentBeforeOpeningNotebook) {
                     if (!this.documentManager.activeTextEditor || this.documentManager.activeTextEditor.document !== document) {

@@ -54,6 +54,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
         const interpreterInfoPromise = interpreterService.getInterpreterDetails(pythonPath);
         // Ensure we do not start multiple daemons for the same interpreter.
@@ -65,7 +66,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool({...options, pythonPath}, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, {...options, pythonPath}, activatedProc!, activatedEnvVars);
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;

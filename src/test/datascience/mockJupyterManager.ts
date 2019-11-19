@@ -217,6 +217,32 @@ export class MockJupyterManager implements IJupyterSessionManager {
         });
     }
 
+    public addInputCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
+        const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
+        cells.forEach(c => {
+            const key = concatMultilineStringInput(c.data.source).replace(LineFeedRegEx, '').toLowerCase();
+            if (c.data.cell_type === 'code') {
+                const taggedResult = {
+                    output_type: 'input'
+                };
+                const massagedResult = this.massageCellResult(result, mimeType);
+                const data: nbformat.ICodeCell = c.data as nbformat.ICodeCell;
+                if (result) {
+                    data.outputs = [...data.outputs, taggedResult, massagedResult];
+                } else {
+                    data.outputs = [...data.outputs, taggedResult];
+                }
+                // Save in the cell.
+                c.data = data;
+            }
+
+            // Save each in our dictionary for future use.
+            // Note: Our entire setup is recreated each test so this dictionary
+            // should be unique per test
+            this.cellDictionary[key] = c;
+        });
+    }
+
     public addCell(code: string, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {
         const cells = generateCells(undefined, code, Uri.file('foo.py').fsPath, 1, true, uuid());
         cells.forEach(c => {

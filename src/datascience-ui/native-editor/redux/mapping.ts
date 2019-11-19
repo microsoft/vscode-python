@@ -15,7 +15,7 @@ import {
     ICodeAction,
     IEditCellAction,
     IExecuteAction,
-    IOpenLinkAction,
+    ILinkClickAction,
     IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
@@ -59,7 +59,7 @@ export class INativeEditorActionMapping {
     public [CommonActionType.ARROW_DOWN]: NativeEditorReducerFunc<ICodeAction>;
     public [CommonActionType.CHANGE_CELL_TYPE]: NativeEditorReducerFunc<IChangeCellTypeAction>;
     public [CommonActionType.EDIT_CELL]: NativeEditorReducerFunc<IEditCellAction>;
-    public [CommonActionType.OPEN_LINK]: NativeEditorReducerFunc<IOpenLinkAction>;
+    public [CommonActionType.LINK_CLICK]: NativeEditorReducerFunc<ILinkClickAction>;
     public [CommonActionType.SHOW_PLOT]: NativeEditorReducerFunc<IShowPlotAction>;
     public [CommonActionType.GATHER_CELL]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;

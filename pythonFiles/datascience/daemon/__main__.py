@@ -12,7 +12,7 @@ import sys
 log = logging.getLogger(__name__)
 
 LOG_FORMAT = "%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s"
-
+queue_handler = None
 
 def add_arguments(parser):
     parser.description = "Daemon"
@@ -42,9 +42,33 @@ def add_arguments(parser):
     )
 
 
+class TemporaryQueueHandler(logging.Handler):
+    """ Logger used to temporarily store everything into a queue.
+    Later the messages are pushed back to the RPC client as a notification.
+    Once the RPC channel is up, we'll stop queuing messages and sending id directly.
+    """
+    def __init__(self):
+        logging.Handler.__init__(self)
+        self.queue = []
+        self.server = None
+    def set_server(self, server):
+        # Send everything that has beeen queued until now.
+        self.server = server
+        for msg in self.queue:
+            self.server._endpoint.notify("log", msg)
+        self.queue = []
+    def emit(self, record):
+        data = {"level": record.levelname, "msg": self.format(record)}
+        # If we don't have the server, then queue it and send it later.
+        if self.server is None:
+            self.queue.append(data)
+        else:
+            self.server._endpoint.notify("log", data)
+
+
 def _configure_logger(verbose=0, log_config=None, log_file=None):
     root_logger = logging.root
-
+    global queue_handler
     if log_config:
         with open(log_config, "r") as f:
             logging.config.dictConfig(json.load(f))
@@ -59,10 +83,11 @@ def _configure_logger(verbose=0, log_config=None, log_file=None):
                 encoding=None,
                 delay=0,
             )
+            log_handler.setFormatter(formatter)
+            root_logger.addHandler(log_handler)
         else:
-            log_handler = logging.StreamHandler()
-        log_handler.setFormatter(formatter)
-        root_logger.addHandler(log_handler)
+            queue_handler = TemporaryQueueHandler()
+            root_logger.addHandler(queue_handler)
 
     if verbose == 0:
         level = logging.WARNING
@@ -89,7 +114,7 @@ def main():
     try:
         daemon_module = importlib.import_module(args.daemon_module)
         daemon_cls = daemon_module.PythonDaemon
-        daemon_cls.start_daemon()
+        daemon_cls.start_daemon(queue_handler)
     except Exception:
         import traceback
 

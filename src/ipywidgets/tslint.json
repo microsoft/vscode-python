@@ -1,0 +1,70 @@
+{
+    "rulesDirectory": [
+        "../../build/tslint-rules"
+    ],
+    "extends": [
+        "tslint-eslint-rules",
+        "tslint-microsoft-contrib"
+    ],
+    "rules": {
+        "messages-must-be-localized": true,
+        "no-unused-expression": true,
+        "no-duplicate-variable": true,
+        "curly": true,
+        "non-literal-fs-path": false,
+        "newline-per-chained-call": false,
+        "class-name": true,
+        "semicolon": [
+            true
+        ],
+        "triple-equals": true,
+        "no-relative-imports": false,
+        "max-line-length": false,
+        "typedef": false,
+        "no-string-throw": true,
+        "missing-jsdoc": false,
+        "one-line": [
+            true,
+            "check-catch",
+            "check-finally",
+            "check-else"
+        ],
+        "no-parameter-properties": false,
+        "no-parameter-reassignment": false,
+        "no-reserved-keywords": false,
+        "newline-before-return": false,
+        "export-name": false,
+        "align": false,
+        "linebreak-style": false,
+        "strict-boolean-expressions": false,
+        "await-promise": [
+            true,
+            "Thenable",
+            "PromiseLike"
+        ],
+        "completed-docs": false,
+        "no-unsafe-any": false,
+        "no-backbone-get-set-outside-model": false,
+        "underscore-consistent-invocation": false,
+        "no-void-expression": false,
+        "no-non-null-assertion": false,
+        "prefer-type-cast": false,
+        "promise-function-async": false,
+        "function-name": false,
+        "variable-name": false,
+        "no-import-side-effect": false,
+        "no-string-based-set-timeout": false,
+        "no-floating-promises": true,
+        "no-empty-interface": false,
+        "no-bitwise": false,
+        "eofline": true,
+        "switch-final-break": false,
+        "no-implicit-dependencies": [
+            "vscode"
+        ],
+        "no-unnecessary-type-assertion": false,
+        "no-submodule-imports": false,
+        "no-redundant-jsdoc": false,
+        "binary-expression-operand-order": false
+    }
+}

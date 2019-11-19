@@ -559,7 +559,7 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         showWatermark={false}
                         ref={this.inputRef}
                         monacoTheme={this.props.monacoTheme}
-                        openLink={this.props.openLink}
+                        openLink={this.openLink}
                         editorMeasureClassName={undefined}
                         focused={this.onCodeFocused}
                         unfocused={this.onCodeUnfocused}
@@ -601,7 +601,6 @@ export class NativeCell extends React.Component<INativeCellProps> {
                         cellVM={this.props.cellVM}
                         baseTheme={this.props.baseTheme}
                         expandImage={this.props.showPlot}
-                        openLink={this.props.openLink}
                         maxTextSize={this.props.maxTextSize}
                         themeMatplotlibPlots={themeMatplotlibPlots}
                     />
@@ -653,6 +652,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
         return <div className={classes}></div>;
     }
+
+    private openLink = (uri: monacoEditor.Uri) => {
+        this.props.linkClick(uri.toString());
+    }
+
 }
 
 // Main export, return a redux connected editor

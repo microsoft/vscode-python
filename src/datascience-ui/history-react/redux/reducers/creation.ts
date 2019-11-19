@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { Identifiers } from '../../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { createCellVM, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
@@ -79,7 +80,21 @@ export namespace Creation {
 
     export function startCell(arg: InteractiveReducerArg<ICell>): IMainState {
         if (isCellSupported(arg.prevState, arg.payload)) {
-            return Helpers.updateOrAdd(arg, prepareCellVM);
+            const result = Helpers.updateOrAdd(arg, prepareCellVM);
+            if (result.cellVMs.length > arg.prevState.cellVMs.length && arg.payload.id !== Identifiers.EditCellId) {
+                const cellVM = result.cellVMs[result.cellVMs.length - 1];
+
+                // We're adding a new cell here. Tell the intellisense engine we have a new cell
+                arg.queueAction(createPostableAction(
+                    InteractiveWindowMessages.AddCell,
+                    {
+                        fullText: extractInputText(cellVM.cell, result.settings),
+                        currentText: cellVM.inputBlockText,
+                        cell: cellVM.cell
+                    }));
+            }
+
+            return result;
         }
         return arg.prevState;
     }

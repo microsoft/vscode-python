@@ -18,6 +18,7 @@ import { OSType } from '../../../../../client/common/utils/platform';
 import { DebuggerTypeName } from '../../../../../client/debugger/constants';
 import { IDebugEnvironmentVariablesService } from '../../../../../client/debugger/extension/configuration/resolvers/helper';
 import { LaunchConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/launch';
+import { ILaunchDebugConfigurationResolverExperiment } from '../../../../../client/debugger/extension/configuration/types';
 import { DebugOptions, LaunchRequestArguments } from '../../../../../client/debugger/types';
 import { IInterpreterHelper } from '../../../../../client/interpreter/contracts';
 import { getOSType } from '../../../../common';
@@ -37,6 +38,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
         let documentManager: TypeMoq.IMock<IDocumentManager>;
         let diagnosticsService: TypeMoq.IMock<IInvalidPythonPathInDebuggerService>;
         let debugEnvHelper: TypeMoq.IMock<IDebugEnvironmentVariablesService>;
+        let configExperiment: TypeMoq.IMock<ILaunchDebugConfigurationResolverExperiment>;
         function createMoqWorkspaceFolder(folderPath: string) {
             const folder = TypeMoq.Mock.ofType<WorkspaceFolder>();
             folder.setup(f => f.uri).returns(() => Uri.file(folderPath));
@@ -50,6 +52,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             platformService = TypeMoq.Mock.ofType<IPlatformService>();
             diagnosticsService = TypeMoq.Mock.ofType<IInvalidPythonPathInDebuggerService>();
             debugEnvHelper = TypeMoq.Mock.ofType<IDebugEnvironmentVariablesService>();
+            configExperiment = TypeMoq.Mock.ofType<ILaunchDebugConfigurationResolverExperiment>();
 
             pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
             helper = TypeMoq.Mock.ofType<IInterpreterHelper>();
@@ -72,6 +75,9 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 platformService
             );
             debugEnvHelper.setup(x => x.getEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve({}));
+            configExperiment.setup(c => c.modifyConfigurationBasedOnExperiment(TypeMoq.It.isAny())).returns(() => {
+                return;
+            });
 
             debugProvider = new LaunchConfigurationResolver(
                 workspaceService.object,
@@ -79,7 +85,8 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 diagnosticsService.object,
                 platformService.object,
                 confgService.object,
-                debugEnvHelper.object);
+                debugEnvHelper.object,
+                configExperiment.object);
         }
         function setupActiveEditor(fileName: string | undefined, languageId: string) {
             if (fileName) {
@@ -381,7 +388,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }]);
         });
         test('Ensure drive letter is lower cased for local path mappings on Windows when with existing path mappings', async function () {
-            if (getOSType() !== OSType.Windows || osType !== OSType.Windows){
+            if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                 // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }
@@ -410,7 +417,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             }]);
         });
         test('Ensure drive letter is not lower cased for local path mappings on non-Windows when with existing path mappings', async function () {
-            if (getOSType() === OSType.Windows || osType === OSType.Windows){
+            if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                 // tslint:disable-next-line: no-invalid-this
                 return this.skip();
             }

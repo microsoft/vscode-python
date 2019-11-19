@@ -112,7 +112,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() private jupyterDebugger: IJupyterDebugger,
         @unmanaged() protected ipynbProvider: INotebookEditorProvider,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
-        @unmanaged() indexPath: string,
+        @unmanaged() rootPath: string,
+        @unmanaged() scripts: string[],
         @unmanaged() title: string,
         @unmanaged() viewColumn: ViewColumn
     ) {
@@ -123,7 +124,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             themeFinder,
             workspaceService,
             (c, v, d) => new InteractiveWindowMessageListener(liveShare, c, v, d),
-            indexPath,
+            rootPath,
+            scripts,
             title,
             viewColumn);
 

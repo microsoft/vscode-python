@@ -22,6 +22,7 @@ export class MockJupyterSession implements IJupyterSession {
     private executes: string[] = [];
     private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
+    private lastRequest: MockJupyterRequest | undefined;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
@@ -55,7 +56,7 @@ export class MockJupyterSession implements IJupyterSession {
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
-    public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
+    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture<any, any> {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {
@@ -71,12 +72,22 @@ export class MockJupyterSession implements IJupyterSession {
         // When it finishes, it should not be an outstanding request anymore
         const removeHandler = () => {
             this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(f => f !== tokenSource);
+            if (this.lastRequest === request) {
+                this.lastRequest = undefined;
+            }
         };
         request.done.then(removeHandler).catch(removeHandler);
+        this.lastRequest = request;
         return request;
     }
 
-    public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public sendInputReply(content: string) {
+        if (this.lastRequest) {
+            this.lastRequest.sendInputReply({ value: content, status: 'ok' });
+        }
+    }
+
+    public async requestComplete(_content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         await sleep(this.completionTimeout);
 
         return {
@@ -99,7 +110,7 @@ export class MockJupyterSession implements IJupyterSession {
             },
             metadata: {
             }
-        };
+        } as any;
     }
 
     public dispose(): Promise<void> {

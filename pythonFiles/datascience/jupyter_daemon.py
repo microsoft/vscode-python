@@ -10,22 +10,19 @@ from datascience.daemon.daemon_python import (
     change_exec_context,
 )
 
-log = logging.getLogger(__name__)
-
-
 class PythonDaemon(BasePythonDaemon):
     def __init__(self, rx, tx):
-        log.info("DataScience Daemon init")
         super().__init__(rx, tx)
+        self.log.info("DataScience Daemon init")
 
     def __getitem__(self, item):
         """Override getitem to ensure we use these methods."""
-        log.info("Execute rpc method %s in Jupyter class", item)
+        self.log.info("Execute rpc method %s in DS Daemon", item)
         return super().__getitem__(item)
 
     @error_decorator
     def m_exec_module(self, module_name, args=[], cwd=None, env=None):
-        log.info("Exec in DS Daemon %s with args %s", module_name, args)
+        self.log.info("Exec in DS Daemon %s with args %s", module_name, args)
         args = [] if args is None else args
 
         if module_name == "jupyter" and args == ["kernelspec", "list"]:
@@ -35,12 +32,12 @@ class PythonDaemon(BasePythonDaemon):
         elif module_name == "jupyter" and args[0] == "nbconvert" and args[-1] != "--version":
             return self._execute_and_capture_output(lambda : self._convert(args))
         else:
-            log.info("check base class stuff")
+            self.log.info("check base class stuff")
             return super().m_exec_module(module_name, args, cwd, env)
 
     @error_decorator
     def m_exec_module_observable(self, module_name, args=None, cwd=None, env=None):
-        log.info("Exec in DS Daemon (observable) %s with args %s", module_name, args)
+        self.log.info("Exec in DS Daemon (observable) %s with args %s", module_name, args)
         args = [] if args is None else args
 
         # Assumption is that `python -m jupyter notebook` or `python -m notebook` with observable output
@@ -52,7 +49,7 @@ class PythonDaemon(BasePythonDaemon):
         ):
             # Args must not have ['notebook'] in the begining. Drop the `notebook` subcommand when using `jupyter`
             args = args[1:] if args[0] == "notebook" else args
-            log.info("Starting notebook with args %s", args)
+            self.log.info("Starting notebook with args %s", args)
 
             # When launching notebook always ensure the first argument is `notebook`.
             with change_exec_context(args, cwd, env):
@@ -79,7 +76,7 @@ class PythonDaemon(BasePythonDaemon):
         sys.stdout.flush()
 
     def _print_kernel_list(self):
-        log.info("check kernels")
+        self.log.info("check kernels")
         # Get kernel specs.
         import jupyter_client.kernelspec
 
@@ -90,7 +87,7 @@ class PythonDaemon(BasePythonDaemon):
         sys.stdout.flush()
 
     def _convert(self, args):
-        log.info("nbconvert")
+        self.log.info("nbconvert")
         from nbconvert import nbconvertapp as app
 
         sys.argv = [""] + args

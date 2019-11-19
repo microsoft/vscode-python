@@ -2,6 +2,11 @@
     "rulesDirectory": [
         "./build/tslint-rules"
     ],
+    "linterOptions": {
+        "exclude": [
+            "src/ipywidgets"
+        ]
+    },
     "extends": [
         "tslint-eslint-rules",
         "tslint-microsoft-contrib"

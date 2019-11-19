@@ -15,9 +15,10 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
+import { IProcessLogger, IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
 import { createTemporaryFile } from '../../../client/common/utils/fs';
@@ -39,6 +40,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
     let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService>>;
+    let logger: IProcessLogger;
     class DaemonPool extends PythonDaemonExecutionServicePool {
         // tslint:disable-next-line: no-unnecessary-override
         public createDaemonServices(): Promise<IPythonDaemonExecutionService> {
@@ -58,6 +60,7 @@ suite('Daemon - Python Daemon Pool', () => {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
+        logger = mock(ProcessLogger);
         createDaemonServicesSpy = sinon.spy(DaemonPool.prototype, 'createDaemonServices');
         pythonExecutionService = mock(PythonExecutionService);
         when(pythonExecutionService.execModuleObservable('datascience.daemon', anything(), anything())).thenCall(() => {
@@ -70,7 +73,7 @@ suite('Daemon - Python Daemon Pool', () => {
             return { proc: pythonProc, dispose: noop, out: undefined as any };
         });
         const options = { pythonPath: fullyQualifiedPythonPath, daemonModule: PythonDaemonModule, daemonCount: 2, observableDaemonCount: 1 };
-        pythonDaemonPool = new DaemonPool(options, instance(pythonExecutionService), {}, 100);
+        pythonDaemonPool = new DaemonPool(logger, [], options, instance(pythonExecutionService), {}, 100);
         await pythonDaemonPool.initialize();
         disposables.push(pythonDaemonPool);
     });

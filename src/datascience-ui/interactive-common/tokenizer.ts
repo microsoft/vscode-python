@@ -20,7 +20,7 @@ export function registerMonacoLanguage() {
         {
             comments: {
                 lineComment: '#',
-                blockComment: ['\'\'\'', '\"\"\"']
+                blockComment: ['\"\"\"', '\"\"\"']
             },
             brackets: [
                 ['{', '}'],
