@@ -8,7 +8,7 @@ const constants = require('../../constants');
 const nodeFetchIndex = path.join(constants.ExtensionRootDir, 'node_modules', '@jupyterlab','services','node_modules','node-fetch','lib','index.js');
 
 /**
- * Node fetch has a commonjs module file. That gets bundled into @jupyterlab/services.
+ * Node fetch has an es6 module file. That gets bundled into @jupyterlab/services.
  * However @jupyterlab/services/serverconnection.js is written such that it uses fetch from either node or browser.
  * We need to force the browser version for things to work correctly.
  *
