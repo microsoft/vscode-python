@@ -287,6 +287,8 @@ export namespace HelpLinks {
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
+    export const JupyterServerUriList = 'python.dataScience.jupyterServer.uriList';
+    export const JupyterServerUriListMax = 10;
     export const IntellisenseTimeout = 30000;
     export const RemoteDebuggerPortBegin = 8889;
     export const RemoteDebuggerPortEnd = 9000;
@@ -296,6 +298,7 @@ export namespace Identifiers {
     export const EmptyFileName = '2DB9B899-6519-4E1B-88B0-FA728A274115';
     export const GeneratedThemeName = 'ipython-theme'; // This needs to be all lower class and a valid class name.
     export const HistoryPurpose = 'history';
+    export const PingPurpose = 'ping';
     export const MatplotLibDefaultParams = '_VSCode_defaultMatplotlib_Params';
     export const EditCellId = '3D3AB152-ADC1-4501-B813-4B83B49B0C10';
     export const SvgSizeTag = 'sizeTag={{0}, {1}}';

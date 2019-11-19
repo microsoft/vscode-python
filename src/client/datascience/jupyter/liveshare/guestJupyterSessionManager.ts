@@ -4,7 +4,7 @@
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { noop } from '../../../common/utils/misc';
-import { IConnection, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
+import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
 
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
     private connInfo: IConnection | undefined;
@@ -19,6 +19,10 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
 
     public async getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         // Don't return any kernel specs in guest mode. They're only needed for the host side
+        return Promise.resolve([]);
+    }
+
+    public getRunningKernels(): Promise<IJupyterKernel[]> {
         return Promise.resolve([]);
     }
 

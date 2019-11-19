@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ContentsManager, ServerConnection, SessionManager } from '@jupyterlab/services';
+import { ContentsManager, Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -10,6 +10,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
     IConnection,
+    IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
@@ -55,6 +56,17 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         this.serverSettings = await this.getServerConnectSettings(connInfo);
         this.sessionManager = new SessionManager({ serverSettings: this.serverSettings });
         this.contentsManager = new ContentsManager({ serverSettings: this.serverSettings });
+    }
+
+    public async getRunningKernels(): Promise<IJupyterKernel[]> {
+        const models = await Kernel.listRunning(this.serverSettings);
+        return models.map(m => {
+            return {
+                name: m.name,
+                lastActivityTime: m.last_activity ? new Date(m.last_activity.toString()) : new Date(),
+                numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
+            };
+        });
     }
 
     public async startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {

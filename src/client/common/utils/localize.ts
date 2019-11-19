@@ -177,9 +177,14 @@ export namespace DataScience {
     export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
     export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
 
-    export const jupyterSelectURIPrompt = localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server or specify "local" to create one locally when needed');
+    export const jupyterSelectURIPrompt = localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
+    export const jupyterSelectURIQuickPickPlaceholder = localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Pick how to connect to Jupyter');
+    export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Automatic');
+    export const jupyterSelectURILocalDetail = localize('DataScience.jupyterSelectURILocalDetail', 'VS Code will start a server for you on the localhost');
+    export const jupyterSelectURINewLabel = localize('DataScience.jupyterSelectURINewLabel', 'Already running');
+    export const jupyterSelectURINewDetail = localize('DataScience.jupyterSelectURINewDetail', 'You type in the URI of an already running server');
     export const jupyterSelectURIInvalidURI = localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
-    export const jupyterSelectWatermarkFormat = localize('DataScience.jupyterSelectWatermarkFormat', '{0} OR {1}');
+    export const jupyterSelectURIRunningDetailFormat = localize('DataScience.jupyterSelectURIRunningDetailFormat', 'Running since {0}. {1} existing connections.');
     export const jupyterSelectPasswordPrompt = localize('DataScience.jupyterSelectPasswordPrompt', 'Enter your notebook password');
     export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
     export const jupyterNotebookConnectFailed = localize('DataScience.jupyterNotebookConnectFailed', 'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}');

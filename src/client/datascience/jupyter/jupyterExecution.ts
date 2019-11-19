@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { URL } from 'url';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
@@ -12,7 +11,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -29,6 +27,7 @@ import {
 import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelService } from './kernelService';
 import { NotebookStarter } from './notebookStarter';
@@ -262,7 +261,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            connection = this.createRemoteConnectionInfo(options.uri);
+            connection = createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
             kernelSpec = undefined;
         }
 
@@ -281,29 +280,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
         // Return the data we found.
         return { connection, kernelSpec };
-    }
-
-    private createRemoteConnectionInfo = (uri: string): IConnection => {
-        let url: URL;
-        try {
-            url = new URL(uri);
-        } catch (err) {
-            // This should already have been parsed when set, so just throw if it's not right here
-            throw err;
-        }
-        const settings = this.configuration.getSettings();
-        const allowUnauthorized = settings.datascience.allowUnauthorizedRemoteConnection ? settings.datascience.allowUnauthorizedRemoteConnection : false;
-
-        return {
-            allowUnauthorized,
-            baseUrl: `${url.protocol}//${url.host}${url.pathname}`,
-            token: `${url.searchParams.get('token')}`,
-            hostName: url.hostname,
-            localLaunch: false,
-            localProcExitCode: undefined,
-            disconnected: (_l) => { return { dispose: noop }; },
-            dispose: noop
-        };
     }
 
     // tslint:disable-next-line: max-func-body-length

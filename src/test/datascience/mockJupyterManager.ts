@@ -23,6 +23,7 @@ import { CodeSnippits, Identifiers } from '../../client/datascience/constants';
 import {
     ICell,
     IConnection,
+    IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterSession,
     IJupyterSessionManager
@@ -139,6 +140,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public getCurrentSession(): MockJupyterSession | undefined {
         return this.currentSession;
+    }
+
+    public getRunningKernels(): Promise<IJupyterKernel[]> {
+        return Promise.resolve([]);
     }
 
     public setProcessDelay(timeout: number | undefined) {
