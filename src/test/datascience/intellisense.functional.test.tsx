@@ -130,7 +130,7 @@ suite('DataScience Intellisense tests', () => {
         }
     }, () => { return ioc; });
 
-    runMountedTest('Jupyter autocomplete timeout', async (wrapper) => {
+    runMountedTest('Jupyter autocomplete not timeout', async (wrapper) => {
         if (ioc.mockJupyter) {
             // This test only works when mocking.
 
@@ -138,7 +138,7 @@ suite('DataScience Intellisense tests', () => {
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
 
-            // Force a timeout on the jupyter completions
+            // Force a timeout on the jupyter completions so that it takes some amount of time
             ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
@@ -146,7 +146,7 @@ suite('DataScience Intellisense tests', () => {
             typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
-            verifyIntellisenseMissing(wrapper, 'printly');
+            verifyIntellisenseVisible(wrapper, 'printly');
         }
     }, () => { return ioc; });
 });
