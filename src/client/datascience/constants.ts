@@ -287,7 +287,7 @@ export namespace HelpLinks {
 
 export namespace Settings {
     export const JupyterServerLocalLaunch = 'local';
-    export const IntellisenseTimeout = 300;
+    export const IntellisenseTimeout = 5000;
     export const RemoteDebuggerPortBegin = 8889;
     export const RemoteDebuggerPortEnd = 9000;
 }
