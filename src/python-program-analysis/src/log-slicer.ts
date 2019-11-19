@@ -136,31 +136,30 @@ export class ExecutionLogSlicer<TCell extends Cell> {
         const cellExecutionTimes = new Map(this.executionLog.map(e =>
             [e.cell.executionEventId, e.executionTime]));
 
+        // If seed locations weren't specified, slice the whole cell,
+        // specified by an unreasonably large character range.
+        if (!seedLocations) {
+            seedLocations = new LocationSet({
+                first_line: 1,
+                first_column: 1,
+                last_line: 10000,
+                last_column: 10000,
+            });
+        }
+
         return this.executionLog
-            .filter(execution =>
-                execution.cell.persistentId == cellId &&
-                execution.cell.executionCount)
-            .map(execution => {
+            .filter(cellExec =>
+                cellExec.cell.persistentId == cellId &&
+                cellExec.cell.executionCount)
+            .map(cellExecution => {
                 // Build the program up to that cell.
-                let program = this.programBuilder.buildTo(execution.cell.executionEventId);
+                let program = this.programBuilder.buildTo(cellExecution.cell.executionEventId);
                 if (!program) { return null; }
 
-                // Set the seed locations for the slice.
-                if (!seedLocations) {
-                    // If seed locations weren't specified, slice the whole cell.
-                    // XXX: Whole cell specified by an unreasonably large character range.
-                    seedLocations = new LocationSet({
-                        first_line: 1,
-                        first_column: 1,
-                        last_line: 10000,
-                        last_column: 10000,
-                    });
-                }
-
                 // Set seed locations were specified relative to the last cell's position in program.
-                let lastCellLines = program.cellToLineMap[execution.cell.executionEventId];
+                let lastCellLines = program.cellToLineMap[cellExecution.cell.executionEventId];
                 let lastCellStart = Math.min(...lastCellLines.items);
-                seedLocations = seedLocations.mapSame(loc => ({
+                const adjustedLocations = seedLocations.mapSame(loc => ({
                     first_line: lastCellStart + loc.first_line - 1,
                     first_column: loc.first_column,
                     last_line: lastCellStart + loc.last_line - 1,
@@ -170,7 +169,7 @@ export class ExecutionLogSlicer<TCell extends Cell> {
                 // Slice the program
                 let sliceLocations = slice(
                     program.tree,
-                    seedLocations,
+                    adjustedLocations,
                     this.dataflowAnalyzer
                 ).items.sort((loc1, loc2) => loc1.first_line - loc2.first_line);
 
@@ -179,6 +178,7 @@ export class ExecutionLogSlicer<TCell extends Cell> {
                     [executionEventId: string]: LocationSet;
                 } = {};
                 let cellOrder: Cell[] = [];
+
                 sliceLocations.forEach(location => {
                     let sliceCell = program.lineToCellMap[location.first_line];
                     let sliceCellLines =
@@ -205,9 +205,10 @@ export class ExecutionLogSlicer<TCell extends Cell> {
                         cellSliceLocations[sliceCell.executionEventId],
                         cellExecutionTimes[sliceCell.executionEventId]
                     ));
-                return new SlicedExecution(execution.executionTime, cellSlices);
+
+                return new SlicedExecution(cellExecution.executionTime, cellSlices);
             })
-            .filter(s => s != null && s != undefined);
+            .filter(slice => slice != null && slice != undefined);
     }
 
     public get cellExecutions(): ReadonlyArray<CellExecution<TCell>> {

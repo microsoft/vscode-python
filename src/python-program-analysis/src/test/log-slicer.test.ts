@@ -41,6 +41,29 @@ describe('log-slicer', () => {
             });
         });
 
+        it('triple execution', () => {
+            const lines = [
+                ["0", "x = 0"],
+                ["0", "x = 0"],
+                ["0", "x = 0"]
+            ];
+            const cells = lines.map(([pid, text], i) => new TestCell(text, i + 1, undefined, pid));
+            const logSlicer = new ExecutionLogSlicer(new DataflowAnalyzer());
+            cells.forEach(cell => logSlicer.logExecution(cell));
+
+            const lastRerun = logSlicer.cellExecutions[2].cell;
+
+            let slice = logSlicer.sliceLatestExecution(lastRerun.persistentId);
+            expect(slice).to.exist;
+            expect(slice.cellSlices).to.exist;
+            expect(slice.cellSlices.length).eq(1);
+            slice.cellSlices.forEach((cs, i) => {
+                expect(cs).to.exist;
+                expect(cs.textSliceLines).eq(lines[i][1]);
+                expect(cs.textSlice).eq(lines[i][1]);
+            });
+        });
+
         it("does jim's demo", () => {
             const lines = [
 			/*[1]*/  "import pandas as pd",
