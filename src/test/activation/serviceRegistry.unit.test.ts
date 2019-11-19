@@ -8,6 +8,7 @@ import { instance, mock, verify } from 'ts-mockito';
 import { AATesting } from '../../client/activation/aaTesting';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import { ActiveResourceService } from '../../client/activation/activeResource';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
@@ -31,6 +32,7 @@ import { LanguageServerOutputChannel } from '../../client/activation/languageSer
 import { PlatformData } from '../../client/activation/languageServer/platformData';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
+    IActiveResourceService,
     IDownloadChannelRule,
     IExtensionActivationManager,
     IExtensionActivationService,
@@ -97,6 +99,7 @@ suite('Unit Tests - Activation Service Registry', () => {
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();
+        verify(serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt)).once();
     });
 });

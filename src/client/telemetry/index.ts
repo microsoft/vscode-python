@@ -1230,14 +1230,14 @@ export interface IEventNamePropertyMapping {
         failed: boolean;
     };
     /**
-     * Telemetry event sent when the extension is activated, if an active terminal is present and 
+     * Telemetry event sent when the extension is activated, if an active terminal is present and
      * the `python.terminal.activateEnvInCurrentTerminal` setting is set to `true`.
      */
     [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
         /**
-         * The name of terminal in which the Python environment was activated.
+         * Carries boolean `true` if an active terminal is present (terminal is visible), `false` otherwise
          */
-        terminalName?: string;
+        isTerminalVisible?: boolean;
     };
     /**
      * Telemetry event sent with details when a terminal is created
