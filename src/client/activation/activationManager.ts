@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable, multiInject } from 'inversify';
-import { TextDocument, workspace } from 'vscode';
+import { TextDocument } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
@@ -12,7 +12,7 @@ import { traceDecorators } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+import { IActiveResourceService, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
@@ -26,7 +26,8 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInterpreterAutoSelectionService) private readonly autoSelection: IInterpreterAutoSelectionService,
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+        @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService
     ) { }
 
     public dispose() {
@@ -44,7 +45,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         // Activate all activation services together.
         await Promise.all([
             Promise.all(this.singleActivationServices.map(item => item.activate())),
-            this.activateWorkspace(this.getActiveResource())
+            this.activateWorkspace(this.activeResourceService.getActiveResource())
         ]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
@@ -113,13 +114,5 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     protected getWorkspaceKey(resource: Resource) {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');
-    }
-    private getActiveResource(): Resource {
-        if (this.documentManager.activeTextEditor && !this.documentManager.activeTextEditor.document.isUntitled) {
-            return this.documentManager.activeTextEditor.document.uri;
-        }
-        return Array.isArray(this.workspaceService.workspaceFolders) && workspace.workspaceFolders!.length > 0
-            ? workspace.workspaceFolders![0].uri
-            : undefined;
     }
 }

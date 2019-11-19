@@ -9,7 +9,8 @@ import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { IExtensionActivationService } from '../../client/activation/types';
+import { ActiveResourceService } from '../../client/activation/activeResource';
+import { IActiveResourceService, IExtensionActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -41,11 +42,13 @@ suite('Activation - ActivationManager', () => {
     let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
     let interpreterService: IInterpreterService;
+    let activeResourceService: IActiveResourceService;
     let documentManager: typemoq.IMock<IDocumentManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     setup(() => {
         workspaceService = mock(WorkspaceService);
+        activeResourceService = mock(ActiveResourceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
         interpreterService = mock(InterpreterService);
@@ -58,7 +61,8 @@ suite('Activation - ActivationManager', () => {
             instance(interpreterService),
             autoSelection.object,
             appDiagnostics.object,
-            instance(workspaceService)
+            instance(workspaceService),
+            instance(activeResourceService)
         );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
