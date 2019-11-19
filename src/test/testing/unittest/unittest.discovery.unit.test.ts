@@ -193,7 +193,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         runner.verifyAll();
         testParser.verifyAll();
     });
-    test('Ensure discovery is invoked with the right args without a pattern defined with ---pattern', async () => {
+    test('Ensure discovery is invoked with the right args without a pattern defined with --pattern', async () => {
         const args: string[] = [];
         const runOutput = 'xyz';
         const tests: Tests = {

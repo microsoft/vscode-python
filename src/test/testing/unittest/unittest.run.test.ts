@@ -33,13 +33,7 @@ import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initiali
 const testFilesPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles');
 const UNITTEST_TEST_FILES_PATH = path.join(testFilesPath, 'standard');
 const unitTestSpecificTestFilesPath = path.join(testFilesPath, 'specificTest');
-const defaultUnitTestArgs = [
-    '-v',
-    '-s',
-    '.',
-    '-p',
-    '*test*.py'
-];
+const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - unittest - run with mocked process output', () => {
@@ -64,6 +58,25 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         await ioc.dispose();
         await updateSetting('testing.unittestArgs', defaultUnitTestArgs, rootWorkspaceUri, configTarget);
     });
+
+    interface ITestConfiguration {
+        patternSwitch: string;
+        startDirSwitch: string;
+    }
+
+    function buildTestCliSwitches(): ITestConfiguration[] {
+        const switches: ITestConfiguration[] = [];
+        ['-p', '--pattern'].forEach(p => {
+            ['-s', '--start - directory'].forEach(s => {
+                switches.push({
+                    patternSwitch: p,
+                    startDirSwitch: s
+                });
+            });
+        });
+        return switches;
+    }
+    const cliSwitches = buildTestCliSwitches();
 
     function initializeDI() {
         ioc = new UnitTestIocContainer();
@@ -98,7 +111,7 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
     }
 
     async function ignoreTestLauncher() {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         // When running the python test launcher, just return.
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.length > 1 && args[0].endsWith('visualstudio_py_testlauncher.py')) {
@@ -107,12 +120,15 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         });
     }
     async function injectTestDiscoveryOutput(output: string) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.length > 1 && args[0] === '-c' && args[1].includes('import unittest') && args[1].includes('loader = unittest.TestLoader()')) {
                 callback({
                     // Ensure any spaces added during code formatting or the like are removed
-                    out: output.split(/\r?\n/g).map(item => item.trim()).join(EOL),
+                    out: output
+                        .split(/\r?\n/g)
+                        .map(item => item.trim())
+                        .join(EOL),
                     source: 'stdout'
                 });
             }
@@ -125,47 +141,64 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
         socketServer.addResults(results);
     }
 
-    test('Run Tests', async () => {
-        await updateSetting('testing.unittestArgs', ['-v', '-s', './tests', '-p', 'test_unittest*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
-        await injectTestDiscoveryOutput(`start
-        test_unittest_one.Test_test1.test_A
-        test_unittest_one.Test_test1.test_B
-        test_unittest_one.Test_test1.test_c
-        test_unittest_two.Test_test2.test_A2
-        test_unittest_two.Test_test2.test_B2
-        test_unittest_two.Test_test2.test_C2
-        test_unittest_two.Test_test2.test_D2
-        test_unittest_two.Test_test2a.test_222A2
-        test_unittest_two.Test_test2a.test_222B2
-        `);
-        const resultsToSend = [
-            { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
-            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
-            { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
-        ];
-        injectTestSocketServerResults(resultsToSend);
+    // tslint:disable-next-line:max-func-body-length
+    cliSwitches.forEach(cfg => {
+        test(`Run Tests [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
+            await updateSetting('testing.unittestArgs', ['-v', cfg.startDirSwitch, './tests', cfg.patternSwitch, 'test_unittest*.py'], rootWorkspaceUri, configTarget);
+            // tslint:disable-next-line:no-multiline-string
+            await injectTestDiscoveryOutput(`start
+            test_unittest_one.Test_test1.test_A
+            test_unittest_one.Test_test1.test_B
+            test_unittest_one.Test_test1.test_c
+            test_unittest_two.Test_test2.test_A2
+            test_unittest_two.Test_test2.test_B2
+            test_unittest_two.Test_test2.test_C2
+            test_unittest_two.Test_test2.test_D2
+            test_unittest_two.Test_test2a.test_222A2
+            test_unittest_two.Test_test2a.test_222B2
+            `);
+            const resultsToSend = [
+                { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
+                { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_two.Test_test2.test_A2'
+                },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
+                    message: '1 != 2 : Not equal',
+                    test: 'test_unittest_two.Test_test2.test_C2'
+                },
+                { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_two.Test_test2a.test_222A2'
+                },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
+            ];
+            injectTestSocketServerResults(resultsToSend);
 
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
-        const results = await testManager.runTest(CommandSource.ui);
+            const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+            const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
+            const results = await testManager.runTest(CommandSource.ui);
 
-        assert.equal(results.summary.errors, 1, 'Errors');
-        assert.equal(results.summary.failures, 4, 'Failures');
-        assert.equal(results.summary.passed, 3, 'Passed');
-        assert.equal(results.summary.skipped, 1, 'skipped');
-    });
+            assert.equal(results.summary.errors, 1, 'Errors');
+            assert.equal(results.summary.failures, 4, 'Failures');
+            assert.equal(results.summary.passed, 3, 'Passed');
+            assert.equal(results.summary.skipped, 1, 'skipped');
+        });
 
-    test('Run Failed Tests', async () => {
-        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
-        await injectTestDiscoveryOutput(`start
+        test(`Run Failed Tests [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
+            await updateSetting('testing.unittestArgs', [`${cfg.startDirSwitch}=./tests`, `${cfg.patternSwitch}=test_unittest*.py`], rootWorkspaceUri, configTarget);
+            // tslint:disable-next-line:no-multiline-string
+            await injectTestDiscoveryOutput(`start
             test_unittest_one.Test_test1.test_A
             test_unittest_one.Test_test1.test_B
             test_unittest_one.Test_test1.test_c
@@ -177,146 +210,185 @@ suite('Unit Tests - unittest - run with mocked process output', () => {
             test_unittest_two.Test_test2a.test_222B2
             `);
 
-        const resultsToSend = [
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
-            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
-            { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
-        ];
-        injectTestSocketServerResults(resultsToSend);
+            const resultsToSend = [
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_one.Test_test1.test_A'
+                },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_B' },
+                { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test1.test_c' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_two.Test_test2.test_A2'
+                },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2.test_B2' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
+                    message: '1 != 2 : Not equal',
+                    test: 'test_unittest_two.Test_test2.test_C2'
+                },
+                { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_two.Test_test2a.test_222A2'
+                },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_two.Test_test2a.test_222B2' }
+            ];
+            injectTestSocketServerResults(resultsToSend);
 
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
-        let results = await testManager.runTest(CommandSource.ui);
-        assert.equal(results.summary.errors, 1, 'Errors');
-        assert.equal(results.summary.failures, 4, 'Failures');
-        assert.equal(results.summary.passed, 3, 'Passed');
-        assert.equal(results.summary.skipped, 1, 'skipped');
+            const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+            const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
+            let results = await testManager.runTest(CommandSource.ui);
+            assert.equal(results.summary.errors, 1, 'Errors');
+            assert.equal(results.summary.failures, 4, 'Failures');
+            assert.equal(results.summary.passed, 3, 'Passed');
+            assert.equal(results.summary.skipped, 1, 'skipped');
 
-        const failedResultsToSend = [
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2.test_A2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_two.Test_test2.test_C2' },
-            { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
-            { outcome: 'failed', traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_two.Test_test2a.test_222A2' }
-        ];
-        injectTestSocketServerResults(failedResultsToSend);
+            const failedResultsToSend = [
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_one.Test_test1.test_A'
+                },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_two.Test_test2.test_A2'
+                },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: 1 != 2 : Not equal\n',
+                    message: '1 != 2 : Not equal',
+                    test: 'test_unittest_two.Test_test2.test_C2'
+                },
+                { outcome: 'error', traceback: 'raise ArithmeticError()\nArithmeticError\n', message: '', test: 'test_unittest_two.Test_test2.test_D2' },
+                {
+                    outcome: 'failed',
+                    traceback: 'raise self.failureException(msg)\nAssertionError: Not implemented\n',
+                    message: 'Not implemented',
+                    test: 'test_unittest_two.Test_test2a.test_222A2'
+                }
+            ];
+            injectTestSocketServerResults(failedResultsToSend);
 
-        results = await testManager.runTest(CommandSource.ui, undefined, true);
-        assert.equal(results.summary.errors, 1, 'Failed Errors');
-        assert.equal(results.summary.failures, 4, 'Failed Failures');
-        assert.equal(results.summary.passed, 0, 'Failed Passed');
-        assert.equal(results.summary.skipped, 0, 'Failed skipped');
-    });
+            results = await testManager.runTest(CommandSource.ui, undefined, true);
+            assert.equal(results.summary.errors, 1, 'Failed Errors');
+            assert.equal(results.summary.failures, 4, 'Failed Failures');
+            assert.equal(results.summary.passed, 0, 'Failed Passed');
+            assert.equal(results.summary.skipped, 0, 'Failed skipped');
+        });
 
-    test('Run Specific Test File', async () => {
-        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
+        test(`Run Specific Test File  [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
+            await updateSetting('testing.unittestArgs', [`${cfg.startDirSwitch}=./tests`, `${cfg.patternSwitch}=test_unittest*.py`], rootWorkspaceUri, configTarget);
 
-        // tslint:disable-next-line:no-multiline-string
-        await injectTestDiscoveryOutput(`start
-        test_unittest_one.Test_test_one_1.test_1_1_1
-        test_unittest_one.Test_test_one_1.test_1_1_2
-        test_unittest_one.Test_test_one_1.test_1_1_3
-        test_unittest_one.Test_test_one_2.test_1_2_1
-        test_unittest_two.Test_test_two_1.test_1_1_1
-        test_unittest_two.Test_test_two_1.test_1_1_2
-        test_unittest_two.Test_test_two_1.test_1_1_3
-        test_unittest_two.Test_test_two_2.test_2_1_1
-        `);
+            // tslint:disable-next-line:no-multiline-string
+            await injectTestDiscoveryOutput(`start
+            test_unittest_one.Test_test_one_1.test_1_1_1
+            test_unittest_one.Test_test_one_1.test_1_1_2
+            test_unittest_one.Test_test_one_1.test_1_1_3
+            test_unittest_one.Test_test_one_2.test_1_2_1
+            test_unittest_two.Test_test_two_1.test_1_1_1
+            test_unittest_two.Test_test_two_1.test_1_1_2
+            test_unittest_two.Test_test_two_1.test_1_1_3
+            test_unittest_two.Test_test_two_2.test_2_1_1
+            `);
 
-        const resultsToSend = [
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_1' },
-            { outcome: 'failed', traceback: 'AssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_one.Test_test_one_1.test_1_1_2' },
-            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_3' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_2.test_1_2_1' }
-        ];
-        injectTestSocketServerResults(resultsToSend);
+            const resultsToSend = [
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_1' },
+                { outcome: 'failed', traceback: 'AssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_one.Test_test_one_1.test_1_1_2' },
+                { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_3' },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_2.test_1_2_1' }
+            ];
+            injectTestSocketServerResults(resultsToSend);
 
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+            const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+            const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
+            const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
-        // tslint:disable-next-line:no-non-null-assertion
-        const testFileToTest = tests.testFiles.find(f => f.name === 'test_unittest_one.py')!;
-        const testFile: TestsToRun = { testFile: [testFileToTest], testFolder: [], testFunction: [], testSuite: [] };
-        const results = await testManager.runTest(CommandSource.ui, testFile);
+            // tslint:disable-next-line:no-non-null-assertion
+            const testFileToTest = tests.testFiles.find(f => f.name === 'test_unittest_one.py')!;
+            const testFile: TestsToRun = { testFile: [testFileToTest], testFolder: [], testFunction: [], testSuite: [] };
+            const results = await testManager.runTest(CommandSource.ui, testFile);
 
-        assert.equal(results.summary.errors, 0, 'Errors');
-        assert.equal(results.summary.failures, 1, 'Failures');
-        assert.equal(results.summary.passed, 2, 'Passed');
-        assert.equal(results.summary.skipped, 1, 'skipped');
-    });
+            assert.equal(results.summary.errors, 0, 'Errors');
+            assert.equal(results.summary.failures, 1, 'Failures');
+            assert.equal(results.summary.passed, 2, 'Passed');
+            assert.equal(results.summary.skipped, 1, 'skipped');
+        });
 
-    test('Run Specific Test Suite', async () => {
-        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
-        await injectTestDiscoveryOutput(`start
-        test_unittest_one.Test_test_one_1.test_1_1_1
-        test_unittest_one.Test_test_one_1.test_1_1_2
-        test_unittest_one.Test_test_one_1.test_1_1_3
-        test_unittest_one.Test_test_one_2.test_1_2_1
-        test_unittest_two.Test_test_two_1.test_1_1_1
-        test_unittest_two.Test_test_two_1.test_1_1_2
-        test_unittest_two.Test_test_two_1.test_1_1_3
-        test_unittest_two.Test_test_two_2.test_2_1_1
-        `);
+        test(`Run Specific Test Suite [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
+            await updateSetting('testing.unittestArgs', [`${cfg.startDirSwitch}=./tests`, `${cfg.patternSwitch}=test_unittest*.py`], rootWorkspaceUri, configTarget);
+            // tslint:disable-next-line:no-multiline-string
+            await injectTestDiscoveryOutput(`start
+            test_unittest_one.Test_test_one_1.test_1_1_1
+            test_unittest_one.Test_test_one_1.test_1_1_2
+            test_unittest_one.Test_test_one_1.test_1_1_3
+            test_unittest_one.Test_test_one_2.test_1_2_1
+            test_unittest_two.Test_test_two_1.test_1_1_1
+            test_unittest_two.Test_test_two_1.test_1_1_2
+            test_unittest_two.Test_test_two_1.test_1_1_3
+            test_unittest_two.Test_test_two_2.test_2_1_1
+            `);
 
-        const resultsToSend = [
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_1' },
-            { outcome: 'failed', traceback: 'AssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_one.Test_test_one_1.test_1_1_2' },
-            { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_3' },
-            { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_2.test_1_2_1' }
-        ];
-        injectTestSocketServerResults(resultsToSend);
+            const resultsToSend = [
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_1' },
+                { outcome: 'failed', traceback: 'AssertionError: 1 != 2 : Not equal\n', message: '1 != 2 : Not equal', test: 'test_unittest_one.Test_test_one_1.test_1_1_2' },
+                { outcome: 'skipped', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_1.test_1_1_3' },
+                { outcome: 'passed', traceback: null, message: null, test: 'test_unittest_one.Test_test_one_2.test_1_2_1' }
+            ];
+            injectTestSocketServerResults(resultsToSend);
 
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+            const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+            const testManager = factory('unittest', rootWorkspaceUri!, unitTestSpecificTestFilesPath);
+            const tests = await testManager.discoverTests(CommandSource.ui, true, true);
 
-        // tslint:disable-next-line:no-non-null-assertion
-        const testSuiteToTest = tests.testSuites.find(s => s.testSuite.name === 'Test_test_one_1')!.testSuite;
-        const testSuite: TestsToRun = { testFile: [], testFolder: [], testFunction: [], testSuite: [testSuiteToTest] };
-        const results = await testManager.runTest(CommandSource.ui, testSuite);
+            // tslint:disable-next-line:no-non-null-assertion
+            const testSuiteToTest = tests.testSuites.find(s => s.testSuite.name === 'Test_test_one_1')!.testSuite;
+            const testSuite: TestsToRun = { testFile: [], testFolder: [], testFunction: [], testSuite: [testSuiteToTest] };
+            const results = await testManager.runTest(CommandSource.ui, testSuite);
 
-        assert.equal(results.summary.errors, 0, 'Errors');
-        assert.equal(results.summary.failures, 1, 'Failures');
-        assert.equal(results.summary.passed, 2, 'Passed');
-        assert.equal(results.summary.skipped, 1, 'skipped');
-    });
+            assert.equal(results.summary.errors, 0, 'Errors');
+            assert.equal(results.summary.failures, 1, 'Failures');
+            assert.equal(results.summary.passed, 2, 'Passed');
+            assert.equal(results.summary.skipped, 1, 'skipped');
+        });
 
-    test('Run Specific Test Function', async () => {
-        await updateSetting('testing.unittestArgs', ['-s=./tests', '-p=test_unittest*.py'], rootWorkspaceUri, configTarget);
-        // tslint:disable-next-line:no-multiline-string
-        await injectTestDiscoveryOutput(`start
-        test_unittest_one.Test_test1.test_A
-        test_unittest_one.Test_test1.test_B
-        test_unittest_one.Test_test1.test_c
-        test_unittest_two.Test_test2.test_A2
-        test_unittest_two.Test_test2.test_B2
-        test_unittest_two.Test_test2.test_C2
-        test_unittest_two.Test_test2.test_D2
-        test_unittest_two.Test_test2a.test_222A2
-        test_unittest_two.Test_test2a.test_222B2
-        `);
+        test(`Run Specific Test Function [${cfg.startDirSwitch}, ${cfg.patternSwitch}]`, async () => {
+            await updateSetting('testing.unittestArgs', [`${cfg.startDirSwitch}=./tests`, `${cfg.patternSwitch}=test_unittest*.py`], rootWorkspaceUri, configTarget);
+            // tslint:disable-next-line:no-multiline-string
+            await injectTestDiscoveryOutput(`start
+            test_unittest_one.Test_test1.test_A
+            test_unittest_one.Test_test1.test_B
+            test_unittest_one.Test_test1.test_c
+            test_unittest_two.Test_test2.test_A2
+            test_unittest_two.Test_test2.test_B2
+            test_unittest_two.Test_test2.test_C2
+            test_unittest_two.Test_test2.test_D2
+            test_unittest_two.Test_test2a.test_222A2
+            test_unittest_two.Test_test2a.test_222B2
+            `);
 
-        const resultsToSend = [
-            { outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' }
-        ];
-        injectTestSocketServerResults(resultsToSend);
+            const resultsToSend = [{ outcome: 'failed', traceback: 'AssertionError: Not implemented\n', message: 'Not implemented', test: 'test_unittest_one.Test_test1.test_A' }];
+            injectTestSocketServerResults(resultsToSend);
 
-        const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
-        const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
-        const tests = await testManager.discoverTests(CommandSource.ui, true, true);
-        const testFn: TestsToRun = { testFile: [], testFolder: [], testFunction: [tests.testFunctions[0].testFunction], testSuite: [] };
-        const results = await testManager.runTest(CommandSource.ui, testFn);
-        assert.equal(results.summary.errors, 0, 'Errors');
-        assert.equal(results.summary.failures, 1, 'Failures');
-        assert.equal(results.summary.passed, 0, 'Passed');
-        assert.equal(results.summary.skipped, 0, 'skipped');
+            const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
+            const testManager = factory('unittest', rootWorkspaceUri!, rootDirectory);
+            const tests = await testManager.discoverTests(CommandSource.ui, true, true);
+            const testFn: TestsToRun = { testFile: [], testFolder: [], testFunction: [tests.testFunctions[0].testFunction], testSuite: [] };
+            const results = await testManager.runTest(CommandSource.ui, testFn);
+            assert.equal(results.summary.errors, 0, 'Errors');
+            assert.equal(results.summary.failures, 1, 'Failures');
+            assert.equal(results.summary.passed, 0, 'Passed');
+            assert.equal(results.summary.skipped, 0, 'skipped');
+        });
     });
 });
