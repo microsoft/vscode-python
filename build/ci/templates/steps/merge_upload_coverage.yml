@@ -21,14 +21,14 @@ steps:
       displayName: "Download .nyc_output coverage artifacts"
       condition: always()
 
-    - bash: |
-        pwd
-        cd $(Pipeline.Workspace)
-        pwd
-        ls -dlU .*/ */
-        ls
-      displayName: "See the content of Pipeline.Workspace dir"
-      condition: always()        
+    # - bash: |
+    #     pwd
+    #     cd $(Pipeline.Workspace)
+    #     pwd
+    #     ls -dlU .*/ */
+    #     ls
+    #   displayName: "See the content of Pipeline.Workspace dir"
+    #   condition: always()        
 
     # Now that we have downloaded artifacts from `coverage-output-`, copy them
     #   into the root directory (they'll go under `.nyc_output/...`)
