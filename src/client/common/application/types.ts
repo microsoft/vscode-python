@@ -1017,3 +1017,8 @@ export interface ILanguageService {
 }
 
 export type Channel = 'stable' | 'insiders';
+
+export const IActiveResourceService = Symbol('IActiveResourceService');
+export interface IActiveResourceService {
+    getActiveResource(): Resource;
+}

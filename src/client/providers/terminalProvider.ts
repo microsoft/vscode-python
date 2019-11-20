@@ -2,8 +2,7 @@
 // Licensed under the MIT License.
 
 import { Disposable, Terminal } from 'vscode';
-import { IActiveResourceService } from '../activation/types';
-import { ICommandManager } from '../common/application/types';
+import { IActiveResourceService, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { ITerminalActivator, ITerminalServiceFactory } from '../common/terminal/types';
 import { IConfigurationService } from '../common/types';

@@ -5,9 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
-import { IActiveResourceService, IExtensionSingleActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import {
-    ICommandManager, ITerminalManager
+    IActiveResourceService, ICommandManager, ITerminalManager
 } from '../common/application/types';
 import { CODE_RUNNER_EXTENSION_ID } from '../common/constants';
 import { ITerminalActivator } from '../common/terminal/types';

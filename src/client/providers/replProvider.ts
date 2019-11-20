@@ -1,6 +1,5 @@
 import { Disposable } from 'vscode';
-import { IActiveResourceService } from '../activation/types';
-import { ICommandManager } from '../common/application/types';
+import { IActiveResourceService, ICommandManager } from '../common/application/types';
 import { Commands } from '../common/constants';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry } from '../telemetry';

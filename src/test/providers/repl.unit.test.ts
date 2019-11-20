@@ -4,8 +4,7 @@
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri } from 'vscode';
-import { IActiveResourceService } from '../../client/activation/types';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { IActiveResourceService, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { IServiceContainer } from '../../client/ioc/types';
 import { ReplProvider } from '../../client/providers/replProvider';

@@ -8,7 +8,7 @@
 import { assert } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { ActiveResourceService } from '../../client/activation/activeResource';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { DocumentManager } from '../../client/common/application/documentManager';
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';

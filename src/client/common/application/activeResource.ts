@@ -4,9 +4,8 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { Resource } from '../common/types';
-import { IActiveResourceService } from './types';
+import { Resource } from '../types';
+import { IActiveResourceService, IDocumentManager, IWorkspaceService } from './types';
 
 @injectable()
 export class ActiveResourceService implements IActiveResourceService {

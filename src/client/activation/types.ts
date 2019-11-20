@@ -169,8 +169,3 @@ export const IExtensionSingleActivationService = Symbol('IExtensionSingleActivat
 export interface IExtensionSingleActivationService {
     activate(): Promise<void>;
 }
-
-export const IActiveResourceService = Symbol('IActiveResourceService');
-export interface IActiveResourceService {
-    getActiveResource(): Resource;
-}

@@ -6,13 +6,13 @@
 import { inject, injectable, multiInject } from 'inversify';
 import { TextDocument } from 'vscode';
 import { IApplicationDiagnostics } from '../application/types';
-import { IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_LANGUAGE } from '../common/constants';
 import { traceDecorators } from '../common/logger';
 import { IDisposable, Resource } from '../common/types';
 import { IInterpreterAutoSelectionService } from '../interpreter/autoSelection/types';
 import { IInterpreterService } from '../interpreter/contracts';
-import { IActiveResourceService, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
+import { IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService } from './types';
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {

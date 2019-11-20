@@ -8,7 +8,7 @@ import { instance, mock, verify } from 'ts-mockito';
 import { AATesting } from '../../client/activation/aaTesting';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { ActiveResourceService } from '../../client/activation/activeResource';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
