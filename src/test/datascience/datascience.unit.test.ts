@@ -327,14 +327,14 @@ class Pizza(object):
 
     test('Remote server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('Already running', 'http://localhost:1111', (v) => value = v);
+        const ds = createDataScienceObject('$(plus) Already running', 'http://localhost:1111', (v) => value = v);
         await ds.selectJupyterURI();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Invalid server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('Already running', 'httx://localhost:1111', (v) => value = v);
+        const ds = createDataScienceObject('$(plus) Already running', 'httx://localhost:1111', (v) => value = v);
         await ds.selectJupyterURI();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');

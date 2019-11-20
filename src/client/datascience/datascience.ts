@@ -387,7 +387,7 @@ export class DataScience implements IDataScience {
         // Always have 'local' and 'add new'
         const items: (TypedQuickPickItem & { newChoice?: boolean })[] = [];
         items.push({ label: localize.DataScience.jupyterSelectURILocalLabel(), detail: localize.DataScience.jupyterSelectURILocalDetail(), type: 'item' });
-        items.push({ label: localize.DataScience.jupyterSelectURINewLabel(), detail: localize.DataScience.jupyterSelectURINewDetail(), type: 'item', newChoice: true });
+        items.push({ label: `$(plus) ${localize.DataScience.jupyterSelectURINewLabel()}`, detail: localize.DataScience.jupyterSelectURINewDetail(), type: 'item', newChoice: true });
 
         // Then our already picked list. Filter out those that aren't actually running.
         const alreadyPicked = this.getSavedUriList();
