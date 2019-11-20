@@ -8,7 +8,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { openFile, waitForCondition } from '../common';
+import { openFile, waitForCondition, getOSType, OSType } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -18,6 +18,10 @@ const timeoutForCellToRun = 3 * 60 * 1_000;
 suite('Smoke Test: Interactive Window', () => {
     suiteSetup(async function() {
         if (!IS_SMOKE_TEST) {
+            return this.skip();
+        }
+        // Skip for now on windows.
+        if (getOSType() === OSType.Windows){
             return this.skip();
         }
         await initialize();
