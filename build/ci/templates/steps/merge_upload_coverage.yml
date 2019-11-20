@@ -4,15 +4,31 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)
         compile: 'false'
 
-    - task: DownloadBuildArtifacts@0
+    # - task: DownloadBuildArtifacts@0
+    #   inputs:
+    #       buildType: "current"
+    #       allowPartiallySucceededBuilds: true
+    #       downloadType: "Specific"
+    #       itemPattern: "**/.nyc_output/**"
+    #       downloadPath: "$(Build.SourcesDirectory)"
+    #   displayName: "Restore Coverage Info"
+    #   condition: always()
+
+    # Download previously generated coverage artifacts
+    - task: DownloadPipelineArtifact@2
       inputs:
-          buildType: "current"
-          allowPartiallySucceededBuilds: true
-          downloadType: "Specific"
-          itemPattern: "**/.nyc_output/**"
-          downloadPath: "$(Build.SourcesDirectory)"
-      displayName: "Restore Coverage Info"
+        patterns: '**/.nyc_output/**'
+      displayName: "Download .nyc_output coverage artifacts"
       condition: always()
+
+    - bash: |
+        pwd
+        cd $(Pipeline.Workspace)
+        pwd
+        ls -dlU .*/ */
+        ls
+      displayName: "See the content of Pipeline.Workspace dir"
+      condition: always()        
 
     # Now that we have downloaded artifacts from `coverage-output-`, copy them
     #   into the root directory (they'll go under `.nyc_output/...`)
