@@ -16,6 +16,7 @@ import { noop } from '../../common/utils/misc';
 import { CodeSnippits, Identifiers } from '../constants';
 import { CellState, ICell, IJupyterExecution, INotebookImporter } from '../types';
 import { InvalidNotebookFileError } from './invalidNotebookFileError';
+import { traceError } from '../../common/logger';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
@@ -138,35 +139,39 @@ export class JupyterImporter implements INotebookImporter {
     // When importing a file, calculate if we can create a %cd so that the relative paths work
     private async calculateDirectoryChange(notebookFile: string): Promise<string | undefined> {
         let directoryChange: string | undefined;
-        // Make sure we don't already have an import/export comment in the file
-        const contents = await this.fileSystem.readFile(notebookFile);
-        const haveChangeAlready = contents.includes(CodeSnippits.ChangeDirectoryCommentIdentifier);
+        try {
+            // Make sure we don't already have an import/export comment in the file
+            const contents = await this.fileSystem.readFile(notebookFile);
+            const haveChangeAlready = contents.includes(CodeSnippits.ChangeDirectoryCommentIdentifier);
 
-        if (!haveChangeAlready) {
-            const notebookFilePath = path.dirname(notebookFile);
-            // First see if we have a workspace open, this only works if we have a workspace root to be relative to
-            if (this.workspaceService.hasWorkspaceFolders) {
-                const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
+            if (!haveChangeAlready) {
+                const notebookFilePath = path.dirname(notebookFile);
+                // First see if we have a workspace open, this only works if we have a workspace root to be relative to
+                if (this.workspaceService.hasWorkspaceFolders) {
+                    const workspacePath = this.workspaceService.workspaceFolders![0].uri.fsPath;
 
-                // Make sure that we have everything that we need here
-                if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
-                    directoryChange = path.relative(workspacePath, notebookFilePath);
+                    // Make sure that we have everything that we need here
+                    if (workspacePath && path.isAbsolute(workspacePath) && notebookFilePath && path.isAbsolute(notebookFilePath)) {
+                        directoryChange = path.relative(workspacePath, notebookFilePath);
+                    }
                 }
             }
-        }
 
-        // If path.relative can't calculate a relative path, then it just returns the full second path
-        // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
-        if (directoryChange && !path.isAbsolute(directoryChange)) {
+            // If path.relative can't calculate a relative path, then it just returns the full second path
+            // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
+            if (directoryChange && !path.isAbsolute(directoryChange)) {
 
-            // Escape windows path chars so they end up in the source escaped
-            if (this.platform.isWindows) {
-                directoryChange = directoryChange.replace('\\', '\\\\');
+                // Escape windows path chars so they end up in the source escaped
+                if (this.platform.isWindows) {
+                    directoryChange = directoryChange.replace('\\', '\\\\');
+                }
+
+                return directoryChange;
+            } else {
+                return undefined;
             }
-
-            return directoryChange;
-        } else {
-            return undefined;
+        } catch (e) {
+            traceError(e);
         }
     }
 

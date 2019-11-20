@@ -25,7 +25,7 @@ import {
     IJupyterExecution
 } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-import { asyncDump } from '../common/asyncDump';
+//import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
 import { waitForUpdate } from './reactHelpers';
@@ -62,7 +62,7 @@ suite('DataScience LiveShare tests', () => {
     });
 
     suiteTeardown(() => {
-        asyncDump();
+        //asyncDump();
     });
 
     function createContainer(role: vsls.Role): DataScienceIocContainer {

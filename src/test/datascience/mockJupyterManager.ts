@@ -430,7 +430,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
             this.setupPythonServiceExec(service, 'jupyter', ['nbconvert', '--version'], () => Promise.resolve({ stdout: '1.1.1.1' }));
             this.setupPythonServiceExec(service, 'jupyter', ['nbconvert', /.*/, '--to', 'python', '--stdout', '--template', /.*/], () => {
                 return Promise.resolve({
-                    stdout: '#%%\r\nimport os\r\nos.chdir()'
+                    stdout: '#%%\r\nimport os\r\nos.chdir()\r\n#%%\r\na=1'
                 });
             });
         }

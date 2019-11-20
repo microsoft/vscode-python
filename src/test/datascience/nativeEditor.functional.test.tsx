@@ -226,17 +226,17 @@ for _ in range(50):
             assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
         }, () => { return ioc; });
 
-        runMountedTest('Export', async (wrapper) => {
+        runMountedTest('Convert to python', async (wrapper) => {
             // Export should cause the export dialog to come up. Remap appshell so we can check
             const dummyDisposable = {
                 dispose: () => { return; }
             };
-            let exportCalled = false;
+            let saveCalled = false;
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
             appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
             appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
             appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => {
-                exportCalled = true;
+                saveCalled = true;
                 return Promise.resolve(undefined);
             });
             appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
@@ -247,9 +247,22 @@ for _ in range(50):
             await addCell(wrapper, ioc, 'a=1\na');
 
             // Export should cause exportCalled to change to true
-            const exportButton = findButton(wrapper, NativeEditor, 8);
+            const saveButton = findButton(wrapper, NativeEditor, 8);
+            await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
+            assert.equal(saveCalled, true, 'Save should have been called');
+
+            // Click export and wait for a document to change
+            const documentChange = createDeferred();
+            const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+            docManager.onDidChangeTextDocument(() => documentChange.resolve());
+            const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            assert.equal(exportCalled, true, 'Export should have been called');
+            await waitForPromise(documentChange.promise, 3000);
+            // Verify the new document is valid python
+            const newDoc = docManager.activeTextEditor;
+            assert.ok(newDoc, 'New doc not created');
+            assert.ok(newDoc!.document.getText().includes('a=1'), 'Export did not create a python file');
+
         }, () => { return ioc; });
 
         runMountedTest('RunAllCells', async (wrapper) => {
