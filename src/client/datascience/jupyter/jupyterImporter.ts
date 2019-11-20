@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
 import { nbformat } from '@jupyterlab/coreutils';
 import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
-import '../../common/extensions';
 
 import { IWorkspaceService } from '../../common/application/types';
+import { traceError } from '../../common/logger';
 import { IFileSystem, IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -16,7 +18,6 @@ import { noop } from '../../common/utils/misc';
 import { CodeSnippits, Identifiers } from '../constants';
 import { CellState, ICell, IJupyterExecution, INotebookImporter } from '../types';
 import { InvalidNotebookFileError } from './invalidNotebookFileError';
-import { traceError } from '../../common/logger';
 
 @injectable()
 export class JupyterImporter implements INotebookImporter {
