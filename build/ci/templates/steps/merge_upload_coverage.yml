@@ -19,16 +19,7 @@ steps:
       inputs:
         patterns: '**/.nyc_output/**'
       displayName: "Download .nyc_output coverage artifacts"
-      condition: always()
-
-    - bash: |
-        pwd
-        cd $(Pipeline.Workspace)
-        pwd
-        ls -dlU .*/ */
-        ls
-      displayName: "See the content of Pipeline.Workspace dir"
-      condition: always()        
+      condition: always()     
 
     # Now that we have downloaded artifacts from `coverage-output-`, copy them
     #   into the root directory (they'll go under `.nyc_output/...`)
@@ -37,12 +28,12 @@ steps:
     #   from all different test outputs.
     # Running the process of generating reports, will result in generation of
     #   reports from all coverage data, i.e. we're basically combining all to generate a single merged report.
-    # - bash: |
-    #     cp -r coverage-output-*/ ./
-    #     cd ./.nyc_output
-    #     ls -dlU .*/ */
-    #     ls
-    #   displayName: "Copy ./.nyc_output"
-    #   condition: always()
+    - bash: |
+        cp -r $(Pipeline.Workspace)/coverage-output-*/ ./
+        cd ./.nyc_output
+        ls -dlU .*/ */
+        ls
+      displayName: "Copy ./.nyc_output"
+      condition: always()
 
     # - template: generate_upload_coverage.yml
