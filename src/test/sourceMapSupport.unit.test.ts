@@ -7,13 +7,13 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
+import rewiremock from 'rewiremock';
+import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable } from 'vscode';
 import { Diagnostics } from '../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
 import { initialize, SourceMapSupport } from '../client/sourceMapSupport';
 import { noop, sleep } from './core';
-import * as sinon from 'sinon';
-import rewiremock from 'rewiremock';
 
 suite('Source Map Support', () => {
     function createVSCStub(isEnabled: boolean = false, selectDisableButton: boolean = false) {
