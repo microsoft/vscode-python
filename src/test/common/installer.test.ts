@@ -75,6 +75,7 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
+        ioc.registerMockInterpreterTypes();
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());

@@ -57,8 +57,8 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
         ioc.registerProcessTypes();
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
+        ioc.registerMockInterpreterTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        ioc.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     }
 
     test('Discover Tests (single test file)', async () => {
