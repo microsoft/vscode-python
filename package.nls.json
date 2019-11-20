@@ -50,7 +50,7 @@
     "python.command.python.datascience.execSelectionInteractive.title": "Run Selection/Line in Python Interactive Window",
     "python.command.python.datascience.runcell.title": "Run Cell",
     "python.command.python.datascience.showhistorypane.title": "Show Python Interactive Window",
-    "python.command.python.datascience.selectjupyteruri.title": "Connect to a Jupyter Server",
+    "python.command.python.datascience.selectjupyteruri.title": "Specify local or remote Jupyter server for connections",
     "python.command.python.datascience.importnotebook.title": "Import Jupyter Notebook",
     "python.command.python.datascience.opennotebook.title": "Open in Notebook Editor",
     "python.command.python.datascience.importnotebookfile.title": "Convert to Python Script",
