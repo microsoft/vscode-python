@@ -3,8 +3,6 @@
 
 'use strict';
 
-// tslint:disable: no-any
-
 import { assert } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
@@ -31,6 +29,7 @@ suite('Active resource service', () => {
                 uri: Uri.parse('a')
             }
         };
+        // tslint:disable-next-line:no-any
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
 
         const activeResource = activeResourceService.getActiveResource();
@@ -47,6 +46,7 @@ suite('Active resource service', () => {
                 uri: Uri.parse('a')
             }
         };
+        // tslint:disable-next-line:no-any
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
         when(workspaceService.workspaceFolders).thenReturn([]);
         const activeResource = activeResourceService.getActiveResource();
@@ -64,6 +64,7 @@ suite('Active resource service', () => {
                 uri: Uri.parse('b')
             }];
         when(documentManager.activeTextEditor).thenReturn(undefined);
+        // tslint:disable-next-line:no-any
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders as any);
         const activeResource = activeResourceService.getActiveResource();
         assert.deepEqual(activeResource, workspaceFolders[0].uri);
