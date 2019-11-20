@@ -24,7 +24,7 @@ suite('Active resource service', () => {
         activeResourceService = new ActiveResourceService(instance(documentManager), instance(workspaceService));
     });
 
-    test('Return document uri if a saved document is currently opened', async () => {
+    test('Return document uri if the active document is not new (has been saved)', async () => {
         const activeTextEditor = {
             document: {
                 isUntitled: false,
