@@ -44,6 +44,7 @@ steps:
     displayName: 'gulp prePublishNonBundle'
     inputs:
       targets: 'prePublishNonBundle'
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
 
   # Run the typescript unit tests.
   #
@@ -146,6 +147,13 @@ steps:
       python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
     displayName: 'pip install ipython requirements'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
+
+
+  # Install jupyter for smoke tests.
+  - bash: |
+      python -m pip install --upgrade jupyter
+    displayName: 'pip install jupyter'
+    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
   - task: PythonScript@0
     displayName: "Install PTVSD wheels"
