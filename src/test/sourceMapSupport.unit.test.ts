@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file
+// tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file match-default-export-name
 
 import { expect } from 'chai';
 import * as path from 'path';
