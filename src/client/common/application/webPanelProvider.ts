@@ -14,7 +14,7 @@ export class WebPanelProvider implements IWebPanelProvider {
     }
 
     // tslint:disable-next-line:no-any
-    public create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any) : IWebPanel {
-        return new WebPanel(viewColumn, this.serviceContainer, listener, title, mainScriptPath, embeddedCss, settings);
+    public create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any) : IWebPanel {
+        return new WebPanel(viewColumn, this.serviceContainer, listener, title, rootPath, scripts, embeddedCss, settings);
     }
 }
