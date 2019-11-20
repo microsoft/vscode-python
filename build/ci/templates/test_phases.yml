@@ -489,5 +489,5 @@ steps:
   - task: PublishBuildArtifacts@1
     inputs:
       pathtoPublish: $(Build.ArtifactStagingDirectory)
-      artifactName: $(Agent.JobName)
+      artifactName: 'coverage-output-$(Agent.Os)'
     condition: always()
