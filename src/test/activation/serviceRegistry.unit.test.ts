@@ -8,7 +8,6 @@ import { instance, mock, verify } from 'ts-mockito';
 import { AATesting } from '../../client/activation/aaTesting';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
@@ -32,7 +31,6 @@ import { LanguageServerOutputChannel } from '../../client/activation/languageSer
 import { PlatformData } from '../../client/activation/languageServer/platformData';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
-    IActiveResourceService,
     IDownloadChannelRule,
     IExtensionActivationManager,
     IExtensionActivationService,
@@ -52,6 +50,8 @@ import {
     LanguageClientFactory,
     LanguageServerActivator
 } from '../../client/activation/types';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
+import { IActiveResourceService } from '../../client/common/application/types';
 import { INugetRepository } from '../../client/common/nuget/types';
 import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';

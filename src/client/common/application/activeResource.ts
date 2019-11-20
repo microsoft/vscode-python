@@ -15,8 +15,9 @@ export class ActiveResourceService implements IActiveResourceService {
     ) { }
 
     public getActiveResource(): Resource {
-        if (this.documentManager.activeTextEditor && !this.documentManager.activeTextEditor.document.isUntitled) {
-            return this.documentManager.activeTextEditor.document.uri;
+        const editor = this.documentManager.activeTextEditor;
+        if (editor && !editor.document.isUntitled) {
+            return editor.document.uri;
         }
         return Array.isArray(this.workspaceService.workspaceFolders) && this.workspaceService.workspaceFolders.length > 0
             ? this.workspaceService.workspaceFolders[0].uri

@@ -32,7 +32,6 @@ suite('Active resource service', () => {
             }
         };
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
-        when(workspaceService.workspaceFolders).thenReturn([]);
 
         const activeResource = activeResourceService.getActiveResource();
 
