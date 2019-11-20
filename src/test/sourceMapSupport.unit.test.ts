@@ -12,6 +12,8 @@ import { Diagnostics } from '../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
 import { initialize, SourceMapSupport } from '../client/sourceMapSupport';
 import { noop, sleep } from './core';
+import * as sinon from 'sinon';
+import rewiremock from 'rewiremock';
 
 suite('Source Map Support', () => {
     function createVSCStub(isEnabled: boolean = false, selectDisableButton: boolean = false) {
@@ -52,6 +54,7 @@ suite('Source Map Support', () => {
 
     const disposables: Disposable[] = [];
     teardown(() => {
+        rewiremock.disable();
         disposables.forEach(disposable => {
             try {
                 disposable.dispose();
@@ -65,14 +68,19 @@ suite('Source Map Support', () => {
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
         expect(stub.stubInfo.messageDisplayed).to.be.equal(false, 'Message displayed');
     });
-    test('Test message is not displayed when source maps are not enabled', async () => {
+    test('Test message is displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true);
         const instance = new class extends SourceMapSupport {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
         }(stub.vscode as any);
+        rewiremock.enable();
+        const installStub = sinon.stub();
+        rewiremock('source-map-support').with({ install: installStub });
         await instance.initialize();
+
+        expect(installStub.callCount).to.be.equal(1);
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
         expect(stub.stubInfo.messageDisplayed).to.be.equal(true, 'Message displayed');
         expect(stub.stubInfo.configValueUpdated).to.be.equal(false, 'Config Value updated');
