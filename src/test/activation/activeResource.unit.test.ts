@@ -33,13 +33,15 @@ suite('Active resource service', () => {
         };
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
         when(workspaceService.workspaceFolders).thenReturn([]);
+
         const activeResource = activeResourceService.getActiveResource();
+
         assert.deepEqual(activeResource, activeTextEditor.document.uri);
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspaceService.workspaceFolders).never();
     });
 
-    test('Don\'t return document uri if a unsaved document is currently opened', async () => {
+    test('Don\'t return document uri if the active document is new (still unsaved)', async () => {
         const activeTextEditor = {
             document: {
                 isUntitled: true,
