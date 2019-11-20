@@ -29,10 +29,11 @@ steps:
     # Running the process of generating reports, will result in generation of
     #   reports from all coverage data, i.e. we're basically combining all to generate a single merged report.
     - bash: |
-        cp -r $(Pipeline.Workspace)/coverage-output-*/ ./
-        cd ./.nyc_output
+        pwd
+        cp -r $(Pipeline.Workspace)/coverage-output-Darwin/.nyc_output ./.nyc_output
+        cp -r $(Pipeline.Workspace)/coverage-output-Linux/.nyc_output ./.nyc_output
+        cp -r $(Pipeline.Workspace)/coverage-output-Windows_NT/.nyc_output ./.nyc_output
         ls -dlU .*/ */
-        ls
       displayName: "Copy ./.nyc_output"
       condition: always()
 
