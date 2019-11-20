@@ -362,16 +362,16 @@ export class DataScience implements IDataScience {
             const sessionManager = await waitForPromise(this.jupyterSessionManagerFactory.create(connection, true), 2000);
             if (sessionManager) {
                 const kernels = await sessionManager.getRunningKernels();
-                const oldestActiveTime = kernels.map(k => k.lastActivityTime).reduce((p, c) => {
-                    if (!p || c < p) {
+                const lastActiveTime = kernels.map(k => k.lastActivityTime).reduce((p, c) => {
+                    if (!p || c > p) {
                         return c;
                     }
-                    return new Date();
+                    return p;
                 });
                 const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
                 return {
                     label: uri,
-                    detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(oldestActiveTime.toLocaleDateString(), activeConnectCount.toString())
+                    detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(lastActiveTime.toLocaleString(), activeConnectCount.toString())
                 };
             }
         } catch (e) {

@@ -64,7 +64,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return models.map(m => {
             return {
                 name: m.name,
-                lastActivityTime: m.last_activity ? new Date(m.last_activity.toString()) : new Date(),
+                lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
                 numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
             };
         });

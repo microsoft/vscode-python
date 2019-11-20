@@ -386,6 +386,6 @@
     "DataScience.jupyterSelectURILocalDetail" : "VS Code will start a server for you on the localhost",
     "DataScience.jupyterSelectURINewLabel" : "Already running",
     "DataScience.jupyterSelectURINewDetail" : "You type in the URI of an already running server",
-    "DataScience.jupyterSelectURIRunningDetailFormat" : "Running since {0}. {1} existing connections.",
+    "DataScience.jupyterSelectURIRunningDetailFormat" : "Last activity {0}. {1} existing connections.",
     "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown."
 }
