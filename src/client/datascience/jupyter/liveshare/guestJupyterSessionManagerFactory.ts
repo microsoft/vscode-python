@@ -11,8 +11,8 @@ export class GuestJupyterSessionManagerFactory implements IJupyterSessionManager
         noop();
     }
 
-    public async create(connInfo: IConnection): Promise<IJupyterSessionManager> {
-        return new GuestJupyterSessionManager(await this.realSessionManager.create(connInfo));
+    public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
+        return new GuestJupyterSessionManager(await this.realSessionManager.create(connInfo, failOnPassword));
     }
 
 }

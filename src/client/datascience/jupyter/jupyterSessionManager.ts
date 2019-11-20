@@ -30,7 +30,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
-        private config: IConfigurationService
+        private config: IConfigurationService,
+        private failOnPassword: boolean | undefined
     ) {
     }
 
@@ -127,6 +128,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // If no token is specified prompt for a password
         if (connInfo.token === '' || connInfo.token === 'null') {
+            if (this.failOnPassword) {
+                throw new Error('Password request not allowed.');
+            }
             serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
             if (pwSettings && !pwSettings.emptyPassword) {

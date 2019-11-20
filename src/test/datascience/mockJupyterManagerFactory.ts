@@ -17,7 +17,7 @@ export class MockJupyterManagerFactory implements IJupyterSessionManagerFactory 
         this.mockJupyterManager = new MockJupyterManager(serviceManager);
     }
 
-    public create(_connInfo: IConnection): Promise<IJupyterSessionManager> {
+    public create(_connInfo: IConnection, _failOnPassword?: boolean): Promise<IJupyterSessionManager> {
         return Promise.resolve(this.mockJupyterManager);
     }
 

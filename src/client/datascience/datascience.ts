@@ -9,7 +9,6 @@ import { URL } from 'url';
 import * as vscode from 'vscode';
 
 import {
-    IApplicationShell,
     ICommandManager,
     IDebugService,
     IDocumentManager,
@@ -29,8 +28,10 @@ import {
     IMemento,
     IPythonExtensionBanner
 } from '../common/types';
+import { waitForPromise } from '../common/utils/async';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
+import { IMultiStepInput, IMultiStepInputFactory, InputStep } from '../common/utils/multiStepInput';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
@@ -58,13 +59,13 @@ export class DataScience implements IDataScience {
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @multiInject(IDataScienceCommandListener) @optional() private commandListeners: IDataScienceCommandListener[] | undefined,
         @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
-        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory
     ) {
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
@@ -237,30 +238,8 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
     public async selectJupyterURI(): Promise<void> {
-        const pickList = this.getUriPickList();
-        const picked = await this.appShell.showQuickPick(
-            pickList,
-            {
-                placeHolder: localize.DataScience.jupyterSelectURIQuickPickPlaceholder(),
-                ignoreFocusOut: true,
-                matchOnDescription: true,
-                canPickMany: false
-            }
-        );
-
-        if (picked && picked.label === Settings.JupyterServerLocalLaunch) {
-            await this.setJupyterURIToLocal();
-        } else if (picked && picked.label && picked.newChoice) {
-            const userURI = await this.appShell.showInputBox({
-                prompt: localize.DataScience.jupyterSelectURIPrompt(),
-                placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateSelectJupyterURI, ignoreFocusOut: true
-            });
-            if (userURI) {
-                await this.setJupyterURIToRemote(userURI);
-            }
-        } else if (picked && picked.label) {
-            await this.setJupyterURIToRemote(picked.label);
-        }
+        const multiStep = this.multiStepFactory.create<{}>();
+        await multiStep.run(this.startSelectingURI.bind(this), {});
     }
 
     public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
@@ -304,21 +283,52 @@ export class DataScience implements IDataScience {
             this.commandManager.executeCommand('workbench.action.debug.continue');
         }
     }
-    private validateSelectJupyterURI = (inputText: string): string | undefined | null => {
-        // First check if the input is 'local' specifically checking against local so culture less comparison is fine
-        if (inputText.toUpperCase() === 'LOCAL') {
-            return null;
-        }
-
+    private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
         try {
             // tslint:disable-next-line:no-unused-expression
             new URL(inputText);
         } catch {
             return localize.DataScience.jupyterSelectURIInvalidURI();
         }
+    }
 
-        // Return null tells the dialog that our string is valid
-        return null;
+    private async startSelectingURI(
+        input: IMultiStepInput<{}>,
+        _state: {}): Promise<InputStep<{}> | void> {
+
+        // First step, show a quick pick to choose either the remote or the local.
+        // newChoice element will be set if the user picked 'enter a new server'
+        const item = await input.showQuickPick({
+            placeholder: localize.DataScience.jupyterSelectURIQuickPickPlaceholder(),
+            items: await this.getUriPickList(),
+            title: localize.DataScience.jupyterSelectURIQuickPickTitle()
+        });
+        // tslint:disable-next-line: no-any
+        const findNewServer = (item as any).newChoice;
+
+        if (item.label === localize.DataScience.jupyterSelectURILocalLabel()) {
+            await this.setJupyterURIToLocal();
+        } else if (!findNewServer) {
+            await this.setJupyterURIToRemote(item.label);
+        } else {
+            return this.selectRemoteURI.bind(this);
+        }
+    }
+
+    private async selectRemoteURI(
+        input: IMultiStepInput<{}>,
+        _state: {}): Promise<InputStep<{}> | void> {
+        // Ask the user to enter a URI to connect to.
+        const uri = await input.showInputBox({
+            title: localize.DataScience.jupyterSelectURIPrompt(),
+            value: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe',
+            validate: this.validateSelectJupyterURI,
+            prompt: ''
+        });
+
+        if (uri) {
+            await this.setJupyterURIToRemote(uri);
+        }
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
@@ -344,22 +354,28 @@ export class DataScience implements IDataScience {
     private async getRunningServerDetails(uri: string): Promise<{ label: string; detail: string } | undefined> {
         try {
             const connection = createRemoteConnectionInfo(uri, this.configuration.getSettings().datascience);
-            const sessionManager = await this.jupyterSessionManagerFactory.create(connection);
-            const kernels = await sessionManager.getRunningKernels();
-            const oldestActiveTime = kernels.map(k => k.lastActivityTime).reduce((p, c) => {
-                if (!p || c < p) {
-                    return c;
-                }
-                return new Date();
-            });
-            const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
-            return {
-                label: uri,
-                detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(oldestActiveTime.toLocaleDateString(), activeConnectCount.toString())
-            };
+            const sessionManager = await waitForPromise(this.jupyterSessionManagerFactory.create(connection, true), 2000);
+            if (sessionManager) {
+                const kernels = await sessionManager.getRunningKernels();
+                const oldestActiveTime = kernels.map(k => k.lastActivityTime).reduce((p, c) => {
+                    if (!p || c < p) {
+                        return c;
+                    }
+                    return new Date();
+                });
+                const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
+                return {
+                    label: uri,
+                    detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(oldestActiveTime.toLocaleDateString(), activeConnectCount.toString())
+                };
+            }
         } catch (e) {
             traceError('Error getting running server details', e);
         }
+        return {
+            label: uri,
+            detail: localize.DataScience.jupyterSelectURINotRunningDetail() // Cannot compute right now.
+        };
     }
 
     private async getUriPickList(): Promise<(TypedQuickPickItem & { newChoice?: boolean })[]> {
@@ -401,8 +417,8 @@ export class DataScience implements IDataScience {
     private addToUriList(uri: string) {
         const list = this.getSavedUriList();
 
-        // Filter to without this item and max size 10
-        const without = list.filter((f, i) => f !== uri && i < Settings.JupyterServerUriListMax - 1);
+        // Filter to without this item and max size 10 and any errors
+        const without = list.filter((f, i) => f !== uri && i < Settings.JupyterServerUriListMax - 1 && f.includes('http'));
         without.splice(0, 0, uri);
 
         // Save to global storage.

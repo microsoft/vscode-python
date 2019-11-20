@@ -16,8 +16,8 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
     ) {
     }
 
-    public async create(connInfo: IConnection): Promise<IJupyterSessionManager> {
-        const result = new JupyterSessionManager(this.jupyterPasswordConnect, this.config);
+    public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
+        const result = new JupyterSessionManager(this.jupyterPasswordConnect, this.config, failOnPassword);
         await result.initialize(connInfo);
         return result;
     }
