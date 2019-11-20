@@ -12,8 +12,7 @@ import {
     ICommandManager,
     IDebugService,
     IDocumentManager,
-    IWorkspaceService,
-    TypedQuickPickItem
+    IWorkspaceService
 } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
@@ -31,7 +30,7 @@ import {
 import { waitForPromise } from '../common/utils/async';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
-import { IMultiStepInput, IMultiStepInputFactory, InputStep } from '../common/utils/multiStepInput';
+import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../common/utils/multiStepInput';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
@@ -45,6 +44,10 @@ import {
     IJupyterSessionManagerFactory,
     INotebookEditorProvider
 } from './types';
+
+interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
+    newChoice: boolean;
+}
 
 @injectable()
 export class DataScience implements IDataScience {
@@ -289,7 +292,7 @@ export class DataScience implements IDataScience {
             new URL(inputText);
 
             // Double check http
-            if (!inputText.includes('http')) {
+            if (!inputText.toLowerCase().includes('http')) {
                 throw new Error('Has to be http');
             }
         } catch {
@@ -303,17 +306,14 @@ export class DataScience implements IDataScience {
 
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
-        const item = await input.showQuickPick({
+        const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
             placeholder: localize.DataScience.jupyterSelectURIQuickPickPlaceholder(),
             items: await this.getUriPickList(),
             title: localize.DataScience.jupyterSelectURIQuickPickTitle()
         });
-        // tslint:disable-next-line: no-any
-        const findNewServer = (item as any).newChoice;
-
         if (item.label === localize.DataScience.jupyterSelectURILocalLabel()) {
             await this.setJupyterURIToLocal();
-        } else if (!findNewServer) {
+        } else if (!item.newChoice) {
             await this.setJupyterURIToRemote(item.label);
         } else {
             return this.selectRemoteURI.bind(this);
@@ -383,11 +383,11 @@ export class DataScience implements IDataScience {
         };
     }
 
-    private async getUriPickList(): Promise<(TypedQuickPickItem & { newChoice?: boolean })[]> {
+    private async getUriPickList(): Promise<ISelectUriQuickPickItem[]> {
         // Always have 'local' and 'add new'
-        const items: (TypedQuickPickItem & { newChoice?: boolean })[] = [];
-        items.push({ label: localize.DataScience.jupyterSelectURILocalLabel(), detail: localize.DataScience.jupyterSelectURILocalDetail(), type: 'item' });
-        items.push({ label: `$(plus) ${localize.DataScience.jupyterSelectURINewLabel()}`, detail: localize.DataScience.jupyterSelectURINewDetail(), type: 'item', newChoice: true });
+        const items: ISelectUriQuickPickItem[] = [];
+        items.push({ label: localize.DataScience.jupyterSelectURILocalLabel(), detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+        items.push({ label: `$(plus) ${localize.DataScience.jupyterSelectURINewLabel()}`, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
 
         // Then our already picked list. Filter out those that aren't actually running.
         const alreadyPicked = this.getSavedUriList();
@@ -401,7 +401,7 @@ export class DataScience implements IDataScience {
                 // Then one per item
                 alreadyRunning.forEach(a => {
                     if (a) {
-                        items.push({ label: a.label, detail: a.detail, type: 'item' });
+                        items.push({ label: a.label, detail: a.detail, newChoice: false });
                     }
                 });
             }
@@ -422,8 +422,8 @@ export class DataScience implements IDataScience {
     private addToUriList(uri: string) {
         const list = this.getSavedUriList();
 
-        // Filter to without this item and max size 10 and any errors
-        const without = list.filter((f, i) => f !== uri && i < Settings.JupyterServerUriListMax - 1 && f.includes('http'));
+        // Filter to without this item and max size 10
+        const without = list.filter((f, i) => f !== uri && i < Settings.JupyterServerUriListMax - 1);
         without.splice(0, 0, uri);
 
         // Save to global storage.

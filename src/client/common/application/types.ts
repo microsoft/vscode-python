@@ -63,11 +63,6 @@ import { ICommandNameArgumentTypeMapping } from './commands';
 
 // tslint:disable:no-any unified-signatures
 
-// tslint:disable-next-line: interface-name
-export interface TypedQuickPickItem extends QuickPickItem {
-    type: 'item' | 'separator';
-}
-
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
     /**
