@@ -106,22 +106,23 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         });
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
-        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath, undefined, options.resource);
-        if (condaExecutionService) {
-            return condaExecutionService;
-        }
-
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
         const hasEnvVars = envVars && Object.keys(envVars).length > 0;
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, undefined, { hasEnvVars });
         if (!hasEnvVars) {
             return this.create({ resource: options.resource, pythonPath: options.interpreter ? options.interpreter.path : undefined });
         }
+        const pythonPath = options.interpreter ? options.interpreter.path : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = new ProcessService(this.decoder, { ...envVars });
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
+
+        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        if (condaExecutionService) {
+            return condaExecutionService;
+        }
+
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
