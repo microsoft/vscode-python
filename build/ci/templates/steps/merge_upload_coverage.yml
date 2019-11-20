@@ -25,8 +25,8 @@ steps:
         pwd
         cd $(Pipeline.Workspace)
         pwd
-        ls
         ls -dlU .*/ */
+        ls
       displayName: "See the content of Pipeline.Workspace dir"
       condition: always()        
 
