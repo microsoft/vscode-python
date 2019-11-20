@@ -30,7 +30,8 @@ steps:
     #   reports from all coverage data, i.e. we're basically combining all to generate a single merged report.
     - bash: |
         pwd
-        cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output ./.nyc_output
+        mkdir ./.nyc_output
+        cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output/ ./.nyc_output/
         ls -dlU .*/ */
         cd ./.nyc_output/
         ls
