@@ -44,8 +44,8 @@
     {
         "name": "PtvsdWheels37 - control",
         "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 7
+        "min": 80,
+        "max": 87
     },
     {
         "name": "PtvsdWheels37 - experiment",
