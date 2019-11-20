@@ -81,6 +81,7 @@ mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeIt
 mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
 mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable;
 mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
+mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

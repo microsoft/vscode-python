@@ -237,9 +237,9 @@ export class DataScience implements IDataScience {
     }
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public async selectJupyterURI(): Promise<void> {
+    public selectJupyterURI(): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
-        await multiStep.run(this.startSelectingURI.bind(this), {});
+        return multiStep.run(this.startSelectingURI.bind(this), {});
     }
 
     public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
@@ -287,6 +287,11 @@ export class DataScience implements IDataScience {
         try {
             // tslint:disable-next-line:no-unused-expression
             new URL(inputText);
+
+            // Double check http
+            if (!inputText.includes('http')) {
+                throw new Error('Has to be http');
+            }
         } catch {
             return localize.DataScience.jupyterSelectURIInvalidURI();
         }
