@@ -8,12 +8,7 @@ import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
 
-import {
-    ICommandManager,
-    IDebugService,
-    IDocumentManager,
-    IWorkspaceService
-} from '../common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import { traceError } from '../common/logger';
@@ -30,6 +25,7 @@ import {
 import { waitForPromise } from '../common/utils/async';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
 import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../common/utils/multiStepInput';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -44,7 +40,6 @@ import {
     IJupyterSessionManagerFactory,
     INotebookEditorProvider
 } from './types';
-import { noop } from '../common/utils/misc';
 
 interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
     newChoice: boolean;
