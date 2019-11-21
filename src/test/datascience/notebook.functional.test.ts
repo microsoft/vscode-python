@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { expect, assert } from 'chai';
+import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
@@ -702,7 +702,7 @@ suite('DataScience notebook tests', () => {
             result === InterruptResult.Restarted,
             `Timed out before interrupt for result: ${result}: ${code}`);
 
-            return result;
+        return result;
     }
 
     runTest('Interrupt kernel', async () => {
