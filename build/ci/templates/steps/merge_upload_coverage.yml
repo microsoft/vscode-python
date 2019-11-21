@@ -29,11 +29,10 @@ steps:
     # Running the process of generating reports, will result in generation of
     #   reports from all coverage data, i.e. we're basically combining all to generate a single merged report.
     - bash: |
-        mkdir ./.nyc_output
         cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output/ ./
         cd .nyc_output/
         ls -la        
-      displayName: "Create nyc_output folder and copy"
+      displayName: "Copy .nyc_output without creating folder first"
       condition: always()
 
     # - template: generate_upload_coverage.yml
