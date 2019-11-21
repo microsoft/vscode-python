@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
-import { assert } from 'chai';
+import { expect, assert } from 'chai';
 import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
@@ -672,7 +672,7 @@ suite('DataScience notebook tests', () => {
         let interrupted = false;
         let finishedBefore = false;
         const finishedPromise = createDeferred();
-        let error;
+        let error: Error | undefined;
         const observable = notebook!.executeObservable(code, Uri.file('foo.py').fsPath, 0, uuid(), false);
         observable.subscribe(c => {
             if (c.length > 0 && c[0].state === CellState.error) {
@@ -692,13 +692,17 @@ suite('DataScience notebook tests', () => {
         // Then we should get our finish unless there was a restart
         await waitForPromise(finishedPromise.promise, sleepMs);
         assert.equal(finishedBefore, false, 'Finished before the interruption');
-        assert.equal(error, undefined, 'Error thrown during interrupt');
+        // If there's an error, we only allow the `Canceled` error throw by @jupyterlab.
+        // This error gets thrown when kernel is interrupted.
+        if (error) {
+            assert.equal(error?.message, 'Canceled', 'Error must be thrown during interrupt');
+        }
         assert.ok(finishedPromise.completed ||
             result === InterruptResult.TimedOut ||
             result === InterruptResult.Restarted,
             `Timed out before interrupt for result: ${result}: ${code}`);
 
-        return result;
+            return result;
     }
 
     runTest('Interrupt kernel', async () => {

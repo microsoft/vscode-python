@@ -729,7 +729,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     private findPythonPath(): string {
         try {
-            const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
+            // Give preference to the CI test python (could also be set in launch.json for debugging).
+            const output = child_process.execFileSync(process.env.CI_PYTHON_PATH || 'python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
             return output.replace(/\r?\n/g, '');
         } catch (ex) {
             return 'python';
