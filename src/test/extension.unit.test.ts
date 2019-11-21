@@ -59,14 +59,14 @@ suite('Extension API Debugger', () => {
 
     test('Test debug launcher args (no-wait and in experiment)', async () => {
         mockInExperiment();
-        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234']);
+        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--host', 'something', '--port', '1234']);
 
         const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
             1234,
             false
         );
-        const expectedArgs = [ptvsdPath, '--default', '--host', 'something', '--port', '1234'];
+        const expectedArgs = [ptvsdPath, '--host', 'something', '--port', '1234'];
 
         expect(args).to.be.deep.equal(expectedArgs);
     });
@@ -86,14 +86,14 @@ suite('Extension API Debugger', () => {
 
     test('Test debug launcher args (wait and in experiment)', async () => {
         mockInExperiment();
-        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--default', '--host', 'something', '--port', '1234', '--wait']);
+        when(debugAdapterFactory.getRemotePtvsdArgs(anything())).thenReturn(['--host', 'something', '--port', '1234', '--wait']);
 
         const args = await buildApi(Promise.resolve(), instance(experimentsManager), instance(debugAdapterFactory), instance(configurationService)).debug.getRemoteLauncherCommand(
             'something',
             1234,
             true
         );
-        const expectedArgs = [ptvsdPath, '--default', '--host', 'something', '--port', '1234', '--wait'];
+        const expectedArgs = [ptvsdPath, '--host', 'something', '--port', '1234', '--wait'];
 
         expect(args).to.be.deep.equal(expectedArgs);
     });
