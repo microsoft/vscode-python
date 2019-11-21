@@ -52,7 +52,7 @@ type WaitForMessageOptions = {
      * @type {number}
      */
     numberOfTimes?: number;
-}
+};
 export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void>;
 /**
  *
