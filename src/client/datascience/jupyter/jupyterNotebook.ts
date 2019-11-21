@@ -628,12 +628,15 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
-    private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IIOPubMessage) {
+    private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, msg: KernelMessage.IIOPubMessage) {
         // tslint:disable-next-line:no-require-imports
         const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
         // Create a trimming function. Only trim user output. Silent output requires the full thing
         const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+
+        // Keep track of our clear state
+        const clearState: Map<string, boolean> = new Map<string, boolean>();
 
         try {
             if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
@@ -723,7 +726,7 @@ export class JupyterNotebookBase implements INotebook {
                     });
 
                     // Listen to messages.
-                    request.onIOPub = this.handleIOPub.bind(this, subscriber, silent, clearState);
+                    request.onIOPub = this.handleIOPub.bind(this, subscriber, silent);
                     request.onStdin = this.handleInputRequest.bind(this, subscriber);
 
                     // When the request finishes we are done
