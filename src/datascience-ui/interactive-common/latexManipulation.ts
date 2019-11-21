@@ -1,38 +1,66 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+
+// tslint:disable-next-line:no-require-imports no-var-requires
+const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
+
+function appendMatch(input: string)
+
 // Adds '$$' to latex formulas that don't have a '$', allowing users to input the formula directly.
 export function fixLatexEquations(input: string): string {
-    const block = '\n$$\n';
+    const output: string[] = [];
 
-    const beginIndexes = getAllIndexesOfRegex(input, /\\begin\{[a-z]*\*?\}/g);
-    const endIndexes = getAllIndexesOfRegex(input, /\\end\{[a-z]*\*?\}/g);
-
-    if (beginIndexes.length === endIndexes.length) {
-        for (let i = 0; i < beginIndexes.length; i += 1) {
-            const endOfEnd = input.indexOf('}', endIndexes[i] + 1 + 8 * i);
-
-            // Edge case, if the input starts with the latex formula we add the block at the beggining.
-            if (beginIndexes[i] === 0 && input[beginIndexes[i]] === '\\') {
-                input = block + input.slice(0, endOfEnd + 1) + block + input.slice(endOfEnd + 1, input.length);
-                // Normal case, if the latex formula starts with a '$' we don't do anything.
-                // Otherwise, we insert the block at the beginning and ending of the latex formula.
-            } else if (input[beginIndexes[i] - 1] !== '$') {
-                input = input.slice(0, beginIndexes[i] + block.length * 2 * i) + block + input.slice(beginIndexes[i] + block.length * 2 * i, endOfEnd + 1) + block + input.slice(endOfEnd + 1, input.length);
+    // Search for begin/end pairs, outputting as we go
+    let start = 0;
+    const appendMatch = (beginIndex: endRegex: RegExp, beginIndex: number)
+    while (start < input.length) {
+        // First $$
+        const startDollars = /\$\$/.exec(input.substr(start));
+        // Then $
+        const startDollar = /\$/.exec(input.substr(start));
+        // Then /begin{name*}
+        const begin = /\\begin\{([a-z,\*]+)\}/.exec(input.substr(start));
+        if (startDollars && startDollars.index < begin.index) {
+            // Output till the next $$
+            const offset = startDollars.index + 1 + start;
+            const endDollars = /\$\$/.exec(input.substr(offset));
+            if (endDollars) {
+                const length = endDollars.index + 2 + offset;
+                output.push(input.substr(start, length));
+                start = start + length;
+            } else {
+                // Invalid, just return
+                return input;
             }
+        } else if (startDollar) {
+            // Output till the next $
+            const offset = startDollar.index + 1 + start;
+            const endDollar = /\$/.exec(input.substr(offset));
+            if (endDollar) {
+                const length = endDollar.index + 1 + offset;
+                output.push(input.substr(start, length));
+                start = start + length;
+            } else {
+                // Invalid, just return
+                return input;
+            }
+        } else if (begin && begin.length > 1) {
+            const offset = begin.index + start;
+            const endRegex = new RegExp(`\\\\end\\{${_escapeRegExp(begin[1])}\\}`);
+            const end = endRegex.exec(input.substr(start));
+            if (end) {
+                const prefix = input.substr(start, begin.index);
+                const wrapped = input.substr(offset, `\\end{${begin[1]}}`.length + end.index - begin.index);
+                output.push(`${prefix}\n$$\n${wrapped}\n$$\n`);
+                start = start + prefix.length + wrapped.length;
+            } else {
+                // Invalid, just return
+                return input;
+            }
+        } else {
+            output.push(input.substr(start));
+            start = input.length;
         }
     }
-
-    return input;
-}
-
-function getAllIndexesOfRegex(arr: string, value: RegExp): number[] {
-    const indexes = [];
-    let result;
-
-    // tslint:disable-next-line: no-conditional-assignment
-    while ((result = value.exec(arr)) !== null) {
-        indexes.push(result.index);
-    }
-
-    return indexes;
+    return output.join('');
 }

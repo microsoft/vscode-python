@@ -85,18 +85,48 @@ $$
 $$
 `;
 
-    test('Latex - Equations don\'t have $$', () => {
+    const markdown4 = `
+$$
+\begin{equation*}
+\mathbf{V}_1 \times \mathbf{V}_2 = \begin{vmatrix}
+\mathbf{i} & \mathbf{j} & \mathbf{k} \\
+\frac{\partial X}{\partial u} & \frac{\partial Y}{\partial u} & 0 \\
+\frac{\partial X}{\partial v} & \frac{\partial Y}{\partial v} & 0
+\end{vmatrix}
+\end{equation*}
+$$
+`;
+
+    test('Latex - Equations don\'t have \$\$', () => {
         const result = fixLatexEquations(markdown1);
         expect(result).to.be.equal(output1, 'Result is incorrect');
     });
 
-    test('Latex - Equations have $', () => {
+    test('Latex - Equations have \$', () => {
         const result = fixLatexEquations(markdown2);
         expect(result).to.be.equal(markdown2, 'Result is incorrect');
     });
 
-    test('Latex - Multiple equations don\'t have $$', () => {
+    test('Latex - Multiple equations don\'t have \$\$', () => {
         const result = fixLatexEquations(markdown3);
         expect(result).to.be.equal(output3, 'Result is incorrect');
+    });
+
+    test('Latex - All on the same line', () => {
+        const line = '\\begin{matrix}1 & 0\\0 & 1\\end{matrix}';
+        const after = '\n$$\n\\begin{matrix}1 & 0\\0 & 1\\end{matrix}\n$$\n';
+        const result = fixLatexEquations(line);
+        expect(result).to.be.equal(after, 'Result is incorrect');
+    });
+
+    test('Latex - Invalid', () => {
+        const invalid = '\n\\begin{eq*}do stuff\\end{eq}';
+        const result = fixLatexEquations(invalid);
+        expect(result).to.be.equal(invalid, 'Result should not have changed');
+    });
+
+    test('Latex - \$\$ already present', () => {
+        const result = fixLatexEquations(markdown4);
+        expect(result).to.be.equal(markdown4, 'Result should not have changed');
     });
 });
