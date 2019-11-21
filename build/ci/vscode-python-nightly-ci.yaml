@@ -464,3 +464,10 @@ stages:
     steps:
       - template: templates/test_phases.yml
 
+- stage: Reports
+  dependsOn:
+  - Smoke
+  - Tests
+  condition: always()
+  jobs:
+  - template: templates/jobs/coverage.yml
