@@ -37,7 +37,37 @@ export enum CellPosition {
     Last = 'last'
 }
 
-export function waitForMessage(ioc: DataScienceIocContainer, message: string, timeoutMs: number = 65000): Promise<void> {
+type WaitForMessageOptions = {
+    /**
+     * Timeout for waiting for message.
+     * Defaults to 65_000ms.
+     *
+     * @type {number}
+     */
+    timeoutMs?: number;
+    /**
+     * Number of times the message should be received.
+     * Defaults to 1.
+     *
+     * @type {number}
+     */
+    numberOfTimes?: number;
+}
+export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void>;
+/**
+ *
+ *
+ * @export
+ * @param {DataScienceIocContainer} ioc
+ * @param {string} message
+ * @param {number} [timeoutMs=65000] defaults to 65_000ms.
+ * @returns {Promise<void>}
+ */
+// tslint:disable-next-line: unified-signatures
+export function waitForMessage(ioc: DataScienceIocContainer, message: string, timeoutMs?: number): Promise<void>;
+export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: number | WaitForMessageOptions): Promise<void> {
+    const timeoutMs = !options ? 65_000 : (typeof options === 'number' ? 65_000 : (options.timeoutMs ?? 65_000));
+    const numberOfTimes = !options ? 1 : (typeof options === 'number' ? 1 : (options.numberOfTimes ?? 1));
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
     let handler: (m: string, p: any) => void;
@@ -46,8 +76,13 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, ti
             promise.reject(new Error(`Waiting for ${message} timed out`));
         }
     }, timeoutMs);
+    let timesMessageReceived = 0;
     handler = (m: string, _p: any) => {
         if (m === message) {
+            timesMessageReceived += 1;
+            if (timesMessageReceived < numberOfTimes){
+                return;
+            }
             ioc.removeMessageListener(handler);
             promise.resolve();
             clearTimeout(timer);

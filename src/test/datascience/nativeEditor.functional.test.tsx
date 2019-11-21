@@ -279,9 +279,10 @@ for _ in range(50):
             await openEditor(ioc, JSON.stringify(notebook));
 
             const runAllButton = findButton(wrapper, NativeEditor, 0);
+            // The render method needs to be executed 3 times for three cells.
+            const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
             await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-
-            await waitForUpdate(wrapper, NativeEditor, 15);
+            await threeCellsUpdated;
 
             verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
             verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
