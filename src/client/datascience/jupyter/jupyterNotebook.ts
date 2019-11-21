@@ -715,9 +715,6 @@ export class JupyterNotebookBase implements INotebook {
                     });
                 }
 
-                // Keep track of our clear state
-                const clearState: Map<string, boolean> = new Map<string, boolean>();
-
                 // Listen to the reponse messages and update state as we go
                 if (request) {
                     // Stop handling the request if the subscriber is canceled.
