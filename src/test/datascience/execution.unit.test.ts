@@ -282,6 +282,7 @@ suite('Jupyter Execution', async () => {
     });
 
     teardown(() => {
+        reset(fileSystem);
         return cleanupDisposables();
     });
 
@@ -446,7 +447,7 @@ suite('Jupyter Execution', async () => {
             .returns(() => result);
     }
 
-    function setupWorkingPythonService(service: TypeMoq.IMock<IPythonExecutionService>, notebookStdErr?: string[]) {
+    function setupWorkingPythonService(service: TypeMoq.IMock<IPythonExecutionService>, notebookStdErr?: string[], runInDocker?: boolean) {
         setupPythonService(service, 'ipykernel', ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['nbconvert', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
@@ -469,8 +470,8 @@ suite('Jupyter Execution', async () => {
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
         setupPythonServiceExecObservable(service, 'jupyter', ['kernelspec', 'list'], [], []);
-        setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0'], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
-
+        const dockerArgs = runInDocker ? ['--ip', '127.0.0.1'] : [];
+        setupPythonServiceExecObservable(service, 'jupyter', ['notebook', '--no-browser', /--notebook-dir=.*/, /--config=.*/, '--NotebookApp.iopub_data_rate_limit=10000000000.0', ...dockerArgs], [], notebookStdErr ? notebookStdErr : ['http://localhost:8888/?token=198']);
     }
 
     function setupMissingKernelPythonService(service: TypeMoq.IMock<IPythonExecutionService>, notebookStdErr?: string[]) {
@@ -537,7 +538,7 @@ suite('Jupyter Execution', async () => {
     function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecutionFactory {
         return createExecutionAndReturnProcessService(activeInterpreter, notebookStdErr, skipSearch).jupyterExecutionFactory;
     }
-    function createExecutionAndReturnProcessService(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): {workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>; jupyterExecutionFactory: JupyterExecutionFactory} {
+    function createExecutionAndReturnProcessService(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean, runInDocker?: boolean): {workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>; jupyterExecutionFactory: JupyterExecutionFactory} {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
@@ -546,10 +547,12 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreterDetails(match('/foo/baz/python.exe'))).thenResolve(missingKernelPython);
         when(interpreterService.getInterpreterDetails(match('/bar/baz/python.exe'))).thenResolve(missingNotebookPython);
         when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject('Unknown interpreter');
-
+        if (runInDocker){
+            when(fileSystem.readFile('/proc/self/cgroup')).thenResolve('hello docker world');
+        }
         // Create our working python and process service.
         const workingService = createTypeMoq<IPythonExecutionService>('working');
-        setupWorkingPythonService(workingService, notebookStdErr);
+        setupWorkingPythonService(workingService, notebookStdErr, runInDocker);
         const missingKernelService = createTypeMoq<IPythonExecutionService>('missingKernel');
         setupMissingKernelPythonService(missingKernelService, notebookStdErr);
         const missingNotebookService = createTypeMoq<IPythonExecutionService>('missingNotebook');
@@ -690,6 +693,19 @@ suite('Jupyter Execution', async () => {
 
     test('Working notebook and commands found', async () => {
         const { workingPythonExecutionService, jupyterExecutionFactory} = createExecutionAndReturnProcessService(workingPython);
+        when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(workingPythonExecutionService.object);
+
+        await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
+        await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
+        await assert.eventually.equal(jupyterExecutionFactory.isKernelSpecSupported(), true, 'Kernel Spec not supported');
+        await assert.eventually.equal(jupyterExecutionFactory.isKernelCreateSupported(), true, 'Kernel Create not supported');
+        const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
+        assert.isOk(usableInterpreter, 'Usable interpreter not found');
+        await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
+    }).timeout(10000);
+
+    test('Includes correct args for running in docker', async () => {
+        const { workingPythonExecutionService, jupyterExecutionFactory} = createExecutionAndReturnProcessService(workingPython, undefined, undefined, true);
         when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(workingPythonExecutionService.object);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
