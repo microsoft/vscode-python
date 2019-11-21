@@ -35,4 +35,4 @@ steps:
       displayName: "Copy .nyc_output without creating folder first"
       condition: always()
 
-    # - template: generate_upload_coverage.yml
+    - template: generate_upload_coverage.yml
