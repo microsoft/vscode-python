@@ -44,6 +44,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebookEditorProvider
 } from './types';
+import { noop } from '../common/utils/misc';
 
 interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
     newChoice: boolean;
@@ -427,7 +428,7 @@ export class DataScience implements IDataScience {
         without.splice(0, 0, uri);
 
         // Save to global storage.
-        this.globalState.update(Settings.JupyterServerUriList, without);
+        this.globalState.update(Settings.JupyterServerUriList, without).then(noop, noop);
     }
 
     private async runCurrentCellAndAddBelow(): Promise<void> {
