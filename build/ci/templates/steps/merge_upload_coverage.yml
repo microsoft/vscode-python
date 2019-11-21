@@ -30,7 +30,7 @@ steps:
     #   reports from all coverage data, i.e. we're basically combining all to generate a single merged report.
     - bash: |
         mkdir ./.nyc_output
-        cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output/ ./.nyc_output/
+        cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output/ ./
         cd .nyc_output/
         ls -la        
       displayName: "Create nyc_output folder and copy"
