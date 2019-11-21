@@ -131,4 +131,3 @@ stages:
   condition: always()
   jobs:
   - template: templates/jobs/coverage.yml
-  
