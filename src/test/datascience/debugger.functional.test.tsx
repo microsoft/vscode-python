@@ -221,12 +221,6 @@ suite('DataScience Debugger tests', () => {
         await debugCell('#%%\nprint("bar")');
     });
 
-    // Debugging with a breakpoint requires the file to actually exist on disk.
-
-    test('Debug cell with breakpoint in another file', async () => {
-        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
-    });
-
     test('Debug remote', async () => {
         const python = await getNotebookCapableInterpreter(ioc, processFactory);
         const procService = await processFactory.create();
