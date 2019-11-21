@@ -712,7 +712,6 @@ export class JupyterNotebookBase implements INotebook {
                     });
                 }
 
-
                 // Keep track of our clear state
                 const clearState: Map<string, boolean> = new Map<string, boolean>();
 
