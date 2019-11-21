@@ -730,7 +730,6 @@ export class JupyterNotebookBase implements INotebook {
 
                     // When the request finishes we are done
                     request.done
-                        .finally(() => exitHandlerDisposable?.dispose())
                         .then(() => subscriber.complete(this.sessionStartTime))
                         .catch(e => {
                             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
@@ -740,7 +739,8 @@ export class JupyterNotebookBase implements INotebook {
                             } else {
                                 subscriber.error(this.sessionStartTime, e);
                             }
-                        });
+                        })
+                        .finally(() => exitHandlerDisposable?.dispose()).ignoreErrors();
                 } else {
                     subscriber.error(this.sessionStartTime, this.getDisposedError());
                 }
