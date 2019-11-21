@@ -4,16 +4,6 @@ steps:
         workingDirectory: $(Build.SourcesDirectory)
         compile: 'false'
 
-    # - task: DownloadBuildArtifacts@0
-    #   inputs:
-    #       buildType: "current"
-    #       allowPartiallySucceededBuilds: true
-    #       downloadType: "Specific"
-    #       itemPattern: "**/.nyc_output/**"
-    #       downloadPath: "$(Build.SourcesDirectory)"
-    #   displayName: "Restore Coverage Info"
-    #   condition: always()
-
     # Download previously generated coverage artifacts
     - task: DownloadPipelineArtifact@2
       inputs:
@@ -31,8 +21,9 @@ steps:
     - bash: |
         cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output/ ./
         cd .nyc_output/
-        ls -la        
-      displayName: "Copy .nyc_output without creating folder first"
+        ls -dlU .*/ */
+        ls      
+      displayName: "Copy ./.nyc_output"
       condition: always()
-
+      
     - template: generate_upload_coverage.yml
