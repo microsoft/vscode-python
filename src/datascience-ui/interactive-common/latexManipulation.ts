@@ -5,6 +5,14 @@
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
 
 // Adds '$$' to latex formulas that don't have a '$', allowing users to input the formula directly.
+//
+// The general algorithm here is:
+// Search for either $$ or $ or a \begin{name} item.
+// If a $$ or $ is found, output up to the next dollar sign
+// If a \begin{name} is found, find the matching \end{name}, wrap the section in $$ and output up to the \end.
+//
+// LaTeX seems to follow the pattern of \begin{name} or is escaped with $$ or $. See here for a bunch of examples:
+// https://jupyter-notebook.readthedocs.io/en/stable/examples/Notebook/Typesetting%20Equations.html
 export function fixLatexEquations(input: string): string {
     const output: string[] = [];
 
