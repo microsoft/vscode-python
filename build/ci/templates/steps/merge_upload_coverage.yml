@@ -38,7 +38,7 @@ steps:
         echo '~~~ cd coverage-output-Darwin/.nyc_output & pwd & ls ~~~'
         cd coverage-output-Darwin/.nyc_output/
         pwd
-        ls -dlU .*/ */
+        ls -la
       displayName: "Check the content of Pipeline.Workspace"
       condition: always()
 
