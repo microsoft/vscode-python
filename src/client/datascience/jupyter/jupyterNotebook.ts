@@ -733,6 +733,8 @@ export class JupyterNotebookBase implements INotebook {
                         .finally(() => exitHandlerDisposable?.dispose())
                         .then(() => subscriber.complete(this.sessionStartTime))
                         .catch(e => {
+                            // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
+                            // Such an error must be ignored.
                             if (e && e instanceof Error && e.message === 'Canceled'){
                                 subscriber.complete(this.sessionStartTime);
                             } else {
