@@ -29,17 +29,11 @@ steps:
     # Running the process of generating reports, will result in generation of
     #   reports from all coverage data, i.e. we're basically combining all to generate a single merged report.
     - bash: |
-        echo '~~~ pwd ~~~'
-        pwd
-        echo '~~~ cd Pipeline.Workspace & pwd & ls ~~~'
-        cd $(Pipeline.Workspace)
-        pwd
-        ls -dlU .*/ */
-        echo '~~~ cd coverage-output-Darwin/.nyc_output & pwd & ls ~~~'
-        cd coverage-output-Darwin/.nyc_output/
-        pwd
-        ls -la
-      displayName: "Check the content of Pipeline.Workspace"
+        mkdir ./.nyc_output
+        cp -r $(Pipeline.Workspace)/coverage-output-*/.nyc_output/ ./.nyc_output/
+        cd .nyc_output/
+        ls -la        
+      displayName: "Create nyc_output folder and copy"
       condition: always()
 
     # - template: generate_upload_coverage.yml
