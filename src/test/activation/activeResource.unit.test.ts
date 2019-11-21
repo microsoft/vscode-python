@@ -49,7 +49,9 @@ suite('Active resource service', () => {
         // tslint:disable-next-line:no-any
         when(documentManager.activeTextEditor).thenReturn(activeTextEditor as any);
         when(workspaceService.workspaceFolders).thenReturn([]);
+
         const activeResource = activeResourceService.getActiveResource();
+
         assert.notDeepEqual(activeResource, activeTextEditor.document.uri);
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspaceService.workspaceFolders).atLeast(1);
@@ -66,7 +68,9 @@ suite('Active resource service', () => {
         when(documentManager.activeTextEditor).thenReturn(undefined);
         // tslint:disable-next-line:no-any
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders as any);
+
         const activeResource = activeResourceService.getActiveResource();
+
         assert.deepEqual(activeResource, workspaceFolders[0].uri);
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspaceService.workspaceFolders).atLeast(1);
@@ -75,7 +79,9 @@ suite('Active resource service', () => {
     test('If no document is currently opened & no folder is opened, return undefined', async () => {
         when(documentManager.activeTextEditor).thenReturn(undefined);
         when(workspaceService.workspaceFolders).thenReturn(undefined);
+
         const activeResource = activeResourceService.getActiveResource();
+
         assert.deepEqual(activeResource, undefined);
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspaceService.workspaceFolders).atLeast(1);
@@ -84,7 +90,9 @@ suite('Active resource service', () => {
     test('If no document is currently opened & workspace contains no workspace folders, return undefined', async () => {
         when(documentManager.activeTextEditor).thenReturn(undefined);
         when(workspaceService.workspaceFolders).thenReturn([]);
+
         const activeResource = activeResourceService.getActiveResource();
+
         assert.deepEqual(activeResource, undefined);
         verify(documentManager.activeTextEditor).atLeast(1);
         verify(workspaceService.workspaceFolders).atLeast(1);
