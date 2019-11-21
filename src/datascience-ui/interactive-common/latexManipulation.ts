@@ -4,60 +4,67 @@
 // tslint:disable-next-line:no-require-imports no-var-requires
 const _escapeRegExp = require('lodash/escapeRegExp') as typeof import('lodash/escapeRegExp');
 
-function appendMatch(input: string)
-
 // Adds '$$' to latex formulas that don't have a '$', allowing users to input the formula directly.
 export function fixLatexEquations(input: string): string {
     const output: string[] = [];
 
     // Search for begin/end pairs, outputting as we go
     let start = 0;
-    const appendMatch = (beginIndex: endRegex: RegExp, beginIndex: number)
+
+    // Loop until we run out string
     while (start < input.length) {
-        // First $$
-        const startDollars = /\$\$/.exec(input.substr(start));
-        // Then $
-        const startDollar = /\$/.exec(input.substr(start));
-        // Then /begin{name*}
+        // Check $$, $ and begin
+        const dollars = /\$\$/.exec(input.substr(start));
+        const dollar = /\$/.exec(input.substr(start));
         const begin = /\\begin\{([a-z,\*]+)\}/.exec(input.substr(start));
-        if (startDollars && startDollars.index < begin.index) {
-            // Output till the next $$
-            const offset = startDollars.index + 1 + start;
-            const endDollars = /\$\$/.exec(input.substr(offset));
-            if (endDollars) {
-                const length = endDollars.index + 2 + offset;
-                output.push(input.substr(start, length));
-                start = start + length;
+        let endRegex = /\$\$/;
+        let endRegexLength = 2;
+
+        // Pick the first that matches
+        let match = dollars;
+        let isBeginMatch = false;
+        if (!match || (dollar && dollar.index < match.index)) {
+            match = dollar;
+            endRegex = /\$/;
+            endRegexLength = 1;
+        }
+        if (!match || (begin && begin.index < match.index)) {
+            match = begin;
+            endRegex = begin ? new RegExp(`\\\\end\\{${_escapeRegExp(begin[1])}\\}`) : /\$/;
+            endRegexLength = begin ? `\\end{${begin[1]}}`.length : 1;
+            isBeginMatch = true;
+        }
+
+        // Output this match
+        if (match) {
+            if (isBeginMatch) {
+                // Begin match is a little more complicated.
+                const offset = match.index + start;
+                const end = endRegex.exec(input.substr(start));
+                if (end) {
+                    const prefix = input.substr(start, match.index);
+                    const wrapped = input.substr(offset, endRegexLength + end.index - match.index);
+                    output.push(`${prefix}\n$$\n${wrapped}\n$$\n`);
+                    start = start + prefix.length + wrapped.length;
+                } else {
+                    // Invalid, just return
+                    return input;
+                }
             } else {
-                // Invalid, just return
-                return input;
-            }
-        } else if (startDollar) {
-            // Output till the next $
-            const offset = startDollar.index + 1 + start;
-            const endDollar = /\$/.exec(input.substr(offset));
-            if (endDollar) {
-                const length = endDollar.index + 1 + offset;
-                output.push(input.substr(start, length));
-                start = start + length;
-            } else {
-                // Invalid, just return
-                return input;
-            }
-        } else if (begin && begin.length > 1) {
-            const offset = begin.index + start;
-            const endRegex = new RegExp(`\\\\end\\{${_escapeRegExp(begin[1])}\\}`);
-            const end = endRegex.exec(input.substr(start));
-            if (end) {
-                const prefix = input.substr(start, begin.index);
-                const wrapped = input.substr(offset, `\\end{${begin[1]}}`.length + end.index - begin.index);
-                output.push(`${prefix}\n$$\n${wrapped}\n$$\n`);
-                start = start + prefix.length + wrapped.length;
-            } else {
-                // Invalid, just return
-                return input;
+                // Output till the next $ or $$
+                const offset = match.index + 1 + start;
+                const endDollar = endRegex.exec(input.substr(offset));
+                if (endDollar) {
+                    const length = endDollar.index + 1 + offset;
+                    output.push(input.substr(start, length));
+                    start = start + length;
+                } else {
+                    // Invalid, just return
+                    return input;
+                }
             }
         } else {
+            // No more matches
             output.push(input.substr(start));
             start = input.length;
         }

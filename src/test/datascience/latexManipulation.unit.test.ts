@@ -87,14 +87,33 @@ $$
 
     const markdown4 = `
 $$
-\begin{equation*}
-\mathbf{V}_1 \times \mathbf{V}_2 = \begin{vmatrix}
-\mathbf{i} & \mathbf{j} & \mathbf{k} \\
-\frac{\partial X}{\partial u} & \frac{\partial Y}{\partial u} & 0 \\
-\frac{\partial X}{\partial v} & \frac{\partial Y}{\partial v} & 0
-\end{vmatrix}
-\end{equation*}
+\\begin{equation*}
+\\mathbf{V}_1 \\times \\mathbf{V}_2 = \\begin{vmatrix}
+\\mathbf{i} & \\mathbf{j} & \\mathbf{k} \\
+\\frac{\partial X}{\\partial u} & \\frac{\\partial Y}{\\partial u} & 0 \\\\
+\\frac{\partial X}{\\partial v} & \\frac{\\partial Y}{\\partial v} & 0
+\\end{vmatrix}
+\\end{equation*}
 $$
+`;
+
+    const markdown5 = `
+\\begin{equation*}
+P(E)   = {n \\choose k} p^k (1-p)^{ n-k}
+\\end{equation*}
+
+This expression $\\sqrt{3x-1}+(1+x)^2$ is an example of a TeX inline equation in a [Markdown-formatted](https://daringfireball.net/projects/markdown/) sentence.
+`;
+    const output5 = `
+
+$$
+\\begin{equation*}
+P(E)   = {n \\choose k} p^k (1-p)^{ n-k}
+\\end{equation*}
+$$
+
+
+This expression $\\sqrt{3x-1}+(1+x)^2$ is an example of a TeX inline equation in a [Markdown-formatted](https://daringfireball.net/projects/markdown/) sentence.
 `;
 
     test('Latex - Equations don\'t have \$\$', () => {
@@ -128,5 +147,10 @@ $$
     test('Latex - \$\$ already present', () => {
         const result = fixLatexEquations(markdown4);
         expect(result).to.be.equal(markdown4, 'Result should not have changed');
+    });
+
+    test('Latex - Multiple types', () => {
+        const result = fixLatexEquations(markdown5);
+        expect(result).to.be.equal(output5, 'Result is incorrect');
     });
 });
