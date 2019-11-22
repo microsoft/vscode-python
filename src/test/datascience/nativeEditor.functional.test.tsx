@@ -31,6 +31,7 @@ import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
+import { IS_CI_SERVER } from '../ciConstants';
 import { waitForCondition } from '../common';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -71,7 +72,12 @@ use(chaiAsPromised);
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
-suite('DataScience Native Editor', () => {
+suite('DataScience Native Editor', function () {
+    // Some of the tests are flaky on CI, lets retry.
+    if (IS_CI_SERVER) {
+        // tslint:disable-next-line: no-invalid-this
+        this.retries(1);
+    }
     function createFileCell(cell: any, data: any): ICell {
         const newCell = { type: 'preview', id: 'FakeID', file: Identifiers.EmptyFileName, line: 0, state: 2, ...cell };
         newCell.data = { cell_type: 'code', execution_count: null, metadata: {}, outputs: [], source: '', ...data };
@@ -257,7 +263,8 @@ for _ in range(50):
             docManager.onDidChangeTextDocument(() => documentChange.resolve());
             const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            await waitForPromise(documentChange.promise, 3000);
+            // This can be slow, hence wait for a max of 5.
+            await waitForPromise(documentChange.promise, 5_000);
             // Verify the new document is valid python
             const newDoc = docManager.activeTextEditor;
             assert.ok(newDoc, 'New doc not created');
