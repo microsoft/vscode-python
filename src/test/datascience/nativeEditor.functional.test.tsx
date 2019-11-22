@@ -257,7 +257,8 @@ for _ in range(50):
             docManager.onDidChangeTextDocument(() => documentChange.resolve());
             const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            await waitForPromise(documentChange.promise, 3000);
+            // This can be slow, hence wait for a max of 5.
+            await waitForPromise(documentChange.promise, 5_000);
             // Verify the new document is valid python
             const newDoc = docManager.activeTextEditor;
             assert.ok(newDoc, 'New doc not created');
