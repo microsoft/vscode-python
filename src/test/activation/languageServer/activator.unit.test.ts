@@ -57,12 +57,12 @@ suite('Language Server - Activator', () => {
     });
     test('Manager must be started without any workspace', async () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(manager.start(undefined)).thenResolve();
+        when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
         await activator.activate(undefined);
 
-        verify(manager.start(undefined)).once();
+        verify(manager.start(undefined, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
     });
     test('Manager must be disposed', async () => {
@@ -72,12 +72,12 @@ suite('Language Server - Activator', () => {
     });
     test('Do not download LS if not required', async () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(manager.start(undefined)).thenResolve();
+        when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
         await activator.activate(undefined);
 
-        verify(manager.start(undefined)).once();
+        verify(manager.start(undefined, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName(anything())).never();
         verify(lsDownloader.downloadLanguageServer(anything(), anything())).never();
@@ -88,7 +88,7 @@ suite('Language Server - Activator', () => {
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
 
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(manager.start(undefined)).thenResolve();
+        when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(true);
         when(lsFolderService.getLanguageServerFolderName(anything()))
             .thenResolve(languageServerFolder);
@@ -96,7 +96,7 @@ suite('Language Server - Activator', () => {
 
         await activator.activate(undefined);
 
-        verify(manager.start(undefined)).once();
+        verify(manager.start(undefined, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName(anything())).once();
         verify(lsDownloader.downloadLanguageServer(anything(), anything())).never();
@@ -108,7 +108,7 @@ suite('Language Server - Activator', () => {
         const mscorlib = path.join(languageServerFolderPath, 'mscorlib.dll');
 
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
-        when(manager.start(undefined)).thenResolve();
+        when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(true);
         when(lsFolderService.getLanguageServerFolderName(anything()))
             .thenResolve(languageServerFolder);
@@ -122,11 +122,11 @@ suite('Language Server - Activator', () => {
         verify(lsFolderService.getLanguageServerFolderName(anything())).once();
         verify(lsDownloader.downloadLanguageServer(anything(), undefined)).once();
 
-        verify(manager.start(undefined)).never();
+        verify(manager.start(undefined, undefined)).never();
 
         deferred.resolve();
         await sleep(1);
-        verify(manager.start(undefined)).once();
+        verify(manager.start(undefined, undefined)).once();
 
         await promise;
     });
@@ -134,12 +134,12 @@ suite('Language Server - Activator', () => {
         const uri = Uri.file(__filename);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         when(workspaceService.workspaceFolders).thenReturn([{ index: 0, name: '', uri }]);
-        when(manager.start(uri)).thenResolve();
+        when(manager.start(uri, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
         await activator.activate(undefined);
 
-        verify(manager.start(uri)).once();
+        verify(manager.start(uri, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(workspaceService.workspaceFolders).once();
     });

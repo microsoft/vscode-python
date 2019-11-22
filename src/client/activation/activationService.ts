@@ -1,43 +1,59 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
+import '../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
+
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experimentGroups';
-import '../common/extensions';
 import { traceError } from '../common/logger';
-import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IOutputChannel,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Resource
+} from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
+import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { IExtensionActivationService, ILanguageServerActivator, LanguageServerActivator } from './types';
+import {
+    IExtensionActivationService,
+    ILanguageServer,
+    ILanguageServerActivator,
+    ILanguageServerCache,
+    LanguageServerActivator
+} from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const workspacePathNameForGlobalWorkspaces = '';
-type ActivatorInfo = { jedi: boolean; activator: ILanguageServerActivator };
+type ActivatorInfo = { jedi: boolean; server: ILanguageServerActivator };
 
 @injectable()
-export class LanguageServerExtensionActivationService implements IExtensionActivationService, Disposable {
-    private lsActivatedWorkspaces = new Map<string, ILanguageServerActivator>();
+export class LanguageServerExtensionActivationService implements IExtensionActivationService, ILanguageServerCache, Disposable {
+    private lsActivatedServers = new Map<string, Promise<ILanguageServerActivator>>();
+    private jediServer: ILanguageServerActivator | undefined;
     private currentActivator?: ActivatorInfo;
-    private jediActivatedOnce: boolean = false;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
     private readonly lsNotSupportedDiagnosticService: IDiagnosticsService;
+    private readonly interpreterService: IInterpreterService;
     private resource!: Resource;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
         @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
+        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
@@ -52,55 +68,24 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     public async activate(resource: Resource): Promise<void> {
         this.resource = resource;
-        let jedi = this.useJedi();
-        if (!jedi) {
-            if (this.lsActivatedWorkspaces.has(this.getWorkspacePathKey(resource))) {
-                return;
-            }
-            const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
-            this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
-                jedi = true;
-            }
-        } else {
-            if (this.jediActivatedOnce) {
-                return;
-            }
-            this.jediActivatedOnce = true;
-        }
+        // Do the same thing as a get.
+        await this.get(resource);
+    }
 
-        await this.logStartup(jedi);
-        let activatorName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
-        let activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
-        this.currentActivator = { jedi, activator };
-
-        try {
-            await activator.activate(resource);
-            if (!jedi) {
-                this.lsActivatedWorkspaces.set(this.getWorkspacePathKey(resource), activator);
-            }
-        } catch (ex) {
-            if (jedi) {
-                return;
-            }
-            //Language server fails, reverting to jedi
-            if (this.jediActivatedOnce) {
-                return;
-            }
-            this.jediActivatedOnce = true;
-            jedi = true;
-            await this.logStartup(jedi);
-            activatorName = LanguageServerActivator.Jedi;
-            activator = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, activatorName);
-            this.currentActivator = { jedi, activator };
-            await activator.activate(resource);
+    public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServer> {
+        // See if we already have it or not
+        const key = await this.getKey(resource, interpreter);
+        let result: Promise<ILanguageServerActivator> | undefined = this.lsActivatedServers.get(key);
+        if (!result) {
+            result = this.createServer(resource, interpreter);
+            this.lsActivatedServers.set(key, result);
         }
+        return result;
     }
 
     public dispose() {
         if (this.currentActivator) {
-            this.currentActivator.activator.dispose();
+            this.currentActivator.server.dispose();
         }
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
@@ -149,17 +134,57 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         return enabled;
     }
 
-    protected onWorkspaceFoldersChanged() {
+    protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
-        const workspaceKeys = this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getWorkspacePathKey(workspaceFolder.uri));
-        const activatedWkspcKeys = Array.from(this.lsActivatedWorkspaces.keys());
+        const workspaceKeys = await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri)));
+        const activatedWkspcKeys = Array.from(this.lsActivatedServers.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
-                this.lsActivatedWorkspaces.get(folder)!.dispose();
-                this.lsActivatedWorkspaces!.delete(folder);
+                this.lsActivatedServers.get(folder)!.then(a => a.dispose()).ignoreErrors();
+                this.lsActivatedServers!.delete(folder);
             }
         }
+    }
+
+    private async createServer(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServerActivator> {
+        let jedi = this.useJedi();
+        if (!jedi) {
+            const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
+            this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+            if (diagnostic.length) {
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
+                jedi = true;
+            }
+        } else if (this.jediServer) {
+            return this.jediServer;
+        }
+
+        await this.logStartup(jedi);
+        let serverName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
+        let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
+        this.currentActivator = { jedi, server };
+
+        try {
+            await server.activate(resource);
+        } catch (ex) {
+            if (jedi) {
+                throw ex;
+            }
+            jedi = true;
+            await this.logStartup(jedi);
+            serverName = LanguageServerActivator.Jedi;
+            server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
+            this.currentActivator = { jedi, server };
+            await server.activate(resource, interpreter);
+        }
+
+        // Jedi is always a singleton. Don't need to create it more than once.
+        if (jedi) {
+            this.jediServer = server;
+        }
+
+        return server;
     }
 
     private async logStartup(isJedi: boolean): Promise<void> {
@@ -189,7 +214,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
     }
-    private getWorkspacePathKey(resource: Resource): string {
-        return this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
+    private async getKey(resource: Resource, interpreter?: PythonInterpreter): Promise<string> {
+        const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
+        interpreter = interpreter ? interpreter : await this.interpreterService.getActiveInterpreter(resource);
+        const interperterPortion = interpreter ? interpreter.path : '';
+        return `${resourcePortion}-${interperterPortion}`;
     }
 }

@@ -1,8 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { instance, mock, verify } from 'ts-mockito';
 
 import { AATesting } from '../../client/activation/aaTesting';
@@ -12,11 +9,19 @@ import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
 import { LanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
-import { DownloadBetaChannelRule, DownloadDailyChannelRule } from '../../client/activation/languageServer/downloadChannelRules';
+import {
+    DownloadBetaChannelRule,
+    DownloadDailyChannelRule
+} from '../../client/activation/languageServer/downloadChannelRules';
 import { LanguageServerDownloader } from '../../client/activation/languageServer/downloader';
-import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from '../../client/activation/languageServer/languageClientFactory';
-import { LanguageServer } from '../../client/activation/languageServer/languageServer';
-import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
+import {
+    BaseLanguageClientFactory,
+    DownloadedLanguageClientFactory,
+    SimpleLanguageClientFactory
+} from '../../client/activation/languageServer/languageClientFactory';
+import {
+    LanguageServerCompatibilityService
+} from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
 import {
@@ -26,6 +31,7 @@ import {
     StableLanguageServerPackageRepository
 } from '../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
+import { LanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
@@ -36,7 +42,6 @@ import {
     IExtensionActivationService,
     IExtensionSingleActivationService,
     ILanguageClientFactory,
-    ILanguageServer,
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCompatibilityService as ILanagueServerCompatibilityService,
@@ -46,12 +51,19 @@ import {
     ILanguageServerManager,
     ILanguageServerOutputChannel,
     ILanguageServerPackageService,
+    ILanguageServerProxy,
     IPlatformData,
     LanguageClientFactory,
     LanguageServerActivator
 } from '../../client/activation/types';
 import { INugetRepository } from '../../client/common/nuget/types';
-import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
+import {
+    BANNER_NAME_DS_SURVEY,
+    BANNER_NAME_INTERACTIVE_SHIFTENTER,
+    BANNER_NAME_LS_SURVEY,
+    BANNER_NAME_PROPOSE_LS,
+    IPythonExtensionBanner
+} from '../../client/common/types';
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnterBanner';
 import { ServiceManager } from '../../client/ioc/serviceManager';
@@ -93,7 +105,7 @@ suite('Unit Tests - Activation Service Registry', () => {
         verify(serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader)).once();
         verify(serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData)).once();
         verify(serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions)).once();
-        verify(serviceManager.addSingleton<ILanguageServer>(ILanguageServer, LanguageServer)).once();
+        verify(serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy)).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();

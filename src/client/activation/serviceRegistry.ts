@@ -1,10 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { INugetRepository } from '../common/nuget/types';
-import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
+import {
+    BANNER_NAME_DS_SURVEY,
+    BANNER_NAME_INTERACTIVE_SHIFTENTER,
+    BANNER_NAME_LS_SURVEY,
+    BANNER_NAME_PROPOSE_LS,
+    IPythonExtensionBanner
+} from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
@@ -19,17 +22,45 @@ import { LanguageServerExtensionActivator } from './languageServer/activator';
 import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from './languageServer/downloadChannelRules';
 import { LanguageServerDownloader } from './languageServer/downloader';
-import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from './languageServer/languageClientFactory';
-import { LanguageServer } from './languageServer/languageServer';
+import {
+    BaseLanguageClientFactory,
+    DownloadedLanguageClientFactory,
+    SimpleLanguageClientFactory
+} from './languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from './languageServer/languageServerExtension';
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from './languageServer/languageServerPackageRepository';
+import {
+    BetaLanguageServerPackageRepository,
+    DailyLanguageServerPackageRepository,
+    LanguageServerDownloadChannel,
+    StableLanguageServerPackageRepository
+} from './languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
+import { LanguageServerProxy } from './languageServer/languageServerProxy';
 import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
-import { IDownloadChannelRule, IExtensionActivationManager, IExtensionActivationService, IExtensionSingleActivationService, ILanguageClientFactory, ILanguageServer, ILanguageServerActivator, ILanguageServerAnalysisOptions, ILanguageServerCompatibilityService as ILanagueServerCompatibilityService, ILanguageServerDownloader, ILanguageServerExtension, ILanguageServerFolderService, ILanguageServerManager, ILanguageServerOutputChannel, ILanguageServerPackageService, IPlatformData, LanguageClientFactory, LanguageServerActivator } from './types';
+import {
+    IDownloadChannelRule,
+    IExtensionActivationManager,
+    IExtensionActivationService,
+    IExtensionSingleActivationService,
+    ILanguageClientFactory,
+    ILanguageServerActivator,
+    ILanguageServerAnalysisOptions,
+    ILanguageServerCompatibilityService as ILanagueServerCompatibilityService,
+    ILanguageServerDownloader,
+    ILanguageServerExtension,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    ILanguageServerOutputChannel,
+    ILanguageServerPackageService,
+    ILanguageServerProxy,
+    IPlatformData,
+    LanguageClientFactory,
+    LanguageServerActivator
+} from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);
@@ -56,7 +87,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
     serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
-    serviceManager.addSingleton<ILanguageServer>(ILanguageServer, LanguageServer);
+    serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy);
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);

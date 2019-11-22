@@ -1,27 +1,27 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
+import '../../common/extensions';
 
 import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
+
 import { ICommandManager } from '../../common/application/types';
-import '../../common/extensions';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { noop } from '../../common/utils/misc';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
-import { ILanguageClientFactory, ILanguageServer, LanguageClientFactory } from '../types';
+import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory } from '../types';
 import { Commands } from './constants';
 import { ProgressReporting } from './progress';
 
 @injectable()
-export class LanguageServer implements ILanguageServer {
+export class LanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
@@ -58,9 +58,9 @@ export class LanguageServer implements ILanguageServer {
 
     @traceDecorators.error('Failed to start language server')
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_ENABLED, undefined, true)
-    public async start(resource: Resource, options: LanguageClientOptions): Promise<void> {
+    public async start(resource: Resource, interpreter: PythonInterpreter | undefined, options: LanguageClientOptions): Promise<void> {
         if (!this.languageClient) {
-            this.languageClient = await this.factory.createLanguageClient(resource, options);
+            this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
             this.disposables.push(this.languageClient!.start());
             await this.serverReady();
             if (this.disposed) {

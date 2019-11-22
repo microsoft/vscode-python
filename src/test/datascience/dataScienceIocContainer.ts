@@ -22,7 +22,7 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
+import { ILanguageServerAnalysisOptions, ILanguageServerProxy } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -110,9 +110,7 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { GatherExecution } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
-import {
-    DotNetIntellisenseProvider
-} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
@@ -253,8 +251,8 @@ import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
-import { MockLanguageServer } from './mockLanguageServer';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
+import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { blurWindow, createMessageEvent } from './reactHelpers';
@@ -398,9 +396,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-        this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
+        this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
-        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);

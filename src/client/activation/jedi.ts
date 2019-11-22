@@ -2,10 +2,32 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { DocumentFilter, languages } from 'vscode';
+import {
+    CancellationToken,
+    CodeLens,
+    CompletionContext,
+    CompletionItem,
+    CompletionList,
+    DocumentFilter,
+    DocumentSymbol,
+    Event,
+    Hover,
+    languages,
+    Location,
+    LocationLink,
+    Position,
+    ProviderResult,
+    ReferenceContext,
+    SignatureHelp,
+    SignatureHelpContext,
+    SymbolInformation,
+    TextDocument,
+    WorkspaceEdit
+} from 'vscode';
+
 import { PYTHON } from '../common/constants';
 import { IConfigurationService, IExtensionContext, ILogger, Resource } from '../common/types';
-import { IShebangCodeLensProvider } from '../interpreter/contracts';
+import { IShebangCodeLensProvider, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
@@ -28,12 +50,21 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
+    private renameProvider: PythonRenameProvider | undefined;
+    private hoverProvider: PythonHoverProvider | undefined;
+    private definitionProvider: PythonDefinitionProvider | undefined;
+    private referenceProvider: PythonReferenceProvider | undefined;
+    private completionProvider: PythonCompletionItemProvider | undefined;
+    private codeLensProvider: IShebangCodeLensProvider | undefined;
+    private symbolProvider: JediSymbolProvider | undefined;
+    private signatureProvider: PythonSignatureProvider | undefined;
+
     constructor(@inject(IServiceManager) private serviceManager: IServiceManager) {
         this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
         this.documentSelector = PYTHON;
     }
 
-    public async activate(_resource: Resource): Promise<void> {
+    public async activate(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {
         if (this.jediFactory) {
             throw new Error('Jedi already started');
         }
@@ -43,30 +74,35 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         context.subscriptions.push(jediFactory);
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
+        this.renameProvider = new PythonRenameProvider(this.serviceManager);
+        this.definitionProvider = new PythonDefinitionProvider(jediFactory);
+        this.hoverProvider = new PythonHoverProvider(jediFactory);
+        this.referenceProvider = new PythonReferenceProvider(jediFactory);
+        this.completionProvider = new PythonCompletionItemProvider(jediFactory, this.serviceManager);
+        this.codeLensProvider = this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider);
+
         context.subscriptions.push(jediFactory);
         context.subscriptions.push(
-            languages.registerRenameProvider(this.documentSelector, new PythonRenameProvider(this.serviceManager))
+            languages.registerRenameProvider(this.documentSelector, this.renameProvider)
         );
-        const definitionProvider = new PythonDefinitionProvider(jediFactory);
-
-        context.subscriptions.push(languages.registerDefinitionProvider(this.documentSelector, definitionProvider));
+        context.subscriptions.push(languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider));
         context.subscriptions.push(
-            languages.registerHoverProvider(this.documentSelector, new PythonHoverProvider(jediFactory))
+            languages.registerHoverProvider(this.documentSelector, this.hoverProvider)
         );
         context.subscriptions.push(
-            languages.registerReferenceProvider(this.documentSelector, new PythonReferenceProvider(jediFactory))
+            languages.registerReferenceProvider(this.documentSelector, this.referenceProvider)
         );
         context.subscriptions.push(
             languages.registerCompletionItemProvider(
                 this.documentSelector,
-                new PythonCompletionItemProvider(jediFactory, this.serviceManager),
+                this.completionProvider,
                 '.'
             )
         );
         context.subscriptions.push(
             languages.registerCodeLensProvider(
                 this.documentSelector,
-                this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider)
+                this.codeLensProvider
             )
         );
 
@@ -87,17 +123,17 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         }
 
         const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
+        this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
+        this.signatureProvider = new PythonSignatureProvider(jediFactory);
         context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
-
-        const symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
-        context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, symbolProvider));
+        context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
         if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
             context.subscriptions.push(
                 languages.registerSignatureHelpProvider(
                     this.documentSelector,
-                    new PythonSignatureProvider(jediFactory),
+                    this.signatureProvider,
                     '(',
                     ','
                 )
@@ -110,8 +146,52 @@ export class JediExtensionActivator implements ILanguageServerActivator {
 
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
         testManagementService
-            .activate(symbolProvider)
+            .activate(this.symbolProvider)
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+    }
+
+    public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
+        if (this.renameProvider) {
+            return this.renameProvider.provideRenameEdits(document, position, newName, token);
+        }
+    }
+    public provideDefinition(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Location | Location[] | LocationLink[]> {
+        if (this.definitionProvider) {
+            return this.definitionProvider.provideDefinition(document, position, token);
+        }
+    }
+    public provideHover(document: TextDocument, position: Position, token: CancellationToken): ProviderResult<Hover> {
+        if (this.hoverProvider) {
+            return this.hoverProvider.provideHover(document, position, token);
+        }
+    }
+    public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): ProviderResult<Location[]> {
+        if (this.referenceProvider) {
+            return this.referenceProvider.provideReferences(document, position, context, token);
+        }
+    }
+    public provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, _context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
+        if (this.completionProvider) {
+            return this.completionProvider.provideCompletionItems(document, position, token);
+        }
+    }
+    public get onDidChangeCodeLenses(): Event<void> | undefined {
+        return this.codeLensProvider ? this.codeLensProvider.onDidChangeCodeLenses : undefined;
+    }
+    public provideCodeLenses(document: TextDocument, token: CancellationToken): ProviderResult<CodeLens[]> {
+        if (this.codeLensProvider) {
+            return this.codeLensProvider.provideCodeLenses(document, token);
+        }
+    }
+    public provideDocumentSymbols(document: TextDocument, token: CancellationToken): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
+        if (this.symbolProvider) {
+            return this.symbolProvider.provideDocumentSymbols(document, token);
+        }
+    }
+    public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, _context: SignatureHelpContext): ProviderResult<SignatureHelp> {
+        if (this.signatureProvider) {
+            return this.signatureProvider.provideSignatureHelp(document, position, token);
+        }
     }
 
     public dispose(): void {

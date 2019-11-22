@@ -24,6 +24,7 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 }
@@ -38,7 +39,8 @@ type JupyterServerClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
-        appShell: IApplicationShell
+        appShell: IApplicationShell,
+        interpreterService: IInterpreterService
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types

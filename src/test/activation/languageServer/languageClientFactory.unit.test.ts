@@ -50,11 +50,11 @@ suite('Language Server - LanguageClient Factory', () => {
         when(envVarProvider.getEnvironmentVariables(uri)).thenReturn(Promise.resolve(env));
         when(activationService.getActivatedEnvironmentVariables(uri)).thenReturn();
 
-        await factory.createLanguageClient(uri, options);
+        await factory.createLanguageClient(uri, undefined, options);
 
         verify(configurationService.getSettings(uri)).once();
-        verify(downloadFactory.createLanguageClient(uri, options, env)).once();
-        verify(simpleFactory.createLanguageClient(uri, options, env)).never();
+        verify(downloadFactory.createLanguageClient(uri, undefined, options, env)).once();
+        verify(simpleFactory.createLanguageClient(uri, undefined, options, env)).never();
     });
     test('Simple factory is used when not required to download the LS', async () => {
         const downloadFactory = mock(DownloadedLanguageClientFactory);
@@ -69,11 +69,11 @@ suite('Language Server - LanguageClient Factory', () => {
         when(envVarProvider.getEnvironmentVariables(uri)).thenReturn(Promise.resolve(env));
         when(activationService.getActivatedEnvironmentVariables(uri)).thenReturn();
 
-        await factory.createLanguageClient(uri, options);
+        await factory.createLanguageClient(uri, undefined, options);
 
         verify(configurationService.getSettings(uri)).once();
-        verify(downloadFactory.createLanguageClient(uri, options, env)).never();
-        verify(simpleFactory.createLanguageClient(uri, options, env)).once();
+        verify(downloadFactory.createLanguageClient(uri, undefined, options, env)).never();
+        verify(simpleFactory.createLanguageClient(uri, undefined, options, env)).once();
     });
     test('Download factory will make use of the language server folder name and client will be created', async () => {
         const platformData = mock(PlatformData);
@@ -104,7 +104,7 @@ suite('Language Server - LanguageClient Factory', () => {
         }
         rewiremock('vscode-languageclient').with({ LanguageClient: MockClass });
 
-        const client = await factory.createLanguageClient(uri, options, { FOO: 'bar' });
+        const client = await factory.createLanguageClient(uri, undefined, options, { FOO: 'bar' });
 
         verify(lsFolderService.getLanguageServerFolderName(anything())).once();
         verify(platformData.engineExecutableName).atLeast(1);
@@ -140,7 +140,7 @@ suite('Language Server - LanguageClient Factory', () => {
         }
         rewiremock('vscode-languageclient').with({ LanguageClient: MockClass });
 
-        const client = await factory.createLanguageClient(uri, options, { FOO: 'bar' });
+        const client = await factory.createLanguageClient(uri, undefined, options, { FOO: 'bar' });
 
         verify(lsFolderService.getLanguageServerFolderName(anything())).once();
         verify(platformData.engineExecutableName).never();

@@ -44,8 +44,8 @@ import { MockProtocolConverter } from './mockProtocolConverter';
 
 // tslint:disable:no-any unified-signatures
 export class MockLanguageClient extends LanguageClient {
-    private notificationPromise : Deferred<void> | undefined;
-    private contents : string;
+    private notificationPromise: Deferred<void> | undefined;
+    private contents: string;
     private versionId: number | null;
     private converter: MockProtocolConverter;
 
@@ -56,17 +56,17 @@ export class MockLanguageClient extends LanguageClient {
         this.versionId = 0;
         this.converter = new MockProtocolConverter();
     }
-    public waitForNotification() : Promise<void> {
+    public waitForNotification(): Promise<void> {
         this.notificationPromise = createDeferred();
         return this.notificationPromise.promise;
     }
 
     // Returns the current contents of the document being built by the completion provider calls
-    public getDocumentContents() : string {
+    public getDocumentContents(): string {
         return this.contents;
     }
 
-    public getVersionId() : number | null {
+    public getVersionId(): number | null {
         return this.versionId;
     }
 
@@ -83,7 +83,7 @@ export class MockLanguageClient extends LanguageClient {
     public sendRequest<P, R, E, RO>(type: RequestType<P, R, E, RO>, params: P, token?: CancellationToken | undefined): Thenable<R>;
     public sendRequest<R>(method: string, token?: CancellationToken | undefined): Thenable<R>;
     public sendRequest<R>(method: string, param: any, token?: CancellationToken | undefined): Thenable<R>;
-    public sendRequest(_method: any, _param?: any, _token?: any) : Thenable<any> {
+    public sendRequest(_method: any, _param?: any, _token?: any): Thenable<any> {
         switch (_method.method) {
             case 'textDocument/completion':
                 // Just return one for each line of our contents
@@ -209,14 +209,14 @@ export class MockLanguageClient extends LanguageClient {
     }
 
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {
-        changes.forEach(c => {
+        changes.forEach((c: TextDocumentContentChangeEvent) => {
             const before = this.contents.substr(0, c.rangeOffset);
             const after = this.contents.substr(c.rangeOffset + c.rangeLength);
             this.contents = `${before}${c.text}${after}`;
         });
     }
 
-    private getDocumentCompletions() : CompletionItem[] {
+    private getDocumentCompletions(): CompletionItem[] {
         const lines = this.contents.splitLines();
         return lines.map(l => {
             return {

@@ -30,6 +30,7 @@ import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { IExecuteObservableResponse, IResponseMapping, IServerResponse, ServerResponseType } from './types';
+import { IInterpreterService } from '../../../interpreter/contracts';
 
 // tslint:disable:no-any
 
@@ -52,9 +53,10 @@ export class HostJupyterNotebook
         resource: vscode.Uri,
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
-        appService: IApplicationShell
+        appService: IApplicationShell,
+        interpreterService: IInterpreterService,
     ) {
-        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService);
+        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, interpreterService);
     }
 
     public dispose = async (): Promise<void> => {

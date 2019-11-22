@@ -123,6 +123,10 @@ class MockJupyterNotebook implements INotebook {
     public async dispose(): Promise<void> {
         return Promise.resolve();
     }
+
+    public getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
+        return Promise.resolve(undefined);
+    }
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
@@ -538,7 +542,7 @@ suite('Jupyter Execution', async () => {
     function createExecution(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean): JupyterExecutionFactory {
         return createExecutionAndReturnProcessService(activeInterpreter, notebookStdErr, skipSearch).jupyterExecutionFactory;
     }
-    function createExecutionAndReturnProcessService(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean, runInDocker?: boolean): {workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>; jupyterExecutionFactory: JupyterExecutionFactory} {
+    function createExecutionAndReturnProcessService(activeInterpreter: PythonInterpreter, notebookStdErr?: string[], skipSearch?: boolean, runInDocker?: boolean): { workingPythonExecutionService: TypeMoq.IMock<IPythonExecutionService>; jupyterExecutionFactory: JupyterExecutionFactory } {
         // Setup defaults
         when(interpreterService.onDidChangeInterpreter).thenReturn(dummyEvent.event);
         when(interpreterService.getActiveInterpreter()).thenResolve(activeInterpreter);
@@ -547,7 +551,7 @@ suite('Jupyter Execution', async () => {
         when(interpreterService.getInterpreterDetails(match('/foo/baz/python.exe'))).thenResolve(missingKernelPython);
         when(interpreterService.getInterpreterDetails(match('/bar/baz/python.exe'))).thenResolve(missingNotebookPython);
         when(interpreterService.getInterpreterDetails(argThat(o => !o.includes || !o.includes('python')))).thenReject('Unknown interpreter');
-        if (runInDocker){
+        if (runInDocker) {
             when(fileSystem.readFile('/proc/self/cgroup')).thenResolve('hello docker world');
         }
         // Create our working python and process service.
@@ -692,7 +696,7 @@ suite('Jupyter Execution', async () => {
     }
 
     test('Working notebook and commands found', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory} = createExecutionAndReturnProcessService(workingPython);
+        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(workingPython);
         when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(workingPythonExecutionService.object);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
@@ -705,7 +709,7 @@ suite('Jupyter Execution', async () => {
     }).timeout(10000);
 
     test('Includes correct args for running in docker', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory} = createExecutionAndReturnProcessService(workingPython, undefined, undefined, true);
+        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(workingPython, undefined, undefined, true);
         when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(workingPythonExecutionService.object);
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
@@ -732,7 +736,7 @@ suite('Jupyter Execution', async () => {
     test('Slow notebook startups throws exception', async () => {
         const daemonService = mock(PythonDaemonExecutionService);
         const stdErr = 'Failure';
-        const proc = {on: noop} as any as ChildProcess;
+        const proc = { on: noop } as any as ChildProcess;
         const out = new Observable<Output<string>>(s => s.next({ source: 'stderr', out: stdErr }));
         when(daemonService.execModuleObservable(anything(), anything(), anything())).thenReturn({ dispose: noop, proc: proc, out });
         when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(instance(daemonService));
@@ -856,7 +860,7 @@ suite('Jupyter Execution', async () => {
     }).timeout(20_000);
 
     test('Kernelspec is deleted on exit', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory} = createExecutionAndReturnProcessService(missingKernelPython);
+        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(missingKernelPython);
         when(interpreterService.getActiveInterpreter(undefined)).thenResolve(missingKernelPython);
         when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: missingKernelPython.path }))).thenResolve(workingPythonExecutionService.object);
 
