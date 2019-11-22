@@ -2770,7 +2770,7 @@
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^5.0.0",
+        "@nteract/transform-plotly": "^6.0.0",
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
         "@types/ansi-regex": "^4.0.0",
