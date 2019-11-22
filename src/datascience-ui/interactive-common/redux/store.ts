@@ -3,7 +3,7 @@
 'use strict';
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
-import { logger } from 'redux-logger';
+import { createLogger } from 'redux-logger';
 
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -14,7 +14,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
-import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer } from './postOffice';
+import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -143,6 +143,41 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const testMiddleware = testMode ? createTestMiddleware() : undefined;
 
     // Create the logger if we're not in production mode or we're forcing logging
+    const reduceLogMessage = '<payload too large to displayed in logs (at least on CI)>';
+    const actionsWithLargePayload = [IncomingMessageActions.LOADONIGASMASSEMBLYRESPONSE, IncomingMessageActions.GETCSSRESPONSE, IncomingMessageActions.LOADTMLANGUAGERESPONSE];
+    const logger = createLogger({
+        // tslint:disable-next-line: no-any
+        stateTransformer: (state: any) => {
+            if (!state || typeof state !== 'object'){
+                return state;
+            }
+            // tslint:disable-next-line: no-any
+            const rootState = {...state} as any;
+            if ('main' in rootState && typeof rootState.main === 'object'){
+                // tslint:disable-next-line: no-any
+                const main = rootState.main = {...rootState.main} as any  as Partial<IMainState>;
+                main.rootCss = reduceLogMessage;
+                main.rootStyle = reduceLogMessage;
+                // tslint:disable-next-line: no-any
+                main.editorOptions = reduceLogMessage as any;
+                // tslint:disable-next-line: no-any
+                main.settings = reduceLogMessage as any;
+            }
+            rootState.monaco = reduceLogMessage;
+
+            return rootState;
+        },
+        // tslint:disable-next-line: no-any
+        actionTransformer: (action: any) => {
+            if (!action){
+                return action;
+            }
+            if (actionsWithLargePayload.indexOf(action.type) >= 0){
+                return { ...action, payload: reduceLogMessage };
+            }
+            return action;
+        }
+    });
     const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode)
         ? logger : undefined;
 

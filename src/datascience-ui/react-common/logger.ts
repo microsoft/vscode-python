@@ -10,6 +10,7 @@ export function logMessage(message: string) {
     // put here to prevent having to disable the console log warning
 
     if (enableLogger) {
+        console.error('hello');
         // tslint:disable-next-line: no-console
         console.log(message);
     }
