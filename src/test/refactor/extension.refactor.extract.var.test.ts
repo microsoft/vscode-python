@@ -53,6 +53,7 @@ suite('Variable Extraction', () => {
         ioc.registerCommonTypes();
         ioc.registerProcessTypes();
         ioc.registerVariableTypes();
+        ioc.registerMockInterpreterTypes();
 
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
     }
