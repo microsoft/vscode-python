@@ -190,10 +190,14 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
             this.props.onChange(e.changes, this.state.model);
             const value = this.state.model.getValue();
 
-            // the second condition means that the changes are more than one character,
-            // like intellisense or a ctrl + v
-            if (value.includes('($0)') && e.changes[0].rangeLength > 0) {
+            if (value.includes('($0)')) {
                 this.state.model.setValue(value.replace('($0)', '()'));
+                const pos = this.state.model.getPositionAt(value.length - 3);
+                setTimeout(() => {
+                    if (this.state.editor) {
+                        this.state.editor.setPosition(pos);
+                    }
+                }, 0);
             }
         }
     }
