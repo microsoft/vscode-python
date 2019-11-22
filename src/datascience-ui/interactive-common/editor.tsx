@@ -188,6 +188,13 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
     private modelChanged = (e: monacoEditor.editor.IModelContentChangedEvent) => {
         if (this.state.model) {
             this.props.onChange(e.changes, this.state.model);
+            const value = this.state.model.getValue();
+
+            // the second condition means that the changes are more than one character,
+            // like intellisense or a ctrl + v
+            if (value.includes('($0)') && e.changes[0].rangeLength > 0) {
+                this.state.model.setValue(value.replace('($0)', '()'));
+            }
         }
     }
 
