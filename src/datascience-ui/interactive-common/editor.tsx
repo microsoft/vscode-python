@@ -189,13 +189,21 @@ export class Editor extends React.Component<IEditorProps, IEditorState> {
         if (this.state.model) {
             this.props.onChange(e.changes, this.state.model);
             const value = this.state.model.getValue();
+            const secondHalf = value.substr(e.changes[0].rangeOffset);
 
-            if (value.includes('($0)')) {
-                this.state.model.setValue(value.replace('($0)', '()'));
-                const pos = this.state.model.getPositionAt(value.length - 3);
+            // The second condition makes sure this block is only entered once after
+            // adding the intellisense suggestion.
+            if (secondHalf.includes('($0)') && e.changes[0].rangeOffset > 0) {
+                // We leave the first half of value intact and only replace the first occurance
+                // of '($0)' on the second half
+                this.state.model.setValue(value.substr(0, e.changes[0].rangeOffset) + secondHalf.replace('($0)', '()'));
+
+                // The monaco editor is leaving the cursor at the end of the intellisense,
+                // so we move it one position to the left to leave it inside the parenthesis
                 setTimeout(() => {
                     if (this.state.editor) {
-                        this.state.editor.setPosition(pos);
+                        const pos = this.state.editor.getPosition();
+                        this.state.editor.setPosition(pos!.delta(0, -1));
                     }
                 }, 0);
             }
