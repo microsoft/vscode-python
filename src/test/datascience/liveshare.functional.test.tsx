@@ -25,6 +25,7 @@ import {
     IJupyterExecution
 } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { IS_CI_SERVER } from '../ciConstants';
 //import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
@@ -34,7 +35,12 @@ import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } 
 //tslint:disable:trailing-comma no-any no-multiline-string
 
 // tslint:disable-next-line:max-func-body-length no-any
-suite('DataScience LiveShare tests', () => {
+suite('DataScience LiveShare tests', function () {
+    // Some of the tests are flaky on CI, lets retry.
+    if (IS_CI_SERVER) {
+        // tslint:disable-next-line: no-invalid-this
+        this.retries(1);
+    }
     const disposables: Disposable[] = [];
     let hostContainer: DataScienceIocContainer;
     let guestContainer: DataScienceIocContainer;
