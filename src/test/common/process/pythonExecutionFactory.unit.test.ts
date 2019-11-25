@@ -37,7 +37,6 @@ import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/se
 import { IWindowsStoreInterpreter } from '../../../client/interpreter/locators/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 
-
 // tslint:disable:no-any max-func-body-length
 
 const pythonInterpreter: PythonInterpreter = {
