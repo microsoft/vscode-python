@@ -20,3 +20,4 @@ ProductNames.set(Product.pytest, 'pytest');
 ProductNames.set(Product.yapf, 'yapf');
 ProductNames.set(Product.rope, 'rope');
 ProductNames.set(Product.jupyter, 'jupyter');
+ProductNames.set(Product.ipykernel, 'ipykernel');
