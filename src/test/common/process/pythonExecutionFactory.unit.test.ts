@@ -3,9 +3,9 @@
 'use strict';
 import * as assert from 'assert';
 import { expect } from 'chai';
-import { SemVer, parse } from 'semver';
+import { parse, SemVer } from 'semver';
 import * as sinon from 'sinon';
-import { anyString, anything, instance, mock, verify, when, reset } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
