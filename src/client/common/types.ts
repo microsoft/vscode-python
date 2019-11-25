@@ -97,7 +97,8 @@ export enum Product {
     isort = 15,
     black = 16,
     bandit = 17,
-    jupyter = 18
+    jupyter = 18,
+    ipykernel = 19
 }
 
 export enum ModuleNamePurpose {
