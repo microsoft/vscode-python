@@ -49,6 +49,7 @@ import {
     ILanguageClientFactory,
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
+    ILanguageServerCache,
     ILanguageServerCompatibilityService as ILanagueServerCompatibilityService,
     ILanguageServerDownloader,
     ILanguageServerExtension,
@@ -63,7 +64,8 @@ import {
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService);
+    serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
+    serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
     serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerActivator.Jedi);

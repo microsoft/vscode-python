@@ -25,6 +25,7 @@ import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
     IExtensionActivationService,
     ILanguageServer,
@@ -35,19 +36,19 @@ import {
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const workspacePathNameForGlobalWorkspaces = '';
-type ActivatorInfo = { jedi: boolean; server: ILanguageServerActivator };
 
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, ILanguageServerCache, Disposable {
-    private lsActivatedServers = new Map<string, Promise<ILanguageServerActivator>>();
-    private jediServer: ILanguageServerActivator | undefined;
-    private currentActivator?: ActivatorInfo;
+    private cache = new Map<string, Promise<RefCountedLanguageServer>>();
+    private jediServer: RefCountedLanguageServer | undefined;
+    private activatedServer?: ILanguageServer;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
     private readonly lsNotSupportedDiagnosticService: IDiagnosticsService;
     private readonly interpreterService: IInterpreterService;
     private resource!: Resource;
+    private interpreter: PythonInterpreter | undefined;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
@@ -64,28 +65,42 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
+        disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
     }
 
     public async activate(resource: Resource): Promise<void> {
+        // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
-        // Do the same thing as a get.
-        await this.get(resource);
+        this.interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const result = await this.get(resource, this.interpreter);
+        if (this.activatedServer) {
+            this.activatedServer.dispose();
+        }
+        this.activatedServer = result;
     }
 
     public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServer> {
         // See if we already have it or not
         const key = await this.getKey(resource, interpreter);
-        let result: Promise<ILanguageServerActivator> | undefined = this.lsActivatedServers.get(key);
+        let result: Promise<RefCountedLanguageServer> | undefined = this.cache.get(key);
         if (!result) {
-            result = this.createServer(resource, interpreter);
-            this.lsActivatedServers.set(key, result);
+            // Create a special ref counted result so we don't dispose of the
+            // server too soon.
+            result = this.createRefCountedServer(resource, interpreter, key);
+            this.cache.set(key, result);
+        } else {
+            // Increment ref count if already exists.
+            result = result.then(r => {
+                r.increment();
+                return r;
+            });
         }
         return result;
     }
 
     public dispose() {
-        if (this.currentActivator) {
-            this.currentActivator.server.dispose();
+        if (this.activatedServer) {
+            this.activatedServer.dispose();
         }
     }
     @swallowExceptions('Send telemetry for Language Server current selection')
@@ -137,17 +152,29 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri)));
-        const activatedWkspcKeys = Array.from(this.lsActivatedServers.keys());
+        const activatedWkspcKeys = Array.from(this.cache.keys());
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
-                this.lsActivatedServers.get(folder)!.then(a => a.dispose()).ignoreErrors();
-                this.lsActivatedServers!.delete(folder);
+                this.cache.get(folder)!.then(a => a.dispose()).ignoreErrors();
             }
         }
     }
 
-    private async createServer(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServerActivator> {
+    private async onDidChangeInterpreter() {
+        // If there's a current item in the map, dispose of it. The dispose
+        // should remove it from the map
+        const key = await this.getKey(this.resource, this.interpreter);
+        const item = this.cache.get(key);
+        if (item) {
+            (await item).dispose();
+        }
+
+        // Then create a new one for our current resource
+        await this.activate(this.resource);
+    }
+
+    private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
         let jedi = this.useJedi();
         if (!jedi) {
             const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
@@ -163,8 +190,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         await this.logStartup(jedi);
         let serverName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
-        this.currentActivator = { jedi, server };
-
         try {
             await server.activate(resource);
         } catch (ex) {
@@ -175,16 +200,26 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             await this.logStartup(jedi);
             serverName = LanguageServerActivator.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
-            this.currentActivator = { jedi, server };
             await server.activate(resource, interpreter);
         }
 
         // Jedi is always a singleton. Don't need to create it more than once.
         if (jedi) {
-            this.jediServer = server;
-        }
+            this.jediServer = new RefCountedLanguageServer(server, () => {
+                // When we remove the jedi server, remove it from the cache.
+                this.cache.delete(key);
+            });
+            return this.jediServer;
+        } else {
+            return new RefCountedLanguageServer(server, () => {
+                // When we finally remove the last ref count, remove from the cache
+                this.cache.delete(key);
 
-        return server;
+                // For non jedi, actually dispose of the language server so the .net process
+                // shuts down
+                server.dispose();
+            });
+        }
     }
 
     private async logStartup(isJedi: boolean): Promise<void> {
@@ -202,7 +237,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             return;
         }
         const jedi = this.useJedi();
-        if (this.currentActivator && this.currentActivator.jedi === jedi) {
+        if (jedi && this.jediServer) {
             return;
         }
 

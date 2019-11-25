@@ -83,11 +83,12 @@ export interface ILanguageServer extends
     CodeLensProvider,
     DocumentSymbolProvider,
     SignatureHelpProvider,
-    Partial<DocumentHandler> {
+    Partial<DocumentHandler>,
+    IDisposable {
 }
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
-export interface ILanguageServerActivator extends ILanguageServer, IDisposable {
+export interface ILanguageServerActivator extends ILanguageServer {
     activate(resource: Resource, interpreter?: PythonInterpreter): Promise<void>;
 }
 
@@ -139,7 +140,7 @@ export interface ILanguageClientFactory {
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
     readonly onDidChange: Event<void>;
-    initialize(resource: Resource): Promise<void>;
+    initialize(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
     getAnalysisOptions(): Promise<LanguageClientOptions>;
 }
 export const ILanguageServerManager = Symbol('ILanguageServerManager');

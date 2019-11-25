@@ -14,6 +14,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../co
 import { traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
 import { IExecuteInfo } from '../../interactive-common/interactiveWindowTypes';
 import {
@@ -30,7 +31,6 @@ import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { IExecuteObservableResponse, IResponseMapping, IServerResponse, ServerResponseType } from './types';
-import { IInterpreterService } from '../../../interpreter/contracts';
 
 // tslint:disable:no-any
 
@@ -54,7 +54,7 @@ export class HostJupyterNotebook
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
         appService: IApplicationShell,
-        interpreterService: IInterpreterService,
+        interpreterService: IInterpreterService
     ) {
         super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, interpreterService);
     }

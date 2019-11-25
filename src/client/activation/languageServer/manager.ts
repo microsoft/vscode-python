@@ -49,7 +49,7 @@ export class LanguageServerManager implements ILanguageServerManager {
         this.interpreter = interpreter;
         this.analysisOptions.onDidChange(this.restartLanguageServerDebounced, this, this.disposables);
 
-        await this.analysisOptions.initialize(resource);
+        await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
     }
     protected registerCommandHandler() {

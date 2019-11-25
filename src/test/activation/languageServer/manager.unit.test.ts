@@ -56,7 +56,7 @@ suite('Language Server - Manager', () => {
                 analysisHandlerRegistered = true;
                 onChangeAnalysisHandler = handler;
             };
-            when(analysisOptions.initialize(resource)).thenResolve();
+            when(analysisOptions.initialize(resource, undefined)).thenResolve();
             when(analysisOptions.getAnalysisOptions()).thenResolve(languageClientOptions);
             when(analysisOptions.onDidChange).thenReturn(analysisChangeFn as any);
             when(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).thenReturn(instance(languageServer));
@@ -64,7 +64,7 @@ suite('Language Server - Manager', () => {
 
             await manager.start(resource, undefined);
 
-            verify(analysisOptions.initialize(resource)).once();
+            verify(analysisOptions.initialize(resource, undefined)).once();
             verify(analysisOptions.getAnalysisOptions()).once();
             verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).once();
             verify(languageServer.start(resource, undefined, languageClientOptions)).once();

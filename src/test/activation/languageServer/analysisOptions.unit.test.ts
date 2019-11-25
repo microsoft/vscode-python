@@ -89,7 +89,7 @@ suite('Language Server - Analysis Options', () => {
         when(interpreterService.onDidChangeInterpreter).thenReturn(() => disposable2.object);
         when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(() => disposable3.object);
 
-        await analysisOptions.initialize(undefined);
+        await analysisOptions.initialize(undefined, undefined);
 
         verify(workspace.onDidChangeConfiguration).once();
         verify(interpreterService.onDidChangeInterpreter).once();
@@ -117,7 +117,7 @@ suite('Language Server - Analysis Options', () => {
         let settingsChangedInvokedCount = 0;
         analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
 
-        await analysisOptions.initialize(undefined);
+        await analysisOptions.initialize(undefined, undefined);
         expect(configChangedHandler).to.not.be.undefined;
         expect(interpreterChangedHandler).to.not.be.undefined;
 
@@ -189,7 +189,7 @@ suite('Language Server - Analysis Options', () => {
         let settingsChangedInvokedCount = 0;
 
         analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
-        await analysisOptions.initialize(uri);
+        await analysisOptions.initialize(uri, undefined);
         expect(configChangedHandler).to.not.be.undefined;
         expect(interpreterChangedHandler).to.not.be.undefined;
         expect(envVarChangedHandler).to.not.be.undefined;

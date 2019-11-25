@@ -61,7 +61,8 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
-        @inject(IApplicationShell) appShell: IApplicationShell) {
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IInterpreterService) interpreterService: IInterpreterService) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -74,7 +75,8 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
             sessionManager,
             workspaceService,
             loggers ? loggers : [],
-            appShell
+            appShell,
+            interpreterService
         );
     }
 

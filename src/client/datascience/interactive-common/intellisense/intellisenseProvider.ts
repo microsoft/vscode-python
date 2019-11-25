@@ -22,9 +22,10 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
+import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
 import { HiddenFileFormatString } from '../../../constants';
-import { IInterpreterService } from '../../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { concatMultilineStringInput } from '../../common';
 import { Identifiers, Settings } from '../../constants';
 import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
@@ -62,6 +63,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private notebookIdentity: Uri | undefined;
     private potentialResource: Uri | undefined;
     private sentOpenDocument: boolean = false;
+    private languageServer: ILanguageServer | undefined;
+    private resource: Resource;
+    private interpreter: PythonInterpreter | undefined;
 
     constructor(
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
@@ -151,8 +155,23 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         const activeNotebook = await this.getNotebook();
         const interpreter = activeNotebook ? await activeNotebook.getMatchingInterpreter() : await this.interpreterService.getActiveInterpreter(resource);
 
+        // See if the resource or the interpreter are different
+        if (resource !== this.resource || interpreter !== this.interpreter || this.languageServer === undefined) {
+            this.resource = resource;
+            this.interpreter = interpreter;
+
+            // Get an instance of the language server (so we ref count it )
+            const languageServer = await this.languageServerCache.get(resource, interpreter);
+
+            // Dispose of our old language service
+            this.languageServer?.dispose();
+
+            // Save the ref.
+            this.languageServer = languageServer;
+        }
+
         // Use the resource and the interpreter to get our language server
-        return this.languageServerCache.get(resource, interpreter);
+        return this.languageServer;
     }
 
     protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
@@ -480,6 +499,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         // This is the one that acts like a reset
         const document = await this.getDocument();
         if (document) {
+            this.sentOpenDocument = false;
             const changes = document.removeAllCells();
             return this.handleChanges(document, changes);
         }
