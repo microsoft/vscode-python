@@ -27,41 +27,34 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
     ) { }
-    public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
+    public async createDebugAdapterDescriptor(session: DebugSession, _executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
 
-        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            if (configuration.request === 'attach') {
-                const port = configuration.port ? configuration.port : 0;
-                if (port === 0) {
-                    throw new Error('Port must be specified for request type attach');
-                }
-                return new DebugAdapterServer(port, configuration.host);
-            } else {
-                const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
-                // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
-                const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
-                const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd');
-                if (pythonPath.length !== 0) {
-                    if (await this.useNewPtvsd(pythonPath)) {
-                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
-                        return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'), ...logArgs]);
-                    } else {
-                        sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: false });
-                        return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'no_wheels', 'ptvsd', 'adapter'), ...logArgs]);
-                    }
-                }
+        if (configuration.request === 'attach') {
+            const port = configuration.port ? configuration.port : 0;
+            if (port === 0) {
+                throw new Error('Port must be specified for request type attach');
             }
+            return new DebugAdapterServer(port, configuration.host);
         } else {
-            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterNewPtvsd.control);
+            const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
+            // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
+            const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
+            const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd');
+            if (pythonPath.length !== 0) {
+                if (await this.useNewPtvsd(pythonPath)) {
+                    const adapterPath = configuration.debugAdapterPath ? configuration.debugAdapterPath : path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter');
+                    sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
+                    return new DebugAdapterExecutable(pythonPath, [adapterPath, ...logArgs]);
+                } else {
+                    const adapterPath = configuration.debugAdapterPath ? configuration.debugAdapterPath : path.join(ptvsdPathToUse, 'no_wheels', 'ptvsd', 'adapter');
+                    sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: false });
+                    return new DebugAdapterExecutable(pythonPath, [adapterPath, ...logArgs]);
+                }
+            } else {
+                throw new Error('Debug Adapter Executable not provided');
+            }
         }
-
-        // Use the Node debug adapter (and ptvsd_launcher.py)
-        if (executable) {
-            return executable;
-        }
-        // Unlikely scenario.
-        throw new Error('Debug Adapter Executable not provided');
     }
 
     /**

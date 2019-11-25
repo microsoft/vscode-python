@@ -6,8 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { IExtensionSingleActivationService } from '../../../activation/types';
 import { IDebugService } from '../../../common/application/types';
-import { DebugAdapterDescriptorFactory } from '../../../common/experimentGroups';
-import { IDisposableRegistry, IExperimentsManager } from '../../../common/types';
+import { IDisposableRegistry } from '../../../common/types';
 import { DebuggerTypeName } from '../../constants';
 import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../types';
 
@@ -17,15 +16,10 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IDebugAdapterDescriptorFactory) private descriptorFactory: IDebugAdapterDescriptorFactory,
         @inject(IDebugSessionLoggingFactory) private debugSessionLoggingFactory: IDebugSessionLoggingFactory,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
-        @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) { }
     public async activate(): Promise<void> {
-        if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
-            this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory));
-            this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory));
-        } else {
-            this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterDescriptorFactory.control);
-        }
+        this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory));
+        this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory));
     }
 }

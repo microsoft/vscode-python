@@ -85,7 +85,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         descriptorFactory = mock(DebugAdapterDescriptorFactory);
         loggingFactory = mock(DebugSessionLoggingFactory);
         disposableRegistry = [];
-        activator = new DebugAdapterActivator(instance(debugService), instance(descriptorFactory), instance(loggingFactory), disposableRegistry, experimentsManager);
+        activator = new DebugAdapterActivator(instance(debugService), instance(descriptorFactory), instance(loggingFactory), disposableRegistry);
     });
 
     teardown(() => {
