@@ -3,8 +3,8 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import * as vscode from 'vscode';
-import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
+import { OutputChannel, Uri, window } from 'vscode';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -12,32 +12,33 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
+import { noop } from '../utils/misc';
+import { InterpreterUri } from './types';
 
 @injectable()
 export abstract class ModuleInstaller {
     public abstract get name(): string;
     public abstract get displayName(): string
-    constructor(
-        protected serviceContainer: IServiceContainer
-    ) { }
-
-    public async installModule(name: string, resource?: vscode.Uri): Promise<void> {
+    constructor(protected serviceContainer: IServiceContainer) { }
+    public async installModule(name: string, resource?: InterpreterUri): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
+        const uri = resource && resource instanceof Uri ? resource : undefined;
         const executionInfo = await this.getExecutionInfo(name, resource);
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
 
-        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreter = (!resource || uri) ? await interpreterService.getActiveInterpreter(uri) : await interpreterService.getInterpreterDetails(resource.path);
+        if (!interpreter){
+            throw new Error('Unable to get interprter details');
+        }
+        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, interpreter);
         if (executionInfo.moduleName) {
             const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const settings = configService.getSettings(resource);
+            const settings = configService.getSettings((resource && resource instanceof Uri) ? resource : undefined);
             const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
+            const pythonPath = interpreter.path;
 
-            const pythonPath = settings.pythonPath;
-
-            const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
-
-            if (!currentInterpreter || currentInterpreter.type !== InterpreterType.Unknown) {
+            if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                 await terminalService.sendCommand(pythonPath, args);
             } else if (settings.globalModuleInstallation) {
                 const dirname = path.dirname(pythonPath);
@@ -55,20 +56,16 @@ export abstract class ModuleInstaller {
             await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs);
         }
     }
-
-    public abstract isSupported(resource?: vscode.Uri): Promise<boolean>;
-    protected abstract getExecutionInfo(moduleName: string, resource?: vscode.Uri): Promise<ExecutionInfo>;
-
-    private async processInstallArgs(args: string[], resource?: vscode.Uri): Promise<string[]> {
+    public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
+    protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
+    private async processInstallArgs(args: string[], interpreter: PythonInterpreter): Promise<string[]> {
         const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
             return args;
         }
 
         // If installing pylint on python 2.x, then use pylint~=1.9.0
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
-        if (currentInterpreter && currentInterpreter.version && currentInterpreter.version.major === 2) {
+        if (interpreter && interpreter.version && interpreter.version.major === 2) {
             const newArgs = [...args];
             // This command could be sent to the terminal, hence '<' needs to be escaped for UNIX.
             newArgs[indexOfPylint] = '"pylint<2.0.0"';
@@ -81,7 +78,7 @@ export abstract class ModuleInstaller {
         const options = {
             name: 'VS Code Python'
         };
-        const outputChannel = this.serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
 
         outputChannel.appendLine('');
@@ -91,7 +88,7 @@ export abstract class ModuleInstaller {
 
         sudo.exec(command, options, (error: string, stdout: string, stderr: string) => {
             if (error) {
-                vscode.window.showErrorMessage(error);
+                window.showErrorMessage(error);
             } else {
                 outputChannel.show();
                 if (stdout) {
