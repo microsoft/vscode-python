@@ -34,7 +34,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
             if (configuration.request === 'attach') {
                 const port = configuration.port ? configuration.port : 0;
                 if (port === 0) {
-                    throw new Error('Port must be specified for request type attach');
+                    throw new Error('Port must be specified for request type attach.');
                 }
                 return new DebugAdapterServer(port, configuration.host);
             } else {
