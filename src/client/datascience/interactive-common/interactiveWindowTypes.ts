@@ -84,7 +84,7 @@ export enum InteractiveWindowMessages {
     ExecutionRendered = 'rendered_execution',
     FocusedCellEditor = 'focused_cell_editor',
     MonacoReady = 'monaco_ready',
-    ClearAllOutputs = 'clear_all_outputs',
+    ClearAllOutputs = 'clear_all_outputs'
 }
 
 export enum IPyWidgetMessages {
