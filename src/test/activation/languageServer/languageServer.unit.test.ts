@@ -43,7 +43,7 @@ suite('Language Server - LanguageServer', () => {
         commandManager.setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).returns(() => {
             return typemoq.Mock.ofType<Disposable>().object;
         });
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object, commandManager.object);
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());

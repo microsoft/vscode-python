@@ -74,6 +74,11 @@ export interface DocumentHandler {
     handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void;
 }
 
+// tslint:disable-next-line: interface-name
+export interface LanguageServerCommandHandler {
+    clearAnalysisCache(): void;
+}
+
 export interface ILanguageServer extends
     RenameProvider,
     DefinitionProvider,
@@ -84,12 +89,13 @@ export interface ILanguageServer extends
     DocumentSymbolProvider,
     SignatureHelpProvider,
     Partial<DocumentHandler>,
+    Partial<LanguageServerCommandHandler>,
     IDisposable {
 }
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {
-    activate(resource: Resource, interpreter?: PythonInterpreter): Promise<void>;
+    activate(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
 }
 
 export const ILanguageServerCache = Symbol('ILanguageServerCache');

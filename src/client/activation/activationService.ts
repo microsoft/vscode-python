@@ -21,10 +21,12 @@ import {
     Resource
 } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
+import { noop } from '../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
+import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
     IExtensionActivationService,
@@ -61,11 +63,13 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             IDiagnosticsService,
             LSNotSupportedDiagnosticServiceId
         );
+        const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
         disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration.bind(this)));
         disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
         disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this)));
+        disposables.push(commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCaches.bind(this)));
     }
 
     public async activate(resource: Resource): Promise<void> {
@@ -162,16 +166,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     private async onDidChangeInterpreter() {
-        // If there's a current item in the map, dispose of it. The dispose
-        // should remove it from the map
-        const key = await this.getKey(this.resource, this.interpreter);
-        const item = this.cache.get(key);
-        if (item) {
-            (await item).dispose();
-        }
-
-        // Then create a new one for our current resource
-        await this.activate(this.resource);
+        // Reactivate the resource. It should destroy the old one if it's different.
+        return this.activate(this.resource);
     }
 
     private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
@@ -191,7 +187,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         let serverName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
         try {
-            await server.activate(resource);
+            await server.activate(resource, interpreter);
         } catch (ex) {
             if (jedi) {
                 throw ex;
@@ -252,7 +248,12 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private async getKey(resource: Resource, interpreter?: PythonInterpreter): Promise<string> {
         const resourcePortion = this.workspaceService.getWorkspaceFolderIdentifier(resource, workspacePathNameForGlobalWorkspaces);
         interpreter = interpreter ? interpreter : await this.interpreterService.getActiveInterpreter(resource);
-        const interperterPortion = interpreter ? interpreter.path : '';
+        const interperterPortion = interpreter ? `${interpreter.path}-${interpreter.envName}` : '';
         return `${resourcePortion}-${interperterPortion}`;
+    }
+
+    private async onClearAnalysisCaches() {
+        const values = await Promise.all([...this.cache.values()]);
+        values.forEach(v => v.clearAnalysisCache ? v.clearAnalysisCache() : noop());
     }
 }

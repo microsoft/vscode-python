@@ -39,6 +39,11 @@ export class RefCountedLanguageServer implements ILanguageServer {
             this.disposeCallback();
         }
     }
+
+    public clearAnalysisCache() {
+        this.impl.clearAnalysisCache ? this.impl.clearAnalysisCache() : noop();
+    }
+
     public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
         this.impl.handleChanges ? this.impl.handleChanges(document, changes) : noop();
     }

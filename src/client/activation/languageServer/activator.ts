@@ -25,9 +25,10 @@ import {
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { traceDecorators } from '../../common/logger';
+import { traceDecorators, traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
+import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import {
@@ -150,6 +151,15 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
 
     public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, context: SignatureHelpContext): ProviderResult<SignatureHelp> {
         return this.handleProvideSignatureHelp(document, position, token, context);
+    }
+
+    public clearAnalysisCache(): void {
+        const languageClient = this.getLanguageClient();
+        if (languageClient) {
+            languageClient.sendRequest('python/clearAnalysisCache').then(noop, ex =>
+                traceError('Request python/clearAnalysisCache failed', ex)
+            );
+        }
     }
 
     private getLanguageClient(): vscodeLanguageClient.LanguageClient | undefined {

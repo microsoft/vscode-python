@@ -5,7 +5,6 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 
-import { ICommandManager } from '../../common/application/types';
 import { traceDecorators, traceError } from '../../common/logger';
 import { IConfigurationService, Resource } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
@@ -17,7 +16,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory } from '../types';
-import { Commands } from './constants';
 import { ProgressReporting } from './progress';
 
 @injectable()
@@ -33,8 +31,7 @@ export class LanguageServerProxy implements ILanguageServerProxy {
         @named(LanguageClientFactory.base)
         private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
-        @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager
+        @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
         this.startupCompleted = createDeferred<void>();
     }
@@ -77,8 +74,6 @@ export class LanguageServerProxy implements ILanguageServerProxy {
                     sendTelemetryEvent(eventName, telemetryEvent.Measurements, telemetryEvent.Properties);
                 });
             }
-
-            this.registerCommands();
             await this.registerTestServices();
         } else {
             await this.startupCompleted.promise;
@@ -111,14 +106,5 @@ export class LanguageServerProxy implements ILanguageServerProxy {
             throw new Error('languageClient not initialized');
         }
         await this.testManager.activate(new LanguageServerSymbolProvider(this.languageClient!));
-    }
-    private registerCommands() {
-        const disposable = this.commandManager.registerCommand(Commands.ClearAnalyisCache, this.onClearAnalysisCache, this);
-        this.disposables.push(disposable);
-    }
-    private onClearAnalysisCache() {
-        this.languageClient!.sendRequest('python/clearAnalysisCache').then(noop, ex =>
-            traceError('Request python/clearAnalysisCache failed', ex)
-        );
     }
 }

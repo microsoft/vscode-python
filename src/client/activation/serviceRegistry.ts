@@ -89,7 +89,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
     serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
-    serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy);
+    serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy);
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);

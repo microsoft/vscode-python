@@ -81,6 +81,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         if (this.temporaryFile) {
             this.temporaryFile.dispose();
         }
+        if (this.languageServer) {
+            this.languageServer.dispose();
+            this.languageServer = undefined;
+        }
     }
 
     public get postMessage(): Event<{ message: string; payload: any }> {
@@ -165,6 +169,13 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
             // Dispose of our old language service
             this.languageServer?.dispose();
+
+            // This new language server does not know about our document, so tell it.
+            const document = await this.getDocument();
+            if (document && languageServer.handleOpen) {
+                languageServer.handleOpen(document);
+                this.sentOpenDocument = true;
+            }
 
             // Save the ref.
             this.languageServer = languageServer;

@@ -78,7 +78,7 @@ suite('Language Server - Analysis Options', () => {
         analysisOptions = new TestClass(context.object, instance(envVarsProvider),
             instance(configurationService),
             instance(workspace), instance(surveyBanner),
-            instance(interpreterService), lsOutputChannel.object,
+            lsOutputChannel.object,
             instance(pathUtils), instance(lsFolderService));
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {

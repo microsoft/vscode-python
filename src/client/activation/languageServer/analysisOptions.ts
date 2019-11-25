@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import {
@@ -39,7 +38,7 @@ import {
 } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { ILanguageServerAnalysisOptions, ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
@@ -58,7 +57,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
@@ -72,11 +70,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
 
         let disposable = this.workspace.onDidChangeConfiguration(this.onSettingsChangedHandler, this);
         this.disposables.push(disposable);
-
-        if (!this.interpreter) {
-            disposable = this.interpreterService.onDidChangeInterpreter(() => this.didChange.fire(), this);
-            this.disposables.push(disposable);
-        }
 
         disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
         this.disposables.push(disposable);
@@ -92,7 +85,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const properties: Record<string, {}> = {};
 
-        const interpreterInfo = this.interpreter ? this.interpreter : await this.interpreterService.getActiveInterpreter(this.resource);
+        const interpreterInfo = this.interpreter;
         if (!interpreterInfo) {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: How do we handle this?  It is pretty unlikely...

@@ -112,7 +112,7 @@ suite('Activation - ActivationService', () => {
                 lsSupported: boolean = true
             ) {
                 activator
-                    .setup(a => a.activate(undefined))
+                    .setup(a => a.activate(undefined, undefined))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
                 let activatorName = LanguageServerActivator.Jedi;
@@ -351,7 +351,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activatorDotNet.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorDotNet
-                        .setup(a => a.activate(undefined))
+                        .setup(a => a.activate(undefined, undefined))
                         .returns(() => Promise.reject(new Error('')))
                         .verifiable(TypeMoq.Times.once());
                     serviceContainer
@@ -364,7 +364,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activatorJedi.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorJedi
-                        .setup(a => a.activate(undefined))
+                        .setup(a => a.activate(undefined, undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
 
@@ -380,7 +380,7 @@ suite('Activation - ActivationService', () => {
                     resource: Resource
                 ) {
                     activator
-                        .setup(a => a.activate(TypeMoq.It.isValue(resource)))
+                        .setup(a => a.activate(TypeMoq.It.isValue(resource), undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
                     lsNotSupportedDiagnosticService
@@ -467,7 +467,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activator1.object)
                         .verifiable(TypeMoq.Times.once());
                     activator1
-                        .setup(a => a.activate(folder1.uri))
+                        .setup(a => a.activate(folder1.uri, undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
                     experiments
@@ -485,7 +485,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activator2.object)
                         .verifiable(TypeMoq.Times.once());
                     activator2
-                        .setup(a => a.activate(folder2.uri))
+                        .setup(a => a.activate(folder2.uri, undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.never());
                     experiments
@@ -582,8 +582,8 @@ suite('Activation - ActivationService', () => {
                 .verifiable(TypeMoq.Times.exactly(2));
             state.setup(s => s.updateValue(TypeMoq.It.isValue(true)))
                 .returns(() => {
-                state.setup(s => s.value).returns(() => true);
-                return Promise.resolve();
+                    state.setup(s => s.value).returns(() => true);
+                    return Promise.resolve();
                 })
                 .verifiable(TypeMoq.Times.once());
 
