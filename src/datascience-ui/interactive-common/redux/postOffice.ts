@@ -5,7 +5,8 @@ import * as Redux from 'redux';
 
 import {
     IInteractiveWindowMapping,
-    InteractiveWindowMessages
+    InteractiveWindowMessages,
+    IPyWidgetMessages
 } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CssMessages } from '../../../client/datascience/messages';
 import { PostOffice } from '../../react-common/postOffice';
@@ -95,6 +96,7 @@ export enum IncomingMessageActions {
 }
 
 export const AllowedMessages = [...Object.values(InteractiveWindowMessages), ...Object.values(CssMessages)];
+export const AllowedIPyWidgetMessages = [...Object.values(IPyWidgetMessages)];
 
 // Actions created from messages
 export function createPostableAction<M extends IInteractiveWindowMapping, T extends keyof M = keyof M>(message: T, payload?: M[T]): Redux.AnyAction {

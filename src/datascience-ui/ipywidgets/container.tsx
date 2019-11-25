@@ -5,28 +5,28 @@
 
 import * as React from 'react';
 import { connect } from 'react-redux';
+import { Observable } from 'rxjs/Observable';
+import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IStore } from '../interactive-common/redux/store';
-import { PostOffice } from '../react-common/postOffice';
 import { WidgetManager } from './manager';
 
-type IProps = { postOffice: PostOffice };
+// tslint:disable-next-line: no-any
+type Props = { messages: Observable<{type: string; payload?: any}>; sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void };
 
-function mapStateToProps(state: IStore): IProps {
-    return { postOffice: state.postOffice } ;
+function mapStateToProps(state: IStore): Props {
+    return { messages: state.widgetMessagses, sendMessage: state.sendMessage } ;
 }
 // Default dispatcher (not required, but required for strictness).
 function mapDispatchToProps(dispatch: Function) {
     return {dispatch};
 }
 
-class Container extends React.Component<IProps> {
+class Container extends React.Component<Props> {
     private readonly widgetManager: WidgetManager;
 
-    constructor(props: IProps) {
+    constructor(props: Props) {
         super(props);
-        // Çreating a manager and registering the post office is all we need to do.
-        this.widgetManager = new WidgetManager(document.getElementById('rootWidget')!);
-        this.widgetManager.registerPostOffice(props.postOffice);
+        this.widgetManager = new WidgetManager(document.getElementById('rootWidget')!, props.messages, props.sendMessage);
     }
     public render() {
         return null;

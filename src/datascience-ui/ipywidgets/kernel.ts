@@ -6,7 +6,7 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as uuid from 'uuid/v4';
 import { noop } from '../../client/common/utils/misc';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ClassicCommShellCallbackManager } from './callbackManager';
 import { ClassicComm } from './classicComm';
 import { CommTargetCallback, IMessageSender } from './types';
@@ -50,13 +50,13 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
         }
     }
     public initialize(): void {
-        this.commRegistrationMessagesToSend.forEach(targetName => this.messageSender.sendMessage(InteractiveWindowMessages.IPyWidgets_registerCommTarget, targetName));
+        this.commRegistrationMessagesToSend.forEach(targetName => this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_registerCommTarget, targetName));
         this.commRegistrationMessagesToSend = [];
     }
     // tslint:disable-next-line: no-any
     public async handleMessageAsync(msg: string, payload?: any): Promise<void> {
         switch (msg) {
-            case InteractiveWindowMessages.IPyWidgets_comm_msg: {
+            case IPyWidgetMessages.IPyWidgets_comm_msg: {
                 // We got a `comm_msg` on the comm channel from kernel.
                 // These messages must be given to all widgets, to update their states.
                 // The `shell` message was sent using our custom `IComm` component provided to ipywidgets.
@@ -75,7 +75,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
                 }
                 break;
             }
-            case InteractiveWindowMessages.IPyWidgets_comm_open:
+            case IPyWidgetMessages.IPyWidgets_comm_open:
                 await this.handleCommOpen(msg, payload);
                 break;
             default:
@@ -118,7 +118,7 @@ export class ProxyKernel implements Partial<Kernel.IKernel> {
     }
     // tslint:disable-next-line: no-any
     private async handleCommOpen(msg: string, payload?: any): Promise<void> {
-        if (msg !== InteractiveWindowMessages.IPyWidgets_comm_open) {
+        if (msg !== IPyWidgetMessages.IPyWidgets_comm_open) {
             return;
         }
         // Happens when a comm is opened (generatelly part of a cell execution).

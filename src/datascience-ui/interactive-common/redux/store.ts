@@ -5,8 +5,10 @@ import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
 
+import { Observable } from 'rxjs/Observable';
+import { Subject } from 'rxjs/Subject';
 import { Identifiers } from '../../../client/datascience/constants';
-import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
 import { IMainState } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
@@ -14,7 +16,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
-import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import { AllowedIPyWidgetMessages, AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     const defaultSettings = loadDefaultSettings();
@@ -198,8 +200,9 @@ export interface IStore {
     main: IMainState;
     monaco: IMonacoState;
     post: {};
-    // Required only for ipywidgets (to send & receive messages).
-    postOffice: PostOffice;
+    // tslint:disable-next-line: no-any
+    widgetMessagses: Observable<{type: string; payload?: any}>;
+    sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
 }
 
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
@@ -216,12 +219,15 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     // Create another reducer for handling monaco state
     const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
+    // tslint:disable-next-line: no-any
+    const widgetMessages = new Subject<{type: string; payload?: any}>();
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
         monaco: monacoReducer,
         post: postOfficeReducer,
-        postOffice: () => postOffice
+        widgetMessagses: () => widgetMessages.asObservable(),
+        sendMessage: () => postOffice.sendMessage.bind(postOffice)
     });
 
     // Create our middleware
@@ -243,6 +249,9 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
                 // - Have one reducer for incoming
                 // - Have another reducer for outgoing
                 store.dispatch({ type: `action.${message}`, payload });
+            }
+            if (AllowedIPyWidgetMessages.find(k => k === message)) {
+                widgetMessages.next({ type: message, payload });
             }
             return true;
         }

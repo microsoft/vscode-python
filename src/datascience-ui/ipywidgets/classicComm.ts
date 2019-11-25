@@ -8,7 +8,7 @@ import * as uuid from 'uuid/v4';
 import { createDeferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { serializeDataViews } from '../../client/common/utils/serializers';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ClassicCommShellCallbackManager } from './callbackManager';
 import { IMessageSender } from './types';
 
@@ -50,7 +50,7 @@ export class ClassicComm implements Kernel.IComm {
         const msgType = 'comm_open';
         // Send this payload to the extension where we'll use the real comms to send to the kernel.
         // The response will be handled and sent back as messages to the UI as messages `shellSend_*`
-        this.messageSender.sendMessage(InteractiveWindowMessages.IPyWidgets_ShellSend, {
+        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_ShellSend, {
             data,
             metadata,
             commId,
@@ -99,7 +99,7 @@ export class ClassicComm implements Kernel.IComm {
         const msgType = 'comm_msg';
         // Send this payload to the extension where we'll use the real comms to send to the kernel.
         // The response will be handled and sent back as messages to the UI as messages `shellSend_*`
-        this.messageSender.sendMessage(InteractiveWindowMessages.IPyWidgets_ShellSend, {
+        this.messageSender.sendMessage(IPyWidgetMessages.IPyWidgets_ShellSend, {
             data,
             metadata,
             commId,

@@ -85,6 +85,9 @@ export enum InteractiveWindowMessages {
     FocusedCellEditor = 'focused_cell_editor',
     MonacoReady = 'monaco_ready',
     ClearAllOutputs = 'clear_all_outputs',
+}
+
+export enum IPyWidgetMessages {
     IPyWidgets_display_data_msg = 'IPyWidgets_display_data_msg',
     IPyWidgets_comm_msg = 'IPyWidgets_comm_msg',
     IPyWidgets_comm_open = 'IPyWidgets_comm_open',
@@ -96,7 +99,6 @@ export enum InteractiveWindowMessages {
     IPyWidgets_ShellSend_resolve = 'IPyWidgets_ShellSend_resolve',
     IPyWidgets_ShellSend_reject = 'IPyWidgets_ShellSend_reject'
 }
-
 export enum NativeCommandType {
     AddToEnd = 0,
     ArrowDown,
@@ -288,17 +290,17 @@ export interface IFocusedCellEditor {
 // Map all messages to specific payloads
 export class IInteractiveWindowMapping {
     // tslint:disable-next-line: no-any
-    public [InteractiveWindowMessages.IPyWidgets_ShellSend]: { data: any; metadata: any; commId: string; requestId: string; buffers?: any[]; disposeOnDone?: boolean; targetName?   : string; msgType: string   };
+    public [IPyWidgetMessages.IPyWidgets_ShellSend]: { data: any; metadata: any; commId: string; requestId: string; buffers?: any[]; disposeOnDone?: boolean; targetName?   : string; msgType: string   };
     // tslint:disable-next-line: no-any
-    public [InteractiveWindowMessages.IPyWidgets_ShellSend_onIOPub]: { requestId: string; msg: KernelMessage.IIOPubMessage };
-    public [InteractiveWindowMessages.IPyWidgets_ShellSend_reply]: { requestId: string; msg: KernelMessage.IShellMessage };
-    public [InteractiveWindowMessages.IPyWidgets_ShellSend_resolve]: { requestId: string; msg?: KernelMessage.IShellMessage };
+    public [IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub]: { requestId: string; msg: KernelMessage.IIOPubMessage };
+    public [IPyWidgetMessages.IPyWidgets_ShellSend_reply]: { requestId: string; msg: KernelMessage.IShellMessage };
+    public [IPyWidgetMessages.IPyWidgets_ShellSend_resolve]: { requestId: string; msg?: KernelMessage.IShellMessage };
     // tslint:disable-next-line: no-any
-    public [InteractiveWindowMessages.IPyWidgets_ShellSend_reject]: { requestId: string; msg?: any };
-    public [InteractiveWindowMessages.IPyWidgets_registerCommTarget]: string;
-    public [InteractiveWindowMessages.IPyWidgets_comm_open]: KernelMessage.ICommOpenMsg;
-    public [InteractiveWindowMessages.IPyWidgets_comm_msg]: KernelMessage.ICommMsgMsg;
-    public [InteractiveWindowMessages.IPyWidgets_display_data_msg]: KernelMessage.IDisplayDataMsg;
+    public [IPyWidgetMessages.IPyWidgets_ShellSend_reject]: { requestId: string; msg?: any };
+    public [IPyWidgetMessages.IPyWidgets_registerCommTarget]: string;
+    public [IPyWidgetMessages.IPyWidgets_comm_open]: KernelMessage.ICommOpenMsg;
+    public [IPyWidgetMessages.IPyWidgets_comm_msg]: KernelMessage.ICommMsgMsg;
+    public [IPyWidgetMessages.IPyWidgets_display_data_msg]: KernelMessage.IDisplayDataMsg;
 
     public [InteractiveWindowMessages.StartCell]: ICell;
     public [InteractiveWindowMessages.FinishCell]: ICell;

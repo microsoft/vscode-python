@@ -6,7 +6,6 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { nbformat } from '@jupyterlab/services/node_modules/@jupyterlab/coreutils';
 import { IInteractiveWindowMapping } from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import { PostOffice } from '../react-common/postOffice';
 
 export interface IMessageSender {
     sendMessage<M extends IInteractiveWindowMapping, T extends keyof M>(type: T, payload?: M[T]): void;
@@ -51,13 +50,6 @@ export interface IHtmlWidgetManager {
 // export interface IIPyWidgetManager extends IMessageHandler {
 export interface IIPyWidgetManager {
     dispose(): void;
-    /**
-     * To send and listen to messages (communicate with extension/backend).
-     *
-     * @param {PostOffice} postOffice
-     * @memberof IIPyWidgetManager
-     */
-    registerPostOffice(postOffice: PostOffice): void;
     /**
      * Clears/removes all the widgets
      *

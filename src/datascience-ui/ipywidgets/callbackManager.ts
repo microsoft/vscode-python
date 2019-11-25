@@ -5,7 +5,7 @@
 
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { Deferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IPyWidgetMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 export class ClassicCommShellCallbackManager {
     private requestFutureMap = new Map<string, { future: Kernel.IShellFuture; deferred: Deferred<KernelMessage.IShellMessage | undefined> }>();
@@ -18,7 +18,7 @@ export class ClassicCommShellCallbackManager {
     // tslint:disable-next-line: no-any
     public async handleShellCallbacks(msg: string, payload?: any): Promise<void> {
         switch (msg) {
-            case InteractiveWindowMessages.IPyWidgets_ShellSend_onIOPub: {
+            case IPyWidgetMessages.IPyWidgets_ShellSend_onIOPub: {
                 // We got an `iopub` message on the comm for the `shell_` message that was sent by ipywidgets.
                 // The `shell` message was sent using our custom `IComm` component provided to ipywidgets.
                 // ipywidgets uses the `IComm.send` method.
@@ -27,7 +27,7 @@ export class ClassicCommShellCallbackManager {
                 reply.future.onIOPub(payload.msg);
                 break;
             }
-            case InteractiveWindowMessages.IPyWidgets_ShellSend_reply: {
+            case IPyWidgetMessages.IPyWidgets_ShellSend_reply: {
                 // We got a `reply` message on the comm for the `shell_` message that was sent by ipywidgets.
                 // The `shell` message was sent using our custom `IComm` component provided to ipywidgets.
                 // ipywidgets uses the `IComm.send` method.
@@ -36,7 +36,7 @@ export class ClassicCommShellCallbackManager {
                 reply.future.onReply(payload.msg);
                 break;
             }
-            case InteractiveWindowMessages.IPyWidgets_ShellSend_resolve: {
+            case IPyWidgetMessages.IPyWidgets_ShellSend_resolve: {
                 // We got a `reply` message on the comm for the `shell_` message that was sent by ipywidgets.
                 // The `shell` message was sent using our custom `IComm` component provided to ipywidgets.
                 // ipywidgets uses the `IComm.send` method.
@@ -46,7 +46,7 @@ export class ClassicCommShellCallbackManager {
                 reply.deferred.resolve(payload.msg);
                 break;
             }
-            case InteractiveWindowMessages.IPyWidgets_ShellSend_reject: {
+            case IPyWidgetMessages.IPyWidgets_ShellSend_reject: {
                 // We got a `reply` message on the comm for the `shell_` message that was sent by ipywidgets.
                 // The `shell` message was sent using our custom `IComm` component provided to ipywidgets.
                 // ipywidgets uses the `IComm.send` method.
