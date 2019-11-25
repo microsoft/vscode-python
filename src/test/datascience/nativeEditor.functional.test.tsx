@@ -1137,7 +1137,7 @@ for _ in range(50):
              */
             async function waitForNotebookToBeDirty(): Promise<void> {
                 // Wait for the state to get updated.
-                await waitForCondition(async () => store.getState().main.dirty === true, 1_000, `Timeout waiting for dirty state to get updated to true`);
+                await waitForCondition(async () => store.getState().main.dirty === true, 5_000, `Timeout waiting for dirty state to get updated to true`);
             }
 
             /**
@@ -1148,7 +1148,7 @@ for _ in range(50):
              */
             async function waitForNotebookToBeClean(): Promise<void> {
                 // Wait for the state to get updated.
-                await waitForCondition(async () => store.getState().main.dirty === false, 2_000, `Timeout waiting for dirty state to get updated to false`);
+                await waitForCondition(async () => store.getState().main.dirty === false, 5_000, `Timeout waiting for dirty state to get updated to false`);
             }
 
             /**
