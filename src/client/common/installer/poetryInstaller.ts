@@ -13,7 +13,7 @@ import { IFileSystem } from '../platform/types';
 import { IProcessServiceFactory } from '../process/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller } from './types';
+import { IModuleInstaller, InterpreterUri } from './types';
 export const poetryName = 'poetry';
 const poetryFile = 'poetry.lock';
 
@@ -38,11 +38,11 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
         @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory) {
         super(serviceContainer);
     }
-    public async isSupported(resource?: Uri): Promise<boolean> {
+    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (!resource) {
             return false;
         }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder((!resource || resource instanceof Uri) ? resource : undefined);
         if (!workspaceFolder) {
             return false;
         }
@@ -62,8 +62,8 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
             return false;
         }
     }
-    protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
-        const execPath = this.configurationService.getSettings(resource).poetryPath;
+    protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
+        const execPath = this.configurationService.getSettings((!resource || resource instanceof Uri) ? resource : undefined).poetryPath;
         const args = ['add', '--dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');

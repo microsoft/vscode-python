@@ -8,7 +8,7 @@ import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller } from './types';
+import { IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
 export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
@@ -25,10 +25,10 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
-    public isSupported(resource?: Uri): Promise<boolean> {
+    public isSupported(resource?: InterpreterUri): Promise<boolean> {
         return this.isPipAvailable(resource);
     }
-    protected async getExecutionInfo(moduleName: string, _resource?: Uri): Promise<ExecutionInfo> {
+    protected async getExecutionInfo(moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {
         const proxyArgs: string[] = [];
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         const proxy = workspaceService.getConfiguration('http').get('proxy', '');
@@ -41,9 +41,11 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
             moduleName: 'pip'
         };
     }
-    private isPipAvailable(resource?: Uri): Promise<boolean> {
+    private isPipAvailable(info?: InterpreterUri): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        return pythonExecutionFactory.create({ resource })
+        const resource = (!info || info instanceof Uri) ? info : undefined;
+        const pythonPath = (info && !(info instanceof Uri)) ? info.path : undefined;
+        return pythonExecutionFactory.create({ resource, pythonPath })
             .then(proc => proc.isModuleInstalled('pip'))
             .catch(() => false);
     }
