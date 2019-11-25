@@ -19,7 +19,7 @@ import { captureTelemetry } from '../../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../../constants';
 import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterCommandFinder } from '../jupyterCommandFinder';
-import { JupyterKernelSpec } from '../jupyterKernelSpec';
+import { JupyterKernelSpec } from './jupyterKernelSpec';
 
 /**
  * Responsible for kernel management and the like.
