@@ -172,9 +172,16 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
             // This new language server does not know about our document, so tell it.
             const document = await this.getDocument();
-            if (document && languageServer.handleOpen) {
-                languageServer.handleOpen(document);
-                this.sentOpenDocument = true;
+            if (document && languageServer.handleOpen && languageServer.handleChanges) {
+                // If we already sent an open document, that means we need to send both the open and
+                // the new changes
+                if (this.sentOpenDocument) {
+                    languageServer.handleOpen(document);
+                    languageServer.handleChanges(document, document.getFullContentChanges());
+                } else {
+                    this.sentOpenDocument = true;
+                    languageServer.handleOpen(document);
+                }
             }
 
             // Save the ref.
@@ -507,9 +514,9 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     }
 
     private async restartKernel(): Promise<void> {
-        // This is the one that acts like a reset
+        // This is the one that acts like a reset if this is the interactive window
         const document = await this.getDocument();
-        if (document) {
+        if (document && document.isReadOnly) {
             this.sentOpenDocument = false;
             const changes = document.removeAllCells();
             return this.handleChanges(document, changes);
