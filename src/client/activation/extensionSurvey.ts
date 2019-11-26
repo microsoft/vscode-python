@@ -4,6 +4,7 @@
 'use strict';
 
 import { inject, injectable, optional } from 'inversify';
+import * as querystring from 'querystring';
 import * as vscode from 'vscode';
 import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
@@ -90,11 +91,13 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
     }
 
     private launchSurvey() {
-        const extensionVersion = encodeURIComponent(this.appEnvironment.packageJson.version);
-        const vscodeVersion = encodeURIComponent(vscode.version);
-        const machineId = encodeURIComponent(this.appEnvironment.machineId);
-        const platform = encodeURIComponent(this.platformService.osType);
-        const url = `https://aka.ms/AA5rjx5?o=${platform}&v=${vscodeVersion}&e=${extensionVersion}&m=${machineId}`;
+        const query = querystring.stringify({
+            o: encodeURIComponent(this.platformService.osType), // platform
+            v: encodeURIComponent(vscode.version),
+            e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
+            m: encodeURIComponent(this.appEnvironment.machineId)
+        });
+        const url = `https://aka.ms/AA5rjx5?${query}`;
         this.browserService.launch(url);
     }
 }
