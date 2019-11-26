@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { OutputChannel, Uri, window } from 'vscode';
+import { OutputChannel, window } from 'vscode';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
