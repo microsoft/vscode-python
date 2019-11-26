@@ -105,6 +105,10 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         await this.fs.writeFile(targetJsonFile, JSON.stringify(content));
     }
 
+    public disconnect(): void {
+        this.manager.disconnect();
+    }
+
     public handleOpen(document: TextDocument): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {

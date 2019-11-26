@@ -40,6 +40,10 @@ export class RefCountedLanguageServer implements ILanguageServer {
         }
     }
 
+    public disconnect() {
+        this.impl.disconnect ? this.impl.disconnect() : noop();
+    }
+
     public clearAnalysisCache() {
         this.impl.clearAnalysisCache ? this.impl.clearAnalysisCache() : noop();
     }

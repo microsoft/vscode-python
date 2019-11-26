@@ -1,41 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import {
-    CancellationToken,
-    CompletionContext,
-    ConfigurationChangeEvent,
-    Diagnostic,
-    Disposable,
-    Event,
-    EventEmitter,
-    Position,
-    TextDocument,
-    Uri,
-    WorkspaceFolder
-} from 'vscode';
-import {
-    DocumentFilter,
-    DocumentSelector,
-    HandleDiagnosticsSignature,
-    LanguageClientOptions,
-    ProvideCompletionItemsSignature,
-    RevealOutputChannelOn
-} from 'vscode-languageclient';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
+import { DocumentFilter, DocumentSelector, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import {
-    BANNER_NAME_LS_SURVEY,
-    IConfigurationService,
-    IExtensionContext,
-    IOutputChannel,
-    IPathUtils,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
@@ -56,7 +29,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
@@ -81,6 +53,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         this.disposables.forEach(d => d.dispose());
         this.didChange.dispose();
     }
+    // tslint:disable-next-line: max-func-body-length
     @traceDecorators.error('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const properties: Record<string, {}> = {};
@@ -160,20 +133,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 analysisUpdates: true,
                 traceLogging: true, // Max level, let LS decide through settings actual level of logging.
                 asyncStartup: true
-            },
-            middleware: {
-                provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
-                    this.surveyBanner.showBanner().ignoreErrors();
-                    return next(document, position, context, token);
-                },
-                handleDiagnostics: (uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature) => {
-                    // Skip sending if this is a special file.
-                    const filePath = uri.fsPath;
-                    const baseName = filePath ? path.basename(filePath) : undefined;
-                    if (!baseName || !baseName.startsWith(HiddenFilePrefix)) {
-                        next(uri, diagnostics);
-                    }
-                }
             }
         };
     }

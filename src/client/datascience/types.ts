@@ -109,7 +109,6 @@ export interface INotebookServerOptions {
     usingDarkTheme?: boolean;
     useDefaultConfig?: boolean;
     workingDir?: string;
-    interpreterPath?: string;
     purpose: string;
 }
 

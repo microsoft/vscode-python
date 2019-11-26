@@ -78,7 +78,6 @@ import { InteractiveWindowMessageListener } from './interactiveWindowMessageList
 
 @injectable()
 export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapping> implements IInteractiveBase {
-    private interpreterChangedDisposable: Disposable;
     private unfinishedCells: ICell[] = [];
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
@@ -131,9 +130,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
         this._id = uuid();
-
-        // Sign up for configuration changes
-        this.interpreterChangedDisposable = this.interpreterService.onDidChangeInterpreter(this.onInterpreterChanged);
 
         // Listen for active text editor changes. This is the only way we can tell that we might be needing to gain focus
         const handler = this.documentManager.onDidChangeActiveTextEditor(() => this.activating());
@@ -293,9 +289,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     public dispose() {
         super.dispose();
         this.listeners.forEach(l => l.dispose());
-        if (this.interpreterChangedDisposable) {
-            this.interpreterChangedDisposable.dispose();
-        }
         this.updateContexts(undefined);
     }
 
@@ -935,13 +928,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         sendTelemetryEvent(event);
     }
 
-    private onInterpreterChanged = () => {
-        // Update our load promise. We need to restart the jupyter server
-        if (this.loadPromise) {
-            this.loadPromise = this.reloadWithNew();
-        }
-    }
-
     private async stopServer(): Promise<void> {
         if (this.loadPromise) {
             await this.loadPromise;
@@ -951,18 +937,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.notebook = undefined;
                 await server.dispose();
             }
-        }
-    }
-
-    private async reloadWithNew(): Promise<void> {
-        const status = this.setStatus(localize.DataScience.startingJupyter(), true);
-        try {
-            // Not the same as reload, we need to actually wait for the server.
-            await this.stopServer();
-            await this.startServer();
-            await this.addSysInfo(SysInfoReason.New);
-        } finally {
-            status.dispose();
         }
     }
 

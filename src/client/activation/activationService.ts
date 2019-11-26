@@ -39,11 +39,16 @@ import {
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const workspacePathNameForGlobalWorkspaces = '';
 
+interface IActivatedServer {
+    key: string;
+    server: ILanguageServer;
+}
+
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, ILanguageServerCache, Disposable {
     private cache = new Map<string, Promise<RefCountedLanguageServer>>();
     private jediServer: RefCountedLanguageServer | undefined;
-    private activatedServer?: ILanguageServer;
+    private activatedServer?: IActivatedServer;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
     private readonly appShell: IApplicationShell;
@@ -76,11 +81,17 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
         this.interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const key = await this.getKey(resource, this.interpreter);
         const result = await this.get(resource, this.interpreter);
         if (this.activatedServer) {
-            this.activatedServer.dispose();
+            // The activatedServer is the one handling intellisense requests for the entire ide, deactivate it if different.
+            // However it should still be able to handle direct requests (like for DS windows)
+            if (this.activatedServer.key !== key && this.activatedServer.server.disconnect) {
+                this.activatedServer.server.disconnect();
+            }
+            this.activatedServer.server.dispose();
         }
-        this.activatedServer = result;
+        this.activatedServer = { key, server: result };
     }
 
     public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServer> {
@@ -104,7 +115,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     public dispose() {
         if (this.activatedServer) {
-            this.activatedServer.dispose();
+            this.activatedServer.server.dispose();
         }
     }
     @swallowExceptions('Send telemetry for Language Server current selection')

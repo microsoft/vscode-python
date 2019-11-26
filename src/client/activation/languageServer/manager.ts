@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 import '../../common/extensions';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import { IDisposable, Resource } from '../../common/types';
+import { IDisposable, Resource, IPythonExtensionBanner, BANNER_NAME_LS_SURVEY } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -17,17 +17,20 @@ import {
     ILanguageServerManager,
     ILanguageServerProxy
 } from '../types';
+import { LanguageClientMiddleware } from './languageClientMiddleware';
 
 @injectable()
 export class LanguageServerManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
     private interpreter: PythonInterpreter | undefined;
+    private middleware: LanguageClientMiddleware | undefined;
     private disposables: IDisposable[] = [];
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension
+        @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
+        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
     ) { }
     public dispose() {
         if (this.languageProxy) {
@@ -51,6 +54,9 @@ export class LanguageServerManager implements ILanguageServerManager {
 
         await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
+    }
+    public disconnect() {
+        this.middleware?.disconnect();
     }
     protected registerCommandHandler() {
         this.lsExtension.invoked(this.loadExtensionIfNecessary, this, this.disposables);
@@ -77,6 +83,7 @@ export class LanguageServerManager implements ILanguageServerManager {
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
         const options = await this.analysisOptions!.getAnalysisOptions();
+        options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
         await this.languageServerProxy.start(this.resource, this.interpreter, options);
         this.loadExtensionIfNecessary();
     }

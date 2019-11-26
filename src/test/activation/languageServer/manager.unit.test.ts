@@ -15,8 +15,10 @@ import {
     ILanguageServerExtension,
     ILanguageServerProxy
 } from '../../../client/activation/types';
+import { IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
 import { sleep } from '../../core';
 
 use(chaiAsPromised);
@@ -30,16 +32,19 @@ suite('Language Server - Manager', () => {
     let languageServer: ILanguageServerProxy;
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
+    let surveyBanner: IPythonExtensionBanner;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         analysisOptions = mock(LanguageServerAnalysisOptions);
         languageServer = mock(LanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
+        surveyBanner = mock(ProposeLanguageServerBanner);
         manager = new LanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
-            instance(lsExtension)
+            instance(lsExtension),
+            instance(surveyBanner)
         );
     });
 

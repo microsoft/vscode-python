@@ -58,7 +58,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             configuration,
             serviceContainer);
         asyncRegistry.push(this);
-        this.serverCache = new ServerCache(configuration, workspace, fileSystem, interpreterService);
+        this.serverCache = new ServerCache(configuration, workspace, fileSystem);
     }
 
     public async dispose(): Promise<void> {

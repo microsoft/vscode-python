@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { expect } from 'chai';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, Uri, WorkspaceFolder } from 'vscode';
 import { DocumentSelector } from 'vscode-languageclient';
+
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel } from '../../../client/activation/types';
@@ -16,12 +14,17 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils, IPythonExtensionBanner } from '../../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IExtensionContext,
+    IOutputChannel,
+    IPathUtils
+} from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
-import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
 import { sleep } from '../../core';
 
 // tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
@@ -55,7 +58,6 @@ suite('Language Server - Analysis Options', () => {
     let envVarsProvider: IEnvironmentVariablesProvider;
     let configurationService: IConfigurationService;
     let workspace: IWorkspaceService;
-    let surveyBanner: IPythonExtensionBanner;
     let interpreterService: IInterpreterService;
     let outputChannel: IOutputChannel;
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
@@ -66,7 +68,6 @@ suite('Language Server - Analysis Options', () => {
         envVarsProvider = mock(EnvironmentVariablesProvider);
         configurationService = mock(ConfigurationService);
         workspace = mock(WorkspaceService);
-        surveyBanner = mock(ProposeLanguageServerBanner);
         interpreterService = mock(InterpreterService);
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
@@ -77,7 +78,7 @@ suite('Language Server - Analysis Options', () => {
         lsFolderService = mock(LanguageServerFolderService);
         analysisOptions = new TestClass(context.object, instance(envVarsProvider),
             instance(configurationService),
-            instance(workspace), instance(surveyBanner),
+            instance(workspace),
             lsOutputChannel.object,
             instance(pathUtils), instance(lsFolderService));
     });

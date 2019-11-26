@@ -79,6 +79,11 @@ export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
 
+// tslint:disable-next-line: interface-name
+export interface RegisteredServer {
+    disconnect(): void;
+}
+
 export interface ILanguageServer extends
     RenameProvider,
     DefinitionProvider,
@@ -90,6 +95,7 @@ export interface ILanguageServer extends
     SignatureHelpProvider,
     Partial<DocumentHandler>,
     Partial<LanguageServerCommandHandler>,
+    Partial<RegisteredServer>,
     IDisposable {
 }
 
@@ -153,6 +159,7 @@ export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
     readonly languageProxy: ILanguageServerProxy | undefined;
     start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
+    disconnect(): void;
 }
 export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
 export interface ILanguageServerExtension extends IDisposable {
