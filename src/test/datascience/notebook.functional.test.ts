@@ -551,7 +551,8 @@ suite('DataScience notebook tests', () => {
 
             // Create a new notebook, we should not be the same anymore
             const server3 = await createNotebook(true);
-            assert.notEqual(server, server3, 'With interpreter changed we should return a new server');
+            assert.ok(server3, 'Server not created');
+            assert.ok(server !== server3, 'With interpreter changed we should return a new server');
         } else {
             console.log(`Skipping Change Interpreter test in non-mocked Jupyter case`);
         }
