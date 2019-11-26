@@ -12,6 +12,7 @@ import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IProcessServiceFactory } from '../process/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller, InterpreterUri } from './types';
 export const poetryName = 'poetry';
@@ -42,7 +43,7 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
         if (!resource) {
             return false;
         }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder((!resource || resource instanceof Uri) ? resource : undefined);
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(isResource(resource) ? resource : undefined);
         if (!workspaceFolder) {
             return false;
         }
@@ -63,7 +64,7 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
         }
     }
     protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
-        const execPath = this.configurationService.getSettings((!resource || resource instanceof Uri) ? resource : undefined).poetryPath;
+        const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
         const args = ['add', '--dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');

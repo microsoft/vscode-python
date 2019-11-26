@@ -18,6 +18,7 @@ import {
     IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel,
     IPersistentStateFactory, ModuleNamePurpose, Product, ProductType
 } from '../types';
+import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
 
@@ -43,7 +44,7 @@ export abstract class BaseInstaller {
         // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
         // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
         // another message.
-        const workspaceFolder = (resource && resource instanceof Uri) ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const workspaceFolder = (resource && isResource(resource)) ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const key = `${product}${workspaceFolder ? workspaceFolder.uri.fsPath : ''}`;
         if (BaseInstaller.PromptPromises.has(key)) {
             return BaseInstaller.PromptPromises.get(key)!;
@@ -81,8 +82,8 @@ export abstract class BaseInstaller {
             return true;
         }
         // User may have customized the module name or provided the fully qualified path.
-        const pythonPath = (resource && !(resource instanceof Uri)) ? resource.path : undefined;
-        const uri = !resource || resource instanceof Uri ? resource : undefined;
+        const pythonPath = isResource(resource) ? undefined : resource.path;
+        const uri = isResource(resource) ? resource : undefined;
         const executableName = this.getExecutableNameFromSettings(product, uri);
 
         const isModule = this.isExecutableAModule(product, uri);

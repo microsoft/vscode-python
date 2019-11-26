@@ -2,11 +2,11 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
 import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller, InterpreterUri } from './types';
 
@@ -43,8 +43,8 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
     }
     private isPipAvailable(info?: InterpreterUri): Promise<boolean> {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-        const resource = (!info || info instanceof Uri) ? info : undefined;
-        const pythonPath = (info && !(info instanceof Uri)) ? info.path : undefined;
+        const resource = isResource(info) ? info : undefined;
+        const pythonPath = isResource(info) ? undefined : info.path;
         return pythonExecutionFactory.create({ resource, pythonPath })
             .then(proc => proc.isModuleInstalled('pip'))
             .catch(() => false);

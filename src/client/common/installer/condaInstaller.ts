@@ -6,6 +6,7 @@ import { Uri } from 'vscode';
 import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller, InterpreterUri } from './types';
 
@@ -87,7 +88,7 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = (!resource || resource instanceof Uri) ?
+        const pythonPath = isResource(resource) ?
                             this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath :
                             resource.path;
         return condaService.isCondaEnvironment(pythonPath);

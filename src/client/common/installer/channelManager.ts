@@ -8,6 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { Product } from '../types';
+import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from './types';
 
@@ -24,7 +25,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const productName = ProductNames.get(product)!;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (channels.length === 0) {
-            await this.showNoInstallersMessage(resource instanceof Uri ? resource : undefined);
+            await this.showNoInstallersMessage(isResource(resource) ? resource : undefined);
             return;
         }
 

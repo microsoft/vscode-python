@@ -12,6 +12,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
+import { isResource } from '../utils/misc';
 import { InterpreterUri } from './types';
 
 @injectable()
@@ -21,19 +22,19 @@ export abstract class ModuleInstaller {
     constructor(protected serviceContainer: IServiceContainer) { }
     public async installModule(name: string, resource?: InterpreterUri): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
-        const uri = resource && resource instanceof Uri ? resource : undefined;
+        const uri = isResource(resource) ? resource : undefined;
         const executionInfo = await this.getExecutionInfo(name, resource);
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
 
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = (!resource || resource instanceof Uri) ? await interpreterService.getActiveInterpreter(resource) : resource;
+        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
         if (!interpreter){
             throw new Error('Unable to get interprter details');
         }
         const executionInfoArgs = await this.processInstallArgs(executionInfo.args, interpreter);
         if (executionInfo.moduleName) {
             const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const settings = configService.getSettings((resource && resource instanceof Uri) ? resource : undefined);
+            const settings = configService.getSettings(uri);
             const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
             const pythonPath = interpreter.path;
 

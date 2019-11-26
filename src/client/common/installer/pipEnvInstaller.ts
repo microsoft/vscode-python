@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
 import { IInterpreterLocatorService, InterpreterType, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
 import { IModuleInstaller, InterpreterUri } from './types';
 
@@ -31,7 +31,7 @@ export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller
         this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
-        if (!resource || resource instanceof Uri){
+        if (isResource(resource)){
             const interpreters = await this.pipenv.getInterpreters(resource);
             return interpreters && interpreters.length > 0;
         } else {
