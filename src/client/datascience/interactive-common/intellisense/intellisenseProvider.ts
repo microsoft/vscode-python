@@ -20,7 +20,7 @@ import {
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
-import { traceWarning } from '../../../common/logger';
+import { traceWarning, traceError } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
@@ -151,7 +151,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         }
     }
 
-    protected async getLanguageServer(): Promise<ILanguageServer> {
+    protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
         // Resource should be our potential resource if its set. Otherwise workspace root
         const resource = this.potentialResource || (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
 
@@ -165,30 +165,32 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             this.interpreter = interpreter;
 
             // Get an instance of the language server (so we ref count it )
-            const languageServer = await this.languageServerCache.get(resource, interpreter);
+            try {
+                const languageServer = await this.languageServerCache.get(resource, interpreter);
 
-            // Dispose of our old language service
-            this.languageServer?.dispose();
+                // Dispose of our old language service
+                this.languageServer?.dispose();
 
-            // This new language server does not know about our document, so tell it.
-            const document = await this.getDocument();
-            if (document && languageServer.handleOpen && languageServer.handleChanges) {
-                // If we already sent an open document, that means we need to send both the open and
-                // the new changes
-                if (this.sentOpenDocument) {
-                    languageServer.handleOpen(document);
-                    languageServer.handleChanges(document, document.getFullContentChanges());
-                } else {
-                    this.sentOpenDocument = true;
-                    languageServer.handleOpen(document);
+                // This new language server does not know about our document, so tell it.
+                const document = await this.getDocument();
+                if (document && languageServer.handleOpen && languageServer.handleChanges) {
+                    // If we already sent an open document, that means we need to send both the open and
+                    // the new changes
+                    if (this.sentOpenDocument) {
+                        languageServer.handleOpen(document);
+                        languageServer.handleChanges(document, document.getFullContentChanges());
+                    } else {
+                        this.sentOpenDocument = true;
+                        languageServer.handleOpen(document);
+                    }
                 }
+
+                // Save the ref.
+                this.languageServer = languageServer;
+            } catch (e) {
+                traceError(e);
             }
-
-            // Save the ref.
-            this.languageServer = languageServer;
         }
-
-        // Use the resource and the interpreter to get our language server
         return this.languageServer;
     }
 

@@ -54,7 +54,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private readonly lsNotSupportedDiagnosticService: IDiagnosticsService;
     private readonly interpreterService: IInterpreterService;
     private resource!: Resource;
-    private interpreter: PythonInterpreter | undefined;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
@@ -79,17 +78,25 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     public async activate(resource: Resource): Promise<void> {
         // Get a new server and dispose of the old one (might be the same one)
         this.resource = resource;
-        this.interpreter = await this.interpreterService.getActiveInterpreter(resource);
-        const key = await this.getKey(resource, this.interpreter);
-        const result = await this.get(resource, this.interpreter);
+        const interpreter = await this.interpreterService.getActiveInterpreter(resource);
+        const key = await this.getKey(resource, interpreter);
+
+        // If we have an old server with a different key, then disconnect it as the
+        // creation of the new server may fail if this server is still connected
+        if (this.activatedServer && this.activatedServer.key !== key && this.activatedServer.server.disconnect) {
+            this.activatedServer.server.disconnect();
+        }
+
+        // Get the new item
+        const result = await this.get(resource, interpreter);
+
+        // Now we dispose. This ensures the object stays alive if it's the same object because
+        // we dispose after we increment the ref count.
         if (this.activatedServer) {
-            // The activatedServer is the one handling intellisense requests for the entire ide, deactivate it if different.
-            // However it should still be able to handle direct requests (like for DS windows)
-            if (this.activatedServer.key !== key && this.activatedServer.server.disconnect) {
-                this.activatedServer.server.disconnect();
-            }
             this.activatedServer.server.dispose();
         }
+
+        // Save our active server.
         this.activatedServer = { key, server: result };
     }
 

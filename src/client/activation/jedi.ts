@@ -4,6 +4,7 @@ import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
     CodeLens,
+    commands,
     CompletionContext,
     CompletionItem,
     CompletionList,
@@ -24,7 +25,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 
-import { PYTHON } from '../common/constants';
+import { PYTHON, Commands } from '../common/constants';
 import { IConfigurationService, IDisposable, IExtensionContext, ILogger, Resource } from '../common/types';
 import { IShebangCodeLensProvider, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
@@ -32,7 +33,7 @@ import { JediFactory } from '../languageServices/jediProxyFactory';
 import { PythonCompletionItemProvider } from '../providers/completionProvider';
 import { PythonDefinitionProvider } from '../providers/definitionProvider';
 import { PythonHoverProvider } from '../providers/hoverProvider';
-import { activateGoToObjectDefinitionProvider } from '../providers/objectDefinitionProvider';
+import { PythonObjectDefinitionProvider } from '../providers/objectDefinitionProvider';
 import { PythonReferenceProvider } from '../providers/referenceProvider';
 import { PythonRenameProvider } from '../providers/renameProvider';
 import { PythonSignatureProvider } from '../providers/signatureProvider';
@@ -46,6 +47,7 @@ import { ILanguageServerActivator } from './types';
 
 @injectable()
 export class JediExtensionActivator implements ILanguageServerActivator {
+    private static workspaceSymbols: WorkspaceSymbols | undefined;
     private readonly context: IExtensionContext;
     private jediFactory?: JediFactory;
     private readonly documentSelector: DocumentFilter[];
@@ -58,6 +60,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     private symbolProvider: JediSymbolProvider | undefined;
     private signatureProvider: PythonSignatureProvider | undefined;
     private registrations: IDisposable[] = [];
+    private objectDefinitionProvider: PythonObjectDefinitionProvider | undefined;
 
     constructor(@inject(IServiceManager) private serviceManager: IServiceManager) {
         this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
@@ -71,7 +74,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         const context = this.context;
         const jediFactory = (this.jediFactory = new JediFactory(context.asAbsolutePath('.'), interpreter, this.serviceManager));
         context.subscriptions.push(jediFactory);
-        context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
+        const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
 
         this.renameProvider = new PythonRenameProvider(this.serviceManager);
         this.definitionProvider = new PythonDefinitionProvider(jediFactory);
@@ -79,8 +82,18 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.referenceProvider = new PythonReferenceProvider(jediFactory);
         this.completionProvider = new PythonCompletionItemProvider(jediFactory, this.serviceManager);
         this.codeLensProvider = this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider);
+        this.objectDefinitionProvider = new PythonObjectDefinitionProvider(jediFactory);
 
-        context.subscriptions.push(jediFactory);
+        if (!JediExtensionActivator.workspaceSymbols) {
+            // Workspace symbols is static because it doesn't rely on the jediFactory.
+            JediExtensionActivator.workspaceSymbols = new WorkspaceSymbols(serviceContainer);
+            context.subscriptions.push(JediExtensionActivator.workspaceSymbols);
+        }
+
+        // Make sure commands are in the registration list that gets disposed when the language server is disconnected from the
+        // IDE.
+        this.registrations.push(commands.registerCommand('python.goToPythonObject', () => this.objectDefinitionProvider!.goToObjectDefinition()));
+
         this.registrations.push(
             languages.registerRenameProvider(this.documentSelector, this.renameProvider)
         );
@@ -121,10 +134,8 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             );
         }
 
-        const serviceContainer = this.serviceManager.get<IServiceContainer>(IServiceContainer);
         this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         this.signatureProvider = new PythonSignatureProvider(jediFactory);
-        context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
         this.registrations.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
