@@ -12,7 +12,6 @@ import { STANDARD_OUTPUT_CHANNEL } from '../constants';
 import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
-import { noop } from '../utils/misc';
 import { InterpreterUri } from './types';
 
 @injectable()
