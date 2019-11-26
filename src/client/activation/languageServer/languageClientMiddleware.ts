@@ -3,79 +3,56 @@
 import * as path from 'path';
 import {
     CancellationToken,
+    CodeAction,
+    CodeActionContext,
+    CodeLens,
+    Command,
     CompletionContext,
-    ConfigurationChangeEvent,
-    Diagnostic,
-    Disposable,
-    Event,
-    EventEmitter,
-    Position,
-    TextDocument,
-    Uri,
-    WorkspaceFolder,
     CompletionItem,
-    ProviderResult,
-    SignatureHelp,
     Definition,
     DefinitionLink,
-    DocumentLink,
+    Diagnostic,
     DocumentHighlight,
-    SymbolInformation,
+    DocumentLink,
     DocumentSymbol,
-    CodeActionContext,
-    Command,
-    Range,
-    Location,
-    CodeAction,
-    CodeLens,
     FormattingOptions,
+    Location,
+    Position,
+    ProviderResult,
+    Range,
+    SignatureHelp,
+    SymbolInformation,
+    TextDocument,
     TextEdit,
+    Uri,
     WorkspaceEdit
 } from 'vscode';
 import {
-    DocumentFilter,
-    DocumentSelector,
     HandleDiagnosticsSignature,
-    LanguageClientOptions,
-    ProvideCompletionItemsSignature,
-    ProvideHoverSignature,
-    RevealOutputChannelOn,
     Middleware,
-    ResolveCompletionItemSignature,
-    ProvideSignatureHelpSignature,
-    ProvideDefinitionSignature,
-    ResolveDocumentLinkSignature,
-    ProvideDocumentLinksSignature,
     PrepareRenameSignature,
-    ProvideReferencesSignature,
-    ProvideDocumentSymbolsSignature,
     ProvideCodeActionsSignature,
-    ResolveCodeLensSignature,
     ProvideCodeLensesSignature,
-    ProvideWorkspaceSymbolsSignature,
-    ProvideDocumentHighlightsSignature,
+    ProvideCompletionItemsSignature,
+    ProvideDefinitionSignature,
     ProvideDocumentFormattingEditsSignature,
+    ProvideDocumentHighlightsSignature,
+    ProvideDocumentLinksSignature,
     ProvideDocumentRangeFormattingEditsSignature,
+    ProvideDocumentSymbolsSignature,
+    ProvideHoverSignature,
     ProvideOnTypeFormattingEditsSignature,
-    ProvideRenameEditsSignature
+    ProvideReferencesSignature,
+    ProvideRenameEditsSignature,
+    ProvideSignatureHelpSignature,
+    ProvideWorkspaceSymbolsSignature,
+    ResolveCodeLensSignature,
+    ResolveCompletionItemSignature,
+    ResolveDocumentLinkSignature
 } from 'vscode-languageclient';
 
-import { IWorkspaceService } from '../../common/application/types';
-import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
-import { traceDecorators, traceError, traceInfo } from '../../common/logger';
-import {
-    BANNER_NAME_LS_SURVEY,
-    IConfigurationService,
-    IExtensionContext,
-    IOutputChannel,
-    IPathUtils,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
-import { debounceSync } from '../../common/utils/decorators';
-import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { PythonInterpreter } from '../../interpreter/contracts';
-import { ILanguageServerAnalysisOptions, ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
+import { HiddenFilePrefix } from '../../common/constants';
+import { IPythonExtensionBanner } from '../../common/types';
 
 export class LanguageClientMiddleware implements Middleware {
     private connected = true;

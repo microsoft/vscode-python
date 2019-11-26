@@ -5,7 +5,7 @@ import '../../common/extensions';
 import { inject, injectable, named } from 'inversify';
 
 import { traceDecorators } from '../../common/logger';
-import { IDisposable, Resource, IPythonExtensionBanner, BANNER_NAME_LS_SURVEY } from '../../common/types';
+import { BANNER_NAME_LS_SURVEY, IDisposable, IPythonExtensionBanner, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
