@@ -5,8 +5,8 @@ import { Kernel } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 
-import { noop } from '../../common/utils/misc';
-import { IJupyterKernelSpec } from '../types';
+import { noop } from '../../../common/utils/misc';
+import { IJupyterKernelSpec } from '../../types';
 
 const IsGuidRegEx = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 
