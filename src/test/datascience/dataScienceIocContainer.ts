@@ -18,18 +18,38 @@ import {
     Uri,
     ViewColumn,
     WorkspaceConfiguration,
-    WorkspaceFolder
+    WorkspaceFolder,
+    WorkspaceFoldersChangeEvent
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import {
+    LanguageServerCompatibilityService
+} from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
 import {
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
+    ILanguageServerCompatibilityService,
     ILanguageServerManager,
     ILanguageServerProxy
 } from '../../client/activation/types';
+import {
+    LSNotSupportedDiagnosticService,
+    LSNotSupportedDiagnosticServiceId
+} from '../../client/application/diagnostics/checks/lsNotSupported';
+import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
+import {
+    DiagnosticCommandPromptHandlerService,
+    DiagnosticCommandPromptHandlerServiceId,
+    MessageCommandPrompt
+} from '../../client/application/diagnostics/promptHandler';
+import {
+    IDiagnosticFilterService,
+    IDiagnosticHandlerService,
+    IDiagnosticsService
+} from '../../client/application/diagnostics/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -49,6 +69,8 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
+import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
@@ -288,6 +310,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+    private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();
     private documentManager = new MockDocumentManager();
     private workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
@@ -425,6 +448,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
+        this.serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId);
+        this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(ILanguageServerCompatibilityService, LanguageServerCompatibilityService);
+        this.serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
+        this.serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
+
+        // Don't check for dot net compatibility
+        const dotNetCompability = mock(DotNetCompatibilityService);
+        this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(IDotNetCompatibilityService, instance(dotNetCompability));
 
         // Disable experiments.
         const experimentManager = mock(ExperimentsManager);
@@ -487,6 +518,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         datascience.setup(d => d.activationStartTime).returns(() => startTime);
