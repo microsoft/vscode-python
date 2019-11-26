@@ -466,6 +466,7 @@ suite('DataScience notebook tests', () => {
                 throw new Error('Method not implemented');
             }
         }
+        @injectable()
         class EmptyPathService implements IKnownSearchPathsForInterpreters {
             public getSearchPaths(): string[] {
                 return [];
