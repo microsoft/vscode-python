@@ -15,11 +15,13 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
+    public display_name?: string;
     constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
         this.language = specModel.language;
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.specFile = file;
+        this.display_name = specModel.display_name;
     }
     public dispose = async () => {
         if (this.specFile &&

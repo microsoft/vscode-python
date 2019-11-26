@@ -244,27 +244,7 @@ export class KernelService {
         return bestSpec;
     }
 
-    private async readSpec(kernelSpecOutputLine: string): Promise<JupyterKernelSpec | undefined> {
-        const match = RegExpValues.KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
-        if (match && match !== null && match.length > 2) {
-            // Second match should be our path to the kernel spec
-            const file = path.join(match[2], 'kernel.json');
-            try {
-                if (await this.fileSystem.fileExists(file)) {
-                    // Turn this into a IJupyterKernelSpec
-                    const model = JSON.parse(await this.fileSystem.readFile(file));
-                    model.name = match[1];
-                    return new JupyterKernelSpec(model, file);
-                }
-            } catch {
-                // Just return nothing if we can't parse.
-            }
-        }
-
-        return undefined;
-    }
-
-    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
         if (await this.jupyterExecution.isKernelSpecSupported()) {
             const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand);
 
@@ -273,24 +253,22 @@ export class KernelService {
                     traceInfo('Asking for kernelspecs from jupyter');
 
                     // Ask for our current list.
-                    const list = await kernelSpecCommand.command.exec(['list'], { throwOnStdErr: true, encoding: 'utf8' });
+                    const output = await kernelSpecCommand.command.exec(['list', '--json'], { throwOnStdErr: true, encoding: 'utf8' });
 
                     traceInfo('Parsing kernelspecs from jupyter');
-
                     // This should give us back a key value pair we can parse
-                    const lines = list.stdout.splitLines({ trim: false, removeEmptyEntries: true });
-
-                    // Generate all of the promises at once
-                    const promises = lines.map(l => this.readSpec(l));
-
-                    traceInfo('Awaiting the read of kernelspecs from jupyter');
-
-                    // Then let them run concurrently (they are file io)
-                    const specs = await Promise.all(promises);
-
-                    traceInfo('Returning kernelspecs from jupyter');
-                    return specs!.filter(s => s);
-                } catch {
+                    const kernelSpecs = JSON.parse(output.stdout.trim()) as Record<string, {spec: Omit<Kernel.ISpecModel, 'name'>}>;
+                    return Object.keys(kernelSpecs).map(kernelName => {
+                        const spec = kernelSpecs[kernelName].spec;
+                        // Add the missing name property.
+                        const model = {
+                            ...spec,
+                            name: kernelName
+                        };
+                        return new JupyterKernelSpec(model as Kernel.ISpecModel);
+                    });
+                } catch (ex) {
+                    traceError('Failed to list kernels', ex);
                     // This is failing for some folks. In that case return nothing
                     return [];
                 }
