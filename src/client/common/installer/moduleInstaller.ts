@@ -4,7 +4,7 @@
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { OutputChannel, window } from 'vscode';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../interpreter/contracts';
+import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -26,18 +26,15 @@ export abstract class ModuleInstaller {
         const executionInfo = await this.getExecutionInfo(name, resource);
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
 
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
-        if (!interpreter){
-            throw new Error('Unable to get interprter details');
-        }
-        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, interpreter);
+        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
         if (executionInfo.moduleName) {
             const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const settings = configService.getSettings(uri);
             const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
-            const pythonPath = interpreter.path;
 
+            const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+            const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+            const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
             if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                 await terminalService.sendCommand(pythonPath, args);
             } else if (settings.globalModuleInstallation) {
@@ -58,12 +55,13 @@ export abstract class ModuleInstaller {
     }
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
     protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
-    private async processInstallArgs(args: string[], interpreter: PythonInterpreter): Promise<string[]> {
+    private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
         const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
             return args;
         }
-
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
         // If installing pylint on python 2.x, then use pylint~=1.9.0
         if (interpreter && interpreter.version && interpreter.version.major === 2) {
             const newArgs = [...args];
