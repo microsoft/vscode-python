@@ -56,6 +56,8 @@ import {
     LanguageClientFactory,
     LanguageServerActivator
 } from '../../client/activation/types';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
+import { IActiveResourceService } from '../../client/common/application/types';
 import { INugetRepository } from '../../client/common/nuget/types';
 import {
     BANNER_NAME_DS_SURVEY,
@@ -109,6 +111,7 @@ suite('Unit Tests - Activation Service Registry', () => {
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();
+        verify(serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt)).once();
     });
 });

@@ -15,13 +15,13 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IProcessLogger, IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
-import { createTemporaryFile } from '../../../client/common/utils/fs';
 import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
@@ -41,6 +41,7 @@ suite('Daemon - Python Daemon Pool', () => {
     let disposables: IDisposable[] = [];
     let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService>>;
     let logger: IProcessLogger;
+    let fsUtils: FileSystem;
     class DaemonPool extends PythonDaemonExecutionServicePool {
         // tslint:disable-next-line: no-unnecessary-override
         public createDaemonServices(): Promise<IPythonDaemonExecutionService> {
@@ -54,6 +55,7 @@ suite('Daemon - Python Daemon Pool', () => {
                 .stdout.toString()
                 .trim();
         }
+        fsUtils = new FileSystem();
     });
     setup(async function () {
         if (isPythonVersion('2.7')){
@@ -94,8 +96,8 @@ suite('Daemon - Python Daemon Pool', () => {
     }
 
     async function createPythonFile(source: string): Promise<string> {
-        const tmpFile = await createTemporaryFile('.py');
-        disposables.push({ dispose: () => tmpFile.cleanupCallback() });
+        const tmpFile = await fsUtils.createTemporaryFile('.py');
+        disposables.push({ dispose: () => tmpFile.dispose() });
         await fs.writeFile(tmpFile.filePath, source, { encoding: 'utf8' });
         return tmpFile.filePath;
     }

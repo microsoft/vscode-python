@@ -110,6 +110,7 @@ export interface INotebookServerOptions {
     useDefaultConfig?: boolean;
     workingDir?: string;
     purpose: string;
+    metadata?: nbformat.INotebookMetadata;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');

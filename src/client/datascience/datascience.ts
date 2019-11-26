@@ -593,34 +593,31 @@ export class DataScience implements IDataScience {
     }
 
     @debounceAsync(1)
+    @swallowExceptions('Sending DataScience Settings Telemetry failed')
     private async sendSettingsTelemetry(): Promise<void> {
-        try {
-            // Get our current settings. This is what we want to send.
-            // tslint:disable-next-line:no-any
-            const settings = this.configuration.getSettings().datascience as any;
+        // Get our current settings. This is what we want to send.
+        // tslint:disable-next-line:no-any
+        const settings = this.configuration.getSettings().datascience as any;
 
-            // Translate all of the 'string' based settings into known values or not.
-            const pythonConfig = this.workspace.getConfiguration('python');
-            if (pythonConfig) {
-                const keys = Object.keys(settings);
-                const resultSettings: JSONObject = {};
-                for (const k of keys) {
-                    const currentValue = settings[k];
-                    if (typeof currentValue === 'string') {
-                        const inspectResult = pythonConfig.inspect<string>(`dataScience.${k}`);
-                        if (inspectResult && inspectResult.defaultValue !== currentValue) {
-                            resultSettings[k] = 'non-default';
-                        } else {
-                            resultSettings[k] = 'default';
-                        }
+        // Translate all of the 'string' based settings into known values or not.
+        const pythonConfig = this.workspace.getConfiguration('python');
+        if (pythonConfig) {
+            const keys = Object.keys(settings);
+            const resultSettings: JSONObject = {};
+            for (const k of keys) {
+                const currentValue = settings[k];
+                if (typeof currentValue === 'string') {
+                    const inspectResult = pythonConfig.inspect<string>(`dataScience.${k}`);
+                    if (inspectResult && inspectResult.defaultValue !== currentValue) {
+                        resultSettings[k] = 'non-default';
                     } else {
-                        resultSettings[k] = currentValue;
+                        resultSettings[k] = 'default';
                     }
+                } else {
+                    resultSettings[k] = currentValue;
                 }
-                sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
             }
-        } catch (err) {
-            traceError(err);
+            sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
         }
     }
     @swallowExceptions('Error in sending DS Startup telemetry')

@@ -231,7 +231,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
-        return this.ipynbProvider.getNotebookOptions();
+        const options = await this.ipynbProvider.getNotebookOptions();
+        const metadata = this.notebookJson.metadata;
+        return {
+            ...options,
+            metadata
+        };
     }
 
     public runAllCells() {
@@ -755,7 +760,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             tempFile = await this.fileSystem.createTemporaryFile('.ipynb');
 
             // Translate the cells into a notebook
-            await this.fileSystem.writeFile(tempFile.filePath, await this.generateNotebookContent(cells), { encoding: 'utf-8' });
+            await this.fileSystem.writeFile(tempFile.filePath, await this.generateNotebookContent(cells));
 
             // Import this file and show it
             const contents = await this.importer.importFromFile(tempFile.filePath, this.file.fsPath);

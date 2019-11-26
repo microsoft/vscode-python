@@ -3,9 +3,9 @@
 'use strict';
 import * as assert from 'assert';
 import { expect } from 'chai';
-import { SemVer } from 'semver';
+import { parse, SemVer } from 'semver';
 import * as sinon from 'sinon';
-import { anyString, anything, instance, mock, verify, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -95,7 +95,7 @@ suite('Process - PythonExecutionFactory', () => {
                 processService.setup(p => p.on('exec', () => { return; })).returns(() => processService.object);
                 processService.setup((p: any) => p.then).returns(() => undefined);
                 interpreterService = mock(InterpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({} as any);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: {major: 3}} as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
@@ -358,6 +358,23 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(daemon).instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);
+            });
+            test('Do not create Daemon Service for Python 2.7', async () => {
+                const pythonSettings = mock(PythonSettings);
+                when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
+                when(pythonSettings.pythonPath).thenReturn('HELLO');
+                when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
+                reset(interpreterService);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({version: parse('2.7.14')} as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+
+                const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
+                initialize.returns(Promise.resolve());
+
+                const daemon = await factory.createDaemon({});
+
+                expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
+                expect(initialize.callCount).to.equal(0);
             });
             test('Create Daemon Service should return the same daemon when created one after another', async () => {
                 const pythonSettings = mock(PythonSettings);

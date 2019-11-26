@@ -1,10 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as assert from 'assert';
 import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Terminal, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
-import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { Disposable, Terminal, Uri } from 'vscode';
+import { IActiveResourceService, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { Commands } from '../../client/common/constants';
 import { TerminalService } from '../../client/common/terminal/service';
 import { ITerminalActivator, ITerminalServiceFactory } from '../../client/common/terminal/types';
@@ -17,16 +18,17 @@ suite('Terminal Provider', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let workspace: TypeMoq.IMock<IWorkspaceService>;
-    let documentManager: TypeMoq.IMock<IDocumentManager>;
+    let activeResourceService: TypeMoq.IMock<IActiveResourceService>;
     let terminalProvider: TerminalProvider;
+    const resource = Uri.parse('a');
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
+        activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
-        documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup(c => c.get(IWorkspaceService)).returns(() => workspace.object);
-        serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
+        serviceContainer.setup(c => c.get(IActiveResourceService)).returns(() => activeResourceService.object);
     });
     teardown(() => {
         try {
@@ -57,7 +59,10 @@ suite('Terminal Provider', () => {
             commandHandler = callback;
             return disposable.object;
         });
-        documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
+        activeResourceService
+            .setup(a => a.getActiveResource())
+            .returns(() => resource)
+            .verifiable(TypeMoq.Times.once());
         workspace.setup(w => w.workspaceFolders).returns(() => undefined);
 
         terminalProvider = new TerminalProvider(serviceContainer.object);
@@ -66,91 +71,14 @@ suite('Terminal Provider', () => {
         const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
         const terminalService = TypeMoq.Mock.ofType<TerminalService>();
-        terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(undefined), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
+        terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(resource), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
 
         commandHandler!.call(terminalProvider);
+        activeResourceService.verifyAll();
         terminalService.verify(t => t.show(false), TypeMoq.Times.once());
     });
 
-    test('Ensure terminal creation does not use uri of the active documents which is untitled', () => {
-        const disposable = TypeMoq.Mock.ofType<Disposable>();
-        let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
-        const editor = TypeMoq.Mock.ofType<TextEditor>();
-        documentManager.setup(d => d.activeTextEditor).returns(() => editor.object);
-        const document = TypeMoq.Mock.ofType<TextDocument>();
-        document.setup(d => d.isUntitled).returns(() => true);
-        editor.setup(e => e.document).returns(() => document.object);
-        workspace.setup(w => w.workspaceFolders).returns(() => undefined);
-
-        terminalProvider = new TerminalProvider(serviceContainer.object);
-        expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
-
-        const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
-        const terminalService = TypeMoq.Mock.ofType<TerminalService>();
-        terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(undefined), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
-
-        commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
-    });
-
-    test('Ensure terminal creation uses uri of active document', () => {
-        const disposable = TypeMoq.Mock.ofType<Disposable>();
-        let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
-        const editor = TypeMoq.Mock.ofType<TextEditor>();
-        documentManager.setup(d => d.activeTextEditor).returns(() => editor.object);
-        const document = TypeMoq.Mock.ofType<TextDocument>();
-        const documentUri = Uri.file('a');
-        document.setup(d => d.isUntitled).returns(() => false);
-        document.setup(d => d.uri).returns(() => documentUri);
-        editor.setup(e => e.document).returns(() => document.object);
-        workspace.setup(w => w.workspaceFolders).returns(() => undefined);
-
-        terminalProvider = new TerminalProvider(serviceContainer.object);
-        expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
-
-        const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
-        const terminalService = TypeMoq.Mock.ofType<TerminalService>();
-        terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(documentUri), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
-
-        commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
-    });
-
-    test('Ensure terminal creation uses uri of active workspace', () => {
-        const disposable = TypeMoq.Mock.ofType<Disposable>();
-        let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
-        documentManager.setup(d => d.activeTextEditor).returns(() => undefined);
-        const workspaceUri = Uri.file('a');
-        const workspaceFolder = TypeMoq.Mock.ofType<WorkspaceFolder>();
-        workspaceFolder.setup(w => w.uri).returns(() => workspaceUri);
-        workspace.setup(w => w.workspaceFolders).returns(() => [workspaceFolder.object]);
-
-        terminalProvider = new TerminalProvider(serviceContainer.object);
-        expect(commandHandler).not.to.be.equal(undefined, 'Handler not set');
-
-        const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
-        const terminalService = TypeMoq.Mock.ofType<TerminalService>();
-        terminalServiceFactory.setup(t => t.createTerminalService(TypeMoq.It.isValue(workspaceUri), TypeMoq.It.isValue('Python'))).returns(() => terminalService.object);
-
-        commandHandler!.call(terminalProvider);
-        terminalService.verify(t => t.show(false), TypeMoq.Times.once());
-    });
-
+    // tslint:disable-next-line: max-func-body-length
     suite('terminal.activateCurrentTerminal setting', () => {
 
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
@@ -163,42 +91,92 @@ suite('Terminal Provider', () => {
             configService = TypeMoq.Mock.ofType<IConfigurationService>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService))).returns(() => configService.object);
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
-            configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+            activeResourceService = TypeMoq.Mock.ofType<IActiveResourceService>();
 
             terminalSettings = TypeMoq.Mock.ofType<ITerminalSettings>();
             pythonSettings.setup(s => s.terminal).returns(() => terminalSettings.object);
 
             terminalActivator = TypeMoq.Mock.ofType<ITerminalActivator>();
             serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalActivator))).returns(() => terminalActivator.object);
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IActiveResourceService))).returns(() => activeResourceService.object);
 
             terminal = TypeMoq.Mock.ofType<Terminal>();
         });
 
         test('If terminal.activateCurrentTerminal setting is set, provided terminal should be activated', async () => {
             terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+            configService
+                .setup(c => c.getSettings(resource))
+                .returns(() => pythonSettings.object)
+                .verifiable(TypeMoq.Times.once());
+            activeResourceService
+                .setup(a => a.getActiveResource())
+                .returns(() => resource)
+                .verifiable(TypeMoq.Times.once());
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
 
             terminalActivator.verify(a => a.activateEnvironmentInTerminal(terminal.object, undefined, true), TypeMoq.Times.once());
+            configService.verifyAll();
+            activeResourceService.verifyAll();
         });
 
         test('If terminal.activateCurrentTerminal setting is not set, provided terminal should not be activated', async () => {
             terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => false);
+            configService
+                .setup(c => c.getSettings(resource))
+                .returns(() => pythonSettings.object)
+                .verifiable(TypeMoq.Times.once());
+            activeResourceService
+                .setup(a => a.getActiveResource())
+                .returns(() => resource)
+                .verifiable(TypeMoq.Times.once());
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
 
             terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), undefined, true), TypeMoq.Times.never());
+            activeResourceService.verifyAll();
+            configService.verifyAll();
         });
 
         test('terminal.activateCurrentTerminal setting is set but provided terminal is undefined', async () => {
             terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+            configService
+                .setup(c => c.getSettings(resource))
+                .returns(() => pythonSettings.object)
+                .verifiable(TypeMoq.Times.once());
+            activeResourceService
+                .setup(a => a.getActiveResource())
+                .returns(() => resource)
+                .verifiable(TypeMoq.Times.once());
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(undefined);
 
             terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), undefined, true), TypeMoq.Times.never());
+            activeResourceService.verifyAll();
+            configService.verifyAll();
+        });
+
+        test('Exceptions are swallowed if initializing terminal provider fails', async () => {
+            terminalSettings
+                .setup(t => t.activateEnvInCurrentTerminal)
+                .returns(() => true);
+            configService
+                .setup(c => c.getSettings(resource))
+                .throws(new Error('Kaboom'));
+            activeResourceService
+                .setup(a => a.getActiveResource())
+                .returns(() => resource);
+
+            terminalProvider = new TerminalProvider(serviceContainer.object);
+            try {
+                await terminalProvider.initialize(undefined);
+            } catch (ex) {
+                assert(false, `No error should be thrown, ${ex}`);
+            }
         });
     });
 });

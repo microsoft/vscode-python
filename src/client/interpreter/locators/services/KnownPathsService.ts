@@ -2,9 +2,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IPlatformService } from '../../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../common/types';
-import { fsExistsAsync } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
@@ -16,12 +15,14 @@ const flatten = require('lodash/flatten') as typeof import('lodash/flatten');
  */
 @injectable()
 export class KnownPathsService extends CacheableLocatorService {
+    private readonly fs: IFileSystem;
     public constructor(
         @inject(IKnownSearchPathsForInterpreters) private knownSearchPaths: IKnownSearchPathsForInterpreters,
         @inject(IInterpreterHelper) private helper: IInterpreterHelper,
         @inject(IServiceContainer) serviceContainer: IServiceContainer
     ) {
         super('KnownPathsService', serviceContainer);
+        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
     /**
@@ -72,9 +73,12 @@ export class KnownPathsService extends CacheableLocatorService {
     /**
      * Return the interpreters in the given directory.
      */
-    private getInterpretersInDirectory(dir: string) {
-        return fsExistsAsync(dir)
-            .then(exists => exists ? lookForInterpretersInDirectory(dir) : Promise.resolve<string[]>([]));
+    private async getInterpretersInDirectory(dir: string): Promise<string[]> {
+        if (await this.fs.fileExists(dir)) {
+            return lookForInterpretersInDirectory(dir, this.fs);
+        } else {
+            return [];
+        }
     }
 }
 

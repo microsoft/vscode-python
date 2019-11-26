@@ -430,6 +430,7 @@ suite('DataScience notebook tests', () => {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
         // Rewire our data we use to search for processes
+        @injectable()
         class EmptyInterpreterService implements IInterpreterService {
             public get hasInterpreters(): Promise<boolean> {
                 return Promise.resolve(true);

@@ -5,10 +5,12 @@
 
 // tslint:disable:no-any max-classes-per-file max-func-body-length no-invalid-this
 import { expect } from 'chai';
-import { exec } from 'child_process';
+import { exec, ExecOptions } from 'child_process';
 import * as path from 'path';
+import { promisify } from 'util';
 import { Uri } from 'vscode';
 import '../../../client/common/extensions';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { createDeferredFromPromise, Deferred } from '../../../client/common/utils/async';
 import { StopWatch } from '../../../client/common/utils/stopWatch';
 import {
@@ -18,21 +20,116 @@ import {
 } from '../../../client/interpreter/contracts';
 import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { IS_CI_SERVER } from '../../ciConstants';
 import { deleteFiles, getOSType, isPythonVersionInProcess, OSType, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { sleep } from '../../core';
 import { initialize, multirootPath } from '../../initialize';
 
-const timeoutMs = 60_000;
+const execAsync = promisify(exec);
+
+class Venvs {
+    private readonly prefix = '.venv-';
+    private readonly python = PYTHON_PATH.fileToCommandArgument();
+    private readonly fullPrefix: string;
+    private readonly procEnv: ExecOptions;
+    private pipInstaller?: string;
+    constructor (
+        private readonly topDir: string
+    ) {
+        this.fullPrefix = path.join(this.topDir, this.prefix);
+        this.procEnv = {
+            cwd: this.topDir
+        };
+    }
+
+    public async create(id: string): Promise<string> {
+        // Ensure env is unique to avoid conflicts in tests (corrupting
+        // test data).
+        const timestamp = new Date().getTime().toString();
+        const root = `${this.fullPrefix}${id}-${timestamp}`;
+        let argv = [
+            this.python, '-m', 'venv',
+            root
+        ];
+
+        try {
+            try {
+                await this.run(argv);
+            } catch (err) {
+                if (!`${err}`.includes('ensurepip') && getOSType() !== OSType.Linux) {
+                    throw err; // re-throw
+                }
+                if (IS_CI_SERVER) {
+                    throw err; // re-throw
+                }
+                argv = [
+                    this.python, '-m', 'venv',
+                    '--system-site-packages',
+                    '--without-pip',
+                    root
+                ];
+                await this.run(argv);
+                await this.installPip(root);
+            }
+        } catch (err2) {
+            throw Error(`command failed ${root}, ${this.python}, Error: ${err2}`);
+        }
+
+        return root;
+    }
+
+    public async cleanUp() {
+        await deleteFiles(`${this.fullPrefix}*`);
+        if (this.pipInstaller) {
+            await deleteFiles(this.pipInstaller);
+            this.pipInstaller = undefined;
+        }
+    }
+
+    private async installPip(root: string) {
+        const script = this.pipInstaller
+            ? this.pipInstaller
+            : path.join(this.topDir, 'get-pip.py');
+        if (!this.pipInstaller) {
+            const fs = new FileSystem();
+            if (!await fs.fileExists(script)) {
+                await this.run([
+                    'curl',
+                    'https://bootstrap.pypa.io/get-pip.py',
+                    '-o', script
+                ]);
+            }
+            this.pipInstaller = script;
+        }
+        await this.run([
+            path.join(root, 'bin', 'python'),
+            script
+        ]);
+    }
+
+    private async run(argv: string[]) {
+        const cmdline = argv.join(' ');
+        const { stderr } = await execAsync(cmdline, this.procEnv);
+        if (stderr && stderr.length > 0) {
+            throw Error(stderr);
+        }
+    }
+}
+
+const timeoutMs = IS_CI_SERVER ? 60_000 : 15_000;
 suite('Interpreters - Workspace VirtualEnv Service', function() {
     this.timeout(timeoutMs);
     this.retries(0);
 
-    let locator: IInterpreterLocatorService;
-    const workspaceUri = IS_MULTI_ROOT_TEST ? Uri.file(path.join(multirootPath, 'workspace3')) : rootWorkspaceUri!;
+    const workspaceUri = IS_MULTI_ROOT_TEST
+        ? Uri.file(path.join(multirootPath, 'workspace3'))
+        : rootWorkspaceUri!;
+    const venvs = new Venvs(workspaceUri.fsPath);
     const workspace4 = Uri.file(path.join(multirootPath, 'workspace4'));
-    const venvPrefix = '.venv';
+
     let serviceContainer: IServiceContainer;
+    let locator: IInterpreterLocatorService;
 
     async function manuallyTriggerFSWatcher(deferred: Deferred<void>) {
         // Monitoring files on virtualized environments can be finicky...
@@ -64,26 +161,6 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         manuallyTriggerFSWatcher(deferred).ignoreErrors();
         await deferred.promise;
     }
-    async function createVirtualEnvironment(envSuffix: string) {
-        // Ensure env is random to avoid conflicts in tests (currupting test data).
-        const envName = `${venvPrefix}${envSuffix}${new Date().getTime().toString()}`;
-        return new Promise<string>((resolve, reject) => {
-            exec(
-                `${PYTHON_PATH.fileToCommandArgument()} -m venv ${envName}`,
-                { cwd: workspaceUri.fsPath },
-                (ex, _, stderr) => {
-                    if (ex) {
-                        return reject(ex);
-                    }
-                    if (stderr && stderr.length > 0) {
-                        reject(new Error(`Failed to create Env ${envName}, ${PYTHON_PATH}, Error: ${stderr}`));
-                    } else {
-                        resolve(envName);
-                    }
-                }
-            );
-        });
-    }
 
     suiteSetup(async function() {
         // skip for Python < 3, no venv support
@@ -98,24 +175,24 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         );
         // This test is required, we need to wait for interpreter listing completes,
         // before proceeding with other tests.
-        await deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`));
+        await venvs.cleanUp();
         await locator.getInterpreters(workspaceUri);
     });
 
-    suiteTeardown(async () => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
-    teardown(async () => deleteFiles(path.join(workspaceUri.fsPath, `${venvPrefix}*`)));
+    suiteTeardown(venvs.cleanUp);
+    teardown(venvs.cleanUp);
 
     test('Detect Virtual Environment', async () => {
-        const envName = await createVirtualEnvironment('one');
+        const envName = await venvs.create('one');
         await waitForInterpreterToBeDetected(envName);
     });
 
     test('Detect a new Virtual Environment', async () => {
-        const env1 = await createVirtualEnvironment('first');
+        const env1 = await venvs.create('first');
         await waitForInterpreterToBeDetected(env1);
 
         // Ensure second environment in our workspace folder is detected when created.
-        const env2 = await createVirtualEnvironment('second');
+        const env2 = await venvs.create('second');
         await waitForInterpreterToBeDetected(env2);
     });
 
@@ -128,8 +205,8 @@ suite('Interpreters - Workspace VirtualEnv Service', function() {
         expect(items4).to.be.lengthOf(0);
 
         const [env1, env2] = await Promise.all([
-            createVirtualEnvironment('first3'),
-            createVirtualEnvironment('second3')
+            venvs.create('first3'),
+            venvs.create('second3')
         ]);
         await Promise.all([waitForInterpreterToBeDetected(env1), waitForInterpreterToBeDetected(env2)]);
 

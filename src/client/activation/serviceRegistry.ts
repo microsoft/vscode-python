@@ -1,5 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import { ActiveResourceService } from '../common/application/activeResource';
+import { IActiveResourceService } from '../common/application/types';
 import { INugetRepository } from '../common/nuget/types';
 import {
     BANNER_NAME_DS_SURVEY,
@@ -93,5 +95,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);
+    serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting);
 }
