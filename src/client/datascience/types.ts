@@ -194,7 +194,6 @@ export interface IJupyterKernel {
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
-    display_name?: string;
     language: string | undefined;
     path: string | undefined;
 }
