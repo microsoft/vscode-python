@@ -17,9 +17,9 @@ import {
     IJupyterSession,
     IJupyterSessionManager
 } from '../types';
-import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
+import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 
 export class JupyterSessionManager implements IJupyterSessionManager {
 
