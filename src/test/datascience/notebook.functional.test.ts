@@ -534,7 +534,7 @@ suite('DataScience notebook tests', () => {
 
             // Create again, we should get the same server from the cache
             const server2 = await createNotebook(true);
-            assert.equal(server, server2, 'With no settings changed we should return the cached server');
+            assert.ok(server === server2, 'With no settings changed we should return the cached server');
 
             // Create a new mock interpreter with a different path
             const newPython: PythonInterpreter = {
