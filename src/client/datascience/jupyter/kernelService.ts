@@ -133,7 +133,7 @@ export class KernelService {
                     if (await this.fileSystem.fileExists(diskPath)) {
                         const specModel: Kernel.ISpecModel = JSON.parse(await this.fileSystem.readFile(diskPath));
                         specModel.argv[0] = bestInterpreter.path;
-                        await this.fileSystem.writeFile(diskPath, JSON.stringify(specModel), { flag: 'w', encoding: 'utf8' });
+                        await this.fileSystem.writeFile(diskPath, JSON.stringify(specModel));
                     }
                 }
             }

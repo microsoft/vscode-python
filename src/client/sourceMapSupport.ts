@@ -59,6 +59,9 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
+        // SourceMapSupport is initialized before the extension, so we
+        // do not have access to IFileSystem yet and have to use Node's
+        // "fs" directly.
         const fsExists = promisify(fs.exists);
         const fsRename = promisify(fs.rename);
         if (await fsExists(targetFile)) {

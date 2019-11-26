@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
 import * as vscode from 'vscode';
@@ -10,15 +9,18 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
-import { noop } from '../utils/misc';
 
 @injectable()
 export abstract class ModuleInstaller {
     public abstract get name(): string;
     public abstract get displayName(): string
-    constructor(protected serviceContainer: IServiceContainer) { }
+    constructor(
+        protected serviceContainer: IServiceContainer
+    ) { }
+
     public async installModule(name: string, resource?: vscode.Uri): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const executionInfo = await this.getExecutionInfo(name, resource);
@@ -38,7 +40,10 @@ export abstract class ModuleInstaller {
             if (!currentInterpreter || currentInterpreter.type !== InterpreterType.Unknown) {
                 await terminalService.sendCommand(pythonPath, args);
             } else if (settings.globalModuleInstallation) {
-                if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
+                const dirname = path.dirname(pythonPath);
+                const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+                const isWritable = ! await fs.isDirReadonly(dirname);
+                if (isWritable) {
                     await terminalService.sendCommand(pythonPath, args);
                 } else {
                     this.elevatedInstall(pythonPath, args);
@@ -50,8 +55,10 @@ export abstract class ModuleInstaller {
             await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs);
         }
     }
+
     public abstract isSupported(resource?: vscode.Uri): Promise<boolean>;
     protected abstract getExecutionInfo(moduleName: string, resource?: vscode.Uri): Promise<ExecutionInfo>;
+
     private async processInstallArgs(args: string[], resource?: vscode.Uri): Promise<string[]> {
         const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
         if (indexOfPylint === -1) {
@@ -68,19 +75,6 @@ export abstract class ModuleInstaller {
             return newArgs;
         }
         return args;
-    }
-    private async isPathWritableAsync(directoryPath: string): Promise<boolean> {
-        const filePath = `${directoryPath}${path.sep}___vscpTest___`;
-        return new Promise<boolean>(resolve => {
-            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
-                if (!error) {
-                    fs.close(fd, () => {
-                        fs.unlink(filePath, noop);
-                    });
-                }
-                return resolve(!error);
-            });
-        });
     }
 
     private elevatedInstall(execPath: string, args: string[]) {

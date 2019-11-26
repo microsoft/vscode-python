@@ -75,11 +75,16 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
-        const interpreterInfoPromise = interpreterService.getInterpreterDetails(pythonPath);
+
+        // No daemon support in Python 2.7.
+        const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
+        if (interpreter?.version && interpreter.version.major < 3){
+            return activatedProcPromise!;
+        }
+
         // Ensure we do not start multiple daemons for the same interpreter.
         // Cache the promise.
         const start = async () => {
-            const interpreter = await interpreterInfoPromise;
             const [activatedProc, activatedEnvVars] = await Promise.all([
                 activatedProcPromise,
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)

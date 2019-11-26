@@ -1,9 +1,9 @@
 import * as path from 'path';
 import { OutputChannel, QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
+import { IFileSystem } from '../../../common/platform/types';
 import { IInstaller, ILogger, IOutputChannel } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
-import { getSubDirectories } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
 import { ITestConfigSettingsService, ITestConfigurationManager } from '../../types';
 import { TEST_OUTPUT_CHANNEL, UNIT_TEST_PRODUCTS } from '../constants';
@@ -13,7 +13,10 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     protected readonly outputChannel: OutputChannel;
     protected readonly installer: IInstaller;
     protected readonly testConfigSettingsService: ITestConfigSettingsService;
-    constructor(protected workspace: Uri,
+    private readonly fs: IFileSystem;
+
+    constructor(
+        protected workspace: Uri,
         protected product: UnitTestProduct,
         protected readonly serviceContainer: IServiceContainer,
         cfg?: ITestConfigSettingsService
@@ -21,9 +24,12 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.installer = serviceContainer.get<IInstaller>(IInstaller);
         this.testConfigSettingsService = cfg ? cfg : serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
+        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
+
     public abstract configure(wkspace: Uri): Promise<void>;
     public abstract requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
+
     public async enable() {
         // Disable other test frameworks.
         await Promise.all(UNIT_TEST_PRODUCTS
@@ -101,7 +107,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         return def.promise;
     }
     protected getTestDirs(rootDir: string): Promise<string[]> {
-        return getSubDirectories(rootDir).then(subDirs => {
+        return this.fs.getSubDirectories(rootDir).then(subDirs => {
             subDirs.sort();
 
             // Find out if there are any dirs with the name test and place them on the top.

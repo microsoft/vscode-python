@@ -12,11 +12,11 @@ import * as os from 'os';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
-import { createTemporaryFile } from '../../../client/common/utils/fs';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
@@ -34,6 +34,7 @@ suite('Daemon', () => {
     let pythonDaemon: PythonDaemonExecutionService;
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
+    let fsUtils: FileSystem;
     suiteSetup(() => {
         // When running locally.
         if (PYTHON_PATH.toLowerCase() === 'python') {
@@ -41,6 +42,7 @@ suite('Daemon', () => {
                 .stdout.toString()
                 .trim();
         }
+        fsUtils = new FileSystem();
     });
     setup(async function () {
         if (isPythonVersion('2.7')){
@@ -66,8 +68,8 @@ suite('Daemon', () => {
     });
 
     async function createPythonFile(source: string): Promise<string> {
-        const tmpFile = await createTemporaryFile('.py');
-        disposables.push({ dispose: () => tmpFile.cleanupCallback() });
+        const tmpFile = await fsUtils.createTemporaryFile('.py');
+        disposables.push({ dispose: () => tmpFile.dispose() });
         await fs.writeFile(tmpFile.filePath, source, { encoding: 'utf8' });
         return tmpFile.filePath;
     }
