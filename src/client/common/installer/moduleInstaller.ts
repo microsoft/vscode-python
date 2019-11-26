@@ -27,7 +27,7 @@ export abstract class ModuleInstaller {
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
 
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = (!resource || uri) ? await interpreterService.getActiveInterpreter(uri) : resource as PythonInterpreter;
+        const interpreter = (!resource || resource instanceof Uri) ? await interpreterService.getActiveInterpreter(resource) : resource;
         if (!interpreter){
             throw new Error('Unable to get interprter details');
         }
