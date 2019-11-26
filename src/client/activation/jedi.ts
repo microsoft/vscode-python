@@ -25,7 +25,7 @@ import {
     WorkspaceEdit
 } from 'vscode';
 
-import { PYTHON, Commands } from '../common/constants';
+import { PYTHON } from '../common/constants';
 import { IConfigurationService, IDisposable, IExtensionContext, ILogger, Resource } from '../common/types';
 import { IShebangCodeLensProvider, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';

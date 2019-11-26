@@ -20,7 +20,7 @@ import {
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
-import { traceWarning, traceError } from '../../../common/logger';
+import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
 import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';

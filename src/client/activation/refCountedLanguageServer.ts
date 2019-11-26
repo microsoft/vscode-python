@@ -22,15 +22,19 @@ import {
 } from 'vscode';
 
 import { noop } from '../common/utils/misc';
-import { ILanguageServer } from './types';
+import { ILanguageServer, LanguageServerActivator } from './types';
 
 export class RefCountedLanguageServer implements ILanguageServer {
     private refCount = 1;
-    constructor(private impl: ILanguageServer, private disposeCallback: () => void) {
+    constructor(private impl: ILanguageServer, private _type: LanguageServerActivator, private disposeCallback: () => void) {
     }
 
     public increment = () => {
         this.refCount += 1;
+    }
+
+    public get type() {
+        return this._type;
     }
 
     public dispose() {

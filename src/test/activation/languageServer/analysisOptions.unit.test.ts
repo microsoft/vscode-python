@@ -23,8 +23,6 @@ import {
 } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
-import { IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { sleep } from '../../core';
 
 // tslint:disable:no-unnecessary-override no-any chai-vague-errors no-unused-expression max-func-body-length
@@ -58,7 +56,6 @@ suite('Language Server - Analysis Options', () => {
     let envVarsProvider: IEnvironmentVariablesProvider;
     let configurationService: IConfigurationService;
     let workspace: IWorkspaceService;
-    let interpreterService: IInterpreterService;
     let outputChannel: IOutputChannel;
     let lsOutputChannel: typemoq.IMock<ILanguageServerOutputChannel>;
     let pathUtils: IPathUtils;
@@ -68,7 +65,6 @@ suite('Language Server - Analysis Options', () => {
         envVarsProvider = mock(EnvironmentVariablesProvider);
         configurationService = mock(ConfigurationService);
         workspace = mock(WorkspaceService);
-        interpreterService = mock(InterpreterService);
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
         lsOutputChannel
@@ -84,43 +80,34 @@ suite('Language Server - Analysis Options', () => {
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
-        const disposable2 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         when(workspace.onDidChangeConfiguration).thenReturn(() => disposable1.object);
-        when(interpreterService.onDidChangeInterpreter).thenReturn(() => disposable2.object);
         when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(() => disposable3.object);
 
         await analysisOptions.initialize(undefined, undefined);
 
         verify(workspace.onDidChangeConfiguration).once();
-        verify(interpreterService.onDidChangeInterpreter).once();
         verify(envVarsProvider.onDidEnvironmentVariablesChange).once();
 
         disposable1.setup(d => d.dispose()).verifiable(typemoq.Times.once());
-        disposable2.setup(d => d.dispose()).verifiable(typemoq.Times.once());
         disposable3.setup(d => d.dispose()).verifiable(typemoq.Times.once());
 
         analysisOptions.dispose();
 
         disposable1.verifyAll();
-        disposable2.verifyAll();
         disposable3.verifyAll();
     });
     test('Changes to settings or interpreter will be debounced', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
-        const disposable2 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         let configChangedHandler!: Function;
-        let interpreterChangedHandler!: Function;
         when(workspace.onDidChangeConfiguration).thenReturn(cb => { configChangedHandler = cb; return disposable1.object; });
-        when(interpreterService.onDidChangeInterpreter).thenReturn(cb => { interpreterChangedHandler = cb; return disposable2.object; });
         when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(() => disposable3.object);
         let settingsChangedInvokedCount = 0;
         analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
 
         await analysisOptions.initialize(undefined, undefined);
         expect(configChangedHandler).to.not.be.undefined;
-        expect(interpreterChangedHandler).to.not.be.undefined;
 
         for (let i = 0; i < 100; i += 1) {
             configChangedHandler.call(analysisOptions);
@@ -179,20 +166,16 @@ suite('Language Server - Analysis Options', () => {
     test('Changes to settings will be filtered to current resource', async () => {
         const uri = Uri.file(__filename);
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
-        const disposable2 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         let configChangedHandler!: Function;
-        let interpreterChangedHandler!: Function;
         let envVarChangedHandler!: Function;
         when(workspace.onDidChangeConfiguration).thenReturn(cb => { configChangedHandler = cb; return disposable1.object; });
-        when(interpreterService.onDidChangeInterpreter).thenReturn(cb => { interpreterChangedHandler = cb; return disposable2.object; });
         when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(cb => { envVarChangedHandler = cb; return disposable3.object; });
         let settingsChangedInvokedCount = 0;
 
         analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
         await analysisOptions.initialize(uri, undefined);
         expect(configChangedHandler).to.not.be.undefined;
-        expect(interpreterChangedHandler).to.not.be.undefined;
         expect(envVarChangedHandler).to.not.be.undefined;
 
         for (let i = 0; i < 100; i += 1) {

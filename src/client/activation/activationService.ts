@@ -42,6 +42,7 @@ const workspacePathNameForGlobalWorkspaces = '';
 interface IActivatedServer {
     key: string;
     server: ILanguageServer;
+    jedi: boolean;
 }
 
 @injectable()
@@ -97,10 +98,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
 
         // Save our active server.
-        this.activatedServer = { key, server: result };
+        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerActivator.Jedi };
     }
 
-    public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServer> {
+    public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<RefCountedLanguageServer> {
         // See if we already have it or not
         const key = await this.getKey(resource, interpreter);
         let result: Promise<RefCountedLanguageServer> | undefined = this.cache.get(key);
@@ -207,7 +208,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             if (jedi) {
                 throw ex;
             }
-            jedi = true;
             await this.logStartup(jedi);
             serverName = LanguageServerActivator.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
@@ -215,7 +215,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
 
         // Wrap the returned server in something that ref counts it.
-        return new RefCountedLanguageServer(server, () => {
+        return new RefCountedLanguageServer(server, serverName, () => {
             // When we finally remove the last ref count, remove from the cache
             this.cache.delete(key);
 
@@ -236,6 +236,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
             : [undefined];
         if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
+            return;
+        }
+        const jedi = this.useJedi();
+        if (this.activatedServer && this.activatedServer.jedi === jedi) {
             return;
         }
         const item = await this.appShell.showInformationMessage(

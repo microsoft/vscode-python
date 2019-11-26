@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationChangeEvent, Disposable, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
     FolderVersionPair,
@@ -22,12 +18,23 @@ import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagn
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { LSControl, LSEnabled } from '../../client/common/experimentGroups';
 import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Resource
+} from '../../client/common/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 
-// tslint:disable:no-any
+// tslint:disable:max-func-body-length no-any
 
-suite('Activation - ActivationService', () => {
+suite('Language Server Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
         suite(`Test activation - ${jediIsEnabled ? 'Jedi is enabled' : 'Jedi is disabled'}`, () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -41,6 +48,7 @@ suite('Activation - ActivationService', () => {
             let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
             let experiments: TypeMoq.IMock<IExperimentsManager>;
             let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+            let interpreterService: TypeMoq.IMock<IInterpreterService>;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -61,6 +69,9 @@ suite('Activation - ActivationService', () => {
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+                interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                const e = new EventEmitter<void>();
+                interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
                 langFolderServiceMock
                     .setup(l => l.getCurrentLanguageServerDirectory())
                     .returns(() => Promise.resolve(folderVer));
@@ -93,6 +104,9 @@ suite('Activation - ActivationService', () => {
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                     .returns(() => platformService.object);
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                    .returns(() => interpreterService.object);
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                     .returns(() => langFolderServiceMock.object);
@@ -451,7 +465,7 @@ suite('Activation - ActivationService', () => {
                     activator3
                         .setup(d => d.dispose())
                         .verifiable(TypeMoq.Times.once());
-                    workspaceFoldersChangedHandler.call(activationService);
+                    await workspaceFoldersChangedHandler.call(activationService);
                     workspaceService.verifyAll();
                     activator3.verifyAll();
                 });
@@ -514,6 +528,7 @@ suite('Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -525,6 +540,9 @@ suite('Activation - ActivationService', () => {
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            const e = new EventEmitter<void>();
+            interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
@@ -563,6 +581,9 @@ suite('Activation - ActivationService', () => {
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
@@ -650,6 +671,7 @@ suite('Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -661,6 +683,9 @@ suite('Activation - ActivationService', () => {
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            const e = new EventEmitter<void>();
+            interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
@@ -699,6 +724,9 @@ suite('Activation - ActivationService', () => {
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
@@ -819,6 +847,7 @@ suite('Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -830,6 +859,9 @@ suite('Activation - ActivationService', () => {
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            const e = new EventEmitter<void>();
+            interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
@@ -868,6 +900,9 @@ suite('Activation - ActivationService', () => {
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
