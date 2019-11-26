@@ -11,11 +11,9 @@ import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { traceError } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import { CondaExecutionService } from './condaExecutionService';
 import { ProcessService } from './proc';
-import { PythonDaemonExecutionServicePool } from './pythonDaemonPool';
 import { PythonExecutionService } from './pythonProcess';
 import {
     DaemonExecutionFactoryCreationOptions,
@@ -25,7 +23,6 @@ import {
     IProcessLogger,
     IProcessService,
     IProcessServiceFactory,
-    IPythonDaemonExecutionService,
     IPythonExecutionFactory,
     IPythonExecutionService
 } from './types';
@@ -36,7 +33,6 @@ export const CONDA_RUN_VERSION = '4.6.0';
 
 @injectable()
 export class PythonExecutionFactory implements IPythonExecutionFactory {
-    private readonly daemonsPerPythonService = new Map<string, Promise<IPythonDaemonExecutionService>>();
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
@@ -69,46 +65,47 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
-        const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
-        const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
-        const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
+        return this.createActivatedEnvironment(options);
+        // const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
+        // const daemonPoolKey = `${pythonPath}#${options.daemonClass || ''}#${options.daemonModule || ''}`;
+        // const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
+        // const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        // const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
+        // const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
 
-        // No daemon support in Python 2.7.
-        const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
-        if (interpreter?.version && interpreter.version.major < 3){
-            return activatedProcPromise!;
-        }
+        // // No daemon support in Python 2.7.
+        // const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
+        // if (interpreter?.version && interpreter.version.major < 3){
+        //     return activatedProcPromise!;
+        // }
 
-        // Ensure we do not start multiple daemons for the same interpreter.
-        // Cache the promise.
-        const start = async () => {
-            const [activatedProc, activatedEnvVars] = await Promise.all([
-                activatedProcPromise,
-                this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
-            ]);
+        // // Ensure we do not start multiple daemons for the same interpreter.
+        // // Cache the promise.
+        // const start = async () => {
+        //     const [activatedProc, activatedEnvVars] = await Promise.all([
+        //         activatedProcPromise,
+        //         this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
+        //     ]);
 
-            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, {...options, pythonPath}, activatedProc!, activatedEnvVars);
-            await daemon.initialize();
-            disposables.push(daemon);
-            return daemon;
-        };
+        //     const daemon = new PythonDaemonExecutionServicePool(logger, disposables, {...options, pythonPath}, activatedProc!, activatedEnvVars);
+        //     await daemon.initialize();
+        //     disposables.push(daemon);
+        //     return daemon;
+        // };
 
-        // Ensure we do not create muliple daemon pools for the same python interpreter.
-        let promise = this.daemonsPerPythonService.get(daemonPoolKey);
-        if (!promise) {
-            promise = start();
-            this.daemonsPerPythonService.set(daemonPoolKey, promise);
-        }
-        return promise.catch(ex => {
-            // Ok, we failed to create the daemon (or failed to start).
-            // What ever the cause, we need to log this & give a standard IPythonExecutionService
-            traceError('Failed to create the daemon service, defaulting to activated environment', ex);
-            this.daemonsPerPythonService.delete(daemonPoolKey);
-            return activatedProcPromise;
-        });
+        // // Ensure we do not create muliple daemon pools for the same python interpreter.
+        // let promise = this.daemonsPerPythonService.get(daemonPoolKey);
+        // if (!promise) {
+        //     promise = start();
+        //     this.daemonsPerPythonService.set(daemonPoolKey, promise);
+        // }
+        // return promise.catch(ex => {
+        //     // Ok, we failed to create the daemon (or failed to start).
+        //     // What ever the cause, we need to log this & give a standard IPythonExecutionService
+        //     traceError('Failed to create the daemon service, defaulting to activated environment', ex);
+        //     this.daemonsPerPythonService.delete(daemonPoolKey);
+        //     return activatedProcPromise;
+        // });
     }
     public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
         const envVars = await this.activationHelper.getActivatedEnvironmentVariables(options.resource, options.interpreter, options.allowEnvironmentFetchExceptions);
