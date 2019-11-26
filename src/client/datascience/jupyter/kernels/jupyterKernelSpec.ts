@@ -25,7 +25,6 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.specFile = file;
         this.display_name = specModel.display_name;
-        this.metadata = specModel.metadata;
     }
     public dispose = async () => {
         if (this.specFile &&
