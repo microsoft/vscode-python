@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 //tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
@@ -24,16 +23,27 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
+import { LanguageServerDownloader } from '../../client/activation/languageServer/downloader';
 import {
     LanguageServerCompatibilityService
 } from '../../client/activation/languageServer/languageServerCompatibilityService';
+import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
+import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
+import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
 import {
+    ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
     ILanguageServerCompatibilityService,
+    ILanguageServerDownloader,
+    ILanguageServerExtension,
+    ILanguageServerFolderService,
     ILanguageServerManager,
-    ILanguageServerProxy
+    ILanguageServerPackageService,
+    ILanguageServerProxy,
+    LanguageServerActivator
 } from '../../client/activation/types';
 import {
     LSNotSupportedDiagnosticService,
@@ -111,6 +121,7 @@ import {
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
+    BANNER_NAME_LS_SURVEY,
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
@@ -120,6 +131,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
+    IPythonExtensionBanner,
     IsWindows
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
@@ -269,6 +281,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -427,6 +440,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
+        this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerActivator.DotNet);
+        this.serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
         this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
         this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
@@ -455,7 +470,21 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Don't check for dot net compatibility
         const dotNetCompability = mock(DotNetCompatibilityService);
+        when(dotNetCompability.isSupported()).thenResolve(true);
         this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(IDotNetCompatibilityService, instance(dotNetCompability));
+
+        // Don't allow a banner to show up
+        const extensionBanner = mock(LanguageServerSurveyBanner);
+        this.serviceManager.addSingletonInstance<IPythonExtensionBanner>(IPythonExtensionBanner, instance(extensionBanner), BANNER_NAME_LS_SURVEY);
+
+        // Don't allow the download to happen
+        const downloader = mock(LanguageServerDownloader);
+        this.serviceManager.addSingletonInstance<ILanguageServerDownloader>(ILanguageServerDownloader, instance(downloader));
+
+        const folderService = mock(LanguageServerFolderService);
+        const packageService = mock(LanguageServerPackageService);
+        this.serviceManager.addSingletonInstance<ILanguageServerFolderService>(ILanguageServerFolderService, instance(folderService));
+        this.serviceManager.addSingletonInstance<ILanguageServerPackageService>(ILanguageServerPackageService, instance(packageService));
 
         // Disable experiments.
         const experimentManager = mock(ExperimentsManager);
@@ -509,6 +538,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             runStartupCommands: '',
             debugJustMyCode: true
         };
+        this.pythonSettings.jediEnabled = false;
+        this.pythonSettings.downloadLanguageServer = false;
 
         const workspaceConfig = this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
@@ -755,10 +786,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (index >= 0) {
             this.extraListeners.splice(index, 1);
         }
-    }
-
-    public enableJedi(enabled: boolean) {
-        this.pythonSettings.jediEnabled = enabled;
     }
 
     public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {

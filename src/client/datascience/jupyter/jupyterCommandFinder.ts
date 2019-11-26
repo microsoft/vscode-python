@@ -265,7 +265,7 @@ export class JupyterCommandFinderImpl {
             found.error = firstError;
         }
 
-        if (found.status === ModuleExistsStatus.NotFound) {
+        if (found && found.status === ModuleExistsStatus.NotFound) {
             this.sendSearchTelemetry(command, 'nowhere', stopWatch.elapsedTime, cancelToken);
         }
 
@@ -362,7 +362,7 @@ export class JupyterCommandFinderImpl {
         // Creating daemons for other interpreters might not be what we want.
         // E.g. users can have dozens of pipenv or conda environments.
         // In such cases, we'd end up creating n*3 python processes that are long lived.
-        if (!currentInterpreter || currentInterpreter.path !== interpreter.path){
+        if (!currentInterpreter || currentInterpreter.path !== interpreter.path) {
             return pythonService!;
         }
 
