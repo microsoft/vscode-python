@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
 import { inject, injectable } from 'inversify';
 import {
     CancellationToken,
@@ -26,7 +25,7 @@ import {
 } from 'vscode';
 
 import { PYTHON } from '../common/constants';
-import { IConfigurationService, IExtensionContext, ILogger, Resource } from '../common/types';
+import { IConfigurationService, IDisposable, IExtensionContext, ILogger, Resource } from '../common/types';
 import { IShebangCodeLensProvider, PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { JediFactory } from '../languageServices/jediProxyFactory';
@@ -58,19 +57,19 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     private codeLensProvider: IShebangCodeLensProvider | undefined;
     private symbolProvider: JediSymbolProvider | undefined;
     private signatureProvider: PythonSignatureProvider | undefined;
+    private registrations: IDisposable[] = [];
 
     constructor(@inject(IServiceManager) private serviceManager: IServiceManager) {
         this.context = this.serviceManager.get<IExtensionContext>(IExtensionContext);
         this.documentSelector = PYTHON;
     }
 
-    public async activate(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {
+    public async activate(_resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
         if (this.jediFactory) {
             throw new Error('Jedi already started');
         }
         const context = this.context;
-
-        const jediFactory = (this.jediFactory = new JediFactory(context.asAbsolutePath('.'), this.serviceManager));
+        const jediFactory = (this.jediFactory = new JediFactory(context.asAbsolutePath('.'), interpreter, this.serviceManager));
         context.subscriptions.push(jediFactory);
         context.subscriptions.push(...activateGoToObjectDefinitionProvider(jediFactory));
 
@@ -82,24 +81,24 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.codeLensProvider = this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider);
 
         context.subscriptions.push(jediFactory);
-        context.subscriptions.push(
+        this.registrations.push(
             languages.registerRenameProvider(this.documentSelector, this.renameProvider)
         );
-        context.subscriptions.push(languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider));
-        context.subscriptions.push(
+        this.registrations.push(languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider));
+        this.registrations.push(
             languages.registerHoverProvider(this.documentSelector, this.hoverProvider)
         );
-        context.subscriptions.push(
+        this.registrations.push(
             languages.registerReferenceProvider(this.documentSelector, this.referenceProvider)
         );
-        context.subscriptions.push(
+        this.registrations.push(
             languages.registerCompletionItemProvider(
                 this.documentSelector,
                 this.completionProvider,
                 '.'
             )
         );
-        context.subscriptions.push(
+        this.registrations.push(
             languages.registerCodeLensProvider(
                 this.documentSelector,
                 this.codeLensProvider
@@ -112,7 +111,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         });
         const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
         if (onTypeTriggers) {
-            context.subscriptions.push(
+            this.registrations.push(
                 languages.registerOnTypeFormattingEditProvider(
                     PYTHON,
                     onTypeDispatcher,
@@ -126,11 +125,11 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
         this.signatureProvider = new PythonSignatureProvider(jediFactory);
         context.subscriptions.push(new WorkspaceSymbols(serviceContainer));
-        context.subscriptions.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
+        this.registrations.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
 
         const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
         if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-            context.subscriptions.push(
+            this.registrations.push(
                 languages.registerSignatureHelpProvider(
                     this.documentSelector,
                     this.signatureProvider,
@@ -140,7 +139,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             );
         }
 
-        context.subscriptions.push(
+        this.registrations.push(
             languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer))
         );
 
@@ -148,6 +147,11 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         testManagementService
             .activate(this.symbolProvider)
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+    }
+
+    public disconnect() {
+        this.registrations.forEach(r => r.dispose());
+        this.registrations = [];
     }
 
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {
@@ -195,6 +199,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     }
 
     public dispose(): void {
+        this.registrations.forEach(r => r.dispose());
         if (this.jediFactory) {
             this.jediFactory.dispose();
         }

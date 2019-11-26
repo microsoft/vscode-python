@@ -1,12 +1,13 @@
 import { Disposable, Uri, workspace } from 'vscode';
 import { IServiceContainer } from '../ioc/types';
 import { ICommandResult, JediProxy, JediProxyHandler } from '../providers/jediProxy';
+import { PythonInterpreter } from '../interpreter/contracts';
 
 export class JediFactory implements Disposable {
     private disposables: Disposable[];
     private jediProxyHandlers: Map<string, JediProxyHandler<ICommandResult>>;
 
-    constructor(private extensionRootPath: string, private serviceContainer: IServiceContainer) {
+    constructor(private extensionRootPath: string, private interpreter: PythonInterpreter | undefined, private serviceContainer: IServiceContainer) {
         this.disposables = [];
         this.jediProxyHandlers = new Map<string, JediProxyHandler<ICommandResult>>();
     }
@@ -27,7 +28,7 @@ export class JediFactory implements Disposable {
         }
 
         if (!this.jediProxyHandlers.has(workspacePath)) {
-            const jediProxy = new JediProxy(this.extensionRootPath, workspacePath, this.serviceContainer);
+            const jediProxy = new JediProxy(this.extensionRootPath, workspacePath, this.interpreter, this.serviceContainer);
             const jediProxyHandler = new JediProxyHandler(jediProxy);
             this.disposables.push(jediProxy, jediProxyHandler);
             this.jediProxyHandlers.set(workspacePath, jediProxyHandler);

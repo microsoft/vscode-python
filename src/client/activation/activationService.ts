@@ -47,7 +47,6 @@ interface IActivatedServer {
 @injectable()
 export class LanguageServerExtensionActivationService implements IExtensionActivationService, ILanguageServerCache, Disposable {
     private cache = new Map<string, Promise<RefCountedLanguageServer>>();
-    private jediServer: RefCountedLanguageServer | undefined;
     private activatedServer?: IActivatedServer;
     private readonly workspaceService: IWorkspaceService;
     private readonly output: OutputChannel;
@@ -190,8 +189,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
                 jedi = true;
             }
-        } else if (this.jediServer) {
-            return this.jediServer;
         }
 
         await this.logStartup(jedi);
@@ -210,23 +207,14 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             await server.activate(resource, interpreter);
         }
 
-        // Jedi is always a singleton. Don't need to create it more than once.
-        if (jedi) {
-            this.jediServer = new RefCountedLanguageServer(server, () => {
-                // When we remove the jedi server, remove it from the cache.
-                this.cache.delete(key);
-            });
-            return this.jediServer;
-        } else {
-            return new RefCountedLanguageServer(server, () => {
-                // When we finally remove the last ref count, remove from the cache
-                this.cache.delete(key);
+        // Wrap the returned server in something that ref counts it.
+        return new RefCountedLanguageServer(server, () => {
+            // When we finally remove the last ref count, remove from the cache
+            this.cache.delete(key);
 
-                // For non jedi, actually dispose of the language server so the .net process
-                // shuts down
-                server.dispose();
-            });
-        }
+            // Dispose of the actual server.
+            server.dispose();
+        });
     }
 
     private async logStartup(isJedi: boolean): Promise<void> {
@@ -243,11 +231,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
             return;
         }
-        const jedi = this.useJedi();
-        if (jedi && this.jediServer) {
-            return;
-        }
-
         const item = await this.appShell.showInformationMessage(
             'Please reload the window switching between language engines.',
             'Reload'
