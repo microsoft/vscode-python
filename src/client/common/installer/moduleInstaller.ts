@@ -26,17 +26,11 @@ export abstract class ModuleInstaller {
         const executionInfo = await this.getExecutionInfo(name, resource);
         const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
 
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
-        if (!interpreter){
-            throw new Error('Unable to get interprter details');
-        }
-        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, interpreter);
+        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
         if (executionInfo.moduleName) {
             const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
             const settings = configService.getSettings(uri);
             const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
-            const pythonPath = interpreter.path;
 
             const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
             const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
