@@ -453,7 +453,7 @@ function getHashString(data: string): string {
 // more aliases (to cause less churn)
 @injectable()
 export class FileSystem implements IFileSystem {
-    protected readonly utils: FileSystemUtils;
+    protected utils: FileSystemUtils;
     constructor() {
         this.utils = FileSystemUtils.withDefaults();
     }

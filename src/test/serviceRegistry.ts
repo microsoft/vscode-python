@@ -10,7 +10,9 @@ import { Disposable, Memento, OutputChannel } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
 import { IS_WINDOWS } from '../client/common/platform/constants';
-import { FileSystem } from '../client/common/platform/fileSystem';
+import {
+    FileSystem, FileSystemPaths, FileSystemUtils, RawFileSystem
+} from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
@@ -64,35 +66,51 @@ import { MockProcess } from './mocks/process';
 // This is necessary for unit tests and functional tests, since they
 // do not run under VS Code so they do not have access to the actual
 // "vscode" namespace.
-class LegacyFileSystem extends FileSystem {
-    public async readFile(filename: string): Promise<string> {
+class LegacyRawFileSystem extends RawFileSystem {
+    public async readText(filename: string): Promise<string> {
         return fsextra.readFile(filename, 'utf8');
     }
-    public async writeFile(filename: string, data: {}): Promise<void> {
-        const options: fsextra.WriteFileOptions = {
+    public async writeText(filename: string, text: string): Promise<void> {
+        return fsextra.writeFile(filename, text, {
             encoding: 'utf8'
-        };
-        return fsextra.writeFile(filename, data, options);
+        });
     }
-    public async deleteDirectory(dirname: string): Promise<void> {
+    public async rmtree(dirname: string): Promise<void> {
         return fsextra.stat(dirname)
             .then(() => fsextra.remove(dirname));
     }
-    public async deleteFile(filename: string): Promise<void> {
+    public async rmfile(filename: string): Promise<void> {
         return fsextra.unlink(filename);
+    }
+    public async stat(filename: string): Promise<FileStat> {
+        const stat = await fsextra.stat(filename);
+        let fileType = FileType.Unknown;
+        if (stat.isFile()) {
+            fileType = FileType.File;
+        } else if (stat.isDirectory()) {
+            fileType = FileType.Directory;
+        } else if (stat.isSymbolicLink()) {
+            fileType = FileType.SymbolicLink;
+        }
+        return {
+            type: fileType,
+            size: stat.size,
+            ctime: stat.ctimeMs,
+            mtime: stat.mtimeMs
+        };
     }
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const names: string[] = await fsextra.readdir(dirname);
         const promises = names
             .map(name => {
                  const filename = path.join(dirname, name);
-                 return this.utils.raw.lstat(filename)
+                 return this.lstat(filename)
                      .then(stat => [name, stat.type] as [string, FileType])
                      .catch(() => [name, FileType.Unknown] as [string, FileType]);
             });
         return Promise.all(promises);
     }
-    public async createDirectory(dirname: string): Promise<void> {
+    public async mkdirp(dirname: string): Promise<void> {
         return fsextra.mkdirp(dirname);
     }
     public async copyFile(src: string, dest: string): Promise<void> {
@@ -110,22 +128,18 @@ class LegacyFileSystem extends FileSystem {
         rs.pipe(ws);
         return deferred.promise;
     }
-    protected async _stat(filePath: string): Promise<FileStat> {
-        const stat = await fsextra.stat(filePath);
-        let fileType = FileType.Unknown;
-        if (stat.isFile()) {
-            fileType = FileType.File;
-        } else if (stat.isDirectory()) {
-            fileType = FileType.Directory;
-        } else if (stat.isSymbolicLink()) {
-            fileType = FileType.SymbolicLink;
-        }
-        return {
-            type: fileType,
-            size: stat.size,
-            ctime: stat.ctimeMs,
-            mtime: stat.mtimeMs
-        };
+}
+class LegacyFileSystem extends FileSystem {
+    constructor() {
+        super();
+        const paths = FileSystemPaths.withDefaults();
+        const raw = new LegacyRawFileSystem(
+            paths,
+            // tslint:disable-next-line:no-any
+            undefined as any,
+            fsextra
+        );
+        this.utils = FileSystemUtils.withDefaults(raw, paths);
     }
 }
 
