@@ -171,7 +171,7 @@ interface IRawPath {
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
-        protected readonly path: IRawPath,
+        protected readonly paths: IRawPath,
         protected readonly vscfs: IVSCodeFileSystemAPI,
         protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
@@ -179,13 +179,13 @@ export class RawFileSystem implements IRawFileSystem {
 
     // Create a new object using common-case default values.
     public static withDefaults(
-        path?: IRawPath,
+        paths?: IRawPath,
         vscfs?: IVSCodeFileSystemAPI,
         nodefs?: IRawFS,
         fsExtra?: IRawFSExtra
     ): RawFileSystem{
         return new RawFileSystem(
-            path || FileSystemPaths.withDefaults(),
+            paths || FileSystemPaths.withDefaults(),
             vscfs || vscode.workspace.fs,
             nodefs || fs,
             fsExtra || fsextra
@@ -262,7 +262,7 @@ export class RawFileSystem implements IRawFileSystem {
                     throw err; // re-throw
                 }
                 // Try creating the parent first.
-                const parent = this.path.dirname(current);
+                const parent = this.paths.dirname(current);
                 if (parent === '' || parent === current) {
                     // This shouldn't ever happen.
                     throw err;
@@ -281,7 +281,7 @@ export class RawFileSystem implements IRawFileSystem {
         //   destination doesn't exist".  However, it happily creates
         //   the parent directory (at least for remote-over-SSH).
         //   So we have to manually stat, just to be sure.
-        await this.vscfs.stat(vscode.Uri.file(this.path.dirname(dest)));
+        await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(dest)));
         await this.vscfs.copy(srcURI, destURI, {
             overwrite: true
         });
@@ -334,7 +334,7 @@ export class RawFileSystem implements IRawFileSystem {
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
         public readonly raw: IRawFileSystem,
-        public readonly path: IFileSystemPaths,
+        public readonly paths: IFileSystemPaths,
         public readonly tmp: ITempFileSystem,
         protected readonly getHash: (data: string) => string,
         protected readonly globFile: (pat: string) => Promise<string[]>
@@ -342,12 +342,12 @@ export class FileSystemUtils implements IFileSystemUtils {
     // Create a new object using common-case default values.
     public static withDefaults(
         raw?: IRawFileSystem,
-        path?: IFileSystemPaths,
+        paths?: IFileSystemPaths,
         tmp?: ITempFileSystem,
         getHash?: (data: string) => string,
         globFile?: (pat: string) => Promise<string[]>
     ): FileSystemUtils {
-        const paths = path || FileSystemPaths.withDefaults();
+        paths = paths || FileSystemPaths.withDefaults();
         return new FileSystemUtils(
             raw || RawFileSystem.withDefaults(paths),
             paths,
@@ -379,8 +379,8 @@ export class FileSystemUtils implements IFileSystemUtils {
         if (path1 === path2) {
             return true;
         }
-        path1 = this.path.normCase(path1);
-        path2 = this.path.normCase(path2);
+        path1 = this.paths.normCase(path1);
+        path2 = this.paths.normCase(path2);
         return path1 === path2;
     }
 
@@ -417,12 +417,12 @@ export class FileSystemUtils implements IFileSystemUtils {
     public async getSubDirectories(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
             .filter(([_name, fileType]) => fileType === FileType.Directory)
-            .map(([name, _fileType]) => this.path.join(dirname, name));
+            .map(([name, _fileType]) => this.paths.join(dirname, name));
     }
     public async getFiles(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
             .filter(([_name, fileType]) => fileType === FileType.File)
-            .map(([name, _fileType]) => this.path.join(dirname, name));
+            .map(([name, _fileType]) => this.paths.join(dirname, name));
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {

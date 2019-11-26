@@ -104,7 +104,7 @@ export interface IRawFileSystem {
 export const IFileSystemUtils = Symbol('IFileSystemUtils');
 export interface IFileSystemUtils {
     readonly raw: IRawFileSystem;
-    readonly path: IFileSystemPaths;
+    readonly paths: IFileSystemPaths;
     readonly tmp: ITempFileSystem;
 
     //***********************
