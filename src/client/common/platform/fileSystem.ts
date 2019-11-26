@@ -4,7 +4,6 @@
 'use strict';
 
 import { createHash } from 'crypto';
-import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
 import { injectable } from 'inversify';
@@ -145,12 +144,6 @@ interface IVSCodeFileSystemAPI {
     writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
 }
 
-// This is the parts of node's 'fs' module that we use in RawFileSystem.
-interface IRawFS {
-    // non-async
-    createWriteStream(filePath: string): fs.WriteStream;
-}
-
 // This is the parts of the 'fs-extra' module that we use in RawFileSystem.
 interface IRawFSExtra {
     chmod(filePath: string, mode: string | number): Promise<void>;
@@ -159,6 +152,7 @@ interface IRawFSExtra {
     // non-async
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
+    createWriteStream(filePath: string): fsextra.WriteStream;
 }
 
 interface IRawPath {
@@ -173,7 +167,6 @@ export class RawFileSystem implements IRawFileSystem {
     constructor(
         protected readonly paths: IRawPath,
         protected readonly vscfs: IVSCodeFileSystemAPI,
-        protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
     ) { }
 
@@ -181,13 +174,11 @@ export class RawFileSystem implements IRawFileSystem {
     public static withDefaults(
         paths?: IRawPath,
         vscfs?: IVSCodeFileSystemAPI,
-        nodefs?: IRawFS,
         fsExtra?: IRawFSExtra
     ): RawFileSystem{
         return new RawFileSystem(
             paths || FileSystemPaths.withDefaults(),
             vscfs || vscode.workspace.fs,
-            nodefs || fs,
             fsExtra || fsextra
         );
     }
@@ -319,13 +310,10 @@ export class RawFileSystem implements IRawFileSystem {
         return this.fsExtra.readFileSync(filename, ENCODING);
     }
 
-    //****************************
-    // non-async (fs)
-
     public createWriteStream(filename: string): WriteStream {
         // TODO https://github.com/microsoft/vscode/issues/84175
         //   This functionality has been requested for the VS Code API.
-        return this.nodefs.createWriteStream(filename);
+        return this.fsExtra.createWriteStream(filename);
     }
 }
 

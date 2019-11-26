@@ -51,18 +51,12 @@ interface IRawFS {
     stat(uri: Uri): Thenable<FileStat>;
     writeFile(uri: Uri, content: Uint8Array): Thenable<void>;
 
-    // node "fs"
-    //tslint:disable-next-line:no-any
-    open(filename: string, flags: number, callback: any): void;
-    //tslint:disable-next-line:no-any
-    close(fd: number, callback: any): void;
-    createWriteStream(dest: string): fs.WriteStream;
-
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
     lstat(filename: string): Promise<fsextra.Stats>;
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
+    createWriteStream(dest: string): fs.WriteStream;
 
     // fs paths (IFileSystemPaths)
     join(...filenames: string[]): string;
@@ -279,7 +273,6 @@ suite('Raw FileSystem', () => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
         oldStat = createMockLegacyStat();
         filesystem = new RawFileSystem(
-            raw.object,
             raw.object,
             raw.object,
             raw.object
