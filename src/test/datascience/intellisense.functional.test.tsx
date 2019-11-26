@@ -6,6 +6,7 @@ import { ReactWrapper } from 'enzyme';
 import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
+import { IConfigurationService } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
@@ -102,6 +103,35 @@ suite('DataScience Intellisense tests', () => {
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
         const suggestion = waitForSuggestion(wrapper);
+        typeCode(getInteractiveEditor(wrapper), 'print');
+        await suggestion.promise;
+        suggestion.disposable.dispose();
+        verifyIntellisenseVisible(wrapper, 'print');
+    }, () => { return ioc; });
+
+    runMountedTest('Multiple interpreters', async (wrapper) => {
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+        await interactiveWindow.show();
+
+        // Then enter some code. Don't submit, we're just testing that autocomplete appears
+        let suggestion = waitForSuggestion(wrapper);
+        typeCode(getInteractiveEditor(wrapper), 'print');
+        await suggestion.promise;
+        suggestion.disposable.dispose();
+        verifyIntellisenseVisible(wrapper, 'print');
+
+        // Clear the code
+        const editor = getInteractiveEditor(wrapper);
+        const inst = editor.instance() as MonacoEditor;
+        inst.state.model!.setValue('');
+
+        // Then change our current interpreter
+        const config = ioc.get<IConfigurationService>(IConfigurationService);
+        await config.updateSetting('python.pythonPath', '/foo/bar/python');
+
+        // Type in again, make sure it works (should use the current interpreter in the server)
+        suggestion = waitForSuggestion(wrapper);
         typeCode(getInteractiveEditor(wrapper), 'print');
         await suggestion.promise;
         suggestion.disposable.dispose();

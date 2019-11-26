@@ -22,7 +22,14 @@ import {
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILanguageServerAnalysisOptions, ILanguageServerProxy } from '../../client/activation/types';
+import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import { LanguageServerManager } from '../../client/activation/languageServer/manager';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerCache,
+    ILanguageServerManager,
+    ILanguageServerProxy
+} from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -397,6 +404,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
+        this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
+        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);

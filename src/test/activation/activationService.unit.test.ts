@@ -29,10 +29,10 @@ import {
     IPythonSettings,
     Resource
 } from '../../client/common/types';
-import { IInterpreterService, PythonInterpreter, InterpreterType } from '../../client/interpreter/contracts';
-import { IServiceContainer } from '../../client/ioc/types';
-import { Architecture } from '../../client/common/utils/platform';
 import { noop } from '../../client/common/utils/misc';
+import { Architecture } from '../../client/common/utils/platform';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { IServiceContainer } from '../../client/ioc/types';
 
 // tslint:disable:max-func-body-length no-any
 
