@@ -46,8 +46,8 @@ import {
     SysInfoReason
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
-import { JupyterKernelPromiseFailedError } from '../jupyter/jupyterKernelPromiseFailedError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { CssMessages } from '../messages';
 import {
     CellState,
