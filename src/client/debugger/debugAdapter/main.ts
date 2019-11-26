@@ -9,7 +9,6 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
-import * as fsextra from 'fs-extra';
 import { Socket } from 'net';
 import { EOL } from 'os';
 import * as path from 'path';
@@ -21,6 +20,7 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import '../../common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
+import { IFileSystem } from '../../common/platform/types';
 import { ICurrentProcess, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -47,10 +47,7 @@ export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean = false;
-    constructor(
-        private readonly serviceContainer: IServiceContainer,
-        private readonly fileExistsSync = fsextra.existsSync
-    ) {
+    constructor(private readonly serviceContainer: IServiceContainer) {
         super(false);
     }
     public shutdown(): void {
@@ -109,7 +106,8 @@ export class PythonDebugger extends DebugSession {
 
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !this.fileExistsSync(args.program)) {
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
 

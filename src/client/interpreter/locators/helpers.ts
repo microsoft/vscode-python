@@ -2,28 +2,20 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
-import { FileSystem } from '../../common/platform/fileSystem';
 import { IFileSystem } from '../../common/platform/types';
+import { fsReaddirAsync } from '../../common/utils/fs';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
-export async function lookForInterpretersInDirectory(
-    pathToCheck: string,
-    fs: IFileSystem = new FileSystem()
-): Promise<string[]> {
-    const files = await (
-        fs.getFiles(pathToCheck)
-            .catch(err => {
-                traceError('Python Extension (lookForInterpretersInDirectory.fs.getFiles):', err);
-                return [] as string[];
-            })
-    );
-    return files.filter(filename => {
-        const name = path.basename(filename);
-        return CheckPythonInterpreterRegEx.test(name);
-    });
+export function lookForInterpretersInDirectory(pathToCheck: string): Promise<string[]> {
+    return fsReaddirAsync(pathToCheck)
+        .then(subDirs => subDirs.filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName))))
+        .catch(err => {
+            traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
+            return [] as string[];
+        });
 }
 
 @injectable()

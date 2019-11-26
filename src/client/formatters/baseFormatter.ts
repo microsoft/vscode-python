@@ -1,3 +1,4 @@
+import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
@@ -5,7 +6,6 @@ import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { isNotInstalledError } from '../common/helpers';
 import { traceError } from '../common/logger';
-import { IFileSystem } from '../common/platform/types';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -15,17 +15,11 @@ import { IFormatterHelper } from './types';
 export abstract class BaseFormatter {
     protected readonly outputChannel: vscode.OutputChannel;
     protected readonly workspace: IWorkspaceService;
-    private readonly fs: IFileSystem;
     private readonly helper: IFormatterHelper;
 
-    constructor(
-        public Id: string,
-        private product: Product,
-        protected serviceContainer: IServiceContainer
-    ) {
+    constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
         this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
-        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
@@ -109,13 +103,13 @@ export abstract class BaseFormatter {
 
     private async createTempFile(document: vscode.TextDocument): Promise<string> {
         return document.isDirty
-            ? getTempFileWithDocumentContents(document, this.fs)
+            ? getTempFileWithDocumentContents(document)
             : document.fileName;
     }
 
     private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
         if (originalFile !== tempFile) {
-            return this.fs.deleteFile(tempFile);
+            return fs.unlink(tempFile);
         }
         return Promise.resolve();
     }

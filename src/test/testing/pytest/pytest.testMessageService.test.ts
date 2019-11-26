@@ -13,6 +13,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import { Product } from '../../../client/common/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -100,7 +101,8 @@ async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails
 
 suite('Unit Tests - PyTest - TestMessageService', () => {
     let ioc: UnitTestIocContainer;
-    const filesystem = new FileSystem();
+    const platformService = new PlatformService();
+    const filesystem = new FileSystem(platformService);
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
