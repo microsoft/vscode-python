@@ -178,12 +178,17 @@ export class RawFileSystem implements IRawFileSystem {
     ) { }
 
     // Create a new object using common-case default values.
-    public static withDefaults(): RawFileSystem{
+    public static withDefaults(
+        path?: IRawPath,
+        vscfs?: IVSCodeFileSystemAPI,
+        nodefs?: IRawFS,
+        fsExtra?: IRawFSExtra
+    ): RawFileSystem{
         return new RawFileSystem(
-            FileSystemPaths.withDefaults(),
-            vscode.workspace.fs,
-            fs,
-            fsextra
+            path || FileSystemPaths.withDefaults(),
+            vscfs || vscode.workspace.fs,
+            nodefs || fs,
+            fsExtra || fsextra
         );
     }
 
@@ -335,14 +340,20 @@ export class FileSystemUtils implements IFileSystemUtils {
         protected readonly globFile: (pat: string) => Promise<string[]>
     ) { }
     // Create a new object using common-case default values.
-    public static withDefaults(): FileSystemUtils {
-        const paths = FileSystemPaths.withDefaults();
+    public static withDefaults(
+        raw?: IRawFileSystem,
+        path?: IFileSystemPaths,
+        tmp?: ITempFileSystem,
+        getHash?: (data: string) => string,
+        globFile?: (pat: string) => Promise<string[]>
+    ): FileSystemUtils {
+        const paths = path || FileSystemPaths.withDefaults();
         return new FileSystemUtils(
-            new RawFileSystem(paths, vscode.workspace.fs, fs, fsextra),
+            raw || RawFileSystem.withDefaults(paths),
             paths,
-            TempFileSystem.withDefaults(),
-            getHashString,
-            util.promisify(glob)
+            tmp || TempFileSystem.withDefaults(),
+            getHash || getHashString,
+            globFile || util.promisify(glob)
         );
     }
 
