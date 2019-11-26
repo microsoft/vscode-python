@@ -231,7 +231,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
-        const options = this.ipynbProvider.getNotebookOptions();
+        const options = await this.ipynbProvider.getNotebookOptions();
         const metadata = this.notebookJson.metadata;
         return {
             ...options,
