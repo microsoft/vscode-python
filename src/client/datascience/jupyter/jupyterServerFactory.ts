@@ -24,6 +24,7 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 }
@@ -38,7 +39,8 @@ type JupyterServerClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
-        appShell: IApplicationShell
+        appShell: IApplicationShell,
+        interpreterService: IInterpreterService
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -59,7 +61,8 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
-        @inject(IApplicationShell) appShell: IApplicationShell) {
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IInterpreterService) interpreterService: IInterpreterService) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -72,7 +75,8 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
             sessionManager,
             workspaceService,
             loggers ? loggers : [],
-            appShell
+            appShell,
+            interpreterService
         );
     }
 

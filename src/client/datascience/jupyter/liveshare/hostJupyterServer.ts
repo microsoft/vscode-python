@@ -13,6 +13,7 @@ import { traceInfo } from '../../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { StopWatch } from '../../../common/utils/stopWatch';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues, Telemetry } from '../../constants';
 import {
@@ -48,7 +49,9 @@ export class HostJupyterServer
         sessionManager: IJupyterSessionManagerFactory,
         private workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
-        private appService: IApplicationShell) {
+        private appService: IApplicationShell,
+        private interpreterService: IInterpreterService
+    ) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
 
@@ -177,7 +180,8 @@ export class HostJupyterServer
                 resource,
                 this.getDisposedError.bind(this),
                 this.workspaceService,
-                this.appService);
+                this.appService,
+                this.interpreterService);
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle (session) ${this.id}`);
