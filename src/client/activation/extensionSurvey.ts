@@ -4,10 +4,12 @@
 'use strict';
 
 import { inject, injectable, optional } from 'inversify';
-import { IApplicationShell } from '../common/application/types';
+import * as vscode from 'vscode';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
+import { IPlatformService } from '../common/platform/types';
 import {
     IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom
 } from '../common/types';
@@ -33,6 +35,8 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IRandom) private random: IRandom,
         @inject(IExperimentsManager) private experiments: IExperimentsManager,
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
+        @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
         @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY) { }
 
@@ -86,6 +90,11 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
     }
 
     private launchSurvey() {
-        this.browserService.launch('https://aka.ms/AA5rjx5');
+        const extensionVersion = encodeURIComponent(this.appEnvironment.packageJson.version);
+        const vscodeVersion = encodeURIComponent(vscode.version);
+        const machineId = encodeURIComponent(this.appEnvironment.machineId);
+        const platform = encodeURIComponent(this.platformService.osType);
+        const url = `https://aka.ms/AA5rjx5?o=${platform}&v=${vscodeVersion}&e=${extensionVersion}&m=${machineId}`;
+        this.browserService.launch(url);
     }
 }
