@@ -3,9 +3,9 @@
 
 import { Uri } from 'vscode';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { Product, ProductType } from '../types';
+import { Product, ProductType, Resource } from '../types';
 
-export type InterpreterUri = Uri | PythonInterpreter;
+export type InterpreterUri = Resource | PythonInterpreter;
 
 export const IModuleInstaller = Symbol('IModuleInstaller');
 export interface IModuleInstaller {
