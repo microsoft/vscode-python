@@ -903,6 +903,10 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly extensionChannel: Channel;
+    /**
+     * The version of the editor.
+     */
+    readonly vscodeVersion: string;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');

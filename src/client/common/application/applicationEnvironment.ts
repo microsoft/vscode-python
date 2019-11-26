@@ -34,6 +34,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get appName(): string {
         return vscode.env.appName;
     }
+    public get vscodeVersion(): string {
+        return vscode.version;
+    }
     public get appRoot(): string {
         return vscode.env.appRoot;
     }

@@ -7,7 +7,6 @@ import { assert, expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import * as vscode from 'vscode';
 import { ExtensionSurveyPrompt, extensionSurveyStateKeys } from '../../client/activation/extensionSurvey';
 import { IApplicationEnvironment, IApplicationShell } from '../../client/common/application/types';
 import { ShowExtensionSurveyPrompt } from '../../client/common/experimentGroups';
@@ -164,9 +163,6 @@ suite('Extension survey prompt - showSurvey()', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let appEnvironment: TypeMoq.IMock<IApplicationEnvironment>;
     let extensionSurveyPrompt: ExtensionSurveyPrompt;
-    const packageJson = {
-        version: 'extensionVersion'
-    };
     setup(() => {
         appShell = TypeMoq.Mock.ofType<IApplicationShell>();
         browserService = TypeMoq.Mock.ofType<IBrowserService>();
@@ -183,11 +179,18 @@ suite('Extension survey prompt - showSurvey()', () => {
     });
 
     test('Launch survey if \'Yes\' option is clicked', async () => {
+        const packageJson = {
+            version: 'extensionVersion'
+        };
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=${vscode.version}&e=extensionVersion&m=machineId`;
+        const expectedUrl = `https://aka.ms/AA5rjx5?o=Windows&v=vscodeVersion&e=extensionVersion&m=machineId`;
         appEnvironment
             .setup(a => a.packageJson)
             .returns(() => packageJson)
+            .verifiable(TypeMoq.Times.once());
+        appEnvironment
+            .setup(a => a.vscodeVersion)
+            .returns(() => 'vscodeVersion')
             .verifiable(TypeMoq.Times.once());
         appEnvironment
             .setup(a => a.machineId)
@@ -228,9 +231,8 @@ suite('Extension survey prompt - showSurvey()', () => {
 
     test('Do nothing if \'Maybe later\' option is clicked', async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        appEnvironment
-            .setup(a => a.packageJson)
-            .returns(() => packageJson)
+        platformService
+            .setup(p => p.osType)
             .verifiable(TypeMoq.Times.never());
         appShell
             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -257,14 +259,13 @@ suite('Extension survey prompt - showSurvey()', () => {
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();
         doNotShowAgain.verifyAll();
-        appEnvironment.verifyAll();
+        platformService.verifyAll();
     });
 
     test('Do nothing if no option is clicked', async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        appEnvironment
-            .setup(a => a.packageJson)
-            .returns(() => packageJson)
+        platformService
+            .setup(p => p.osType)
             .verifiable(TypeMoq.Times.never());
         appShell
             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -291,14 +292,13 @@ suite('Extension survey prompt - showSurvey()', () => {
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();
         doNotShowAgain.verifyAll();
-        appEnvironment.verifyAll();
+        platformService.verifyAll();
     });
 
     test('Disable prompt if \'Do not show again\' option is clicked', async () => {
         const prompts = [LanguageService.bannerLabelYes(), ExtensionSurveyBanner.maybeLater(), Common.doNotShowAgain()];
-        appEnvironment
-            .setup(a => a.packageJson)
-            .returns(() => packageJson)
+        platformService
+            .setup(p => p.osType)
             .verifiable(TypeMoq.Times.never());
         appShell
             .setup(a => a.showInformationMessage(ExtensionSurveyBanner.bannerMessage(), ...prompts))
@@ -325,7 +325,7 @@ suite('Extension survey prompt - showSurvey()', () => {
         browserService.verifyAll();
         disableSurveyForTime.verifyAll();
         doNotShowAgain.verifyAll();
-        appEnvironment.verifyAll();
+        platformService.verifyAll();
     });
 });
 
