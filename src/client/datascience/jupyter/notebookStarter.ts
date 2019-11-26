@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import * as cp from 'child_process';
 import * as os from 'os';
 import * as path from 'path';
@@ -56,7 +57,7 @@ export class NotebookStarter implements Disposable {
         }
     }
     // tslint:disable-next-line: max-func-body-length
-    public async start(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    public async start(options: {useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata}, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         traceInfo('Starting Notebook');
         const notebookCommandPromise = this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
         // Now actually launch it
@@ -67,7 +68,7 @@ export class NotebookStarter implements Disposable {
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
             const [args, kernelSpec, notebookCommand] = await Promise.all([
-                this.generateArguments(useDefaultConfig, tempDirPromise),
+                this.generateArguments(options.useDefaultConfig, tempDirPromise),
                 this.kernelService.getMatchingKernelSpec(undefined, cancelToken),
                 notebookCommandPromise
             ]);

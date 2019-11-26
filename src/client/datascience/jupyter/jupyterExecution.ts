@@ -4,6 +4,7 @@
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
@@ -248,7 +249,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
-            const launchResults = await this.startNotebookServer(options && options.useDefaultConfig ? true : false, cancelToken);
+            const useDefaultConfig = options && options.useDefaultConfig ? true : false;
+            const metadata = options?.metadata;
+            const launchResults = await this.startNotebookServer({useDefaultConfig, metadata}, cancelToken);
             if (launchResults) {
                 connection = launchResults.connection;
                 kernelSpec = launchResults.kernelSpec;
@@ -284,11 +287,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startNotebookServer(options: {useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata}, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
-        return this.notebookStarter.start(useDefaultConfig, cancelToken);
+        return this.notebookStarter.start(options, cancelToken);
     }
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
