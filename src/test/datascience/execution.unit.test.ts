@@ -451,7 +451,7 @@ suite('Jupyter Execution', async () => {
             .returns(() => result);
     }
 
-    function createKernelSpecs(specs: {name: string, resourceDir: string}[]): Record<string, any> {
+    function createKernelSpecs(specs: {name: string; resourceDir: string}[]): Record<string, any> {
         const models: Record<string, any> = {};
         specs.forEach(spec => {
             models[spec.name] = {
@@ -461,7 +461,7 @@ suite('Jupyter Execution', async () => {
                     display_name: spec.name,
                     language: 'python'
                 }
-            }
+            };
         });
         return models;
     }
