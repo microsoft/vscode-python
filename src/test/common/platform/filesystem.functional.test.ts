@@ -995,7 +995,7 @@ suite('FileSystem Utils', () => {
 suite('FileSystem - legacy aliases', () => {
     const fileToAppendTo = path.join(__dirname, 'created_for_testing_dummy.txt');
     setup(() => {
-        cleanTestFiles(); // This smells like functional testing...
+        cleanTestFiles();
     });
     teardown(cleanTestFiles);
     function cleanTestFiles() {

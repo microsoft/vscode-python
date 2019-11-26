@@ -79,7 +79,7 @@ interface IRawTmp {
     file(options: tmpMod.Options, cb: TempCallback): void;
 }
 
-// The operations on tempporary files/directoryes used by the extension.
+// The operations on temporary files/directoryes used by the extension.
 export class TempFileSystem {
     constructor(
         protected readonly raw: IRawTmp
@@ -351,7 +351,8 @@ export class FileSystemUtils implements IFileSystemUtils {
         try {
             tmpFile = await this.tmp.createFile('___vscpTest___', dirname);
         } catch {
-            await this.raw.stat(dirname); // fails if does not exist
+            // Use a stat call to ensure the directory exists.
+            await this.raw.stat(dirname);
             return true;
         }
         tmpFile.dispose();
@@ -370,7 +371,8 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
 }
 
-// We *could* use ICryptUtils, but it's a bit overkill.
+// We *could* use ICryptoUtils, but it's a bit overkill, issue tracked
+// in https://github.com/microsoft/vscode-python/issues/8438.
 function getHashString(data: string): string {
     const hash = createHash('sha512')
         .update(data);
