@@ -77,6 +77,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Setup our interpreter service
         this.interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => this.changedInterpreterEvent.event);
         this.interpreterService.setup(i => i.getActiveInterpreter()).returns(() => Promise.resolve(this.activeInterpreter));
+        this.interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(this.activeInterpreter));
         this.interpreterService.setup(i => i.getInterpreters()).returns(() => Promise.resolve(this.installedInterpreters));
         this.interpreterService.setup(i => i.getInterpreterDetails(TypeMoq.It.isAnyString())).returns((p) => {
             const found = this.installedInterpreters.find(i => i.path === p);
