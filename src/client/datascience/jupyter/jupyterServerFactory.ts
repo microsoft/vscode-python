@@ -11,6 +11,7 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import {
     IConnection,
     IDataScience,
@@ -24,7 +25,6 @@ import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
-import { IInterpreterService } from '../../interpreter/contracts';
 
 interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
 }
