@@ -4,6 +4,7 @@
 'use strict';
 
 import { createHash } from 'crypto';
+import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as glob from 'glob';
 import { injectable } from 'inversify';
@@ -11,6 +12,7 @@ import * as fspath from 'path';
 import * as tmpMod from 'tmp';
 import * as util from 'util';
 import * as vscode from 'vscode';
+import { createDeferred } from '../utils/async';
 import { getOSType, OSType } from '../utils/platform';
 import {
     FileStat, FileType,
@@ -20,42 +22,25 @@ import {
 } from './types';
 
 // tslint:disable:max-classes-per-file
-// tslint:disable:no-suspicious-comment
 
 const ENCODING: string = 'utf8';
 
-const FILE_NOT_FOUND = vscode.FileSystemError.FileNotFound().name;
-const FILE_EXISTS = vscode.FileSystemError.FileExists().name;
-
-function isFileNotFoundError(err: Error): boolean {
-    return err.name === FILE_NOT_FOUND;
-}
-
-function isFileExistsError(err: Error): boolean {
-    return err.name === FILE_EXISTS;
-}
-
-function convertFileStat(stat: fsextra.Stats): FileStat {
-    let fileType = FileType.Unknown;
+// Determine the file type from the given file info.
+function getFileType(stat: FileStat): FileType {
     if (stat.isFile()) {
-        fileType = FileType.File;
+        return FileType.File;
     } else if (stat.isDirectory()) {
-        fileType = FileType.Directory;
+        return FileType.Directory;
     } else if (stat.isSymbolicLink()) {
-        fileType = FileType.SymbolicLink;
+        return FileType.SymbolicLink;
+    } else {
+        return FileType.Unknown;
     }
-    return {
-        type: fileType,
-        size: stat.size,
-        ctime: stat.ctimeMs,
-        mtime: stat.mtimeMs
-    };
 }
 
 // The parts of node's 'path' module used by FileSystemPath.
 interface INodePath {
     join(...filenames: string[]): string;
-    dirname(filename: string): string;
     normalize(filename: string): string;
 }
 
@@ -79,10 +64,6 @@ export class FileSystemPaths implements IFileSystemPaths {
 
     public join(...filenames: string[]): string {
         return this.raw.join(...filenames);
-    }
-
-    public dirname(filename: string): string {
-        return this.raw.dirname(filename);
     }
 
     public normCase(filename: string): string {
@@ -131,32 +112,36 @@ export class TempFileSystem {
     }
 }
 
-// This is the parts of the vscode.workspace.fs API that we use here.
-// See: https://code.visualstudio.com/api/references/vscode-api#FileSystem
-// Note that we have used all the API functions *except* "rename()".
-interface IVSCodeFileSystemAPI {
-    copy(source: vscode.Uri, target: vscode.Uri, options?: {overwrite: boolean}): Thenable<void>;
-    createDirectory(uri: vscode.Uri): Thenable<void>;
-    delete(uri: vscode.Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
-    readDirectory(uri: vscode.Uri): Thenable<[string, FileType][]>;
-    readFile(uri: vscode.Uri): Thenable<Uint8Array>;
-    stat(uri: vscode.Uri): Thenable<FileStat>;
-    writeFile(uri: vscode.Uri, content: Uint8Array): Thenable<void>;
+// This is the parts of node's 'fs' module that we use in RawFileSystem.
+interface IRawFS {
+    // non-async
+    createWriteStream(filePath: string): fs.WriteStream;
 }
 
 // This is the parts of the 'fs-extra' module that we use in RawFileSystem.
 interface IRawFSExtra {
     chmod(filePath: string, mode: string | number): Promise<void>;
+    readFile(path: string, encoding: string): Promise<string>;
+    //tslint:disable-next-line:no-any
+    writeFile(path: string, data: any, options: any): Promise<void>;
+    unlink(filename: string): Promise<void>;
+    stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
+    mkdirp(dirname: string): Promise<void>;
+    rmdir(dirname: string): Promise<void>;
+    readdir(dirname: string): Promise<string[]>;
+    remove(dirname: string): Promise<void>;
 
     // non-async
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
-    createWriteStream(filePath: string): fsextra.WriteStream;
+    createReadStream(src: string): fsextra.ReadStream;
+    createWriteStream(dest: string): fsextra.WriteStream;
 }
 
+// The parts of IFileSystemPaths used by RawFileSystem.
 interface IRawPath {
-    dirname(filename: string): string;
+    join(...filenames: string[]): string;
 }
 
 // Later we will drop "FileSystem", switching usage to
@@ -165,155 +150,105 @@ interface IRawPath {
 // The low-level filesystem operations used by the extension.
 export class RawFileSystem implements IRawFileSystem {
     constructor(
-        protected readonly paths: IRawPath,
-        protected readonly vscfs: IVSCodeFileSystemAPI,
+        protected readonly path: IRawPath,
+        protected readonly nodefs: IRawFS,
         protected readonly fsExtra: IRawFSExtra
     ) { }
 
     // Create a new object using common-case default values.
-    public static withDefaults(
-        paths?: IRawPath,
-        vscfs?: IVSCodeFileSystemAPI,
-        fsExtra?: IRawFSExtra
-    ): RawFileSystem{
+    public static withDefaults(): RawFileSystem{
         return new RawFileSystem(
-            paths || FileSystemPaths.withDefaults(),
-            vscfs || vscode.workspace.fs,
-            fsExtra || fsextra
+            FileSystemPaths.withDefaults(),
+            fs,
+            fsextra
         );
-    }
-
-    //****************************
-    // VS Code API
-
-    public async readText(filename: string): Promise<string> {
-        const uri = vscode.Uri.file(filename);
-        const data = Buffer.from(
-            await this.vscfs.readFile(uri));
-        return data.toString(ENCODING);
-    }
-
-    public async writeText(filename: string, text: string): Promise<void> {
-        const uri = vscode.Uri.file(filename);
-        const data = Buffer.from(text);
-        await this.vscfs.writeFile(uri, data);
-    }
-
-    public async rmtree(dirname: string): Promise<void> {
-        const uri = vscode.Uri.file(dirname);
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   The docs say "throws - FileNotFound when uri doesn't exist".
-        //   However, it happily does nothing (at least for remote-over-SSH).
-        //   So we have to manually stat, just to be sure.
-        await this.vscfs.stat(uri);
-        return this.vscfs.delete(uri, {
-            recursive: true,
-            useTrash: false
-        });
-    }
-
-    public async rmfile(filename: string): Promise<void> {
-        const uri = vscode.Uri.file(filename);
-        return this.vscfs.delete(uri, {
-            recursive: false,
-            useTrash: false
-        });
-    }
-
-    public async stat(filename: string): Promise<FileStat> {
-        const uri = vscode.Uri.file(filename);
-        return this.vscfs.stat(uri);
-    }
-
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
-        const uri = vscode.Uri.file(dirname);
-        return this.vscfs.readDirectory(uri);
-    }
-
-    public async mkdirp(dirname: string): Promise<void> {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   Hopefully VS Code provides this method in their API
-        //   so we don't have to roll our own.
-        const stack = [dirname];
-        while (stack.length > 0) {
-            const current = stack.pop() || '';
-            const uri = vscode.Uri.file(current);
-            try {
-                await this.vscfs.createDirectory(uri);
-            } catch (err) {
-                if (isFileExistsError(err)) {
-                    // already done!
-                    return;
-                }
-                // According to the docs, FileNotFound means the parent
-                // does not exist.
-                // See: https://code.visualstudio.com/api/references/vscode-api#FileSystemProvider
-                if (!isFileNotFoundError(err)) {
-                    // Fail for anything else.
-                    throw err; // re-throw
-                }
-                // Try creating the parent first.
-                const parent = this.paths.dirname(current);
-                if (parent === '' || parent === current) {
-                    // This shouldn't ever happen.
-                    throw err;
-                }
-                stack.push(current);
-                stack.push(parent);
-            }
-        }
-    }
-
-    public async copyFile(src: string, dest: string): Promise<void> {
-        const srcURI = vscode.Uri.file(src);
-        const destURI = vscode.Uri.file(dest);
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   The docs say "throws - FileNotFound when parent of
-        //   destination doesn't exist".  However, it happily creates
-        //   the parent directory (at least for remote-over-SSH).
-        //   So we have to manually stat, just to be sure.
-        await this.vscfs.stat(vscode.Uri.file(this.paths.dirname(dest)));
-        await this.vscfs.copy(srcURI, destURI, {
-            overwrite: true
-        });
     }
 
     //****************************
     // fs-extra
 
+    public async readText(filename: string): Promise<string> {
+        return this.fsExtra.readFile(filename, ENCODING);
+    }
+
+    public async writeText(filename: string, data: {}): Promise<void> {
+        const options: fsextra.WriteFileOptions = {
+            encoding: ENCODING
+        };
+        await this.fsExtra.writeFile(filename, data, options);
+    }
+
+    public async mkdirp(dirname: string): Promise<void> {
+        return this.fsExtra.mkdirp(dirname);
+    }
+
+    public async rmtree(dirname: string): Promise<void> {
+        return this.fsExtra.stat(dirname)
+            .then(() => this.fsExtra.remove(dirname));
+    }
+
+    public async rmfile(filename: string): Promise<void> {
+        return this.fsExtra.unlink(filename);
+    }
+
     public async chmod(filename: string, mode: string | number): Promise<void> {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   This functionality has been requested for the VS Code API.
         return this.fsExtra.chmod(filename, mode);
     }
 
+    public async stat(filename: string): Promise<FileStat> {
+        return this.fsExtra.stat(filename);
+    }
+
     public async lstat(filename: string): Promise<FileStat> {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   This functionality has been requested for the VS Code API.
-        const stat = await this.fsExtra.lstat(filename);
-        return convertFileStat(stat);
+        return this.fsExtra.lstat(filename);
+    }
+
+    // Once we move to the VS Code API, this method becomes a trivial wrapper.
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        const names: string[] = await this.fsExtra.readdir(dirname);
+        const promises = names
+            .map(name => {
+                 const filename = this.path.join(dirname, name);
+                 return this.lstat(filename)
+                     .then(stat => [name, getFileType(stat)] as [string, FileType])
+                     .catch(() => [name, FileType.Unknown] as [string, FileType]);
+            });
+        return Promise.all(promises);
+    }
+
+    // Once we move to the VS Code API, this method becomes a trivial wrapper.
+    public async copyFile(src: string, dest: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        const rs = this.fsExtra.createReadStream(src)
+            .on('error', (err) => {
+                deferred.reject(err);
+            });
+        const ws = this.fsExtra.createWriteStream(dest)
+            .on('error', (err) => {
+                deferred.reject(err);
+            }).on('close', () => {
+                deferred.resolve();
+            });
+        rs.pipe(ws);
+        return deferred.promise;
     }
 
     //****************************
     // non-async (fs-extra)
 
     public statSync(filename: string): FileStat {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   This functionality has been requested for the VS Code API.
-        const stat = this.fsExtra.statSync(filename);
-        return convertFileStat(stat);
+        return this.fsExtra.statSync(filename);
     }
 
     public readTextSync(filename: string): string {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   This functionality has been requested for the VS Code API.
         return this.fsExtra.readFileSync(filename, ENCODING);
     }
 
+    //****************************
+    // non-async (fs)
+
     public createWriteStream(filename: string): WriteStream {
-        // TODO https://github.com/microsoft/vscode/issues/84175
-        //   This functionality has been requested for the VS Code API.
-        return this.fsExtra.createWriteStream(filename);
+        return this.nodefs.createWriteStream(filename);
     }
 }
 
@@ -322,26 +257,20 @@ export class RawFileSystem implements IRawFileSystem {
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
         public readonly raw: IRawFileSystem,
-        public readonly paths: IFileSystemPaths,
+        public readonly path: IFileSystemPaths,
         public readonly tmp: ITempFileSystem,
         protected readonly getHash: (data: string) => string,
         protected readonly globFile: (pat: string) => Promise<string[]>
     ) { }
     // Create a new object using common-case default values.
-    public static withDefaults(
-        raw?: IRawFileSystem,
-        paths?: IFileSystemPaths,
-        tmp?: ITempFileSystem,
-        getHash?: (data: string) => string,
-        globFile?: (pat: string) => Promise<string[]>
-    ): FileSystemUtils {
-        paths = paths || FileSystemPaths.withDefaults();
+    public static withDefaults(): FileSystemUtils {
+        const paths = FileSystemPaths.withDefaults();
         return new FileSystemUtils(
-            raw || RawFileSystem.withDefaults(paths),
+            new RawFileSystem(paths, fs, fsextra),
             paths,
-            tmp || TempFileSystem.withDefaults(),
-            getHash || getHashString,
-            globFile || util.promisify(glob)
+            TempFileSystem.withDefaults(),
+            getHashString,
+            util.promisify(glob)
         );
     }
 
@@ -367,8 +296,8 @@ export class FileSystemUtils implements IFileSystemUtils {
         if (path1 === path2) {
             return true;
         }
-        path1 = this.paths.normCase(path1);
-        path2 = this.paths.normCase(path2);
+        path1 = this.path.normCase(path1);
+        path2 = this.path.normCase(path2);
         return path1 === path2;
     }
 
@@ -378,15 +307,19 @@ export class FileSystemUtils implements IFileSystemUtils {
     ): Promise<boolean> {
         let stat: FileStat;
         try {
-            stat = await this._stat(filename);
+            stat = await this.raw.stat(filename);
         } catch (err) {
             return false;
         }
-
         if (fileType === undefined) {
             return true;
+        } else if (fileType === FileType.File) {
+            return stat.isFile();
+        } else if (fileType === FileType.Directory) {
+            return stat.isDirectory();
+        } else {
+            return false;
         }
-        return stat.type === fileType;
     }
     public async fileExists(filename: string): Promise<boolean> {
         return this.pathExists(filename, FileType.File);
@@ -405,12 +338,12 @@ export class FileSystemUtils implements IFileSystemUtils {
     public async getSubDirectories(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
             .filter(([_name, fileType]) => fileType === FileType.Directory)
-            .map(([name, _fileType]) => this.paths.join(dirname, name));
+            .map(([name, _fileType]) => this.path.join(dirname, name));
     }
     public async getFiles(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
             .filter(([_name, fileType]) => fileType === FileType.File)
-            .map(([name, _fileType]) => this.paths.join(dirname, name));
+            .map(([name, _fileType]) => this.path.join(dirname, name));
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
@@ -419,7 +352,7 @@ export class FileSystemUtils implements IFileSystemUtils {
             tmpFile = await this.tmp.createFile('___vscpTest___', dirname);
         } catch {
             // Use a stat call to ensure the directory exists.
-            await this._stat(dirname);
+            await this.raw.stat(dirname);
             return true;
         }
         tmpFile.dispose();
@@ -428,17 +361,13 @@ export class FileSystemUtils implements IFileSystemUtils {
 
     public async getFileHash(filename: string): Promise<string> {
         const stat = await this.raw.lstat(filename);
-        const data = `${stat.ctime}-${stat.mtime}`;
+        const data = `${stat.ctimeMs}-${stat.mtimeMs}`;
         return this.getHash(data);
     }
 
     public async search(globPattern: string): Promise<string[]> {
         const files = await this.globFile(globPattern);
         return Array.isArray(files) ? files : [];
-    }
-
-    public async _stat(filename: string): Promise<FileStat> {
-        return this.raw.stat(filename);
     }
 }
 
@@ -453,7 +382,7 @@ function getHashString(data: string): string {
 // more aliases (to cause less churn)
 @injectable()
 export class FileSystem implements IFileSystem {
-    protected utils: FileSystemUtils;
+    private readonly utils: FileSystemUtils;
     constructor() {
         this.utils = FileSystemUtils.withDefaults();
     }
@@ -513,8 +442,12 @@ export class FileSystem implements IFileSystem {
     //****************************
     // aliases
 
-    public async stat(filePath: string): Promise<FileStat> {
-        return this.utils._stat(filePath);
+    public async stat(filePath: string): Promise<vscode.FileStat> {
+        // Do not import vscode directly, as this isn't available in the Debugger Context.
+        // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
+        // tslint:disable-next-line: no-require-imports
+        const vsc = require('vscode');
+        return vsc.workspace.fs.stat(vscode.Uri.file(filePath));
     }
 
     public async readFile(filename: string): Promise<string> {
