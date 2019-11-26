@@ -4,7 +4,6 @@
 'use strict';
 
 import * as fs from 'fs';
-import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
@@ -48,11 +47,12 @@ export interface ITempFileSystem {
 
 export interface IFileSystemPaths {
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     normCase(filename: string): string;
 }
 
 export import FileType = vscode.FileType;
-export type FileStat = fsextra.Stats;
+export type FileStat = vscode.FileStat;
 export type WriteStream = fs.WriteStream;
 
 // Later we will drop "IFileSystem", switching usage to
@@ -104,7 +104,7 @@ export interface IRawFileSystem {
 export const IFileSystemUtils = Symbol('IFileSystemUtils');
 export interface IFileSystemUtils {
     readonly raw: IRawFileSystem;
-    readonly path: IFileSystemPaths;
+    readonly paths: IFileSystemPaths;
     readonly tmp: ITempFileSystem;
 
     //***********************
@@ -157,7 +157,7 @@ export interface IFileSystem {
     search(globPattern: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
 
-    stat(filePath: string): Promise<vscode.FileStat>;
+    stat(filePath: string): Promise<FileStat>;
     readFile(filename: string): Promise<string>;
     writeFile(filename: string, data: {}): Promise<void>;
     chmod(filename: string, mode: string): Promise<void>;

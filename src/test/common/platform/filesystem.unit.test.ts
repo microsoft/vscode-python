@@ -2,9 +2,10 @@
 // Licensed under the MIT License.
 
 import { expect } from 'chai';
+import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
-import { Disposable } from 'vscode';
+import { Disposable, FileSystemError, Uri } from 'vscode';
 import {
     FileSystemPaths, FileSystemUtils, RawFileSystem, TempFileSystem
 } from '../../../client/common/platform/fileSystem';
@@ -16,28 +17,50 @@ import {
 
 // tslint:disable:max-func-body-length chai-vague-errors
 
+function createMockStat(): TypeMoq.IMock<FileStat> {
+    const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
+    // This is necessary because passing "mock.object" to
+    // Promise.resolve() triggers the lookup.
+    //tslint:disable-next-line:no-any
+    stat.setup((s: any) => s.then)
+        .returns(() => undefined)
+        .verifiable(TypeMoq.Times.atLeast(0));
+    return stat;
+}
+
+function createMockLegacyStat(): TypeMoq.IMock<fsextra.Stats> {
+    const stat = TypeMoq.Mock.ofType<fsextra.Stats>(undefined, TypeMoq.MockBehavior.Strict);
+    // This is necessary because passing "mock.object" to
+    // Promise.resolve() triggers the lookup.
+    //tslint:disable-next-line:no-any
+    stat.setup((s: any) => s.then)
+        .returns(() => undefined)
+        .verifiable(TypeMoq.Times.atLeast(0));
+    return stat;
+}
+
 //tslint:disable-next-line:no-any
 type TempCallback = (err: any, path: string, fd: number, cleanupCallback: () => void) => void;
 interface IRawFS {
+    // VS Code
+    copy(source: Uri, target: Uri, options?: {overwrite: boolean}): Thenable<void>;
+    createDirectory(uri: Uri): Thenable<void>;
+    delete(uri: Uri, options?: {recursive: boolean; useTrash: boolean}): Thenable<void>;
+    readDirectory(uri: Uri): Thenable<[string, FileType][]>;
+    readFile(uri: Uri): Thenable<Uint8Array>;
+    stat(uri: Uri): Thenable<FileStat>;
+    writeFile(uri: Uri, content: Uint8Array): Thenable<void>;
+
     // "fs-extra"
     chmod(filePath: string, mode: string): Promise<void>;
-    readFile(path: string, encoding: string): Promise<string>;
-    //tslint:disable-next-line:no-any
-    writeFile(path: string, data: any, options: any): Promise<void>;
-    unlink(filename: string): Promise<void>;
-    stat(filename: string): Promise<fsextra.Stats>;
     lstat(filename: string): Promise<fsextra.Stats>;
-    mkdirp(dirname: string): Promise<void>;
-    rmdir(dirname: string): Promise<void>;
-    readdir(dirname: string): Promise<string[]>;
-    remove(dirname: string): Promise<void>;
     statSync(filename: string): fsextra.Stats;
     readFileSync(path: string, encoding: string): string;
-    createReadStream(src: string): fsextra.ReadStream;
-    createWriteStream(dest: string): fsextra.WriteStream;
+    createWriteStream(dest: string): fs.WriteStream;
 
     // fs paths (IFileSystemPaths)
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     normalize(filename: string): string;
 
     // "tmp"
@@ -91,10 +114,10 @@ suite('FileSystem - Temporary files', () => {
 
 suite('FileSystem paths', () => {
     let raw: TypeMoq.IMock<IRawFS>;
-    let path: IFileSystemPaths;
+    let paths: IFileSystemPaths;
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
-        path = new FileSystemPaths(
+        paths = new FileSystemPaths(
             false, // isWindows
             raw.object
         );
@@ -109,7 +132,20 @@ suite('FileSystem paths', () => {
             raw.setup(r => r.join('x', 'y/z', 'spam.py'))
                 .returns(() => expected);
 
-            const result = path.join('x', 'y/z', 'spam.py');
+            const result = paths.join('x', 'y/z', 'spam.py');
+
+            expect(result).to.equal(expected);
+        });
+    });
+
+    suite('dirname', () => {
+        test('wraps low-level function', () => {
+            const filename = 'x/y/z/spam.py';
+            const expected = 'x/y/z';
+            raw.setup(r => r.dirname(filename))
+                .returns(() => expected);
+
+            const result = paths.dirname(filename);
 
             expect(result).to.equal(expected);
         });
@@ -120,12 +156,12 @@ suite('FileSystem paths', () => {
             const filename = 'x/y/z/spam.py';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(filename);
             verifyAll();
@@ -136,12 +172,12 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -152,12 +188,12 @@ suite('FileSystem paths', () => {
             const expected = filename;
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -168,12 +204,12 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -184,12 +220,12 @@ suite('FileSystem paths', () => {
             const expected = 'X\\Y\\Z\\SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 true, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -200,12 +236,12 @@ suite('FileSystem paths', () => {
             const expected = 'x/y/z/spam.py';
             raw.setup(r => r.normalize(filename))
                 .returns(() => filename);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -216,12 +252,12 @@ suite('FileSystem paths', () => {
             const expected = 'X/Y/Z/SPAM.PY';
             raw.setup(r => r.normalize(filename))
                 .returns(() => expected);
-            path = new FileSystemPaths(
+            paths = new FileSystemPaths(
                 false, // isWindows
                 raw.object
             );
 
-            const result = path.normCase(filename);
+            const result = paths.normCase(filename);
 
             expect(result).to.equal(expected);
             verifyAll();
@@ -231,9 +267,11 @@ suite('FileSystem paths', () => {
 
 suite('Raw FileSystem', () => {
     let raw: TypeMoq.IMock<IRawFS>;
+    let oldStat: TypeMoq.IMock<fsextra.Stats>;
     let filesystem: IRawFileSystem;
     setup(() => {
         raw = TypeMoq.Mock.ofType<IRawFS>(undefined, TypeMoq.MockBehavior.Strict);
+        oldStat = createMockLegacyStat();
         filesystem = new RawFileSystem(
             raw.object,
             raw.object,
@@ -242,14 +280,56 @@ suite('Raw FileSystem', () => {
     });
     function verifyAll() {
         raw.verifyAll();
+        oldStat.verifyAll();
+    }
+
+    function setupOldStat(stat: FileStat, old?: TypeMoq.IMock<fsextra.Stats> | null) {
+        if (old === undefined) {
+            old = oldStat;
+        } else if (old === null) {
+            old = createMockLegacyStat();
+        }
+
+        if (stat.type === FileType.File) {
+            old!.setup(s => s.isFile())
+                .returns(() => true);
+        } else if (stat.type === FileType.Directory) {
+            old!.setup(s => s.isFile())
+                .returns(() => false);
+            old!.setup(s => s.isDirectory())
+                .returns(() => true);
+        } else if (stat.type === FileType.SymbolicLink) {
+            old!.setup(s => s.isFile())
+                .returns(() => false);
+            old!.setup(s => s.isDirectory())
+                .returns(() => false);
+            old!.setup(s => s.isSymbolicLink())
+                .returns(() => true);
+        } else {
+            old!.setup(s => s.isFile())
+                .returns(() => false);
+            old!.setup(s => s.isDirectory())
+                .returns(() => false);
+            old!.setup(s => s.isSymbolicLink())
+                .returns(() => false);
+        }
+        old!.setup(s => s.size)
+            .returns(() => stat.size);
+        old!.setup(s => s.ctimeMs)
+            .returns(() => stat.ctime);
+        old!.setup(s => s.mtimeMs)
+            .returns(() => stat.mtime);
+
+        return old!;
     }
 
     suite('readText', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             const expected = '<text>';
-            raw.setup(r => r.readFile(filename, TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(expected));
+            const data = Buffer.from(expected);
+            raw.setup(r => r.readFile(Uri.file(filename)))
+                .returns(() => Promise.resolve(data));
 
             const text = await filesystem.readText(filename);
 
@@ -259,9 +339,10 @@ suite('Raw FileSystem', () => {
 
         test('always UTF-8', async () => {
             const filename = 'x/y/z/spam.py';
-            const expected = '<text>';
-            raw.setup(r => r.readFile(filename, 'utf8'))
-                .returns(() => Promise.resolve(expected));
+            const expected = '... 😁 ...';
+            const data = Buffer.from(expected);
+            raw.setup(r => r.readFile(Uri.file(filename)))
+                .returns(() => Promise.resolve(data));
 
             const text = await filesystem.readText(filename);
 
@@ -273,11 +354,24 @@ suite('Raw FileSystem', () => {
     suite('writeText', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
-            const data = '<data>';
-            raw.setup(r => r.writeFile(filename, data, { encoding: 'utf8' }))
+            const text = '<data>';
+            const data = Buffer.from(text);
+            raw.setup(r => r.writeFile(Uri.file(filename), data))
                 .returns(() => Promise.resolve());
 
-            await filesystem.writeText(filename, data);
+            await filesystem.writeText(filename, text);
+
+            verifyAll();
+        });
+
+        test('always UTF-8', async () => {
+            const filename = 'x/y/z/spam.py';
+            const text = '... 😁 ...';
+            const data = Buffer.from(text);
+            raw.setup(r => r.writeFile(Uri.file(filename), data))
+                .returns(() => Promise.resolve());
+
+            await filesystem.writeText(filename, text);
 
             verifyAll();
         });
@@ -286,8 +380,34 @@ suite('Raw FileSystem', () => {
     suite('mkdirp', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.mkdirp(dirname))
+            raw.setup(r => r.createDirectory(Uri.file(dirname)))
                 .returns(() => Promise.resolve());
+
+            await filesystem.mkdirp(dirname);
+
+            verifyAll();
+        });
+
+        test('creates missing parent directories', async () => {
+            const dirname = 'x/y/z/spam';
+            raw.setup(r => r.createDirectory(Uri.file(dirname)))
+                .throws(FileSystemError.FileNotFound(dirname))
+                .verifiable(TypeMoq.Times.exactly(2));
+            raw.setup(r => r.dirname(dirname))
+                .returns(() => 'x/y/z');
+            raw.setup(r => r.createDirectory(Uri.file('x/y/z')))
+                .throws(FileSystemError.FileNotFound('x/y/z'))
+                .verifiable(TypeMoq.Times.exactly(2));
+            raw.setup(r => r.dirname('x/y/z'))
+                .returns(() => 'x/y');
+            raw.setup(r => r.createDirectory(Uri.file('x/y')))
+                .returns(() => Promise.resolve());
+            raw.setup(r => r.createDirectory(Uri.file('x/y/z')))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.exactly(2));
+            raw.setup(r => r.createDirectory(Uri.file(dirname)))
+                .returns(() => Promise.resolve())
+                .verifiable(TypeMoq.Times.exactly(2));
 
             await filesystem.mkdirp(dirname);
 
@@ -298,32 +418,35 @@ suite('Raw FileSystem', () => {
     suite('rmtree', () => {
         test('wraps the low-level function', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.stat(dirname))
-                //tslint:disable-next-line:no-any
-                .returns(() => Promise.resolve({} as any as FileStat));
-            raw.setup(r => r.remove(dirname))
+            const uri = Uri.file(dirname);
+            const stat = createMockStat();
+            raw.setup(r => r.stat(uri))
+                .returns(() => Promise.resolve(stat.object));
+            raw.setup(r => r.delete(uri, { recursive: true, useTrash: false }))
                 .returns(() => Promise.resolve());
 
             await filesystem.rmtree(dirname);
 
             verifyAll();
+            stat.verifyAll();
         });
 
         test('fails if the directory does not exist', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.stat(dirname))
+            raw.setup(r => r.stat(Uri.file(dirname)))
                 .throws(new Error('file not found'));
 
             const promise = filesystem.rmtree(dirname);
 
             await expect(promise).to.eventually.be.rejected;
+            verifyAll();
         });
     });
 
     suite('rmfile', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
-            raw.setup(r => r.unlink(filename))
+            raw.setup(r => r.delete(Uri.file(filename), { recursive: false, useTrash: false }))
                 .returns(() => Promise.resolve());
 
             await filesystem.rmfile(filename);
@@ -349,8 +472,8 @@ suite('Raw FileSystem', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
             //tslint:disable-next-line:no-any
-            const expected: FileStat = {} as any;
-            raw.setup(r => r.stat(filename))
+            const expected: FileStat = { type: FileType.File } as any;
+            raw.setup(r => r.stat(Uri.file(filename)))
                 .returns(() => Promise.resolve(expected));
 
             const stat = await filesystem.stat(filename);
@@ -363,97 +486,57 @@ suite('Raw FileSystem', () => {
     suite('lstat', () => {
         test('wraps the low-level function', async () => {
             const filename = 'x/y/z/spam.py';
+            const expected: FileStat = {
+                type: FileType.File,
+                size: 10,
+                ctime: 101,
+                mtime: 102
             //tslint:disable-next-line:no-any
-            const expected: FileStat = {} as any;
+            } as any;
+            setupOldStat(expected);
             raw.setup(r => r.lstat(filename))
-                .returns(() => Promise.resolve(expected));
+                .returns(() => Promise.resolve(oldStat.object));
 
             const stat = await filesystem.lstat(filename);
 
-            expect(stat).to.equal(expected);
+            expect(stat).to.deep.equal(expected);
             verifyAll();
         });
     });
 
     suite('listdir', () => {
-        function setupStat(filename: string, ft: FileType) {
-            const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
-            if (ft === FileType.File) {
-                stat.setup(s => s.isFile())
-                    .returns(() => true);
-            } else if (ft === FileType.Directory) {
-                stat.setup(s => s.isFile())
-                    .returns(() => false);
-                stat.setup(s => s.isDirectory())
-                    .returns(() => true);
-            } else if (ft === FileType.SymbolicLink) {
-                stat.setup(s => s.isFile())
-                    .returns(() => false);
-                stat.setup(s => s.isDirectory())
-                    .returns(() => false);
-                stat.setup(s => s.isSymbolicLink())
-                    .returns(() => true);
-            } else {
-                stat.setup(s => s.isFile())
-                    .returns(() => false);
-                stat.setup(s => s.isDirectory())
-                    .returns(() => false);
-                stat.setup(s => s.isSymbolicLink())
-                    .returns(() => false);
-            }
-            // This is necessary because passing "stat.object" to
-            // Promise.resolve() triggers the lookup.
-            //tslint:disable-next-line:no-any
-            stat.setup((s: any) => s.then)
-                .returns(() => undefined)
-                .verifiable(TypeMoq.Times.atLeast(0));
-            raw.setup(r => r.lstat(filename))
-                .returns(() => Promise.resolve(stat.object));
-            return stat;
-        }
-
         test('mixed', async () => {
             const dirname = 'x/y/z/spam';
             const expected: [string, FileType][] = [
                 ['dev1', FileType.Unknown],
                 ['w', FileType.Directory],
                 ['spam.py', FileType.File],
-                ['other', FileType.SymbolicLink]
+                ['other', FileType.SymbolicLink | FileType.File]
             ];
-            const names = expected.map(([name, _ft]) => name);
-            raw.setup(r => r.readdir(dirname))
-                .returns(() => Promise.resolve(names));
-            const stats: TypeMoq.IMock<FileStat>[] = [];
-            expected.forEach(([name, ft]) => {
-                const filename = `${dirname}/${name}`;
-                raw.setup(r => r.join(dirname, name))
-                    .returns(() => filename);
-                stats.push(
-                    setupStat(filename, ft));
-            });
+            raw.setup(r => r.readDirectory(Uri.file(dirname)))
+                .returns(() => Promise.resolve(expected));
 
             const entries = await filesystem.listdir(dirname);
 
             expect(entries).to.deep.equal(expected);
             verifyAll();
-            stats.forEach(stat => stat.verifyAll());
         });
 
         test('empty', async () => {
             const dirname = 'x/y/z/spam';
-            const names: string[] = [];
-            raw.setup(r => r.readdir(dirname))
-                .returns(() => Promise.resolve(names));
+            const expected: [string, FileType][] = [];
+            raw.setup(r => r.readDirectory(Uri.file(dirname)))
+                .returns(() => Promise.resolve(expected));
 
             const entries = await filesystem.listdir(dirname);
 
-            expect(entries).to.deep.equal([]);
+            expect(entries).to.deep.equal(expected);
             verifyAll();
         });
 
         test('fails if the low-level call fails', async () => {
             const dirname = 'x/y/z/spam';
-            raw.setup(r => r.readdir(dirname))
+            raw.setup(r => r.readDirectory(Uri.file(dirname)))
                 .throws(new Error('file not found'));
 
             const promise = filesystem.listdir(dirname);
@@ -464,48 +547,34 @@ suite('Raw FileSystem', () => {
     });
 
     suite('copyFile', () => {
-        let rs: TypeMoq.IMock<fsextra.ReadStream>;
-        let ws: TypeMoq.IMock<fsextra.WriteStream>;
-        let done: () => void;
-        let finished: boolean;
-        setup(() => {
-            rs = TypeMoq.Mock.ofType<fsextra.ReadStream>(undefined, TypeMoq.MockBehavior.Strict);
-            ws = TypeMoq.Mock.ofType<fsextra.WriteStream>(undefined, TypeMoq.MockBehavior.Strict);
-
-            rs.setup(s => s.on('error', TypeMoq.It.isAny()))
-                .returns(() => rs.object);
-            finished = false;
-            done = () => {
-                throw Error();
-            };
-            rs.setup(s => s.pipe(TypeMoq.It.isAny()))
-                .callback(_r => {
-                    done();
-                    finished = true;
-                });
-
-            ws.setup(s => s.on('error', TypeMoq.It.isAny()))
-                .returns(() => ws.object);
-            ws.setup(s => s.on('close', TypeMoq.It.isAny()))
-                .callback((_e, cb) => {
-                    done = cb;
-                })
-                .returns(() => ws.object);
-        });
-
         test('read/write streams are used properly', async () => {
             const src = 'x/y/z/spam.py';
             const dest = 'x/y/z/spam.py.bak';
-            raw.setup(r => r.createReadStream(src))
-                .returns(() => rs.object);
-            raw.setup(r => r.createWriteStream(dest))
-                .returns(() => ws.object);
+            raw.setup(r => r.dirname(dest))
+                .returns(() => 'x/y/z');
+            const stat = createMockStat();
+            raw.setup(r => r.stat(Uri.file('x/y/z')))
+                .returns(() => Promise.resolve(stat.object));
+            raw.setup(r => r.copy(Uri.file(src), Uri.file(dest), { overwrite: true }))
+                .returns(() => Promise.resolve());
 
             await filesystem.copyFile(src, dest);
 
-            expect(finished).to.equal(true);
-            rs.verifyAll();
-            ws.verifyAll();
+            verifyAll();
+            stat.verifyAll();
+        });
+
+        test('fails if the parent directory does not exist', async () => {
+            const src = '/tmp/spam.py';
+            const dest = '/tmp/__does_not_exist__/spam.py';
+            raw.setup(r => r.dirname(dest))
+                .returns(() => '/tmp/__does_not_exist__');
+            raw.setup(r => r.stat(Uri.file('/tmp/__does_not_exist__')))
+                .throws(new Error('file not found'));
+
+            const promise = filesystem.copyFile(src, dest);
+
+            await expect(promise).to.eventually.be.rejected;
             verifyAll();
         });
     });
@@ -513,14 +582,20 @@ suite('Raw FileSystem', () => {
     suite('statSync', () => {
         test('wraps the low-level function', () => {
             const filename = 'x/y/z/spam.py';
+            const expected: FileStat = {
+                type: FileType.File,
+                size: 10,
+                ctime: 101,
+                mtime: 102
             //tslint:disable-next-line:no-any
-            const expected: FileStat = {} as any;
+            } as any;
+            setupOldStat(expected);
             raw.setup(r => r.statSync(filename))
-                .returns(() => expected);
+                .returns(() => oldStat.object);
 
             const stat = filesystem.statSync(filename);
 
-            expect(stat).to.equal(expected);
+            expect(stat).to.deep.equal(expected);
             verifyAll();
         });
     });
@@ -580,7 +655,7 @@ suite('FileSystem Utils', () => {
     let deps: TypeMoq.IMock<IDeps>;
     let utils: IFileSystemUtils;
     setup(() => {
-        stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
+        stat = createMockStat();
         filesystem = TypeMoq.Mock.ofType<IRawFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         path = TypeMoq.Mock.ofType<IFileSystemPaths>(undefined, TypeMoq.MockBehavior.Strict);
         tmp = TypeMoq.Mock.ofType<ITempFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
@@ -592,13 +667,6 @@ suite('FileSystem Utils', () => {
             ((data: string) => deps.object.getHashString(data)),
             ((p: string) => deps.object.glob(p))
         );
-
-        // This is necessary because passing "stat.object" to
-        // Promise.resolve() triggers the lookup.
-        //tslint:disable-next-line:no-any
-        stat.setup((s: any) => s.then)
-            .returns(() => undefined)
-            .verifiable(TypeMoq.Times.atLeast(0));
     });
     function verifyAll() {
         filesystem.verifyAll();
@@ -714,8 +782,8 @@ suite('FileSystem Utils', () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.stat(filename))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.isFile())
-                .returns(() => true);
+            stat.setup(s => s.type)
+                .returns(() => FileType.File);
 
             const exists = await utils.pathExists(filename, FileType.File);
 
@@ -727,8 +795,8 @@ suite('FileSystem Utils', () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.stat(filename))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.isFile())
-                .returns(() => false);
+            stat.setup(s => s.type)
+                .returns(() => FileType.Directory);
 
             const exists = await utils.pathExists(filename, FileType.File);
 
@@ -740,8 +808,8 @@ suite('FileSystem Utils', () => {
             const dirname = 'x/y/z/spam';
             filesystem.setup(f => f.stat(dirname))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.isDirectory())
-                .returns(() => true);
+            stat.setup(s => s.type)
+                .returns(() => FileType.Directory);
 
             const exists = await utils.pathExists(dirname, FileType.Directory);
 
@@ -753,8 +821,8 @@ suite('FileSystem Utils', () => {
             const dirname = 'x/y/z/spam';
             filesystem.setup(f => f.stat(dirname))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.isDirectory())
-                .returns(() => false);
+            stat.setup(s => s.type)
+                .returns(() => FileType.File);
 
             const exists = await utils.pathExists(dirname, FileType.Directory);
 
@@ -766,10 +834,12 @@ suite('FileSystem Utils', () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.stat(filename))
                 .returns(() => Promise.resolve(stat.object));
+            stat.setup(s => s.type)
+                .returns(() => FileType.SymbolicLink);
 
             const exists = await utils.pathExists(filename, FileType.SymbolicLink);
 
-            expect(exists).to.equal(false);
+            expect(exists).to.equal(true);
             verifyAll();
         });
 
@@ -777,10 +847,12 @@ suite('FileSystem Utils', () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.stat(filename))
                 .returns(() => Promise.resolve(stat.object));
+            stat.setup(s => s.type)
+                .returns(() => FileType.Unknown);
 
             const exists = await utils.pathExists(filename, FileType.Unknown);
 
-            expect(exists).to.equal(false);
+            expect(exists).to.equal(true);
             verifyAll();
         });
     });
@@ -790,8 +862,8 @@ suite('FileSystem Utils', () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.stat(filename))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.isFile())
-                .returns(() => true);
+            stat.setup(s => s.type)
+                .returns(() => FileType.File);
 
             const exists = await utils.fileExists(filename);
 
@@ -805,8 +877,8 @@ suite('FileSystem Utils', () => {
             const dirname = 'x/y/z/spam';
             filesystem.setup(f => f.stat(dirname))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.isDirectory())
-                .returns(() => true);
+            stat.setup(s => s.type)
+                .returns(() => FileType.Directory);
 
             const exists = await utils.directoryExists(dirname);
 
@@ -961,9 +1033,9 @@ suite('FileSystem Utils', () => {
             const filename = 'x/y/z/spam.py';
             filesystem.setup(f => f.lstat(filename))
                 .returns(() => Promise.resolve(stat.object));
-            stat.setup(s => s.ctimeMs)
+            stat.setup(s => s.ctime)
                 .returns(() => 101);
-            stat.setup(s => s.mtimeMs)
+            stat.setup(s => s.mtime)
                 .returns(() => 102);
             const expected = '<hash>';
             deps.setup(d => d.getHashString('101-102'))
