@@ -376,6 +376,10 @@ suite('Raw FileSystem', () => {
     });
 
     suite('listdir', () => {
+        setup(function (){
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        });
         function setupStat(filename: string, ft: FileType) {
             const stat = TypeMoq.Mock.ofType<FileStat>(undefined, TypeMoq.MockBehavior.Strict);
             if (ft === FileType.File) {

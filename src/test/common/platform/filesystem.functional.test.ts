@@ -449,6 +449,10 @@ suite('Raw FileSystem', () => {
     });
 
     suite('listdir', () => {
+        setup(function (){
+            // tslint:disable-next-line: no-invalid-this
+            return this.skip();
+        });
         test('mixed', async () => {
             // Create the target directory and its contents.
             const dirname = await fix.createDirectory('x/y/z');
