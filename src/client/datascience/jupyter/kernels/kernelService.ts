@@ -40,10 +40,10 @@ export class KernelService {
         private readonly fileSystem: IFileSystem
     ) {}
     /**
-     * Finds a kernel spec that matches the provided spec info.
+     * Finds a kernel spec from a given session or jupyter process that matches a given spec.
      *
-     * @param {(nbformat.IKernelspecMetadata | undefined)} kernelSpec
-     * @param {(IJupyterSessionManager | undefined)} sessionManager
+     * @param {nbformat.IKernelspecMetadata} kernelSpec The kernelspec (criteria) to be used when searching for a kernel.
+     * @param {IJupyterSessionManager} [sessionManager] If not provided search against the jupyter process.
      * @param {CancellationToken} [cancelToken]
      * @returns {(Promise<IJupyterKernelSpec | undefined>)}
      * @memberof KernelService
@@ -53,6 +53,15 @@ export class KernelService {
         sessionManager?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
+    /**
+     * Finds a kernel spec from a given session or jupyter process that matches a given interpreter.
+     *
+     * @param {PythonInterpreter} interpreter The interpreter (criteria) to be used when searching for a kernel.
+     * @param {(IJupyterSessionManager | undefined)} sessionManager If not provided search against the jupyter process.
+     * @param {CancellationToken} [cancelToken]
+     * @returns {(Promise<IJupyterKernelSpec | undefined>)}
+     * @memberof KernelService
+     */
     public async findMatchingKernelSpec(
         interpreter: PythonInterpreter,
         sessionManager: IJupyterSessionManager | undefined,
