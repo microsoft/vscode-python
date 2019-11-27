@@ -48,7 +48,12 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             settings: defaultSettings,
             activateCount: 0,
             monacoReady: testMode, // When testing, monaco starts out ready
-            loaded: false
+            loaded: false,
+            kernel: {
+                version: 'Python 3',
+                state: 'No Kernel',
+                status: 'Not started'
+            }
         };
     }
 }
@@ -148,14 +153,14 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const logger = createLogger({
         // tslint:disable-next-line: no-any
         stateTransformer: (state: any) => {
-            if (!state || typeof state !== 'object'){
+            if (!state || typeof state !== 'object') {
                 return state;
             }
             // tslint:disable-next-line: no-any
-            const rootState = {...state} as any;
-            if ('main' in rootState && typeof rootState.main === 'object'){
+            const rootState = { ...state } as any;
+            if ('main' in rootState && typeof rootState.main === 'object') {
                 // tslint:disable-next-line: no-any
-                const main = rootState.main = {...rootState.main} as any  as Partial<IMainState>;
+                const main = rootState.main = { ...rootState.main } as any as Partial<IMainState>;
                 main.rootCss = reduceLogMessage;
                 main.rootStyle = reduceLogMessage;
                 // tslint:disable-next-line: no-any
@@ -169,10 +174,10 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         },
         // tslint:disable-next-line: no-any
         actionTransformer: (action: any) => {
-            if (!action){
+            if (!action) {
                 return action;
             }
-            if (actionsWithLargePayload.indexOf(action.type) >= 0){
+            if (actionsWithLargePayload.indexOf(action.type) >= 0) {
                 return { ...action, payload: reduceLogMessage };
             }
             return action;

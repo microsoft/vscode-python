@@ -83,7 +83,8 @@ export enum InteractiveWindowMessages {
     ExecutionRendered = 'rendered_execution',
     FocusedCellEditor = 'focused_cell_editor',
     MonacoReady = 'monaco_ready',
-    ClearAllOutputs = 'clear_all_outputs'
+    ClearAllOutputs = 'clear_all_outputs',
+    SelectKernel = 'select_kernel'
 }
 
 export enum NativeCommandType {
@@ -107,6 +108,7 @@ export enum NativeCommandType {
     RunAndAdd,
     RunAndMove,
     RunBelow,
+    SelectKernel,
     ToggleLineNumbers,
     ToggleOutput,
     ToggleVariableExplorer,
@@ -283,6 +285,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.CopyCodeCell]: ICopyCode;
     public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
+    public [InteractiveWindowMessages.SelectKernel]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];

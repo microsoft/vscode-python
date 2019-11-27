@@ -109,6 +109,11 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
 
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
+        const dynamicFont: React.CSSProperties = {
+            fontSize: this.props.font.size - 2,
+            fontFamily: this.props.font.family
+        };
+
         const selectedIndex = this.props.cellVMs.findIndex(c => c.cell.id === this.props.selectedCellId);
 
         const addCell = () => {
@@ -144,6 +149,10 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                 this.props.executeCellAndBelow(this.props.selectedCellId, concatMultilineStringInput(this.props.cellVMs[selectedIndex].cell.data.source));
                 this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
             }
+        };
+        const selectKernel = () => {
+            this.props.selectKernel();
+            this.props.sendCommand(NativeCommandType.SelectKernel, 'mouse');
         };
         const canRunAbove = selectedIndex > 0;
         const canRunBelow = selectedIndex < this.props.cellVMs.length - 1 && this.props.selectedCellId;
@@ -181,6 +190,12 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.export} disabled={!this.props.cellVMs.length} className='native-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
                     </ImageButton>
+                    <div onClick={selectKernel} className='kernel-status' style={dynamicFont} role='toolbar'>
+                        <div className='kernel-status-section'>{this.props.kernel.state}</div>
+                        <div className='kernel-status-divider'/>
+                        <div className='kernel-status-section'>{this.props.kernel.version}:</div>
+                        <div className='kernel-status-section'>{this.props.kernel.status}</div>
+                    </div>
                 </div>
                 <div className='toolbar-divider'/>
             </div>

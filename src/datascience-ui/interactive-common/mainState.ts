@@ -72,11 +72,18 @@ export type IMainState = {
     activateCount: number;
     monacoReady: boolean;
     loaded: boolean;
+    kernel: IKernel;
 };
 
 export interface IFont {
     size: number;
     family: string;
+}
+
+export interface IKernel {
+    status: string;
+    state: string;
+    version: string;
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -135,7 +142,12 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         activateCount: 0,
         monacoReady: true,
         loaded: false,
-        testMode: true
+        testMode: true,
+        kernel: {
+            state: 'No Kernel',
+            version: 'Python 3',
+            status: 'Not started'
+        }
     };
 }
 

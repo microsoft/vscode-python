@@ -1,23 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
-
-import { nbformat } from '@jupyterlab/coreutils';
-import * as sinon from 'sinon';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../../client/common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../../client/common/application/types';
 import { WebPanelProvider } from '../../../client/common/application/webPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -28,6 +20,7 @@ import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, Version } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewerProvider } from '../../../client/datascience/data-viewing/dataViewerProvider';
+import { DataScience } from '../../../client/datascience/datascience';
 import { DataScienceErrorHandler } from '../../../client/datascience/errorHandler/errorHandler';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../../client/datascience/interactive-ipynb/nativeEditor';
@@ -38,18 +31,7 @@ import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExpo
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
-import {
-    ICodeCssGenerator,
-    IDataScienceErrorHandler,
-    IDataViewerProvider,
-    IJupyterDebugger,
-    IJupyterExecution,
-    IJupyterVariables,
-    INotebookEditorProvider,
-    INotebookExporter,
-    INotebookImporter,
-    IThemeFinder
-} from '../../../client/datascience/types';
+import { ICodeCssGenerator, IDataScienceErrorHandler, IDataViewerProvider, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditorProvider, INotebookExporter, INotebookImporter, IThemeFinder } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
@@ -67,6 +49,7 @@ suite('Data Science - Native Editor', () => {
     let fileSystem: IFileSystem;
     let docManager: IDocumentManager;
     let dsErrorHandler: IDataScienceErrorHandler;
+    let ds: DataScience;
     let cmdManager: ICommandManager;
     let liveShare: ILiveShareApi;
     let applicationShell: IApplicationShell;
@@ -191,6 +174,7 @@ suite('Data Science - Native Editor', () => {
         fileSystem = mock(FileSystem);
         docManager = mock(DocumentManager);
         dsErrorHandler = mock(DataScienceErrorHandler);
+        ds = mock(DataScience);
         cmdManager = mock(CommandManager);
         workspace = mock(WorkspaceService);
         liveShare = mock(LiveShareApi);
@@ -255,6 +239,7 @@ suite('Data Science - Native Editor', () => {
             instance(jupyterDebugger),
             instance(importer),
             instance(dsErrorHandler),
+            instance(ds),
             storage,
             localStorage
         );
