@@ -100,6 +100,7 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
+    getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
 }
 
 export interface INotebookServerOptions {
@@ -110,6 +111,7 @@ export interface INotebookServerOptions {
     workingDir?: string;
     interpreterPath?: string;
     purpose: string;
+    metadata?: nbformat.INotebookMetadata;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');

@@ -13,8 +13,16 @@ import { IConfigurationService, IDisposableRegistry } from '../../../common/type
 import { createDeferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import {
+    ICell,
+    INotebook,
+    INotebookCompletion,
+    INotebookExecutionLogger,
+    INotebookServer,
+    InterruptResult
+} from '../../types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -170,6 +178,10 @@ export class GuestJupyterNotebook
                 service.notify(LiveShareCommands.catchupRequest, { since: this.startTime });
             }
         }
+    }
+
+    public getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
+        return Promise.resolve(undefined);
     }
 
     private onServerResponse = (args: Object) => {

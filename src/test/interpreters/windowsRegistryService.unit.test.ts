@@ -1,7 +1,9 @@
 import * as assert from 'assert';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { IPlatformService, RegistryHive } from '../../client/common/platform/types';
+import {
+    IFileSystem, IPlatformService, RegistryHive
+} from '../../client/common/platform/types';
 import { IPathUtils, IPersistentStateFactory } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterHelper, InterpreterType } from '../../client/interpreter/contracts';
@@ -19,6 +21,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let platformService: TypeMoq.IMock<IPlatformService>;
     let windowsStoreInterpreter: TypeMoq.IMock<IWindowsStoreInterpreter>;
+    let fs: TypeMoq.IMock<IFileSystem>;
+
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const stateFactory = TypeMoq.Mock.ofType<IPersistentStateFactory>();
@@ -26,6 +30,8 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         windowsStoreInterpreter = TypeMoq.Mock.ofType<IWindowsStoreInterpreter>();
+        fs = TypeMoq.Mock.ofType<IFileSystem>();
+
         windowsStoreInterpreter.setup(w => w.isHiddenInterpreter(TypeMoq.It.isAny())).returns(() => false);
         windowsStoreInterpreter.setup(w => w.isWindowsStoreInterpreter(TypeMoq.It.isAny())).returns(() => false);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
@@ -41,16 +47,54 @@ suite('Interpreters from Windows Registry (unit)', () => {
         platformService.setup(ps => ps.is64bit).returns(() => is64Bit);
         return platformService.object;
     }
+    function setInterpreterFiles(
+        regValues: { key: string; value: string; name?: string }[],
+        skipKeys: string[] = []
+    ) {
+        const seen: string[] = [];
+        const dirs: [string, boolean][] = [];
+        for (const regValue of regValues) {
+            const exists = !skipKeys.includes(regValue.key);
+            if (regValue.name === undefined) {
+                if (regValue.value) {
+                    dirs.push([regValue.value, exists]);
+                }
+            } else if (regValue.name === 'ExecutablePath') {
+                fs
+                    .setup(s => s.pathExists(regValue.value))
+                    .returns(() => Promise.resolve(exists));
+                seen.push(path.dirname(regValue.value));
+            }
+        }
+        for (const [dirname, exists] of dirs) {
+            fs
+                .setup(s => s.pathExists(path.join(dirname, 'python.exe')))
+                .returns(() => Promise.resolve(exists));
+            seen.push(dirname);
+        }
+    }
     test('Must return an empty list (x86)', async () => {
         const registry = new MockRegistry([], []);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
 
         const interpreters = await winRegistry.getInterpreters();
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
     });
     test('Must return an empty list (x64)', async () => {
         const registry = new MockRegistry([], []);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(true), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(true),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
 
         const interpreters = await winRegistry.getInterpreters();
         assert.equal(interpreters.length, 0, 'Incorrect number of entries');
@@ -67,8 +111,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
             { key: '\\Software\\Python\\Company One\\Tag1', hive: RegistryHive.HKCU, arch: Architecture.x86, value: '9.9.9.final', name: 'SysVersion' },
             { key: '\\Software\\Python\\Company One\\Tag1', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'DisplayName.Tag1', name: 'DisplayName' }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
 
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
@@ -89,8 +140,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const registryValues = [
             { key: '\\Software\\Python\\PythonCore\\9.9.9-final\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
 
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
@@ -111,8 +169,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const registryValues = [
             { key: '\\Software\\Python\\PyLauncher\\Tag1\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: 'c:/temp/Install Path Tag1' }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
 
         const interpreters = await winRegistry.getInterpreters();
 
@@ -126,8 +191,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const registryValues = [
             { key: '\\Software\\Python\\Company One\\9.9.9-final\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
@@ -148,8 +220,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const registryValues = [
             { key: '\\Software\\Python\\Company One\\9.9.9-final\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
         windowsStoreInterpreter.reset();
@@ -177,8 +256,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
         const registryValues = [
             { key: '\\Software\\Python\\Company One\\9.9.9-final\\InstallPath', hive: RegistryHive.HKCU, arch: Architecture.x86, value: path.join(environmentsPath, 'path1') }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
         windowsStoreInterpreter.reset();
@@ -224,8 +310,17 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
             { key: '\\Software\\Python\\Company A\\8.0.0\\InstallPath', hive: RegistryHive.HKLM, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'scipy', 'python.exe') }
         ];
+        setInterpreterFiles(registryValues, [
+            '\\Software\\Python\\Company Two\\3.0.0\\InstallPath'
+        ]);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
@@ -288,8 +383,15 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
             { key: '\\Software\\Python\\Company A\\10.0.0\\InstallPath', hive: RegistryHive.HKLM, arch: Architecture.x86, value: path.join(environmentsPath, 'conda', 'envs', 'numpy') }
         ];
+        setInterpreterFiles(registryValues);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 
@@ -352,8 +454,21 @@ suite('Interpreters from Windows Registry (unit)', () => {
 
             { key: '\\Software\\Python\\Company A\\Another Tag\\InstallPath', hive: RegistryHive.HKLM, arch: Architecture.x86, value: path.join(environmentsPath, 'non-existent-path', 'envs', 'numpy') }
         ];
+        setInterpreterFiles(registryValues, [
+            '\\Software\\Python\\Company One\\Tag2\\InstallPath',
+            '\\Software\\Python\\Company Two\\Tag A\\InstallPath',
+            '\\Software\\Python\\Company Two\\Tag C\\InstallPath',
+            '\\Software\\Python\\Company Three\\Tag !\\InstallPath',
+            '\\Software\\Python\\Company A\\Another Tag\\InstallPath'
+        ]);
         const registry = new MockRegistry(registryKeys, registryValues);
-        const winRegistry = new WindowsRegistryService(registry, setup64Bit(false), serviceContainer.object, windowsStoreInterpreter.object);
+        const winRegistry = new WindowsRegistryService(
+            registry,
+            setup64Bit(false),
+            serviceContainer.object,
+            windowsStoreInterpreter.object,
+            fs.object
+        );
         interpreterHelper.reset();
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ architecture: Architecture.x86 }));
 

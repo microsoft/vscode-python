@@ -65,34 +65,35 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         noop();
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['GetPythonVersion']);
-        return this.wrapCall(daemon => daemon.getInterpreterInformation());
+        const msg = {args: ['GetPythonVersion']};
+        return this.wrapCall(daemon => daemon.getInterpreterInformation(), msg);
     }
     public async getExecutablePath(): Promise<string> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['getExecutablePath']);
-        return this.wrapCall(daemon => daemon.getExecutablePath());
+        const msg = {args: ['getExecutablePath']};
+        return this.wrapCall(daemon => daemon.getExecutablePath(), msg);
     }
     public getExecutionInfo(args: string[]): PythonExecutionInfo {
         return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['-m', moduleName]);
-        return this.wrapCall(daemon => daemon.isModuleInstalled(moduleName));
+        const msg = {args: ['-m', moduleName]};
+        return this.wrapCall(daemon => daemon.isModuleInstalled(moduleName), msg);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, args, options);
-        return this.wrapCall(daemon => daemon.exec(args, options));
+        const msg = {args, options};
+        return this.wrapCall(daemon => daemon.exec(args, options), msg);
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['-m', moduleName].concat(args), options);
-        return this.wrapCall(daemon => daemon.execModule(moduleName, args, options));
+        const msg = {args: ['-m', moduleName].concat(args), options};
+        return this.wrapCall(daemon => daemon.execModule(moduleName, args, options), msg);
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, args, options);
-        return this.wrapObservableCall(daemon => daemon.execObservable(args, options));    }
+        const msg = {args, options};
+        return this.wrapObservableCall(daemon => daemon.execObservable(args, options), msg);
+    }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        this.logger.logProcess(`${this.pythonPath} (daemon)`, ['-m', moduleName].concat(args), options);
-        return this.wrapObservableCall(daemon => daemon.execModuleObservable(moduleName, args, options));
+        const msg = {args: ['-m', moduleName].concat(args), options};
+        return this.wrapObservableCall(daemon => daemon.execModuleObservable(moduleName, args, options), msg);
     }
     /**
      * Protected so we can override for testing purposes.
@@ -152,9 +153,13 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns {Promise<T>}
      * @memberof PythonDaemonExecutionServicePool
      */
-    private async wrapCall<T>(cb: (daemon: IPythonExecutionService) => Promise<T>): Promise<T> {
+    private async wrapCall<T>(cb: (daemon: IPythonExecutionService) => Promise<T>, daemonLogMessage: {args: string[]; options?: SpawnOptions}): Promise<T> {
         const daemon = await this.popDaemonFromPool();
         try {
+            // When using the daemon, log the message ourselves.
+            if (daemon instanceof PythonDaemonExecutionService) {
+                this.logger.logProcess(`${this.pythonPath} (daemon)`, daemonLogMessage.args, daemonLogMessage.options);
+            }
             return await cb(daemon);
         } finally {
             this.pushDaemonIntoPool('StandardDaemon', daemon);
@@ -170,11 +175,15 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns {ObservableExecutionResult<string>}
      * @memberof PythonDaemonExecutionServicePool
      */
-    private wrapObservableCall(cb: (daemon: IPythonExecutionService) => ObservableExecutionResult<string>): ObservableExecutionResult<string> {
+    private wrapObservableCall(cb: (daemon: IPythonExecutionService) => ObservableExecutionResult<string>, daemonLogMessage: {args: string[]; options?: SpawnOptions}): ObservableExecutionResult<string> {
         const execService = this.popDaemonFromObservablePool();
         // Possible the daemon returned is a standard python execution service.
         const daemonProc = execService instanceof PythonDaemonExecutionService ? execService.proc : undefined;
 
+        // When using the daemon, log the message ourselves.
+        if (daemonProc) {
+            this.logger.logProcess(`${this.pythonPath} (daemon)`, daemonLogMessage.args, daemonLogMessage.options);
+        }
         const result = cb(execService);
         let completed = false;
         const completeHandler = () => {

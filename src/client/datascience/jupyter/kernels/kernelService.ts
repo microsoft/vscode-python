@@ -7,18 +7,18 @@ import { Kernel } from '@jupyterlab/services';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
-import '../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory } from '../../common/process/types';
-import { IAsyncDisposableRegistry } from '../../common/types';
-import * as localize from '../../common/utils/localize';
-import { noop } from '../../common/utils/misc';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
-import { JupyterCommands, RegExpValues, Telemetry } from '../constants';
-import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../types';
-import { JupyterCommandFinder } from './jupyterCommandFinder';
+import '../../../common/extensions';
+import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
+import { IProcessServiceFactory } from '../../../common/process/types';
+import { IAsyncDisposableRegistry } from '../../../common/types';
+import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { captureTelemetry } from '../../../telemetry';
+import { JupyterCommands, RegExpValues, Telemetry } from '../../constants';
+import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { JupyterCommandFinder } from '../jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
 /**
@@ -133,7 +133,7 @@ export class KernelService {
                     if (await this.fileSystem.fileExists(diskPath)) {
                         const specModel: Kernel.ISpecModel = JSON.parse(await this.fileSystem.readFile(diskPath));
                         specModel.argv[0] = bestInterpreter.path;
-                        await this.fileSystem.writeFile(diskPath, JSON.stringify(specModel), { flag: 'w', encoding: 'utf8' });
+                        await this.fileSystem.writeFile(diskPath, JSON.stringify(specModel));
                     }
                 }
             }

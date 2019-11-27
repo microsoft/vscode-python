@@ -298,6 +298,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     constructor() {
         super();
+        this.useVSCodeAPI = false;
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
         this.asyncRegistry = new AsyncDisposableRegistry();

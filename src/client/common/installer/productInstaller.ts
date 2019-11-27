@@ -18,8 +18,9 @@ import {
     IConfigurationService, IInstaller, ILogger, InstallerResponse, IOutputChannel,
     IPersistentStateFactory, ModuleNamePurpose, Product, ProductType
 } from '../types';
+import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
-import { IInstallationChannelManager, IProductPathService, IProductService } from './types';
+import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProductService } from './types';
 
 export { Product } from '../types';
 
@@ -39,11 +40,11 @@ export abstract class BaseInstaller {
         this.productService = serviceContainer.get<IProductService>(IProductService);
     }
 
-    public promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public promptToInstall(product: Product, resource?: InterpreterUri): Promise<InstallerResponse> {
         // If this method gets called twice, while previous promise has not been resolved, then return that same promise.
         // E.g. previous promise is not resolved as a message has been displayed to the user, so no point displaying
         // another message.
-        const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
+        const workspaceFolder = (resource && isResource(resource)) ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const key = `${product}${workspaceFolder ? workspaceFolder.uri.fsPath : ''}`;
         if (BaseInstaller.PromptPromises.has(key)) {
             return BaseInstaller.PromptPromises.get(key)!;
@@ -56,7 +57,7 @@ export abstract class BaseInstaller {
         return promise;
     }
 
-    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async install(product: Product, resource?: InterpreterUri): Promise<InstallerResponse> {
         if (product === Product.unittest) {
             return InstallerResponse.Installed;
         }
@@ -76,26 +77,28 @@ export abstract class BaseInstaller {
             .then(isInstalled => isInstalled ? InstallerResponse.Installed : InstallerResponse.Ignore);
     }
 
-    public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         if (product === Product.unittest || product === Product.jupyter) {
             return true;
         }
         // User may have customized the module name or provided the fully qualified path.
-        const executableName = this.getExecutableNameFromSettings(product, resource);
+        const pythonPath = isResource(resource) ? undefined : resource.path;
+        const uri = isResource(resource) ? resource : undefined;
+        const executableName = this.getExecutableNameFromSettings(product, uri);
 
-        const isModule = this.isExecutableAModule(product, resource);
+        const isModule = this.isExecutableAModule(product, uri);
         if (isModule) {
-            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource });
+            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: uri, pythonPath });
             return pythonProcess.isModuleInstalled(executableName);
         } else {
-            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(resource);
+            const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
             return process.exec(executableName, ['--version'], { mergeStdOutErr: true })
                 .then(() => true)
                 .catch(() => false);
         }
     }
 
-    protected abstract promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse>;
+    protected abstract promptToInstallImplementation(product: Product, resource?: InterpreterUri): Promise<InstallerResponse>;
     protected getExecutableNameFromSettings(product: Product, resource?: Uri): string {
         const productType = this.productService.getProductType(product);
         const productPathService = this.serviceContainer.get<IProductPathService>(IProductPathService, productType);
@@ -273,7 +276,7 @@ export class RefactoringLibraryInstaller extends BaseInstaller {
 }
 
 export class DataScienceInstaller extends BaseInstaller {
-    protected async promptToInstallImplementation(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(product: Product, resource?: InterpreterUri): Promise<InstallerResponse> {
         const productName = ProductNames.get(product)!;
         const item = await this.appShell.showErrorMessage(localize.DataScience.libraryNotInstalled().format(productName), 'Yes', 'No');
         return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
@@ -291,13 +294,13 @@ export class ProductInstaller implements IInstaller {
 
     // tslint:disable-next-line:no-empty
     public dispose() { }
-    public async promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async promptToInstall(product: Product, resource?: InterpreterUri): Promise<InstallerResponse> {
         return this.createInstaller(product).promptToInstall(product, resource);
     }
-    public async install(product: Product, resource?: Uri): Promise<InstallerResponse> {
+    public async install(product: Product, resource?: InterpreterUri): Promise<InstallerResponse> {
         return this.createInstaller(product).install(product, resource);
     }
-    public async isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined> {
+    public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
         return this.createInstaller(product).isInstalled(product, resource);
     }
     public translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string {
@@ -345,6 +348,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.rope: return 'rope';
         case Product.bandit: return 'bandit';
         case Product.jupyter: return 'jupyter';
+        case Product.ipykernel: return 'ipykernel';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

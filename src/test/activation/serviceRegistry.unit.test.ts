@@ -50,6 +50,8 @@ import {
     LanguageClientFactory,
     LanguageServerActivator
 } from '../../client/activation/types';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
+import { IActiveResourceService } from '../../client/common/application/types';
 import { INugetRepository } from '../../client/common/nuget/types';
 import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
@@ -97,6 +99,7 @@ suite('Unit Tests - Activation Service Registry', () => {
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();
+        verify(serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt)).once();
     });
 });

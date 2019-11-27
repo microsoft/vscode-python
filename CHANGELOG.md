@@ -1,6 +1,70 @@
 # Changelog
 
-## 2019.11.0-rc (7 November 2019)
+## 2019.11.1 (22 November 2019)
+
+### Fixes
+
+1. Some LaTeX equations do not print in notebooks or the interactive window.
+   ([#8673](https://github.com/Microsoft/vscode-python/issues/8673))
+1. Converting to python script no longer working from a notebook.
+   ([#8677](https://github.com/Microsoft/vscode-python/issues/8677))
+1. Fixes to starting `Jupyter` in a `Docker` container.
+   ([#8661](https://github.com/Microsoft/vscode-python/issues/8661))
+1. Ensure arguments are generated correctly for `getRemoteLauncherCommand` when in debugger experiment.
+   ([#8685](https://github.com/Microsoft/vscode-python/issues/8685))
+
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort](https://pypi.org/project/isort/)
+- [jedi](https://pypi.org/project/jedi/)
+  and [parso](https://pypi.org/project/parso/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
+
+## 2019.11.0 (18 November 2019)
 
 ### Enhancements
 
@@ -113,6 +177,24 @@
    ([#8296](https://github.com/Microsoft/vscode-python/issues/8296))
 1. Correctly transition markdown cells into code cells.
    ([#8386](https://github.com/Microsoft/vscode-python/issues/8386))
+1. Fix cells being erased when saving and then changing focus to another cell.
+   ([#8399](https://github.com/Microsoft/vscode-python/issues/8399))
+1. Add a white background for most non-text mimetypes. This lets stuff like Atlair look good in dark mode.
+   ([#8423](https://github.com/Microsoft/vscode-python/issues/8423))
+1. Export to python button is blue in native editor.
+   ([#8424](https://github.com/Microsoft/vscode-python/issues/8424))
+1. CTRL+Z is deleting cells. It should only undo changes inside of the code for a cell. 'Z' and 'SHIFT+Z' are for undoing/redoing cell adds/moves.
+   ([#7999](https://github.com/Microsoft/vscode-python/issues/7999))
+1. Ensure clicking `ctrl+s` in a new `notebook` prompts the user to select a file once instead of twice.
+   ([#8138](https://github.com/Microsoft/vscode-python/issues/8138))
+1. Creating a new blank notebook should not require a search for jupyter.
+   ([#8481](https://github.com/Microsoft/vscode-python/issues/8481))
+1. Arrowing up and down through cells can lose code that was just typed.
+   ([#8491](https://github.com/Microsoft/vscode-python/issues/8491))
+1. After pasting code, arrow keys don't navigate in a cell.
+   ([#8495](https://github.com/Microsoft/vscode-python/issues/8495))
+1. Typing 'z' in a cell causes the cell to disappear.
+   ([#8594](https://github.com/Microsoft/vscode-python/issues/8594))
 
 ### Code Health
 

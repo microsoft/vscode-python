@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import '../../common/extensions';
 
 // tslint:disable-next-line: no-require-imports
@@ -23,6 +22,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../common/utils/asy
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -145,6 +145,7 @@ export class JupyterNotebookBase implements INotebook {
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
+    private interpreter: PythonInterpreter | undefined;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -157,11 +158,15 @@ export class JupyterNotebookBase implements INotebook {
         resource: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
-        private applicationService: IApplicationShell
+        private applicationService: IApplicationShell,
+        private interpreterService: IInterpreterService
     ) {
         this.sessionStartTime = Date.now();
         this._resource = resource;
         this._loggers = [...loggers];
+        // Save our interpreter and don't change it. Later on when kernel changes
+        // are possible, recompute it.
+        this.interpreterService.getActiveInterpreter(resource).then(i => this.interpreter = i).ignoreErrors();
     }
 
     public get server(): INotebookServer {
@@ -438,7 +443,7 @@ export class JupyterNotebookBase implements INotebook {
                 cursor_pos: offsetInCode
             }), cancelToken);
             if (result && result.content) {
-                if ('matches' in result.content){
+                if ('matches' in result.content) {
                     return {
                         matches: result.content.matches,
                         cursor: {
@@ -450,7 +455,7 @@ export class JupyterNotebookBase implements INotebook {
                 } else {
                     return {
                         matches: [],
-                        cursor : {start: 0, end: 0},
+                        cursor: { start: 0, end: 0 },
                         metadata: []
                     };
                 }
@@ -459,6 +464,10 @@ export class JupyterNotebookBase implements INotebook {
 
         // Default is just say session was disposed
         throw new Error(localize.DataScience.sessionDisposed());
+    }
+
+    public async getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
+        return this.interpreter;
     }
 
     private finishUncompletedCells() {
@@ -734,7 +743,7 @@ export class JupyterNotebookBase implements INotebook {
                         .catch(e => {
                             // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
                             // Such an error must be ignored.
-                            if (e && e instanceof Error && e.message === 'Canceled'){
+                            if (e && e instanceof Error && e.message === 'Canceled') {
                                 subscriber.complete(this.sessionStartTime);
                             } else {
                                 subscriber.error(this.sessionStartTime, e);

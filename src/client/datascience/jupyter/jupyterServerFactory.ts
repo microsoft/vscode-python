@@ -11,6 +11,7 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import {
     IConnection,
     IDataScience,
@@ -38,7 +39,8 @@ type JupyterServerClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
-        appShell: IApplicationShell
+        appShell: IApplicationShell,
+        interpreterService: IInterpreterService
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -59,7 +61,8 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
-        @inject(IApplicationShell) appShell: IApplicationShell) {
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IInterpreterService) interpreterService: IInterpreterService) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -72,7 +75,8 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
             sessionManager,
             workspaceService,
             loggers ? loggers : [],
-            appShell
+            appShell,
+            interpreterService
         );
     }
 
