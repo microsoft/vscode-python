@@ -1,13 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    CancellationToken,
-    DiagnosticCollection,
-    Disposable,
-    Event,
-    OutputChannel
-} from 'vscode';
+import { CancellationToken, DiagnosticCollection, Disposable, Event, OutputChannel } from 'vscode';
 import {
     Code2ProtocolConverter,
     CompletionItem,
@@ -33,17 +27,17 @@ import {
     ServerOptions,
     StateChangeEvent,
     StaticFeature,
-    TextDocumentItem,
     TextDocumentContentChangeEvent,
+    TextDocumentItem,
     Trace,
     VersionedTextDocumentIdentifier
 } from 'vscode-languageclient';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
+import { IntellisenseLine } from '../../client/datascience/interactive-common/intellisense/intellisenseLine';
 import { noop } from '../core';
 import { MockCode2ProtocolConverter } from './mockCode2ProtocolConverter';
 import { MockProtocol2CodeConverter } from './mockProtocol2CodeConverter';
-import { IntellisenseLine } from '../../client/datascience/interactive-common/intellisense/intellisenseLine';
 
 // tslint:disable:no-any unified-signatures
 export class MockLanguageClient extends LanguageClient {
