@@ -181,10 +181,10 @@ export namespace DataScience {
     export const jupyterSelectURIPrompt = localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
     export const jupyterSelectURIQuickPickTitle = localize('DataScience.jupyterSelectURIQuickPickTitle', 'Pick how to connect to Jupyter');
     export const jupyterSelectURIQuickPickPlaceholder = localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Choose an option');
-    export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Automatic');
-    export const jupyterSelectURILocalDetail = localize('DataScience.jupyterSelectURILocalDetail', 'VS Code will start a server for you on the localhost');
-    export const jupyterSelectURINewLabel = localize('DataScience.jupyterSelectURINewLabel', 'Already running');
-    export const jupyterSelectURINewDetail = localize('DataScience.jupyterSelectURINewDetail', 'You type in the URI of an already running server');
+    export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Default');
+    export const jupyterSelectURILocalDetail = localize('DataScience.jupyterSelectURILocalDetail', 'VS Code will automatically start a server for you on the localhost');
+    export const jupyterSelectURINewLabel = localize('DataScience.jupyterSelectURINewLabel', 'Existing');
+    export const jupyterSelectURINewDetail = localize('DataScience.jupyterSelectURINewDetail', 'Specify the URI of an existing server');
     export const jupyterSelectURIInvalidURI = localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
     export const jupyterSelectURIRunningDetailFormat = localize('DataScience.jupyterSelectURIRunningDetailFormat', 'Last activity {0}. {1} existing connections.');
     export const jupyterSelectURINotRunningDetail = localize('DataScience.jupyterSelectURINotRunningDetail', 'Cannot connect at this time. Status unknown.');

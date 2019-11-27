@@ -382,10 +382,10 @@
     "DataScience.savePngTitle": "Save Image",
     "DataScience.jupyterSelectURIQuickPickTitle" : "Pick how to connect to Jupyter",
     "DataScience.jupyterSelectURIQuickPickPlaceholder" : "Choose an option",
-    "DataScience.jupyterSelectURILocalLabel" : "Automatic",
-    "DataScience.jupyterSelectURILocalDetail" : "VS Code will start a server for you on the localhost",
-    "DataScience.jupyterSelectURINewLabel" : "Already running",
-    "DataScience.jupyterSelectURINewDetail" : "You type in the URI of an already running server",
+    "DataScience.jupyterSelectURILocalLabel" : "Default",
+    "DataScience.jupyterSelectURILocalDetail" : "VS Code will automatically start a server for you on the localhost",
+    "DataScience.jupyterSelectURINewLabel" : "Existing",
+    "DataScience.jupyterSelectURINewDetail" : "Specify the URI of an existing server",
     "DataScience.jupyterSelectURIRunningDetailFormat" : "Last activity {0}. {1} existing connections.",
     "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown."
 }

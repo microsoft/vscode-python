@@ -51,6 +51,8 @@ export class DataScience implements IDataScience {
     private readonly dataScienceSurveyBanner: IPythonExtensionBanner;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
+    private localLabel = `$(zap) ${localize.DataScience.jupyterSelectURILocalLabel()}`;
+    private newLabel = `$(server) ${localize.DataScience.jupyterSelectURINewLabel()}`;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -307,7 +309,7 @@ export class DataScience implements IDataScience {
             items: await this.getUriPickList(),
             title: localize.DataScience.jupyterSelectURIQuickPickTitle()
         });
-        if (item.label === localize.DataScience.jupyterSelectURILocalLabel()) {
+        if (item.label === this.localLabel) {
             await this.setJupyterURIToLocal();
         } else if (!item.newChoice) {
             await this.setJupyterURIToRemote(item.label);
@@ -382,8 +384,8 @@ export class DataScience implements IDataScience {
     private async getUriPickList(): Promise<ISelectUriQuickPickItem[]> {
         // Always have 'local' and 'add new'
         const items: ISelectUriQuickPickItem[] = [];
-        items.push({ label: localize.DataScience.jupyterSelectURILocalLabel(), detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
-        items.push({ label: `$(plus) ${localize.DataScience.jupyterSelectURINewLabel()}`, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
+        items.push({ label: this.localLabel, detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+        items.push({ label: this.newLabel, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
 
         // Then our already picked list. Filter out those that aren't actually running.
         const alreadyPicked = this.getSavedUriList();
