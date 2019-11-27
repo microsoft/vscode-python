@@ -132,8 +132,11 @@ suite('Language Server Activation - ActivationService', () => {
                 lsSupported: boolean = true
             ) {
                 activator
-                    .setup(a => a.activate(undefined, undefined))
+                    .setup(a => a.start(undefined, undefined))
                     .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+                activator
+                    .setup(a => a.activate())
                     .verifiable(TypeMoq.Times.once());
                 let activatorName = LanguageServerActivator.Jedi;
                 if (lsSupported && !jediIsEnabled) {
@@ -368,13 +371,19 @@ suite('Language Server Activation - ActivationService', () => {
                 const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 activator
-                    .setup(a => a.activate(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
                 activator
-                    .setup(a => a.activate(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
+                activator
+                    .setup(a => a.deactivate())
+                    .verifiable(TypeMoq.Times.never());
+                activator
+                    .setup(a => a.activate())
+                    .verifiable(TypeMoq.Times.never());
                 activator
                     .setup(a => a.dispose()).returns(noop).verifiable(TypeMoq.Times.exactly(2));
                 serviceContainer
@@ -434,18 +443,18 @@ suite('Language Server Activation - ActivationService', () => {
                 const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                 const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                 activator
-                    .setup(a => a.activate(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
                 activator
-                    .setup(a => a.activate(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
-                let reconnectCount = 0;
+                let connectCount = 0;
                 activator
-                    .setup(a => a.reconnect())
+                    .setup(a => a.activate())
                     .returns(() => {
-                        reconnectCount = reconnectCount + 1;
+                        connectCount = connectCount + 1;
                     });
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
@@ -473,9 +482,9 @@ suite('Language Server Activation - ActivationService', () => {
                 // reconnect happens
                 const server = await activationService.get(folder1.uri);
                 await interpreterChangedHandler();
-                expect(reconnectCount).to.be.equal(3, 'Reconnect is not happening');
+                expect(connectCount).to.be.equal(3, 'Reconnect is not happening');
                 await interpreterChangedHandler();
-                expect(reconnectCount).to.be.equal(4, 'Reconnect is not happening');
+                expect(connectCount).to.be.equal(4, 'Reconnect is not happening');
                 server.dispose();
             });
             if (!jediIsEnabled) {
@@ -501,7 +510,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => activatorDotNet.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorDotNet
-                        .setup(a => a.activate(undefined, undefined))
+                        .setup(a => a.start(undefined, undefined))
                         .returns(() => Promise.reject(new Error('')))
                         .verifiable(TypeMoq.Times.once());
                     serviceContainer
@@ -514,7 +523,11 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => activatorJedi.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorJedi
-                        .setup(a => a.activate(undefined, undefined))
+                        .setup(a => a.start(undefined, undefined))
+                        .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.once());
+                    activatorJedi
+                        .setup(a => a.activate())
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
 
@@ -530,8 +543,11 @@ suite('Language Server Activation - ActivationService', () => {
                     resource: Resource
                 ) {
                     activator
-                        .setup(a => a.activate(TypeMoq.It.isValue(resource), undefined))
+                        .setup(a => a.start(TypeMoq.It.isValue(resource), undefined))
                         .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.once());
+                    activator
+                        .setup(a => a.activate())
                         .verifiable(TypeMoq.Times.once());
                     lsNotSupportedDiagnosticService
                         .setup(l => l.diagnose(undefined))
@@ -606,7 +622,7 @@ suite('Language Server Activation - ActivationService', () => {
                     activator3.verifyAll();
                 });
             } else {
-                test('Jedi is only activated once', async () => {
+                test('Jedi is only started once', async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
@@ -617,7 +633,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => activator1.object)
                         .verifiable(TypeMoq.Times.once());
                     activator1
-                        .setup(a => a.activate(folder1.uri, undefined))
+                        .setup(a => a.start(folder1.uri, undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
                     experiments
@@ -626,6 +642,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .verifiable(TypeMoq.Times.never());
                     await activationService.activate(folder1.uri);
                     activator1.verifyAll();
+                    activator1.verify(a => a.activate(), TypeMoq.Times.once());
                     serviceContainer.verifyAll();
                     experiments.verifyAll();
 
@@ -635,8 +652,11 @@ suite('Language Server Activation - ActivationService', () => {
                         .returns(() => activator2.object)
                         .verifiable(TypeMoq.Times.once());
                     activator2
-                        .setup(a => a.activate(folder2.uri, undefined))
+                        .setup(a => a.start(folder2.uri, undefined))
                         .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.never());
+                    activator2
+                        .setup(a => a.activate())
                         .verifiable(TypeMoq.Times.never());
                     experiments
                         .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
@@ -644,7 +664,9 @@ suite('Language Server Activation - ActivationService', () => {
                         .verifiable(TypeMoq.Times.never());
                     await activationService.activate(folder2.uri);
                     serviceContainer.verifyAll();
+                    activator1ActivateCount = 2;
                     activator1.verifyAll();
+                    activator1.verify(a => a.activate(), TypeMoq.Times.exactly(2));
                     activator2.verifyAll();
                     experiments.verifyAll();
                 });

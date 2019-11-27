@@ -55,11 +55,11 @@ export class LanguageServerManager implements ILanguageServerManager {
         await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
     }
+    public connect() {
+        this.middleware?.connect();
+    }
     public disconnect() {
         this.middleware?.disconnect();
-    }
-    public reconnect() {
-        this.middleware?.reconnect();
     }
     protected registerCommandHandler() {
         this.lsExtension.invoked(this.loadExtensionIfNecessary, this, this.disposables);

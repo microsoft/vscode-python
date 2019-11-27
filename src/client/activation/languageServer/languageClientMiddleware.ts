@@ -55,17 +55,17 @@ import { HiddenFilePrefix } from '../../common/constants';
 import { IPythonExtensionBanner } from '../../common/types';
 
 export class LanguageClientMiddleware implements Middleware {
-    private connected = true;
+    private connected = false; // Default to not forwarding to VS code.
 
     public constructor(private readonly surveyBanner: IPythonExtensionBanner) {
     }
 
-    public disconnect() {
-        this.connected = false;
+    public connect() {
+        this.connected = true;
     }
 
-    public reconnect() {
-        this.connected = true;
+    public disconnect() {
+        this.connected = false;
     }
 
     public provideCompletionItem(document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) {

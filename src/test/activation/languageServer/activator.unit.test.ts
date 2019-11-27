@@ -60,7 +60,7 @@ suite('Language Server - Activator', () => {
         when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
-        await activator.activate(undefined);
+        await activator.start(undefined);
 
         verify(manager.start(undefined, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -70,12 +70,18 @@ suite('Language Server - Activator', () => {
 
         verify(manager.dispose()).once();
     });
+    test('Server should be disconnected but be started', async () => {
+        await activator.start(undefined);
+
+        verify(manager.start(undefined, undefined)).once();
+        verify(manager.connect()).never();
+    });
     test('Do not download LS if not required', async () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
-        await activator.activate(undefined);
+        await activator.start(undefined);
 
         verify(manager.start(undefined, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -94,7 +100,7 @@ suite('Language Server - Activator', () => {
             .thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(true);
 
-        await activator.activate(undefined);
+        await activator.start(undefined);
 
         verify(manager.start(undefined, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();
@@ -116,7 +122,7 @@ suite('Language Server - Activator', () => {
         when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined))
             .thenReturn(deferred.promise);
 
-        const promise = activator.activate(undefined);
+        const promise = activator.start(undefined);
         await sleep(1);
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(lsFolderService.getLanguageServerFolderName(anything())).once();
@@ -137,7 +143,7 @@ suite('Language Server - Activator', () => {
         when(manager.start(uri, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(false);
 
-        await activator.activate(undefined);
+        await activator.start(undefined);
 
         verify(manager.start(uri, undefined)).once();
         verify(workspaceService.hasWorkspaceFolders).once();

@@ -21,12 +21,14 @@ import {
     WorkspaceEdit
 } from 'vscode';
 
+import { Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
-import { ILanguageServer, LanguageServerActivator } from './types';
+import { PythonInterpreter } from '../interpreter/contracts';
+import { ILanguageServerActivator, LanguageServerActivator } from './types';
 
-export class RefCountedLanguageServer implements ILanguageServer {
+export class RefCountedLanguageServer implements ILanguageServerActivator {
     private refCount = 1;
-    constructor(private impl: ILanguageServer, private _type: LanguageServerActivator, private disposeCallback: () => void) {
+    constructor(private impl: ILanguageServerActivator, private _type: LanguageServerActivator, private disposeCallback: () => void) {
     }
 
     public increment = () => {
@@ -44,12 +46,16 @@ export class RefCountedLanguageServer implements ILanguageServer {
         }
     }
 
-    public disconnect() {
-        this.impl.disconnect ? this.impl.disconnect() : noop();
+    public start(_resource: Resource, _interpreter: PythonInterpreter | undefined): Promise<void> {
+        throw new Error('Server should have already been started. Do not start the wrapper.');
     }
 
-    public reconnect() {
-        this.impl.reconnect ? this.impl.reconnect() : noop();
+    public activate() {
+        this.impl.activate();
+    }
+
+    public deactivate() {
+        this.impl.deactivate();
     }
 
     public clearAnalysisCache() {

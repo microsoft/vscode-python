@@ -67,7 +67,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.documentSelector = PYTHON;
     }
 
-    public async activate(_resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
+    public async start(_resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
         if (this.jediFactory) {
             throw new Error('Jedi already started');
         }
@@ -92,21 +92,18 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             context.subscriptions.push(JediExtensionActivator.workspaceSymbols);
         }
 
-        // Do the same thing we'd do on reconnect, that is, register for the VS code provider callbacks.
-        this.reconnect();
-
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
         testManagementService
             .activate(this.symbolProvider)
             .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
     }
 
-    public disconnect() {
+    public deactivate() {
         this.registrations.forEach(r => r.dispose());
         this.registrations = [];
     }
 
-    public reconnect() {
+    public activate() {
         if (this.registrations.length === 0 &&
             this.renameProvider &&
             this.definitionProvider &&

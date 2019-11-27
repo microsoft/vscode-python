@@ -30,7 +30,6 @@ import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
 import {
     IExtensionActivationService,
-    ILanguageServer,
     ILanguageServerActivator,
     ILanguageServerCache,
     LanguageServerActivator
@@ -41,7 +40,7 @@ const workspacePathNameForGlobalWorkspaces = '';
 
 interface IActivatedServer {
     key: string;
-    server: ILanguageServer;
+    server: ILanguageServerActivator;
     jedi: boolean;
 }
 
@@ -82,10 +81,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const interpreter = await this.interpreterService.getActiveInterpreter(resource);
         const key = await this.getKey(resource, interpreter);
 
-        // If we have an old server with a different key, then disconnect it as the
+        // If we have an old server with a different key, then deactivate it as the
         // creation of the new server may fail if this server is still connected
-        if (this.activatedServer && this.activatedServer.key !== key && this.activatedServer.server.disconnect) {
-            this.activatedServer.server.disconnect();
+        if (this.activatedServer && this.activatedServer.key !== key) {
+            this.activatedServer.server.deactivate();
         }
 
         // Get the new item
@@ -102,9 +101,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
-        if (this.activatedServer.server && this.activatedServer.server.reconnect) {
-            this.activatedServer.server.reconnect();
-        }
+        this.activatedServer.server.activate();
     }
 
     public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<RefCountedLanguageServer> {
@@ -209,7 +206,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         let serverName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
         let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
         try {
-            await server.activate(resource, interpreter);
+            await server.start(resource, interpreter);
         } catch (ex) {
             if (jedi) {
                 throw ex;
@@ -217,7 +214,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             await this.logStartup(jedi);
             serverName = LanguageServerActivator.Jedi;
             server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
-            await server.activate(resource, interpreter);
+            await server.start(resource, interpreter);
         }
 
         // Wrap the returned server in something that ref counts it.

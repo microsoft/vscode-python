@@ -57,7 +57,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) { }
     @traceDecorators.error('Failed to activate language server')
-    public async activate(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
+    public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
         if (!resource) {
             resource = this.workspace.hasWorkspaceFolders
                 ? this.workspace.workspaceFolders![0].uri
@@ -105,12 +105,12 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         await this.fs.writeFile(targetJsonFile, JSON.stringify(content));
     }
 
-    public disconnect(): void {
-        this.manager.disconnect();
+    public activate(): void {
+        this.manager.connect();
     }
 
-    public reconnect(): void {
-        this.manager.reconnect();
+    public deactivate(): void {
+        this.manager.disconnect();
     }
 
     public handleOpen(document: TextDocument): void {
