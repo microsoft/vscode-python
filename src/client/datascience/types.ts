@@ -206,6 +206,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
     readonly display_name?: string;
     /**
      * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
+     * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
      */
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };

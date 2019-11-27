@@ -16,18 +16,9 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
-    /**
-     * Kernel display name
-     *
-     * @type {string}
-     * @memberof JupyterKernelSpec
-     */
     public display_name?: string;
-    /**
-     * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
-     */
     // tslint:disable-next-line: no-any
-    public readonly metadata?: Record<string, any> & Partial<PythonInterpreter>;
+    public readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
 
     constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
