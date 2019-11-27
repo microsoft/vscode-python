@@ -181,7 +181,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
         if (activatedWkspcFoldersRemoved.length > 0) {
             for (const folder of activatedWkspcFoldersRemoved) {
-                this.cache.get(folder)!.then(a => a.dispose()).ignoreErrors();
+                const server = await this.cache.get(folder);
+                server?.dispose(); // This should remove it from the cache if this is the last instance.
             }
         }
     }
