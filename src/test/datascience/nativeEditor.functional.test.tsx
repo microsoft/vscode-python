@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
@@ -1336,104 +1337,91 @@ for _ in range(50):
             setup(async function() {
                 initIoc();
 
-        const oldFile = `
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 1,
-   "metadata": {
-    "collapsed": true
-   },
-   "outputs": [
-    {
-     "data": {
-      "text/plain": [
-       "1"
-      ]
-     },
-     "execution_count": 1,
-     "metadata": {},
-     "output_type": "execute_result"
-    }
-   ],
-   "source": [
-    "a=1\\n",
-    "a"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 2,
-   "metadata": {},
-   "outputs": [
-    {
-     "data": {
-      "text/plain": [
-       "2"
-      ]
-     },
-     "execution_count": 2,
-     "metadata": {},
-     "output_type": "execute_result"
-    }
-   ],
-   "source": [
-    "b=2\\n",
-    "b"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 3,
-   "metadata": {},
-   "outputs": [
-    {
-     "data": {
-      "text/plain": [
-       "3"
-      ]
-     },
-     "execution_count": 3,
-     "metadata": {},
-     "output_type": "execute_result"
-    }
-   ],
-   "source": [
-    "c=3\\n",
-    "c"
-   ]
-  }
- ],
- "metadata": {
-  "file_extension": ".py",
-  "kernelspec": {
-   "display_name": "JUNK",
-   "name": "JUNK"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "1.2.3"
-  },
-  "mimetype": "text/x-python",
-  "name": "python",
-  "npconvert_exporter": "python",
-  "pygments_lexer": "ipython3",
-  "version": 3
- },
- "nbformat": 4,
- "nbformat_minor": 2
-}`;
+                const oldJson: nbformat.INotebookContent = {
+                    nbformat: 4,
+                    nbformat_minor: 2,
+                    cells: [
+                        {
+                            cell_type: 'code',
+                            execution_count: 1,
+                            metadata: {
+                                collapsed: true
+                            },
+                            outputs: [
+                                {
+                                    data: {
+                                        'text/plain': [
+                                            '1'
+                                        ]
+                                    },
+                                    output_type: 'execute_result',
+                                    execution_count: 1,
+                                    metadata: {}
+                                }
+                            ],
+                            source: [
+                                'a=1\n',
+                                'a'
+                            ]
+                        },
+                        {
+                            cell_type: 'code',
+                            execution_count: 2,
+                            metadata: {},
+                            outputs: [
+                                {
+                                    data: {
+                                        'text/plain': [
+                                            '2'
+                                        ]
+                                    },
+                                    output_type: 'execute_result',
+                                    execution_count: 2,
+                                    metadata: {}
+                                }
+                            ],
+                            source: [
+                                'b=2\n',
+                                'b'
+                            ]
+                        },
+                        {
+                            cell_type: 'code',
+                            execution_count: 3,
+                            metadata: {},
+                            outputs: [
+                                {
+                                    data: {
+                                        'text/plain': [
+                                            '3'
+                                        ]
+                                    },
+                                    output_type: 'execute_result',
+                                    execution_count: 3,
+                                    metadata: {}
+                                }
+                            ],
+                            source: [
+                                'c=3\n',
+                                'c'
+                            ]
+                        }
+                    ],
+                    metadata: {
+                        orig_nbformat: 4,
+                        kernelspec: {
+                            display_name: 'JUNK',
+                            name: 'JUNK'
+                        },
+                        language_info: {
+                            name: 'python',
+                            version: '1.2.3'
+                        }
+                    }
+                };
+
                 // tslint:disable-next-line: no-invalid-this
-                await setupFunction.call(this, oldFile);
+                await setupFunction.call(this, JSON.stringify(oldJson));
             });
 
             test('Update notebook metadata on execution', async () => {

@@ -449,16 +449,22 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             const kernelSpec = await notebook.getKernelSpec();
 
             if (interpreter && interpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
-                this.notebookJson.metadata.language_info.version = `${interpreter.version.major}.${interpreter.version.minor}.${interpreter.version.patch}`;
+                this.notebookJson.metadata.language_info.version = interpreter.version.raw;
             } else if (this.notebookJson.metadata && this.notebookJson.metadata.language_info && this.notebookJson.metadata.language_info.version) {
                 this.notebookJson.metadata.language_info.version = undefined;
             }
 
-            if (kernelSpec && this.notebookJson.metadata) {
+            if (kernelSpec && this.notebookJson.metadata && !this.notebookJson.metadata.kernelspec) {
+                // Add a new spec in this case
                 this.notebookJson.metadata.kernelspec = { name: kernelSpec.name, display_name: kernelSpec.display_name };
-            } else if (this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
+            } else if (kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
+                // Spec exists, just update name and display_name
+                this.notebookJson.metadata.kernelspec.name = kernelSpec.name;
+                this.notebookJson.metadata.kernelspec.display_name = kernelSpec.display_name;
+            } else if (!kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
                 // If we don't have a kernel spec and we do have it in the metadata then clear it
-                this.notebookJson.metadata.kernelspec = undefined;
+                this.notebookJson.metadata.kernelspec.name = '';
+                this.notebookJson.metadata.kernelspec.display_name = '';
             }
         }
     }
