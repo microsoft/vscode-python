@@ -1100,6 +1100,26 @@ plt.show()`,
         assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
     });
 
+    async function disableJupyter(pythonPath: string) {
+        const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const service = await factory.create({ pythonPath });
+        const mockService = service as MockPythonService;
+        mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
+            return Promise.resolve({
+                stdout: '9.9.9.9',
+                stderr: 'Not supported'
+            });
+        });
+
+        mockService.addExecResult(['-m', 'notebook', '--version'], () => {
+            return Promise.resolve({
+                stdout: '',
+                stderr: 'Not supported'
+            });
+        });
+
+    }
+
     test('Notebook launch failure', async function () {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
@@ -1116,22 +1136,8 @@ plt.show()`,
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
 
             // Change notebook command to fail with some goofy output
-            const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-            const service = await factory.create({ pythonPath: ioc.workingInterpreter.path });
-            const mockService = service as MockPythonService;
-            mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
-                return Promise.resolve({
-                    stdout: '9.9.9.9',
-                    stderr: 'Not supported'
-                });
-            });
-
-            mockService.addExecResult(['-m', 'notebook', '--version'], () => {
-                return Promise.resolve({
-                    stdout: '',
-                    stderr: 'Not supported'
-                });
-            });
+            await disableJupyter(ioc.workingInterpreter.path);
+            await disableJupyter(ioc.workingInterpreter2.path);
 
             // Try creating a notebook
             let threw = false;

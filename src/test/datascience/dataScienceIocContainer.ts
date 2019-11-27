@@ -357,6 +357,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.workingPython;
     }
 
+    public get workingInterpreter2() {
+        return this.workingPython2;
+    }
+
     public get onContextSet(): Event<{ name: string; value: boolean }> {
         return this.contextSetEvent.event;
     }
