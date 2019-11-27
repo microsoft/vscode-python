@@ -664,7 +664,6 @@ suite('Language Server Activation - ActivationService', () => {
                         .verifiable(TypeMoq.Times.never());
                     await activationService.activate(folder2.uri);
                     serviceContainer.verifyAll();
-                    activator1ActivateCount = 2;
                     activator1.verifyAll();
                     activator1.verify(a => a.activate(), TypeMoq.Times.exactly(2));
                     activator2.verifyAll();
