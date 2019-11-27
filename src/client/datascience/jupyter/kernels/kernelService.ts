@@ -233,7 +233,7 @@ export class KernelService {
 
         // If no active interpreter, just act like everything is okay as we can't find a new spec anyway
         return true;
-    };
+    }
 
     private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {
         const displayName = localize.DataScience.historyTitle();
@@ -294,7 +294,7 @@ export class KernelService {
                 return js && js.name === specName;
             }) as JupyterKernelSpec;
         return match ? match.specFile : undefined;
-    };
+    }
 
     //tslint:disable-next-line:cyclomatic-complexity
     private findSpecMatch = async (enumerator: () => Promise<(IJupyterKernelSpec | undefined)[]>): Promise<IJupyterKernelSpec | undefined> => {
@@ -384,7 +384,7 @@ export class KernelService {
 
         traceInfo(`Found kernelspec match ${bestSpec ? `${bestSpec.name}' '${bestSpec.path}` : 'undefined'}`);
         return bestSpec;
-    };
+    }
 
     private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
         // Ignore errors if there are no kernels.
@@ -423,7 +423,7 @@ export class KernelService {
             // This is failing for some folks. In that case return nothing
             return [];
         }
-    };
+    }
     private async getInterpreterDetailsFromProcess(baseProcessName: string): Promise<PythonInterpreter | undefined> {
         if (path.basename(baseProcessName) !== baseProcessName) {
             // This function should only be called with a non qualified path. We're using this
