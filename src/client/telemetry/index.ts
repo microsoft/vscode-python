@@ -489,6 +489,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     /**
+     * Telemetry event sent when attaching to a local process.
+     */
+    [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
+    /**
      * Telemetry sent after building configuration for debugger
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {

@@ -33,7 +33,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         let debugConfig: AttachRequestArguments & DebugConfiguration;
         let processId: number;
         if (data.rootStartRequest) {
-            processId = data.processId;
+            processId = data.processId!;
             debugConfig = this.getAttachConfiguration(data as ChildProcessLaunchData);
         } else {
             debugConfig = data as (AttachRequestArguments & DebugConfiguration);
