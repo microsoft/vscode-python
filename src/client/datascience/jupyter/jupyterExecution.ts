@@ -313,7 +313,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // See if we can find the command
         try {
             const result = await this.findBestCommand(command, cancelToken);
-            return result && result.command !== undefined;
+
+            // Note to self, if result is undefined, check that your test is actually
+            // setting up different services correctly. Some method must be undefined.
+            return result.command !== undefined;
         } catch (err) {
             this.logger.logWarning(err);
             return false;

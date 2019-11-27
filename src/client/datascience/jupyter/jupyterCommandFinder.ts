@@ -265,7 +265,9 @@ export class JupyterCommandFinderImpl {
             found.error = firstError;
         }
 
-        if (found && found.status === ModuleExistsStatus.NotFound) {
+        // Note to self, if found is undefined, check that your test is actually
+        // setting up different services correctly. Some method must be undefined.
+        if (found.status === ModuleExistsStatus.NotFound) {
             this.sendSearchTelemetry(command, 'nowhere', stopWatch.elapsedTime, cancelToken);
         }
 
