@@ -472,7 +472,7 @@ export interface IEventNamePropertyMapping {
          */
         pyspark: boolean;
         /**
-         * Whether using `gevent` when deugging.
+         * Whether using `gevent` when debugging.
          *
          * @type {boolean}
          */
@@ -497,7 +497,7 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
         /**
-         * The type of debug configuration to build configuration fore
+         * The type of debug configuration to build configuration for
          *
          * @type {DebugConfigurationType}
          */
