@@ -208,7 +208,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
      * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
      */
     // tslint:disable-next-line: no-any
-    readonly metadata?: Record<string, any> & Partial<PythonInterpreter>;
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

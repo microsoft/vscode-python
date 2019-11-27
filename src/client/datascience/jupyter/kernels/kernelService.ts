@@ -48,7 +48,7 @@ export class KernelService {
      * @returns {(Promise<IJupyterKernelSpec | undefined>)}
      * @memberof KernelService
      */
-    public async findMatchingKernelSpec(kernelSpec: nbformat.IKernelspecMetadata, sessionManager: IJupyterSessionManager | undefined, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+    public async findMatchingKernelSpec(kernelSpec: nbformat.IKernelspecMetadata, sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
         return specs.find(item =>  item.language === PYTHON_LANGUAGE && item.display_name === kernelSpec.display_name && item.name === kernelSpec.name);
     }
@@ -284,7 +284,7 @@ export class KernelService {
         return bestSpec;
     }
 
-    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> => {
         // Ignore errors if there are no kernels.
         const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
 
