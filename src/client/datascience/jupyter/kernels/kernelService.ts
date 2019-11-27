@@ -21,7 +21,7 @@ import { IInterpreterService, PythonInterpreter } from '../../../interpreter/con
 import { captureTelemetry } from '../../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../../constants';
 import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { JupyterCommandFinder } from '../jupyterCommandFinder';
+import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
 /**
@@ -118,6 +118,33 @@ export class KernelService {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(sessionManager!.getConnInfo().localProcExitCode!.toString()));
             }
         }
+    }
+    public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec> {
+        if (!interpreter.displayName){
+            throw new Error('Interpreter does not have a display name');
+        }
+        const ipykernelCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
+        if (ipykernelCommand.status === ModuleExistsStatus.NotFound || !ipykernelCommand.command){
+            throw new Error('Command not found to install the kernel');
+        }
+        await ipykernelCommand.command.exec(['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
+            throwOnStdErr: true,
+            encoding: 'utf8',
+            token: cancelToken
+        });
+    }
+    /**
+     * Not all characters are allowed in a kernel name.
+     * This method will generate a name for a kernel based on display name and path.
+     * Algorithm = <displayname - invalid characters> + <hash of path>
+     *
+     * @private
+     * @param {PythonInterpreter} interpreter
+     * @memberof KernelService
+     */
+    private generateKernelNameForIntepreter(interpreter: PythonInterpreter): string {
+        const validName = (interpreter.displayName || '').replace(/[A-Za-z0-9]/g, '');
+        return `${validName}_${this.fileSystem.getFileHash(interpreter.path)}`;
     }
     private async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         const enumerator = sessionManager ? sessionManager.getActiveKernelSpecs() : this.enumerateSpecs(cancelToken);
