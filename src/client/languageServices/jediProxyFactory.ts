@@ -1,7 +1,8 @@
 import { Disposable, Uri, workspace } from 'vscode';
+
+import { PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { ICommandResult, JediProxy, JediProxyHandler } from '../providers/jediProxy';
-import { PythonInterpreter } from '../interpreter/contracts';
 
 export class JediFactory implements Disposable {
     private disposables: Disposable[];

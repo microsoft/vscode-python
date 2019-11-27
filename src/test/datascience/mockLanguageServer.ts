@@ -45,61 +45,46 @@ export class MockLanguageServer implements ILanguageServer {
         return this.versionId;
     }
 
-    public handleChanges(_document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
+    public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]) {
+        this.versionId = document.version;
         this.applyChanges(changes);
+        this.resolveNotificationPromise();
     }
 
-    public handleOpen(document: TextDocument) {
-        this.contents = document.getText();
-        this.versionId = document.version;
+    public handleOpen(_document: TextDocument) {
+        noop();
     }
 
     public provideRenameEdits(_document: TextDocument, _position: Position, _newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideDefinition(_document: TextDocument, _position: Position, _token: CancellationToken): ProviderResult<Location | Location[] | LocationLink[]> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideHover(_document: TextDocument, _position: Position, _token: CancellationToken): ProviderResult<Hover> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideReferences(_document: TextDocument, _position: Position, _context: ReferenceContext, _token: CancellationToken): ProviderResult<Location[]> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideCompletionItems(_document: TextDocument, _position: Position, _token: CancellationToken, _context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideCodeLenses(_document: TextDocument, _token: CancellationToken): ProviderResult<CodeLens[]> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideDocumentSymbols(_document: TextDocument, _token: CancellationToken): ProviderResult<SymbolInformation[] | DocumentSymbol[]> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public provideSignatureHelp(_document: TextDocument, _position: Position, _token: CancellationToken, _context: SignatureHelpContext): ProviderResult<SignatureHelp> {
-        if (this.notificationPromise) {
-            this.notificationPromise.resolve();
-        }
+        this.resolveNotificationPromise();
         return null;
     }
     public dispose(): void {
@@ -121,5 +106,12 @@ export class MockLanguageServer implements ILanguageServer {
             this.contents = `${before}${c.text}${after}`;
         });
         this.versionId = this.versionId + 1;
+    }
+
+    private resolveNotificationPromise() {
+        if (this.notificationPromise) {
+            this.notificationPromise.resolve();
+            this.notificationPromise = undefined;
+        }
     }
 }
