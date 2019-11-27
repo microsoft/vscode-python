@@ -26,6 +26,7 @@ export class LanguageServerManager implements ILanguageServerManager {
     private interpreter: PythonInterpreter | undefined;
     private middleware: LanguageClientMiddleware | undefined;
     private disposables: IDisposable[] = [];
+    private connected: boolean = false;
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
@@ -56,9 +57,11 @@ export class LanguageServerManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
     public connect() {
+        this.connected = true;
         this.middleware?.connect();
     }
     public disconnect() {
+        this.connected = false;
         this.middleware?.disconnect();
     }
     protected registerCommandHandler() {
@@ -87,6 +90,13 @@ export class LanguageServerManager implements ILanguageServerManager {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
+
+        // Make sure the middleware is connected if we restart and we we're already connected.
+        if (this.connected) {
+            this.middleware.connect();
+        }
+
+        // Then use this middleware to start a new language client.
         await this.languageServerProxy.start(this.resource, this.interpreter, options);
         this.loadExtensionIfNecessary();
     }
