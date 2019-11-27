@@ -333,6 +333,14 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
     };
+    private workingPython2: PythonInterpreter = {
+        path: '/foo/baz/python.exe',
+        version: new SemVer('3.6.7-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        type: InterpreterType.Unknown,
+        architecture: Architecture.x64,
+    };
     private extraListeners: ((m: string, p: any) => void)[] = [];
 
     private webPanelProvider: TypeMoq.IMock<IWebPanelProvider> | undefined;
@@ -674,6 +682,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
+        this.addInterpreter(this.workingPython2, SupportedCommands.all);
         this.addInterpreter(this.workingPython, SupportedCommands.all);
     }
 

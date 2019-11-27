@@ -88,7 +88,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Listen to configuration changes like the real interpreter service does so that we fire our settings changed event
         const configService = serviceManager.get<IConfigurationService>(IConfigurationService);
         if (configService && configService !== null) {
-            configService.getSettings().onDidChange(this.onConfigChanged.bind(this));
+            configService.getSettings().onDidChange(this.onConfigChanged.bind(this, configService));
         }
 
         // Stick our services into the service manager
@@ -302,8 +302,12 @@ export class MockJupyterManager implements IJupyterSessionManager {
         return Promise.resolve([]);
     }
 
-    private onConfigChanged = () => {
-        this.changedInterpreterEvent.fire();
+    private onConfigChanged(configService: IConfigurationService) {
+        const pythonPath = configService.getSettings().pythonPath;
+        if (this.activeInterpreter === undefined || pythonPath !== this.activeInterpreter.path) {
+            this.activeInterpreter = this.installedInterpreters.filter(f => f.path === pythonPath)[0];
+            this.changedInterpreterEvent.fire();
+        }
     }
 
     private createNewSession(): MockJupyterSession {

@@ -6,23 +6,60 @@ import { Code2ProtocolConverter } from 'vscode-languageclient';
 import * as proto from 'vscode-languageserver-protocol';
 
 // tslint:disable:no-any unified-signatures
-export class MockProtocolConverter implements Code2ProtocolConverter {
+export class MockCode2ProtocolConverter implements Code2ProtocolConverter {
     public asUri(_uri: code.Uri): string {
         throw new Error('Method not implemented.');
     }
-    public asTextDocumentIdentifier(_textDocument: code.TextDocument): proto.TextDocumentIdentifier {
-        throw new Error('Method not implemented.');
+    public asTextDocumentIdentifier(textDocument: code.TextDocument): proto.TextDocumentIdentifier {
+        return { uri: textDocument.uri.toString() };
     }
-    public asVersionedTextDocumentIdentifier(_textDocument: code.TextDocument): proto.VersionedTextDocumentIdentifier {
-        throw new Error('Method not implemented.');
+    public asVersionedTextDocumentIdentifier(textDocument: code.TextDocument): proto.VersionedTextDocumentIdentifier {
+        return { uri: textDocument.uri.toString(), version: textDocument.version };
     }
-    public asOpenTextDocumentParams(_textDocument: code.TextDocument): proto.DidOpenTextDocumentParams {
-        throw new Error('Method not implemented.');
+    public asOpenTextDocumentParams(textDocument: code.TextDocument): proto.DidOpenTextDocumentParams {
+        return {
+            textDocument: {
+                uri: textDocument.uri.toString(),
+                languageId: 'PYTHON',
+                version: textDocument.version,
+                text: textDocument.getText()
+            }
+        };
     }
+
     public asChangeTextDocumentParams(textDocument: code.TextDocument): proto.DidChangeTextDocumentParams;
     public asChangeTextDocumentParams(event: code.TextDocumentChangeEvent): proto.DidChangeTextDocumentParams;
-    public asChangeTextDocumentParams(_event: any): proto.DidChangeTextDocumentParams {
-        throw new Error('Method not implemented.');
+    public asChangeTextDocumentParams(arg: any): proto.DidChangeTextDocumentParams {
+        if (this.isTextDocument(arg)) {
+            return {
+                textDocument: {
+                    uri: arg.uri.toString(),
+                    version: arg.version
+                },
+                contentChanges: [{ text: arg.getText() }]
+            };
+        } else if (this.isTextDocumentChangeEvent(arg)) {
+            const document = arg.document;
+            return {
+                textDocument: {
+                    uri: document.uri.toString(),
+                    version: document.version
+                },
+                contentChanges: arg.contentChanges.map((change): proto.TextDocumentContentChangeEvent => {
+                    const range = change.range;
+                    return {
+                        range: {
+                            start: { line: range.start.line, character: range.start.character },
+                            end: { line: range.end.line, character: range.end.character }
+                        },
+                        rangeLength: change.rangeLength,
+                        text: change.text
+                    };
+                })
+            };
+        } else {
+            throw Error('Unsupported text document change parameter');
+        }
     }
     public asCloseTextDocumentParams(_textDocument: code.TextDocument): proto.DidCloseTextDocumentParams {
         throw new Error('Method not implemented.');
@@ -118,5 +155,14 @@ export class MockProtocolConverter implements Code2ProtocolConverter {
     }
     public asDocumentLinkParams(_textDocument: code.TextDocument): proto.DocumentLinkParams {
         throw new Error('Method not implemented.');
+    }
+    private isTextDocumentChangeEvent(value: any): value is code.TextDocumentChangeEvent {
+        const candidate = <code.TextDocumentChangeEvent>value;
+        return !!candidate.document && !!candidate.contentChanges;
+    }
+
+    private isTextDocument(value: any): value is code.TextDocument {
+        const candidate = <code.TextDocument>value;
+        return !!candidate.uri && !!candidate.version;
     }
 }
