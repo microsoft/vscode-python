@@ -54,7 +54,8 @@ import {
     ILanguageServerProxy,
     IPlatformData,
     LanguageClientFactory,
-    LanguageServerActivator
+    LanguageServerActivator,
+    ILanguageServerCache
 } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService } from '../../client/common/application/types';
@@ -73,7 +74,7 @@ import { IServiceManager } from '../../client/ioc/types';
 import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { ProposeLanguageServerBanner } from '../../client/languageServices/proposeLanguageServerBanner';
 
-suite('Unit Tests - Activation Service Registry', () => {
+suite('Unit Tests - Language Server Activation Service Registry', () => {
     let serviceManager: IServiceManager;
 
     setup(() => {
@@ -83,7 +84,7 @@ suite('Unit Tests - Activation Service Registry', () => {
     test('Ensure services are registered', async () => {
         registerTypes(instance(serviceManager));
 
-        verify(serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LanguageServerExtensionActivationService)).once();
+        verify(serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService)).once();
         verify(serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension)).once();
         verify(serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager)).once();
         verify(serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerActivator.Jedi)).once();
@@ -107,7 +108,7 @@ suite('Unit Tests - Activation Service Registry', () => {
         verify(serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader)).once();
         verify(serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData)).once();
         verify(serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions)).once();
-        verify(serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy)).once();
+        verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy)).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();
