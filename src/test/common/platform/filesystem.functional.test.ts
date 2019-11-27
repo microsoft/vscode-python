@@ -51,7 +51,14 @@ export class FSFixture {
         if (this.tempDir) {
             const tempDir = this.tempDir;
             this.tempDir = undefined;
-            tempDir.removeCallback();
+            try {
+                tempDir.removeCallback();
+            } catch {
+                // The "unsafeCleanup: true" option is supposed
+                // to support a non-empty directory, but apparently
+                // that isn't always the case.  (see #8804)
+                await fsextra.remove(tempDir.name);
+            }
         }
         if (this.sockServer) {
             const srv = this.sockServer;
