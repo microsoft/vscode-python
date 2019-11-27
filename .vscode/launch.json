@@ -150,6 +150,7 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
+                "--grep", "IANHU",
                 "--timeout=300000"
             ],
             "outFiles": [
@@ -195,6 +196,7 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
+                "--grep", "IANHU",
                 "--timeout=300000"
             ],
             "outFiles": [

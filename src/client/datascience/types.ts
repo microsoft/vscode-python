@@ -101,6 +101,7 @@ export interface INotebook extends IAsyncDisposable {
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
     getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
+    getKernelSpec(): Promise<IJupyterKernelSpec | undefined>;
 }
 
 export interface INotebookServerOptions {
@@ -194,9 +195,10 @@ export interface IJupyterKernel {
 }
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {
-    name: string | undefined;
-    language: string | undefined;
-    path: string | undefined;
+    name: string;
+    display_name: string;
+    language: string;
+    path: string;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

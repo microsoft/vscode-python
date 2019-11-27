@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { expect } from 'chai';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, spy, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
 
 import { nbformat } from '@jupyterlab/coreutils';
@@ -36,6 +36,8 @@ import { JupyterDebugger } from '../../../client/datascience/jupyter/jupyterDebu
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
+import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
+import { JupyterServerBase } from '../../../client/datascience/jupyter/jupyterServer';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import {
@@ -421,6 +423,7 @@ suite('Data Science - Native Editor', () => {
         expect(newEditor.cells).to.be.lengthOf(3);
     });
 
+    // IANHU: Update this test as well
     test('Python version info is not queried on creating a blank editor', async () => {
         const file = Uri.parse('file:///Untitled1.ipynb');
 
@@ -439,7 +442,25 @@ suite('Data Science - Native Editor', () => {
         }
     });
 
-    test('Pyton version info will be updated in notebook when a cell has been executed', async () => {
+    test('IANHU Python version info will be updated in notebook when a cell has been executed', async () => {
+        // Set up our fake notebook info
+        const mockJupyterNotebook = mock(JupyterNotebookBase);
+        // This is the python version associated with the active notebook, this is what we want to see in the metadata
+        const notebookVersion: Version = { build: [], major: 1, minor: 2, patch: 3, prerelease: [], raw: '1.2.3' };
+        when(mockJupyterNotebook.getMatchingInterpreter()).thenResolve(({ version: notebookVersion } as any));
+        when(mockJupyterNotebook.getKernelSpec()).thenResolve(({ name: 'kernelname', display_name: 'kerneldisplayname' } as any));
+
+        // Set our server to return fake notebook
+        const mockJupyterServer = mock(JupyterServerBase);
+        //when(mockJupyterServer.createNotebook(anything())).thenReturn(Promise.resolve(instance(mockJupyterNotebook)));
+        //when(mockJupyterServer.createNotebook(anything())).thenResolve(instance(mockJupyterNotebook));
+        when(mockJupyterServer.createNotebook(anything())).thenResolve(mockJupyterNotebook);
+
+        // Add to execution service
+        //when(executionProvider.connectToNotebookServer(anything())).thenReturn(Promise.resolve(instance(mockJupyterServer)));
+        //when(executionProvider.connectToNotebookServer(anything())).thenResolve(instance(mockJupyterServer));
+        when(executionProvider.connectToNotebookServer(anything())).thenResolve(mockJupyterServer);
+
         const file = Uri.parse('file:///foo.ipynb');
 
         const editor = createEditor();
@@ -449,7 +470,7 @@ suite('Data Science - Native Editor', () => {
         let contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
         expect(contents.metadata!.language_info!.version).to.not.equal('10.11.12');
 
-        // When a cell is executed, then ensure we store the python version info in the notebook data.
+        // This is the python version for getting the usable python, we don't want to see this in the meta data
         const version: Version = { build: [], major: 10, minor: 11, patch: 12, prerelease: [], raw: '10.11.12' };
         when(executionProvider.getUsableJupyterPython()).thenResolve(({ version } as any));
 
@@ -463,7 +484,8 @@ suite('Data Science - Native Editor', () => {
         // Wait for the version info to be retrieved (done in the background).
         await waitForCondition(async () => {
             try {
-                verify(executionProvider.getUsableJupyterPython()).atLeast(1);
+                //verify(executionProvider.getUsableJupyterPython()).atLeast(1);
+                verify(mockJupyterNotebook.getMatchingInterpreter()).atLeast(1);
                 return true;
             } catch {
                 return false;
@@ -474,6 +496,42 @@ suite('Data Science - Native Editor', () => {
         contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
         expect(contents.metadata!.language_info!.version).to.equal('10.11.12');
     });
+
+    //test('Python kernelspec will be updated in notebook metadata when a cell has been executed', async () => {
+    //const file = Uri.parse('file:///foo.ipynb');
+
+    //const editor = createEditor();
+    //await editor.load(baseFile, file);
+    //expect(await editor.getContents()).to.be.equal(baseFile);
+    //// At the begining version info is NOT in the file (at least not the same as what we are using to run cells).
+    //let contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
+    //expect(contents.metadata!.language_info!.version).to.not.equal('10.11.12');
+
+    //// When a cell is executed, then ensure we store the python version info in the notebook data.
+    //const version: Version = { build: [], major: 10, minor: 11, patch: 12, prerelease: [], raw: '10.11.12' };
+    //when(executionProvider.getUsableJupyterPython()).thenResolve(({ version } as any));
+
+    //try {
+    //editor.onMessage(InteractiveWindowMessages.SubmitNewCell, { code: 'hello', id: '1' });
+    //} catch {
+    //// Ignore errors related to running cells, assume that works.
+    //noop();
+    //}
+
+    //// Wait for the version info to be retrieved (done in the background).
+    //await waitForCondition(async () => {
+    //try {
+    //verify(executionProvider.getUsableJupyterPython()).atLeast(1);
+    //return true;
+    //} catch {
+    //return false;
+    //}
+    //}, 5_000, 'Timeout');
+
+    //// Verify the version info is in the notbook.
+    //contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
+    //expect(contents.metadata!.language_info!.version).to.equal('10.11.12');
+    //});
 
     test('Opening file with local storage but no global will still open with old contents', async () => {
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
