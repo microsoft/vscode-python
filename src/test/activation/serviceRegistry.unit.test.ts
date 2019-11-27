@@ -39,11 +39,11 @@ import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
     IDownloadChannelRule,
     IExtensionActivationManager,
-    IExtensionActivationService,
     IExtensionSingleActivationService,
     ILanguageClientFactory,
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
+    ILanguageServerCache,
     ILanguageServerCompatibilityService as ILanagueServerCompatibilityService,
     ILanguageServerDownloader,
     ILanguageServerExtension,
@@ -54,8 +54,7 @@ import {
     ILanguageServerProxy,
     IPlatformData,
     LanguageClientFactory,
-    LanguageServerActivator,
-    ILanguageServerCache
+    LanguageServerActivator
 } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService } from '../../client/common/application/types';
