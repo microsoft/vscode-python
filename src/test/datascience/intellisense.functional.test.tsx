@@ -99,6 +99,8 @@ suite('DataScience Intellisense tests', () => {
         // Create an interactive window so that it listens to the results.
         const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
         await interactiveWindow.show();
+        
+        assert.fail('Test should fail');
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
         const suggestion = waitForSuggestion(wrapper);
