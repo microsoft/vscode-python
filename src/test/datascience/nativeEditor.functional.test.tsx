@@ -1332,7 +1332,7 @@ for _ in range(50):
             });
         });
 
-        suite('IANHU Update Metadata', () => {
+        suite('Update Metadata', () => {
             setup(async function() {
                 initIoc();
 

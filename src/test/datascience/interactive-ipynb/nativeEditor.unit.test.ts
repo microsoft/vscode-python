@@ -2,10 +2,9 @@
 // Licensed under the MIT License.
 'use strict';
 import { expect } from 'chai';
-import { anything, instance, mock, spy, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import * as sinon from 'sinon';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
@@ -25,7 +24,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { LiveShareApi } from '../../../client/common/liveshare/liveshare';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, Version } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewerProvider } from '../../../client/datascience/data-viewing/dataViewerProvider';
 import { DataScienceErrorHandler } from '../../../client/datascience/errorHandler/errorHandler';
@@ -36,8 +35,6 @@ import { JupyterDebugger } from '../../../client/datascience/jupyter/jupyterDebu
 import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
-import { JupyterNotebookBase } from '../../../client/datascience/jupyter/jupyterNotebook';
-import { JupyterServerBase } from '../../../client/datascience/jupyter/jupyterServer';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import {
