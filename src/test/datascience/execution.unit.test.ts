@@ -478,8 +478,10 @@ suite('Jupyter Execution', async () => {
             if (ipykernelInstallCount > 0) {
                 const kernelSpecs = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}, {name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
+            } else {
+                const kernelSpecs = createKernelSpecs([{name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
+                return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
-            return Promise.resolve({ stdout: ` 0e8519db-0895-416c-96df-fa80131ecea0    C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0` });
         });
         const kernelSpecs2 = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}, {name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
         setupPythonService(service, 'jupyter', ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) }));
