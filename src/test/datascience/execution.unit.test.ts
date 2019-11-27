@@ -487,7 +487,8 @@ suite('Jupyter Execution', async () => {
         setupPythonService(service, 'jupyter', ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) }));
         setupPythonServiceWithFunc(service, 'ipykernel', ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
             ipykernelInstallCount += 1;
-            return Promise.resolve({ stdout: `somename ${path.dirname(workingKernelSpec)}` });
+            const kernelSpecs = createKernelSpecs([{name: 'somename', resourceDir: path.dirname(workingKernelSpec)}]);
+            return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
         });
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
@@ -532,7 +533,8 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExec(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2)}));
         setupProcessServiceExecWithFunc(service, workingPython.path, ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
             ipykernelInstallCount += 1;
-            return Promise.resolve({ stdout: `somename ${path.dirname(workingKernelSpec)}` });
+            const kernelSpecs = createKernelSpecs([{name: 'somename', resourceDir: path.dirname(workingKernelSpec)}]);
+            return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
         });
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupProcessServiceExec(service, workingPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));

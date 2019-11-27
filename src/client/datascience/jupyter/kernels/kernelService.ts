@@ -313,16 +313,23 @@ export class KernelService {
 
             traceInfo('Parsing kernelspecs from jupyter');
             // This should give us back a key value pair we can parse
-            const kernelSpecs = JSON.parse(output.stdout.trim()) as Record<string, { spec: Omit<Kernel.ISpecModel, 'name'> }>;
-            return Object.keys(kernelSpecs).map(kernelName => {
+            const kernelSpecs = JSON.parse(output.stdout.trim()) as Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }>;
+            const specs = await Promise.all(Object.keys(kernelSpecs).map(async kernelName => {
+                const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
                 const spec = kernelSpecs[kernelName].spec;
                 // Add the missing name property.
                 const model = {
                     ...spec,
                     name: kernelName
                 };
-                return new JupyterKernelSpec(model as Kernel.ISpecModel);
-            });
+                // Check if the spec file exists.
+                if (await this.fileSystem.fileExists(specFile)){
+                    return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
+                } else {
+                    return;
+                }
+            }));
+            return specs.filter(item => !!item).map(item => item as IJupyterKernelSpec);
         } catch (ex) {
             traceError('Failed to list kernels', ex);
             // This is failing for some folks. In that case return nothing
