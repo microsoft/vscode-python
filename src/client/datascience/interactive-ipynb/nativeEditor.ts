@@ -281,23 +281,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    protected async submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
+    protected submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
         // When code is executed, update the version number in the metadata.
-        //const ret = await super.submitCode(code, file, line, id, editor, debug);
-        //this.updateVersionInfoInNotebook().ignoreErrors();
-        //return ret;
-
         return super.submitCode(code, file, line, id, editor, debug).then((value) => {
             this.updateVersionInfoInNotebook().ignoreErrors();
             return value;
         });
     }
-
-    //protected submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
-    //// When code is executed, update the version number in the metadata.
-    //this.updateVersionInfoInNotebook().ignoreErrors();
-    //return super.submitCode(code, file, line, id, editor, debug);
-    //}
 
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
     // tslint:disable-next-line:no-any
