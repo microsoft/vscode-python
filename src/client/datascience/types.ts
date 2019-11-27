@@ -197,6 +197,18 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;
+    /**
+     * Kernel display name.
+     *
+     * @type {string}
+     * @memberof IJupyterKernelSpec
+     */
+    readonly display_name?: string;
+    /**
+     * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
+     */
+    // tslint:disable-next-line: no-any
+    readonly metadata?: Record<string, any> & Partial<PythonInterpreter>;
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
