@@ -11,6 +11,7 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../../../client/common/process/processFactory';
 import { IProcessServiceFactory } from '../../../../client/common/process/types';
 import { noop } from '../../../../client/common/utils/misc';
+import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder, ModuleExistsStatus } from '../../../../client/datascience/jupyter/jupyterCommandFinder';
@@ -18,9 +19,8 @@ import { JupyterExecutionBase } from '../../../../client/datascience/jupyter/jup
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IJupyterCommand, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
-import { IInterpreterService, PythonInterpreter, InterpreterType } from '../../../../client/interpreter/contracts';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { Architecture } from '../../../../client/common/utils/platform';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelService', () => {
