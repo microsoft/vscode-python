@@ -109,6 +109,10 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         this.manager.disconnect();
     }
 
+    public reconnect(): void {
+        this.manager.reconnect();
+    }
+
     public handleOpen(document: TextDocument): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {

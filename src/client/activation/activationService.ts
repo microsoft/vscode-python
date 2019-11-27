@@ -99,6 +99,12 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
         // Save our active server.
         this.activatedServer = { key, server: result, jedi: result.type === LanguageServerActivator.Jedi };
+
+        // Force this server to reconnect (if disconnected) as it should be the active
+        // language server for all of VS code.
+        if (this.activatedServer.server && this.activatedServer.server.reconnect) {
+            this.activatedServer.server.reconnect();
+        }
     }
 
     public async get(resource: Resource, interpreter?: PythonInterpreter): Promise<RefCountedLanguageServer> {

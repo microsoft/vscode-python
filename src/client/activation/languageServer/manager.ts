@@ -58,6 +58,9 @@ export class LanguageServerManager implements ILanguageServerManager {
     public disconnect() {
         this.middleware?.disconnect();
     }
+    public reconnect() {
+        this.middleware?.reconnect();
+    }
     protected registerCommandHandler() {
         this.lsExtension.invoked(this.loadExtensionIfNecessary, this, this.disposables);
     }

@@ -48,6 +48,10 @@ export class RefCountedLanguageServer implements ILanguageServer {
         this.impl.disconnect ? this.impl.disconnect() : noop();
     }
 
+    public reconnect() {
+        this.impl.reconnect ? this.impl.reconnect() : noop();
+    }
+
     public clearAnalysisCache() {
         this.impl.clearAnalysisCache ? this.impl.clearAnalysisCache() : noop();
     }

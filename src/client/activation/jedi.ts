@@ -83,6 +83,8 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         this.completionProvider = new PythonCompletionItemProvider(jediFactory, this.serviceManager);
         this.codeLensProvider = this.serviceManager.get<IShebangCodeLensProvider>(IShebangCodeLensProvider);
         this.objectDefinitionProvider = new PythonObjectDefinitionProvider(jediFactory);
+        this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
+        this.signatureProvider = new PythonSignatureProvider(jediFactory);
 
         if (!JediExtensionActivator.workspaceSymbols) {
             // Workspace symbols is static because it doesn't rely on the jediFactory.
@@ -90,69 +92,8 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             context.subscriptions.push(JediExtensionActivator.workspaceSymbols);
         }
 
-        // Make sure commands are in the registration list that gets disposed when the language server is disconnected from the
-        // IDE.
-        this.registrations.push(commands.registerCommand('python.goToPythonObject', () => this.objectDefinitionProvider!.goToObjectDefinition()));
-
-        this.registrations.push(
-            languages.registerRenameProvider(this.documentSelector, this.renameProvider)
-        );
-        this.registrations.push(languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider));
-        this.registrations.push(
-            languages.registerHoverProvider(this.documentSelector, this.hoverProvider)
-        );
-        this.registrations.push(
-            languages.registerReferenceProvider(this.documentSelector, this.referenceProvider)
-        );
-        this.registrations.push(
-            languages.registerCompletionItemProvider(
-                this.documentSelector,
-                this.completionProvider,
-                '.'
-            )
-        );
-        this.registrations.push(
-            languages.registerCodeLensProvider(
-                this.documentSelector,
-                this.codeLensProvider
-            )
-        );
-
-        const onTypeDispatcher = new OnTypeFormattingDispatcher({
-            '\n': new OnEnterFormatter(),
-            ':': new BlockFormatProviders()
-        });
-        const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
-        if (onTypeTriggers) {
-            this.registrations.push(
-                languages.registerOnTypeFormattingEditProvider(
-                    PYTHON,
-                    onTypeDispatcher,
-                    onTypeTriggers.first,
-                    ...onTypeTriggers.more
-                )
-            );
-        }
-
-        this.symbolProvider = new JediSymbolProvider(serviceContainer, jediFactory);
-        this.signatureProvider = new PythonSignatureProvider(jediFactory);
-        this.registrations.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
-
-        const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
-        if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-            this.registrations.push(
-                languages.registerSignatureHelpProvider(
-                    this.documentSelector,
-                    this.signatureProvider,
-                    '(',
-                    ','
-                )
-            );
-        }
-
-        this.registrations.push(
-            languages.registerRenameProvider(PYTHON, new PythonRenameProvider(serviceContainer))
-        );
+        // Do the same thing we'd do on reconnect, that is, register for the VS code provider callbacks.
+        this.reconnect();
 
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
         testManagementService
@@ -163,6 +104,73 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     public disconnect() {
         this.registrations.forEach(r => r.dispose());
         this.registrations = [];
+    }
+
+    public reconnect() {
+        if (this.registrations.length === 0 &&
+            this.renameProvider &&
+            this.definitionProvider &&
+            this.hoverProvider &&
+            this.referenceProvider &&
+            this.completionProvider &&
+            this.codeLensProvider &&
+            this.symbolProvider &&
+            this.signatureProvider) {
+
+            // Make sure commands are in the registration list that gets disposed when the language server is disconnected from the
+            // IDE.
+            this.registrations.push(commands.registerCommand('python.goToPythonObject', () => this.objectDefinitionProvider!.goToObjectDefinition()));
+            this.registrations.push(
+                languages.registerRenameProvider(this.documentSelector, this.renameProvider)
+            );
+            this.registrations.push(languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider));
+            this.registrations.push(
+                languages.registerHoverProvider(this.documentSelector, this.hoverProvider)
+            );
+            this.registrations.push(
+                languages.registerReferenceProvider(this.documentSelector, this.referenceProvider)
+            );
+            this.registrations.push(
+                languages.registerCompletionItemProvider(
+                    this.documentSelector,
+                    this.completionProvider,
+                    '.'
+                )
+            );
+            this.registrations.push(
+                languages.registerCodeLensProvider(
+                    this.documentSelector,
+                    this.codeLensProvider
+                )
+            );
+            const onTypeDispatcher = new OnTypeFormattingDispatcher({
+                '\n': new OnEnterFormatter(),
+                ':': new BlockFormatProviders()
+            });
+            const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
+            if (onTypeTriggers) {
+                this.registrations.push(
+                    languages.registerOnTypeFormattingEditProvider(
+                        PYTHON,
+                        onTypeDispatcher,
+                        onTypeTriggers.first,
+                        ...onTypeTriggers.more
+                    )
+                );
+            }
+            this.registrations.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
+            const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
+            if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
+                this.registrations.push(
+                    languages.registerSignatureHelpProvider(
+                        this.documentSelector,
+                        this.signatureProvider,
+                        '(',
+                        ','
+                    )
+                );
+            }
+        }
     }
 
     public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken): ProviderResult<WorkspaceEdit> {

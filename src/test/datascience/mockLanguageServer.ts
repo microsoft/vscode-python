@@ -106,6 +106,14 @@ export class MockLanguageServer implements ILanguageServer {
         noop();
     }
 
+    public disconnect(): void {
+        noop();
+    }
+
+    public reconnect(): void {
+        noop();
+    }
+
     private applyChanges(changes: TextDocumentContentChangeEvent[]) {
         changes.forEach(c => {
             const before = this.contents.substr(0, c.rangeOffset);

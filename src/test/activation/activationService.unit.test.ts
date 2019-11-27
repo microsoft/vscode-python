@@ -424,7 +424,7 @@ suite('Language Server Activation - ActivationService', () => {
                 };
                 let getActiveCount = 0;
                 interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => {
-                    if (getActiveCount <= 0) {
+                    if (getActiveCount % 2 === 0) {
                         getActiveCount += 1;
                         return Promise.resolve(interpreter1);
                     }
@@ -441,6 +441,12 @@ suite('Language Server Activation - ActivationService', () => {
                     .setup(a => a.activate(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
                     .returns(() => Promise.resolve())
                     .verifiable(TypeMoq.Times.once());
+                let reconnectCount = 0;
+                activator
+                    .setup(a => a.reconnect())
+                    .returns(() => {
+                        reconnectCount = reconnectCount + 1;
+                    });
                 serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
                     .returns(() => activator.object);
@@ -462,6 +468,15 @@ suite('Language Server Activation - ActivationService', () => {
                 await activationService.activate(folder1.uri);
                 await interpreterChangedHandler();
                 activator.verifyAll();
+
+                // Hold onto the second item and switch two more times. Verify that
+                // reconnect happens
+                const server = await activationService.get(folder1.uri);
+                await interpreterChangedHandler();
+                expect(reconnectCount).to.be.equal(3, 'Reconnect is not happening');
+                await interpreterChangedHandler();
+                expect(reconnectCount).to.be.equal(4, 'Reconnect is not happening');
+                server.dispose();
             });
             if (!jediIsEnabled) {
                 test('Revert to jedi when LS activation fails', async () => {

@@ -64,6 +64,10 @@ export class LanguageClientMiddleware implements Middleware {
         this.connected = false;
     }
 
+    public reconnect() {
+        this.connected = true;
+    }
+
     public provideCompletionItem(document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) {
         if (this.connected) {
             this.surveyBanner.showBanner().ignoreErrors();
