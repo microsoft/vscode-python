@@ -2,12 +2,12 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
-import { IInterpreterLocatorService, PIPENV_SERVICE } from '../../interpreter/contracts';
+import { IInterpreterLocatorService, InterpreterType, PIPENV_SERVICE } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller } from './types';
+import { IModuleInstaller, InterpreterUri } from './types';
 
 export const pipenvName = 'pipenv';
 
@@ -30,11 +30,15 @@ export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller
         super(serviceContainer);
         this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
-    public async isSupported(resource?: Uri): Promise<boolean> {
-        const interpreters = await this.pipenv.getInterpreters(resource);
-        return interpreters && interpreters.length > 0;
+    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
+        if (isResource(resource)){
+            const interpreters = await this.pipenv.getInterpreters(resource);
+            return interpreters && interpreters.length > 0;
+        } else {
+            return resource.type === InterpreterType.Pipenv;
+        }
     }
-    protected async getExecutionInfo(moduleName: string, _resource?: Uri): Promise<ExecutionInfo> {
+    protected async getExecutionInfo(moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {
         const args = ['install', moduleName, '--dev'];
         if (moduleName === 'black') {
             args.push('--pre');

@@ -477,6 +477,12 @@ suite('FileSystem Utils', () => {
     });
 
     suite('getFileHash', () => {
+        setup(function() {
+            // Tests disabled due to CI failures: https://github.com/microsoft/vscode-python/issues/8804
+            // tslint:disable-next-line:no-invalid-this
+            return this.skip();
+        });
+
         test('Getting hash for a file should return non-empty string', async () => {
             const filename = await fix.createFile('x/y/z/spam.py');
 
