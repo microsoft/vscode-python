@@ -4,6 +4,7 @@
 'use strict';
 
 import { assert } from 'chai';
+import * as path from 'path';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
@@ -153,11 +154,11 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a jupyter process for a given kernelspec', async () => {
         const kernelSpecs = {
-            K1: { spec: { display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } } },
-            K2: { spec: { display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } } }
+            K1: { resource_dir: 'dir1', spec: { display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } } },
+            K2: { resource_dir: 'dir2', spec: { display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } } }
         };
         when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify(kernelSpecs) });
-
+        when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const matchingKernel = await kernelService.findMatchingKernelSpec({ name: 'K2', display_name: 'disp2' }, undefined);
 
         assert.isOk(matchingKernel);
@@ -170,11 +171,12 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a jupyter process for a given interpreter', async () => {
         const kernelSpecs = {
-            K1: { spec: { display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } } },
-            K2: { spec: { display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } } }
+            K1: { resource_dir: 'dir1', spec: { display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } } },
+            K2: { resource_dir: 'dir2', spec: { display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } } }
         };
         when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify(kernelSpecs) });
         when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
+        when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const interpreter: PythonInterpreter = {
             path: 'Some Path2',
             sysPrefix: 'xyz',
