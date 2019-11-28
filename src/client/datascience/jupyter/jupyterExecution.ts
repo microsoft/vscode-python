@@ -12,6 +12,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -54,11 +55,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
+        activationHelper: IEnvironmentActivationService,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
         this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
-            processServiceFactory, interpreterService, fileSystem);
+            processServiceFactory, interpreterService, fileSystem, activationHelper);
         this.notebookStarter = new NotebookStarter(executionFactory, this.commandFinder,
             this.kernelService, fileSystem, serviceContainer);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));

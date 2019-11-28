@@ -20,6 +20,8 @@ import { JupyterExecutionBase } from '../../../../client/datascience/jupyter/jup
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IJupyterCommand, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
+import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
@@ -33,6 +35,7 @@ suite('Data Science - KernelService', () => {
     let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
     let kernelSpecCmd: IJupyterCommand;
+    let activationHelper: IEnvironmentActivationService;
 
     setup(() => {
         jupyterExecution = mock(JupyterExecutionBase);
@@ -42,7 +45,7 @@ suite('Data Science - KernelService', () => {
         fs = mock(FileSystem);
         sessionManager = mock(JupyterSessionManager);
         kernelSpecCmd = mock(InterpreterJupyterNotebookCommand);
-
+        activationHelper = mock(EnvironmentActivationService);
         when(cmdFinder.findBestCommand(JupyterCommands.KernelSpecCommand)).thenResolve({ status: ModuleExistsStatus.Found, command: instance(kernelSpecCmd) });
 
         kernelService = new KernelService(
@@ -51,7 +54,8 @@ suite('Data Science - KernelService', () => {
             { push: noop, dispose: async () => noop() },
             instance(processServiceFactory),
             instance(interperterService),
-            instance(fs)
+            instance(fs),
+            instance(activationHelper)
         );
     });
 

@@ -14,6 +14,7 @@ import {
     IDisposableRegistry,
     ILogger
 } from '../../common/types';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import {
@@ -42,6 +43,7 @@ type JupyterExecutionClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
+        activationHelper: IEnvironmentActivationService,
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };

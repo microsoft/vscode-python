@@ -33,6 +33,10 @@ export type Version = {
     prerelease: string[];
 };
 
+export type ReadWrite<T> = {
+    -readonly [P in keyof T]: T[P];
+};
+
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
 
 export interface IPersistentStateFactory {

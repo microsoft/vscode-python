@@ -11,13 +11,14 @@ import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning, traceDecorators } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { IAsyncDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposableRegistry, ReadWrite } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../../constants';
 import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -37,7 +38,8 @@ export class KernelService {
         private readonly asyncRegistry: IAsyncDisposableRegistry,
         private readonly processServiceFactory: IProcessServiceFactory,
         private readonly interpreterService: IInterpreterService,
-        private readonly fileSystem: IFileSystem
+        private readonly fileSystem: IFileSystem,
+        private readonly activationHelper: IEnvironmentActivationService
     ) {}
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given spec.
@@ -139,15 +141,33 @@ export class KernelService {
             const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
-        if (kernel instanceof){
-            const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+        if (!(kernel instanceof JupyterKernelSpec)) {
+            const error = `Kernel not registered locally, created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
-        if (!kernel.path){
-            const error = `kernelspec.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+        if (!kernel.specFile){
+            const error = `kernel.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
-        const kernelJson = this.fileSystem.readFile(kernel.path);
+        const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fileSystem.readFile(kernel.specFile));
+
+        // If this is conda environment, then add the environment variables.
+        if (interpreter.type !== InterpreterType.Conda){
+            specModel.env = await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)
+                                    .catch(noop).then(env => env || {});
+        }
+
+        // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
+        // We'll need information such as interpreter type, display name, path, etc...
+        // Its just a JSON file, and the information is small, hence might as well store everything.
+        specModel.metadata = specModel.metadata || {};
+        specModel.metadata.interpreter = interpreter;
+
+        // Update the kernel.json with our new stuff.
+        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2));
+        kernel.metadata = specModel.metadata;
+
+        return kernel;
     }
     /**
      * Not all characters are allowed in a kernel name.
