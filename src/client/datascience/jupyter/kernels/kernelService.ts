@@ -121,6 +121,19 @@ export class KernelService {
             }
         }
     }
+    /**
+     * Registers an interprter as a kernel.
+     * The assumption is that `ipykernel` has been installed in the interpreter.
+     * Kernel created will have following characteristics:
+     * - display_name = Display name of the interpreter.
+     * - metadata.interperter = Interpreter information (useful in finding a kernel that matches a given interpreter)
+     * - env = Will have environment variables of the activated environment.
+     *
+     * @param {PythonInterpreter} interpreter
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<IJupyterKernelSpec>}
+     * @memberof KernelService
+     */
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec> {
         if (!interpreter.displayName){
