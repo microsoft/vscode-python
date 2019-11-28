@@ -18,7 +18,7 @@ import {
     IWebPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
-import { WebPanelProvider } from '../../../client/common/application/webPanelProvider';
+import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';

@@ -646,7 +646,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 }
 
                 // Return our dummy web panel
-                return webPanel.object;
+                return Promise.resolve(webPanel.object);
             });
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             const message = createMessageEvent(m);

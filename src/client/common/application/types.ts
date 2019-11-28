@@ -982,7 +982,7 @@ export interface IWebPanelProvider {
      * @returns {IWebPanel}
      * @memberof IWebPanelProvider
      */
-    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): IWebPanel;
+    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): Promise<IWebPanel>;
 }
 
 // Wraps the vsls liveshare API

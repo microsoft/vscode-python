@@ -4,7 +4,7 @@
 
 import { IServiceManager } from '../../ioc/types';
 import { IWebPanelProvider } from '../application/types';
-import { WebPanelProvider } from '../application/webPanelProvider';
+import { WebPanelProvider } from '../application/webPanels/webPanelProvider';
 import { ProductType } from '../types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';

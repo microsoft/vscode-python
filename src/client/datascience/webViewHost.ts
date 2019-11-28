@@ -280,7 +280,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
     }
 
-    private loadWebPanel() {
+    private async loadWebPanel() {
         traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
 
         // Create our web panel (it's the UI that shows up for the history)
@@ -292,7 +292,7 @@ export class WebViewHost<IMapping> implements IDisposable {
             traceInfo('Loading web view...');
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
-            this.webPanel = this.provider.create(this.viewColumn, this.messageListener, this.title, this.rootPath, this.scripts, '', settings);
+            this.webPanel = await this.provider.create(this.viewColumn, this.messageListener, this.title, this.rootPath, this.scripts, '', settings);
 
             traceInfo('Web view created.');
         }
