@@ -200,7 +200,7 @@ suite('Debugging - Adapter Factory', () => {
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        await expect(promise).to.eventually.be.rejectedWith('Port must be specified for request type attach');
+        await expect(promise).to.eventually.be.rejectedWith('Port or processId must be specified for request type attach');
     });
 
     test('Throw error if in DA experiment, configuration is attach and port and process ID are not specified', async () => {
@@ -209,7 +209,7 @@ suite('Debugging - Adapter Factory', () => {
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        await expect(promise).to.eventually.be.rejectedWith('Port must be specified for request type attach');
+        await expect(promise).to.eventually.be.rejectedWith('Port or processId must be specified for request type attach');
     });
 
     test('Return old node debugger when not in the experiment', async () => {
