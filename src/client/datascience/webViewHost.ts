@@ -52,7 +52,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
 
         // Do the same thing a reload would do
-        this.reload();
+        this.reload().ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -97,7 +97,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         }
     }
 
-    protected reload() {
+    protected async reload() {
         // Make not disposed anymore
         this.disposed = false;
 
@@ -110,7 +110,7 @@ export class WebViewHost<IMapping> implements IDisposable {
         this.themeIsDarkPromise = createDeferred<boolean>();
 
         // Load our actual web panel
-        this.loadWebPanel();
+        return this.loadWebPanel();
     }
 
     protected get isDisposed(): boolean {
