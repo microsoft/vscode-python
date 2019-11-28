@@ -151,11 +151,10 @@ export class KernelService {
         }
         const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fileSystem.readFile(kernel.specFile));
 
-        // If this is conda environment, then add the environment variables.
-        if (interpreter.type !== InterpreterType.Conda){
-            specModel.env = await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)
-                                    .catch(noop).then(env => env || {});
-        }
+        // Get the activated environment variables (as a work around for `conda run` and similar).
+        // This ensures the code runs within the context of an activated environment.
+        specModel.env = await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)
+                                .catch(noop).then(env => env || {});
 
         // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
         // We'll need information such as interpreter type, display name, path, etc...
