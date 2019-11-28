@@ -33,11 +33,13 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             const isAttach = configuration.request === 'attach';
             const port = configuration.port ?? 0;
+            // When processId is provided we may have to inject the debugger into the process.
+            // This is done by the debug adapter, so we need to start it. The adapter will handle injecting the debugger when it receives the attach request.
             const processId = configuration.processId ?? 0;
 
             if (isAttach && processId === 0) {
                 if (port === 0) {
-                    throw new Error('Port must be specified for request type attach');
+                    throw new Error('Port or processId must be specified for request type attach');
                 } else {
                     return new DebugAdapterServer(port, configuration.host);
                 }
