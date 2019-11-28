@@ -11,7 +11,7 @@ import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceError, traceInfo, traceWarning, traceDecorators } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry } from '../../../common/types';
@@ -119,6 +119,7 @@ export class KernelService {
             }
         }
     }
+    @traceDecorators.error('Failed to register an interpreter as a kernel')
     public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec> {
         if (!interpreter.displayName){
             throw new Error('Interpreter does not have a display name');
@@ -127,11 +128,26 @@ export class KernelService {
         if (ipykernelCommand.status === ModuleExistsStatus.NotFound || !ipykernelCommand.command){
             throw new Error('Command not found to install the kernel');
         }
-        await ipykernelCommand.command.exec(['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
+        const name = this.generateKernelNameForIntepreter(interpreter);
+        const output = await ipykernelCommand.command.exec(['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
             throwOnStdErr: true,
             encoding: 'utf8',
             token: cancelToken
         });
+        const kernel = await this.findMatchingKernelSpec({display_name: interpreter.displayName, name}, undefined, cancelToken);
+        if (!kernel){
+            const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+            throw new Error(error);
+        }
+        if (kernel instanceof){
+            const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+            throw new Error(error);
+        }
+        if (!kernel.path){
+            const error = `kernelspec.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+            throw new Error(error);
+        }
+        const kernelJson = this.fileSystem.readFile(kernel.path);
     }
     /**
      * Not all characters are allowed in a kernel name.
@@ -143,8 +159,7 @@ export class KernelService {
      * @memberof KernelService
      */
     private generateKernelNameForIntepreter(interpreter: PythonInterpreter): string {
-        const validName = (interpreter.displayName || '').replace(/[A-Za-z0-9]/g, '');
-        return `${validName}_${this.fileSystem.getFileHash(interpreter.path)}`;
+        return `${interpreter.displayName || ''}_${this.fileSystem.getFileHash(interpreter.path)}`.replace(/[^A-Za-z0-9]/g, '');
     }
     private async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         const enumerator = sessionManager ? sessionManager.getActiveKernelSpecs() : this.enumerateSpecs(cancelToken);
@@ -325,7 +340,7 @@ export class KernelService {
         return bestSpec;
     }
 
-    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> => {
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
         // Ignore errors if there are no kernels.
         const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
 
@@ -356,7 +371,7 @@ export class KernelService {
                     return;
                 }
             }));
-            return specs.filter(item => !!item).map(item => item as IJupyterKernelSpec);
+            return specs.filter(item => !!item).map(item => item as JupyterKernelSpec);
         } catch (ex) {
             traceError('Failed to list kernels', ex);
             // This is failing for some folks. In that case return nothing
