@@ -134,6 +134,7 @@ export class KernelService {
      * @returns {Promise<IJupyterKernelSpec>}
      * @memberof KernelService
      */
+    @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec> {
         if (!interpreter.displayName){
