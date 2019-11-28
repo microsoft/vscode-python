@@ -137,7 +137,7 @@ export class WebPanel implements IWebPanel {
                 </style>
             </head>
             <body>
-                <iframe src="http://localhost:${this.port}?scripts=${scripts.join('%')}" frameborder="0" style="display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe src="http://localhost:${this.port}?scripts=${scripts.join('%')}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }
