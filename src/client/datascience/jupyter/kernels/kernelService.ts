@@ -18,7 +18,7 @@ import { IAsyncDisposableRegistry, ReadWrite } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
-import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../../constants';
 import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
