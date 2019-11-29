@@ -19,7 +19,7 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IApplicationEnvironment) private readonly application: IApplicationEnvironment,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
-    ) {}
+    ) { }
     public async activate(resource: Resource): Promise<void> {
         this.updateTestSettings(resource).ignoreErrors();
     }
@@ -67,10 +67,14 @@ export class UpdateTestSettingService implements IExtensionActivationService {
         const setting_pep8_cat_severity = new RegExp('\\.pep8CategorySeverity\\.', 'g');
         const setting_pep8_enabled = new RegExp('\\.pep8Enabled', 'g');
         const setting_pep8_path = new RegExp('\\.(?<!auto)pep8Path', 'g');
+        const setting_jedi_disabled = new RegExp('\\.jediEnabled": *false', 'g');
+        const setting_jedi_enabled = new RegExp('\\.jediEnabled": *true', 'g');
         fileContents = fileContents.replace(setting_pep8_args, '.pycodestyleArgs');
         fileContents = fileContents.replace(setting_pep8_cat_severity, '.pycodestyleCategorySeverity.');
         fileContents = fileContents.replace(setting_pep8_enabled, '.pycodestyleEnabled');
         fileContents = fileContents.replace(setting_pep8_path, '.pycodestylePath');
+        fileContents = fileContents.replace(setting_jedi_disabled, '.languageServer": "microsoft"');
+        fileContents = fileContents.replace(setting_jedi_enabled, '.languageServer": "jedi"');
 
         await this.fs.writeFile(filePath, fileContents);
     }

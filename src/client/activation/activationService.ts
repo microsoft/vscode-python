@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, OutputChannel, Uri } from 'vscode';
 import { LSNotSupportedDiagnosticServiceId } from '../application/diagnostics/checks/lsNotSupported';
 import { IDiagnosticsService } from '../application/diagnostics/types';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
@@ -143,8 +143,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     /**
-     * Checks if user is using Jedi as intellisense
-     * @returns `jedi` if user is using jedi, `microsoft` if user is using language server
+     * Checks the language server user is using as intellisense
+     * @returns `jedi` if user is using jedi, `microsoft` if user is using microsoft language server
      * or `none` if using neither.
      */
     public getLanguageServerSetting(): LanguageServerType {

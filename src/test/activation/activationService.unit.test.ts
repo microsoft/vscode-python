@@ -459,7 +459,7 @@ suite('Activation - ActivationService', () => {
                     workspaceService.verifyAll();
                     activator3.verifyAll();
                 });
-            } else {
+            } else if (languageServerValue === 'jedi') {
                 test('Jedi is only activated once', async () => {
                     pythonSettings.setup(p => p.languageServer).returns(() => languageServerValue);
                     const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
@@ -588,8 +588,8 @@ suite('Activation - ActivationService', () => {
                 .verifiable(TypeMoq.Times.exactly(2));
             state.setup(s => s.updateValue(TypeMoq.It.isValue(jedi)))
                 .returns(() => {
-                state.setup(s => s.value).returns(() => jedi);
-                return Promise.resolve();
+                    state.setup(s => s.value).returns(() => jedi);
+                    return Promise.resolve();
                 })
                 .verifiable(TypeMoq.Times.once());
 

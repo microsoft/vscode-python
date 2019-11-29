@@ -81,7 +81,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             assert.deepEqual(files, []);
             verify(workspace.getWorkspaceFolder(resource)).once();
         });
-        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function() {
+        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function () {
             if (!resource) {
                 return this.skip();
             }
@@ -93,7 +93,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             assert.deepEqual(files, ['user.json', path.join(Uri.file('folder1').fsPath, '.vscode', 'settings.json')]);
             verify(workspace.getWorkspaceFolder(resource)).once();
         });
-        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function() {
+        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function () {
             if (!resource) {
                 return this.skip();
             }
