@@ -47,7 +47,7 @@ export class PythonExecutionService implements IPythonExecutionService {
             let interpreterInfoTimeout = this.configService.getSettings().retrieveInterpreterInfoTimeout;
 
             if (!interpreterInfoTimeout || interpreterInfoTimeout === 0) {
-                interpreterInfoTimeout = 120;
+                interpreterInfoTimeout = 5;
             }
 
             const jsonValue = await waitForPromise(this.procService.exec(this.pythonPath, [file], { mergeStdOutErr: true }), interpreterInfoTimeout * 1000)
