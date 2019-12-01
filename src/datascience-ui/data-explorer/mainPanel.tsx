@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import './mainPanel.css';
 
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
@@ -14,18 +15,18 @@ import {
     IDataViewerMapping,
     IGetRowsResponse
 } from '../../client/datascience/data-viewing/types';
-import { IJupyterVariable } from '../../client/datascience/types';
+import { SharedMessages } from '../../client/datascience/messages';
+import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
+import { loadDefaultSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
 
 // Our css has to come after in order to override body styles
-import './mainPanel.css';
-
 export interface IMainPanelProps {
     skipDefault?: boolean;
     baseTheme: string;
@@ -41,6 +42,7 @@ interface IMainPanelState {
     filters: {};
     indexColumn: string;
     styleReady: boolean;
+    settings: IDataScienceExtraSettings;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -68,7 +70,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
-                styleReady: false
+                styleReady: false,
+                settings: loadDefaultSettings()
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -81,7 +84,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
-                styleReady: false
+                styleReady: false,
+                settings: loadDefaultSettings()
             };
         }
     }
@@ -113,6 +117,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             <div className='main-panel' ref={this.container}>
                 <StyleInjector
                     onReady={this.saveReadyState}
+                    settings={this.state.settings}
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
                 {progressBar}
@@ -136,11 +141,23 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
+            case SharedMessages.UpdateSettings:
+                this.updateSettings(payload);
+                break;
+
             default:
                 break;
         }
 
         return false;
+    }
+
+    private updateSettings(content: string) {
+        const newSettingsJSON = JSON.parse(content);
+        const newSettings = newSettingsJSON as IDataScienceExtraSettings;
+        this.setState({
+            settings: newSettings
+        });
     }
 
     private saveReadyState = () => {

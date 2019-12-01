@@ -22,7 +22,7 @@ export function createDocument(inputText: string, fileName: string, fileVersion:
     document.setup(d => d.version).returns(() => fileVersion).verifiable(times);
 
     // Next add the lines in
-    document.setup(d => d.lineCount).returns(() => inputLines.length).verifiable(times);
+    document.setup(d => d.lineCount).returns(() => inputLines.length);
 
     const textLines = inputLines.map((line, index) => {
         const textLine = TypeMoq.Mock.ofType<TextLine>();

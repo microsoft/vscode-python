@@ -5,6 +5,12 @@
         },
         {
             "path": "uitests"
+        },
+        {
+            "path": "pythonFiles"
+        },
+        {
+            "path": "src/ipywidgets"
         }
     ],
     "settings": {

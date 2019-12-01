@@ -38,7 +38,7 @@ export function initialize() {
             return mockedVSCode;
         }
         if (request === 'vscode-extension-telemetry') {
-            return { default: vscMockTelemetryReporter };
+            return { default: vscMockTelemetryReporter as any };
         }
         // less files need to be in import statements to be converted to css
         // But we don't want to try to load them in the mock vscode
@@ -81,6 +81,9 @@ mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeIt
 mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
 mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable;
 mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
+mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
+mockedVSCode.FileType = vscodeMocks.vscMock.FileType;
+mockedVSCode.FileSystemError = vscodeMocks.vscMockExtHostedTypes.FileSystemError;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

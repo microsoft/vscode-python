@@ -3,7 +3,7 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { TextDocument, TextEditor, Uri } from 'vscode';
+import { Event, EventEmitter, TextDocument, TextEditor, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { JUPYTER_LANGUAGE } from '../../common/constants';
@@ -17,10 +17,16 @@ import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INo
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
+
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
     private executedEditors: Set<string> = new Set<string>();
+    private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     private notebookCount: number = 0;
     private openedNotebookCount: number = 0;
+    private nextNumber: number = 1;
+    public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
+        return this._onDidOpenNotebookEditor.event;
+    }
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
@@ -71,7 +77,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         sendTelemetryEvent(Telemetry.NotebookRunCount, this.executedEditors.size);
         sendTelemetryEvent(Telemetry.NotebookWorkspaceCount, this.notebookCount);
     }
-
     public get activeEditor(): INotebookEditor | undefined {
         const active = [...this.activeEditors.entries()].find(e => e[1].active);
         if (active) {
@@ -105,11 +110,15 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
     }
 
     @captureTelemetry(Telemetry.CreateNewNotebook, undefined, false)
-    public async createNew(): Promise<INotebookEditor> {
+    public async createNew(contents?: string): Promise<INotebookEditor> {
         // Create a new URI for the dummy file using our root workspace path
         const uri = await this.getNextNewNotebookUri();
         this.notebookCount += 1;
-        return this.open(uri, '');
+        if (contents) {
+            return this.open(uri, contents);
+        } else {
+            return this.open(uri, '');
+        }
     }
 
     public async getNotebookOptions(): Promise<INotebookServerOptions> {
@@ -129,15 +138,16 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             purpose: Identifiers.HistoryPurpose  // Share the same one as the interactive window. Just need a new session
         };
     }
+
     /**
      * Open ipynb files when user opens an ipynb file.
      *
      * @private
      * @memberof NativeEditorProvider
      */
-    private onDidChangeActiveTextEditorHandler(editor?: TextEditor){
+    private onDidChangeActiveTextEditorHandler(editor?: TextEditor) {
         // I we're a source control diff view, then ignore this editor.
-        if (!editor || this.isEditorPartOfDiffView(editor)){
+        if (!editor || this.isEditorPartOfDiffView(editor)) {
             return;
         }
         this.openNotebookAndCloseEditor(editor.document, true).ignoreErrors();
@@ -162,7 +172,17 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
 
     private onOpenedEditor(e: INotebookEditor) {
         this.activeEditors.set(e.file.fsPath, e);
+        this.disposables.push(e.saved(this.onSavedEditor.bind(this, e.file.fsPath)));
         this.openedNotebookCount += 1;
+        this._onDidOpenNotebookEditor.fire(e);
+    }
+
+    private onSavedEditor(oldPath: string, e: INotebookEditor) {
+        // Switch our key for this editor
+        if (this.activeEditors.has(oldPath)) {
+            this.activeEditors.delete(oldPath);
+        }
+        this.activeEditors.set(e.file.fsPath, e);
     }
 
     private async getNextNewNotebookUri(): Promise<Uri> {
@@ -170,7 +190,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         let number = 1;
         const dir = this.workspace.rootPath;
         if (dir) {
-            const existing = await this.fileSystem.search(`${dir}/${localize.DataScience.untitledNotebookFileName()}-*.ipynb`);
+            const existing = await this.fileSystem.search(path.join(dir, `${localize.DataScience.untitledNotebookFileName()}-*.ipynb`));
 
             // Sort by number
             existing.sort();
@@ -181,24 +201,25 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
                 if (match && match.length > 1) {
                     number = parseInt(match[2], 10);
                 }
+                return Uri.file(path.join(dir, `${localize.DataScience.untitledNotebookFileName()}-${number + 1}`));
             }
-            return Uri.file(path.join(dir, `${localize.DataScience.untitledNotebookFileName()}-${number}`));
         }
 
-        return Uri.file(`${localize.DataScience.untitledNotebookFileName()}-${number}`);
+        const result = Uri.file(`${localize.DataScience.untitledNotebookFileName()}-${this.nextNumber}`);
+        this.nextNumber += 1;
+        return result;
     }
 
     private openNotebookAndCloseEditor = async (document: TextDocument, closeDocumentBeforeOpeningNotebook: boolean) => {
         // See if this is an ipynb file
-        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor &&
-            !this.activeEditors.has(document.uri.fsPath)) {
+        if (this.isNotebook(document) && this.configuration.getSettings().datascience.useNotebookEditor) {
+            const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
             try {
-                const contents = document.  getText();
+                const contents = document.getText();
                 const uri = document.uri;
-                const closeActiveEditorCommand = 'workbench.action.closeActiveEditor';
 
                 if (closeDocumentBeforeOpeningNotebook) {
-                    if (!this.documentManager.activeTextEditor || this.documentManager.activeTextEditor.document !== document){
+                    if (!this.documentManager.activeTextEditor || this.documentManager.activeTextEditor.document !== document) {
                         await this.documentManager.showTextDocument(document);
                     }
                     await this.cmdManager.executeCommand(closeActiveEditorCommand);
@@ -207,7 +228,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
                 // Open our own editor.
                 await this.open(uri, contents);
 
-                if (!closeDocumentBeforeOpeningNotebook){
+                if (!closeDocumentBeforeOpeningNotebook) {
                     // Then switch back to the ipynb and close it.
                     // If we don't do it in this order, the close will switch to the wrong item
                     await this.documentManager.showTextDocument(document);
@@ -226,14 +247,14 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
      * @param {TextEditor} editor
      * @memberof NativeEditorProvider
      */
-    private isEditorPartOfDiffView(editor?: TextEditor){
-        if (!editor){
+    private isEditorPartOfDiffView(editor?: TextEditor) {
+        if (!editor) {
             return false;
         }
         // There's no easy way to determine if the user is openeing a diff view.
         // One simple way is to check if there are 2 editor opened, and if both editors point to the same file
         // One file with the `file` scheme and the other with the `git` scheme.
-        if (this.documentManager.visibleTextEditors.length <= 1){
+        if (this.documentManager.visibleTextEditors.length <= 1) {
             return false;
         }
 
@@ -242,18 +263,18 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         // Possible we have a git diff view (with two editors git and file scheme), and we open the file view
         // on the side (different view column).
         const gitSchemeEditor = this.documentManager.visibleTextEditors.find(editorUri =>
-                                editorUri.document.uri.scheme === 'git' &&
-                                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath));
+            editorUri.document.uri.scheme === 'git' &&
+            this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath));
 
-        if (!gitSchemeEditor){
+        if (!gitSchemeEditor) {
             return false;
         }
 
         const fileSchemeEditor = this.documentManager.visibleTextEditors.find(editorUri =>
-                                    editorUri.document.uri.scheme === 'file' &&
-                                    this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
-                                    editorUri.viewColumn === gitSchemeEditor.viewColumn);
-        if (!fileSchemeEditor){
+            editorUri.document.uri.scheme === 'file' &&
+            this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
+            editorUri.viewColumn === gitSchemeEditor.viewColumn);
+        if (!fileSchemeEditor) {
             return false;
         }
 

@@ -23,6 +23,7 @@ import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../com
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
+import { JupyterCommands } from './constants';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -98,6 +99,8 @@ export interface INotebook extends IAsyncDisposable {
     setLaunchingFile(file: string): Promise<void>;
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
+    addLogger(logger: INotebookExecutionLogger): void;
+    getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
 }
 
 export interface INotebookServerOptions {
@@ -106,7 +109,9 @@ export interface INotebookServerOptions {
     usingDarkTheme?: boolean;
     useDefaultConfig?: boolean;
     workingDir?: string;
+    interpreterPath?: string;
     purpose: string;
+    metadata?: nbformat.INotebookMetadata;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -118,7 +123,9 @@ export interface INotebookExecutionLogger {
 export const IGatherExecution = Symbol('IGatherExecution');
 export interface IGatherExecution {
     enabled: boolean;
+    logExecution(vscCell: ICell): void;
     gatherCode(vscCell: ICell): string;
+    resetLog(): void;
 }
 
 export const IJupyterExecution = Symbol('IJupyterExecution');
@@ -163,30 +170,51 @@ export interface IJupyterSession extends IAsyncDisposable {
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
-    requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined;
-    requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+    requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
+    sendInputReply(content: string): void;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
 export interface IJupyterSessionManagerFactory {
-    create(connInfo: IConnection): Promise<IJupyterSessionManager>;
+    create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager>;
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
     getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
+    getRunningKernels(): Promise<IJupyterKernel[]>;
+}
+
+export interface IJupyterKernel {
+    name: string | undefined;
+    lastActivityTime: Date;
+    numberOfConnections: number;
 }
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {
     name: string | undefined;
     language: string | undefined;
     path: string | undefined;
+    /**
+     * Kernel display name.
+     *
+     * @type {string}
+     * @memberof IJupyterKernelSpec
+     */
+    readonly display_name?: string;
+    /**
+     * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
+     * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
+     */
+    // tslint:disable-next-line: no-any
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
 export interface INotebookImporter extends Disposable {
-    importFromFile(file: string): Promise<string>;
+    importFromFile(contentsFile: string, originalFile?: string): Promise<string>; // originalFile is the base file if file is a temp file / location
     importCellsFromFile(file: string): Promise<ICell[]>;
     importCells(json: string): Promise<ICell[]>;
 }
@@ -239,9 +267,10 @@ export const INotebookEditorProvider = Symbol('INotebookEditorProvider');
 export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
+    readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
-    createNew(): Promise<INotebookEditor>;
+    createNew(contents?: string): Promise<INotebookEditor>;
     getNotebookOptions(): Promise<INotebookServerOptions>;
 }
 
@@ -383,10 +412,10 @@ export const IStatusProvider = Symbol('IStatusProvider');
 export interface IStatusProvider {
     // call this function to set the new status on the active
     // interactive window. Dispose of the returned object when done.
-    set(message: string, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Disposable;
+    set(message: string, showInWebView: boolean, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Disposable;
 
     // call this function to wait for a promise while displaying status
-    waitWithStatus<T>(promise: () => Promise<T>, message: string, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Promise<T>;
+    waitWithStatus<T>(promise: () => Promise<T>, message: string, showInWebView: boolean, timeout?: number, canceled?: () => void, interactivePanel?: IInteractiveBase): Promise<T>;
 }
 
 export interface IJupyterCommand {
@@ -397,7 +426,7 @@ export interface IJupyterCommand {
 
 export const IJupyterCommandFactory = Symbol('IJupyterCommandFactory');
 export interface IJupyterCommandFactory {
-    createInterpreterCommand(args: string[], interpreter: PythonInterpreter): IJupyterCommand;
+    createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand;
     createProcessCommand(exe: string, args: string[]): IJupyterCommand;
 }
 

@@ -189,6 +189,18 @@ suite('Terminal Environment Activation conda', () => {
             envName: environmentNameHasSpaces,
             expectedResult: ['source path/to/activate', 'conda activate "Env with spaces"'],
             isWindows: false
+        },
+        {
+            testName: 'Activation provides correct activation commands (windows) after 4.4.0 given interpreter path is provided, and no env name',
+            envName: '',
+            expectedResult: ['path/to/activate', `conda activate .`],
+            isWindows: true
+        },
+        {
+            testName: 'Activation provides correct activation commands (non-windows) after 4.4.0 given interpreter path is provided, and no env name',
+            envName: '',
+            expectedResult: ['source path/to/activate', `conda activate .`],
+            isWindows: false
         }
     ];
 
@@ -215,45 +227,43 @@ suite('Terminal Environment Activation conda', () => {
         });
     });
 
-    async function testCondaActivationCommands(
-        isWindows: boolean,
-        isOsx: boolean,
-        isLinux: boolean,
-        pythonPath: string,
-        shellType: TerminalShellType,
-        hasSpaceInEnvironmentName = false
-    ) {
+    async function testCondaActivationCommands(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, shellType: TerminalShellType, envName: string) {
         terminalSettings.setup(t => t.activateEnvironment).returns(() => true);
         platformService.setup(p => p.isLinux).returns(() => isLinux);
         platformService.setup(p => p.isWindows).returns(() => isWindows);
         platformService.setup(p => p.isMac).returns(() => isOsx);
         condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(true));
         pythonSettings.setup(s => s.pythonPath).returns(() => pythonPath);
-        const envName = hasSpaceInEnvironmentName ? 'EnvA' : 'Env A';
         condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve({ name: envName, path: path.dirname(pythonPath) }));
 
         const activationCommands = await new CondaActivationCommandProvider(condaService.object, platformService.object, configService.object).getActivationCommands(
             undefined,
             shellType
         );
-        let expectedActivationCommamnd: string[] | undefined;
+        let expectedActivationCommand: string[] | undefined;
+        const expectEnvActivatePath = path.dirname(pythonPath);
         switch (shellType) {
             case TerminalShellType.powershell:
-            case TerminalShellType.powershellCore: {
-                expectedActivationCommamnd = [`conda activate ${envName.toCommandArgument()}`];
-                break;
-            }
+            case TerminalShellType.powershellCore:
             case TerminalShellType.fish: {
-                expectedActivationCommamnd = [`conda activate ${envName.toCommandArgument()}`];
+                if (envName !== '') {
+                    expectedActivationCommand = [`conda activate ${envName.toCommandArgument()}`];
+                } else {
+                    expectedActivationCommand = [`conda activate ${expectEnvActivatePath}`];
+                }
                 break;
             }
             default: {
-                expectedActivationCommamnd = isWindows ? [`activate ${envName.toCommandArgument()}`] : [`source activate ${envName.toCommandArgument()}`];
+                if (envName !== '') {
+                    expectedActivationCommand = isWindows ? [`activate ${envName.toCommandArgument()}`] : [`source activate ${envName.toCommandArgument()}`];
+                } else {
+                    expectedActivationCommand = isWindows ? [`activate ${expectEnvActivatePath}`] : [`source activate ${expectEnvActivatePath}`];
+                }
                 break;
             }
         }
-        if (expectedActivationCommamnd) {
-            expect(activationCommands).to.deep.equal(expectedActivationCommamnd, 'Incorrect Activation command');
+        if (expectedActivationCommand) {
+            expect(activationCommands).to.deep.equal(expectedActivationCommand, 'Incorrect Activation command');
         } else {
             expect(activationCommands).to.equal(undefined, 'Incorrect Activation command');
         }
@@ -261,33 +271,49 @@ suite('Terminal Environment Activation conda', () => {
     getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows)`, async () => {
             const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
-            await testCondaActivationCommands(true, false, false, pythonPath, shellType.value);
+            await testCondaActivationCommands(true, false, false, pythonPath, shellType.value, 'Env');
         });
 
         test(`Conda activation command for shell ${shellType.name} on (linux)`, async () => {
             const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-            await testCondaActivationCommands(false, false, true, pythonPath, shellType.value);
+            await testCondaActivationCommands(false, false, true, pythonPath, shellType.value, 'Env');
         });
 
         test(`Conda activation command for shell ${shellType.name} on (mac)`, async () => {
             const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-            await testCondaActivationCommands(false, true, false, pythonPath, shellType.value);
+            await testCondaActivationCommands(false, true, false, pythonPath, shellType.value, 'Env');
         });
     });
     getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
         test(`Conda activation command for shell ${shellType.name} on (windows), containing spaces in environment name`, async () => {
             const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
-            await testCondaActivationCommands(true, false, false, pythonPath, shellType.value, true);
+            await testCondaActivationCommands(true, false, false, pythonPath, shellType.value, 'Env A');
         });
 
         test(`Conda activation command for shell ${shellType.name} on (linux), containing spaces in environment name`, async () => {
             const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-            await testCondaActivationCommands(false, false, true, pythonPath, shellType.value, true);
+            await testCondaActivationCommands(false, false, true, pythonPath, shellType.value, 'Env A');
         });
 
         test(`Conda activation command for shell ${shellType.name} on (mac), containing spaces in environment name`, async () => {
             const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
-            await testCondaActivationCommands(false, true, false, pythonPath, shellType.value, true);
+            await testCondaActivationCommands(false, true, false, pythonPath, shellType.value, 'Env A');
+        });
+    });
+    getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(shellType => {
+        test(`Conda activation command for shell ${shellType.name} on (windows), containing no environment name`, async () => {
+            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'enva', 'python.exe');
+            await testCondaActivationCommands(true, false, false, pythonPath, shellType.value, '');
+        });
+
+        test(`Conda activation command for shell ${shellType.name} on (linux), containing no environment name`, async () => {
+            const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+            await testCondaActivationCommands(false, false, true, pythonPath, shellType.value, '');
+        });
+
+        test(`Conda activation command for shell ${shellType.name} on (mac), containing no environment name`, async () => {
+            const pythonPath = path.join('users', 'xyz', '.conda', 'envs', 'enva', 'bin', 'python');
+            await testCondaActivationCommands(false, true, false, pythonPath, shellType.value, '');
         });
     });
     async function expectCondaActivationCommand(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {

@@ -7,6 +7,7 @@ import * as TypeMoq from 'typemoq';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { IConfigurationService, IDataScienceSettings, IDisposableRegistry, IPythonSettings } from '../../../client/common/types';
 import { GatherExecution } from '../../../client/datascience/gather/gather';
+import { GatherLogger } from '../../../client/datascience/gather/gatherLogger';
 import { ICell as IVscCell } from '../../../client/datascience/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -125,13 +126,14 @@ suite('DataScience code gathering unit tests', () => {
     configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
     appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
     const gatherExecution = new GatherExecution(configurationService.object, appShell.object, disposableRegistry.object, commandManager.object);
+    const gatherLogger = new GatherLogger(gatherExecution, configurationService.object);
 
     test('Logs a cell execution', async () => {
         let count = 0;
         for (const c of codeCells) {
-            await gatherExecution.postExecute(c, false);
+            await gatherLogger.postExecute(c, false);
             count += 1;
-            assert.equal(gatherExecution.executionSlicer._executionLog.length, count);
+            assert.equal(gatherExecution.executionSlicer.executionLog.length, count);
         }
     });
 
@@ -139,7 +141,7 @@ suite('DataScience code gathering unit tests', () => {
         const defaultCellMarker = '# %%';
         const cell: IVscCell = codeCells[codeCells.length - 1];
         const program = gatherExecution.gatherCode(cell);
-        const expectedProgram = `# This file contains the minimal amount of code required to produce the code cell you gathered.\n${defaultCellMarker}\nfrom bokeh.plotting import show, figure, output_notebook\n\n${defaultCellMarker}\nx = [1,2,3,4,5]\ny = [21,9,15,17,4]\n\n${defaultCellMarker}\np=figure(title='demo',x_axis_label='x',y_axis_label='y')\n\n${defaultCellMarker}\np.line(x,y,line_width=2)\n\n${defaultCellMarker}\nshow(p)\n`;
+        const expectedProgram = `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\nfrom bokeh.plotting import show, figure, output_notebook\n\n${defaultCellMarker}\nx = [1,2,3,4,5]\ny = [21,9,15,17,4]\n\n${defaultCellMarker}\np=figure(title='demo',x_axis_label='x',y_axis_label='y')\n\n${defaultCellMarker}\np.line(x,y,line_width=2)\n\n${defaultCellMarker}\nshow(p)\n`;
         assert.equal(program.trim(), expectedProgram.trim());
     });
 });

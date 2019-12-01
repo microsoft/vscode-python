@@ -1,3 +1,5 @@
+import { OSType } from '../../client/common/utils/platform';
+
 // Javascript keyCodes
 export const KeyCodes = {
     LeftArrow: 37,
@@ -9,3 +11,15 @@ export const KeyCodes = {
     End: 35,
     Home: 36
 };
+
+export function getOSType() {
+    if (window.navigator.platform.startsWith('Mac')){
+        return OSType.OSX;
+    } else if (window.navigator.platform.startsWith('Win')){
+        return OSType.Windows;
+    } else if (window.navigator.userAgent.indexOf('Linux') > 0){
+        return OSType.Linux;
+    } else {
+        return OSType.Unknown;
+    }
+}

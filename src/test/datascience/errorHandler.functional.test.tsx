@@ -1,20 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { mount } from 'enzyme';
-import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import * as vsls from 'vsls/vscode';
+
 import { IDocumentManager } from '../../client/common/application/types';
 import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
-import {
-    ICodeWatcher,
-    IInteractiveWindowProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
+import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
+import { mountConnectedMainPanel } from './testHelpers';
 
 suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
@@ -59,7 +54,7 @@ suite('DataScience Error Handler Functional Tests', () => {
         result.serviceManager.rebindInstance<IJupyterExecution>(IJupyterExecution, jupyterExecution.object);
         result.serviceManager.rebindInstance<IInstallationChannelManager>(IInstallationChannelManager, channels.object);
 
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), vsls.Role.None);
+        result.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
 
         result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         result.get<IJupyterExecution>(IJupyterExecution);

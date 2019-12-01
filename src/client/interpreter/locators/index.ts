@@ -51,7 +51,7 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         return new EventEmitter<Promise<PythonInterpreter[]>>().event;
     }
     public get hasInterpreters(): Promise<boolean> {
-        return this._hasInterpreters.promise;
+        return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
     }
 
     /**

@@ -15,7 +15,7 @@ export interface IContentPanelProps {
     baseTheme: string;
     cellVMs: ICellViewModel[];
     newCellVM?: ICellViewModel;
-    history: InputHistory;
+    history?: InputHistory;
     testMode?: boolean;
     codeTheme: string;
     submittedText: boolean;

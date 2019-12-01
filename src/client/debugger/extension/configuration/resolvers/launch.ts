@@ -12,6 +12,7 @@ import { IPlatformService } from '../../../../common/platform/types';
 import { IConfigurationService } from '../../../../common/types';
 import { DebuggerTypeName } from '../../../constants';
 import { DebugOptions, LaunchRequestArguments } from '../../../types';
+import { ILaunchDebugConfigurationResolverExperiment } from '../types';
 import { BaseConfigurationResolver } from './base';
 import { IDebugEnvironmentVariablesService } from './helper';
 
@@ -23,11 +24,16 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         @inject(IDiagnosticsService) @named(InvalidPythonPathInDebuggerServiceId) private readonly invalidPythonPathInDebuggerService: IInvalidPythonPathInDebuggerService,
         @inject(IPlatformService) platformService: IPlatformService,
         @inject(IConfigurationService) configurationService: IConfigurationService,
-        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService
+        @inject(IDebugEnvironmentVariablesService) private readonly debugEnvHelper: IDebugEnvironmentVariablesService,
+        @inject(ILaunchDebugConfigurationResolverExperiment) private readonly configExperiment: ILaunchDebugConfigurationResolverExperiment
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments, _token?: CancellationToken): Promise<LaunchRequestArguments | undefined> {
+    public async resolveDebugConfiguration(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: LaunchRequestArguments,
+        _token?: CancellationToken
+    ): Promise<LaunchRequestArguments | undefined> {
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         const config = debugConfiguration as LaunchRequestArguments;
@@ -44,6 +50,9 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         }
 
         await this.provideLaunchDefaults(workspaceFolder, config);
+
+        this.configExperiment.modifyConfigurationBasedOnExperiment(config);
+
         const isValid = await this.validateLaunchConfiguration(folder, config);
         if (!isValid) {
             return;
@@ -118,9 +127,7 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
             this.debugOption(debugOptions, DebugOptions.FixFilePathCase);
         }
         const isFlask = this.isDebuggingFlask(debugConfiguration);
-        if ((debugConfiguration.pyramid || isFlask)
-            && debugOptions.indexOf(DebugOptions.Jinja) === -1
-            && debugConfiguration.jinja !== false) {
+        if ((debugConfiguration.pyramid || isFlask) && debugOptions.indexOf(DebugOptions.Jinja) === -1 && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
         // Unlike with attach, we do not set a default path mapping.
@@ -128,19 +135,11 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.pathMappings) {
             let pathMappings = debugConfiguration.pathMappings;
             if (pathMappings.length > 0) {
-                pathMappings = this.fixUpPathMappings(
-                    pathMappings || [],
-                    workspaceFolder ? workspaceFolder.fsPath : ''
-                );
+                pathMappings = this.fixUpPathMappings(pathMappings || [], workspaceFolder ? workspaceFolder.fsPath : '');
             }
-            debugConfiguration.pathMappings = pathMappings.length > 0
-                ? pathMappings
-                : undefined;
+            debugConfiguration.pathMappings = pathMappings.length > 0 ? pathMappings : undefined;
         }
-        this.sendTelemetry(
-            debugConfiguration.request as 'launch' | 'test',
-            debugConfiguration
-        );
+        this.sendTelemetry(debugConfiguration.request as 'launch' | 'test', debugConfiguration);
     }
 
     protected async validateLaunchConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: LaunchRequestArguments): Promise<boolean> {

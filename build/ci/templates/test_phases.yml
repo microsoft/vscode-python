@@ -44,6 +44,7 @@ steps:
     displayName: 'gulp prePublishNonBundle'
     inputs:
       targets: 'prePublishNonBundle'
+    condition: and(succeeded(), not(contains(variables['TestsToRun'], 'testSmoke')))
 
   # Run the typescript unit tests.
   #
@@ -96,6 +97,7 @@ steps:
       python -m pip install --upgrade -r build/test-requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
       python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+      python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==5.0.0a8'
     displayName: 'pip install system test requirements'
     condition: and(succeeded(), eq(variables['NeedsPythonTestReqs'], 'true'))
 
@@ -145,6 +147,13 @@ steps:
       python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
     displayName: 'pip install ipython requirements'
     condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'))
+
+
+  # Install jupyter for smoke tests.
+  - bash: |
+      python -m pip install --upgrade jupyter
+    displayName: 'pip install jupyter'
+    condition: and(succeeded(), eq(variables['NeedsIPythonReqs'], 'true'), contains(variables['TestsToRun'], 'testSmoke'))
 
   - task: PythonScript@0
     displayName: "Install PTVSD wheels"

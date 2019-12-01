@@ -11,17 +11,26 @@ import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { DebugService } from '../../../../client/common/application/debugService';
+import { IApplicationShell, IDebugService, IWorkspaceService } from '../../../../client/common/application/types';
 import { WorkspaceService } from '../../../../client/common/application/workspace';
 import { ChildProcessAttachService } from '../../../../client/debugger/extension/hooks/childProcessAttachService';
 import { ChildProcessLaunchData } from '../../../../client/debugger/extension/hooks/types';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../../../client/debugger/types';
 
 suite('Debug - Attach to Child Process', () => {
+    let shell: IApplicationShell;
+    let debugService: IDebugService;
+    let workspaceService: IWorkspaceService;
+    let attachService: ChildProcessAttachService;
+
+    setup(() => {
+        shell = mock(ApplicationShell);
+        debugService = mock(DebugService);
+        workspaceService = mock(WorkspaceService);
+        attachService = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
+    });
+
     test('Message is not displayed if debugger is launched', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
         const args: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
@@ -42,15 +51,11 @@ suite('Debug - Attach to Child Process', () => {
         const session: any = {};
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(true as any);
-        await service.attach(data, session);
+        await attachService.attach(data, session);
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
     });
     test('Message is displayed if debugger is not launched', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
         const args: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
@@ -74,17 +79,13 @@ suite('Debug - Attach to Child Process', () => {
         when(debugService.startDebugging(anything(), anything(), anything())).thenResolve(false as any);
         when(shell.showErrorMessage(anything())).thenResolve();
 
-        await service.attach(data, session);
+        await attachService.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(anything(), anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).once();
     });
     test('Use correct workspace folder', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
         const rightWorkspaceFolder: WorkspaceFolder = { name: '1', index: 1, uri: Uri.file('a') };
         const wkspace1: WorkspaceFolder = { name: '0', index: 0, uri: Uri.file('0') };
         const wkspace2: WorkspaceFolder = { name: '2', index: 2, uri: Uri.file('2') };
@@ -113,17 +114,13 @@ suite('Debug - Attach to Child Process', () => {
         when(workspaceService.workspaceFolders).thenReturn([wkspace1, rightWorkspaceFolder, wkspace2]);
         when(debugService.startDebugging(rightWorkspaceFolder, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data, session);
+        await attachService.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(rightWorkspaceFolder, anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Use empty workspace folder if right one is not found', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
         const rightWorkspaceFolder: WorkspaceFolder = { name: '1', index: 1, uri: Uri.file('a') };
         const wkspace1: WorkspaceFolder = { name: '0', index: 0, uri: Uri.file('0') };
         const wkspace2: WorkspaceFolder = { name: '2', index: 2, uri: Uri.file('2') };
@@ -152,18 +149,13 @@ suite('Debug - Attach to Child Process', () => {
         when(workspaceService.workspaceFolders).thenReturn([wkspace1, wkspace2]);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data, session);
+        await attachService.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Validate debug config when parent/root parent was launched', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const args: LaunchRequestArguments | AttachRequestArguments = {
             request: 'launch',
             type: 'python',
@@ -192,7 +184,28 @@ suite('Debug - Attach to Child Process', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data, session);
+        await attachService.attach(data, session);
+
+        verify(workspaceService.hasWorkspaceFolders).once();
+        verify(debugService.startDebugging(undefined, anything(), anything())).once();
+        const [, secondArg, thirdArg] = capture(debugService.startDebugging).last();
+        expect(secondArg).to.deep.equal(debugConfig);
+        expect(thirdArg).to.deep.equal(session);
+        verify(shell.showErrorMessage(anything())).never();
+    });
+    test('Pass data as is if data is attach debug configuration', async () => {
+        const data: AttachRequestArguments = {
+            type: 'python',
+            request: 'attach',
+            name: ''
+        };
+        const session: any = {};
+        const debugConfig = JSON.parse(JSON.stringify(data));
+
+        when(workspaceService.hasWorkspaceFolders).thenReturn(false);
+        when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
+
+        await attachService.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
@@ -202,11 +215,6 @@ suite('Debug - Attach to Child Process', () => {
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Validate debug config when parent/root parent was attached', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const args: AttachRequestArguments = {
             request: 'attach',
             type: 'python',
@@ -236,7 +244,7 @@ suite('Debug - Attach to Child Process', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(debugService.startDebugging(undefined, anything(), anything())).thenResolve(true as any);
 
-        await service.attach(data, session);
+        await attachService.attach(data, session);
 
         verify(workspaceService.hasWorkspaceFolders).once();
         verify(debugService.startDebugging(undefined, anything(), anything())).once();
@@ -246,11 +254,6 @@ suite('Debug - Attach to Child Process', () => {
         verify(shell.showErrorMessage(anything())).never();
     });
     test('Path mappings are not set when there is no workspace folder', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const args: LaunchRequestArguments & AttachRequestArguments = {
             request: 'launch',
             type: 'python',
@@ -258,16 +261,11 @@ suite('Debug - Attach to Child Process', () => {
             pythonPath: '', args: [], envFile: ''
         };
 
-        service.fixPathMappings(args);
+        attachService.fixPathMappings(args);
 
         expect(args.pathMappings).to.equal(undefined, 'Not undefined');
     });
     test('Path mappings are left untouched when they are provided', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const pathMappings = [{ localRoot: '1', remoteRoot: '2' }];
         const args: LaunchRequestArguments & AttachRequestArguments = {
             request: 'launch',
@@ -278,16 +276,11 @@ suite('Debug - Attach to Child Process', () => {
             pathMappings: pathMappings
         };
 
-        service.fixPathMappings(args);
+        attachService.fixPathMappings(args);
 
         expect(args.pathMappings).to.deep.equal(pathMappings);
     });
     test('Path mappings default to workspace folder', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const expectedPathMappings = [{ localRoot: __dirname, remoteRoot: '.' }];
         const args: LaunchRequestArguments & AttachRequestArguments = {
             request: 'launch',
@@ -297,16 +290,11 @@ suite('Debug - Attach to Child Process', () => {
             pythonPath: '', args: [], envFile: ''
         };
 
-        service.fixPathMappings(args);
+        attachService.fixPathMappings(args);
 
         expect(args.pathMappings).to.deep.equal(expectedPathMappings);
     });
     test('Path mappings default to cwd folder', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const expectedPathMappings = [{ localRoot: path.join('hello', 'world'), remoteRoot: '.' }];
         const args: LaunchRequestArguments & AttachRequestArguments = {
             request: 'launch',
@@ -317,16 +305,11 @@ suite('Debug - Attach to Child Process', () => {
             pythonPath: '', args: [], envFile: ''
         };
 
-        service.fixPathMappings(args);
+        attachService.fixPathMappings(args);
 
         expect(args.pathMappings).to.deep.equal(expectedPathMappings);
     });
     test('Path mappings default to cwd folder relative to workspace folder', async () => {
-        const shell = mock(ApplicationShell);
-        const debugService = mock(DebugService);
-        const workspaceService = mock(WorkspaceService);
-        const service = new ChildProcessAttachService(instance(shell), instance(debugService), instance(workspaceService));
-
         const expectedPathMappings = [{ localRoot: path.join(__dirname, 'hello', 'world'), remoteRoot: '.' }];
         const args: LaunchRequestArguments & AttachRequestArguments = {
             request: 'launch',
@@ -338,7 +321,7 @@ suite('Debug - Attach to Child Process', () => {
             pythonPath: '', args: [], envFile: ''
         };
 
-        service.fixPathMappings(args);
+        attachService.fixPathMappings(args);
 
         expect(args.pathMappings).to.deep.equal(expectedPathMappings);
     });

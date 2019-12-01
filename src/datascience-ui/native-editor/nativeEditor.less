@@ -2,7 +2,7 @@
 @import "../interactive-common/common.css";
 
 :root {
-    --right-offset-px: 123px;
+    --right-offset-px: 94px;
 }
 
 .toolbar-panel-button {
@@ -25,24 +25,17 @@
 }
 
 .cell-wrapper {
-    margin: 1px 2px;
-    border-color: transparent;
-    border-style: solid;
-    border-width: 2px 2px 0px 20px;
+    margin: 2px 2px 0px 0px;
     position: relative;
     min-height: 55px;
 }
 
 .cell-wrapper-focused {
-    border-color: transparent;
-    border-style: solid;
-    border-width: 2px 2px 0px 20px;
+    margin: 2px 2px 0px 0px;
 }
 
 .cell-wrapper-selected {
-    border-color: transparent;
-    border-style: solid;
-    border-width: 2px 2px 0px 20px;
+    margin: 2px 2px 0px 0px;
 }
 
 .cell-menu-bar-outer {
@@ -106,7 +99,7 @@
 .code-area {
     position: relative;
     width:100%;
-    padding-right: 10px;
+    padding-right: 8px;
     margin-bottom: 0px;
     padding-left: 2px;
     padding-top: 2px;
@@ -128,7 +121,7 @@
 }
 
 .cell-input {
-    margin: 0px 10px 0px 0px;
+    margin: 2px 10px 0px 0px;
     grid-column: 3;
     grid-row: 1;
     min-width: calc(100% - var(--right-offset-px));
@@ -140,8 +133,8 @@
 
 .controls-div {
     min-width: 34px;
-    max-width: 34px;
-    padding-left: 10px;
+    padding-left: 4px;
+    padding-right: 4px;
     display: block;
     grid-column: 2;
     grid-row: 1;
@@ -178,6 +171,41 @@
     grid-column: 3;
     grid-row: 2;
     justify-items: left;
+    background: var(--vscode-notifications-background);
+}
+
+.native-editor-celltoolbar-divider {
+    background-color: var(--vscode-badge-background);
+    height: 2px;
+}
+
+.code-toolbar {
+    visibility: visible;
+}
+
+.markdown-toolbar {
+    visibility: collapse;
+}
+
+.hover-cell-button {
+    visibility: collapse;
+}
+
+.cell-wrapper:hover .hover-cell-button {
+    visibility: visible;
+}
+
+.cell-wrapper-selected .hover-cell-button {
+    visibility: visible;
+}
+
+.cell-wrapper-focused .hover-cell-button {
+    visibility: visible;
+}
+
+.delete-cell-button {
+    right: 2px;
+    position: absolute;
     visibility: collapse;
 }
 
@@ -193,17 +221,29 @@
     visibility: visible;
 }
 
-.cell-wrapper:hover .native-editor-celltoolbar-middle {
+.cell-wrapper:hover .markdown-toolbar {
     visibility: visible;
 }
 
-.cell-wrapper-selected .native-editor-celltoolbar-middle {
+.cell-wrapper-selected .markdown-toolbar {
     visibility: visible;
 }
 
-.cell-wrapper-focused .native-editor-celltoolbar-middle {
+.cell-wrapper-focused .markdown-toolbar {
     visibility: visible;
 }
+
+// .cell-wrapper:hover .native-editor-celltoolbar-middle {
+//     visibility: visible;
+// }
+
+// .cell-wrapper-selected .native-editor-celltoolbar-middle {
+//     visibility: visible;
+// }
+
+// .cell-wrapper-focused .native-editor-celltoolbar-middle {
+//     visibility: visible;
+// }
 
 .native-editor-flyout-button {
     width: auto;
@@ -243,15 +283,6 @@
 
 .flyout-button-content {
     color: var(--override-foreground, var(--vscode-editor-foreground));
-}
-
-.save-button {
-    background: var(--vscode-button-background);
-    color: var(--vscode-button-foreground);
-    padding: 2px;
-    border: none;
-    cursor: pointer;
-    margin:2px 4px;
 }
 
 .native-button {

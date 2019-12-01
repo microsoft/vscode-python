@@ -73,6 +73,16 @@ steps:
     #   displayName: 'Uninstall canvas and install build from source (only for Linux)'
     #   condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'))
 
+    # See the help here on how to cache npm
+    # https://docs.microsoft.com/en-us/azure/devops/pipelines/caching/?view=azure-devops#nodejsnpm
+    - task: CacheBeta@0
+      inputs:
+          key: npm | $(Agent.OS) | package-lock.json
+          path: $(npm_config_cache)
+          restoreKeys: |
+            npm | $(Agent.OS)
+          displayName: Cache npm
+
     - task: Npm@1
       displayName: "npm ci"
       inputs:

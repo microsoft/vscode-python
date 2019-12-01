@@ -4,19 +4,19 @@
 jobs:
 - job: Compile
   pool:
-    vmImage: "macos-latest"
+    vmImage: "ubuntu-16.04"
   steps:
     - template: ../steps/compile.yml
 
 - job: Build
   pool:
-    vmImage: "macos-latest"
+    vmImage: "ubuntu-16.04"
   steps:
     - template: ../steps/build.yml
 
 - job: Hygiene
   pool:
-    vmImage: "macos-latest"
+    vmImage: "ubuntu-16.04"
   steps:
     - template: ../steps/initialization.yml
       parameters:

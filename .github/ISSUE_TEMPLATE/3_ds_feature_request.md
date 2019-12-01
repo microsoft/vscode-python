@@ -1,5 +1,5 @@
 ---
-name: Feature request for Notebook Editor, Interactive Window, Python Editor cells
+name: Feature request for Notebook Editor, Interactive Window, Editor cells
 about: Suggest an idea for this project
 labels: type-enhancement, data science
 ---
@@ -14,5 +14,7 @@ request template instead of this one. ***Thank you!***
 
 ## Description
 
+
+Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer
 
 

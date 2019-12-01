@@ -3,7 +3,6 @@
 
 // tslint:disable:no-var-requires no-require-imports no-any
 import { ChildProcess } from 'child_process';
-import * as fs from 'fs-extra';
 import * as path from 'path';
 // @ts-ignore
 import * as pidusage from 'pidusage';
@@ -11,6 +10,7 @@ import { CancellationToken, CancellationTokenSource, CompletionItemKind, Disposa
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
 import { IS_WINDOWS } from '../common/platform/constants';
+import { IFileSystem } from '../common/platform/types';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { BANNER_NAME_PROPOSE_LS, IConfigurationService, ILogger, IPythonExtensionBanner, IPythonSettings } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
@@ -155,7 +155,11 @@ export class JediProxy implements Disposable {
     private readonly disposables: Disposable[] = [];
     private timer?: NodeJS.Timer | number;
 
-    public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
+    public constructor(
+        private extensionRootDir: string,
+        workspacePath: string,
+        private serviceContainer: IServiceContainer
+    ) {
         this.workspacePath = workspacePath;
         const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pythonSettings = configurationService.getSettings(Uri.file(workspacePath));
@@ -652,6 +656,7 @@ export class JediProxy implements Disposable {
             if (lines.length === 0) {
                 return '';
             }
+            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
             const exists = await fs.pathExists(lines[0]);
             return exists ? lines[0] : '';
         } catch {

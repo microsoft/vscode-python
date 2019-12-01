@@ -9,19 +9,21 @@ import { IDebugService } from '../../../common/application/types';
 import { DebugAdapterDescriptorFactory } from '../../../common/experimentGroups';
 import { IDisposableRegistry, IExperimentsManager } from '../../../common/types';
 import { DebuggerTypeName } from '../../constants';
-import { IDebugAdapterDescriptorFactory } from '../types';
+import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../types';
 
 @injectable()
 export class DebugAdapterActivator implements IExtensionSingleActivationService {
     constructor(
         @inject(IDebugService) private readonly debugService: IDebugService,
-        @inject(IDebugAdapterDescriptorFactory) private factory: IDebugAdapterDescriptorFactory,
+        @inject(IDebugAdapterDescriptorFactory) private descriptorFactory: IDebugAdapterDescriptorFactory,
+        @inject(IDebugSessionLoggingFactory) private debugSessionLoggingFactory: IDebugSessionLoggingFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) {}
+    ) { }
     public async activate(): Promise<void> {
         if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
-            this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.factory));
+            this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory));
+            this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory));
         } else {
             this.experimentsManager.sendTelemetryIfInExperiment(DebugAdapterDescriptorFactory.control);
         }

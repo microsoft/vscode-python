@@ -22,6 +22,7 @@ steps:
           python -m pip install -U pip
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==5.0.0a8'
       failOnStderr: true
       displayName: "pip install requirements"
 
@@ -35,6 +36,12 @@ steps:
     - bash: npm run clean
       displayName: "Clean"
 
+    # This is a slow process, hence do this only on master and release branches.
+    # I.e. skip on in PRs.
+    - bash: npm run checkDependencies
+      displayName: "Check Dependencies"
+      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), startsWith(variables['Build.SourceBranchName'], 'release')))
+
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
       displayName: "Update dev Version of Extension"
@@ -43,7 +50,7 @@ steps:
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
       displayName: "Update release Version of Extension"
-      condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'release'))
+      condition: and(succeeded(), startsWith(variables['Build.SourceBranchName'], 'release'))
 
     - bash: |
           npm run package

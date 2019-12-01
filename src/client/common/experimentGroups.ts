@@ -25,6 +25,12 @@ export enum DebugAdapterNewPtvsd {
     experiment = 'PtvsdWheels37 - experiment'
 }
 
+// Experiment to check whether to enable re-load for web apps while debugging.
+export enum WebAppReload {
+    control = 'Reload - control',
+    experiment = 'Reload - experiment'
+}
+
 // Dummy experiment added to validate metrics of A/B testing
 export enum ValidateABTesting {
     control = 'AA_testing - control',

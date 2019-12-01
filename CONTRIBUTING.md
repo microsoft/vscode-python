@@ -61,7 +61,7 @@ TypeScript errors and warnings will be displayed in the `Problems` window of Vis
 ### Validate your changes
 
 To test the changes you launch a development version of VS Code on the workspace vscode, which you are currently editing.
-Use the `Launch Extension` launch option.
+Use the `Extension` launch option.
 
 ### Debugging Unit Tests
 
@@ -147,7 +147,7 @@ To run only the functional tests:
 
 ### Standard Debugging
 
-Clone the repo into any directory, open that directory in VSCode, and use the `Launch Extension` launch option within VSCode.
+Clone the repo into any directory, open that directory in VSCode, and use the `Extension` launch option within VSCode.
 
 ### Debugging the Python Extension Debugger
 

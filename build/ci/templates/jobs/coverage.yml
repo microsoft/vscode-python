@@ -1,7 +1,7 @@
 jobs:
 - job: Coverage
   pool:
-    vmImage: "macos-latest"
+    vmImage: "ubuntu-16.04"
   variables:
     TestsToRun: 'testUnitTests'
   steps:

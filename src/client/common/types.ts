@@ -97,7 +97,8 @@ export enum Product {
     isort = 15,
     black = 16,
     bandit = 17,
-    jupyter = 18
+    jupyter = 18,
+    ipykernel = 19
 }
 
 export enum ModuleNamePurpose {
@@ -277,6 +278,7 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+    readonly activateEnvInCurrentTerminal: boolean;
 }
 
 export interface IExperiments {
@@ -325,6 +327,7 @@ export interface IDataScienceSettings {
     collapseCellInputCodeByDefault: boolean;
     maxOutputSize: number;
     enableGather?: boolean;
+    gatherToScript?: boolean;
     gatherRules?: IGatherRule[];
     sendSelectionToInteractiveWindow: boolean;
     markdownRegularExpression: string;
@@ -332,7 +335,6 @@ export interface IDataScienceSettings {
     allowLiveShare?: boolean;
     errorBackgroundColor: string;
     ignoreVscodeTheme?: boolean;
-    showJupyterVariableExplorer?: boolean;
     variableExplorerExclude?: string;
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;

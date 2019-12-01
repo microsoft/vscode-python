@@ -5,4 +5,4 @@ export const AnacondaCompanyName = 'Anaconda, Inc.';
 // tslint:disable-next-line:variable-name
 export const AnacondaDisplayName = 'Anaconda';
 // tslint:disable-next-line:variable-name
-export const AnacondaIdentfiers = ['Anaconda', 'Conda', 'Continuum'];
+export const AnacondaIdentifiers = ['Anaconda', 'Conda', 'Continuum'];

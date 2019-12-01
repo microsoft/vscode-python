@@ -21,6 +21,7 @@ import {
     WorkspaceFolder
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
+
 import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
@@ -41,6 +42,7 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
@@ -83,6 +85,8 @@ import {
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
+    IDataScienceSettings,
+    IExperimentsManager,
     IExtensions,
     ILogger,
     IPathUtils,
@@ -117,6 +121,7 @@ import {
     InteractiveWindowCommandListener
 } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -293,6 +298,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     constructor() {
         super();
+        this.useVSCodeAPI = false;
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         this.shouldMockJupyter = !isRollingBuild;
         this.asyncRegistry = new AsyncDisposableRegistry();
@@ -404,14 +410,20 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, GatherListener);
         this.serviceManager.addBinding(ICellHashProvider, INotebookExecutionLogger);
         this.serviceManager.addBinding(IJupyterDebugger, ICellHashListener);
-        this.serviceManager.addSingleton<IGatherExecution>(IGatherExecution, GatherExecution);
-        this.serviceManager.addBinding(IGatherExecution, INotebookExecutionLogger);
+        this.serviceManager.add<IGatherExecution>(IGatherExecution, GatherExecution);
         this.serviceManager.addSingleton<ICodeLensFactory>(ICodeLensFactory, CodeLensFactory);
         this.serviceManager.addSingleton<IShellDetector>(IShellDetector, TerminalNameShellDetector);
         this.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
         this.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
+
+        // Disable experiments.
+        const experimentManager = mock(ExperimentsManager);
+        when(experimentManager.inExperiment(anything())).thenReturn(false);
+        when(experimentManager.activate()).thenResolve();
+        this.serviceManager.addSingletonInstance<IExperimentsManager>(IExperimentsManager, instance(experimentManager));
 
         // Setup our command list
         this.commandManager.registerCommand('setContext', (name: string, value: boolean) => {
@@ -449,7 +461,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             sendSelectionToInteractiveWindow: false,
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             liveShareConnectionTimeout: 100,
             enablePlotViewer: true,
@@ -510,7 +521,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.terminal = {
             executeInFileDir: false,
             launchArgs: [],
-            activateEnvironment: true
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
         };
 
         condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
@@ -592,9 +604,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
-        if (this.mockJupyter) {
-            this.mockJupyter.addInterpreter(this.workingPython, SupportedCommands.all);
-        }
+        this.addInterpreter(this.workingPython, SupportedCommands.all);
     }
 
     // tslint:disable:any
@@ -615,7 +625,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny())).returns(
+        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(
             (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
                 // Keep track of the current listener. It listens to messages through the vscode api
                 this.webPanelListener = listener;
@@ -670,8 +680,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         return this.pythonSettings;
     }
 
-    public forceSettingsChanged(newPath: string) {
+    public forceSettingsChanged(newPath: string, datascienceSettings?: IDataScienceSettings) {
         this.pythonSettings.pythonPath = newPath;
+        this.pythonSettings.datascience = datascienceSettings ? datascienceSettings : this.pythonSettings.datascience;
         this.pythonSettings.fireChangeEvent();
         this.configChangeEvent.fire({
             affectsConfiguration(_s: string, _r?: Uri): boolean {
@@ -711,9 +722,16 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.pythonSettings.jediEnabled = enabled;
     }
 
+    public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {
+        if (this.mockJupyter) {
+            this.mockJupyter.addInterpreter(newInterpreter, commands);
+        }
+    }
+
     private findPythonPath(): string {
         try {
-            const output = child_process.execFileSync('python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
+            // Give preference to the CI test python (could also be set in launch.json for debugging).
+            const output = child_process.execFileSync(process.env.CI_PYTHON_PATH || 'python', ['-c', 'import sys;print(sys.executable)'], { encoding: 'utf8' });
             return output.replace(/\r?\n/g, '');
         } catch (ex) {
             return 'python';

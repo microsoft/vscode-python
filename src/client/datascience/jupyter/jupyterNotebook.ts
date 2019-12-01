@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 import '../../common/extensions';
+
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
@@ -12,7 +14,7 @@ import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -20,6 +22,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../common/utils/asy
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -141,6 +144,8 @@ export class JupyterNotebookBase implements INotebook {
     private _resource: Uri;
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
+    private _loggers: INotebookExecutionLogger[] = [];
+    private interpreter: PythonInterpreter | undefined;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -149,13 +154,19 @@ export class JupyterNotebookBase implements INotebook {
         private disposableRegistry: IDisposableRegistry,
         private owner: INotebookServer,
         private launchInfo: INotebookServerLaunchInfo,
-        private loggers: INotebookExecutionLogger[],
+        loggers: INotebookExecutionLogger[],
         resource: Uri,
         private getDisposedError: () => Error,
-        private workspace: IWorkspaceService
+        private workspace: IWorkspaceService,
+        private applicationService: IApplicationShell,
+        private interpreterService: IInterpreterService
     ) {
         this.sessionStartTime = Date.now();
         this._resource = resource;
+        this._loggers = [...loggers];
+        // Save our interpreter and don't change it. Later on when kernel changes
+        // are possible, recompute it.
+        this.interpreterService.getActiveInterpreter(resource).then(i => this.interpreter = i).ignoreErrors();
     }
 
     public get server(): INotebookServer {
@@ -253,6 +264,10 @@ export class JupyterNotebookBase implements INotebook {
     public setLaunchingFile(file: string): Promise<void> {
         // Update our working directory if we don't have one set already
         return this.updateWorkingDirectory(file);
+    }
+
+    public addLogger(logger: INotebookExecutionLogger) {
+        this._loggers.push(logger);
     }
 
     public executeObservable(code: string, file: string, line: number, id: string, silent: boolean = false): Observable<ICell[]> {
@@ -367,10 +382,12 @@ export class JupyterNotebookBase implements INotebook {
             const restartHandlerToken = this.session.onRestarted(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
-            this.session.interrupt(timeoutMs).catch(exc => {
-                traceWarning(`Error during interrupt: ${exc}`);
-                restarted.resolve([]);
-            });
+            this.session.interrupt(timeoutMs)
+                .then(() => restarted.resolve([]))
+                .catch(exc => {
+                    traceWarning(`Error during interrupt: ${exc}`);
+                    restarted.resolve([]);
+                });
 
             try {
                 // Wait for all of the pending cells to finish or the timeout to fire
@@ -426,19 +443,31 @@ export class JupyterNotebookBase implements INotebook {
                 cursor_pos: offsetInCode
             }), cancelToken);
             if (result && result.content) {
-                return {
-                    matches: result.content.matches,
-                    cursor: {
-                        start: result.content.cursor_start,
-                        end: result.content.cursor_end
-                    },
-                    metadata: result.content.metadata
-                };
+                if ('matches' in result.content) {
+                    return {
+                        matches: result.content.matches,
+                        cursor: {
+                            start: result.content.cursor_start,
+                            end: result.content.cursor_end
+                        },
+                        metadata: result.content.metadata
+                    };
+                } else {
+                    return {
+                        matches: [],
+                        cursor: { start: 0, end: 0 },
+                        metadata: []
+                    };
+                }
             }
         }
 
         // Default is just say session was disposed
         throw new Error(localize.DataScience.sessionDisposed());
+    }
+
+    public async getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
+        return this.interpreter;
     }
 
     private finishUncompletedCells() {
@@ -525,7 +554,7 @@ export class JupyterNotebookBase implements INotebook {
         });
     }
 
-    private generateRequest = (code: string, silent?: boolean): Kernel.IFuture | undefined => {
+    private generateRequest = (code: string, silent?: boolean): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined => {
         //traceInfo(`Executing code in jupyter : ${code}`);
         try {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
@@ -534,7 +563,7 @@ export class JupyterNotebookBase implements INotebook {
                     // Remove the cell marker if we have one.
                     code: cellMatcher.stripFirstMarker(code),
                     stop_on_error: false,
-                    allow_stdin: false,
+                    allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
                     store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
                 },
                 true
@@ -610,6 +639,58 @@ export class JupyterNotebookBase implements INotebook {
         }
     }
 
+    private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IIOPubMessage) {
+        // tslint:disable-next-line:no-require-imports
+        const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
+
+        // Create a trimming function. Only trim user output. Silent output requires the full thing
+        const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
+
+        try {
+            if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
+                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
+            } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
+                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
+                this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
+                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
+            } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
+                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
+                this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
+                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState, subscriber.cell);
+            } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
+                this.handleError(msg as KernelMessage.IErrorMsg, clearState, subscriber.cell);
+            } else {
+                traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
+            }
+
+            // Set execution count, all messages should have it
+            if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
+                subscriber.cell.data.execution_count = msg.content.execution_count as number;
+            }
+
+            // Show our update if any new output.
+            subscriber.next(this.sessionStartTime);
+        } catch (err) {
+            // If not a restart error, then tell the subscriber
+            subscriber.error(this.sessionStartTime, err);
+        }
+    }
+
+    private handleInputRequest(_subscriber: CellSubscriber, msg: KernelMessage.IStdinMessage) {
+        // Ask the user for input
+        if (msg.content && 'prompt' in msg.content && msg.content.prompt) {
+            const hasPassword = msg.content.password !== null && msg.content.password as boolean;
+            this.applicationService.showInputBox({ prompt: msg.content.prompt.toString(), password: hasPassword })
+                .then(v => {
+                    this.session.sendInputReply(v || '');
+                });
+        }
+    }
+
     // tslint:disable-next-line: max-func-body-length
     private handleCodeRequest = (subscriber: CellSubscriber, silent?: boolean) => {
         // Generate a new request if we still can
@@ -624,9 +705,6 @@ export class JupyterNotebookBase implements INotebook {
                 subscriber.complete(this.sessionStartTime);
             } else {
                 const request = this.generateRequest(concatMultilineStringInput(subscriber.cell.data.source), silent);
-
-                // tslint:disable-next-line:no-require-imports
-                const jupyterLab = require('@jupyterlab/services') as typeof import('@jupyterlab/services');
 
                 // Transition to the busy stage
                 subscriber.cell.state = CellState.executing;
@@ -645,9 +723,7 @@ export class JupyterNotebookBase implements INotebook {
                     });
                 }
 
-                // Create a trimming function. Only trim user output. Silent output requires the full thing
-                const trimFunc = silent ? (s: string) => s : this.trimOutput.bind(this);
-
+                // Keep track of our clear state
                 const clearState: Map<string, boolean> = new Map<string, boolean>();
 
                 // Listen to the reponse messages and update state as we go
@@ -658,48 +734,22 @@ export class JupyterNotebookBase implements INotebook {
                     });
 
                     // Listen to messages.
-                    request.onIOPub = (msg: KernelMessage.IIOPubMessage) => {
-                        try {
-                            if (jupyterLab.KernelMessage.isExecuteResultMsg(msg)) {
-                                this.handleExecuteResult(msg as KernelMessage.IExecuteResultMsg, clearState, subscriber.cell, trimFunc);
-                            } else if (jupyterLab.KernelMessage.isExecuteInputMsg(msg)) {
-                                this.handleExecuteInput(msg as KernelMessage.IExecuteInputMsg, clearState, subscriber.cell);
-                            } else if (jupyterLab.KernelMessage.isStatusMsg(msg)) {
-                                this.handleStatusMessage(msg as KernelMessage.IStatusMsg, clearState, subscriber.cell);
-                            } else if (jupyterLab.KernelMessage.isStreamMsg(msg)) {
-                                this.handleStreamMesssage(msg as KernelMessage.IStreamMsg, clearState, subscriber.cell, trimFunc);
-                            } else if (jupyterLab.KernelMessage.isDisplayDataMsg(msg)) {
-                                this.handleDisplayData(msg as KernelMessage.IDisplayDataMsg, clearState, subscriber.cell);
-                            } else if (jupyterLab.KernelMessage.isUpdateDisplayDataMsg(msg)) {
-                                this.handleUpdateDisplayData(msg as KernelMessage.IUpdateDisplayDataMsg, clearState, subscriber.cell);
-                            } else if (jupyterLab.KernelMessage.isClearOutputMsg(msg)) {
-                                this.handleClearOutput(msg as KernelMessage.IClearOutputMsg, clearState, subscriber.cell);
-                            } else if (jupyterLab.KernelMessage.isErrorMsg(msg)) {
-                                this.handleError(msg as KernelMessage.IErrorMsg, clearState, subscriber.cell);
-                            } else {
-                                traceWarning(`Unknown message ${msg.header.msg_type} : hasData=${'data' in msg.content}`);
-                            }
-
-                            // Set execution count, all messages should have it
-                            if (msg.content.execution_count) {
-                                subscriber.cell.data.execution_count = msg.content.execution_count as number;
-                            }
-
-                            // Show our update if any new output.
-                            subscriber.next(this.sessionStartTime);
-                        } catch (err) {
-                            // If not a restart error, then tell the subscriber
-                            subscriber.error(this.sessionStartTime, err);
-                        }
-                    };
+                    request.onIOPub = this.handleIOPub.bind(this, subscriber, silent, clearState);
+                    request.onStdin = this.handleInputRequest.bind(this, subscriber);
 
                     // When the request finishes we are done
-                    request.done.then(() => {
-                        subscriber.complete(this.sessionStartTime);
-                        if (exitHandlerDisposable) {
-                            exitHandlerDisposable.dispose();
-                        }
-                    }).catch(e => subscriber.error(this.sessionStartTime, e));
+                    request.done
+                        .then(() => subscriber.complete(this.sessionStartTime))
+                        .catch(e => {
+                            // @jupyterlab/services throws a `Canceled` error when the kernel is interrupted.
+                            // Such an error must be ignored.
+                            if (e && e instanceof Error && e.message === 'Canceled') {
+                                subscriber.complete(this.sessionStartTime);
+                            } else {
+                                subscriber.error(this.sessionStartTime, e);
+                            }
+                        })
+                        .finally(() => exitHandlerDisposable?.dispose()).ignoreErrors();
                 } else {
                     subscriber.error(this.sessionStartTime, this.getDisposedError());
                 }
@@ -745,11 +795,11 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private async logPreCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map(l => l.preExecute(cell, silent)));
+        await Promise.all(this._loggers.map(l => l.preExecute(cell, silent)));
     }
 
     private async logPostCode(cell: ICell, silent: boolean): Promise<void> {
-        await Promise.all(this.loggers.map(l => l.postExecute(cell, silent)));
+        await Promise.all(this._loggers.map(l => l.postExecute(cloneDeep(cell), silent)));
     }
 
     private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {
@@ -861,7 +911,7 @@ export class JupyterNotebookBase implements INotebook {
             channel: 'iopub',
             parent_header: {},
             metadata: {},
-            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error' },
+            header: { username: '', version: '', session: '', msg_id: '', msg_type: 'error', date: '' },
             content: {
                 ename: 'KeyboardInterrupt',
                 evalue: '',

@@ -16,6 +16,9 @@ export class Flake8 extends BaseLinter {
         const messages = await this.run(['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', document.uri.fsPath], document, cancellation);
         messages.forEach(msg => {
             msg.severity = this.parseMessagesSeverity(msg.type, this.pythonSettings.linting.flake8CategorySeverity);
+            // flake8 uses 0th line for some file-wide problems
+            // but diagnostics expects positive line numbers.
+            if (msg.line === 0) { msg.line = 1; }
         });
         return messages;
     }

@@ -5,5 +5,6 @@
 
 export enum PTVSDEvents {
     // Event sent by PTVSD when a child process is launched and ready to be attached to for multi-proc debugging.
-    ChildProcessLaunched = 'ptvsd_subprocess'
+    ChildProcessLaunched = 'ptvsd_subprocess',
+    AttachToSubprocess = 'ptvsd_attach'
 }

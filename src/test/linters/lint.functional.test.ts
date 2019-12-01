@@ -16,7 +16,6 @@ import {
 } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { PlatformService } from '../../client/common/platform/platformService';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -36,6 +35,7 @@ import {
 import {
     IEnvironmentActivationService
 } from '../../client/interpreter/activation/types';
+import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
 import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
@@ -196,11 +196,9 @@ class TestFixture extends BaseTestFixture {
         processLogger.setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => { return; });
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny())).returns(() => processLogger.object);
 
-        const platformService = new PlatformService();
-        const filesystem = new FileSystem(platformService);
+        const filesystem = new FileSystem();
 
         super(
-            platformService,
             filesystem,
             TestFixture.newPythonToolExecService(
                 serviceContainer.object
@@ -246,6 +244,15 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>(undefined, TypeMoq.MockBehavior.Strict);
+        interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
+
+        const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
+        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
+        condaService.setup(c => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
+        condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
+
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
             .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -259,6 +266,7 @@ class TestFixture extends BaseTestFixture {
             envActivationService.object,
             procServiceFactory,
             configService,
+            condaService.object,
             decoder,
             instance(windowsStoreInterpreter)
         );

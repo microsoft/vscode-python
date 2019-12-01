@@ -4,7 +4,7 @@ name: '$(Year:yyyy).$(Month).0.$(BuildID)-ci'
 #        on changes in the news and .vscode folders.
 trigger:
   branches:
-    include: ["master", "release"]
+    include: ["master", "release*"]
   paths:
     exclude: ["/news/1 Enhancements", "/news/2 Fixes", "/news/3 Code Health", "/.vscode"]
 
@@ -276,23 +276,25 @@ stages:
             VMImageName: 'macos-10.13'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
+            NeedsIPythonReqs: true
         'Linux-Py3.7':
             PythonVersion: '3.7'
             VMImageName: 'ubuntu-16.04'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
+            NeedsIPythonReqs: true
         'Win-Py3.7':
             PythonVersion: '3.7'
             VMImageName: 'vs2017-win2016'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
+            NeedsIPythonReqs: true
 
     pool:
       vmImage: $(VMImageName)
 
     steps:
       - template: templates/test_phases.yml
-
 
 - stage: Reports
   dependsOn:

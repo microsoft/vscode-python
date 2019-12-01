@@ -194,7 +194,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js'
             ];
         case 'extension':
             return [
@@ -211,7 +213,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 gulp.task('renameSourceMaps', async () => {
-    // By default souce maps will be disabled in the extenion.
+    // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
     const debuggerSourceMap = path.join(__dirname, 'out', 'client', 'debugger', 'debugAdapter', 'main.js.map');
@@ -229,7 +231,8 @@ gulp.task('verifyBundle', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
-gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
+gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
 
 gulp.task('installPythonRequirements', async () => {
     const requirements = fs
@@ -254,19 +257,32 @@ gulp.task('installPythonRequirements', async () => {
     );
 });
 
-// Install new PTVSD wheels for python 3.7
+
 // See https://github.com/microsoft/vscode-python/issues/7136
-gulp.task('installPtvsdWheels', async () => {
-    const args = ['./pythonFiles/install_ptvsd.py']
-    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+gulp.task('installNewPtvsd', async () => {
+    // Install new PTVSD with wheels for python 3.7
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', './pythonFiles/install_ptvsd.py')
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install new PTVSD wheels using 'python3'", ex);
             return false;
         });
-    if (!success) {
+    if (!successWithWheels) {
         console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+    }
+
+    // Install source only version of new PTVSD for use with all other python versions.
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a8']
+    const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install PTVSD using 'python3'", ex);
+            return false;
+        });
+    if (!successWithoutWheels) {
+        console.info("Failed to install source only version of new PTVSD using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install source only PTVSD 5.0 using 'python'", ex));
     }
 });
 
@@ -283,11 +299,11 @@ gulp.task('installOldPtvsd', async () => {
         });
     if (!success) {
         console.info("Failed to install PTVSD using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
     }
 });
 
-gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installPtvsdWheels'));
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installNewPtvsd'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');

@@ -1,5 +1,5 @@
 variables:
-  PythonVersion: '3.7.4' # Always use latest version.
+  PythonVersion: '3.7' # Always use latest version.
   NodeVersion: '10.11.0' # Check version of node used in VS Code.
   NpmVersion: '6.10.3'
   MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
@@ -7,3 +7,5 @@ variables:
   VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
   VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
   CI_BRANCH_NAME: ${Build.SourceBranchName}
+  npm_config_cache: $(Pipeline.Workspace)/.npm
+

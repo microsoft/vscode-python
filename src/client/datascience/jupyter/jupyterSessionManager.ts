@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ContentsManager, ServerConnection, SessionManager } from '@jupyterlab/services';
+import { ContentsManager, Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -10,15 +10,16 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import {
     IConnection,
+    IJupyterKernel,
     IJupyterKernelSpec,
     IJupyterPasswordConnect,
     IJupyterPasswordConnectInfo,
     IJupyterSession,
     IJupyterSessionManager
 } from '../types';
-import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
+import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
 
 export class JupyterSessionManager implements IJupyterSessionManager {
 
@@ -29,7 +30,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
-        private config: IConfigurationService
+        private config: IConfigurationService,
+        private failOnPassword: boolean | undefined
     ) {
     }
 
@@ -55,6 +57,17 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         this.serverSettings = await this.getServerConnectSettings(connInfo);
         this.sessionManager = new SessionManager({ serverSettings: this.serverSettings });
         this.contentsManager = new ContentsManager({ serverSettings: this.serverSettings });
+    }
+
+    public async getRunningKernels(): Promise<IJupyterKernel[]> {
+        const models = await Kernel.listRunning(this.serverSettings);
+        return models.map(m => {
+            return {
+                name: m.name,
+                lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
+                numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
+            };
+        });
     }
 
     public async startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
@@ -102,7 +115,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         let serverSettings: Partial<ServerConnection.ISettings> =
         {
             baseUrl: connInfo.baseUrl,
-            pageUrl: '',
+            appUrl: '',
             // A web socket is required to allow token authentication
             wsUrl: connInfo.baseUrl.replace('http', 'ws')
         };
@@ -115,6 +128,9 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
         // If no token is specified prompt for a password
         if (connInfo.token === '' || connInfo.token === 'null') {
+            if (this.failOnPassword) {
+                throw new Error('Password request not allowed.');
+            }
             serverSettings = { ...serverSettings, token: '' };
             const pwSettings = await this.jupyterPasswordConnect.getPasswordConnectionInfo(connInfo.baseUrl, connInfo.allowUnauthorized ? true : false);
             if (pwSettings && !pwSettings.emptyPassword) {

@@ -9,8 +9,9 @@ import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import {
     IConnection,
     IDataScience,
@@ -37,7 +38,9 @@ type JupyterServerClassType = {
         configService: IConfigurationService,
         sessionManager: IJupyterSessionManagerFactory,
         workspaceService: IWorkspaceService,
-        loggers: INotebookExecutionLogger[]
+        loggers: INotebookExecutionLogger[],
+        appShell: IApplicationShell,
+        interpreterService: IInterpreterService
     ): IJupyterServerInterface;
 };
 // tslint:enable:callable-types
@@ -57,7 +60,9 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
         @inject(IConfigurationService) configService: IConfigurationService,
         @inject(IJupyterSessionManagerFactory) sessionManager: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
-        @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined) {
+        @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IInterpreterService) interpreterService: IInterpreterService) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -69,7 +74,9 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
             configService,
             sessionManager,
             workspaceService,
-            loggers ? loggers : []
+            loggers ? loggers : [],
+            appShell,
+            interpreterService
         );
     }
 

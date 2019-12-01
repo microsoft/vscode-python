@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import { Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
@@ -24,6 +24,10 @@ import { IServiceContainer } from '../../client/ioc/types';
 @injectable()
 export class TestNativeEditorProvider implements INotebookEditorProvider {
     private realProvider: NativeEditorProvider;
+    private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
+    public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
+        return this._onDidOpenNotebookEditor.event;
+    }
 
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
@@ -46,6 +50,7 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
             documentManager,
             cmdManager,
             dataScienceErrorHandler);
+        this.realProvider.onDidOpenNotebookEditor(e => this._onDidOpenNotebookEditor.fire(e));
     }
 
     public get activeEditor(): INotebookEditor | undefined {
@@ -68,7 +73,6 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         // Also need the css request so that other messages can go through
         const webHost = result as NativeEditor;
         webHost.setTheme(false);
-
         return result;
     }
 

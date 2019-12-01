@@ -2,9 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount } from 'enzyme';
 import * as path from 'path';
-import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
 import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
@@ -22,13 +20,13 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
+import { mountConnectedMainPanel } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -43,18 +41,6 @@ suite('DataScience Debugger tests', () => {
     suiteSetup(function () {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
-
-        // Currently these test fail on Mac / Python 3.7 so disable for that
-        // https://github.com/microsoft/ptvsd/issues/1587
-        const isMac = process.env ? (process.env.VMIMAGENAME !== undefined && process.env.VMIMAGENAME === 'macos-10.13') : false;
-        const py37 = process.env ? (process.env.PYTHONVERSION !== undefined && process.env.PYTHONVERSION === '3.7') : false;
-
-        if (isMac && py37) {
-            // tslint:disable-next-line:no-console
-            console.log('Skipping debugger tests on mac / py3.7 for debugger issue');
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
 
         if (!isRollingBuild) {
             // tslint:disable-next-line:no-console
@@ -120,7 +106,7 @@ suite('DataScience Debugger tests', () => {
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<InteractivePanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), vsls.Role.None);
+        result.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.
@@ -221,12 +207,6 @@ suite('DataScience Debugger tests', () => {
 
     test('Debug cell without breakpoint', async () => {
         await debugCell('#%%\nprint("bar")');
-    });
-
-    // Debugging with a breakpoint requires the file to actually exist on disk.
-
-    test('Debug cell with breakpoint in another file', async () => {
-        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
     });
 
     test('Debug remote', async () => {

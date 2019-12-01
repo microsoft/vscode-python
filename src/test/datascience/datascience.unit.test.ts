@@ -2,15 +2,33 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
+import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 
+import { DebugService } from '../../client/common/application/debugService';
+import { IApplicationShell } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
+import { ConfigurationService } from '../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { IExtensionContext } from '../../client/common/types';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
+import { Settings } from '../../client/datascience/constants';
+import { DataScience } from '../../client/datascience/datascience';
+import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
+import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
+import { ServiceContainer } from '../../client/ioc/container';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
+import { MockMemento } from '../mocks/mementos';
+import { MockCommandManager } from './mockCommandManager';
+import { MockDocumentManager } from './mockDocumentManager';
+import { MockInputBox } from './mockInputBox';
+import { MockQuickPick } from './mockQuickPick';
 
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {
@@ -257,6 +275,69 @@ class Pizza(object):
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
+    });
+
+    function createDataScienceObject(quickPickSelection: string, inputSelection: string, updateCallback: (val: string) => void): DataScience {
+        const configService = mock(ConfigurationService);
+        const serviceContainer = mock(ServiceContainer);
+        const codeLensProvider = mock(DataScienceCodeLensProvider);
+        const notebookProvider = mock(NativeEditorProvider);
+        const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
+        const disposableRegistry: IDisposable[] = [];
+        const debugService = mock(DebugService);
+        const applicationShell = typemoq.Mock.ofType<IApplicationShell>();
+        const documentManager = new MockDocumentManager();
+        const commandManager = new MockCommandManager();
+        const storage = new MockMemento();
+        const context: typemoq.IMock<IExtensionContext> = typemoq.Mock.ofType<IExtensionContext>();
+        const quickPick = new MockQuickPick(quickPickSelection);
+        const input = new MockInputBox(inputSelection);
+        applicationShell.setup(a => a.createQuickPick()).returns(() => quickPick);
+        applicationShell.setup(a => a.createInputBox()).returns(() => input);
+        const multiStepFactory = new MultiStepInputFactory(applicationShell.object);
+        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall((_a1, a2, _a3, _a4) => {
+            updateCallback(a2);
+            return Promise.resolve();
+        });
+
+        return new DataScience(
+            instance(serviceContainer),
+            commandManager,
+            disposableRegistry,
+            context.object,
+            instance(codeLensProvider),
+            instance(configService),
+            documentManager,
+            instance(workspaceService),
+            [],
+            instance(notebookProvider),
+            instance(debugService),
+            storage,
+            instance(jupyterSessionManagerFactory),
+            multiStepFactory
+        );
+    }
+
+    test('Local pick server uri', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(zap) Default', '', (v) => value = v);
+        await ds.selectJupyterURI();
+        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
+    });
+
+    test('Remote server uri', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => value = v);
+        await ds.selectJupyterURI();
+        assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
+    });
+
+    test('Invalid server uri', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', (v) => value = v);
+        await ds.selectJupyterURI();
+        assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
+        assert.equal(value, '', 'Validation failed');
     });
 
 });

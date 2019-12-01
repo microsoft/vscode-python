@@ -3,7 +3,7 @@ name: Bug report for Notebook Editor, Interactive Window, Python Editor cells
 about: Create a report to help us improve
 labels: type-bug, data science
 ---
-# Bug: Notebook Editor, Interactive Window, Python Editor cells
+# Bug: Notebook Editor, Interactive Window, Editor cells
 
 <!-----------------------------------------------------------------------------------------------
                                                       ***PLEASE READ***
@@ -15,7 +15,9 @@ bug template instead of this one. ***Thank you!***
 ## Steps to cause the bug to occur
 1.
 
-## Actual & Expected behavior
+## Actual behavior
+
+## Expected behavior
 
 <!-----------------------------------------------------------------------------------------------
 Animated GIFs can be effective means to describe a bug. Consider using a tool like
@@ -38,7 +40,7 @@ Copy/paste the output in the "Console" tab in the "Developer Tools" panel (Help 
 Toggle Developer Tools). For better details, run the "Enable source map support for
 extension debugging" command in VS Code at least once beforehand.
 ------------------------------------------------------------------------------------------------->
-
+Microsoft Data Science for VS Code Engineering Team: @rchiodo, @IanMatthewHuff, @DavidKutu, @DonJayamanne, @greazer
 
 
 

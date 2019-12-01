@@ -144,14 +144,16 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
 function getTestStatusIcon(status?: TestStatus): string {
     switch (status) {
         case TestStatus.Pass: {
-            return '✔ ';
+            return `${constants.Octicons.Test_Pass} `;
         }
-        case TestStatus.Error:
+        case TestStatus.Error: {
+            return `${constants.Octicons.Test_Error} `;
+        }
         case TestStatus.Fail: {
-            return '✘ ';
+            return `${constants.Octicons.Test_Fail} `;
         }
         case TestStatus.Skipped: {
-            return '⊘ ';
+            return `${constants.Octicons.Test_Skip} `;
         }
         default: {
             return '';
@@ -163,15 +165,19 @@ function getTestStatusIcons(fns: TestFunction[]): string {
     const statuses: string[] = [];
     let count = fns.filter(fn => fn.status === TestStatus.Pass).length;
     if (count > 0) {
-        statuses.push(`✔ ${count}`);
-    }
-    count = fns.filter(fn => fn.status === TestStatus.Error || fn.status === TestStatus.Fail).length;
-    if (count > 0) {
-        statuses.push(`✘ ${count}`);
+        statuses.push(`${constants.Octicons.Test_Pass} ${count}`);
     }
     count = fns.filter(fn => fn.status === TestStatus.Skipped).length;
     if (count > 0) {
-        statuses.push(`⊘ ${count}`);
+        statuses.push(`${constants.Octicons.Test_Skip} ${count}`);
+    }
+    count = fns.filter(fn => fn.status === TestStatus.Fail).length;
+    if (count > 0) {
+        statuses.push(`${constants.Octicons.Test_Fail} ${count}`);
+    }
+    count = fns.filter(fn => fn.status === TestStatus.Error).length;
+    if (count > 0) {
+        statuses.push(`${constants.Octicons.Test_Error} ${count}`);
     }
 
     return statuses.join(' ');
@@ -219,12 +225,12 @@ function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites,
     // Find all flattened functions.
     return [
         new CodeLens(range, {
-            title: `${getTestStatusIcons(functions)}${constants.Text.CodeLensRunUnitTest} (Multiple)`,
+            title: `${getTestStatusIcons(functions)} ${constants.Text.CodeLensRunUnitTest} (Multiple)`,
             command: constants.Commands.Tests_Picker_UI,
             arguments: [undefined, CommandSource.codelens, file, functions]
         }),
         new CodeLens(range, {
-            title: `${getTestStatusIcons(functions)}${constants.Text.CodeLensDebugUnitTest} (Multiple)`,
+            title: `${getTestStatusIcons(functions)} ${constants.Text.CodeLensDebugUnitTest} (Multiple)`,
             command: constants.Commands.Tests_Picker_UI_Debug,
             arguments: [undefined, CommandSource.codelens, file, functions]
         })

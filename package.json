@@ -2,8 +2,8 @@
     "name": "python",
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
-    "version": "2019.11.0-dev",
-    "languageServerVersion": "0.4.24",
+    "version": "2019.12.0-dev",
+    "languageServerVersion": "0.4.114",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1287,9 +1287,6 @@
                         }
                     },
                     "attach": {
-                        "required": [
-                            "port"
-                        ],
                         "properties": {
                             "port": {
                                 "type": "number",
@@ -1364,6 +1361,10 @@
                                 "type": "boolean",
                                 "description": "Show return value of functions when stepping.",
                                 "default": true
+                            },
+                            "processId": {
+                                "type": "number",
+                                "description": "ID of the local process to attach to."
                             }
                         }
                     }
@@ -1513,7 +1514,7 @@
                 },
                 "python.dataScience.jupyterLaunchTimeout": {
                     "type": "number",
-                    "default": 10000,
+                    "default": 60000,
                     "description": "Amount of time (in ms) to wait for the Jupyter Notebook server to start.",
                     "scope": "resource"
                 },
@@ -1526,7 +1527,7 @@
                 "python.dataScience.jupyterServerURI": {
                     "type": "string",
                     "default": "local",
-                    "description": "Select the Jupyter server URI to connect to. Select 'local' to launch a new Jupyter server on the local machine.",
+                    "description": "When a Notebook Editor or Interactive Window session is started, create the kernel on the specified Jupyter server. Select 'local' to create a new Jupyter server on this local machine.",
                     "scope": "resource"
                 },
                 "python.dataScience.notebookFileRoot": {
@@ -1599,6 +1600,7 @@
                     "type": "boolean",
                     "default": true,
                     "description": "Show the variable explorer in the Python Interactive window.",
+                    "deprecationMessage": "This setting no longer applies. It is ignored.",
                     "scope": "resource"
                 },
                 "python.dataScience.variableExplorerExclude": {
@@ -1695,7 +1697,13 @@
                 "python.dataScience.enableGather": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Enable code gathering for single cells in the interactive window (experimental).",
+                    "description": "Enable code gather for executed cells. For a gathered cell, that cell and only the code it depends on will be exported to a new notebook.",
+                    "scope": "resource"
+                },
+                "python.dataScience.gatherToScript": {
+                    "type": "boolean",
+                    "default": true,
+                    "description": "Gather code to a python script rather than a notebook.",
                     "scope": "resource"
                 },
                 "python.dataScience.codeLenses": {
@@ -2364,6 +2372,12 @@
                     "description": "Python launch arguments to use when executing a file in the terminal.",
                     "scope": "resource"
                 },
+                "python.terminal.activateEnvInCurrentTerminal": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "Activate Python Environment in the current Terminal on load of the Extension.",
+                    "scope": "resource"
+                },
                 "python.testing.cwd": {
                     "type": "string",
                     "default": null,
@@ -2661,6 +2675,7 @@
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
         "compile-webviews-watch": "npx npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --watch",
+        "checkDependencies": "gulp checkDependencies",
         "dump-datascience-webpack-stats": "npx -n --max_old_space_size=4096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
         "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
@@ -2670,7 +2685,7 @@
         "test:unittests:cover": "nyc --silent --no-clean --nycrc-path build/.nycrc mocha --opts ./build/.mocha.unittests.ts.opts",
         "test:functional": "mocha --require source-map-support/register --opts ./build/.mocha.functional.opts",
         "test:functional:cover": "npm run test:functional",
-        "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=lcov --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
+        "test:cover:report": "nyc --nycrc-path build/.nycrc  report --reporter=text --reporter=html --reporter=text-summary --reporter=cobertura",
         "testDebugger": "node ./out/test/testBootstrap.js ./out/test/debuggerTest.js",
         "testSingleWorkspace": "node ./out/test/testBootstrap.js ./out/test/standardTest.js",
         "testMultiWorkspace": "node ./out/test/testBootstrap.js ./out/test/multiRootTest.js",
@@ -2684,8 +2699,9 @@
     },
     "dependencies": {
         "@blueprintjs/select": "3.10.0",
-        "@jupyterlab/services": "^3.2.1",
-        "@msrvida/python-program-analysis": "^0.2.6",
+        "@jupyterlab/coreutils": "^3.1.0",
+        "@jupyterlab/services": "^4.2.0",
+        "@msrvida/python-program-analysis": "^0.4.1",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
         "azure-storage": "^2.10.3",
@@ -2737,6 +2753,7 @@
         "vscode-debugadapter": "^1.28.0",
         "vscode-debugprotocol": "^1.28.0",
         "vscode-extension-telemetry": "0.1.0",
+        "vscode-jsonrpc": "^4.0.0",
         "vscode-languageclient": "^5.2.1",
         "vscode-languageserver": "^5.2.1",
         "vscode-languageserver-protocol": "^3.14.1",
@@ -2760,13 +2777,15 @@
         "@nteract/transform-dataresource": "^4.3.5",
         "@nteract/transform-geojson": "^3.2.3",
         "@nteract/transform-model-debug": "^3.2.3",
-        "@nteract/transform-plotly": "^5.0.0",
+        "@nteract/transform-plotly": "^6.0.0",
+        "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
         "@types/chai-as-promised": "^7.1.0",
         "@types/copy-webpack-plugin": "^4.4.2",
+        "@types/dedent": "^0.7.0",
         "@types/del": "^3.0.0",
         "@types/diff-match-patch": "^1.0.32",
         "@types/download": "^6.2.2",
@@ -2793,7 +2812,9 @@
         "@types/react": "^16.4.14",
         "@types/react-dom": "^16.0.8",
         "@types/react-json-tree": "^0.6.8",
+        "@types/react-redux": "^7.1.5",
         "@types/react-virtualized": "^9.21.2",
+        "@types/redux-logger": "^3.0.7",
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
@@ -2822,13 +2843,14 @@
         "chai": "^4.1.2",
         "chai-arrays": "^2.0.0",
         "chai-as-promised": "^7.1.1",
-        "codecov": "^3.5.0",
+        "codecov": "^3.6.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
         "cucumber-html-reporter": "^4.0.5",
         "decache": "^4.4.0",
+        "dedent": "^0.7.0",
         "del": "^3.0.0",
         "download": "^7.0.0",
         "electron-download": "^4.1.1",
@@ -2862,7 +2884,7 @@
         "mocha": "^6.1.4",
         "mocha-junit-reporter": "^1.17.0",
         "mocha-multi-reporters": "^1.1.7",
-        "monaco-editor": "0.16.2",
+        "monaco-editor": "0.18.1",
         "monaco-editor-webpack-plugin": "^1.7.0",
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
@@ -2874,6 +2896,9 @@
         "react-dev-utils": "^5.0.2",
         "react-dom": "^16.5.2",
         "react-json-tree": "^0.11.0",
+        "react-redux": "^7.1.1",
+        "redux": "^4.0.4",
+        "redux-logger": "^3.0.6",
         "relative": "^3.0.2",
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "rewiremock": "^3.13.0",
@@ -2895,7 +2920,7 @@
         "tslint-microsoft-contrib": "^5.0.3",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
-        "typescript": "^3.6.4",
+        "typescript": "^3.7.2",
         "typescript-formatter": "^7.1.0",
         "unicode-properties": "1.1.0",
         "url-loader": "^1.1.2",
@@ -2903,7 +2928,7 @@
         "vinyl-fs": "^3.0.3",
         "vsce": "^1.59.0",
         "vscode-debugadapter-testsupport": "^1.27.0",
-        "vscode-test": "^1.0.2",
+        "vscode-test": "^1.2.3",
         "webpack": "^4.33.0",
         "webpack-bundle-analyzer": "^3.3.2",
         "webpack-cli": "^3.1.2",

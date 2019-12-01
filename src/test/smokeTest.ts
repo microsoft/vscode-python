@@ -36,7 +36,7 @@ class TestRunner {
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', '.vscode', 'settings.json'), settings);
     }
     private async launchTest(customEnvVars: Record<string, {}>) {
-        console.log('Launc tests in test runner');
+        console.log('Launch tests in test runner');
         await new Promise((resolve, reject) => {
             const env: Record<string, string> = {
                 TEST_FILES_SUFFIX: 'smoke.test',

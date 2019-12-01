@@ -16,6 +16,7 @@ import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
+import { Logger } from '../../../client/common/logger';
 import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
@@ -26,7 +27,7 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { GLOBAL_MEMENTO, IConfigurationService, ICurrentProcess, IDisposableRegistry, IMemento, IOutputChannel, IPathUtils, IPersistentStateFactory, IsWindows, WORKSPACE_MEMENTO } from '../../../client/common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IPersistentStateFactory, IsWindows, WORKSPACE_MEMENTO } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
 import {
@@ -35,6 +36,9 @@ import {
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
 import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
@@ -98,8 +102,16 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
         serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
         serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
+
+        serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        serviceManager.addSingleton<ILogger>(ILogger, Logger);
+
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
+
+        const mockInterpreterService = mock(InterpreterService);
+        when(mockInterpreterService.hasInterpreters).thenResolve(false);
+        serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mockInterpreterService));
 
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();

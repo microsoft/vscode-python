@@ -14,8 +14,10 @@ import { IServiceContainer } from '../../../client/ioc/types';
 import { UNITTEST_PROVIDER } from '../../../client/testing/common/constants';
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestFlatteningVisitor } from '../../../client/testing/common/testVisitors/flatteningVisitor';
-import { ITestDiscoveryService, ITestRunner, ITestsParser,
-    Options, TestDiscoveryOptions, Tests, UnitTestParserOptions } from '../../../client/testing/common/types';
+import {
+    ITestDiscoveryService, ITestRunner, ITestsParser,
+    Options, TestDiscoveryOptions, Tests, UnitTestParserOptions
+} from '../../../client/testing/common/types';
 import { IArgumentsHelper } from '../../../client/testing/types';
 import { TestDiscoveryService } from '../../../client/testing/unittest/services/discoveryService';
 import { TestsParser } from '../../../client/testing/unittest/services/parserService';
@@ -53,7 +55,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-s')))
             .returns(() => dir)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
@@ -76,6 +78,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const result = await discoveryService.discoverTests(options.object);
 
         expect(result).to.be.equal(tests);
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
@@ -89,10 +92,10 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-s')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('--start-directory')))
             .returns(() => dir)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
@@ -115,6 +118,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const result = await discoveryService.discoverTests(options.object);
 
         expect(result).to.be.equal(tests);
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
@@ -128,10 +132,10 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-s')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('--start-directory')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
@@ -154,6 +158,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const result = await discoveryService.discoverTests(options.object);
 
         expect(result).to.be.equal(tests);
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
@@ -167,7 +172,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
             .returns(() => pattern)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
@@ -190,10 +195,11 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const result = await discoveryService.discoverTests(options.object);
 
         expect(result).to.be.equal(tests);
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
-    test('Ensure discovery is invoked with the right args without a pattern defined with ---pattern', async () => {
+    test('Ensure discovery is invoked with the right args without a pattern defined with --pattern', async () => {
         const args: string[] = [];
         const runOutput = 'xyz';
         const tests: Tests = {
@@ -203,10 +209,10 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('--pattern')))
             .returns(() => pattern)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
@@ -229,6 +235,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const result = await discoveryService.discoverTests(options.object);
 
         expect(result).to.be.equal(tests);
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
@@ -242,10 +249,10 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('--pattern')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('-c');
@@ -268,6 +275,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const result = await discoveryService.discoverTests(options.object);
 
         expect(result).to.be.equal(tests);
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
@@ -281,10 +289,10 @@ suite('Unit Tests - Unittest - Discovery', () => {
         };
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('-p')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         argsHelper.setup(a => a.getOptionValues(typeMoq.It.isValue(args), typeMoq.It.isValue('--pattern')))
             .returns(() => undefined)
-            .verifiable(typeMoq.Times.once());
+            .verifiable(typeMoq.Times.atLeastOnce());
         runner.setup(r => r.run(typeMoq.It.isValue(UNITTEST_PROVIDER), typeMoq.It.isAny()))
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
@@ -302,6 +310,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
         const promise = discoveryService.discoverTests(options.object);
 
         await expect(promise).to.eventually.be.rejectedWith('cancelled');
+        argsHelper.verifyAll();
         runner.verifyAll();
         testParser.verifyAll();
     });
@@ -473,7 +482,7 @@ suite('Unit Tests - Unittest - Discovery', () => {
             }
         });
     });
-    test('Ensure discovery will not fail with blank content' , async () => {
+    test('Ensure discovery will not fail with blank content', async () => {
         const testHelper: TestsHelper = new TestsHelper(new TestFlatteningVisitor(), serviceContainer.object);
 
         const testsParser: TestsParser = new TestsParser(testHelper);

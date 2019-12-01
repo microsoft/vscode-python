@@ -891,7 +891,7 @@ export interface IApplicationEnvironment {
      * @type {string}
      * @memberof IApplicationShell
      */
-    readonly shell: string | undefined;
+    readonly shell: string;
     /**
      * Gets the vscode channel (whether 'insiders' or 'stable').
      */
@@ -903,6 +903,10 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly extensionChannel: Channel;
+    /**
+     * The version of the editor.
+     */
+    readonly vscodeVersion: string;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -967,12 +971,18 @@ export const IWebPanelProvider = Symbol('IWebPanelProvider');
 export interface IWebPanelProvider {
     /**
      * Creates a new webpanel
-     * @param listener for messages from the panel
-     * @param title: title of the panel when it shows
-     * @param: mainScriptPath: full path in the output folder to the script
-     * @return A IWebPanel that can be used to show html pages.
+     *
+     * @param {ViewColumn} viewColumn
+     * @param {IWebPanelMessageListener} listener
+     * @param {string} title
+     * @param {string} rootPath
+     * @param {string[]} scripts
+     * @param {string} [embeddedCss]
+     * @param {*} [settings]
+     * @returns {IWebPanel}
+     * @memberof IWebPanelProvider
      */
-    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): IWebPanel;
 }
 
 // Wraps the vsls liveshare API
@@ -1011,3 +1021,11 @@ export interface ILanguageService {
 }
 
 export type Channel = 'stable' | 'insiders';
+
+/**
+ * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing
+ */
+export const IActiveResourceService = Symbol('IActiveResourceService');
+export interface IActiveResourceService {
+    getActiveResource(): Resource;
+}

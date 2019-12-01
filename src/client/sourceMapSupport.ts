@@ -26,6 +26,7 @@ export class SourceMapSupport {
             return;
         }
         await this.enableSourceMaps(true);
+        require('source-map-support').install();
         const localize = require('./common/utils/localize') as typeof import('./common/utils/localize');
         const disable = localize.Diagnostics.disableSourceMaps();
         this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable).then(selection => {
@@ -58,6 +59,9 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
+        // SourceMapSupport is initialized before the extension, so we
+        // do not have access to IFileSystem yet and have to use Node's
+        // "fs" directly.
         const fsExists = promisify(fs.exists);
         const fsRename = promisify(fs.rename);
         if (await fsExists(targetFile)) {

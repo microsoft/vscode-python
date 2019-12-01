@@ -3,9 +3,10 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { FileSystem } from '../platform/fileSystem';
+import { IFileSystem } from '../platform/types';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
@@ -45,7 +46,7 @@ export namespace LanguageService {
     export const lsFailedToExtract = localize('LanguageService.lsFailedToExtract', 'We encountered an issue extracting the Language Server. Reverting to the alternative, Jedi. Check the Python output panel for details.');
     export const downloadFailedOutputMessage = localize('LanguageService.downloadFailedOutputMessage', 'Language server download failed.');
     export const extractionFailedOutputMessage = localize('LanguageService.extractionFailedOutputMessage', 'Language server extraction failed.');
-    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'Language server dowload complete.');
+    export const extractionCompletedOutputMessage = localize('LanguageService.extractionCompletedOutputMessage', 'Language server download complete.');
     export const extractionDoneOutputMessage = localize('LanguageService.extractionDoneOutputMessage', 'done.');
     export const reloadVSCodeIfSeachPathHasChanged = localize('LanguageService.reloadVSCodeIfSeachPathHasChanged', 'Search paths have changed for this Python interpreter. Please reload the extension to ensure that the IntelliSense works correctly.');
 
@@ -177,10 +178,16 @@ export namespace DataScience {
     export const pythonNewHeader = localize('DataScience.pythonNewHeader', 'Started new kernel:');
     export const pythonVersionHeaderNoPyKernel = localize('DataScience.pythonVersionHeaderNoPyKernel', 'Python Version may not match, no ipykernel found:');
 
-    export const jupyterSelectURILaunchLocal = localize('DataScience.jupyterSelectURILaunchLocal', 'Launch local Jupyter server');
-    export const jupyterSelectURISpecifyURI = localize('DataScience.jupyterSelectURISpecifyURI', 'Type in the URI for the Jupyter server');
-    export const jupyterSelectURIPrompt = localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of a Jupyter server');
+    export const jupyterSelectURIPrompt = localize('DataScience.jupyterSelectURIPrompt', 'Enter the URI of the running Jupyter server');
+    export const jupyterSelectURIQuickPickTitle = localize('DataScience.jupyterSelectURIQuickPickTitle', 'Pick how to connect to Jupyter');
+    export const jupyterSelectURIQuickPickPlaceholder = localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Choose an option');
+    export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Default');
+    export const jupyterSelectURILocalDetail = localize('DataScience.jupyterSelectURILocalDetail', 'VS Code will automatically start a server for you on the localhost');
+    export const jupyterSelectURINewLabel = localize('DataScience.jupyterSelectURINewLabel', 'Existing');
+    export const jupyterSelectURINewDetail = localize('DataScience.jupyterSelectURINewDetail', 'Specify the URI of an existing server');
     export const jupyterSelectURIInvalidURI = localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
+    export const jupyterSelectURIRunningDetailFormat = localize('DataScience.jupyterSelectURIRunningDetailFormat', 'Last activity {0}. {1} existing connections.');
+    export const jupyterSelectURINotRunningDetail = localize('DataScience.jupyterSelectURINotRunningDetail', 'Cannot connect at this time. Status unknown.');
     export const jupyterSelectPasswordPrompt = localize('DataScience.jupyterSelectPasswordPrompt', 'Enter your notebook password');
     export const jupyterNotebookFailure = localize('DataScience.jupyterNotebookFailure', 'Jupyter notebook failed to launch. \r\n{0}');
     export const jupyterNotebookConnectFailed = localize('DataScience.jupyterNotebookConnectFailed', 'Failed to connect to Jupyter notebook. \r\n{0}\r\n{1}');
@@ -294,6 +301,9 @@ export namespace DataScience {
     export const findJupyterCommandProgress = localize('DataScience.findJupyterCommandProgress', 'Active interpreter does not support {0}. Searching for the best available interpreter.');
     export const findJupyterCommandProgressCheckInterpreter = localize('DataScience.findJupyterCommandProgressCheckInterpreter', 'Checking {0}.');
     export const findJupyterCommandProgressSearchCurrentPath = localize('DataScience.findJupyterCommandProgressSearchCurrentPath', 'Searching current path.');
+    export const gatheredScriptDescription = localize('DataScience.gatheredScriptDescription', '# This file contains only the code required to produce the results of the gathered cell.\n');
+    export const gatheredNotebookDescriptionInMarkdown = localize('DataScience.gatheredNotebookDescriptionInMarkdown', '# Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.');
+    export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
 }
 
 export namespace DebugConfigStrings {
@@ -481,14 +491,15 @@ function getString(key: string, defValue?: string) {
     return result;
 }
 
-function load() {
+function load(fs?: IFileSystem) {
+    fs = fs ? fs : new FileSystem();
     // Figure out our current locale.
     loadedLocale = parseLocale();
 
     // Find the nls file that matches (if there is one)
     const nlsFile = path.join(EXTENSION_ROOT_DIR, `package.nls.${loadedLocale}.json`);
-    if (fs.existsSync(nlsFile)) {
-        const contents = fs.readFileSync(nlsFile, 'utf8');
+    if (fs.fileExistsSync(nlsFile)) {
+        const contents = fs.readFileSync(nlsFile);
         loadedCollection = JSON.parse(contents);
     } else {
         // If there isn't one, at least remember that we looked so we don't try to load a second time
@@ -498,8 +509,8 @@ function load() {
     // Get the default collection if necessary. Strings may be in the default or the locale json
     if (!defaultCollection) {
         const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
-        if (fs.existsSync(defaultNlsFile)) {
-            const contents = fs.readFileSync(defaultNlsFile, 'utf8');
+        if (fs.fileExistsSync(defaultNlsFile)) {
+            const contents = fs.readFileSync(defaultNlsFile);
             defaultCollection = JSON.parse(contents);
         } else {
             defaultCollection = {};

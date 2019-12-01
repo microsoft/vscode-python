@@ -105,10 +105,11 @@ suite('Formatting - General', () => {
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
         ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
         // Mocks.
         ioc.registerMockProcessTypes();
-        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        ioc.registerMockInterpreterTypes();
     }
 
     async function injectFormatOutput(outputFileName: string) {

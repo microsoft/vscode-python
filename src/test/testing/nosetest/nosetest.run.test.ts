@@ -7,8 +7,7 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { ICondaService } from '../../../client/interpreter/contracts';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
 import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
@@ -66,8 +65,8 @@ suite('Unit Tests - nose - run against actual python process', () => {
         ioc.registerVariableTypes();
 
         ioc.registerMockProcessTypes();
+        ioc.registerMockInterpreterTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        ioc.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
 
         ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
         ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);

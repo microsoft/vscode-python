@@ -10,10 +10,10 @@ import TelemetryReporter from 'vscode-extension-telemetry';
 import { DiagnosticCodes } from '../application/diagnostics/constants';
 import { IWorkspaceService } from '../common/application/types';
 import { AppinsightsKey, EXTENSION_ROOT_DIR, isTestExecution, PVSC_EXTENSION_ID } from '../common/constants';
-import { traceInfo } from '../common/logger';
+import { traceError, traceInfo } from '../common/logger';
 import { TerminalShellType } from '../common/terminal/types';
 import { StopWatch } from '../common/utils/stopWatch';
-import { NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
+import { JupyterCommands, NativeKeyboardCommandTelemetry, NativeMouseCommandTelemetry, Telemetry } from '../datascience/constants';
 import { DebugConfigurationType } from '../debugger/extension/types';
 import { ConsoleType, TriggerType } from '../debugger/types';
 import { AutoSelectionRule } from '../interpreter/autoSelection/types';
@@ -92,7 +92,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
         // Hence they need to be classified as part of the GDPR process, and thats unnecessary and onerous.
         const props: Record<string, string> = {};
         props.stackTrace = getStackTrace(ex);
-        props.originalEventName = eventName as any as string;
+        props.originalEventName = (eventName as any) as string;
         reporter.sendTelemetryEvent('ERROR', props, measures);
     }
     const customProperties: Record<string, string> = {};
@@ -103,8 +103,14 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
             if (data[prop] === undefined || data[prop] === null) {
                 return;
             }
-            // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
-            (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
+            try {
+                // If there are any errors in serializing one property, ignore that and move on.
+                // Else nothign will be sent.
+                // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
+                (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
+            } catch (ex){
+                traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
+            }
         });
     }
     reporter.sendTelemetryEvent((eventName as any) as string, customProperties, measures);
@@ -114,17 +120,12 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 }
 
 // tslint:disable-next-line:no-any function-name
-export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(
-    eventName: E,
-    properties?: P[E],
-    captureDuration: boolean = true,
-    failureEventName?: E
-) {
+export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(eventName: E, properties?: P[E], captureDuration: boolean = true, failureEventName?: E) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function(...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -149,12 +150,7 @@ export function captureTelemetry<P extends IEventNamePropertyMapping, E extends 
                         // tslint:disable-next-line:no-any
                         properties = properties || ({} as any);
                         (properties as any).failed = true;
-                        sendTelemetryEvent(
-                            failureEventName ? failureEventName : eventName,
-                            stopWatch.elapsedTime,
-                            properties,
-                            ex
-                        );
+                        sendTelemetryEvent(failureEventName ? failureEventName : eventName, stopWatch.elapsedTime, properties, ex);
                     });
             } else {
                 sendTelemetryEvent(eventName, stopWatch.elapsedTime, properties);
@@ -263,6 +259,17 @@ export interface IEventNamePropertyMapping {
          * Carries boolean `true` if 'python.autoComplete.addBrackets' is set to true, `false` otherwise
          */
         enabled: boolean;
+    };
+    /**
+     * Telemetry event captured when debug adapter executable is created
+     */
+    [EventName.DEBUG_ADAPTER_USING_WHEELS_PATH]: {
+        /**
+         * Carries boolean
+         * - `true` if path used for the adapter is the debugger with wheels.
+         * - `false` if path used for the adapter is the source only version of the debugger.
+         */
+        usingWheels: boolean;
     };
     /**
      * Telemetry captured before starting debug session.
@@ -465,7 +472,7 @@ export interface IEventNamePropertyMapping {
          */
         pyspark: boolean;
         /**
-         * Whether using `gevent` when deugging.
+         * Whether using `gevent` when debugging.
          *
          * @type {boolean}
          */
@@ -482,11 +489,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     /**
+     * Telemetry event sent when attaching to a local process.
+     */
+    [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
+    /**
      * Telemetry sent after building configuration for debugger
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
         /**
-         * The type of debug configuration to build configuration fore
+         * The type of debug configuration to build configuration for
          *
          * @type {DebugConfigurationType}
          */
@@ -1117,6 +1128,23 @@ export interface IEventNamePropertyMapping {
         error?: string;
     };
     /**
+     * Telemetry captured for enabling reload.
+     */
+    [EventName.PYTHON_WEB_APP_RELOAD]: {
+        /**
+         * Carries value indicating if the experiment modified `subProcess` field in debug config:
+         * - `true` if reload experiment modified the `subProcess` field.
+         * - `false` if user provided debug configuration was not changed (already setup for reload)
+         */
+        subProcessModified?: boolean;
+        /**
+         * Carries value indicating if the experiment modified `args` field in debug config:
+         * - `true` if reload experiment modified the `args` field.
+         * - `false` if user provided debug configuration was not changed (already setup for reload)
+         */
+        argsModified?: boolean;
+    };
+    /**
      * When user clicks a button in the python extension survey prompt, this telemetry event is sent with details
      */
     [EventName.EXTENSION_SURVEY_PROMPT]: {
@@ -1210,6 +1238,16 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed: boolean;
+    };
+    /**
+     * Telemetry event sent when the extension is activated, if an active terminal is present and
+     * the `python.terminal.activateEnvInCurrentTerminal` setting is set to `true`.
+     */
+    [EventName.ACTIVATE_ENV_IN_CURRENT_TERMINAL]: {
+        /**
+         * Carries boolean `true` if an active terminal is present (terminal is visible), `false` otherwise
+         */
+        isTerminalVisible?: boolean;
     };
     /**
      * Telemetry event sent with details when a terminal is created
@@ -1362,6 +1400,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.CodeLensAverageAcquisitionTime]: never | undefined;
     [Telemetry.CollapseAll]: never | undefined;
     [Telemetry.ConnectFailedJupyter]: never | undefined;
+    [Telemetry.NotebookExecutionActivated]: never | undefined;
     [Telemetry.ConnectLocalJupyter]: never | undefined;
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
@@ -1408,6 +1447,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.PtvsdPromptToInstall]: never | undefined;
     [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
+    [Telemetry.OpenNotebookAll]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
@@ -1425,13 +1465,17 @@ export interface IEventNamePropertyMapping {
     [Telemetry.RunFileInteractive]: never | undefined;
     [Telemetry.RunFromLine]: never | undefined;
     [Telemetry.ScrolledToCell]: never | undefined;
-    [Telemetry.CellCount]: { count: number} ;
+    [Telemetry.CellCount]: { count: number };
     [Telemetry.Save]: never | undefined;
-    [Telemetry.AutoSaveEnabled]: {enabled: boolean};
+    [Telemetry.AutoSaveEnabled]: { enabled: boolean };
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
+    [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
+    [Telemetry.JupyterCommandSearch]: { where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere'; command: JupyterCommands };
+    [Telemetry.UserInstalledJupyter]: never | undefined;
+    [Telemetry.UserDidNotInstallJupyter]: never | undefined;
     [Telemetry.SetJupyterURIToLocal]: never | undefined;
     [Telemetry.SetJupyterURIToUserSpecified]: never | undefined;
     [Telemetry.ShiftEnterBannerShown]: never | undefined;

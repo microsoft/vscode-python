@@ -1,29 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../client/common/extensions';
-
-// tslint:disable-next-line: no-var-requires no-require-imports
-const ansiToHtml = require('ansi-to-html');
-
 import { nbformat } from '@jupyterlab/coreutils';
 import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
-
+import '../../client/common/extensions';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
-import { noop } from '../../test/core';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
+import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
 import { displayOrder, richestMimetype, transforms } from './transforms';
+
+// tslint:disable-next-line: no-var-requires no-require-imports
+const ansiToHtml = require('ansi-to-html');
+
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
+import { noop } from '../../client/common/utils/misc';
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;
@@ -31,7 +30,6 @@ interface ICellOutputProps {
     maxTextSize?: number;
     hideOutput?: boolean;
     themeMatplotlibPlots?: boolean;
-    openLink(uri: monacoEditor.Uri): void;
     expandImage(imageHtml: string): void;
 }
 
@@ -172,7 +170,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
-        const source = concatMultilineStringInput(markdown.source);
+        const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
         const Transform = transforms['text/markdown'];
         const MarkdownClassName = 'markdown-cell-output';
 
@@ -249,70 +247,72 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             const mimeBundle = copy.data as nbformat.IMimeBundle;
             let data: nbformat.MultilineString | JSONObject = mimeBundle[mimeType];
 
-            switch (mimeType) {
-                case 'text/plain':
-                    return {
-                        mimeType,
-                        data: concatMultilineStringOutput(data as nbformat.MultilineString),
-                        isText,
-                        isError,
-                        renderWithScrollbars: true,
-                        extraButton,
-                        doubleClick: noop
+            // Text based mimeTypes don't get a white background
+            if (/^text\//.test(mimeType)) {
+                return {
+                    mimeType,
+                    data: concatMultilineStringOutput(data as nbformat.MultilineString),
+                    isText,
+                    isError,
+                    renderWithScrollbars: true,
+                    extraButton,
+                    doubleClick: noop
+                };
+            } else if (mimeType === 'image/svg+xml' || mimeType === 'image/png') {
+                // If we have a png or svg enable the plot viewer button
+                // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
+                const svg = mimeBundle['image/svg+xml'];
+                const png = mimeBundle['image/png'];
+                const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
+                let doubleClick: () => void = noop;
+                if (svg && png) {
+                    // Save the svg in the extra button.
+                    const openClick = () => {
+                        this.props.expandImage(svg.toString());
                     };
+                    extraButton = (
+                        <div className='plot-open-button'>
+                            <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
+                                <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
+                            </ImageButton>
+                        </div>
+                    );
 
-                case 'image/svg+xml':
-                case 'image/png':
-                    // There should be two mime bundles. Well if enablePlotViewer is turned on. See if we have both
-                    const svg = mimeBundle['image/svg+xml'];
-                    const png = mimeBundle['image/png'];
-                    const buttonTheme = this.props.themeMatplotlibPlots ? this.props.baseTheme : 'vscode-light';
-                    let doubleClick: () => void = noop;
-                    if (svg && png) {
-                        // Save the svg in the extra button.
-                        const openClick = () => {
-                            this.props.expandImage(svg.toString());
-                        };
-                        extraButton = (
-                            <div className='plot-open-button'>
-                                <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
-                                    <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
-                                </ImageButton>
-                            </div>
-                        );
+                    // Switch the data to the png
+                    data = png;
+                    mimeType = 'image/png';
 
-                        // Switch the data to the png
-                        data = png;
-                        mimeType = 'image/png';
+                    // Switch double click to do the same thing as the extra button
+                    doubleClick = openClick;
+                }
 
-                        // Switch double click to do the same thing as the extra button
-                        doubleClick = openClick;
-                    }
-
-                    // return the image
-                    // If not theming plots then wrap in a span
-                    return {
-                        mimeType,
-                        data,
-                        isText,
-                        isError,
-                        renderWithScrollbars,
-                        extraButton,
-                        doubleClick,
-                        outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
-                    };
-
-                default:
-                    return {
-                        mimeType,
-                        data,
-                        isText,
-                        isError,
-                        renderWithScrollbars,
-                        extraButton,
-                        doubleClick: noop
-                    };
+                // return the image
+                // If not theming plots then wrap in a span
+                return {
+                    mimeType,
+                    data,
+                    isText,
+                    isError,
+                    renderWithScrollbars,
+                    extraButton,
+                    doubleClick,
+                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                };
+            } else {
+                // For anything else just return it with a white plot background. This lets stuff like vega look good in
+                // dark mode
+                return {
+                    mimeType,
+                    data,
+                    isText,
+                    isError,
+                    renderWithScrollbars,
+                    extraButton,
+                    doubleClick: noop,
+                    outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
+                };
             }
+
         } catch (e) {
             return {
                 data: e.toString(),
@@ -326,78 +326,66 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
     }
 
-    private click = (event: React.MouseEvent<HTMLDivElement>) => {
-        // If this is an anchor element, forward the click as Jupyter does.
-        let anchor = event.target as HTMLAnchorElement;
-        if (anchor && anchor.href) {
-            // Href may be redirected to an inner anchor
-            if (anchor.href.startsWith('vscode')) {
-                const inner = anchor.getElementsByTagName('a');
-                if (inner && inner.length > 0) {
-                    anchor = inner[0];
-                }
-            }
-            if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
-                this.props.openLink(monacoEditor.Uri.parse(anchor.href));
-            }
-        }
-    }
-
     // tslint:disable-next-line: max-func-body-length
     private renderOutputs(outputs: nbformat.IOutput[]): JSX.Element[] {
-        return outputs.map(this.renderOutput);
+        return [this.renderOutput(outputs)];
     }
 
-    private renderOutput = (output: nbformat.IOutput, index: number): JSX.Element => {
-        const transformed = this.transformOutput(output);
-        let mimetype = transformed.mimeType;
+    private renderOutput = (outputs: nbformat.IOutput[]): JSX.Element => {
+        const buffer: JSX.Element[] = [];
+        const transformedList = outputs.map(this.transformOutput.bind(this));
 
-        // If that worked, use the transform
-        if (mimetype) {
-            // Get the matching React.Component for that mimetype
-            const Transform = transforms[mimetype];
+        transformedList.forEach((transformed, index) => {
+            let mimetype = transformed.mimeType;
 
-            // Create a default set of properties
-            const style: React.CSSProperties = {
-            };
+            // If that worked, use the transform
+            if (mimetype) {
+                // Get the matching React.Component for that mimetype
+                const Transform = transforms[mimetype];
 
-            // Create a scrollbar style if necessary
-            if (transformed.renderWithScrollbars && this.props.maxTextSize) {
-                style.overflowX = 'auto';
-                style.overflowY = 'auto';
-                style.maxHeight = `${this.props.maxTextSize}px`;
-            }
+                let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
+                className = transformed.isError ? `${className} cell-output-error` : className;
 
-            let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
-            className = transformed.isError ? `${className} cell-output-error` : className;
-
-            // If we are not theming plots then wrap them in a white span
-            if (transformed.outputSpanClassName) {
-                return (
-                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
-                        <span className={transformed.outputSpanClassName}>
+                // If we are not theming plots then wrap them in a white span
+                if (transformed.outputSpanClassName) {
+                    buffer.push(
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                            <span className={transformed.outputSpanClassName}>
+                                {transformed.extraButton}
+                                <Transform data={transformed.data} />
+                            </span>
+                        </div>
+                    );
+                } else {
+                    buffer.push(
+                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} className={className}>
                             {transformed.extraButton}
                             <Transform data={transformed.data} />
-                        </span>
-                    </div>
-                );
+                        </div>
+                    );
+                }
             } else {
-                return (
-                    <div role='group' key={index} onDoubleClick={transformed.doubleClick} onClick={this.click} className={className} style={style}>
-                        {transformed.extraButton}
-                        <Transform data={transformed.data} />
-                    </div>
-                );
+                if (transformed.data) {
+                    const keys = Object.keys(transformed.data);
+                    mimetype = keys.length > 0 ? keys[0] : 'unknown';
+                } else {
+                    mimetype = 'unknown';
+                }
+                const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
+                buffer.push(<div key={index}>{str}</div>);
             }
+        });
+
+        // Create a default set of properties
+        const style: React.CSSProperties = {
+        };
+
+        // Create a scrollbar style if necessary
+        if (transformedList.some(transformed => transformed.renderWithScrollbars) && this.props.maxTextSize) {
+            style.overflowY = 'auto';
+            style.maxHeight = `${this.props.maxTextSize}px`;
         }
 
-        if (output.data) {
-            const keys = Object.keys(output.data);
-            mimetype = keys.length > 0 ? keys[0] : 'unknown';
-        } else {
-            mimetype = 'unknown';
-        }
-        const str: string = this.getUnknownMimeTypeFormatString().format(mimetype);
-        return <div key={index}>{str}</div>;
+        return <div key={0} style={style}>{buffer}</div>;
     }
 }

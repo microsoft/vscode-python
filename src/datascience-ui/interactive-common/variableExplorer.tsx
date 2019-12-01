@@ -12,7 +12,6 @@ import { IJupyterVariable } from '../../client/datascience/types';
 import { Image, ImageName } from '../react-common/image';
 import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
-import { getSettings } from '../react-common/settingsReactSide';
 import { IButtonCellValue, VariableExplorerButtonCellFormatter } from './variableExplorerButtonCellFormatter';
 import { CellStyle, VariableExplorerCellFormatter } from './variableExplorerCellFormatter';
 import { VariableExplorerEmptyRowsView } from './variableExplorerEmptyRows';
@@ -134,29 +133,25 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     }
 
     public render() {
-        if (getSettings && getSettings().showJupyterVariableExplorer) {
-            const contentClassName = `variable-explorer-content`;
+        const contentClassName = `variable-explorer-content`;
 
-            const fontSizeStyle: React.CSSProperties = {
-                fontSize: `${this.state.fontSize.toString()}px`
-            };
+        const fontSizeStyle: React.CSSProperties = {
+            fontSize: `${this.state.fontSize.toString()}px`
+        };
 
-            return(
-                <div className='variable-explorer' ref={this.divRef} style={fontSizeStyle}>
-                    <div className='variable-explorer-menu-bar'>
-                        <label className='inputLabel variable-explorer-label'>{getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}</label>
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.closeVariableExplorer} className='variable-explorer-close-button' tooltip={getLocString('DataScience.close', 'Close')}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
-                        </ImageButton>
-                    </div>
-                    <div className={contentClassName}>
-                        {this.renderGrid()}
-                    </div>
+        return (
+            <div className='variable-explorer' ref={this.divRef} style={fontSizeStyle}>
+                <div className='variable-explorer-menu-bar'>
+                    <label className='inputLabel variable-explorer-label'>{getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}</label>
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.closeVariableExplorer} className='variable-explorer-close-button' tooltip={getLocString('DataScience.close', 'Close')}>
+                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                    </ImageButton>
                 </div>
-            );
-        }
-
-        return null;
+                <div className={contentClassName}>
+                    {this.renderGrid()}
+                </div>
+            </div>
+        );
     }
 
     public componentDidMount = () => {

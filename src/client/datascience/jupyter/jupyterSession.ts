@@ -23,8 +23,8 @@ import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
-import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 
 export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;
@@ -132,18 +132,25 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public requestExecute(content: KernelMessage.IExecuteRequest, disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IFuture | undefined {
+    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
         // Start the restart session as soon as a request is created
         this.startRestartSession();
 
         return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
     }
 
-    public requestComplete(content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         // Start the restart session as soon as a request is created
         this.startRestartSession();
 
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
+    }
+
+    public sendInputReply(content: string) {
+        if (this.session && this.session.kernel) {
+            // tslint:disable-next-line: no-any
+            this.session.kernel.sendInputReply({ value: content, status: 'ok' });
+        }
     }
 
     public async connect(cancelToken?: CancellationToken): Promise<void> {
@@ -174,20 +181,24 @@ export class JupyterSession implements IJupyterSession {
 
     private async waitForIdleOnSession(session: Session.ISession | undefined, timeout: number): Promise<void> {
         if (session && session.kernel) {
-            traceInfo(`Waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
+            traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            // This function seems to cause CI builds to timeout randomly on
-            // different tests. Waiting for status to go idle doesn't seem to work and
-            // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
-            const startTime = Date.now();
-            while (session &&
-                session.kernel &&
-                session.kernel.status !== 'idle' &&
-                (Date.now() - startTime < timeout)) {
-                await sleep(100);
-            }
-
-            traceInfo(`Finished waiting for idle on: ${session.kernel.id} -> ${session.kernel.status}`);
+            const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => e.newValue && e.newValue.status === 'idle' ? resolve() : undefined));
+            const checkStatusPromise = new Promise(async resolve => {
+                // This function seems to cause CI builds to timeout randomly on
+                // different tests. Waiting for status to go idle doesn't seem to work and
+                // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
+                const startTime = Date.now();
+                while (session &&
+                    session.kernel &&
+                    session.kernel.status !== 'idle' &&
+                    (Date.now() - startTime < timeout)) {
+                    await sleep(100);
+                }
+                resolve();
+            });
+            await Promise.race([statusChangedPromise, checkStatusPromise]);
+            traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
             // If we didn't make it out in ten seconds, indicate an error
             if (session.kernel && session.kernel.status === 'idle') {
