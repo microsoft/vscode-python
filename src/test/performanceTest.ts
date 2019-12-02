@@ -71,7 +71,7 @@ class TestRunner {
         await this.runPerfTest(devLogFiles, releaseLogFiles, languageServerLogFiles);
     }
     private async enableLanguageServer(enable: boolean) {
-        const settings = `{ "python.languageServer": ${enable ? 'jedi' : 'microsoft'} }`;
+        const settings = `{ "python.languageServer": ${enable ? '"microsoft"' : '"jedi"'} }`;
         await fs.writeFile(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'performance', 'settings.json'), settings);
     }
 
