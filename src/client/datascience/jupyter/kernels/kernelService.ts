@@ -144,7 +144,7 @@ export class KernelService {
         if (ipykernelCommand.status === ModuleExistsStatus.NotFound || !ipykernelCommand.command){
             throw new Error('Command not found to install the kernel');
         }
-        const name = this.generateKernelNameForIntepreter(interpreter);
+        const name = await this.generateKernelNameForIntepreter(interpreter);
         const output = await ipykernelCommand.command.exec(['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
             throwOnStdErr: true,
             encoding: 'utf8',
@@ -193,8 +193,8 @@ export class KernelService {
      * @param {PythonInterpreter} interpreter
      * @memberof KernelService
      */
-    private generateKernelNameForIntepreter(interpreter: PythonInterpreter): string {
-        return `${interpreter.displayName || ''}_${this.fileSystem.getFileHash(interpreter.path)}`.replace(/[^A-Za-z0-9]/g, '');
+    private async generateKernelNameForIntepreter(interpreter: PythonInterpreter): Promise<string> {
+        return `${interpreter.displayName || ''}_${await this.fileSystem.getFileHash(interpreter.path)}`.replace(/[^A-Za-z0-9]/g, '');
     }
     private async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         const enumerator = sessionManager ? sessionManager.getActiveKernelSpecs() : this.enumerateSpecs(cancelToken);
