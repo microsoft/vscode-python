@@ -10,9 +10,9 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import * as path from 'path';
 import * as vscode from 'vscode';
+import { LanguageServerType } from '../../client/common/types';
 import { SMOKE_TEST_EXTENSIONS_DIR } from '../constants';
 import { noop, sleep } from '../core';
-import { LanguageServerType } from '../../client/common/types';
 
 export async function updateSetting(setting: string, value: any) {
     const resource = vscode.workspace.workspaceFolders![0].uri;
