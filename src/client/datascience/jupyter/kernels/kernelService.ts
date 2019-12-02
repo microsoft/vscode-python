@@ -168,13 +168,15 @@ export class KernelService {
         // Get the activated environment variables (as a work around for `conda run` and similar).
         // This ensures the code runs within the context of an activated environment.
         specModel.env = await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)
-                                .catch(noop).then(env => env || {});
+                                // tslint:disable-next-line: no-any
+                                .catch(noop).then(env => (env || {}) as any);
 
         // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
         // We'll need information such as interpreter type, display name, path, etc...
         // Its just a JSON file, and the information is small, hence might as well store everything.
         specModel.metadata = specModel.metadata || {};
-        specModel.metadata.interpreter = interpreter;
+        // tslint:disable-next-line: no-any
+        specModel.metadata.interpreter = interpreter as any;
 
         // Update the kernel.json with our new stuff.
         await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2));
