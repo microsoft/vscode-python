@@ -445,8 +445,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const notebook = this.getNotebook();
 
         if (notebook) {
-            const interpreter = await notebook.getMatchingInterpreter();
-            const kernelSpec = await notebook.getKernelSpec();
+            const [interpreter, kernelSpec] = await Promise.all([notebook.getMatchingInterpreter(), notebook.getKernelSpec()]);
 
             if (interpreter && interpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
                 this.notebookJson.metadata.language_info.version = interpreter.version.raw;
@@ -459,10 +458,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 // Spec exists, just update name and display_name
                 this.notebookJson.metadata.kernelspec.name = kernelSpec.name;
                 this.notebookJson.metadata.kernelspec.display_name = kernelSpec.display_name;
-            } else if (!kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
-                // If we don't have a kernel spec and we do have it in the metadata then clear it
-                this.notebookJson.metadata.kernelspec.name = '';
-                this.notebookJson.metadata.kernelspec.display_name = '';
             }
         }
     }
