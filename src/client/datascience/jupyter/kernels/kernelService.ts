@@ -26,6 +26,18 @@ import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinde
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
 /**
+ * Helper to ensure we can differentiate between two types in union types, keeping typing information.
+ * (basically avoiding the need to case using `as`).
+ * We cannot use `xx in` as jupyter uses `JSONObject` which is too broad and captures anything and everything.
+ *
+ * @param {(nbformat.IKernelspecMetadata | PythonInterpreter)} item
+ * @returns {item is PythonInterpreter}
+ */
+function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): item is PythonInterpreter {
+    return !!(item as PythonInterpreter).path && !!(item as PythonInterpreter).type;
+}
+
+/**
  * Responsible for kernel management and the like.
  *
  * @export
@@ -75,12 +87,10 @@ export class KernelService {
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
-        if ('path' in option && 'type' in option) {
-            const interpreter = option as PythonInterpreter;
-            return specs.find(item => item.language === PYTHON_LANGUAGE && this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', interpreter.path));
+        if (isInterpreter(option)) {
+            return specs.find(item => item.language === PYTHON_LANGUAGE && this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path));
         } else {
-            const kernelSpec = option as nbformat.IKernelspecMetadata;
-            return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === kernelSpec.display_name && item.name === kernelSpec.name);
+            return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === option.display_name && item.name === option.name);
         }
     }
 
