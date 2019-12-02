@@ -31,18 +31,29 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
 
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
-            if (configuration.request === 'attach') {
-                const port = configuration.port ? configuration.port : 0;
+            const isAttach = configuration.request === 'attach';
+            const port = configuration.port ?? 0;
+            // When processId is provided we may have to inject the debugger into the process.
+            // This is done by the debug adapter, so we need to start it. The adapter will handle injecting the debugger when it receives the attach request.
+            const processId = configuration.processId ?? 0;
+
+            if (isAttach && processId === 0) {
                 if (port === 0) {
-                    throw new Error('Port must be specified for request type attach');
+                    throw new Error('Port or processId must be specified for request type attach');
+                } else {
+                    return new DebugAdapterServer(port, configuration.host);
                 }
-                return new DebugAdapterServer(port, configuration.host);
             } else {
                 const pythonPath = await this.getPythonPath(configuration, session.workspaceFolder);
                 // If logToFile is set in the debug config then pass --log-dir <path-to-extension-dir> when launching the debug adapter.
                 const logArgs = configuration.logToFile ? ['--log-dir', EXTENSION_ROOT_DIR] : [];
                 const ptvsdPathToUse = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'new_ptvsd');
+
                 if (pythonPath.length !== 0) {
+                    if (processId) {
+                        sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
+                    }
+
                     if (await this.useNewPtvsd(pythonPath)) {
                         sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
                         return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'), ...logArgs]);

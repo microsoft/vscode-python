@@ -53,7 +53,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { waitForCondition } from '../../common';
-import { noop } from '../../core';
 import { MockMemento } from '../../mocks/mementos';
 import { MockStatusProvider } from '../mockStatusProvider';
 

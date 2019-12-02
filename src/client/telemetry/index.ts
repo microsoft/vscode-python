@@ -472,7 +472,7 @@ export interface IEventNamePropertyMapping {
          */
         pyspark: boolean;
         /**
-         * Whether using `gevent` when deugging.
+         * Whether using `gevent` when debugging.
          *
          * @type {boolean}
          */
@@ -489,11 +489,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     /**
+     * Telemetry event sent when attaching to a local process.
+     */
+    [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
+    /**
      * Telemetry sent after building configuration for debugger
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
         /**
-         * The type of debug configuration to build configuration fore
+         * The type of debug configuration to build configuration for
          *
          * @type {DebugConfigurationType}
          */

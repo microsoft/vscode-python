@@ -23,8 +23,8 @@ import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
-import { JupyterKernelPromiseFailedError } from './jupyterKernelPromiseFailedError';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 
 export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;

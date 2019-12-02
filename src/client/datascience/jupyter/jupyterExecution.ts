@@ -30,7 +30,7 @@ import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { KernelService } from './kernelService';
+import { KernelService } from './kernels/kernelService';
 import { NotebookStarter } from './notebookStarter';
 
 export class JupyterExecutionBase implements IJupyterExecution {

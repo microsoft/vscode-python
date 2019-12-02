@@ -28,7 +28,7 @@ import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import {
     CellState,
     ICell,
@@ -466,6 +466,7 @@ suite('DataScience notebook tests', () => {
                 throw new Error('Method not implemented');
             }
         }
+        @injectable()
         class EmptyPathService implements IKnownSearchPathsForInterpreters {
             public getSearchPaths(): string[] {
                 return [];
@@ -533,7 +534,7 @@ suite('DataScience notebook tests', () => {
 
             // Create again, we should get the same server from the cache
             const server2 = await createNotebook(true);
-            assert.equal(server, server2, 'With no settings changed we should return the cached server');
+            assert.ok(server === server2, 'With no settings changed we should return the cached server');
 
             // Create a new mock interpreter with a different path
             const newPython: PythonInterpreter = {
@@ -550,7 +551,8 @@ suite('DataScience notebook tests', () => {
 
             // Create a new notebook, we should not be the same anymore
             const server3 = await createNotebook(true);
-            assert.notEqual(server, server3, 'With interpreter changed we should return a new server');
+            assert.ok(server3, 'Server not created');
+            assert.ok(server !== server3, 'With interpreter changed we should return a new server');
         } else {
             console.log(`Skipping Change Interpreter test in non-mocked Jupyter case`);
         }

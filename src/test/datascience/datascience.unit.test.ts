@@ -320,21 +320,21 @@ class Pizza(object):
 
     test('Local pick server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('Automatic', '', (v) => value = v);
+        const ds = createDataScienceObject('$(zap) Default', '', (v) => value = v);
         await ds.selectJupyterURI();
-        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Automatic should pick local launch');
+        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
     });
 
     test('Remote server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(plus) Already running', 'http://localhost:1111', (v) => value = v);
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => value = v);
         await ds.selectJupyterURI();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Invalid server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(plus) Already running', 'httx://localhost:1111', (v) => value = v);
+        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', (v) => value = v);
         await ds.selectJupyterURI();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');

@@ -3,7 +3,7 @@
     "displayName": "Python",
     "description": "Linting, Debugging (multi-threaded, remote), Intellisense, code formatting, refactoring, unit tests, snippets, and more.",
     "version": "2019.12.0-dev",
-    "languageServerVersion": "0.4.71",
+    "languageServerVersion": "0.4.114",
     "publisher": "ms-python",
     "author": {
         "name": "Microsoft Corporation"
@@ -1287,9 +1287,6 @@
                         }
                     },
                     "attach": {
-                        "required": [
-                            "port"
-                        ],
                         "properties": {
                             "port": {
                                 "type": "number",
@@ -1364,6 +1361,10 @@
                                 "type": "boolean",
                                 "description": "Show return value of functions when stepping.",
                                 "default": true
+                            },
+                            "processId": {
+                                "type": "number",
+                                "description": "ID of the local process to attach to."
                             }
                         }
                     }

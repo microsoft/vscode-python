@@ -4,10 +4,12 @@
 'use strict';
 
 import { inject, injectable, optional } from 'inversify';
-import { IApplicationShell } from '../common/application/types';
+import * as querystring from 'querystring';
+import { IApplicationEnvironment, IApplicationShell } from '../common/application/types';
 import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
+import { IPlatformService } from '../common/platform/types';
 import {
     IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom
 } from '../common/types';
@@ -33,6 +35,8 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IRandom) private random: IRandom,
         @inject(IExperimentsManager) private experiments: IExperimentsManager,
+        @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
+        @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
         @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY) { }
 
@@ -86,6 +90,13 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
     }
 
     private launchSurvey() {
-        this.browserService.launch('https://aka.ms/AA5rjx5');
+        const query = querystring.stringify({
+            o: encodeURIComponent(this.platformService.osType), // platform
+            v: encodeURIComponent(this.appEnvironment.vscodeVersion),
+            e: encodeURIComponent(this.appEnvironment.packageJson.version), // extension version
+            m: encodeURIComponent(this.appEnvironment.machineId)
+        });
+        const url = `https://aka.ms/AA5rjx5?${query}`;
+        this.browserService.launch(url);
     }
 }

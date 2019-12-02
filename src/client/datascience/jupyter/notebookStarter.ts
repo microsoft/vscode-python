@@ -24,7 +24,7 @@ import { JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
 import { IConnection, IJupyterKernelSpec } from '../types';
 import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
-import { KernelService } from './kernelService';
+import { KernelService } from './kernels/kernelService';
 
 /**
  * Responsible for starting a notebook.
