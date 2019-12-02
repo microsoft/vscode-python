@@ -118,9 +118,11 @@ export class WebPanel implements IWebPanel {
     }
 
     // tslint:disable-next-line:no-any
-    private generateReactHtml(scripts: string[], webView: Webview, embeddedCss?: string, _settings?: any) {
+    private generateReactHtml(scripts: string[], webView: Webview, embeddedCss?: string, settings?: any) {
         const uriBase = webView.asWebviewUri(Uri.file(this.rootPath));
-        const style = embeddedCss ? embeddedCss : '';
+        const style = encodeURI(embeddedCss ? embeddedCss : '');
+        const encodedSettings = encodeURI(JSON.stringify(settings));
+        const encodedScripts = scripts.map(encodeURI);
 
         return `<!doctype html>
         <html lang="en">
@@ -132,12 +134,9 @@ export class WebPanel implements IWebPanel {
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
                 <base href="${uriBase}"/>
-                <style type="text/css">
-                ${style}
-                </style>
             </head>
             <body>
-                <iframe src="http://localhost:${this.port}?scripts=${scripts.join('%')}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe src="http://localhost:${this.port}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&embeddedCss=${style}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }

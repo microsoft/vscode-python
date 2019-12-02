@@ -6,6 +6,7 @@ import * as path from 'path';
 import { ViewColumn } from 'vscode';
 
 import { IServiceContainer } from '../../../ioc/types';
+import { traceInfo } from '../../logger';
 import { IProcessServiceFactory } from '../../process/types';
 import { createDeferred } from '../../utils/async';
 import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../types';
@@ -33,8 +34,12 @@ export class WebPanelProvider implements IWebPanelProvider {
 
             // This should output the port number
             server.out.subscribe(next => {
-                this.port = parseInt(next.out, 10);
-                promise.resolve(this.port);
+                if (!promise.resolved) {
+                    this.port = parseInt(next.out, 10);
+                    promise.resolve(this.port);
+                } else {
+                    traceInfo(`WebServer output: ${next.out}`);
+                }
             },
                 error => {
                     promise.reject(error);
