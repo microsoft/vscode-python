@@ -66,6 +66,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
+        @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
@@ -83,6 +84,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             sessionManagerFactory,
             workspace,
             configuration,
+            activationHelper,
             serviceContainer
         );
         this.executionFactory.sessionChanged(() => this.onSessionChanged());
