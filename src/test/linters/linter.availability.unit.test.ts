@@ -311,7 +311,7 @@ suite('Linter Availability Provider tests', () => {
         // set expectations
         const testOpts = new AvailablityTestOverallOptions();
         testOpts.lsValue = 'jedi';
-        const expectedResult: LanguageServerType = 'jedi';
+        const expectedResult = false;
 
         // arrange
         const result = await performTestOfOverallImplementation(testOpts);
