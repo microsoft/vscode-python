@@ -450,8 +450,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             if (interpreter && interpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
                 this.notebookJson.metadata.language_info.version = interpreter.version.raw;
-            } else if (this.notebookJson.metadata && this.notebookJson.metadata.language_info && this.notebookJson.metadata.language_info.version) {
-                this.notebookJson.metadata.language_info.version = undefined;
             }
 
             if (kernelSpec && this.notebookJson.metadata && !this.notebookJson.metadata.kernelspec) {
