@@ -34,7 +34,8 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
  * @returns {item is PythonInterpreter}
  */
 function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): item is PythonInterpreter {
-    return !!(item as PythonInterpreter).path && !!(item as PythonInterpreter).type;
+    // Interpreters will not have a `display_name` property, but have `path` and `type` properties.
+    return !!(item as PythonInterpreter).path && !!(item as PythonInterpreter).type && !(item as nbformat.IKernelspecMetadata).display_name;
 }
 
 /**
