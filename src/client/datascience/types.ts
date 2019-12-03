@@ -281,6 +281,7 @@ export interface INotebookEditor extends IInteractiveBase {
     executed: Event<INotebookEditor>;
     modified: Event<INotebookEditor>;
     saved: Event<INotebookEditor>;
+    metadataUpdated: Event<INotebookEditor>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */

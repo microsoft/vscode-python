@@ -146,7 +146,7 @@ export class JupyterNotebookBase implements INotebook {
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
-    private interpreter: PythonInterpreter | undefined;
+    private interpreterPromise: Promise<PythonInterpreter | undefined>;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -167,7 +167,7 @@ export class JupyterNotebookBase implements INotebook {
         this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
-        this.interpreterService.getActiveInterpreter(resource).then(i => this.interpreter = i).ignoreErrors();
+        this.interpreterPromise = this.interpreterService.getActiveInterpreter(resource);
     }
 
     public get server(): INotebookServer {
@@ -468,7 +468,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
-        return this.interpreter;
+        return this.interpreterPromise;
     }
 
     public async getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {

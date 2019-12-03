@@ -39,6 +39,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
+    private metadataUpdatedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
@@ -172,6 +173,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.savedEvent.event;
     }
 
+    public get metadataUpdated(): Event<INotebookEditor> {
+        return this.metadataUpdatedEvent.event;
+    }
+
     public get isDirty(): boolean {
         return this._dirty;
     }
@@ -284,7 +289,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     protected submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
         // When code is executed, update the version number in the metadata.
         return super.submitCode(code, file, line, id, editor, debug).then((value) => {
-            this.updateVersionInfoInNotebook().ignoreErrors();
+            this.updateVersionInfoInNotebook().then(() => {
+                this.metadataUpdatedEvent.fire(this);
+            }).catch(ex => {
+                traceError('Failed to update version info in notebook file metadata', ex);
+            });
             return value;
         });
     }
