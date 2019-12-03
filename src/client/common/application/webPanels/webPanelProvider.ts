@@ -6,7 +6,7 @@ import * as path from 'path';
 import * as portfinder from 'portfinder';
 
 import { IServiceContainer } from '../../../ioc/types';
-import { traceInfo, traceError } from '../../logger';
+import { traceError, traceInfo } from '../../logger';
 import { IProcessServiceFactory } from '../../process/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';

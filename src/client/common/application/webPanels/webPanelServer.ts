@@ -83,7 +83,8 @@ async function generateFileResponse(ctx: Koa.ParameterizedContext) {
 
 // tslint:disable: no-any
 async function generateReactHtml(query: any) {
-    const settings = query.settings ? query.settings : '';
+    const settingsBuffer = query.settings ? Buffer.from(query.settings, 'base64') : undefined;
+    const settings = settingsBuffer ? settingsBuffer.toString() : '{}';
     const embeddedCss = query.embeddedCss ? query.embeddedCss : '';
     const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
     const scripts = query.scripts ? query.scripts : '';
@@ -122,7 +123,7 @@ async function generateReactHtml(query: any) {
                     return ${locDatabase};
                 }
                 function getInitialSettings() {
-                    return JSON.parse(window.atob(${settings}));
+                    return JSON.parse('${settings}');
                 }
             </script>
             <script>
