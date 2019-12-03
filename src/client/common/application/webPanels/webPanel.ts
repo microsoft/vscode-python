@@ -12,6 +12,8 @@ import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
 
+const RemappedPort = 9890;
+
 export class WebPanel implements IWebPanel {
 
     private panel: WebviewPanel | undefined;
@@ -20,7 +22,7 @@ export class WebPanel implements IWebPanel {
 
     constructor(
         private disposableRegistry: IDisposableRegistry,
-        private port: number,
+        private port: number | undefined,
         private options: IWebPanelOptions) {
         this.panel = window.createWebviewPanel(
             options.title.toLowerCase().replace(' ', ''),
@@ -29,7 +31,8 @@ export class WebPanel implements IWebPanel {
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: [Uri.file(this.options.rootPath)]
+                localResourceRoots: [Uri.file(this.options.rootPath)],
+                portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
             });
         this.loadPromise = this.load();
     }
@@ -195,7 +198,7 @@ export class WebPanel implements IWebPanel {
                     });
                     //# sourceURL=listener.js
                 </script>
-                <iframe id='hostframe' src="http://localhost:${this.port}/${this.id}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }

@@ -2727,6 +2727,7 @@
         "onigasm": "^2.2.2",
         "pdfkit": "^0.10.0",
         "pidusage": "^1.2.0",
+        "portfinder": "^1.0.25",
         "react-svg-pan-zoom": "^3.1.0",
         "react-svgmt": "^1.1.8",
         "react-virtualized": "^9.21.1",

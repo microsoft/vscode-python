@@ -8,6 +8,7 @@ import * as logger from 'koa-logger';
 import * as path from 'path';
 import * as Stream from 'stream';
 
+import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { Identifiers } from '../../../datascience/constants';
 import { noop } from '../../utils/misc';
 
@@ -19,6 +20,7 @@ interface INotebookState {
 
 const notebookState = new Map<string, INotebookState>();
 
+// Create a new Koa App to host our web server
 const app = new Koa();
 app.use(Cors());
 app.use(compress());
@@ -35,14 +37,14 @@ app.use(async ctx => {
     }
 });
 
-app.listen(9890);
-// tslint:disable-next-line: no-console
-console.log('9890');
+// Port should be passed in
+// args should be of form 'node', 'path to this file', '--port', 'port number'
+app.listen(parseInt(process.argv[3], 10));
 
 async function generateNotebookResponse(ctx: Koa.ParameterizedContext) {
     const readable = new Stream.Readable();
     readable._read = noop;
-    const id = ctx.path;
+    const id = ctx.path.substr(1);
     let state = notebookState.get(id);
     if (!state) {
         state = {
@@ -55,11 +57,28 @@ async function generateNotebookResponse(ctx: Koa.ParameterizedContext) {
     readable.push(state.bundle);
     readable.push(null);
     ctx.body = readable;
+    ctx.cookies.set('id', id);
     ctx.type = 'html';
 }
 
 async function generateFileResponse(ctx: Koa.ParameterizedContext) {
-    ctx.body = fs.createReadStream(path.join(process.cwd(), ctx.url));
+    const id = ctx.cookies.get('id');
+    const state = id ? notebookState.get(id) : undefined;
+    const cwd = state ? state.cwd : process.cwd();
+    let filePath = path.join(cwd, ctx.url);
+
+    switch (ctx.url) {
+        case '/editor.worker.js':
+            // This is actually in the root out folder
+            filePath = path.join(EXTENSION_ROOT_DIR, 'out', ctx.url);
+            break;
+
+        // Here is where we'd likely support loading split bundles.
+        default:
+            break;
+
+    }
+    ctx.body = fs.createReadStream(filePath);
 }
 
 // tslint:disable: no-any

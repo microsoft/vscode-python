@@ -3,12 +3,12 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import * as portfinder from 'portfinder';
 
 import { IServiceContainer } from '../../../ioc/types';
-import { traceInfo } from '../../logger';
+import { traceInfo, traceError } from '../../logger';
 import { IProcessServiceFactory } from '../../process/types';
 import { IDisposableRegistry } from '../../types';
-import { createDeferred } from '../../utils/async';
 import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';
 import { WebPanel } from './webPanel';
 
@@ -22,36 +22,39 @@ export class WebPanelProvider implements IWebPanelProvider {
 
     // tslint:disable-next-line:no-any
     public async create(options: IWebPanelOptions): Promise<IWebPanel> {
-        const port = options.startHttpServer ? await this.ensureServerIsRunning() : -1;
+        const port = options.startHttpServer ? await this.ensureServerIsRunning() : undefined;
         return new WebPanel(this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry), port, options);
     }
 
     private async ensureServerIsRunning(): Promise<number> {
         if (!this.port) {
-            const procService = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-            const server = procService.execObservable('node', [path.join(__dirname, 'webPanelServer.js')], { cwd: 'D:\\Training\\SnakePython' });
-            const promise = createDeferred<number>();
+            // Compute a usable port.
+            const port = await portfinder.getPortPromise({ startPort: 9000, port: 9000 });
+            this.port = port;
 
-            // This should output the port number
-            server.out.subscribe(next => {
-                if (!promise.resolved) {
-                    this.port = parseInt(next.out, 10);
-                    promise.resolve(this.port);
-                } else {
-                    traceInfo(`WebServer output: ${next.out}`);
-                }
-            },
-                error => {
-                    promise.reject(error);
-                },
-                () => {
-                    this.port = undefined;
-                    promise.reject(new Error('server died'));
-                });
+            // Start the service. Wait for it to start before talking to it.
+            try {
+                const ps = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
+                const server = ps.execObservable('node', [path.join(__dirname, 'webPanelServer.js'), '--port', port.toString()]);
+                traceInfo(`WebServer startup on port ${this.port}`);
 
-            return promise.promise;
+                // Subscribe to output so we can trace it
+                server.out.subscribe(
+                    next => {
+                        traceInfo(`WebServer output: ${next.out}`);
+                    },
+                    error => {
+                        traceInfo(`WebServer error: ${error}`);
+                    },
+                    () => {
+                        traceInfo(`WebServer shutdown ${this.port}`);
+                    });
+            } catch (e) {
+                traceError(`WebServer launch failure: ${e}`);
+                throw e;
+            }
         }
 
-        return Promise.resolve(this.port);
+        return this.port;
     }
 }
