@@ -14,9 +14,10 @@ import { IJupyterCommand, IJupyterKernelSpec, IJupyterSessionManager } from '../
 import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinder';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
+import { IKernelSelector } from './types';
 
 @injectable()
-export class KernelSelector {
+export class KernelSelector implements IKernelSelector {
     constructor(
         @inject(KernelSelectionProvider) private readonly selectionProvider: KernelSelectionProvider,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -24,39 +25,37 @@ export class KernelSelector {
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInstaller) private readonly installer: IInstaller
     ) {}
-    public async selectKernel(
-        options: { session?: IJupyterSessionManager } | { session: IJupyterSessionManager; isRemoteConnection: true },
-        cancelToken?: CancellationToken
-    ): Promise<IJupyterKernelSpec | undefined> {
-        const suggestions =
-            'isRemoteConnection' in options
-                ? this.selectionProvider.getKernelSelectionsForRemoteSession(options.session)
-                : this.selectionProvider.getLocalKernelSelectionProvider(options.session);
-
-        const selection = await this.applicationShell.showQuickPick(suggestions);
+    public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+        const suggestions = this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
+        const selection = await this.applicationShell.showQuickPick(suggestions, undefined, cancelToken);
         if (!selection) {
             return;
         }
 
         // Nothing to validate if this is a remote connection.
-        if ('isRemoteConnection' in options) {
-            if ('kernelSpec' in selection.selection) {
-                return selection.selection.kernelSpec;
-            }
-            // This is not possible.
-            throw new Error('Invalid Selection in kernel spec');
+        if (!selection.selection.kernelSpec) {
+            return selection.selection.kernelSpec;
+        }
+        // This is not possible (remote kernels selector can only display remote kernels).
+        throw new Error('Invalid Selection in kernel spec (somehow a local kernel/interpreter has been selected for a remote session!');
+    }
+
+    public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+        const suggestions = this.selectionProvider.getLocalKernelSelectionProvider(session, cancelToken);
+        const selection = await this.applicationShell.showQuickPick(suggestions, undefined, cancelToken);
+        if (!selection) {
+            return;
         }
 
         // Check if ipykernel is installed in this kernel.
-        if ('interpreter' in selection.selection) {
-            const interpreter = selection.selection.interpreter;
-            const isValid = await this.isSelectionValid(interpreter, cancelToken);
+        if (selection.selection.interpreter) {
+            const isValid = await this.isSelectionValid(selection.selection.interpreter, cancelToken);
             if (!isValid) {
                 return;
             }
 
             // Try an install this interpreter as a kernel.
-            return this.kernelService.registerKernel(interpreter, cancelToken);
+            return this.kernelService.registerKernel(selection.selection.interpreter, cancelToken);
         } else {
             return selection.selection.kernelSpec;
         }
