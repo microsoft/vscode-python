@@ -28,8 +28,8 @@ suite('Data Science - KernelSelections', () => {
     const activeJuliaKernelModel = { lastActivityTime: new Date(2001, 1, 1, 12, 15, 0, 0), numberOfConnections: 10, name: 'julia' };
     const python1KernelSpecModel = { display_name: 'Python display name', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'py1', path: 'somePath', metadata: {} };
     const python3KernelSpecModel = { display_name: 'Python3', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'py3', path: 'somePath3', metadata: {} };
-    const juliaKernelSpecModel = { display_name: 'Julia display name', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'julia', path: 'j', metadata: {} };
-    const rKernelSpecModel = { display_name: 'R', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'r', path: 'r', metadata: {} };
+    const juliaKernelSpecModel = { display_name: 'Julia display name', dispose: async () => noop(), language: 'julia', name: 'julia', path: 'j', metadata: {} };
+    const rKernelSpecModel = { display_name: 'R', dispose: async () => noop(), language: 'r', name: 'r', path: 'r', metadata: {} };
 
     const allSpecs: IJupyterKernelSpec[] = [python1KernelSpecModel, python3KernelSpecModel, juliaKernelSpecModel, rKernelSpecModel];
 

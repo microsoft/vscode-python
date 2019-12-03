@@ -17,23 +17,23 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types'
 /**
  * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
  *
- * @param {boolean} activeKernel Whether this is an active kernel in a jupyter session.
  * @param {IJupyterKernelSpec} kernelSpec
  * @returns {IKernelSpecQuickPickItem}
  */
 function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelSpecQuickPickItem {
     return {
         label: kernelSpec.display_name,
+        // tslint:disable-next-line: no-suspicious-comment
+        // TODO: Localize & fix as per spec.
         description: '(kernel)',
         selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
     };
 }
 
 /**
- * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
+ * Given an active kernel, this will return a quick pick item with appropriate display names and the like.
  *
- * @param {boolean} activeKernel Whether this is an active kernel in a jupyter session.
- * @param {IJupyterKernelSpec} kernelSpec
+ * @param {(IJupyterKernel & Partial<IJupyterKernelSpec>)} kernel
  * @returns {IKernelSpecQuickPickItem}
  */
 function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyterKernelSpec>): IKernelSpecQuickPickItem {
@@ -70,7 +70,7 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
  * Provider for installed kernel specs (`python -m jupyter kernelspec list`).
  *
  * @export
- * @class JupyterKernelSelectionListProvider
+ * @class InstalledJupyterKernelSelectionListProvider
  * @implements {IKernelSelectionListProvider}
  */
 export class InstalledJupyterKernelSelectionListProvider implements IKernelSelectionListProvider {
@@ -96,6 +96,8 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
         return items.map(item => {
             return {
                 ...item,
+        // tslint:disable-next-line: no-suspicious-comment
+                // TODO: Localize & fix as per spec.
                 description: '(register and use interpreter as kernel)',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };

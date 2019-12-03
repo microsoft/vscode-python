@@ -66,7 +66,7 @@ export class KernelSelector {
 
     private async isSelectionValid(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> {
         // Is ipykernel installed in this environment.
-        if ((await this.installer.isInstalled(Product.ipykernel, interpreter))) {
+        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
             return true;
         }
         if (Cancellation.isCanceled(cancelToken)) {
