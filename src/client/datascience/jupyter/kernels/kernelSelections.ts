@@ -23,7 +23,7 @@ function getQuickPickFromKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelSpec
     return {
         label: kernelSpec.display_name || kernelSpec.name || '',
         description: '',
-        selection: { kernelSpec: kernelSpec }
+        selection: { kernelSpec: kernelSpec, interpreter: undefined }
     };
 }
 
@@ -71,7 +71,7 @@ export class InterpreterKernelSelectionnListProvider implements IKernelSelection
         return items.map(item => {
             return {
                 ...item,
-                selection: { interpreter: item.interpreter }
+                selection: { interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
     }
