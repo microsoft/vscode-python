@@ -4,6 +4,7 @@ import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { Disposable, Position, Range, TextDocument, TextEditorOptions, Uri, window } from 'vscode';
 import '../common/extensions';
+import { traceError } from '../common/logger';
 import { IS_WINDOWS } from '../common/platform/constants';
 import { IPythonExecutionFactory } from '../common/process/types';
 import { IPythonSettings } from '../common/types';
@@ -136,7 +137,7 @@ export class RefactorProxy extends Disposable {
             errorResponse = dataStr.split(/\r?\n/g).filter(line => line.length > 0).map(resp => JSON.parse(resp));
             this._previousStdErrData = '';
         } catch (ex) {
-            console.error(ex);
+            traceError(ex);
             // Possible we've only received part of the data, hence don't clear previousData
             return;
         }

@@ -43,16 +43,16 @@ class CellFormatter extends React.Component<ICellFormatterProps> {
 
         // Otherwise an unknown type or a string
         const val = this.props.value !== null ? this.props.value.toString() : '';
-        return (<div className='cell-formatter' title={val}><span>{val}</span></div>);
+        return (<div className='cell-formatter' role='gridcell' title={val}><span>{val}</span></div>);
     }
 
     private renderBool(value: boolean) {
-        return <div className='cell-formatter' title={value.toString()}><span>{value.toString()}</span></div>;
+        return <div className='cell-formatter' role='gridcell' title={value.toString()}><span>{value.toString()}</span></div>;
     }
 
     private renderNumber(value: number) {
         const val = value.toString();
-        return <div className='number-formatter cell-formatter' title={val}><span>{val}</span></div>;
+        return <div className='number-formatter cell-formatter' role='gridcell' title={val}><span>{val}</span></div>;
     }
 
 }

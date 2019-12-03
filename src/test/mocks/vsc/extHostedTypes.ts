@@ -1920,6 +1920,16 @@ export namespace vscMockExtHostedTypes {
         }
     }
 
+    export class DebugAdapterServer {
+        readonly port: number;
+        readonly host?: string;
+
+        constructor(port: number, host?: string) {
+            this.port = port;
+            this.host = host;
+        }
+    }
+
     export enum LogLevel {
         Trace = 1,
         Debug = 2,
@@ -2013,5 +2023,9 @@ export namespace vscMockExtHostedTypes {
          * Determines an item is expanded
          */
         Expanded = 1
+    }
+
+    export class QuickInputButtons {
+        static readonly Back: vscode.QuickInputButton = { iconPath: 'back' };
     }
 }

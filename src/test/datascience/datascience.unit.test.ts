@@ -2,13 +2,37 @@
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
+import { IDisposable } from 'monaco-editor';
+import { anything, instance, mock, when } from 'ts-mockito';
+import * as typemoq from 'typemoq';
+import { Uri } from 'vscode';
 
+import { DebugService } from '../../client/common/application/debugService';
+import { IApplicationShell } from '../../client/common/application/types';
+import { WorkspaceService } from '../../client/common/application/workspace';
+import { ConfigurationService } from '../../client/common/configuration/service';
+import { IS_WINDOWS } from '../../client/common/platform/constants';
+import { IExtensionContext } from '../../client/common/types';
+import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
-import { InputHistory } from '../../datascience-ui/history-react/inputHistory';
+import { Settings } from '../../client/datascience/constants';
+import { DataScience } from '../../client/datascience/datascience';
+import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
+import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
+import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
+import { ServiceContainer } from '../../client/ioc/container';
+import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
+import { MockMemento } from '../mocks/mementos';
+import { MockCommandManager } from './mockCommandManager';
+import { MockDocumentManager } from './mockDocumentManager';
+import { MockInputBox } from './mockInputBox';
+import { MockQuickPick } from './mockQuickPick';
 
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {
+    const workspaceService = mock(WorkspaceService);
 
     test('formatting stream text', async () => {
         assert.equal(formatStreamText('\rExecute\rExecute 1'), 'Execute 1');
@@ -19,6 +43,30 @@ suite('Data Science Tests', () => {
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 6\rExecute 7'), 'Execute\nExecute 7');
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 8\rExecute 9\r\r'), 'Execute\n');
         assert.equal(formatStreamText('\rExecute\rExecute\nExecute 10\rExecute 11\r\n'), 'Execute\nExecute 11\n');
+    });
+
+    // tslint:disable: no-invalid-template-strings
+    test('expanding file variables', async function () {
+        // tslint:disable-next-line: no-invalid-this
+        this.timeout(10000);
+        const uri = Uri.file('test/bar');
+        const folder = { index: 0, name: '', uri };
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+        when(workspaceService.workspaceFolders).thenReturn([folder]);
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(folder);
+        const inst = instance(workspaceService);
+        const relativeFilePath = IS_WINDOWS ? '..\\xyz\\bip\\foo.baz' : '../xyz/bip/foo.baz';
+        const relativeFileDir = IS_WINDOWS ? '..\\xyz\\bip' : '../xyz/bip';
+
+        assert.equal(expandWorkingDir(undefined, 'bar/foo.baz', inst), 'bar');
+        assert.equal(expandWorkingDir(undefined, 'bar/bip/foo.baz', inst), 'bar/bip');
+        assert.equal(expandWorkingDir('${file}', 'bar/bip/foo.baz', inst), Uri.file('bar/bip/foo.baz').fsPath);
+        assert.equal(expandWorkingDir('${fileDirname}', 'bar/bip/foo.baz', inst), Uri.file('bar/bip').fsPath);
+        assert.equal(expandWorkingDir('${relativeFile}', 'test/xyz/bip/foo.baz', inst), relativeFilePath);
+        assert.equal(expandWorkingDir('${relativeFileDirname}', 'test/xyz/bip/foo.baz', inst), relativeFileDir);
+        assert.equal(expandWorkingDir('${cwd}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
+        assert.equal(expandWorkingDir('${workspaceFolder}', 'test/xyz/bip/foo.baz', inst), Uri.file('test/bar').fsPath);
+        assert.equal(expandWorkingDir('${cwd}-${file}', 'bar/bip/foo.baz', inst), `${Uri.file('test/bar').fsPath}-${Uri.file('bar/bip/foo.baz').fsPath}`);
     });
 
     test('input history', async () => {
@@ -110,8 +158,8 @@ suite('Data Science Tests', () => {
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
 
-// tslint:disable-next-line: no-multiline-string
-const multilineCode = `#%%
+        // tslint:disable-next-line: no-multiline-string
+        const multilineCode = `#%%
 myvar = """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 Nullam eget varius ligula, eget fermentum mauris.
@@ -121,8 +169,8 @@ Sed mattis dui diam, et blandit augue mattis vestibulum.
 Suspendisse ornare interdum velit. Suspendisse potenti.
 Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
 """`;
-// tslint:disable-next-line: no-multiline-string
-const multilineTwo = `#%%
+        // tslint:disable-next-line: no-multiline-string
+        const multilineTwo = `#%%
 """ # Lorem Ipsum
 Lorem ipsum dolor sit amet, consectetur adipiscing elit.
 Nullam eget varius ligula, eget fermentum mauris.
@@ -141,9 +189,9 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells.length, 1, 'code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 10, 'Lines for cell not emitted');
-// tslint:disable-next-line: no-multiline-string
+        // tslint:disable-next-line: no-multiline-string
         assert.equal(cells[0].data.source[9], `""" print('bob')`, 'Lines for cell not emitted');
-// tslint:disable-next-line: no-multiline-string
+        // tslint:disable-next-line: no-multiline-string
         const multilineMarkdown = `#%% [markdown]
 # ## Block of Interest
 #
@@ -171,8 +219,8 @@ Morbi molestie lacinia sapien nec porttitor. Nam at vestibulum nisi.
         assert.equal(cells[0].data.source.length, 20, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[17], '          - Item 1-a-3-c\n', 'Lines for markdown not emitted');
 
-// tslint:disable-next-line: no-multiline-string
-const multilineQuoteWithOtherDelimiter = `#%% [markdown]
+        // tslint:disable-next-line: no-multiline-string
+        const multilineQuoteWithOtherDelimiter = `#%% [markdown]
 '''
 ### Take a look
   2. Item 2
@@ -186,7 +234,7 @@ const multilineQuoteWithOtherDelimiter = `#%% [markdown]
         assert.equal(cells[0].data.source[2], '""" Not a comment delimiter', 'Lines for markdown not emitted');
 
         // tslint:disable-next-line: no-multiline-string
-const multilineQuoteInFunc = `#%%
+        const multilineQuoteInFunc = `#%%
 import requests
 def download(url, filename):
     """ utility function to download a file """
@@ -201,8 +249,8 @@ def download(url, filename):
         assert.equal(cells[0].data.source.length, 9, 'Lines for cell not emitted');
         assert.equal(cells[0].data.source[3], '    """ utility function to download a file """\n', 'Lines for cell not emitted');
 
-// tslint:disable-next-line: no-multiline-string
-const multilineMarkdownWithCell = `#%% [markdown]
+        // tslint:disable-next-line: no-multiline-string
+        const multilineMarkdownWithCell = `#%% [markdown]
 # # Define a simple class
 class Pizza(object):
     def __init__(self, size, toppings, price, rating):
@@ -227,6 +275,69 @@ class Pizza(object):
         assert.equal(nonComments, '', 'Multline comment is not being stripped');
         nonComments = stripComments(multilineQuoteInFunc);
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
+    });
+
+    function createDataScienceObject(quickPickSelection: string, inputSelection: string, updateCallback: (val: string) => void): DataScience {
+        const configService = mock(ConfigurationService);
+        const serviceContainer = mock(ServiceContainer);
+        const codeLensProvider = mock(DataScienceCodeLensProvider);
+        const notebookProvider = mock(NativeEditorProvider);
+        const jupyterSessionManagerFactory = mock(JupyterSessionManagerFactory);
+        const disposableRegistry: IDisposable[] = [];
+        const debugService = mock(DebugService);
+        const applicationShell = typemoq.Mock.ofType<IApplicationShell>();
+        const documentManager = new MockDocumentManager();
+        const commandManager = new MockCommandManager();
+        const storage = new MockMemento();
+        const context: typemoq.IMock<IExtensionContext> = typemoq.Mock.ofType<IExtensionContext>();
+        const quickPick = new MockQuickPick(quickPickSelection);
+        const input = new MockInputBox(inputSelection);
+        applicationShell.setup(a => a.createQuickPick()).returns(() => quickPick);
+        applicationShell.setup(a => a.createInputBox()).returns(() => input);
+        const multiStepFactory = new MultiStepInputFactory(applicationShell.object);
+        when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall((_a1, a2, _a3, _a4) => {
+            updateCallback(a2);
+            return Promise.resolve();
         });
+
+        return new DataScience(
+            instance(serviceContainer),
+            commandManager,
+            disposableRegistry,
+            context.object,
+            instance(codeLensProvider),
+            instance(configService),
+            documentManager,
+            instance(workspaceService),
+            [],
+            instance(notebookProvider),
+            instance(debugService),
+            storage,
+            instance(jupyterSessionManagerFactory),
+            multiStepFactory
+        );
+    }
+
+    test('Local pick server uri', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(zap) Default', '', (v) => value = v);
+        await ds.selectJupyterURI();
+        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
+    });
+
+    test('Remote server uri', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => value = v);
+        await ds.selectJupyterURI();
+        assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
+    });
+
+    test('Invalid server uri', async () => {
+        let value = '';
+        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', (v) => value = v);
+        await ds.selectJupyterURI();
+        assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
+        assert.equal(value, '', 'Validation failed');
+    });
 
 });

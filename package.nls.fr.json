@@ -7,7 +7,6 @@
     "python.command.python.debugtests.title": "Déboguer tous les tests unitaires",
     "python.command.python.execInTerminal.title": "Exécuter le script Python dans un terminal",
     "python.command.python.setInterpreter.title": "Sélectionner l'interpreteur",
-    "python.command.python.updateSparkLibrary.title": "Mettre à jour les librairies de l'espace de travail PySpark",
     "python.command.python.refactorExtractVariable.title": "Extraire la variable",
     "python.command.python.refactorExtractMethod.title": "Extraire la méthode",
     "python.command.python.viewTestOutput.title": "Afficher la sortie des tests unitaires",

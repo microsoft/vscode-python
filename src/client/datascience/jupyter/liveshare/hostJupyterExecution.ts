@@ -11,14 +11,13 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterService, IKnownSearchPathsForInterpreters } from '../../../interpreter/contracts';
+import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
-    IJupyterCommandFactory,
     IJupyterExecution,
-    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
@@ -39,22 +38,19 @@ export class HostJupyterExecution
         executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
         processServiceFactory: IProcessServiceFactory,
-        knownSearchPaths: IKnownSearchPathsForInterpreters,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSys: IFileSystem,
-        sessionManager: IJupyterSessionManager,
+        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        commandFactory: IJupyterCommandFactory,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
             executionFactory,
             interpreterService,
             processServiceFactory,
-            knownSearchPaths,
             logger,
             disposableRegistry,
             asyncRegistry,
@@ -62,7 +58,6 @@ export class HostJupyterExecution
             sessionManager,
             workspace,
             configService,
-            commandFactory,
             serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys);
     }
@@ -161,6 +156,7 @@ export class HostJupyterExecution
                 return {
                     baseUrl: connectionInfo.baseUrl,
                     token: connectionInfo.token,
+                    hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
                     disconnected: (_l) => { return { dispose: noop }; },

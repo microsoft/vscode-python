@@ -9,47 +9,64 @@ schedules:
   branches:
     include:
     - master
-    - releases/*
+    - releases*
 
 # Variables that are available for the entire pipeline.
 variables:
-  PythonVersion: '3.7'
-  NodeVersion: '10.5.0'
-  NpmVersion: 'latest'
-  MOCHA_FILE: '$(Build.ArtifactStagingDirectory)/test-junit.xml' # All test files will write their JUnit xml output to this file, clobbering the last time it was written.
-  MOCHA_REPORTER_JUNIT: true # Use the mocha-multi-reporters and send output to both console (spec) and JUnit (mocha-junit-reporter).
-  VSC_PYTHON_FORCE_LOGGING: true # Enable this to turn on console output for the logger
-  VSC_PYTHON_LOG_FILE: '$(Build.ArtifactStagingDirectory)/pvsc.log'
+- template: templates/globals.yml
 
-jobs:
-- template: templates/build_compile_jobs.yml
+stages:
+- stage: Build
+  jobs:
+  - template: templates/jobs/build_compile.yml
 
-- template: templates/uitest_jobs.yml
-  parameters:
-    jobs:
-    - test: "Smoke"
-      tags: "--tags=@smoke"
-      # Smoke tests are cheap, so run them against all Python Versions.
-    - test: "Test"
-      tags: "--tags=@testing"
-      # We have python code that is involved in running/discovering tests.
-      # Hence test against all versions, until we have CI running for the Python code.
-      # I.e. when all test dicovery/running is done purely in Python.
-    - test: "Terminal"
-      tags: "--tags=@terminal --tags=~@terminal.pipenv"
-      # No need to run tests against all versions.
-      # This is faster/cheaper, besides activation of terminals is generic enough
-      # not to warrant testing against all versions.
-      ignorePythonVersions: "3.6,3.5"
-    - test: "Debugging"
-      tags: "--tags=@debugging"
-      # No need to run tests against all versions.
-      # This is faster/cheaper, and these are external packages.
-      # We expect them to work (or 3rd party packages to test against all PY versions).
-      ignorePythonVersions: "3.6,3.5"
-    - test: "Jedi_Language_Server"
-      tags: "--tags=@ls"
-      # No need to run tests against all versions.
-      # This is faster/cheaper, and these are external packages.
-      # We expect them to work (or 3rd party packages to test against all PY versions).
-      ignorePythonVersions: "3.6,3.5"
+- stage: Build_UITests
+  dependsOn: []
+  jobs:
+  - template: templates/jobs/build_uitests.yml
+
+- stage: UITests
+  dependsOn:
+  - Build
+  - Build_UITests
+  jobs:
+  - template: templates/jobs/uitest.yml
+    parameters:
+      jobs:
+      - test: "Smoke"
+        tags: "@smoke"
+        # Smoke tests are cheap, so run them against all Python Versions.
+      - test: "Test"
+        tags: "@testing"
+        # We have python code that is involved in running/discovering tests.
+        # Hence test against all versions, until we have CI running for the Python code.
+        # I.e. when all test discovery/running is done purely in Python.
+        # However we will not run against Python 2.7 as Pytest is not supported against 2.7.
+        # Yes unitest and nose are, but its messy to write the BDD tests to re-use same tests
+        # but exclude for pytest and python 2.7 in a generic & simple way.
+        ignorePythonVersions: "2.7"
+      - test: "Terminal"
+        tags: "@terminal and not @terminal.pipenv"
+        # No need to run tests against all versions.
+        # This is faster/cheaper, besides activation of terminals is generic enough
+        # not to warrant testing against all versions.
+        ignorePythonVersions: "3.6,3.5"
+      - test: "Debugging"
+        tags: "@debugging"
+        # No need to run tests against all versions.
+        # This is faster/cheaper, and these are external packages.
+        # We expect them to work (or 3rd party packages to test against all PY versions).
+        ignorePythonVersions: "3.6,3.5"
+      - test: "Jedi_Language_Server"
+        tags: "@ls"
+        # No need to run tests against all versions.
+        # This is faster/cheaper, and these are external packages.
+        # We expect them to work (or 3rd party packages to test against all PY versions).
+        ignorePythonVersions: "3.6,3.5"
+
+- stage: Reports
+  dependsOn:
+  - UITests
+  condition: always()
+  jobs:
+  - template: templates/jobs/merge_upload_uitest_report.yml

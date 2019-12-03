@@ -6,7 +6,6 @@ import '../../common/extensions';
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
-
 import { CancellationError } from '../../common/cancellation';
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
@@ -42,7 +41,7 @@ class JupyterConnectionWaiter {
     private fileSystem: IFileSystem;
     private notebook_dir: string;
     private getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>;
-    private createConnection: (b: string, t: string, p: Disposable) => IConnection;
+    private createConnection: (b: string, t: string, h: string, p: Disposable) => IConnection;
     private launchResult: ObservableExecutionResult<string>;
     private cancelToken: CancellationToken | undefined;
     private stderr: string[] = [];
@@ -52,7 +51,7 @@ class JupyterConnectionWaiter {
         launchResult: ObservableExecutionResult<string>,
         notebookFile: string,
         getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
-        createConnection: (b: string, t: string, p: Disposable) => IConnection,
+        createConnection: (b: string, t: string, h: string, p: Disposable) => IConnection,
         serviceContainer: IServiceContainer,
         cancelToken?: CancellationToken
     ) {
@@ -124,7 +123,8 @@ class JupyterConnectionWaiter {
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
-                this.resolveStartPromise(url, token);
+                const host = matchInfo.hostname;
+                this.resolveStartPromise(url, token, host);
             }
         }
 
@@ -158,7 +158,7 @@ class JupyterConnectionWaiter {
             }
 
             // Here we parsed the URL correctly
-            this.resolveStartPromise(`${url.protocol}//${url.host}${url.pathname}`, `${url.searchParams.get('token')}`);
+            this.resolveStartPromise(`${url.protocol}//${url.host}${url.pathname}`, `${url.searchParams.get('token')}`, url.hostname);
         }
     }
 
@@ -187,11 +187,11 @@ class JupyterConnectionWaiter {
         }
     }
 
-    private resolveStartPromise = (baseUrl: string, token: string) => {
+    private resolveStartPromise = (baseUrl: string, token: string, hostName: string) => {
         // tslint:disable-next-line: no-any
         clearTimeout(this.launchTimeout as any);
         if (!this.startPromise.rejected) {
-            const connection = this.createConnection(baseUrl, token, this.launchResult);
+            const connection = this.createConnection(baseUrl, token, hostName, this.launchResult);
             const origDispose = connection.dispose.bind(connection);
             connection.dispose = () => {
                 // Stop listening when we disconnect
@@ -214,14 +214,16 @@ class JupyterConnectionWaiter {
 
 // Represents an active connection to a running jupyter notebook
 export class JupyterConnection implements IConnection {
-    public baseUrl: string;
-    public token: string;
-    public localLaunch: boolean;
+    public readonly baseUrl: string;
+    public readonly token: string;
+    public readonly hostName: string;
+    public readonly localLaunch: boolean;
     public localProcExitCode: number | undefined;
     private disposable: Disposable | undefined;
     private eventEmitter: EventEmitter<number> = new EventEmitter<number>();
-    constructor(baseUrl: string, token: string, disposable: Disposable, childProc: ChildProcess | undefined) {
+    constructor(baseUrl: string, token: string, hostName: string, disposable: Disposable, childProc: ChildProcess | undefined) {
         this.baseUrl = baseUrl;
+        this.hostName = hostName;
         this.token = token;
         this.localLaunch = true;
         this.disposable = disposable;
@@ -229,8 +231,10 @@ export class JupyterConnection implements IConnection {
         // If the local process exits, set our exit code and fire our event
         if (childProc) {
             childProc.on('exit', c => {
-                this.localProcExitCode = c;
-                this.eventEmitter.fire(c);
+                // Our code expects the exit code to be of type `number` or `undefined`.
+                const code = typeof c === 'number' ? c : undefined;
+                this.localProcExitCode = code;
+                this.eventEmitter.fire(code);
             });
         }
     }
@@ -251,7 +255,7 @@ export class JupyterConnection implements IConnection {
             notebookExecution,
             notebookFile,
             getServerInfo,
-            (baseUrl: string, token: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, processDisposable, notebookExecution.proc),
+            (baseUrl: string, token: string, hostName: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, hostName, processDisposable, notebookExecution.proc),
             serviceContainer,
             cancelToken
         );

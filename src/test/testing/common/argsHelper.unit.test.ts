@@ -66,7 +66,7 @@ suite('Unit Tests - Arguments Helper', () => {
         expect(values).to.be.lengthOf(2);
         expect(values).to.be.deep.equal(['value2', 'value3']);
     });
-    test('Get multiple Positional options and ineline values', () => {
+    test('Get multiple Positional options and inline values', () => {
         const args = ['-abc=1234', '--value-option=value1', '--no-value-option', 'value2', 'value3'];
         const values = argsHelper.getPositionalArguments(args, ['--value-option', '-abc'], ['--no-value-option']);
         expect(values).to.be.array();
@@ -80,12 +80,27 @@ suite('Unit Tests - Arguments Helper', () => {
         expect(values).to.be.lengthOf(1);
         expect(values).to.be.deep.equal(['value3']);
     });
-    test('Get multiplle Positional options with trailing value option', () => {
+    test('Get multiple Positional options with trailing value option', () => {
         const args = ['-abc', '1234', '--value-option', 'value1', '--value-option', 'value2', 'value3', '4'];
         const values = argsHelper.getPositionalArguments(args, ['--value-option', '-abc'], ['--no-value-option']);
         expect(values).to.be.array();
         expect(values).to.be.lengthOf(2);
         expect(values).to.be.deep.equal(['value3', '4']);
+    });
+    test('Get Positional options with unknown args', () => {
+        const args = ['-abc', '1234', '--value-option', 'value1', '--value-option', 'value2', 'value3', '4'];
+        const values = argsHelper.getPositionalArguments(args, ['-abc'], ['--no-value-option']);
+        expect(values).to.be.array();
+        expect(values).to.be.lengthOf(4);
+        expect(values).to.be.deep.equal(['value1', 'value2', 'value3', '4']);
+    });
+    test('Get Positional options with no options parameters', () => {
+        const args = ['-abc', '1234', '--value-option', 'value1', '--value-option', 'value2', 'value3', '4'];
+        const values = argsHelper.getPositionalArguments(args);
+        expect(values).to.be.array();
+        expect(values).to.be.lengthOf(5);
+        expect(values).to.be.deep.equal(['1234', 'value1', 'value2', 'value3', '4']);
+        expect(values).to.be.deep.equal(argsHelper.getPositionalArguments(args, [], []));
     });
     test('Filter to remove those with values', () => {
         const args = ['-abc', '1234', '--value-option', 'value1', '--value-option', 'value2', 'value3', '4'];

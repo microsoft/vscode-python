@@ -106,7 +106,7 @@ def normalize_lines(source):
         del lines[line_number-1]
 
     # Step 2: Add blank lines between each global statement block.
-    # A consequtive single lines blocks of code will be treated as a single statement,
+    # A consecutive single lines blocks of code will be treated as a single statement,
     # just to ensure we do not unnecessarily add too many blank lines.
     source = '\n'.join(lines)
     tokens = _tokenize(source)

@@ -6,7 +6,11 @@
 import { expect } from 'chai';
 import * as typemoq from 'typemoq';
 import { TestResultsService } from '../../../../client/testing/common/services/testResultsService';
-import { FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile, TestFolder, TestFunction, Tests, TestStatus, TestSuite, TestType } from '../../../../client/testing/common/types';
+import {
+    FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile,
+    TestFolder, TestFunction, Tests, TestStatus, TestSuite
+} from '../../../../client/testing/common/types';
+import { TestDataItemType } from '../../../../client/testing/types';
 import { createMockTestDataItem } from '../testUtils.unit.test';
 
 // tslint:disable:no-any max-func-body-length
@@ -19,53 +23,53 @@ suite('Unit Tests - Tests Results Service', () => {
     let file1: TestFile, file2: TestFile, file3: TestFile, file4: TestFile, file5: TestFile;
     setup(() => {
         resultResetVisitor = typemoq.Mock.ofType<ITestVisitor>();
-        folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        folder2 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        folder3 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        folder4 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        folder5 = createMockTestDataItem<TestFolder>(TestType.testFolder);
+        folder1 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        folder2 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        folder3 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        folder4 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        folder5 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
         folder1.folders.push(folder2);
         folder1.folders.push(folder3);
         folder2.folders.push(folder4);
         folder3.folders.push(folder5);
 
-        file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        file2 = createMockTestDataItem<TestFile>(TestType.testFile);
-        file3 = createMockTestDataItem<TestFile>(TestType.testFile);
-        file4 = createMockTestDataItem<TestFile>(TestType.testFile);
-        file5 = createMockTestDataItem<TestFile>(TestType.testFile);
+        file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        file2 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        file3 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        file4 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        file5 = createMockTestDataItem<TestFile>(TestDataItemType.file);
         folder1.testFiles.push(file1);
         folder3.testFiles.push(file2);
         folder3.testFiles.push(file3);
         folder4.testFiles.push(file5);
         folder5.testFiles.push(file4);
 
-        suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        suite3 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        suite4 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        suite5 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn1.passed = true;
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn2 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn2.passed = undefined;
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn3 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn3.passed = true;
-        const fn4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn4 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn4.passed = false;
-        const fn5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn5 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn5.passed = undefined;
-        const fn6 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn6 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn6.passed = true;
-        const fn7 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn7 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn7.passed = undefined;
-        const fn8 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn8 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn8.passed = false;
-        const fn9 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn9 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn9.passed = true;
-        const fn10 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn10 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn10.passed = true;
-        const fn11 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const fn11 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         fn11.passed = true;
         file1.suites.push(suite1);
         file1.suites.push(suite2);

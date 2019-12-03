@@ -2,12 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils/lib/nbformat';
-
-import { noop } from '../../test/core';
+import { noop } from '../common/utils/misc';
 
 const SingleQuoteMultiline = '\'\'\'';
 const DoubleQuoteMultiline = '\"\"\"';
-export function concatMultilineString(str: nbformat.MultilineString): string {
+
+function concatMultilineString(str: nbformat.MultilineString, trim: boolean): string {
+    const nonLineFeedWhiteSpaceTrim = /(^[\t\f\v\r ]+|[\t\f\v\r ]+$)/g; // Local var so don't have to reset the lastIndex.
     if (Array.isArray(str)) {
         let result = '';
         for (let i = 0; i < str.length; i += 1) {
@@ -18,29 +19,64 @@ export function concatMultilineString(str: nbformat.MultilineString): string {
                 result = result.concat(s);
             }
         }
-        return result.trim();
+
+        // Just trim whitespace. Leave \n in place
+        return trim ? result.replace(nonLineFeedWhiteSpaceTrim, '') : result;
     }
-    return str.toString().trim();
+    return trim ? str.toString().replace(nonLineFeedWhiteSpaceTrim, '') : str.toString();
 }
 
-export function splitMultilineString(str: nbformat.MultilineString): string[] {
-    if (Array.isArray(str)) {
-        return str as string[];
+export function concatMultilineStringOutput(str: nbformat.MultilineString): string {
+    return concatMultilineString(str, true);
+}
+export function concatMultilineStringInput(str: nbformat.MultilineString): string {
+    return concatMultilineString(str, false);
+}
+
+export function splitMultilineString(source: nbformat.MultilineString): string[] {
+    // Make sure a multiline string is back the way Jupyter expects it
+    if (Array.isArray(source)) {
+        return source as string[];
     }
-    return str.toString().split('\n');
+    const str = source.toString();
+    if (str.length > 0) {
+        // Each line should be a separate entry, but end with a \n if not last entry
+        const arr = str.split('\n');
+        return arr.map((s, i) => {
+            if (i < arr.length - 1) {
+                return `${s}\n`;
+            }
+            return s;
+        }).filter(s => s.length > 0); // Skip last one if empty (it's the only one that could be length 0)
+    }
+    return [];
 }
 
 // Strip out comment lines from code
 export function stripComments(str: string): string {
     let result: string = '';
     parseForComments(
-        str.splitLines({trim: false, removeEmptyEntries: false}),
+        str.splitLines({ trim: false, removeEmptyEntries: false }),
         (_s) => noop,
         (s) => result = result.concat(`${s}\n`));
     return result;
 }
 
-export function formatStreamText(str: string): string {
+// Took this from jupyter/notebook
+// https://github.com/jupyter/notebook/blob/b8b66332e2023e83d2ee04f83d8814f567e01a4e/notebook/static/base/js/utils.js
+// Remove characters that are overridden by backspace characters
+function fixBackspace(txt: string) {
+    let tmp = txt;
+    do {
+        txt = tmp;
+        // Cancel out anything-but-newline followed by backspace
+        tmp = txt.replace(/[^\n]\x08/gm, '');
+    } while (tmp.length < txt.length);
+    return txt;
+}
+
+// Using our own version for fixCarriageReturn. The jupyter version seems to not work.
+function fixCarriageReturn(str: string): string {
     // Go through the string, looking for \r's that are not followed by \n. This is
     // a special case that means replace the string before. This is necessary to
     // get an html display of this string to behave correctly.
@@ -73,6 +109,11 @@ export function formatStreamText(str: string): string {
     return result;
 }
 
+export function formatStreamText(str: string): string {
+    // Do the same thing jupyter is doing
+    return fixCarriageReturn(fixBackspace(str));
+}
+
 export function appendLineFeed(arr: string[], modifier?: (s: string) => string) {
     return arr.map((s: string, i: number) => {
         const out = modifier ? modifier(s) : s;
@@ -91,7 +132,7 @@ export function parseForComments(
     foundCommentLine: (s: string, i: number) => void,
     foundNonCommentLine: (s: string, i: number) => void) {
     // Check for either multiline or single line comments
-    let insideMultilineComment: string | undefined ;
+    let insideMultilineComment: string | undefined;
     let insideMultilineQuote: string | undefined;
     let pos = 0;
     for (const l of lines) {
@@ -108,7 +149,7 @@ export function parseForComments(
                 insideMultilineQuote = undefined;
             }
             foundNonCommentLine(l, pos);
-        // Not inside quote, see if inside a comment
+            // Not inside quote, see if inside a comment
         } else if (insideMultilineComment) {
             if (insideMultilineComment === isMultilineComment) {
                 insideMultilineComment = undefined;
@@ -116,14 +157,14 @@ export function parseForComments(
             if (insideMultilineComment) {
                 foundCommentLine(l, pos);
             }
-        // Not inside either, see if starting a quote
+            // Not inside either, see if starting a quote
         } else if (isMultilineQuote && !isMultilineComment) {
             // Make sure doesn't begin and end on the same line.
             const beginQuote = trim.indexOf(isMultilineQuote);
             const endQuote = trim.lastIndexOf(isMultilineQuote);
             insideMultilineQuote = endQuote !== beginQuote ? undefined : isMultilineQuote;
             foundNonCommentLine(l, pos);
-        // Not starting a quote, might be starting a comment
+            // Not starting a quote, might be starting a comment
         } else if (isMultilineComment) {
             // See if this line ends the comment too or not
             const endIndex = trim.indexOf(isMultilineComment, 3);

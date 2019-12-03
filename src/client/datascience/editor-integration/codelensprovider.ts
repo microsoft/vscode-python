@@ -6,30 +6,33 @@ import * as vscode from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IDisposable, IDisposableRegistry } from '../../common/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { EditorContexts, Telemetry } from '../constants';
-import { ICodeWatcher, IDataScienceCodeLensProvider } from '../types';
+import { CodeLensCommands, EditorContexts, Telemetry } from '../constants';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../types';
 
 @injectable()
 export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider, IDisposable {
-    private totalExecutionTimeInMs : number = 0;
-    private totalGetCodeLensCalls : number = 0;
+    private totalExecutionTimeInMs: number = 0;
+    private totalGetCodeLensCalls: number = 0;
     private activeCodeWatchers: ICodeWatcher[] = [];
     private didChangeCodeLenses: vscode.EventEmitter<void> = new vscode.EventEmitter<void>();
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-                @inject(IDocumentManager) private documentManager: IDocumentManager,
-                @inject(IConfigurationService) private configuration: IConfigurationService,
-                @inject(ICommandManager) private commandManager: ICommandManager,
-                @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
-                @inject(IDebugService) private debugService: IDebugService
-        )
-    {
+        @inject(IDebugLocationTracker) private debugLocationTracker: IDebugLocationTracker,
+        @inject(IDocumentManager) private documentManager: IDocumentManager,
+        @inject(IConfigurationService) private configuration: IConfigurationService,
+        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IFileSystem) private fileSystem: IFileSystem
+    ) {
         disposableRegistry.push(this);
         disposableRegistry.push(this.debugService.onDidChangeActiveDebugSession(this.onChangeDebugSession.bind(this)));
-
+        disposableRegistry.push(this.documentManager.onDidCloseTextDocument(this.onDidCloseTextDocument.bind(this)));
+        disposableRegistry.push(this.debugLocationTracker.updated(this.onDebugLocationUpdated.bind(this)));
     }
 
     public dispose() {
@@ -39,7 +42,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
     }
 
-    public get onDidChangeCodeLenses() : vscode.Event<void> {
+    public get onDidChangeCodeLenses(): vscode.Event<void> {
         return this.didChangeCodeLenses.event;
     }
 
@@ -47,14 +50,7 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
     // Some implementation based on DonJayamanne's jupyter extension work
     public provideCodeLenses(document: vscode.TextDocument, _token: vscode.CancellationToken): vscode.CodeLens[] {
         // Get the list of code lens for this document.
-        const result = this.getCodeLensTimed(document);
-
-        // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
-        // ask whenever a change occurs.
-        const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
-        editorContext.set(result && result.length > 0).catch();
-
-        return result;
+        return this.getCodeLensTimed(document);
     }
 
     // IDataScienceCodeLensProvider interface
@@ -62,8 +58,19 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         return this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
     }
 
+    private onDebugLocationUpdated() {
+        this.didChangeCodeLenses.fire();
+    }
+
     private onChangeDebugSession(_e: vscode.DebugSession | undefined) {
         this.didChangeCodeLenses.fire();
+    }
+
+    private onDidCloseTextDocument(e: vscode.TextDocument) {
+        const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === e.fileName);
+        if (index >= 0) {
+            this.activeCodeWatchers.splice(index, 1);
+        }
     }
 
     private getCodeLensTimed(document: vscode.TextDocument): vscode.CodeLens[] {
@@ -71,13 +78,16 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         const result = this.getCodeLens(document);
         this.totalExecutionTimeInMs += stopWatch.elapsedTime;
         this.totalGetCodeLensCalls += 1;
-        return result;
-    }
 
-    private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
+        // Update the hasCodeCells context at the same time we are asked for codelens as VS code will
+        // ask whenever a change occurs. Do this regardless of if we have code lens turned on or not as
+        // shift+enter relies on this code context.
+        const editorContext = new ContextKey(EditorContexts.HasCodeCells, this.commandManager);
+        editorContext.set(result && result.length > 0).catch();
+
         // Don't provide any code lenses if we have not enabled data science
         const settings = this.configuration.getSettings();
-        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens || this.debugService.activeDebugSession) {
+        if (!settings.datascience.enabled || !settings.datascience.enableCellCodeLens) {
             // Clear out any existing code watchers, providecodelenses is called on settings change
             // so we don't need to watch the settings change specifically here
             if (this.activeCodeWatchers.length > 0) {
@@ -86,6 +96,45 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
             return [];
         }
 
+        return this.adjustDebuggingLenses(document, result);
+    }
+
+    // Adjust what code lenses are visible or not given debug mode and debug context location
+    private adjustDebuggingLenses(document: vscode.TextDocument, lenses: vscode.CodeLens[]): vscode.CodeLens[] {
+        const debugCellList = CodeLensCommands.DebuggerCommands;
+
+        if (this.debugService.activeDebugSession) {
+            const debugLocation = this.debugLocationTracker.getLocation(this.debugService.activeDebugSession);
+
+            if (debugLocation && this.fileSystem.arePathsSame(debugLocation.fileName, document.uri.fsPath)) {
+                // We are in the given debug file, so only return the code lens that contains the given line
+                const activeLenses = lenses.filter(lens => {
+                    // -1 for difference between file system one based and debugger zero based
+                    const pos = new vscode.Position(debugLocation.lineNumber - 1, debugLocation.column - 1);
+                    return lens.range.contains(pos);
+                });
+
+                return activeLenses.filter(lens => {
+                    if (lens.command) {
+                        return debugCellList.includes(lens.command.command);
+                    }
+                    return false;
+                });
+            }
+        } else {
+            return lenses.filter(lens => {
+                if (lens.command) {
+                    return !(debugCellList.includes(lens.command.command));
+                }
+                return false;
+            });
+        }
+
+        // Fall through case to return nothing
+        return [];
+    }
+
+    private getCodeLens(document: vscode.TextDocument): vscode.CodeLens[] {
         // See if we already have a watcher for this file and version
         const codeWatcher: ICodeWatcher | undefined = this.matchWatcher(document.fileName, document.version, this.configuration.getSettings().datascience);
         if (codeWatcher) {
@@ -93,13 +142,11 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         }
 
         // Create a new watcher for this file
-        const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
-        newCodeWatcher.setDocument(document);
-        this.activeCodeWatchers.push(newCodeWatcher);
+        const newCodeWatcher = this.createNewCodeWatcher(document);
         return newCodeWatcher.getCodeLenses();
     }
 
-    private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings) : ICodeWatcher | undefined {
+    private matchWatcher(fileName: string, version: number, settings: IDataScienceSettings): ICodeWatcher | undefined {
         const index = this.activeCodeWatchers.findIndex(item => item.getFileName() === fileName);
         if (index >= 0) {
             const item = this.activeCodeWatchers[index];
@@ -119,12 +166,21 @@ export class DataScienceCodeLensProvider implements IDataScienceCodeLensProvider
         // Create a new watcher for this file if we can find a matching document
         const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === fileName);
         if (possibleDocuments && possibleDocuments.length > 0) {
-            const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
-            newCodeWatcher.setDocument(possibleDocuments[0]);
-            this.activeCodeWatchers.push(newCodeWatcher);
-            return newCodeWatcher;
+            return this.createNewCodeWatcher(possibleDocuments[0]);
         }
 
         return undefined;
+    }
+
+    private createNewCodeWatcher(document: vscode.TextDocument): ICodeWatcher {
+        const newCodeWatcher = this.serviceContainer.get<ICodeWatcher>(ICodeWatcher);
+        newCodeWatcher.setDocument(document);
+        newCodeWatcher.codeLensUpdated(this.onWatcherUpdated.bind(this));
+        this.activeCodeWatchers.push(newCodeWatcher);
+        return newCodeWatcher;
+    }
+
+    private onWatcherUpdated(): void {
+        this.didChangeCodeLenses.fire();
     }
 }

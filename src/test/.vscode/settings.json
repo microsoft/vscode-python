@@ -11,7 +11,7 @@
     "python.sortImports.args": [],
     "python.linting.lintOnSave": false,
     "python.linting.enabled": true,
-    "python.linting.pep8Enabled": false,
+    "python.linting.pycodestyleEnabled": false,
     "python.linting.prospectorEnabled": false,
     "python.linting.pydocstyleEnabled": false,
     "python.linting.pylamaEnabled": false,

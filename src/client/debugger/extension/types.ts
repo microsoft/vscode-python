@@ -3,8 +3,9 @@
 
 'use strict';
 
-import { CancellationToken, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
+import { CancellationToken, DebugAdapterDescriptorFactory, DebugAdapterTrackerFactory, DebugConfigurationProvider, WorkspaceFolder } from 'vscode';
 import { InputStep, MultiStepInput } from '../../common/utils/multiStepInput';
+import { RemoteDebugOptions } from '../debugAdapter/types';
 import { DebugConfigurationArguments } from '../types';
 
 export const IDebugConfigurationService = Symbol('IDebugConfigurationService');
@@ -34,3 +35,16 @@ export enum PythonPathSource {
     launchJson = 'launch.json',
     settingsJson = 'settings.json'
 }
+
+export const IDebugAdapterDescriptorFactory = Symbol('IDebugAdapterDescriptorFactory');
+export interface IDebugAdapterDescriptorFactory extends DebugAdapterDescriptorFactory {
+    useNewPtvsd(pythonPath: string): Promise<boolean>;
+    getPtvsdPath(): string;
+    getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[];
+}
+
+export type DebugAdapterPtvsdPathInfo = { extensionVersion: string; ptvsdPath: string };
+
+export const IDebugSessionLoggingFactory = Symbol('IDebugSessionLoggingFactory');
+
+export interface IDebugSessionLoggingFactory extends DebugAdapterTrackerFactory { }

@@ -34,7 +34,7 @@
   - [ ] Right-click
   - [ ] Command
   - [ ] `Shift+Enter`
-  
+
 #### Terminal
 Sample file:
 ```python
@@ -159,7 +159,7 @@ foo = 42  # Marked as a blacklisted name.
   - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] mypy works
   - [ ] `Select linter` lists the linter and installs it if necessary
-- [ ] pep8 works
+- [ ] pycodestyle works
   - [ ] `Select linter` lists the linter and installs it if necessary
 - [ ] prospector works
   - [ ] `Select linter` lists the linter and installs it if necessary
@@ -316,7 +316,7 @@ def test_failure():
   - [ ] `Run Test` works
   - [ ] `Debug Test` works
 - [ ] A `Diagnostic` is shown in the problems pane for each failed/skipped test
-  - [ ] The `Diagnostic`s are organized according to the file the test was executed from (not neccesarily the file it was defined in)
+  - [ ] The `Diagnostic`s are organized according to the file the test was executed from (not necessarily the file it was defined in)
   - [ ] The appropriate `DiagnosticRelatedInformation` is shown for each `Diagnostic`
   - [ ] The `DiagnosticRelatedInformation` reflects the traceback for the test
 
@@ -365,6 +365,22 @@ def test_failure():
     1. On the first cell click `Run Below`
     1. Interactive Window should open, show connection information, and execute cells
     1. The first thing in the window should have a line like this: `Jupyter Server URI: http://localhost:[port number]/?token=[token value]`
+- [ ] Verify Basic Notebook Editor
+    1. Create a new file in VS code with the extension .ipynb
+    1. Open the file
+    1. The Notebook Editor should open
+    1. Verify that there is a single cell in the notebook editor
+    1. Add `print('bar')` to that cell
+    1. Run the cell
+    1. Verify that `bar` shows up below the input
+    1. Add a cell with the topmost hover bar
+    1. Verify the cell appears above all others
+    1. Add a cell at the bottom with the bottom most hover bar
+    1. Verify the cell appears below all cells
+    1. Select a cell
+    1. Add a cell with the plus button on the cell
+    1. Verify cell appears below
+    1. Repeat with the topmost toolbar
 - [ ] Verify basic outputs
     1. Run all the cells in manualTestFile.py
     1. Check to make sure that no outputs have errors
@@ -374,8 +390,8 @@ def test_failure():
     1. Choose a file location and save the generated .ipynb file
     1. When the prompt comes up in the lower right choose to open the file in the browser
     1. The file should open in the web browser and contain the output from the Interactive Window
-    1. In VSCode open up the exported .ipynb file in the editor, when the prompt for `Do you want to import the Jupyter Notebook into Python code?` appears click import
-    1. The imported file should match the original python file
+    1. Try the same steps and choose to open the file in the ipynb editor.
+    1. The file should open in the Notebook Editor.
 - [ ] Verify text entry
     1. In the Interactive Window type in some new code `print('testing')` and submit it to the Interactive Windows
     1. Verify the output from what you added
@@ -385,9 +401,14 @@ def test_failure():
     1. After manualTestFile.py has been run drop down the Variables section at the top of the Interactive Window
     1. In the Variables list there should be an entry for all variables created. These variables might change as more is added to manualTestFile.py.
     1. Check that variables have expected values. They will be truncated for longer items
-    1. Sort the list ascending and descending by Type. Also sort the list ascending and descenting by Count. Values like (X, Y) use the first X value for Count sort ordering
+    1. Sort the list ascending and descending by Type. Also sort the list ascending and descending by Count. Values like (X, Y) use the first X value for Count sort ordering
     1. Check that list, Series, ndarray, and DataFrame types have a button to "Show variable in data viewer" on the right
     1. In the Interactive Window input box add a new variable. Verify that it is added into the Variable Explorer
+    1. Export the contents of the interactive window as a notebook and open the notebook editor
+    1. Find the first cell and click on the Run Below button
+    1. Open the variable explorer and verify the same variables are there
+    1. Add a new cell with a variable in it.
+    1. Run the cell and verify the variable shows up in the variable explorer
 - [ ] Verify Data Explorer
     1. From the listed types in the Variable explorer open up the Data Viewer by clicking the button or double clicking the row
     1. Inspect the data in the Data Viewer for the expected values
@@ -400,15 +421,61 @@ def test_failure():
         1. In one of the numerical columns input a number 1 - 9 to filter to just that column
     1. Open the myList variable in the explorer
     1. Make sure that you can scroll all the way to the end of the entries
+  [ ] Verify notebook outputs
+    1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
+    1. Run all of the cells in the file.
+    1. Interactive Window should open
+    1. Export the cells in the interactive window and open the notebook editor
+    1. Run all the cells in the notebook editor and verify the same outputs appear as in the interactive window
+- [ ] Verify Notebook Editor Intellisense
+    1. Open the src/test/datascience/manualTestFiles/manualTestFile.py in VSCode.
+    1. Run all of the cells in the file.
+    1. Interactive Window should open
+    1. Export the cells in the interactive window and open the notebook editor
+    1. Hover over each cell in the notebook editor and verify you get hover intellisense
+    1. Add a new cell in between cells
+    1. Add `import sys` and `sys.executable` to the cell
+    1. Move the cell around and verify intellisense hover still works on the `import sys`
+    1. Delete and readd the cell and verify intellisense hover still works.
+- [ ] Verify Notebook Keyboard Shortcuts
+    1. Using the notebook generated from the manualTestFile.py, do the following
+    1. Select a cell by clicking on it
+    1. Move selection up and down with j,k and arrow keys.
+    1. Focus a cell by double clicking on it or hitting the enter key when selected
+    1. Move selection through the code with the arrow keys.
+    1. Verify selection travels between focused cells
+    1. Hit escape when a cell has focus and verify it becomes selected instead of focused
+    1. Hit `y` on a markdown cell when not focused and see that it becomes a code cell
+    1. Hit `m` on a code cell when not focused and see that it becomes a markdown cell
+    1. Hit `l` on a code cell and verify line numbers appear
+    1. Hit `o` on a code cell with output and verify that outputs disappear
+    1. Hit `d` + `d` and verify a cell is deleted.
+    1. Hit `z` and verify a deleted cell reappears
+    1. Hit `a` and verify the selected cell moves up
+    1. Hit `b` and verify the selected cell moves down
+    1. Hit `shift+enter` and verify a cell runs and selection moves to the next cell
+    1. Hit `alt+enter` and verify a cell runs and a new cell is added below
+    1. Hit `ctrl+enter` and verify a cell runs and selection does not change
+- [ ] Verify debugging
+    1. Open the file src/test/datascience/manualTestFiles/manualTestFile.py in VSCode
+    1. On the first cell click `Run Below`
+    1. Interactive Window should open, show connection information, and execute cells
+    1. Go back to the first cell and click `Debug Cell`
+    1. Debugger should start and have an ip indicator on the first line of the cell
+    1. Step through the debugger.
+    1. Verify the variables tab of the debugger shows variables.
+    1. Verify the variables explorer window shows output not available while debugging
+    1. When you get to the end of the cell, the debugger should stop
+    1. Output from the cell should show up in the Interactive Window (sometimes you have to finish debugging the cell first)
 
 #### P1 Test Scenarios
 - [ ] Connect to a `remote` server
     1. Open up a valid python command prompt that can run `jupyter notebook` (a default Anaconda prompt works well)
-    1. Run `jupyter notebook` to start up a local Jupyter server 
-    1. In the command window that launched Jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d 
+    1. Run `jupyter notebook` to start up a local Jupyter server
+    1. In the command window that launched Jupyter look for the server / token name like so: http://localhost:8888/?token=bf9eae43641cd75015df9104f814b8763ef0e23ffc73720d
     1. Run the command `Python: Select Jupyter server URI` then `Type in the URI to connect to a running jupyter server`
     1. Input the server / token name here
-    1. Now run the cells in the manualTestFile.py 
+    1. Now run the cells in the manualTestFile.py
     1. Verify that you see the server name in the initial connection message
     1. Verify the outputs of the cells
 - [ ] Interactive Window commands
@@ -458,7 +525,7 @@ def test_failure():
     1. Also make sure you are set to locally launch Jupyter and not to connect to an existing URI
     1. In addition to your main testing environment install a new python or miniconda install (conda won't work as it has Jupyter by default)
     1. In VS code change the python interpreter to the new install
-    1. Try `Run Cell` 
+    1. Try `Run Cell`
     1. You should get a message that Jupyter was not found and that it is defaulting back to launch on the python instance that has Jupyter
 - [ ] LiveShare Support
     1. Install the LiveShare VSCode Extension
@@ -470,7 +537,7 @@ def test_failure():
     1. Open another window of VSCode
     1. Connect the second instance of VSCode as a Guest to the first Live Share session
     1. After the workspace opens, open the manualTestFile.py on the Guest instance
-    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command 
+    1. On the Guest instance run a cell from the file, both via the codelens and via the command palette `Run Cell` command
         - [ ] Verify results
             1. Output should show up on the Guest Interactive Window
             1. Same output should show up in the Host Interactive Window
@@ -478,6 +545,10 @@ def test_failure():
         - [ ] Verify results
             1. Output should show up on the Guest Interactive Window
             1. Same output should show up in the Host Interactive Window
+    1. Export the file to a notebook
+    1. Open the notebook editor on the host
+    1. Run a cell on the host
+    1. Verify the editor opens on the guest and the cell is run there too
 
 #### P2 Test Scenarios
 - [ ] Directory change

@@ -2,6 +2,52 @@
 // Licensed under the MIT License.
 
 declare module '@phosphor/coreutils' {
+    export class PromiseDelegate<T> {
+        /**
+         * The promise wrapped by the delegate.
+         */
+        public readonly promise: Promise<T>;
+        /**
+         * Construct a new promise delegate.
+         */
+        constructor();
+        /**
+         * Reject the wrapped promise with the given value.
+         *
+         * @reason - The reason for rejecting the promise.
+         */
+        reject(reason: any): void;
+        /**
+         * Resolve the wrapped promise with the given value.
+         *
+         * @param value - The value to use for resolving the promise.
+         */
+        resolve(value: T | PromiseLike<T>): void;
+    }
+    /**
+     * A type definition for the MimeData class.
+     * Based on http://phosphorjs.github.io/phosphor/api/coreutils/classes/mimedata.html
+     */
+    export class MimeData {
+        private _types: string[];
+        private _values: any[];
+        public clear(): void;
+        public clearData(mime: string): void;
+        public getData(mime: string): any | undefined;
+        public hasData(mime: string): boolean;
+        public setData(mime: string, data: any): void;
+        public types(): string[];
+    }
+    /**
+     * The namespace for UUID related functionality.
+     */
+    export namespace UUID {
+        /**
+         * A function which generates UUID v4 identifiers.
+         * @returns A new UUID v4 string.
+         */
+        const uuid4: () => string;
+    }
     /**
      * A type alias for a JSON primitive.
      */
@@ -19,7 +65,7 @@ declare module '@phosphor/coreutils' {
     /**
      * A type definition for a JSON array.
      */
-    export interface JSONArray extends Array<JSONValue> {}
+    export interface JSONArray extends Array<JSONValue> { }
     /**
      * A type definition for a readonly JSON object.
      */
@@ -29,7 +75,7 @@ declare module '@phosphor/coreutils' {
     /**
      * A type definition for a readonly JSON array.
      */
-    export interface ReadonlyJSONArray extends ReadonlyArray<ReadonlyJSONValue> {}
+    export interface ReadonlyJSONArray extends ReadonlyArray<ReadonlyJSONValue> { }
     /**
      * A type alias for a readonly JSON value.
      */
@@ -94,18 +140,18 @@ declare module '@phosphor/coreutils' {
 
     export class Token<T> {
         /**
-         * Construct a new token.
-         *
-         * @param name - A human readable name for the token.
-         */
-        constructor(name: string);
-        /**
          * The human readable name for the token.
          *
          * #### Notes
          * This can be useful for debugging and logging.
          */
-        readonly name: string;
+        public readonly name: string;
         private _tokenStructuralPropertyT;
+        /**
+         * Construct a new token.
+         *
+         * @param name - A human readable name for the token.
+         */
+        constructor(name: string);
     }
 }

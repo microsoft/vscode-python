@@ -23,7 +23,7 @@ import { BaseShellDetector } from './baseShellDetector';
 export class SettingsShellDetector extends BaseShellDetector {
     constructor(@inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IPlatformService) private readonly platform: IPlatformService) {
-        super(1);
+        super(2);
     }
     public getTerminalShellPath(): string | undefined {
         const shellConfig = this.workspace.getConfiguration('terminal.integrated.shell');

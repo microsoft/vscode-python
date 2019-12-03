@@ -26,18 +26,19 @@ class TestPath(namedtuple('TestPath', 'root relfile func sub')):
         # self.sub may be None.
 
 
-class ParentInfo(namedtuple('ParentInfo', 'id kind name root parentid')):
+class ParentInfo(namedtuple('ParentInfo', 'id kind name root relpath parentid')):
 
     KINDS = ('folder', 'file', 'suite', 'function', 'subtest')
 
-    def __new__(cls, id, kind, name, root=None, parentid=None):
+    def __new__(cls, id, kind, name, root=None, relpath=None, parentid=None):
         self = super(ParentInfo, cls).__new__(
                 cls,
-                str(id) if id else None,
-                str(kind) if kind else None,
-                str(name) if name else None,
-                str(root) if root else None,
-                str(parentid) if parentid else None,
+                id=str(id) if id else None,
+                kind=str(kind) if kind else None,
+                name=str(name) if name else None,
+                root=str(root) if root else None,
+                relpath=str(relpath) if relpath else None,
+                parentid=str(parentid) if parentid else None,
                 )
         return self
 
@@ -53,8 +54,12 @@ class ParentInfo(namedtuple('ParentInfo', 'id kind name root parentid')):
         if self.root is None:
             if self.parentid is not None or self.kind != 'folder':
                 raise TypeError('missing root')
+            if self.relpath is not None:
+                raise TypeError('unexpected relpath {}'.format(self.relpath))
         elif self.parentid is None:
             raise TypeError('missing parentid')
+        elif self.relpath is None and self.kind in ('folder', 'file'):
+            raise TypeError('missing relpath')
 
 
 class TestInfo(namedtuple('TestInfo', 'id name path source markers parentid kind')):

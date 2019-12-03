@@ -14,7 +14,7 @@ suite('Configuration Settings', () => {
     setup(initialize);
 
     test('Check Values', done => {
-        const systemVariables: SystemVariables = new SystemVariables(workspaceRoot);
+        const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot);
         // tslint:disable-next-line:no-any
         const pythonConfig = vscode.workspace.getConfiguration('python', null as any as vscode.Uri);
         const pythonSettings = getExtensionSettings(vscode.Uri.file(workspaceRoot));

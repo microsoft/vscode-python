@@ -4,7 +4,7 @@
 import { inject, injectable, named } from 'inversify';
 import { ConfigurationTarget, Disposable, Uri } from 'vscode';
 import { IExtensionActivationService } from '../../activation/types';
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import { sleep } from '../../common/utils/async';
@@ -20,7 +20,6 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
     constructor(
         @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder,
         @inject(IPersistentStateFactory) private readonly persistentStateFactory: IPersistentStateFactory,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly locator: IInterpreterLocatorService,
@@ -40,7 +39,7 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         await sleep(1000);
         const interpreters = await this.locator.getInterpreters(resource);
         const interpreter = this.helper.getBestInterpreter(interpreters);
-        if (!interpreter || this.hasUserDefinedPythonPath(resource)) {
+        if (!interpreter) {
             return;
         }
         await this.notifyUser(interpreter, resource);
@@ -62,10 +61,5 @@ export class VirtualEnvironmentPrompt implements IExtensionActivationService {
         } else if (selection === prompts[2]) {
             await notificationPromptEnabled.updateValue(false);
         }
-    }
-    protected hasUserDefinedPythonPath(resource?: Uri) {
-        const settings = this.workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
-        return ((settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
-            (settings.workspaceValue && settings.workspaceValue !== 'python')) ? true : false;
     }
 }

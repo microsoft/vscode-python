@@ -5,7 +5,7 @@
 
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { TreeView, Uri } from 'vscode';
+import { TreeView } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
@@ -31,20 +31,12 @@ suite('Unit Tests Test Explorer Tree View', () => {
             instance(appShell), instance(commandManager));
     });
 
-    test('Activation will create the treeview (without a resource)', async () => {
-        await treeViewService.activate(undefined);
+    test('Activation will create the treeview', async () => {
+        await treeViewService.activate();
         verify(appShell.createTreeView('python_tests', deepEqual({ showCollapseAll: true, treeDataProvider: instance(treeViewProvider) }))).once();
     });
-    test('Activation will create the treeview (with a resource)', async () => {
-        await treeViewService.activate(Uri.file(__filename));
-        verify(appShell.createTreeView('python_tests', deepEqual({ showCollapseAll: true, treeDataProvider: instance(treeViewProvider) }))).once();
-    });
-    test('Activation will add command handlers (without a resource)', async () => {
-        await treeViewService.activate(undefined);
-        verify(commandManager.registerCommand(Commands.Test_Reveal_Test_Item, treeViewService.onRevealTestItem, treeViewService)).once();
-    });
-    test('Activation will add command handlers (with a resource)', async () => {
-        await treeViewService.activate(Uri.file(__filename));
+    test('Activation will add command handlers', async () => {
+        await treeViewService.activate();
         verify(commandManager.registerCommand(Commands.Test_Reveal_Test_Item, treeViewService.onRevealTestItem, treeViewService)).once();
     });
     test('Invoking the command handler will reveal the node in the tree', async () => {
@@ -55,7 +47,7 @@ suite('Unit Tests Test Explorer Tree View', () => {
             .verifiable(typemoq.Times.once());
         when(appShell.createTreeView('python_tests', anything())).thenReturn(treeView.object);
 
-        await treeViewService.activate(undefined);
+        await treeViewService.activate();
         await treeViewService.onRevealTestItem(data);
 
         treeView.verifyAll();

@@ -4,6 +4,7 @@
 'use strict';
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
@@ -18,12 +19,18 @@ export type CommandsWithoutArgs = keyof ICommandNameWithoutArgumentTypeMapping;
  * @interface ICommandNameWithoutArgumentTypeMapping
  */
 interface ICommandNameWithoutArgumentTypeMapping {
+    [Commands.SwitchToInsidersDaily]: [];
+    [Commands.SwitchToInsidersWeekly]: [];
+    [Commands.SwitchOffInsidersChannel]: [];
     [Commands.Set_Interpreter]: [];
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
     [Commands.Enable_Linter]: [];
+    ['workbench.action.debug.continue']: [];
+    ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
+    ['workbench.action.closeActiveEditor']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
@@ -47,10 +54,20 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.RemoveAllCells]: [];
     [DSCommands.InterruptKernel]: [];
     [DSCommands.RestartKernel]: [];
+    [DSCommands.NotebookEditorUndoCells]: [];
+    [DSCommands.NotebookEditorRedoCells]: [];
+    [DSCommands.NotebookEditorRemoveAllCells]: [];
+    [DSCommands.NotebookEditorInterruptKernel]: [];
+    [DSCommands.NotebookEditorRestartKernel]: [];
+    [DSCommands.NotebookEditorRunAllCells]: [];
+    [DSCommands.NotebookEditorRunSelectedCell]: [];
+    [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
+    [DSCommands.CreateNewNotebook]: [];
+    [LSCommands.ClearAnalyisCache]: [];
 }
 
 /**
@@ -61,13 +78,16 @@ interface ICommandNameWithoutArgumentTypeMapping {
  * @extends {ICommandNameWithoutArgumentTypeMapping}
  */
 export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgumentTypeMapping {
+    ['workbench.extensions.installExtension']: [Uri | 'ms-python.python'];
     ['setContext']: [string, boolean];
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
+    ['python.viewLanguageServerOutput']: [];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
+    [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
     [Commands.Tests_ViewOutput]: [undefined, CommandSource];
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
@@ -105,7 +125,15 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunToLine]: [string, number, number];
     [DSCommands.RunFromLine]: [string, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.OpenNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
+    [DSCommands.DebugFileInInteractiveWindows]: [string];
     [DSCommands.DebugCell]: [string, number, number, number, number];
+    [DSCommands.DebugStepOver]: [];
+    [DSCommands.DebugStop]: [];
+    [DSCommands.DebugContinue]: [];
+    [DSCommands.RunCurrentCellAndAddBelow]: [string];
+    [DSCommands.ScrollToCell]: [string, string];
 }

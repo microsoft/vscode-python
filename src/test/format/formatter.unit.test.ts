@@ -56,7 +56,7 @@ suite('Formatting - Test Arguments', () => {
         blackPath: 'module_name',
         provider: '',
         yapfArgs: ['1', '2'],
-        yapfPath: 'module_name',
+        yapfPath: 'module_name'
     };
 
     setup(() => {

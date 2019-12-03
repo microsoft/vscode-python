@@ -22,6 +22,10 @@ export enum DebugOptions {
     SubProcess = 'Multiprocess'
 }
 
+export type PathMapping = {
+    localRoot: string;
+    remoteRoot: string;
+};
 interface ICommonDebugArguments {
     redirectOutput?: boolean;
     django?: boolean;
@@ -36,14 +40,20 @@ interface ICommonDebugArguments {
     // Show return values of functions while stepping.
     showReturnValue?: boolean;
     subProcess?: boolean;
+    // An absolute path to local directory with source.
+    pathMappings?: PathMapping[];
 }
 export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;
-    // An absolute path to local directory with source.
+    customDebugger?: boolean;
+    // localRoot and remoteRoot are deprecated (replaced by pathMappings).
     localRoot?: string;
     remoteRoot?: string;
-    pathMappings?: { localRoot: string; remoteRoot: string }[];
-    customDebugger?: boolean;
+
+    // Internal files used to attach to subprocess using python debug adapter
+    subProcessId?: number;
+
+    processId?: number;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
@@ -77,3 +87,5 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
 export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
 
 export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
+
+export type TriggerType = 'launch' | 'attach' | 'test';

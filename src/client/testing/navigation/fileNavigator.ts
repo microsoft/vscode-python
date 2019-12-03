@@ -15,7 +15,7 @@ import { ITestCodeNavigator, ITestNavigatorHelper } from './types';
 export class TestFileCodeNavigator implements ITestCodeNavigator {
     constructor(@inject(ITestNavigatorHelper) private readonly helper: ITestNavigatorHelper) { }
     @swallowExceptions('Navigate to test file')
-    @captureTelemetry(EventName.UNITTEST_NAVIGATE_TEST_FILE, undefined, true)
+    @captureTelemetry(EventName.UNITTEST_NAVIGATE, { byFile: true })
     public async navigateTo(_: Uri, item: TestFile, __: boolean): Promise<void> {
         await this.helper.openFile(Uri.file(item.fullPath));
     }

@@ -17,4 +17,7 @@ export class MockMemento implements Memento {
         this.map.set(key, value);
         return Promise.resolve();
     }
+    public clear() {
+        this.map.clear();
+    }
 }

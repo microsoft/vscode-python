@@ -7,6 +7,8 @@ import {
     CancellationToken,
     CompletionItemProvider,
     ConfigurationChangeEvent,
+    DebugAdapterDescriptorFactory,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -23,6 +25,7 @@ import {
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
+    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -46,6 +49,7 @@ import {
     TreeViewOptions,
     Uri,
     ViewColumn,
+    WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
     WorkspaceFolder,
@@ -61,6 +65,12 @@ import { ICommandNameArgumentTypeMapping } from './commands';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
+    /**
+     * An [event](#Event) which fires when the focus state of the current window
+     * changes. The value of the event represents whether the window is focused.
+     */
+    readonly onDidChangeWindowState: Event<WindowState>;
+
     showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
 
     /**
@@ -346,6 +356,13 @@ export interface IApplicationShell {
      * @returns a [TreeView](#TreeView).
      */
     createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
+
+    /**
+     * Creates a new [output channel](#OutputChannel) with the given name.
+     *
+     * @param name Human-readable string which will be used to represent the channel in the UI.
+     */
+    createOutputChannel(name: string): OutputChannel;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
@@ -765,6 +782,26 @@ export interface IDebugService {
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
 
     /**
+     * Register a [debug adapter descriptor factory](#DebugAdapterDescriptorFactory) for a specific debug type.
+     * An extension is only allowed to register a DebugAdapterDescriptorFactory for the debug type(s) defined by the extension. Otherwise an error is thrown.
+     * Registering more than one DebugAdapterDescriptorFactory for a debug type results in an error.
+     *
+     * @param debugType The debug type for which the factory is registered.
+     * @param factory The [debug adapter descriptor factory](#DebugAdapterDescriptorFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable;
+
+    /**
+     * Register a debug adapter tracker factory for the given debug type.
+     *
+     * @param debugType The debug type for which the factory is registered or '*' for matching all debug types.
+     * @param factory The [debug adapter tracker factory](#DebugAdapterTrackerFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable;
+
+    /**
      * Start debugging by using either a named launch or named compound configuration,
      * or by directly passing a [DebugConfiguration](#DebugConfiguration).
      * The named configurations are looked up in '.vscode/launch.json' found in the given folder.
@@ -847,6 +884,29 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly userSettingsFile: string | undefined;
+    /**
+     * The detected default shell for the extension host, this is overridden by the
+     * `terminal.integrated.shell` setting for the extension host's platform.
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly shell: string;
+    /**
+     * Gets the vscode channel (whether 'insiders' or 'stable').
+     */
+    readonly channel: Channel;
+    /**
+     * Gets the extension channel (whether 'insiders' or 'stable').
+     *
+     * @type {string}
+     * @memberof IApplicationShell
+     */
+    readonly extensionChannel: Channel;
+    /**
+     * The version of the editor.
+     */
+    readonly vscodeVersion: string;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -911,12 +971,18 @@ export const IWebPanelProvider = Symbol('IWebPanelProvider');
 export interface IWebPanelProvider {
     /**
      * Creates a new webpanel
-     * @param listener for messages from the panel
-     * @param title: title of the panel when it shows
-     * @param: mainScriptPath: full path in the output folder to the script
-     * @return A IWebPanel that can be used to show html pages.
+     *
+     * @param {ViewColumn} viewColumn
+     * @param {IWebPanelMessageListener} listener
+     * @param {string} title
+     * @param {string} rootPath
+     * @param {string[]} scripts
+     * @param {string} [embeddedCss]
+     * @param {*} [settings]
+     * @returns {IWebPanel}
+     * @memberof IWebPanelProvider
      */
-    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): IWebPanel;
 }
 
 // Wraps the vsls liveshare API
@@ -952,4 +1018,14 @@ export interface ILanguageService {
      * @return A [disposable](#Disposable) that unregisters this provider when being disposed.
      */
     registerCompletionItemProvider(selector: DocumentSelector, provider: CompletionItemProvider, ...triggerCharacters: string[]): Disposable;
+}
+
+export type Channel = 'stable' | 'insiders';
+
+/**
+ * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing
+ */
+export const IActiveResourceService = Symbol('IActiveResourceService');
+export interface IActiveResourceService {
+    getActiveResource(): Resource;
 }

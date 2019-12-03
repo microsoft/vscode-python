@@ -31,7 +31,7 @@ import {
     ILogger,
     IMypyCategorySeverity,
     IOutputChannel,
-    IPep8CategorySeverity,
+    IPycodestyleCategorySeverity,
     IPylintCategorySeverity,
     IPythonSettings
 } from '../../client/common/types';
@@ -95,8 +95,8 @@ export class LintingSettings {
     public prospectorArgs: string[];
     public pylintEnabled: boolean;
     public pylintArgs: string[];
-    public pep8Enabled: boolean;
-    public pep8Args: string[];
+    public pycodestyleEnabled: boolean;
+    public pycodestyleArgs: string[];
     public pylamaEnabled: boolean;
     public pylamaArgs: string[];
     public flake8Enabled: boolean;
@@ -106,12 +106,12 @@ export class LintingSettings {
     public lintOnSave: boolean;
     public maxNumberOfProblems: number;
     public pylintCategorySeverity: IPylintCategorySeverity;
-    public pep8CategorySeverity: IPep8CategorySeverity;
+    public pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
     public flake8CategorySeverity: Flake8CategorySeverity;
     public mypyCategorySeverity: IMypyCategorySeverity;
     public prospectorPath: string;
     public pylintPath: string;
-    public pep8Path: string;
+    public pycodestylePath: string;
     public pylamaPath: string;
     public flake8Path: string;
     public pydocstylePath: string;
@@ -152,10 +152,10 @@ export class LintingSettings {
         this.banditPath = 'bandit';
         this.banditArgs = [];
 
-        this.pep8Enabled = false;
-        this.pep8Path = 'pep8';
-        this.pep8Args = [];
-        this.pep8CategorySeverity = {
+        this.pycodestyleEnabled = false;
+        this.pycodestylePath = 'pycodestyle';
+        this.pycodestyleArgs = [];
+        this.pycodestyleCategorySeverity = {
             E: DiagnosticSeverity.Error,
             W: DiagnosticSeverity.Warning
         };
@@ -195,6 +195,7 @@ export class BaseTestFixture {
     public logger: TypeMoq.IMock<ILogger>;
     public installer: TypeMoq.IMock<IInstaller>;
     public appShell: TypeMoq.IMock<IApplicationShell>;
+    public platform: TypeMoq.IMock<IPlatformService>;
 
     // config
     public configService: TypeMoq.IMock<IConfigurationService>;
@@ -209,7 +210,6 @@ export class BaseTestFixture {
     public logged: string[];
 
     constructor(
-        platformService: IPlatformService,
         filesystem: IFileSystem,
         pythonToolExecService: IPythonToolExecutionService,
         pythonExecFactory: IPythonExecutionFactory,
@@ -227,6 +227,7 @@ export class BaseTestFixture {
         this.logger = TypeMoq.Mock.ofType<ILogger>(undefined, TypeMoq.MockBehavior.Strict);
         this.installer = TypeMoq.Mock.ofType<IInstaller>(undefined, TypeMoq.MockBehavior.Strict);
         this.appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
+        this.platform = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
 
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem), TypeMoq.It.isAny()))
             .returns(() => filesystem);
@@ -237,7 +238,7 @@ export class BaseTestFixture {
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInstaller), TypeMoq.It.isAny()))
             .returns(() => this.installer.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService), TypeMoq.It.isAny()))
-            .returns(() => platformService);
+            .returns(() => this.platform.object);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonToolExecutionService), TypeMoq.It.isAny()))
             .returns(() => pythonToolExecService);
         this.serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory), TypeMoq.It.isAny()))

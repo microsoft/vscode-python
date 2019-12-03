@@ -65,6 +65,7 @@ export class TestsParser implements ITestsParser {
         const functionName = testIdParts.pop()!;
         const suiteToRun = testIdParts.join('.');
         const className = testIdParts.pop()!;
+        const moduleName = testIdParts.join('.');
         const resource = Uri.file(rootDirectory);
 
         // Check if we already have this test file
@@ -76,7 +77,7 @@ export class TestsParser implements ITestsParser {
                 fullPath: filePath,
                 functions: [],
                 suites: [],
-                nameToRun: `${suiteToRun}.${functionName}`,
+                nameToRun: moduleName,
                 xmlName: '',
                 status: TestStatus.Idle,
                 time: 0

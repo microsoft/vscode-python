@@ -10,12 +10,12 @@ import { Commands } from '../../common/constants';
 import { getIcon } from '../../common/utils/icons';
 import { noop } from '../../common/utils/misc';
 import { Icons } from '../common/constants';
-import { getTestType, isSubtestsParent } from '../common/testUtils';
-import { TestResult, TestStatus, TestSuite, TestType } from '../common/types';
-import { TestDataItem } from '../types';
+import { getTestDataItemType, isSubtestsParent } from '../common/testUtils';
+import { TestResult, TestStatus, TestSuite } from '../common/types';
+import { TestDataItem, TestDataItemType } from '../types';
 
 function getDefaultCollapsibleState(data: TestDataItem): TreeItemCollapsibleState {
-    return getTestType(data) === TestType.testFunction ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed;
+    return getTestDataItemType(data) === TestDataItemType.function ? TreeItemCollapsibleState.None : TreeItemCollapsibleState.Collapsed;
 }
 
 /**
@@ -24,7 +24,7 @@ function getDefaultCollapsibleState(data: TestDataItem): TreeItemCollapsibleStat
  * TestDataItem.
  */
 export class TestTreeItem extends TreeItem {
-    public readonly testType: TestType;
+    public readonly testType: TestDataItemType;
 
     constructor(
         public readonly resource: Uri,
@@ -32,7 +32,7 @@ export class TestTreeItem extends TreeItem {
         collapsibleStatue: TreeItemCollapsibleState = getDefaultCollapsibleState(data)
     ) {
         super(data.name, collapsibleStatue);
-        this.testType = getTestType(this.data);
+        this.testType = getTestDataItemType(this.data);
         this.setCommand();
     }
     public get contextValue(): string {
@@ -40,7 +40,7 @@ export class TestTreeItem extends TreeItem {
     }
 
     public get iconPath(): string | Uri | { light: string | Uri; dark: string | Uri } | ThemeIcon {
-        if (this.testType === TestType.testWorkspaceFolder) {
+        if (this.testType === TestDataItemType.workspaceFolder) {
             return ThemeIcon.Folder;
         }
         if (!this.data) {
@@ -70,14 +70,14 @@ export class TestTreeItem extends TreeItem {
     }
 
     public get tooltip(): string {
-        if (!this.data || this.testType === TestType.testWorkspaceFolder) {
+        if (!this.data || this.testType === TestDataItemType.workspaceFolder) {
             return '';
         }
         const result = this.data as TestResult;
         if (!result.status || result.status === TestStatus.Idle || result.status === TestStatus.Unknown || result.status === TestStatus.Skipped) {
             return '';
         }
-        if (this.testType !== TestType.testFunction) {
+        if (this.testType !== TestDataItemType.function) {
             if (result.functionsPassed === undefined) {
                 return '';
             }
@@ -113,15 +113,15 @@ export class TestTreeItem extends TreeItem {
 
     private setCommand() {
         switch (this.testType) {
-            case TestType.testFile: {
+            case TestDataItemType.file: {
                 this.command = { command: Commands.navigateToTestFile, title: 'Open', arguments: [this.resource, this.data] };
                 break;
             }
-            case TestType.testFunction: {
+            case TestDataItemType.function: {
                 this.command = { command: Commands.navigateToTestFunction, title: 'Open', arguments: [this.resource, this.data, false] };
                 break;
             }
-            case TestType.testSuite: {
+            case TestDataItemType.suite: {
                 if (isSubtestsParent(this.data as TestSuite)) {
                     this.command = { command: Commands.navigateToTestFunction, title: 'Open', arguments: [this.resource, this.data, false] };
                     break;

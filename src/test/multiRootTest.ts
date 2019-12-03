@@ -1,13 +1,20 @@
-// tslint:disable:no-console no-require-imports no-var-requires
+// tslint:disable:no-console
 
 import * as path from 'path';
+import { runTests } from 'vscode-test';
+import { EXTENSION_ROOT_DIR_FOR_TESTS } from './constants';
 
-process.env.CODE_TESTS_WORKSPACE = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');
+const workspacePath = path.join(__dirname, '..', '..', 'src', 'testMultiRootWkspc', 'multi.code-workspace');
 process.env.IS_CI_SERVER_TEST_DEBUGGER = '';
 
 function start() {
     console.log('*'.repeat(100));
     console.log('Start Multiroot tests');
-    require('../../node_modules/vscode/bin/test');
+    runTests({
+        extensionDevelopmentPath: EXTENSION_ROOT_DIR_FOR_TESTS,
+        extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
+        launchArgs: [workspacePath],
+        version: 'stable'
+    }).catch(console.error);
 }
 start();

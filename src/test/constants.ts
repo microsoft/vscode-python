@@ -4,7 +4,9 @@
 import * as path from 'path';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 
+export const MAX_EXTENSION_ACTIVATION_TIME = 120_000;
 export const TEST_TIMEOUT = 25000;
+export const TEST_RETRYCOUNT = 3;
 export const IS_SMOKE_TEST = process.env.VSC_PYTHON_SMOKE_TEST === '1';
 export const IS_PERF_TEST = process.env.VSC_PYTHON_PERF_TEST === '1';
 export const IS_MULTI_ROOT_TEST = isMultitrootTest();
@@ -17,10 +19,15 @@ function isMultitrootTest() {
     if (IS_SMOKE_TEST || IS_PERF_TEST) {
         return false;
     }
-    // tslint:disable-next-line:no-require-imports
-    const vscode = require('vscode');
-    const workspace = vscode.workspace;
-    return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
+    try {
+        // tslint:disable-next-line:no-require-imports
+        const vscode = require('vscode');
+        const workspace = vscode.workspace;
+        return Array.isArray(workspace.workspaceFolders) && workspace.workspaceFolders.length > 1;
+    } catch {
+        // being accessed, when VS Code hasn't been launched.
+        return false;
+    }
 }
 
 export const EXTENSION_ROOT_DIR_FOR_TESTS = path.join(__dirname, '..', '..');

@@ -4,14 +4,14 @@
 import { inject, injectable } from 'inversify';
 import * as vscode from 'vscode';
 
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
-import { IConfigurationService, IDisposable, IDisposableRegistry, Resource } from '../../common/types';
-import { generateCellRanges } from '../cellFactory';
+import { IConfigurationService, IDisposable, IDisposableRegistry } from '../../common/types';
+import { generateCellRangesFromDocument } from '../cellFactory';
 
 @injectable()
-export class Decorator implements IExtensionActivationService, IDisposable {
+export class Decorator implements IExtensionSingleActivationService, IDisposable {
     private activeCellTop: vscode.TextEditorDecorationType | undefined;
     private activeCellBottom: vscode.TextEditorDecorationType | undefined;
     private cellSeparatorType: vscode.TextEditorDecorationType | undefined;
@@ -31,7 +31,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
         this.settingsChanged();
     }
 
-    public activate(_resource: Resource): Promise<void> {
+    public activate(): Promise<void> {
         // We don't need to do anything here as we already did all of our work in the
         // constructor.
         return Promise.resolve();
@@ -68,6 +68,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
 
     private triggerUpdate(editor: vscode.TextEditor | undefined) {
         if (this.timer) {
+            // tslint:disable-next-line: no-any
             clearTimeout(this.timer as any);
         }
         this.timer = setTimeout(() => this.update(editor), 100);
@@ -99,7 +100,7 @@ export class Decorator implements IExtensionActivationService, IDisposable {
             const settings = this.configuration.getSettings().datascience;
             if (settings.decorateCells && settings.enabled) {
                 // Find all of the cells
-                const cells = generateCellRanges(editor.document, this.configuration.getSettings().datascience);
+                const cells = generateCellRangesFromDocument(editor.document, this.configuration.getSettings().datascience);
 
                 // Find the range for our active cell.
                 const currentRange = cells.map(c => c.range).filter(r => r.contains(editor.selection.anchor));

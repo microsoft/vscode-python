@@ -47,13 +47,14 @@ export class ShellDetector {
             hasShellInEnv: undefined
         };
 
-        // Sort in order of priority and then identify the shell in terminal.
+        // Sort in order of priority and then identify the shell.
         const shellDetectors = this.shellDetectors.slice();
         shellDetectors.sort((a, b) => a.priority < b.priority ? 1 : 0);
 
         for (const detector of shellDetectors) {
             shell = detector.identify(telemetryProperties, terminal);
-            if (shell) {
+            traceVerbose(`${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`);
+            if (shell && shell !== TerminalShellType.other) {
                 break;
             }
         }
@@ -66,6 +67,7 @@ export class ShellDetector {
 
         // If we could not identify the shell, use the defaults.
         if (shell === undefined || shell === TerminalShellType.other) {
+            traceVerbose('Using default OS shell');
             shell = defaultOSShells[this.platform.osType];
         }
         return shell;

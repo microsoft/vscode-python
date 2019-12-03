@@ -1,7 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { IExtensionActivationService } from '../activation/types';
+'use strict';
+
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
 import { EnvironmentActivationService } from './activation/service';
 import { IEnvironmentActivationService } from './activation/types';
@@ -28,6 +30,7 @@ import {
     IInterpreterDisplay,
     IInterpreterHelper,
     IInterpreterLocatorHelper,
+    IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterLocatorService,
     IInterpreterService,
@@ -36,7 +39,6 @@ import {
     IInterpreterWatcherBuilder,
     IKnownSearchPathsForInterpreters,
     INTERPRETER_LOCATOR_SERVICE,
-    InterpreterLocatorProgressHandler,
     IPipEnvService,
     IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
@@ -60,14 +62,19 @@ import { CondaEnvService } from './locators/services/condaEnvService';
 import { CondaService } from './locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './locators/services/currentPathService';
 import { GlobalVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvService } from './locators/services/globalVirtualEnvService';
+import { InterpreterHashProvider } from './locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
+import { InterpreterFilter } from './locators/services/interpreterFilter';
 import { InterpreterWatcherBuilder } from './locators/services/interpreterWatcherBuilder';
 import { KnownPathsService, KnownSearchPathsForInterpreters } from './locators/services/KnownPathsService';
 import { PipEnvService } from './locators/services/pipEnvService';
 import { PipEnvServiceHelper } from './locators/services/pipEnvServiceHelper';
 import { WindowsRegistryService } from './locators/services/windowsRegistryService';
+import { WindowsStoreInterpreter } from './locators/services/windowsStoreInterpreter';
 import { WorkspaceVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvService } from './locators/services/workspaceVirtualEnvService';
 import { WorkspaceVirtualEnvWatcherService } from './locators/services/workspaceVirtualEnvWatcherService';
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from './locators/types';
+import { CondaInheritEnvPrompt } from './virtualEnvs/condaInheritEnvPrompt';
 import { VirtualEnvironmentManager } from './virtualEnvs/index';
 import { IVirtualEnvironmentManager } from './virtualEnvs/types';
 import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
@@ -81,7 +88,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
     serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, VirtualEnvironmentPrompt);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, InterpreterSelectionTip);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InterpreterSelectionTip);
     serviceManager.addSingleton<IPythonInPathCommandProvider>(IPythonInPathCommandProvider, PythonInPathCommandProvider);
 
     serviceManager.add<IInterpreterWatcher>(IInterpreterWatcher, WorkspaceVirtualEnvWatcherService, WORKSPACE_VIRTUAL_ENV_SERVICE);
@@ -111,17 +118,27 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterLocatorHelper>(IInterpreterLocatorHelper, InterpreterLocatorHelper);
     serviceManager.addSingleton<IInterpreterComparer>(IInterpreterComparer, InterpreterComparer);
 
-    serviceManager.addSingleton<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler);
+    serviceManager.addSingleton<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler, InterpreterLocatorProgressStatubarHandler);
     serviceManager.addSingleton<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService, InterpreterLocatorProgressService);
 
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, CurrentPathInterpretersAutoSelectionRule, AutoSelectionRule.currentPath);
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, SystemWideInterpretersAutoSelectionRule, AutoSelectionRule.systemWide);
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, WindowsRegistryInterpretersAutoSelectionRule, AutoSelectionRule.windowsRegistry);
-    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, WorkspaceVirtualEnvInterpretersAutoSelectionRule, AutoSelectionRule.workspaceVirtualEnvs);
+    serviceManager.addSingleton<IInterpreterAutoSelectionRule>(
+        IInterpreterAutoSelectionRule,
+        WorkspaceVirtualEnvInterpretersAutoSelectionRule,
+        AutoSelectionRule.workspaceVirtualEnvs
+    );
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, CachedInterpretersAutoSelectionRule, AutoSelectionRule.cachedInterpreters);
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings);
     serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, InterpreterAutoSeletionProxyService);
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, InterpreterAutoSelectionService);
 
     serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+
+    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
+    serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+    serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+    serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+    serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
 }

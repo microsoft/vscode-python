@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import './mainPanel.css';
 
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
@@ -14,18 +15,18 @@ import {
     IDataViewerMapping,
     IGetRowsResponse
 } from '../../client/datascience/data-viewing/types';
-import { IJupyterVariable } from '../../client/datascience/types';
+import { SharedMessages } from '../../client/datascience/messages';
+import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
 import { getLocString } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
+import { loadDefaultSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
 
 // Our css has to come after in order to override body styles
-import './mainPanel.css';
-
 export interface IMainPanelProps {
     skipDefault?: boolean;
     baseTheme: string;
@@ -40,6 +41,8 @@ interface IMainPanelState {
     totalRowCount: number;
     filters: {};
     indexColumn: string;
+    styleReady: boolean;
+    settings: IDataScienceExtraSettings;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -51,7 +54,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
-    private grid: React.Ref<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private updateTimeout?: NodeJS.Timer | number;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -63,23 +67,25 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 gridColumns: data.columns.map(c => { return {...c, formatter: cellFormatterFunc }; }),
                 gridRows: [],
                 totalRowCount: data.rows.length,
-                fetchedRowCount: 0,
+                fetchedRowCount: -1,
                 filters: {},
-                indexColumn: data.primaryKeys[0]
+                indexColumn: data.primaryKeys[0],
+                styleReady: false,
+                settings: loadDefaultSettings()
             };
 
             // Fire off a timer to mimic dynamic loading
-            setTimeout(() => {
-                this.handleGetAllRowsResponse({data: data.rows});
-            }, 1000);
+            setTimeout(() => this.handleGetAllRowsResponse({data: data.rows}), 1000);
         } else {
             this.state = {
                 gridColumns: [],
                 gridRows: [],
                 totalRowCount: 0,
-                fetchedRowCount: 0,
+                fetchedRowCount: -1,
                 filters: {},
-                indexColumn: 'index'
+                indexColumn: 'index',
+                styleReady: false,
+                settings: loadDefaultSettings()
             };
         }
     }
@@ -110,10 +116,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         return (
             <div className='main-panel' ref={this.container}>
                 <StyleInjector
+                    onReady={this.saveReadyState}
+                    settings={this.state.settings}
                     expectingDark={this.props.baseTheme !== 'vscode-light'}
                     postOffice={this.postOffice} />
                 {progressBar}
-                {this.state.totalRowCount > 0 && this.renderGrid()}
+                {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
         );
     }
@@ -133,11 +141,27 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
+            case SharedMessages.UpdateSettings:
+                this.updateSettings(payload);
+                break;
+
             default:
                 break;
         }
 
         return false;
+    }
+
+    private updateSettings(content: string) {
+        const newSettingsJSON = JSON.parse(content);
+        const newSettings = newSettingsJSON as IDataScienceExtraSettings;
+        this.setState({
+            settings: newSettings
+        });
+    }
+
+    private saveReadyState = () => {
+        this.setState({styleReady: true});
     }
 
     private renderGrid() {
@@ -220,7 +244,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             });
 
         // Add all of these rows to the grid
-        this.gridAddEvent.notify({newRows: normalized});
+        this.updateRows(normalized);
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
@@ -241,7 +265,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
 
         // Tell our grid about the new ros
-        this.gridAddEvent.notify({newRows: normalized});
+        this.updateRows(normalized);
 
         // Get the next chunk
         if (newFetched < this.state.totalRowCount) {
@@ -282,6 +306,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private sendMessage<M extends IDataViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
+    }
+
+    private updateRows(newRows: ISlickRow[]) {
+        if (this.updateTimeout !== undefined) {
+            clearTimeout(this.updateTimeout as any);
+            this.updateTimeout = undefined;
+        }
+        if (!this.grid.current) {
+            // This might happen before we render the grid. Postpone till then.
+            this.updateTimeout = setTimeout(() => this.updateRows(newRows), 10);
+        } else {
+            this.gridAddEvent.notify({newRows});
+        }
     }
 
 }

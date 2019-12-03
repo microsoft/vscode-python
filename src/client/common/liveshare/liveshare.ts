@@ -13,15 +13,16 @@ import { LiveShareProxy } from './liveshareProxy';
 @injectable()
 export class LiveShareApi implements ILiveShareApi {
 
-    private supported : boolean = false;
-    private apiPromise : Promise<vsls.LiveShare | null> | undefined;
+    private supported: boolean = false;
+    private apiPromise: Promise<vsls.LiveShare | null> | undefined;
+    private disposed: boolean = false;
 
     constructor(
-        @inject(IDisposableRegistry) disposableRegistry : IDisposableRegistry,
-        @inject(IWorkspaceService) workspace : IWorkspaceService,
-        @inject(IConfigurationService) private configService : IConfigurationService,
-        @inject(IApplicationShell) private appShell : IApplicationShell
-        ) {
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+        @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(IConfigurationService) private configService: IConfigurationService,
+        @inject(IApplicationShell) private appShell: IApplicationShell
+    ) {
         const disposable = workspace.onDidChangeConfiguration(e => {
             if (e.affectsConfiguration('python.dataScience', undefined)) {
                 // When config changes happen, recreate our commands.
@@ -29,10 +30,18 @@ export class LiveShareApi implements ILiveShareApi {
             }
         });
         disposableRegistry.push(disposable);
+        disposableRegistry.push(this);
         this.onSettingsChanged();
     }
 
+    public dispose(): void {
+        this.disposed = true;
+    }
+
     public getApi(): Promise<vsls.LiveShare | null> {
+        if (this.disposed) {
+            return Promise.resolve(null);
+        }
         return this.apiPromise!;
     }
 

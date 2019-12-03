@@ -38,7 +38,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
     public dispose() {
         this.clearTimers();
     }
-    @traceDecorators.verbose('Register Intepreter Watcher')
+    @traceDecorators.verbose('Register Interpreter Watcher')
     public async register(resource: Resource): Promise<void> {
         if (this.fsWatchers.length > 0) {
             return;
@@ -59,7 +59,7 @@ export class WorkspaceVirtualEnvWatcherService implements IInterpreterWatcher, D
             this.fsWatchers.push(fsWatcher);
         }
     }
-    @traceDecorators.verbose('Intepreter Watcher change handler')
+    @traceDecorators.verbose('Interpreter Watcher change handler')
     public async createHandler(e: Uri) {
         this.didCreate.fire(this.resource);
         // On Windows, creation of environments are very slow, hence lets notify again after

@@ -5,13 +5,12 @@
 .image-button {
     border-width: 0px;
     border-style: solid;
-    cursor: pointer;
     text-align: center;
     line-height: 16px;
     overflow: hidden;
     width: var(--button-size);
     height: var(--button-size);
-    margin-left: 10px;
+    margin-left: 2px;
     padding: 1px;
     background-color: transparent;
     cursor: hand;
