@@ -300,6 +300,11 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     // }
 
     private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
+        // Don't render until we have settings
+        if (!this.props.settings || !this.props.editorOptions) {
+            return null;
+        }
+
         const addNewCell = () => {
             this.props.insertBelow(cellVM.cell.id);
             this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');

@@ -1218,7 +1218,7 @@ for _ in range(50):
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('off');
                 when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1000);
                 // Update the settings and wait for the component to receive it and process it.
-                const promise = waitForMessage(ioc, InteractiveWindowMessages.UpdateSettings);
+                const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
                 await promise;
 

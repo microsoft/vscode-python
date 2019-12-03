@@ -12,6 +12,7 @@ export namespace CssMessages {
 export namespace SharedMessages {
     export const UpdateSettings = 'update_settings';
     export const Started = 'started';
+    export const LocInit = 'loc_init';
 }
 
 export interface IGetCssRequest {

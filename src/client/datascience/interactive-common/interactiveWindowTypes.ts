@@ -28,7 +28,7 @@ export enum InteractiveWindowMessages {
     StopProgress = 'stop_progress',
     Interrupt = 'interrupt',
     SubmitNewCell = 'submit_new_cell',
-    UpdateSettings = 'update_settings',
+    SettingsUpdated = 'settings_updated',
     // Message sent to React component from extension asking it to save the notebook.
     DoSave = 'DoSave',
     SendInfo = 'send_info',
@@ -295,7 +295,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.StartProgress]: never | undefined;
     public [InteractiveWindowMessages.StopProgress]: never | undefined;
     public [InteractiveWindowMessages.Interrupt]: never | undefined;
-    public [InteractiveWindowMessages.UpdateSettings]: string;
+    public [InteractiveWindowMessages.SettingsUpdated]: string;
     public [InteractiveWindowMessages.SubmitNewCell]: ISubmitNewCell;
     public [InteractiveWindowMessages.SendInfo]: IInteractiveWindowInfo;
     public [InteractiveWindowMessages.Started]: never | undefined;

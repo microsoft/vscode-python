@@ -90,4 +90,5 @@ export class INativeEditorActionMapping {
     public [IncomingMessageActions.GETCSSRESPONSE]: NativeEditorReducerFunc<IGetCssResponse>;
     public [IncomingMessageActions.MONACOREADY]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
+    public [IncomingMessageActions.LOCINIT]: NativeEditorReducerFunc<string>;
 }

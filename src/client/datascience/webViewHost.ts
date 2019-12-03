@@ -10,6 +10,7 @@ import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider, IWorkspaceServi
 import { traceInfo } from '../common/logger';
 import { IConfigurationService, IDisposable } from '../common/types';
 import { createDeferred, Deferred } from '../common/utils/async';
+import * as localize from '../common/utils/localize';
 import { noop } from '../common/utils/misc';
 import { StopWatch } from '../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
@@ -22,11 +23,11 @@ export class WebViewHost<IMapping> implements IDisposable {
     protected viewState: { visible: boolean; active: boolean } = { visible: false, active: false };
     private disposed: boolean = false;
     private webPanel: IWebPanel | undefined;
-    private webPanelInit: Deferred<void> | undefined;
+    private webPanelInit: Deferred<void> | undefined = createDeferred<void>();
     private messageListener: IWebPanelMessageListener;
     private themeChangeHandler: IDisposable | undefined;
     private settingsChangeHandler: IDisposable | undefined;
-    private themeIsDarkPromise: Deferred<boolean> | undefined;
+    private themeIsDarkPromise: Deferred<boolean> | undefined = createDeferred<boolean>();
     private startupStopwatch = new StopWatch();
 
     constructor(
@@ -50,6 +51,12 @@ export class WebViewHost<IMapping> implements IDisposable {
 
         // Listen for settings changes
         this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
+
+        // Send the first settings message
+        this.onDataScienceSettingsChanged();
+
+        // Send the loc strings
+        this.postMessageInternal(SharedMessages.LocInit, localize.getCollectionJSON()).ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -142,12 +149,12 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     // tslint:disable-next-line:no-any
     protected async postMessageInternal(type: string, payload?: any): Promise<void> {
-        if (this.webPanel && this.webPanelInit) {
+        if (this.webPanelInit) {
             // Make sure the webpanel is up before we send it anything.
             await this.webPanelInit.promise;
 
             // Then send it the message
-            this.webPanel.postMessage({ type: type.toString(), payload: payload });
+            this.webPanel?.postMessage({ type: type.toString(), payload: payload });
         }
     }
 
@@ -226,7 +233,7 @@ export class WebViewHost<IMapping> implements IDisposable {
                 rootPath: this.rootPath,
                 scripts: this.scripts,
                 settings,
-                startHttpServer: settings.skipWebViewServer ? settings.skipWebViewServer : true,
+                startHttpServer: settings.skipWebViewServer ? !settings.skipWebViewServer : true,
                 cwd
             });
 

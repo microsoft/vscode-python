@@ -150,7 +150,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private renderFooterPanel(baseTheme: string) {
         // Skip if the tokenizer isn't finished yet. It needs
         // to finish loading so our code editors work.
-        if (!this.props.monacoReady || !this.props.editCellVM) {
+        if (!this.props.monacoReady || !this.props.editCellVM || !this.props.settings || !this.props.editorOptions) {
             return null;
         }
 
@@ -215,6 +215,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     }
 
     private renderCell = (cellVM: ICellViewModel, _index: number, containerRef?: React.RefObject<HTMLDivElement>): JSX.Element | null => {
+        if (this.props.settings && this.props.editorOptions) {
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id} ref={containerRef}>
                 <ErrorBoundary>
@@ -235,6 +236,9 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                     />
                 </ErrorBoundary>
             </div>);
+        } else {
+            return null;
+        }
     }
 
     // This handles the scrolling. Its called from the props of contentPanel.

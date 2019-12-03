@@ -12,7 +12,7 @@ import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IDataScienceExtraSettings, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
-import { loadDefaultSettings } from '../react-common/settingsReactSide';
+import { getDefaultSettings } from '../react-common/settingsReactSide';
 
 export enum CursorPos {
     Top,
@@ -53,7 +53,7 @@ export type IMainState = {
     baseTheme: string;
     monacoTheme?: string;
     knownDark: boolean;
-    editorOptions: monacoEditor.editor.IEditorOptions;
+    editorOptions?: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
     variablesVisible: boolean;
     variables: IJupyterVariable[];
@@ -68,7 +68,7 @@ export type IMainState = {
     skipDefault?: boolean;
     testMode?: boolean;
     codeTheme: string;
-    settings: IDataScienceExtraSettings;
+    settings?: IDataScienceExtraSettings;
     activateCount: number;
     monacoReady: boolean;
     loaded: boolean;
@@ -94,7 +94,7 @@ const darkStyle = `
 
 // This function generates test state when running under a browser instead of inside of
 export function generateTestState(filePath: string = '', editable: boolean = false): IMainState {
-    const defaultSettings = loadDefaultSettings();
+    const defaultSettings = getDefaultSettings();
     defaultSettings.enableGather = true;
 
     return {

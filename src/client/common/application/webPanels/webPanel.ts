@@ -124,8 +124,6 @@ export class WebPanel implements IWebPanel {
     private generateLocalReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
-        const locDatabase = localize.getCollectionJSON();
-        const settingsString = this.options.settings ? JSON.stringify(this.options.settings) : '{}';
 
         return `<!doctype html>
         <html lang="en">
@@ -149,12 +147,6 @@ export class WebPanel implements IWebPanel {
 
                         return "${uriBase}" + relativePath;
                     }
-                    function getLocStrings() {
-                        return ${locDatabase};
-                    }
-                    function getInitialSettings() {
-                        return ${settingsString};
-                    }
                 </script>
                 ${uris.map(uri => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
             </body>
@@ -164,7 +156,6 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private generateServerReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
-        const encodedSettings = this.options.settings ? encodeURI(Buffer.from(JSON.stringify(this.options.settings)).toString('base64')) : '';
         const encodedScripts = this.options.scripts.map(encodeURI);
 
         return `<!doctype html>
@@ -198,7 +189,7 @@ export class WebPanel implements IWebPanel {
                     });
                     //# sourceURL=listener.js
                 </script>
-                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encodedScripts.join('%')}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }

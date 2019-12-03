@@ -12,12 +12,10 @@ import { IMainState } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
-import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
-    const defaultSettings = loadDefaultSettings();
     if (!skipDefault) {
         return generateTestState('', editable);
     } else {
@@ -25,8 +23,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             // tslint:disable-next-line: no-typeof-undefined
             skipDefault,
             testMode,
-            baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
-            editorOptions: computeEditorOptions(defaultSettings),
+            baseTheme: baseTheme,
             cellVMs: [],
             busy: true,
             undoStack: [],
@@ -45,7 +42,6 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
                 family: 'Consolas, \'Courier New\', monospace'
             },
             codeTheme: Identifiers.GeneratedThemeName,
-            settings: defaultSettings,
             activateCount: 0,
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false
@@ -100,7 +96,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         // Indicate settings updates
         if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.UpdateSettings)));
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.SettingsUpdated)));
         }
 
         // Indicate clean changes
@@ -148,14 +144,14 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const logger = createLogger({
         // tslint:disable-next-line: no-any
         stateTransformer: (state: any) => {
-            if (!state || typeof state !== 'object'){
+            if (!state || typeof state !== 'object') {
                 return state;
             }
             // tslint:disable-next-line: no-any
-            const rootState = {...state} as any;
-            if ('main' in rootState && typeof rootState.main === 'object'){
+            const rootState = { ...state } as any;
+            if ('main' in rootState && typeof rootState.main === 'object') {
                 // tslint:disable-next-line: no-any
-                const main = rootState.main = {...rootState.main} as any  as Partial<IMainState>;
+                const main = rootState.main = { ...rootState.main } as any as Partial<IMainState>;
                 main.rootCss = reduceLogMessage;
                 main.rootStyle = reduceLogMessage;
                 // tslint:disable-next-line: no-any
@@ -169,10 +165,10 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         },
         // tslint:disable-next-line: no-any
         actionTransformer: (action: any) => {
-            if (!action){
+            if (!action) {
                 return action;
             }
-            if (actionsWithLargePayload.indexOf(action.type) >= 0){
+            if (actionsWithLargePayload.indexOf(action.type) >= 0) {
                 return { ...action, payload: reduceLogMessage };
             }
             return action;

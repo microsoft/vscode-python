@@ -17,10 +17,9 @@ import {
 } from '../../client/datascience/data-viewing/types';
 import { SharedMessages } from '../../client/datascience/messages';
 import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
-import { getLocString } from '../react-common/locReactSide';
+import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
-import { loadDefaultSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { cellFormatterFunc } from './cellFormatter';
 import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
@@ -42,7 +41,7 @@ interface IMainPanelState {
     filters: {};
     indexColumn: string;
     styleReady: boolean;
-    settings: IDataScienceExtraSettings;
+    settings?: IDataScienceExtraSettings;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -70,8 +69,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: data.primaryKeys[0],
-                styleReady: false,
-                settings: loadDefaultSettings()
+                styleReady: false
             };
 
             // Fire off a timer to mimic dynamic loading
@@ -84,8 +82,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 fetchedRowCount: -1,
                 filters: {},
                 indexColumn: 'index',
-                styleReady: false,
-                settings: loadDefaultSettings()
+                styleReady: false
             };
         }
     }
@@ -104,6 +101,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public render = () => {
+        if (!this.state.settings) {
+            return null;
+        }
+
         // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
         // can guarantee our render will run before somebody checks our rendered output.
         if (this.state.totalRowCount && this.state.totalRowCount === this.state.fetchedRowCount && !this.sentDone) {
@@ -145,11 +146,20 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.updateSettings(payload);
                 break;
 
+            case SharedMessages.LocInit:
+                this.initializeLoc(payload);
+                break;
+
             default:
                 break;
         }
 
         return false;
+    }
+
+    private initializeLoc(content: string) {
+        const locJSON = JSON.parse(content);
+        storeLocStrings(locJSON);
     }
 
     private updateSettings(content: string) {

@@ -83,14 +83,9 @@ async function generateFileResponse(ctx: Koa.ParameterizedContext) {
 
 // tslint:disable: no-any
 async function generateReactHtml(query: any) {
-    const settingsBuffer = query.settings ? Buffer.from(query.settings, 'base64') : undefined;
-    const settings = settingsBuffer ? settingsBuffer.toString() : '{}';
-    const embeddedCss = query.embeddedCss ? query.embeddedCss : '';
     const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
     const scripts = query.scripts ? query.scripts : '';
     const loaded = await getIndexBundle(scripts);
-    const locDatabase = '';
-    const style = embeddedCss ? embeddedCss : '';
 
     return `<!doctype html>
     <html lang="en">
@@ -101,9 +96,6 @@ async function generateReactHtml(query: any) {
             <meta name="theme-color" content="#000000">
             <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
             <title>React App</title>
-            <style type="text/css">
-            ${style}
-            </style>
         </head>
         <body>
             <noscript>You need to enable JavaScript to run this app.</noscript>
@@ -118,12 +110,6 @@ async function generateReactHtml(query: any) {
                     }
 
                     return "${uriBase}" + relativePath;
-                }
-                function getLocStrings() {
-                    return ${locDatabase};
-                }
-                function getInitialSettings() {
-                    return JSON.parse('${settings}');
                 }
             </script>
             <script>
