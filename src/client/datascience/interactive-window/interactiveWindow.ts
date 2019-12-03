@@ -51,6 +51,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
+    private lastFile: string | undefined;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -106,11 +107,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.startServer().ignoreErrors();
     }
 
-    public get ready(): Promise<void> {
-        // We need this to ensure the interactive window is up and ready to receive messages.
-        return this.startServer();
-    }
-
     public dispose() {
         super.dispose();
         if (this.closedEvent) {
@@ -127,7 +123,21 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async show(): Promise<void> {
+        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+        return super.show();
+    }
+
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        // Save the last file we ran with.
+        this.lastFile = file;
+
+        // Make sure our web panel opens.
+        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+
+        // Tell the webpanel about the new directory.
+        this.updateCwd(path.dirname(file));
+
         // Call the internal method.
         return this.submitCode(code, file, line, undefined, editor, false);
     }
@@ -259,7 +269,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected startServer(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
-        if (!this.trackedJupyterStart){
+        if (!this.trackedJupyterStart) {
             this.trackedJupyterStart = true;
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();

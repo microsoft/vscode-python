@@ -3,6 +3,7 @@
 import * as Cors from '@koa/cors';
 import * as fs from 'fs-extra';
 import * as Koa from 'koa';
+import * as compress from 'koa-compress';
 import * as logger from 'koa-logger';
 import * as path from 'path';
 import * as Stream from 'stream';
@@ -10,22 +11,24 @@ import * as Stream from 'stream';
 import { Identifiers } from '../../../datascience/constants';
 import { noop } from '../../utils/misc';
 
-//import * as compress from 'koa-compress';
+interface INotebookState {
+    cwd: string;
+    outDir: string;
+    bundle: string;
+}
+
+const notebookState = new Map<string, INotebookState>();
+
 const app = new Koa();
 app.use(Cors());
-//app.use(compress());
+app.use(compress());
 app.use(logger());
 app.use(async ctx => {
     try {
         if (ctx.query.scripts) {
-            const readable = new Stream.Readable();
-            readable._read = noop;
-            readable.push(await generateReactHtml(ctx.query));
-            readable.push(null);
-            ctx.body = readable;
-            ctx.type = 'html';
+            await generateNotebookResponse(ctx);
         } else {
-            ctx.body = fs.createReadStream(path.join(process.cwd(), ctx.url));
+            await generateFileResponse(ctx);
         }
     } catch (e) {
         ctx.body = `<div>${e}</div>`;
@@ -36,16 +39,38 @@ app.listen(9890);
 // tslint:disable-next-line: no-console
 console.log('9890');
 
+async function generateNotebookResponse(ctx: Koa.ParameterizedContext) {
+    const readable = new Stream.Readable();
+    readable._read = noop;
+    const id = ctx.path;
+    let state = notebookState.get(id);
+    if (!state) {
+        state = {
+            cwd: ctx.query.cwd,
+            outDir: ctx.query.rootPath,
+            bundle: await generateReactHtml(ctx.query)
+        };
+        notebookState.set(id, state);
+    }
+    readable.push(state.bundle);
+    readable.push(null);
+    ctx.body = readable;
+    ctx.type = 'html';
+}
+
+async function generateFileResponse(ctx: Koa.ParameterizedContext) {
+    ctx.body = fs.createReadStream(path.join(process.cwd(), ctx.url));
+}
+
 // tslint:disable: no-any
 async function generateReactHtml(query: any) {
-    //const settings = query.settings ? query.settings : '';
+    const settings = query.settings ? query.settings : '';
     const embeddedCss = query.embeddedCss ? query.embeddedCss : '';
     const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
     const scripts = query.scripts ? query.scripts : '';
     const loaded = await getIndexBundle(scripts);
     const locDatabase = '';
     const style = embeddedCss ? embeddedCss : '';
-    //const settingsString = settings ? settings : '{}';
 
     return `<!doctype html>
     <html lang="en">
@@ -78,7 +103,7 @@ async function generateReactHtml(query: any) {
                     return ${locDatabase};
                 }
                 function getInitialSettings() {
-                    return ${query.settings};
+                    return JSON.parse(window.atob(${settings}));
                 }
             </script>
             <script>

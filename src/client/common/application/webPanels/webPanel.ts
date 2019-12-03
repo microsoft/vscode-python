@@ -4,50 +4,48 @@
 import '../../extensions';
 
 import * as fs from 'fs-extra';
-import { Uri, ViewColumn, Webview, WebviewPanel, window } from 'vscode';
+import * as uuid from 'uuid/v4';
+import { Uri, Webview, WebviewPanel, window } from 'vscode';
 
 import { Identifiers } from '../../../datascience/constants';
-import { IServiceContainer } from '../../../ioc/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
-import { IWebPanel, IWebPanelMessageListener, WebPanelMessage } from '../types';
+import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
 
 export class WebPanel implements IWebPanel {
 
-    private listener: IWebPanelMessageListener;
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
-    private disposableRegistry: IDisposableRegistry;
+    private id = uuid();
 
     constructor(
-        viewColumn: ViewColumn,
-        serviceContainer: IServiceContainer,
-        listener: IWebPanelMessageListener,
-        title: string,
-        private readonly rootPath: string,
-        scripts: string[],
-        private readonly port: number,
-        embeddedCss?: string,
-        // tslint:disable-next-line:no-any
-        settings?: any) {
-        this.disposableRegistry = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
-        this.listener = listener;
+        private disposableRegistry: IDisposableRegistry,
+        private port: number,
+        private options: IWebPanelOptions) {
         this.panel = window.createWebviewPanel(
-            title.toLowerCase().replace(' ', ''),
-            title,
-            { viewColumn, preserveFocus: true },
+            options.title.toLowerCase().replace(' ', ''),
+            options.title,
+            { viewColumn: options.viewColumn, preserveFocus: true },
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: [Uri.file(this.rootPath)]
+                localResourceRoots: [Uri.file(this.options.rootPath)]
             });
-        this.loadPromise = this.load(scripts, embeddedCss, settings);
+        this.loadPromise = this.load();
     }
 
     public async show(preserveFocus: boolean) {
         await this.loadPromise;
         if (this.panel) {
             this.panel.reveal(this.panel.viewColumn, preserveFocus);
+        }
+    }
+
+    public updateCwd(_cwd: string) {
+        if (this.options.startHttpServer && this.port) {
+            // tslint:disable-next-line: no-suspicious-comment
+            // TODO: Make a post to the server to indicate this notebook should serve
+            // files from the new cwd.
         }
     }
 
@@ -82,47 +80,89 @@ export class WebPanel implements IWebPanel {
     }
 
     // tslint:disable-next-line:no-any
-    private async load(scripts: string[], embeddedCss?: string, settings?: any) {
+    private async load() {
         if (this.panel) {
-            const localFilesExist = await Promise.all(scripts.map(s => fs.pathExists(s)));
+            const localFilesExist = await Promise.all(this.options.scripts.map(s => fs.pathExists(s)));
             if (localFilesExist.every(exists => exists === true)) {
 
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.generateReactHtml(scripts, this.panel.webview, embeddedCss, settings);
+                this.panel.webview.html = this.options.startHttpServer ?
+                    this.generateServerReactHtml(this.panel.webview) :
+                    this.generateLocalReactHtml(this.panel.webview);
 
                 // Reset when the current panel is closed
                 this.disposableRegistry.push(this.panel.onDidDispose(() => {
                     this.panel = undefined;
-                    this.listener.dispose().ignoreErrors();
+                    this.options.listener.dispose().ignoreErrors();
                 }));
 
                 this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
                     // Pass the message onto our listener
-                    this.listener.onMessage(message.type, message.payload);
+                    this.options.listener.onMessage(message.type, message.payload);
                 }));
 
                 this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
                     // Pass the state change onto our listener
-                    this.listener.onChangeViewState(this);
+                    this.options.listener.onChangeViewState(this);
                 }));
 
                 // Set initial state
-                this.listener.onChangeViewState(this);
+                this.options.listener.onChangeViewState(this);
             } else {
                 // Indicate that we can't load the file path
                 const badPanelString = localize.DataScience.badWebPanelFormatString();
-                this.panel.webview.html = badPanelString.format(scripts.join(', '));
+                this.panel.webview.html = badPanelString.format(this.options.scripts.join(', '));
             }
         }
     }
 
     // tslint:disable-next-line:no-any
-    private generateReactHtml(scripts: string[], webView: Webview, embeddedCss?: string, settings?: any) {
-        const uriBase = webView.asWebviewUri(Uri.file(this.rootPath));
-        const style = encodeURI(embeddedCss ? embeddedCss : '');
-        const encodedSettings = encodeURI(JSON.stringify(settings));
-        const encodedScripts = scripts.map(encodeURI);
+    private generateLocalReactHtml(webView: Webview) {
+        const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
+        const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
+        const locDatabase = localize.getCollectionJSON();
+        const settingsString = this.options.settings ? JSON.stringify(this.options.settings) : '{}';
+
+        return `<!doctype html>
+        <html lang="en">
+            <head>
+                <meta charset="utf-8">
+                <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http:;">
+                <meta name="theme-color" content="#000000">
+                <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
+                <title>React App</title>
+                <base href="${uriBase}"/>
+            </head>
+            <body>
+                <noscript>You need to enable JavaScript to run this app.</noscript>
+                <div id="root"></div>
+                <script type="text/javascript">
+                    function resolvePath(relativePath) {
+                        if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
+                            return "${uriBase}" + relativePath.substring(1);
+                        }
+
+                        return "${uriBase}" + relativePath;
+                    }
+                    function getLocStrings() {
+                        return ${locDatabase};
+                    }
+                    function getInitialSettings() {
+                        return ${settingsString};
+                    }
+                </script>
+                ${uris.map(uri => `<script type="text/javascript" src="${uri}"></script>`).join('\n')}
+            </body>
+        </html>`;
+    }
+
+    // tslint:disable-next-line:no-any
+    private generateServerReactHtml(webView: Webview) {
+        const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
+        const encodedSettings = this.options.settings ? encodeURI(Buffer.from(JSON.stringify(this.options.settings)).toString('base64')) : '';
+        const encodedScripts = this.options.scripts.map(encodeURI);
 
         return `<!doctype html>
         <html lang="en">
@@ -155,7 +195,7 @@ export class WebPanel implements IWebPanel {
                     });
                     //# sourceURL=listener.js
                 </script>
-                <iframe id='hostframe' src="http://localhost:${this.port}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&embeddedCss=${style}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe id='hostframe' src="http://localhost:${this.port}/${this.id}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }

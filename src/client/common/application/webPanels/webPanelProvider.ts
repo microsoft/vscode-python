@@ -3,13 +3,13 @@
 'use strict';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { ViewColumn } from 'vscode';
 
 import { IServiceContainer } from '../../../ioc/types';
 import { traceInfo } from '../../logger';
 import { IProcessServiceFactory } from '../../process/types';
+import { IDisposableRegistry } from '../../types';
 import { createDeferred } from '../../utils/async';
-import { IWebPanel, IWebPanelMessageListener, IWebPanelProvider } from '../types';
+import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';
 import { WebPanel } from './webPanel';
 
 @injectable()
@@ -21,9 +21,9 @@ export class WebPanelProvider implements IWebPanelProvider {
     }
 
     // tslint:disable-next-line:no-any
-    public async create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): Promise<IWebPanel> {
-        const port = await this.ensureServerIsRunning();
-        return new WebPanel(viewColumn, this.serviceContainer, listener, title, rootPath, scripts, port, embeddedCss, settings);
+    public async create(options: IWebPanelOptions): Promise<IWebPanel> {
+        const port = options.startHttpServer ? await this.ensureServerIsRunning() : -1;
+        return new WebPanel(this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry), port, options);
     }
 
     private async ensureServerIsRunning(): Promise<number> {

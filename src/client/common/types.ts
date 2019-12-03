@@ -360,6 +360,7 @@ export interface IDataScienceSettings {
     defaultCellMarker?: string;
     verboseLogging?: boolean;
     themeMatplotlibPlots?: boolean;
+    skipWebViewServer?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

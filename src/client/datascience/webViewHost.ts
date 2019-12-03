@@ -50,9 +50,6 @@ export class WebViewHost<IMapping> implements IDisposable {
 
         // Listen for settings changes
         this.settingsChangeHandler = this.configService.getSettings().onDidChange(this.onDataScienceSettingsChanged.bind(this));
-
-        // Do the same thing a reload would do
-        this.reload().ignoreErrors();
     }
 
     public async show(preserveFocus: boolean): Promise<void> {
@@ -61,6 +58,12 @@ export class WebViewHost<IMapping> implements IDisposable {
             if (this.webPanel) {
                 await this.webPanel.show(preserveFocus);
             }
+        }
+    }
+
+    public updateCwd(cwd: string): void {
+        if (this.webPanel) {
+            this.webPanel.updateCwd(cwd);
         }
     }
 
@@ -79,6 +82,8 @@ export class WebViewHost<IMapping> implements IDisposable {
                 this.settingsChangeHandler.dispose();
                 this.settingsChangeHandler = undefined;
             }
+            this.webPanelInit = undefined;
+            this.themeIsDarkPromise = undefined;
         }
     }
 
@@ -95,22 +100,6 @@ export class WebViewHost<IMapping> implements IDisposable {
             this.themeIsDarkPromise = createDeferred<boolean>();
             this.themeIsDarkPromise.resolve(isDark);
         }
-    }
-
-    protected async reload() {
-        // Make not disposed anymore
-        this.disposed = false;
-
-        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
-        // react control.
-        this.webPanelInit = createDeferred();
-
-        // Setup a promise that will wait until the webview passes back
-        // a message telling us what them is in use
-        this.themeIsDarkPromise = createDeferred<boolean>();
-
-        // Load our actual web panel
-        return this.loadWebPanel();
     }
 
     protected get isDisposed(): boolean {
@@ -204,6 +193,47 @@ export class WebViewHost<IMapping> implements IDisposable {
         return this.themeIsDarkPromise!.promise;
     }
 
+    protected async loadWebPanel(cwd: string) {
+        // Make not disposed anymore
+        this.disposed = false;
+
+        // Setup our init promise for the web panel. We use this to make sure we're in sync with our
+        // react control.
+        this.webPanelInit = this.webPanelInit ? this.webPanelInit : createDeferred();
+
+        // Setup a promise that will wait until the webview passes back
+        // a message telling us what them is in use
+        this.themeIsDarkPromise = this.themeIsDarkPromise ? this.themeIsDarkPromise : createDeferred<boolean>();
+
+        // Load our actual web panel
+
+        traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
+
+        // Create our web panel (it's the UI that shows up for the history)
+        if (this.webPanel === undefined) {
+
+            // Get our settings to pass along to the react control
+            const settings = this.generateDataScienceExtraSettings();
+
+            traceInfo('Loading web view...');
+
+            // Use this script to create our web view panel. It should contain all of the necessary
+            // script to communicate with this class.
+            this.webPanel = await this.provider.create({
+                viewColumn: this.viewColumn,
+                listener: this.messageListener,
+                title: this.title,
+                rootPath: this.rootPath,
+                scripts: this.scripts,
+                settings,
+                startHttpServer: settings.skipWebViewServer ? settings.skipWebViewServer : true,
+                cwd
+            });
+
+            traceInfo('Web view created.');
+        }
+    }
+
     private getValue<T>(workspaceConfig: WorkspaceConfiguration, section: string, defaultValue: T): T {
         if (workspaceConfig) {
             return workspaceConfig.get(section, defaultValue);
@@ -278,23 +308,5 @@ export class WebViewHost<IMapping> implements IDisposable {
         // Stringify our settings to send over to the panel
         const dsSettings = JSON.stringify(this.generateDataScienceExtraSettings());
         this.postMessageInternal(SharedMessages.UpdateSettings, dsSettings).ignoreErrors();
-    }
-
-    private async loadWebPanel() {
-        traceInfo(`Loading web panel. Panel is ${this.webPanel ? 'set' : 'notset'}`);
-
-        // Create our web panel (it's the UI that shows up for the history)
-        if (this.webPanel === undefined) {
-
-            // Get our settings to pass along to the react control
-            const settings = this.generateDataScienceExtraSettings();
-
-            traceInfo('Loading web view...');
-            // Use this script to create our web view panel. It should contain all of the necessary
-            // script to communicate with this class.
-            this.webPanel = await this.provider.create(this.viewColumn, this.messageListener, this.title, this.rootPath, this.scripts, '', settings);
-
-            traceInfo('Web view created.');
-        }
     }
 }
