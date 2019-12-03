@@ -251,7 +251,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
             const metadata = options?.metadata;
-            const launchResults = await this.startNotebookServer({useDefaultConfig, metadata}, cancelToken);
+            const launchResults = await this.startNotebookServer({ useDefaultConfig, metadata }, cancelToken);
             if (launchResults) {
                 connection = launchResults.connection;
                 kernelSpec = launchResults.kernelSpec;
@@ -287,7 +287,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(options: {useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata}, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startNotebookServer(options: { useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata }, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
@@ -313,6 +313,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // See if we can find the command
         try {
             const result = await this.findBestCommand(command, cancelToken);
+
+            // Note to self, if result is undefined, check that your test is actually
+            // setting up different services correctly. Some method must be undefined.
             return result.command !== undefined;
         } catch (err) {
             this.logger.logWarning(err);

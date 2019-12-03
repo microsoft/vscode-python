@@ -32,11 +32,11 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     public async attach(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration), parentSession: DebugSession): Promise<void> {
         let debugConfig: AttachRequestArguments & DebugConfiguration;
         let processId: number;
-        if (data.rootStartRequest) {
+        if (this.isChildProcessLaunchData(data)) {
             processId = data.processId;
-            debugConfig = this.getAttachConfiguration(data as ChildProcessLaunchData);
+            debugConfig = this.getAttachConfiguration(data);
         } else {
-            debugConfig = data as (AttachRequestArguments & DebugConfiguration);
+            debugConfig = data;
             processId = debugConfig.subProcessId!;
         }
         const folder = this.getRelatedWorkspaceFolder(debugConfig);
@@ -86,5 +86,8 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         config.name = `Child Process ${data.processId}`;
         config.request = 'attach';
         return config;
+    }
+    private isChildProcessLaunchData(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration)): data is ChildProcessLaunchData {
+        return data.rootStartRequest !== undefined;
     }
 }

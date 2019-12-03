@@ -534,7 +534,8 @@ suite('DataScience notebook tests', () => {
 
             // Create again, we should get the same server from the cache
             const server2 = await createNotebook(true);
-            assert.ok(server === server2, 'With no settings changed we should return the cached server');
+            // tslint:disable-next-line: triple-equals
+            assert.ok(server == server2, 'With no settings changed we should return the cached server');
 
             // Create a new mock interpreter with a different path
             const newPython: PythonInterpreter = {
@@ -549,10 +550,10 @@ suite('DataScience notebook tests', () => {
             // Add interpreter into mock jupyter service and set it as active
             ioc.addInterpreter(newPython, SupportedCommands.all);
 
-            // Create a new notebook, we should not be the same anymore
+            // Create a new notebook, we should still be the same as interpreter is just saved for notebook creation
             const server3 = await createNotebook(true);
-            assert.ok(server3, 'Server not created');
-            assert.ok(server !== server3, 'With interpreter changed we should return a new server');
+            // tslint:disable-next-line: triple-equals
+            assert.ok(server == server3, 'With interpreter changed we should not return a new server');
         } else {
             console.log(`Skipping Change Interpreter test in non-mocked Jupyter case`);
         }
@@ -1099,6 +1100,26 @@ plt.show()`,
         assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
     });
 
+    async function disableJupyter(pythonPath: string) {
+        const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
+        const service = await factory.create({ pythonPath });
+        const mockService = service as MockPythonService;
+        mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
+            return Promise.resolve({
+                stdout: '9.9.9.9',
+                stderr: 'Not supported'
+            });
+        });
+
+        mockService.addExecResult(['-m', 'notebook', '--version'], () => {
+            return Promise.resolve({
+                stdout: '',
+                stderr: 'Not supported'
+            });
+        });
+
+    }
+
     test('Notebook launch failure', async function () {
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
         processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
@@ -1115,22 +1136,8 @@ plt.show()`,
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
 
             // Change notebook command to fail with some goofy output
-            const factory = ioc.serviceManager.get<IPythonExecutionFactory>(IPythonExecutionFactory);
-            const service = await factory.create({ pythonPath: ioc.workingInterpreter.path });
-            const mockService = service as MockPythonService;
-            mockService.addExecResult(['-m', 'jupyter', 'notebook', '--version'], () => {
-                return Promise.resolve({
-                    stdout: '9.9.9.9',
-                    stderr: 'Not supported'
-                });
-            });
-
-            mockService.addExecResult(['-m', 'notebook', '--version'], () => {
-                return Promise.resolve({
-                    stdout: '',
-                    stderr: 'Not supported'
-                });
-            });
+            await disableJupyter(ioc.workingInterpreter.path);
+            await disableJupyter(ioc.workingInterpreter2.path);
 
             // Try creating a notebook
             let threw = false;

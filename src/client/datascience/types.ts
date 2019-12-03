@@ -101,6 +101,7 @@ export interface INotebook extends IAsyncDisposable {
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
     getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
+    getKernelSpec(): Promise<IJupyterKernelSpec | undefined>;
 }
 
 export interface INotebookServerOptions {
@@ -109,7 +110,6 @@ export interface INotebookServerOptions {
     usingDarkTheme?: boolean;
     useDefaultConfig?: boolean;
     workingDir?: string;
-    interpreterPath?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
 }
@@ -194,9 +194,22 @@ export interface IJupyterKernel {
 }
 
 export interface IJupyterKernelSpec extends IAsyncDisposable {
-    name: string | undefined;
-    language: string | undefined;
-    path: string | undefined;
+    name: string;
+    language: string;
+    path: string;
+    /**
+     * Kernel display name.
+     *
+     * @type {string}
+     * @memberof IJupyterKernelSpec
+     */
+    readonly display_name: string;
+    /**
+     * A dictionary of additional attributes about this kernel; used by clients to aid in kernel selection.
+     * Optionally storing the interpreter information in the metadata (helping extension search for kernels that match an interpereter).
+     */
+    // tslint:disable-next-line: no-any
+    readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

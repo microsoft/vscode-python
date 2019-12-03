@@ -59,7 +59,7 @@ export class HostJupyterExecution
             workspace,
             configService,
             serviceContainer);
-        this.serverCache = new ServerCache(configService, workspace, fileSys, interpreterService);
+        this.serverCache = new ServerCache(configService, workspace, fileSys);
     }
 
     public async dispose(): Promise<void> {

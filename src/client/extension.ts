@@ -201,8 +201,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const api = buildApi(
         Promise.all([activationDeferred.promise, activationPromise]),
         serviceContainer.get<IExperimentsManager>(IExperimentsManager),
-        serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory),
-        configuration
+        serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory)
     );
     // In test environment return the DI Container.
     if (isTestExecution()) {

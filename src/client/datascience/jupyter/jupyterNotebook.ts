@@ -31,6 +31,7 @@ import { CodeSnippits, Identifiers, Telemetry } from '../constants';
 import {
     CellState,
     ICell,
+    IJupyterKernelSpec,
     IJupyterSession,
     INotebook,
     INotebookCompletion,
@@ -468,6 +469,10 @@ export class JupyterNotebookBase implements INotebook {
 
     public async getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
         return this.interpreter;
+    }
+
+    public async getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
+        return this.launchInfo.kernelSpec;
     }
 
     private finishUncompletedCells() {

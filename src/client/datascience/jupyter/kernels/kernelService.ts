@@ -3,10 +3,13 @@
 
 'use strict';
 
+import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel } from '@jupyterlab/services';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
+import { Cancellation } from '../../../common/cancellation';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -36,6 +39,49 @@ export class KernelService {
         private readonly interpreterService: IInterpreterService,
         private readonly fileSystem: IFileSystem
     ) {}
+    /**
+     * Finds a kernel spec from a given session or jupyter process that matches a given spec.
+     *
+     * @param {nbformat.IKernelspecMetadata} kernelSpec The kernelspec (criteria) to be used when searching for a kernel.
+     * @param {IJupyterSessionManager} [sessionManager] If not provided search against the jupyter process.
+     * @param {CancellationToken} [cancelToken]
+     * @returns {(Promise<IJupyterKernelSpec | undefined>)}
+     * @memberof KernelService
+     */
+    public async findMatchingKernelSpec(
+        kernelSpec: nbformat.IKernelspecMetadata,
+        sessionManager?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec | undefined>;
+    /**
+     * Finds a kernel spec from a given session or jupyter process that matches a given interpreter.
+     *
+     * @param {PythonInterpreter} interpreter The interpreter (criteria) to be used when searching for a kernel.
+     * @param {(IJupyterSessionManager | undefined)} sessionManager If not provided search against the jupyter process.
+     * @param {CancellationToken} [cancelToken]
+     * @returns {(Promise<IJupyterKernelSpec | undefined>)}
+     * @memberof KernelService
+     */
+    public async findMatchingKernelSpec(
+        interpreter: PythonInterpreter,
+        sessionManager: IJupyterSessionManager | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec | undefined>;
+    public async findMatchingKernelSpec(
+        option: nbformat.IKernelspecMetadata | PythonInterpreter,
+        sessionManager: IJupyterSessionManager | undefined,
+        cancelToken?: CancellationToken
+    ): Promise<IJupyterKernelSpec | undefined> {
+        const specs = await this.getKernelSpecs(sessionManager, cancelToken);
+        if ('path' in option && 'type' in option) {
+            const interpreter = option as PythonInterpreter;
+            return specs.find(item => item.language === PYTHON_LANGUAGE && this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', interpreter.path));
+        } else {
+            const kernelSpec = option as nbformat.IKernelspecMetadata;
+            return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === kernelSpec.display_name && item.name === kernelSpec.name);
+        }
+    }
+
     @captureTelemetry(Telemetry.FindJupyterKernelSpec)
     public async getMatchingKernelSpec(sessionManager: IJupyterSessionManager | undefined, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         try {
@@ -72,6 +118,14 @@ export class KernelService {
                 throw new Error(localize.DataScience.jupyterServerCrashed().format(sessionManager!.getConnInfo().localProcExitCode!.toString()));
             }
         }
+    }
+    private async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
+        const enumerator = sessionManager ? sessionManager.getActiveKernelSpecs() : this.enumerateSpecs(cancelToken);
+        if (Cancellation.isCanceled(cancelToken)) {
+            return [];
+        }
+        const specs = await enumerator;
+        return specs.filter(item => !!item);
     }
     private hasSpecPathMatch = async (info: PythonInterpreter | undefined, cancelToken?: CancellationToken): Promise<boolean> => {
         if (info) {
@@ -244,60 +298,43 @@ export class KernelService {
         return bestSpec;
     }
 
-    private async readSpec(kernelSpecOutputLine: string): Promise<JupyterKernelSpec | undefined> {
-        const match = RegExpValues.KernelSpecOutputRegEx.exec(kernelSpecOutputLine);
-        if (match && match !== null && match.length > 2) {
-            // Second match should be our path to the kernel spec
-            const file = path.join(match[2], 'kernel.json');
-            try {
-                if (await this.fileSystem.fileExists(file)) {
-                    // Turn this into a IJupyterKernelSpec
-                    const model = JSON.parse(await this.fileSystem.readFile(file));
-                    model.name = match[1];
-                    return new JupyterKernelSpec(model, file);
-                }
-            } catch {
-                // Just return nothing if we can't parse.
-            }
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> => {
+        // Ignore errors if there are no kernels.
+        const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
+
+        if (!kernelSpecCommand || !kernelSpecCommand.command) {
+            return [];
         }
+        try {
+            traceInfo('Asking for kernelspecs from jupyter');
 
-        return undefined;
-    }
+            // Ask for our current list.
+            const output = await kernelSpecCommand.command.exec(['list', '--json'], { throwOnStdErr: true, encoding: 'utf8' });
 
-    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<(JupyterKernelSpec | undefined)[]> => {
-        if (await this.jupyterExecution.isKernelSpecSupported()) {
-            const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand);
-
-            if (kernelSpecCommand.command) {
-                try {
-                    traceInfo('Asking for kernelspecs from jupyter');
-
-                    // Ask for our current list.
-                    const list = await kernelSpecCommand.command.exec(['list'], { throwOnStdErr: true, encoding: 'utf8' });
-
-                    traceInfo('Parsing kernelspecs from jupyter');
-
-                    // This should give us back a key value pair we can parse
-                    const lines = list.stdout.splitLines({ trim: false, removeEmptyEntries: true });
-
-                    // Generate all of the promises at once
-                    const promises = lines.map(l => this.readSpec(l));
-
-                    traceInfo('Awaiting the read of kernelspecs from jupyter');
-
-                    // Then let them run concurrently (they are file io)
-                    const specs = await Promise.all(promises);
-
-                    traceInfo('Returning kernelspecs from jupyter');
-                    return specs!.filter(s => s);
-                } catch {
-                    // This is failing for some folks. In that case return nothing
-                    return [];
+            traceInfo('Parsing kernelspecs from jupyter');
+            // This should give us back a key value pair we can parse
+            const kernelSpecs = JSON.parse(output.stdout.trim()) as Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }>;
+            const specs = await Promise.all(Object.keys(kernelSpecs).map(async kernelName => {
+                const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
+                const spec = kernelSpecs[kernelName].spec;
+                // Add the missing name property.
+                const model = {
+                    ...spec,
+                    name: kernelName
+                };
+                // Check if the spec file exists.
+                if (await this.fileSystem.fileExists(specFile)){
+                    return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
+                } else {
+                    return;
                 }
-            }
+            }));
+            return specs.filter(item => !!item).map(item => item as IJupyterKernelSpec);
+        } catch (ex) {
+            traceError('Failed to list kernels', ex);
+            // This is failing for some folks. In that case return nothing
+            return [];
         }
-
-        return [];
     }
     private async getInterpreterDetailsFromProcess(baseProcessName: string): Promise<PythonInterpreter | undefined> {
         if (path.basename(baseProcessName) !== baseProcessName) {

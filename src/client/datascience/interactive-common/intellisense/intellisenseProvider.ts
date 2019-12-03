@@ -3,7 +3,7 @@
 'use strict';
 import '../../../common/extensions';
 
-import { injectable, unmanaged } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -12,16 +12,20 @@ import {
     CancellationTokenSource,
     Event,
     EventEmitter,
+    SignatureHelpContext,
     TextDocumentContentChangeEvent,
     Uri
 } from 'vscode';
 
-import { HiddenFileFormatString } from '../../../../client/constants';
+import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
-import { traceWarning } from '../../../common/logger';
+import { traceError, traceWarning } from '../../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../../common/platform/types';
+import { Resource } from '../../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../../common/utils/async';
+import { HiddenFileFormatString } from '../../../constants';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { concatMultilineStringInput } from '../../common';
 import { Identifiers, Settings } from '../../constants';
 import { IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../types';
@@ -40,30 +44,46 @@ import {
     IRemoveCell,
     ISwapCells
 } from '../interactiveWindowTypes';
-import { convertStringsToSuggestions } from './conversion';
+import {
+    convertStringsToSuggestions,
+    convertToMonacoCompletionList,
+    convertToMonacoHover,
+    convertToMonacoSignatureHelp
+} from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
 @injectable()
-export abstract class BaseIntellisenseProvider implements IInteractiveWindowListener {
+export class IntellisenseProvider implements IInteractiveWindowListener {
 
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
     private cancellationSources: Map<string, CancellationTokenSource> = new Map<string, CancellationTokenSource>();
     private notebookIdentity: Uri | undefined;
+    private potentialResource: Uri | undefined;
+    private sentOpenDocument: boolean = false;
+    private languageServer: ILanguageServer | undefined;
+    private resource: Resource;
+    private interpreter: PythonInterpreter | undefined;
 
     constructor(
-        @unmanaged() private workspaceService: IWorkspaceService,
-        @unmanaged() private fileSystem: IFileSystem,
-        @unmanaged() private jupyterExecution: IJupyterExecution,
-        @unmanaged() private interactiveWindowProvider: IInteractiveWindowProvider
+        @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService,
+        @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache
     ) {
     }
 
     public dispose() {
         if (this.temporaryFile) {
             this.temporaryFile.dispose();
+        }
+        if (this.languageServer) {
+            this.languageServer.dispose();
+            this.languageServer = undefined;
         }
     }
 
@@ -75,27 +95,19 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         switch (message) {
             case InteractiveWindowMessages.CancelCompletionItemsRequest:
             case InteractiveWindowMessages.CancelHoverRequest:
-                if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleCancel);
-                }
+                this.dispatchMessage(message, payload, this.handleCancel);
                 break;
 
             case InteractiveWindowMessages.ProvideCompletionItemsRequest:
-                if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleCompletionItemsRequest);
-                }
+                this.dispatchMessage(message, payload, this.handleCompletionItemsRequest);
                 break;
 
             case InteractiveWindowMessages.ProvideHoverRequest:
-                if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleHoverRequest);
-                }
+                this.dispatchMessage(message, payload, this.handleHoverRequest);
                 break;
 
             case InteractiveWindowMessages.ProvideSignatureHelpRequest:
-                if (this.isActive) {
-                    this.dispatchMessage(message, payload, this.handleSignatureHelpRequest);
-                }
+                this.dispatchMessage(message, payload, this.handleSignatureHelpRequest);
                 break;
 
             case InteractiveWindowMessages.EditCell:
@@ -139,6 +151,49 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         }
     }
 
+    protected async getLanguageServer(): Promise<ILanguageServer | undefined> {
+        // Resource should be our potential resource if its set. Otherwise workspace root
+        const resource = this.potentialResource || (this.workspaceService.rootPath ? Uri.parse(this.workspaceService.rootPath) : undefined);
+
+        // Interpreter should be the interpreter currently active in the notebook
+        const activeNotebook = await this.getNotebook();
+        const interpreter = activeNotebook ? await activeNotebook.getMatchingInterpreter() : await this.interpreterService.getActiveInterpreter(resource);
+
+        // See if the resource or the interpreter are different
+        if (resource?.toString() !== this.resource?.toString() || interpreter?.path !== this.interpreter?.path || this.languageServer === undefined) {
+            this.resource = resource;
+            this.interpreter = interpreter;
+
+            // Get an instance of the language server (so we ref count it )
+            try {
+                const languageServer = await this.languageServerCache.get(resource, interpreter);
+
+                // Dispose of our old language service
+                this.languageServer?.dispose();
+
+                // This new language server does not know about our document, so tell it.
+                const document = await this.getDocument();
+                if (document && languageServer.handleOpen && languageServer.handleChanges) {
+                    // If we already sent an open document, that means we need to send both the open and
+                    // the new changes
+                    if (this.sentOpenDocument) {
+                        languageServer.handleOpen(document);
+                        languageServer.handleChanges(document, document.getFullContentChanges());
+                    } else {
+                        this.sentOpenDocument = true;
+                        languageServer.handleOpen(document);
+                    }
+                }
+
+                // Save the ref.
+                this.languageServer = languageServer;
+            } catch (e) {
+                traceError(e);
+            }
+        }
+        return this.languageServer;
+    }
+
     protected getDocument(resource?: Uri): Promise<IntellisenseDocument> {
         if (!this.documentPromise) {
             this.documentPromise = createDeferred<IntellisenseDocument>();
@@ -164,11 +219,70 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         return this.documentPromise.promise;
     }
 
-    protected abstract get isActive(): boolean;
-    protected abstract provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList>;
-    protected abstract provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover>;
-    protected abstract provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp>;
-    protected abstract handleChanges(originalFile: string | undefined, document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void>;
+    protected async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
+        const languageServer = await this.getLanguageServer();
+        const document = await this.getDocument();
+        if (languageServer && document) {
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            const result = await languageServer.provideCompletionItems(document, docPos, token, context);
+            if (result) {
+                return convertToMonacoCompletionList(result, true);
+            }
+        }
+
+        return {
+            suggestions: [],
+            incomplete: false
+        };
+    }
+    protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
+        const languageServer = await this.getLanguageServer();
+        const document = await this.getDocument();
+        if (languageServer && document) {
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            const result = await languageServer.provideHover(document, docPos, token);
+            if (result) {
+                return convertToMonacoHover(result);
+            }
+        }
+
+        return {
+            contents: []
+        };
+    }
+    protected async provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp> {
+        const languageServer = await this.getLanguageServer();
+        const document = await this.getDocument();
+        if (languageServer && document) {
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            const result = await languageServer.provideSignatureHelp(document, docPos, token, context as SignatureHelpContext);
+            if (result) {
+                return convertToMonacoSignatureHelp(result);
+            }
+        }
+
+        return {
+            signatures: [],
+            activeParameter: 0,
+            activeSignature: 0
+        };
+    }
+
+    protected async handleChanges(document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void> {
+        // For the dot net language server, we have to send extra data to the language server
+        if (document) {
+            // Broadcast an update to the language server
+            const languageServer = await this.getLanguageServer();
+            if (languageServer && languageServer.handleChanges && languageServer.handleOpen) {
+                if (!this.sentOpenDocument) {
+                    this.sentOpenDocument = true;
+                    return languageServer.handleOpen(document);
+                } else {
+                    return languageServer.handleChanges(document, changes);
+                }
+            }
+        }
+    }
 
     private dispatchMessage<M extends IInteractiveWindowMapping, T extends keyof M>(_message: T, payload: any, handler: (args: M[T]) => void) {
         const args = payload as M[T];
@@ -329,11 +443,16 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
     }
 
     private async addCell(request: IAddCell): Promise<void> {
+        // Save this request file as our potential resource
+        if (request.cell.file !== Identifiers.EmptyFileName) {
+            this.potentialResource = Uri.file(request.cell.file);
+        }
+
         // Get the document and then pass onto the sub class
         const document = await this.getDocument(request.cell.file === Identifiers.EmptyFileName ? undefined : Uri.file(request.cell.file));
         if (document) {
             const changes = document.addCell(request.fullText, request.currentText, request.cell.id);
-            return this.handleChanges(request.cell.file, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
@@ -342,7 +461,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         const document = await this.getDocument();
         if (document) {
             const changes = document.insertCell(request.cell.id, request.code, request.codeCellAboveId);
-            return this.handleChanges(undefined, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
@@ -351,7 +470,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         const document = await this.getDocument();
         if (document) {
             const changes = document.edit(request.changes, request.id);
-            return this.handleChanges(undefined, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
@@ -360,7 +479,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         const document = await this.getDocument();
         if (document) {
             const changes = document.remove(request.id);
-            return this.handleChanges(undefined, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
@@ -369,7 +488,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         const document = await this.getDocument();
         if (document) {
             const changes = document.swap(request.firstCellId, request.secondCellId);
-            return this.handleChanges(undefined, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
@@ -378,7 +497,7 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
         const document = await this.getDocument();
         if (document) {
             const changes = document.removeAll();
-            return this.handleChanges(undefined, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
@@ -392,21 +511,23 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
                 };
             }));
 
-            await this.handleChanges(Identifiers.EmptyFileName, document, changes);
+            await this.handleChanges(document, changes);
         }
     }
 
     private async restartKernel(): Promise<void> {
-        // This is the one that acts like a reset
+        // This is the one that acts like a reset if this is the interactive window
         const document = await this.getDocument();
-        if (document) {
+        if (document && document.isReadOnly) {
+            this.sentOpenDocument = false;
             const changes = document.removeAllCells();
-            return this.handleChanges(undefined, document, changes);
+            return this.handleChanges(document, changes);
         }
     }
 
     private setIdentity(identity: INotebookIdentity) {
         this.notebookIdentity = Uri.parse(identity.resource);
+        this.potentialResource = Uri.parse(identity.resource);
     }
 
     private async getNotebook(): Promise<INotebook | undefined> {
@@ -420,4 +541,5 @@ export abstract class BaseIntellisenseProvider implements IInteractiveWindowList
 
         return undefined;
     }
+
 }

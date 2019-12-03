@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { ReactWrapper } from 'enzyme';
@@ -491,7 +492,7 @@ for _ in range(50):
             ioc = new DataScienceIocContainer();
             ioc.registerDataScienceTypes();
         }
-        async function setupFunction(this: Mocha.Context) {
+        async function setupFunction(this: Mocha.Context, fileContents?: any) {
             const wrapperPossiblyUndefined = await setupWebview(ioc);
             if (wrapperPossiblyUndefined) {
                 wrapper = wrapperPossiblyUndefined;
@@ -502,8 +503,8 @@ for _ in range(50):
                 // This is used in some tests (saving).
                 const filesystem = new FileSystem();
                 notebookFile = await filesystem.createTemporaryFile('.ipynb');
-                await fs.writeFile(notebookFile.filePath, baseFile);
-                await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, baseFile, notebookFile.filePath)]);
+                await fs.writeFile(notebookFile.filePath, fileContents ? fileContents : baseFile);
+                await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath)]);
             } else {
                 // tslint:disable-next-line: no-invalid-this
                 this.skip();
@@ -1329,6 +1330,130 @@ for _ in range(50):
                 await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
+            });
+        });
+
+        suite('Update Metadata', () => {
+            setup(async function() {
+                initIoc();
+
+                const oldJson: nbformat.INotebookContent = {
+                    nbformat: 4,
+                    nbformat_minor: 2,
+                    cells: [
+                        {
+                            cell_type: 'code',
+                            execution_count: 1,
+                            metadata: {
+                                collapsed: true
+                            },
+                            outputs: [
+                                {
+                                    data: {
+                                        'text/plain': [
+                                            '1'
+                                        ]
+                                    },
+                                    output_type: 'execute_result',
+                                    execution_count: 1,
+                                    metadata: {}
+                                }
+                            ],
+                            source: [
+                                'a=1\n',
+                                'a'
+                            ]
+                        },
+                        {
+                            cell_type: 'code',
+                            execution_count: 2,
+                            metadata: {},
+                            outputs: [
+                                {
+                                    data: {
+                                        'text/plain': [
+                                            '2'
+                                        ]
+                                    },
+                                    output_type: 'execute_result',
+                                    execution_count: 2,
+                                    metadata: {}
+                                }
+                            ],
+                            source: [
+                                'b=2\n',
+                                'b'
+                            ]
+                        },
+                        {
+                            cell_type: 'code',
+                            execution_count: 3,
+                            metadata: {},
+                            outputs: [
+                                {
+                                    data: {
+                                        'text/plain': [
+                                            '3'
+                                        ]
+                                    },
+                                    output_type: 'execute_result',
+                                    execution_count: 3,
+                                    metadata: {}
+                                }
+                            ],
+                            source: [
+                                'c=3\n',
+                                'c'
+                            ]
+                        }
+                    ],
+                    metadata: {
+                        orig_nbformat: 4,
+                        kernelspec: {
+                            display_name: 'JUNK',
+                            name: 'JUNK'
+                        },
+                        language_info: {
+                            name: 'python',
+                            version: '1.2.3'
+                        }
+                    }
+                };
+
+                // tslint:disable-next-line: no-invalid-this
+                await setupFunction.call(this, JSON.stringify(oldJson));
+            });
+
+            test('Update notebook metadata on execution', async () => {
+                const notebookProvider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const editor = notebookProvider.editors[0];
+                assert.ok(editor, 'No editor when saving');
+                const savedPromise = createDeferred();
+                const disp = editor.saved(() => savedPromise.resolve());
+
+                // add cells, run them and save
+                await addCell(wrapper, ioc, 'a=1\na');
+                const runAllButton = findButton(wrapper, NativeEditor, 0);
+                await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+                simulateKeyPressOnCell(1, { code: 's', ctrlKey: true });
+
+                await savedPromise.promise;
+                disp.dispose();
+
+                // the file has output and execution count
+                const fileContent = await fs.readFile(notebookFile.filePath, 'utf8');
+                const fileObject = JSON.parse(fileContent);
+
+                // The version should be updated to something not "1.2.3"
+                assert.notEqual(fileObject.metadata.language_info.version, '1.2.3');
+
+                // Some tests don't have a kernelspec, in which case we should remove it
+                // If there is a spec, we should update the name and display name
+                const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
+                if (isRollingBuild && fileObject.metadata.kernelspec) {
+                    assert.notEqual(fileObject.metadata.kernelspec.display_name, 'JUNK');
+                    assert.notEqual(fileObject.metadata.kernelspec.name, 'JUNK');
+                }
             });
         });
 

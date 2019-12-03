@@ -22,7 +22,7 @@ import { InterpreterService } from '../../client/interpreter/interpreterService'
 import { sleep } from '../core';
 
 // tslint:disable:max-func-body-length no-any
-suite('Activation - ActivationManager', () => {
+suite('Language Server Activation - ActivationManager', () => {
     class ExtensionActivationManagerTest extends ExtensionActivationManager {
         // tslint:disable-next-line:no-unnecessary-override
         public addHandlers() {
