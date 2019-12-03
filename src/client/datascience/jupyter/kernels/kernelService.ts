@@ -191,13 +191,12 @@ export class KernelService {
         const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fileSystem.readFile(kernel.specFile));
 
         // Ensure we use a fully qualified path to the python interpreter in `argv`.
-        if (['python', 'python2', 'python3'].includes(specModel.argv[0].toLowerCase())) {
-            if (specModel.argv[0].toLowerCase() !== 'conda') {
-                // If conda is the first word, its possible its a conda activation command.
-                specModel.argv[0] = interpreter.path;
-            } else {
-                traceWarning(`Unknown value in model.argv[0], ${specModel.argv[0]}. Kernel might not work as expected.`);
-            }
+        if (specModel.argv[0].toLowerCase() === 'conda') {
+            // If conda is the first word, its possible its a conda activation command.
+            traceInfo(`Spec argv[0], not updated as it is using conda.`);
+        } else {
+            traceInfo(`Spec argv[0] updated from '${specModel.argv[0]}' to '${interpreter.path}'`);
+            specModel.argv[0] = interpreter.path;
         }
 
         // Get the activated environment variables (as a work around for `conda run` and similar).

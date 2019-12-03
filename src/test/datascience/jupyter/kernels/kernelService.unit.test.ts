@@ -214,12 +214,12 @@ suite('Data Science - KernelService', () => {
     // tslint:disable-next-line: max-func-body-length
     suite('Registering Interpreters as Kernels', () => {
         let findMatchingKernelSpecStub: sinon.SinonStub<
-            [PythonInterpreter, IJupyterSessionManager | undefined, (CancellationToken | undefined)?],
+            [PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?],
             Promise<IJupyterKernelSpec | undefined>
         >;
         const interpreter: PythonInterpreter = {
             architecture: Architecture.Unknown,
-            path: 'pyPath',
+            path: path.join('interprter', 'python'),
             sysPrefix: '',
             sysVersion: '',
             type: InterpreterType.Conda,
@@ -299,7 +299,7 @@ suite('Data Science - KernelService', () => {
             const promise = kernelService.registerKernel(interpreter);
             await assert.isRejected(promise, `kernel.json not created with the name ${installedKernelName}, display_name ${interpreter.displayName}. Output is `);
         });
-        test('Kernel is installed and spec file is updated with interpreter information in metadata', async () => {
+        test('xKernel is installed and spec file is updated with interpreter information in metadata and interpreter path in argv', async () => {
             when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
 
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
@@ -309,6 +309,8 @@ suite('Data Science - KernelService', () => {
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(undefined);
             findMatchingKernelSpecStub.resolves(kernel);
             const expectedKernelJsonContent: ReadWrite<Kernel.ISpecModel> = cloneDeep(kernelSpecModel);
+            // Fully qualified path must be injected into `argv`.
+            expectedKernelJsonContent.argv = [interpreter.path, '-m', 'ipykernel'];
             // tslint:disable-next-line: no-any
             expectedKernelJsonContent.metadata!.interpreter = interpreter as any;
 
@@ -330,6 +332,8 @@ suite('Data Science - KernelService', () => {
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(envVariables);
             findMatchingKernelSpecStub.resolves(kernel);
             const expectedKernelJsonContent: ReadWrite<Kernel.ISpecModel> = cloneDeep(kernelSpecModel);
+            // Fully qualified path must be injected into `argv`.
+            expectedKernelJsonContent.argv = [interpreter.path, '-m', 'ipykernel'];
             // tslint:disable-next-line: no-any
             expectedKernelJsonContent.metadata!.interpreter = interpreter as any;
             // tslint:disable-next-line: no-any
