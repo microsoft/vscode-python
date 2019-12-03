@@ -182,7 +182,7 @@ export interface IJupyterSessionManagerFactory {
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
-    getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]>;
+    getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
 }

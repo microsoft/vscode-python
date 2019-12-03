@@ -17,7 +17,7 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
         return this.realSessionManager.startNew(kernelSpec, cancelToken);
     }
 
-    public async getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {
+    public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         // Don't return any kernel specs in guest mode. They're only needed for the host side
         return Promise.resolve([]);
     }
