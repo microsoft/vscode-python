@@ -6,23 +6,20 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
+import { Cancellation } from '../../../common/cancellation';
 import { traceWarning } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { PythonInterpreter } from '../../../interpreter/contracts';
-import { JupyterCommands } from '../../constants';
-import { IJupyterCommand, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinder';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSelector } from './types';
-import { Cancellation } from '../../../common/cancellation';
 
 @injectable()
 export class KernelSelector implements IKernelSelector {
     constructor(
         @inject(KernelSelectionProvider) private readonly selectionProvider: KernelSelectionProvider,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(JupyterCommandFinder) private readonly cmdFinder: JupyterCommandFinder,
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInstaller) private readonly installer: IInstaller
     ) {}
