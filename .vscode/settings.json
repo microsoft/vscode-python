@@ -41,7 +41,6 @@
     "prettier.tslintIntegration": true,
     "prettier.printWidth": 180,
     "prettier.singleQuote": true,
-    "python.jediEnabled": false,
     "python.languageServer": "microsoft",
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",

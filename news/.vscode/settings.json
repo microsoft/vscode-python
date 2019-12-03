@@ -1,5 +1,4 @@
 {
-    "python.jediEnabled": false,
     "python.languageServer": "microsoft",
     "python.formatting.provider": "black",
     "editor.formatOnSave": true,
