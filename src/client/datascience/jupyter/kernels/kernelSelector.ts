@@ -37,7 +37,7 @@ export class KernelSelector {
     }
 
     public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
-        const suggestions = this.selectionProvider.getLocalKernelSelectionProvider(session, cancelToken);
+        const suggestions = this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         const selection = await this.applicationShell.showQuickPick(suggestions, undefined, cancelToken);
         if (!selection) {
             return;

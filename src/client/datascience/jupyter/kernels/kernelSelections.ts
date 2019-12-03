@@ -130,7 +130,7 @@ export class KernelSelectionProvider {
      * @returns {Promise<IKernelSelectionListProvider>}
      * @memberof KernelSelectionProvider
      */
-    public async getLocalKernelSelectionProvider(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
+    public async getKernelSelectionsForLocalSession(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
         const activeKernelsPromise = sessionManager ? new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken) : Promise.resolve([]);
         const jupyterKernelsPromise = new JupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
         const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);

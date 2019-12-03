@@ -146,7 +146,7 @@ suite('Data Science - KernelSelections', () => {
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
-        const items = await kernelSelectionProvider.getLocalKernelSelectionProvider(instance(sessionManager));
+        const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager));
 
         verify(sessionManager.getRunningKernels()).once();
         verify(sessionManager.getKernelSpecs()).once();
