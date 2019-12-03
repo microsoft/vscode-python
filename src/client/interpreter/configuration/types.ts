@@ -26,6 +26,7 @@ export interface IInterpreterSelector extends Disposable {
 
 export interface IInterpreterQuickPickItem extends QuickPickItem {
     path: string;
+    interpreter: PythonInterpreter;
 }
 
 export const IInterpreterComparer = Symbol('IInterpreterComparer');

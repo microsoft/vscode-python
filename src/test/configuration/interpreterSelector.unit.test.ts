@@ -31,6 +31,8 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public label: string;
     public description!: string;
     public detail?: string;
+    // tslint:disable-next-line: no-any
+    public interpreter = {} as any;
     constructor(l: string, p: string) {
         this.path = p;
         this.label = l;
@@ -136,7 +138,9 @@ suite('Interpreters - selector', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         workspace.setup(w => w.workspaceFolders).returns(() => undefined);
@@ -166,7 +170,9 @@ suite('Interpreters - selector', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
@@ -197,7 +203,9 @@ suite('Interpreters - selector', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
@@ -232,7 +240,9 @@ suite('Interpreters - selector', () => {
 
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
