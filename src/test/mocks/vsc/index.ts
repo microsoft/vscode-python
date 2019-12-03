@@ -11,51 +11,11 @@ import * as vscode from 'vscode';
 // export * from './position';
 // export * from './selection';
 export * from './extHostedTypes';
+export * from './uri';
 
 export namespace vscMock {
-    // This is one of the very few classes that we need in our unit tests.
-    // It is constructed in a number of places, and this is required for verification.
-    // Using mocked objects for verfications does not work in typemoq.
-    export class Uri implements vscode.Uri {
-
-        private static _regexp = /^(([^:/?#]+?):)?(\/\/([^/?#]*))?([^?#]*)(\?([^#]*))?(#(.*))?/;
-        private static _empty = '';
-
-        private constructor(public readonly scheme: string, public readonly authority: string,
-            public readonly path: string, public readonly query: string,
-            public readonly fragment: string, public readonly fsPath: string) {
-
-        }
-        public static file(path: string): Uri {
-            return new Uri('file', '', path, '', '', path);
-        }
-        public static parse(value: string): Uri {
-            const match = this._regexp.exec(value);
-            if (!match) {
-                return new Uri('', '', '', '', '', '');
-            }
-            return new Uri(
-                match[2] || this._empty,
-                decodeURIComponent(match[4] || this._empty),
-                decodeURIComponent(match[5] || this._empty),
-                decodeURIComponent(match[7] || this._empty),
-                decodeURIComponent(match[9] || this._empty),
-                decodeURIComponent(match[5] || this._empty));
-        }
-        public with(_change: { scheme?: string; authority?: string; path?: string; query?: string; fragment?: string }): vscode.Uri {
-            throw new Error('Not implemented');
-        }
-        public toString(_skipEncoding?: boolean): string {
-            return this.fsPath;
-        }
-        public toJSON(): any {
-            return this.fsPath;
-        }
-    }
-
     export class Disposable {
-        constructor(private callOnDispose: Function) {
-        }
+        constructor(private callOnDispose: Function) { }
         public dispose(): any {
             if (this.callOnDispose) {
                 this.callOnDispose();
@@ -64,7 +24,6 @@ export namespace vscMock {
     }
 
     export class EventEmitter<T> implements vscode.EventEmitter<T> {
-
         public event: vscode.Event<T>;
         public emitter: NodeEventEmitter;
         constructor() {
@@ -82,11 +41,11 @@ export namespace vscMock {
         protected add = (listener: (e: T) => any, _thisArgs?: any, _disposables?: Disposable[]): Disposable => {
             const bound = _thisArgs ? listener.bind(_thisArgs) : listener;
             this.emitter.addListener('evt', bound);
-            return {
+            return ({
                 dispose: () => {
                     this.emitter.removeListener('evt', bound);
                 }
-            } as any as Disposable;
+            } as any) as Disposable;
         }
     }
 
@@ -172,6 +131,12 @@ export namespace vscMock {
         Operator = 24,
         TypeParameter = 25
     }
+    export enum IndentAction {
+        None = 0,
+        Indent = 1,
+        IndentOutdent = 2,
+        Outdent = 3
+    }
 
     export class CodeActionKind {
         public static readonly Empty: CodeActionKind = new CodeActionKind('empty');
@@ -188,8 +153,7 @@ export namespace vscMock {
         public static readonly SourceOrganizeImports: CodeActionKind = new CodeActionKind('source.organize.imports');
         public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
 
-        private constructor(private _value: string) {
-        }
+        private constructor(private _value: string) { }
 
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(`${this._value}.${parts}`);
@@ -207,4 +171,23 @@ export namespace vscMock {
         }
     }
 
+    // tslint:disable-next-line: interface-name
+    export interface DebugAdapterExecutableOptions {
+        env?: { [key: string]: string };
+        cwd?: string;
+    }
+
+    export class DebugAdapterServer {
+        constructor(public readonly port: number, public readonly host?: string) { }
+    }
+    export class DebugAdapterExecutable {
+        constructor(public readonly command: string, public readonly args: string[] = [], public readonly options?: DebugAdapterExecutableOptions) { }
+    }
+
+    export enum FileType {
+        Unknown = 0,
+        File = 1,
+        Directory = 2,
+        SymbolicLink = 64
+    }
 }

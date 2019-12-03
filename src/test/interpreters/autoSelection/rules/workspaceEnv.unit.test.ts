@@ -147,12 +147,12 @@ suite('Interpreters - Auto Selection - Workspace Virtual Envs Rule', () => {
         verify(helper.getActiveWorkspaceUri(anything())).once();
         pythonPathInConfig.verifyAll();
     });
-    test('Does not udpate settings when there is no interpreter', async () => {
+    test('Does not update settings when there is no interpreter', async () => {
         await rule.cacheSelectedInterpreter(undefined, {} as any);
 
         verify(pythonPathUpdaterService.updatePythonPath(anything(), anything(), anything(), anything())).never();
     });
-    test('Does not udpate settings when there is not workspace', async () => {
+    test('Does not update settings when there is not workspace', async () => {
         const resource = Uri.file('x');
         when(helper.getActiveWorkspaceUri(resource)).thenReturn(undefined);
 

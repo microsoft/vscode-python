@@ -72,7 +72,7 @@ gulp.task('compile', done => {
         .on('error', () => (failed = true))
         .js.pipe(gulp.dest('out'))
         .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
-});
+    });
 
 gulp.task('precommit', done => run({ exitOnError: true, mode: 'staged' }, done));
 
@@ -103,7 +103,7 @@ gulp.task('clean', gulp.parallel('output:clean', 'clean:vsix', 'clean:out'));
 
 gulp.task('checkNativeDependencies', done => {
     if (hasNativeDependencies()) {
-        done(new Error('Native dependencies deteced'));
+        done(new Error('Native dependencies detected'));
     }
     done();
 });
@@ -194,7 +194,9 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js'
             ];
         case 'extension':
             return [
@@ -211,7 +213,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 gulp.task('renameSourceMaps', async () => {
-    // By default souce maps will be disabled in the extenion.
+    // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
     const debuggerSourceMap = path.join(__dirname, 'out', 'client', 'debugger', 'debugAdapter', 'main.js.map');
@@ -229,9 +231,10 @@ gulp.task('verifyBundle', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
-gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
+gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
 
-gulp.task('installPythonLibs', async () => {
+gulp.task('installPythonRequirements', async () => {
     const requirements = fs
         .readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8')
         .split('\n')
@@ -253,6 +256,54 @@ gulp.task('installPythonLibs', async () => {
         })
     );
 });
+
+
+// See https://github.com/microsoft/vscode-python/issues/7136
+gulp.task('installNewPtvsd', async () => {
+    // Install new PTVSD with wheels for python 3.7
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', './pythonFiles/install_ptvsd.py')
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            return false;
+        });
+    if (!successWithWheels) {
+        console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+    }
+
+    // Install source only version of new PTVSD for use with all other python versions.
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a8']
+    const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install PTVSD using 'python3'", ex);
+            return false;
+        });
+    if (!successWithoutWheels) {
+        console.info("Failed to install source only version of new PTVSD using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install source only PTVSD 5.0 using 'python'", ex));
+    }
+});
+
+// Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
+// until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
+// See https://github.com/microsoft/vscode-python/issues/7136
+gulp.task('installOldPtvsd', async () => {
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/old_ptvsd', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==4.3.2']
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install PTVSD using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install PTVSD using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
+    }
+});
+
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installNewPtvsd'));
 
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');

@@ -5,11 +5,12 @@
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
+import { parse } from 'semver';
 import * as vscode from 'vscode';
 import { IPlatformService } from '../platform/types';
 import { ICurrentProcess, IPathUtils } from '../types';
 import { OSType } from '../utils/platform';
-import { IApplicationEnvironment } from './types';
+import { Channel, IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
@@ -18,7 +19,7 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         @inject(ICurrentProcess) private readonly process: ICurrentProcess) { }
 
     public get userSettingsFile(): string | undefined {
-        const vscodeFolderName = vscode.env.appName.indexOf('Insider') > 0 ? 'Code - Insiders' : 'Code';
+        const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
         switch (this.platform.osType) {
             case OSType.OSX:
                 return path.join(this.pathUtils.home, 'Library', 'Application Support', vscodeFolderName, 'User', 'settings.json');
@@ -32,6 +33,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     }
     public get appName(): string {
         return vscode.env.appName;
+    }
+    public get vscodeVersion(): string {
+        return vscode.version;
     }
     public get appRoot(): string {
         return vscode.env.appRoot;
@@ -49,9 +53,28 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
     }
+    /**
+     * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
+     * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of
+     * unstable API.
+     * Solution - log and suppress the errors.
+     * @readonly
+     * @type {(string)}
+     * @memberof ApplicationEnvironment
+     */
+    public get shell(): string {
+        return vscode.env.shell;
+    }
     // tslint:disable-next-line:no-any
     public get packageJson(): any {
         // tslint:disable-next-line:non-literal-require no-require-imports
         return require('../../../../package.json');
+    }
+    public get channel(): Channel {
+        return this.appName.indexOf('Insider') > 0 ? 'insiders' : 'stable';
+    }
+    public get extensionChannel(): Channel {
+        const version = parse(this.packageJson.version);
+        return !version || version.prerelease.length > 0 ? 'insiders' : 'stable';
     }
 }

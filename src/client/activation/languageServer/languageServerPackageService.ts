@@ -65,8 +65,18 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             return settings.analysis.downloadChannel;
         }
 
+        if (settings.insidersChannel === 'daily' || settings.insidersChannel === 'weekly') {
+            return 'beta';
+        }
         const isAlphaVersion = this.isAlphaVersionOfExtension();
         return isAlphaVersion ? 'beta' : 'stable';
+    }
+
+    public isAlphaVersionOfExtension() {
+        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
+        const version = parse(extension.packageJSON.version)!;
+        return version.prerelease.length > 0 && version.prerelease[0] === 'alpha';
     }
     protected getValidPackage(packages: NugetPackage[]): NugetPackage {
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
@@ -88,12 +98,5 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             package: LanguageServerPackageStorageContainers.stable,
             uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
         };
-    }
-
-    private isAlphaVersionOfExtension() {
-        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
-        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
-        const version = parse(extension.packageJSON.version)!;
-        return version.prerelease.length > 0 && version.prerelease[0] === 'alpha';
     }
 }

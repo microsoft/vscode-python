@@ -20,9 +20,9 @@ import { WebViewHost } from '../webViewHost';
 import { PlotViewerMessageListener } from './plotViewerMessageListener';
 import { IExportPlotRequest, IPlotViewerMapping, PlotViewerMessages } from './types';
 
+const plotDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'plot');
 @injectable()
 export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlotViewer, IDisposable {
-    private disposed: boolean = false;
     private closedEvent: EventEmitter<IPlotViewer> = new EventEmitter<IPlotViewer>();
     private removedEvent: EventEmitter<number> = new EventEmitter<number>();
 
@@ -34,7 +34,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(IFileSystem) private fileSystem: IFileSystem
-        ) {
+    ) {
         super(
             configuration,
             provider,
@@ -42,7 +42,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             themeFinder,
             workspaceService,
             (c, v, d) => new PlotViewerMessageListener(c, v, d),
-            path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'plot', 'index_bundle.js'),
+            plotDir,
+            [path.join(plotDir, 'index_bundle.js')],
             localize.DataScience.plotViewerTitle(),
             ViewColumn.One);
     }
@@ -56,14 +57,14 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
     }
 
     public async show(): Promise<void> {
-        if (!this.disposed) {
+        if (!this.isDisposed) {
             // Then show our web panel.
             return super.show(true);
         }
     }
 
-    public addPlot = async (imageHtml: string) : Promise<void> => {
-        if (!this.disposed) {
+    public addPlot = async (imageHtml: string): Promise<void> => {
+        if (!this.isDisposed) {
             // Make sure we're shown
             await super.show(false);
 
@@ -73,12 +74,9 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
     }
 
     public dispose() {
-        if (!this.disposed) {
-            this.disposed = true;
-            super.dispose();
-            if (this.closedEvent) {
-                this.closedEvent.fire(this);
-            }
+        super.dispose();
+        if (this.closedEvent) {
+            this.closedEvent.fire(this);
         }
     }
 
@@ -108,13 +106,13 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         this.removedEvent.fire(payload);
     }
 
-    private copyPlot(_svg: string) : Promise<void> {
+    private copyPlot(_svg: string): Promise<void> {
         // This should be handled actually in the web view. Leaving
         // this here for now in case need node to handle it.
         return Promise.resolve();
     }
 
-    private async exportPlot(payload: IExportPlotRequest) : Promise<void> {
+    private async exportPlot(payload: IExportPlotRequest): Promise<void> {
         traceInfo('exporting plot...');
         const filtersObject: Record<string, string[]> = {};
         filtersObject[localize.DataScience.pdfFilter()] = ['pdf'];

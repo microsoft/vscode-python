@@ -12,7 +12,7 @@ import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
-import { CTagsProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
+import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
 import { IConfigurationService, IFormattingSettings, IInstaller, IPythonSettings, ITestingSettings, IWorkspaceSymbolSettings, ModuleNamePurpose, Product, ProductType } from '../../../client/common/types';
@@ -176,6 +176,16 @@ suite('Product Path', () => {
                         const moduleName = productInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.run);
                         expect(value).to.be.equal(moduleName);
                         testHelper.verifyAll();
+                    });
+                    break;
+                }
+                case ProductType.DataScience: {
+                    test(`Ensure path is returned for ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        const productPathService = new DataScienceProductPathService(serviceContainer.object);
+
+                        const value = productPathService.getExecutableNameFromSettings(product.value, resource);
+                        const moduleName = productInstaller.translateProductToModuleName(product.value, ModuleNamePurpose.run);
+                        expect(value).to.be.equal(moduleName);
                     });
                     break;
                 }

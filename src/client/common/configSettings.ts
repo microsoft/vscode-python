@@ -10,18 +10,21 @@ import { EventName } from '../telemetry/constants';
 import { IWorkspaceService } from './application/types';
 import { WorkspaceService } from './application/workspace';
 import { isTestExecution } from './constants';
+import { ExtensionChannels } from './insidersBuild/types';
 import { IS_WINDOWS } from './platform/constants';
 import {
     IAnalysisSettings,
     IAutoCompleteSettings,
     IDataScienceSettings,
+    IExperiments,
     IFormattingSettings,
     ILintingSettings,
     IPythonSettings,
     ISortImportSettings,
     ITerminalSettings,
     ITestingSettings,
-    IWorkspaceSymbolSettings
+    IWorkspaceSymbolSettings,
+    Resource
 } from './types';
 import { debounceSync } from './utils/decorators';
 import { SystemVariables } from './variables/systemVariables';
@@ -55,6 +58,8 @@ export class PythonSettings implements IPythonSettings {
     public analysis!: IAnalysisSettings;
     public autoUpdateLanguageServer: boolean = true;
     public datascience!: IDataScienceSettings;
+    public insidersChannel!: ExtensionChannels;
+    public experiments!: IExperiments;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -66,7 +71,9 @@ export class PythonSettings implements IPythonSettings {
         return this.changed.event;
     }
 
-    constructor(workspaceFolder: Uri | undefined, private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
+    constructor(
+        workspaceFolder: Resource,
+        private readonly interpreterAutoSelectionService: IInterpreterAutoSeletionProxyService,
         workspace?: IWorkspaceService) {
         this.workspace = workspace || new WorkspaceService();
         this.workspaceRoot = workspaceFolder ? workspaceFolder : Uri.file(__dirname);
@@ -124,7 +131,7 @@ export class PythonSettings implements IPythonSettings {
     // tslint:disable-next-line:cyclomatic-complexity max-func-body-length
     protected update(pythonSettings: WorkspaceConfiguration) {
         const workspaceRoot = this.workspaceRoot.fsPath;
-        const systemVariables: SystemVariables = new SystemVariables(this.workspaceRoot ? this.workspaceRoot.fsPath : undefined);
+        const systemVariables: SystemVariables = new SystemVariables(undefined, workspaceRoot, this.workspace);
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.pythonPath = systemVariables.resolveAny(pythonSettings.get<string>('pythonPath'))!;
@@ -204,7 +211,7 @@ export class PythonSettings implements IPythonSettings {
             lintOnSave: false, maxNumberOfProblems: 100,
             mypyArgs: [], mypyEnabled: false, mypyPath: 'mypy',
             banditArgs: [], banditEnabled: false, banditPath: 'bandit',
-            pep8Args: [], pep8Enabled: false, pep8Path: 'pep8',
+            pycodestyleArgs: [], pycodestyleEnabled: false, pycodestylePath: 'pycodestyle',
             pylamaArgs: [], pylamaEnabled: false, pylamaPath: 'pylama',
             prospectorArgs: [], prospectorEnabled: false, prospectorPath: 'prospector',
             pydocstyleArgs: [], pydocstyleEnabled: false, pydocstylePath: 'pydocstyle',
@@ -216,7 +223,7 @@ export class PythonSettings implements IPythonSettings {
                 refactor: DiagnosticSeverity.Hint,
                 warning: DiagnosticSeverity.Warning
             },
-            pep8CategorySeverity: {
+            pycodestyleCategorySeverity: {
                 E: DiagnosticSeverity.Error,
                 W: DiagnosticSeverity.Warning
             },
@@ -236,7 +243,7 @@ export class PythonSettings implements IPythonSettings {
         };
         this.linting.pylintPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylintPath), workspaceRoot);
         this.linting.flake8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.flake8Path), workspaceRoot);
-        this.linting.pep8Path = getAbsolutePath(systemVariables.resolveAny(this.linting.pep8Path), workspaceRoot);
+        this.linting.pycodestylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pycodestylePath), workspaceRoot);
         this.linting.pylamaPath = getAbsolutePath(systemVariables.resolveAny(this.linting.pylamaPath), workspaceRoot);
         this.linting.prospectorPath = getAbsolutePath(systemVariables.resolveAny(this.linting.prospectorPath), workspaceRoot);
         this.linting.pydocstylePath = getAbsolutePath(systemVariables.resolveAny(this.linting.pydocstylePath), workspaceRoot);
@@ -347,7 +354,18 @@ export class PythonSettings implements IPythonSettings {
         this.terminal = this.terminal ? this.terminal : {
             executeInFileDir: true,
             launchArgs: [],
-            activateEnvironment: true
+            activateEnvironment: true,
+            activateEnvInCurrentTerminal: false
+        };
+
+        const experiments = systemVariables.resolveAny(pythonSettings.get<IExperiments>('experiments'))!;
+        if (this.experiments) {
+            Object.assign<IExperiments, IExperiments>(this.experiments, experiments);
+        } else {
+            this.experiments = experiments;
+        }
+        this.experiments = this.experiments ? this.experiments : {
+            enabled: true
         };
 
         const dataScienceSettings = systemVariables.resolveAny(pythonSettings.get<IDataScienceSettings>('dataScience'))!;
@@ -356,6 +374,8 @@ export class PythonSettings implements IPythonSettings {
         } else {
             this.datascience = dataScienceSettings;
         }
+
+        this.insidersChannel = pythonSettings.get<ExtensionChannels>('insidersChannel')!;
     }
 
     public get pythonPath(): string {

@@ -147,7 +147,7 @@ function getOptions(product: Product, moduleName: string, withValues: boolean) {
         return getOptionsWithoutArguments(output)
             .concat(...knownOptionsWithoutArgs)
             .filter(item => knownOptionsWithArgs.indexOf(item) === -1)
-            // In pytest, any option begining with --log- is known to have args.
+            // In pytest, any option beginning with --log- is known to have args.
             .filter(item => product === Product.pytest ? !item.startsWith('--log-') : true)
             .sort();
     }

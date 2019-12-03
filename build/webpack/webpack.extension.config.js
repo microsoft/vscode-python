@@ -26,11 +26,11 @@ const config = {
     module: {
         rules: [
             {
-                // JupyterServices imports node-fetch using `eval`.
+                // JupyterServices imports node-fetch.
                 test: /@jupyterlab[\\\/]services[\\\/].*js$/,
                 use: [
                     {
-                        loader: path.join(__dirname, 'loaders', 'fixEvalRequire.js')
+                        loader: path.join(__dirname, 'loaders', 'fixNodeFetch.js')
                     }
                 ]
             },
@@ -68,6 +68,7 @@ const config = {
             onEnd: [
                 {
                     copy: [
+                        { source: './node_modules/fontkit/*.trie', destination: './out/client/node_modules' },
                         { source: './node_modules/pdfkit/js/data/*.*', destination: './out/client/node_modules/data' },
                         { source: './node_modules/pdfkit/js/pdfkit.js', destination: './out/client/node_modules/' }
                     ]

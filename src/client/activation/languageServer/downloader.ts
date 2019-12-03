@@ -3,14 +3,13 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ProgressLocation, window } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { STANDARD_OUTPUT_CHANNEL } from '../../common/constants';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IOutputChannel, Resource, IFileDownloader } from '../../common/types';
+import { IFileDownloader, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -18,6 +17,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import {
     ILanguageServerDownloader, ILanguageServerFolderService,
+    ILanguageServerOutputChannel,
     IPlatformData
 } from '../types';
 
@@ -27,15 +27,17 @@ const downloadFileExtension = '.nupkg';
 
 @injectable()
 export class LanguageServerDownloader implements ILanguageServerDownloader {
+    private output: IOutputChannel;
     constructor(
         @inject(IPlatformData) private readonly platformData: IPlatformData,
-        @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
+        @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(ILanguageServerFolderService) private readonly lsFolderService: ILanguageServerFolderService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
     ) {
+        this.output = this.lsOutputChannel.channel;
     }
 
     public async getDownloadInfo(resource: Resource) {

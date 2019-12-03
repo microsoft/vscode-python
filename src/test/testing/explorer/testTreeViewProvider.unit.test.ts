@@ -14,14 +14,14 @@ import { Commands } from '../../../client/common/constants';
 import { IDisposable } from '../../../client/common/types';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { TestCollectionStorageService } from '../../../client/testing/common/services/storageService';
-import { getTestType } from '../../../client/testing/common/testUtils';
+import { getTestDataItemType } from '../../../client/testing/common/testUtils';
 import {
-    ITestCollectionStorageService, TestFile, TestFolder, Tests, TestStatus, TestType
+    ITestCollectionStorageService, TestFile, TestFolder, Tests, TestStatus
 } from '../../../client/testing/common/types';
 import { TestTreeItem } from '../../../client/testing/explorer/testTreeViewItem';
 import { TestTreeViewProvider } from '../../../client/testing/explorer/testTreeViewProvider';
 import { UnitTestManagementService } from '../../../client/testing/main';
-import { TestDataItem, TestWorkspaceFolder } from '../../../client/testing/types';
+import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
 import { noop } from '../../core';
 import {
     createMockTestExplorer as createMockTestTreeProvider, createMockTestsData,
@@ -296,22 +296,22 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
 
             let parent = (await testTreeProvider.getParent(testFunction))!;
             expect(parent.name).to.be.equal(testSuite.name, 'Function within a test suite not returning the suite as parent.');
-            let parentType = getTestType(parent);
-            expect(parentType).to.be.equal(TestType.testSuite);
+            let parentType = getTestDataItemType(parent);
+            expect(parentType).to.be.equal(TestDataItemType.suite);
 
             parent = (await testTreeProvider.getParent(testSuite))!;
             expect(parent.name).to.be.equal(testFile.name, 'Suite within a test file not returning the test file as parent.');
-            parentType = getTestType(parent);
-            expect(parentType).to.be.equal(TestType.testFile);
+            parentType = getTestDataItemType(parent);
+            expect(parentType).to.be.equal(TestDataItemType.file);
 
             parent = (await testTreeProvider.getParent(outerTestFunction))!;
             expect(parent.name).to.be.equal(testFile.name, 'Function within a test file not returning the test file as parent.');
-            parentType = getTestType(parent);
-            expect(parentType).to.be.equal(TestType.testFile);
+            parentType = getTestDataItemType(parent);
+            expect(parentType).to.be.equal(TestDataItemType.file);
 
             parent = (await testTreeProvider.getParent(testFile))!;
-            parentType = getTestType(parent!);
-            expect(parentType).to.be.equal(TestType.testFolder);
+            parentType = getTestDataItemType(parent!);
+            expect(parentType).to.be.equal(TestDataItemType.folder);
         });
 
         test('Get children is working for each item type', async () => {
@@ -334,7 +334,7 @@ suite('Unit Tests Test Explorer TestTreeViewProvider', () => {
             expect(children.length).to.be.equal(1, 'Suite a single function should only return one child.');
             children.forEach((child: TestDataItem) => {
                 expect(child.name).oneOf(['test_fn']);
-                expect(getTestType(child)).to.be.equal(TestType.testFunction);
+                expect(getTestDataItemType(child)).to.be.equal(TestDataItemType.function);
             });
 
             children = await testTreeProvider.getChildren(outerTestFunction);

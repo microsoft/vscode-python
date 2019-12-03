@@ -9,10 +9,11 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
+import * as fsextra from 'fs-extra';
 import { Socket } from 'net';
 import { EOL } from 'os';
 import * as path from 'path';
-import { PassThrough, Writable } from 'stream';
+import { PassThrough } from 'stream';
 import { Disposable } from 'vscode';
 import { DebugSession, ErrorDestination, Event, logger, OutputEvent, Response, TerminatedEvent } from 'vscode-debugadapter';
 import { LogLevel } from 'vscode-debugadapter/lib/logger';
@@ -20,7 +21,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import '../../common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
-import { IFileSystem } from '../../common/platform/types';
 import { ICurrentProcess, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -47,7 +47,10 @@ export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean = false;
-    constructor(private readonly serviceContainer: IServiceContainer) {
+    constructor(
+        private readonly serviceContainer: IServiceContainer,
+        private readonly fileExistsSync = fsextra.existsSync
+    ) {
         super(false);
     }
     public shutdown(): void {
@@ -106,8 +109,7 @@ export class PythonDebugger extends DebugSession {
 
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
+        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !this.fileExistsSync(args.program)) {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
 
@@ -414,7 +416,7 @@ class DebugManager implements Disposable {
         }
 
         // Get ready for PTVSD to communicate directly with VS Code.
-        (this.inputStream as any as NodeJS.ReadStream).unpipe<Writable>(this.debugSessionInputStream);
+        (this.inputStream as any as NodeJS.ReadStream).unpipe(this.debugSessionInputStream);
         this.debugSessionOutputStream.unpipe(this.outputStream);
 
         // Do not pipe. When restarting the debugger, the socket gets closed,
@@ -462,20 +464,20 @@ class DebugManager implements Disposable {
         }
 
         // When VS Code sends a disconnect request, PTVSD replies back with a response.
-        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         setTimeout(this.shutdown, 500);
     }
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');
         this.terminatedEventSent = true;
-        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         setTimeout(this.shutdown, 300);
     }
     private onResponseDisconnect = async () => {
         this.disconnectResponseSent = true;
         logger.verbose('onResponseDisconnect');
         // When VS Code sends a disconnect request, PTVSD replies back with a response, but its upto us to kill the process.
-        // Wait for sometime, untill the messages are sent out (remember, we're just intercepting streams here).
+        // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         // Also its possible PTVSD might run to completion.
         setTimeout(this.shutdown, 100);
     }

@@ -21,20 +21,31 @@ suite('Import Tracker', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let openedEventEmitter: EventEmitter<TextDocument>;
     let savedEventEmitter: EventEmitter<TextDocument>;
-    const pandasHash = hashJs.sha256().update('pandas').digest('hex');
-    const elephasHash = hashJs.sha256().update('elephas').digest('hex');
-    const kerasHash = hashJs.sha256().update('keras').digest('hex');
-    const pysparkHash = hashJs.sha256().update('pyspark').digest('hex');
-    const sparkdlHash = hashJs.sha256().update('sparkdl').digest('hex');
-    const numpyHash = hashJs.sha256().update('numpy').digest('hex');
-    const scipyHash = hashJs.sha256().update('scipy').digest('hex');
-    const sklearnHash = hashJs.sha256().update('sklearn').digest('hex');
-    const randomHash = hashJs.sha256().update('random').digest('hex');
+    const pandasHash: string = hashJs.sha256().update('pandas').digest('hex');
+    const elephasHash: string = hashJs.sha256().update('elephas').digest('hex');
+    const kerasHash: string = hashJs.sha256().update('keras').digest('hex');
+    const pysparkHash: string = hashJs.sha256().update('pyspark').digest('hex');
+    const sparkdlHash: string = hashJs.sha256().update('sparkdl').digest('hex');
+    const numpyHash: string = hashJs.sha256().update('numpy').digest('hex');
+    const scipyHash: string = hashJs.sha256().update('scipy').digest('hex');
+    const sklearnHash: string = hashJs.sha256().update('sklearn').digest('hex');
+    const randomHash: string = hashJs.sha256().update('random').digest('hex');
 
     class Reporter {
         public static eventNames: string[] = [];
         public static properties: Record<string, string>[] = [];
         public static measures: {}[] = [];
+
+        public static expectHashes(...hashes: string[]) {
+            expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_PERF);
+            if (hashes.length > 0) {
+                expect(Reporter.eventNames).to.contain(EventName.HASHED_PACKAGE_NAME);
+            }
+
+            Reporter.properties.pop();  // HASHED_PACKAGE_PERF
+            expect(Reporter.properties).to.deep.equal(hashes.map(hash => ({ hashedName: hash })));
+        }
+
         public sendTelemetryEvent(eventName: string, properties?: {}, measures?: {}) {
             Reporter.eventNames.push(eventName);
             Reporter.properties.push(properties!);
@@ -76,8 +87,7 @@ suite('Import Tracker', () => {
     test('Open document', () => {
         emitDocEvent('import pandas\r\n', openedEventEmitter);
 
-        expect(Reporter.eventNames).to.deep.equal([EventName.HASHED_PACKAGE_NAME]);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        Reporter.expectHashes(pandasHash);
     });
 
     test('Already opened documents', async () => {
@@ -85,15 +95,13 @@ suite('Import Tracker', () => {
         documentManager.setup(d => d.textDocuments).returns(() => [doc.object]);
         await importTracker.activate();
 
-        expect(Reporter.eventNames).to.deep.equal([EventName.HASHED_PACKAGE_NAME]);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        Reporter.expectHashes(pandasHash);
     });
 
     test('Save document', () => {
         emitDocEvent('import pandas\r\n', savedEventEmitter);
 
-        expect(Reporter.eventNames).to.deep.equal([EventName.HASHED_PACKAGE_NAME]);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        Reporter.expectHashes(pandasHash);
     });
 
     test('from <pkg>._ import _, _', () => {
@@ -120,7 +128,7 @@ suite('Import Tracker', () => {
         model.set_weights(weights)`;
 
         emitDocEvent(elephas, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: elephasHash}, {hashedName: kerasHash}]);
+        Reporter.expectHashes(elephasHash, kerasHash);
     });
 
     test('from <pkg>._ import _', () => {
@@ -142,7 +150,7 @@ suite('Import Tracker', () => {
         print("Training set accuracy = " + str(evaluator.evaluate(predictionAndLabels)))`;
 
         emitDocEvent(pyspark, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pysparkHash}, {hashedName: sparkdlHash}]);
+        Reporter.expectHashes(pysparkHash, sparkdlHash);
     });
 
     test('import <pkg> as _', () => {
@@ -158,7 +166,7 @@ def simplify_ages(df):
     df.Age = categories
     return df`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}, {hashedName: numpyHash}, {hashedName: randomHash}]);
+        Reporter.expectHashes(pandasHash, numpyHash, randomHash);
     });
 
     test('from <pkg> import _', () => {
@@ -172,14 +180,13 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: scipyHash}]);
+        Reporter.expectHashes(scipyHash);
     });
-
 
     test('from <pkg> import _ as _', () => {
         const code = `from pandas import DataFrame as df`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        Reporter.expectHashes(pandasHash);
     });
 
     test('import <pkg1>, <pkg2>', () => {
@@ -193,27 +200,7 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}, {hashedName: pandasHash}]);
-    });
-
-    /*test('from <pkg> import (_, _)', () => {
-        const code = `from pandas import (DataFrame, Series)`;
-        emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
-    });
-
-    test('from <pkg> import (_,', () => {
-        const code = `
-from pandas import (DataFrame,
-Series)`;
-        emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
-    });*/
-
-    test('import pkg # Comment', () => {
-        const code = `import pandas  # Because we wants it.`;
-        emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        Reporter.expectHashes(sklearnHash, pandasHash);
     });
 
     test('Import from within a function', () => {
@@ -227,7 +214,7 @@ x = np.array([r * np.cos(theta) for r in radius])
 y = np.array([r * np.sin(theta) for r in radius])
 z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: sklearnHash}]);
+        Reporter.expectHashes(sklearnHash);
     });
 
     test('Do not send the same package twice', () => {
@@ -235,13 +222,13 @@ z = np.array([drumhead_height(1, 1, r, theta, 0.5) for r in radius])`;
 import pandas
 import pandas`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([{hashedName: pandasHash}]);
+        Reporter.expectHashes(pandasHash);
     });
 
     test('Ignore relative imports', () => {
         const code = 'from .pandas import not_real';
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([]);
+        Reporter.expectHashes();
     });
 
     test('Ignore docstring for `from` imports', () => {
@@ -249,7 +236,7 @@ import pandas`;
 from numpy import the random function
 """`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([]);
+        Reporter.expectHashes();
     });
 
     test('Ignore docstring for `import` imports', () => {
@@ -257,6 +244,6 @@ from numpy import the random function
 import numpy for all the things
 """`;
         emitDocEvent(code, savedEventEmitter);
-        expect(Reporter.properties).to.deep.equal([]);
+        Reporter.expectHashes();
     });
 });

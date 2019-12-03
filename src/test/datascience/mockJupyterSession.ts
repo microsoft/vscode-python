@@ -5,7 +5,7 @@ import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
-import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/jupyterKernelPromiseFailedError';
+import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { ICell, IJupyterSession } from '../../client/datascience/types';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -20,15 +20,16 @@ export class MockJupyterSession implements IJupyterSession {
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
     private executes: string[] = [];
-    private forceRestartTimeout : boolean = false;
+    private forceRestartTimeout: boolean = false;
     private completionTimeout: number = 1;
+    private lastRequest: MockJupyterRequest | undefined;
 
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
     }
 
-    public get onRestarted() : Event<void> {
+    public get onRestarted(): Event<void> {
         return this.restartedEvent.event;
     }
 
@@ -55,7 +56,7 @@ export class MockJupyterSession implements IJupyterSession {
     public prolongRestarts() {
         this.forceRestartTimeout = true;
     }
-    public requestExecute(content: KernelMessage.IExecuteRequest, _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture {
+    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], _disposeOnDone?: boolean, _metadata?: JSONObject): Kernel.IFuture<any, any> {
         // Content should have the code
         const cell = this.findCell(content.code);
         if (cell) {
@@ -63,7 +64,7 @@ export class MockJupyterSession implements IJupyterSession {
         }
 
         // Create a new dummy request
-        this.executionCount += 1;
+        this.executionCount += content.store_history && content.code.trim().length > 0 ? 1 : 0;
         const tokenSource = new CancellationTokenSource();
         const request = new MockJupyterRequest(cell, this.timedelay, this.executionCount, tokenSource.token);
         this.outstandingRequestTokenSources.push(tokenSource);
@@ -71,12 +72,22 @@ export class MockJupyterSession implements IJupyterSession {
         // When it finishes, it should not be an outstanding request anymore
         const removeHandler = () => {
             this.outstandingRequestTokenSources = this.outstandingRequestTokenSources.filter(f => f !== tokenSource);
+            if (this.lastRequest === request) {
+                this.lastRequest = undefined;
+            }
         };
         request.done.then(removeHandler).catch(removeHandler);
+        this.lastRequest = request;
         return request;
     }
 
-    public async requestComplete(_content: KernelMessage.ICompleteRequest): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
+    public sendInputReply(content: string) {
+        if (this.lastRequest) {
+            this.lastRequest.sendInputReply({ value: content, status: 'ok' });
+        }
+    }
+
+    public async requestComplete(_content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
         await sleep(this.completionTimeout);
 
         return {
@@ -99,14 +110,14 @@ export class MockJupyterSession implements IJupyterSession {
             },
             metadata: {
             }
-        };
+        } as any;
     }
 
     public dispose(): Promise<void> {
         return sleep(10);
     }
 
-    public getExecutes() : string [] {
+    public getExecutes(): string[] {
         return this.executes;
     }
 
@@ -114,15 +125,17 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    private findCell = (code : string) : ICell => {
+    private findCell = (code: string): ICell => {
         // Match skipping line separators
-        const withoutLines = code.replace(LineFeedRegEx, '');
+        const withoutLines = code.replace(LineFeedRegEx, '').toLowerCase();
 
         if (this.dict.hasOwnProperty(withoutLines)) {
             return this.dict[withoutLines] as ICell;
         }
         // tslint:disable-next-line:no-console
-        console.log(`Cell ${code.splitLines()[1]} not found in mock`);
-        throw new Error(`Cell ${code.splitLines()[1]} not found in mock`);
+        console.log(`Cell '${code}' not found in mock`);
+        // tslint:disable-next-line:no-console
+        console.log(`Dict has these keys ${Object.keys(this.dict).join('","')}`);
+        throw new Error(`Cell '${code}' not found in mock`);
     }
 }

@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import { IPlatformService } from '../../common/platform/types';
+import { IPythonExecutionFactory } from '../../common/process/types';
 import { ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { TerminalCodeExecutionProvider } from './terminalCodeExecution';
@@ -17,11 +18,11 @@ export class ReplProvider extends TerminalCodeExecutionProvider {
         @inject(ITerminalServiceFactory) terminalServiceFactory: ITerminalServiceFactory,
         @inject(IConfigurationService) configurationService: IConfigurationService,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
+        @inject(IPythonExecutionFactory) pythonExecFactory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) disposableRegistry: Disposable[],
         @inject(IPlatformService) platformService: IPlatformService
     ) {
-
-        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService);
+        super(terminalServiceFactory, configurationService, workspace, disposableRegistry, platformService, pythonExecFactory);
         this.terminalTitle = 'REPL';
     }
 }

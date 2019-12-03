@@ -57,12 +57,24 @@ function getCacheStore(resource: Resource, vscode: VSCodeType = require('vscode'
     return resourceSpecificCacheStores.get(key)!;
 }
 
-function getCacheKeyFromFunctionArgs(keyPrefix: string, fnArgs: any[]): string {
+const globalCacheStore = new Map<string, {expiry: number; data: any}>();
+
+/**
+ * Gets a cache store to be used to store return values of methods or any other.
+ *
+ * @returns
+ */
+export function getGlobalCacheStore() {
+    return globalCacheStore;
+}
+
+export function getCacheKeyFromFunctionArgs(keyPrefix: string, fnArgs: any[]): string {
     const argsKey = fnArgs.map(arg => `${JSON.stringify(arg)}`).join('-Arg-Separator-');
     return `KeyPrefix=${keyPrefix}-Args=${argsKey}`;
 }
 
 export function clearCache() {
+    globalCacheStore.clear();
     resourceSpecificCacheStores.clear();
 }
 

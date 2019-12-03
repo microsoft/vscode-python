@@ -34,8 +34,8 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
     const oldValueOfVSC_PYTHON_CI_TEST = process.env.VSC_PYTHON_CI_TEST;
 
     setup(() => {
-        process.env.VSC_PYTHON_UNIT_TEST = undefined;
-        process.env.VSC_PYTHON_CI_TEST = undefined;
+        delete process.env.VSC_PYTHON_UNIT_TEST;
+        delete process.env.VSC_PYTHON_CI_TEST;
         serviceContainer = typemoq.Mock.ofType<IServiceContainer>();
         envHealthCheck = typemoq.Mock.ofType<IDiagnosticsService>();
         envHealthCheck.setup(service => service.runInBackground).returns(() => true);

@@ -6,6 +6,11 @@ export class MockModuleInstaller extends EventEmitter implements IModuleInstalle
     constructor(public readonly displayName: string, private supported: boolean) {
         super();
     }
+
+    public get name(): string {
+        return 'mock';
+    }
+
     public get priority(): number {
         return 0;
     }

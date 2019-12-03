@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import * as path from 'path';
 import {
     DecorationRenderOptions,
     Event,
@@ -20,15 +21,17 @@ import {
 } from 'vscode';
 
 import { IDocumentManager } from '../../client/common/application/types';
+import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { MockDocument } from './mockDocument';
 import { MockEditor } from './mockTextEditor';
+
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
 
 export class MockDocumentManager implements IDocumentManager {
     public textDocuments: TextDocument[] = [];
     public activeTextEditor: TextEditor | undefined;
     public visibleTextEditors: TextEditor[] = [];
-    private didChangeEmitter = new EventEmitter<TextEditor>();
+    public didChangeEmitter = new EventEmitter<TextEditor>();
     private didOpenEmitter = new EventEmitter<TextDocument>();
     private didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
     private didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();
@@ -66,7 +69,8 @@ export class MockDocumentManager implements IDocumentManager {
     }
     public showTextDocument(_document: TextDocument, _column?: ViewColumn, _preserveFocus?: boolean): Thenable<TextEditor>;
     public showTextDocument(_document: TextDocument | Uri, _options?: TextDocumentShowOptions): Thenable<TextEditor>;
-    public showTextDocument(_document: any, _column?: any, _preserveFocus?: any): Thenable<TextEditor> {
+    public showTextDocument(document: any, _column?: any, _preserveFocus?: any): Thenable<TextEditor> {
+        this.visibleTextEditors.push(document);
         const mockEditor = new MockEditor(this, this.lastDocument as MockDocument);
         this.activeTextEditor = mockEditor;
         return Promise.resolve(mockEditor);
@@ -74,6 +78,10 @@ export class MockDocumentManager implements IDocumentManager {
     public openTextDocument(_fileName: string | Uri): Thenable<TextDocument>;
     public openTextDocument(_options?: { language?: string; content?: string }): Thenable<TextDocument>;
     public openTextDocument(_options?: any): Thenable<TextDocument> {
+        if (_options && _options.content) {
+            const doc = new MockDocument(_options.content, 'Untitled-1', this.saveDocument);
+            this.textDocuments.push(doc);
+        }
         return Promise.resolve(this.lastDocument);
     }
     public applyEdit(_edit: WorkspaceEdit): Thenable<boolean> {
@@ -81,12 +89,12 @@ export class MockDocumentManager implements IDocumentManager {
     }
 
     public addDocument(code: string, file: string) {
-        const mockDoc = new MockDocument(code, file);
+        const mockDoc = new MockDocument(code, file, this.saveDocument);
         this.textDocuments.push(mockDoc);
     }
 
-    public changeDocument(file: string, changes: {range: Range; newText: string}[]) {
-        const doc = this.textDocuments.find(d => d.fileName === file) as MockDocument;
+    public changeDocument(file: string, changes: { range: Range; newText: string }[]) {
+        const doc = this.textDocuments.find(d => d.uri.fsPath === Uri.file(file).fsPath) as MockDocument;
         if (doc) {
             const contentChanges = changes.map(c => {
                 const startOffset = doc.offsetAt(c.range.start);
@@ -102,19 +110,26 @@ export class MockDocumentManager implements IDocumentManager {
                 document: doc,
                 contentChanges
             };
-            this.didChangeTextDocumentEmitter.fire(ev);
+            // Changes are applied to the doc before it's sent.
             ev.contentChanges.forEach(doc.edit.bind(doc));
+            this.didChangeTextDocumentEmitter.fire(ev);
         }
     }
 
-    public createTextEditorDecorationType(_options: DecorationRenderOptions) : TextEditorDecorationType {
+    public createTextEditorDecorationType(_options: DecorationRenderOptions): TextEditorDecorationType {
         throw new Error('Method not implemented');
     }
 
-    private get lastDocument() : TextDocument {
+    private get lastDocument(): TextDocument {
         if (this.textDocuments.length > 0) {
             return this.textDocuments[this.textDocuments.length - 1];
         }
         throw new Error('No documents in MockDocumentManager');
+    }
+
+    private saveDocument = (doc: TextDocument): Promise<boolean> => {
+        // Create a new document with the contents of the doc passed in
+        this.addDocument(doc.getText(), path.join(EXTENSION_ROOT_DIR, 'baz.py'));
+        return Promise.resolve(true);
     }
 }

@@ -7,13 +7,12 @@ import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
-import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
-import { IInteractiveWindow, IInteractiveWindowProvider } from '../../client/datascience/types';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getEditor, runMountedTest, typeCode } from './interactiveWindowTestHelpers';
+import { getOrCreateInteractiveWindow, runMountedTest } from './interactiveWindowTestHelpers';
+import { getInteractiveEditor, typeCode } from './testHelpers';
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Intellisense tests', () => {
@@ -22,8 +21,6 @@ suite('DataScience Intellisense tests', () => {
 
     setup(() => {
         ioc = new DataScienceIocContainer();
-        // For this test, jedi is turned off so we use our mock language server
-        ioc.changeJediEnabled(false);
         ioc.registerDataScienceTypes();
     });
 
@@ -45,21 +42,9 @@ suite('DataScience Intellisense tests', () => {
     //     asyncDump();
     // });
 
-    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
-        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const result = await interactiveWindowProvider.getOrCreateActive();
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
-        return result;
-    }
-
     function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
         assert.ok(wrapper);
-        const editor = getEditor(wrapper);
+        const editor = getInteractiveEditor(wrapper);
         assert.ok(editor);
         const domNode = editor.getDOMNode();
         assert.ok(domNode);
@@ -81,13 +66,8 @@ suite('DataScience Intellisense tests', () => {
         assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
     }
 
-    function verifyIntellisenseMissing(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedSpan: string) {
-        const innerTexts = getIntellisenseTextLines(wrapper);
-        assert.ok(!innerTexts.includes(expectedSpan), 'Intellisense row was found when not expected');
-    }
-
     function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
-        const editorEnzyme = getEditor(wrapper);
+        const editorEnzyme = getInteractiveEditor(wrapper);
         const reactEditor = editorEnzyme.instance() as MonacoEditor;
         const editor = reactEditor.state.editor;
         if (editor) {
@@ -116,15 +96,55 @@ suite('DataScience Intellisense tests', () => {
 
     runMountedTest('Simple autocomplete', async (wrapper) => {
         // Create an interactive window so that it listens to the results.
-        const interactiveWindow = await getOrCreateInteractiveWindow();
+        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
         await interactiveWindow.show();
 
         // Then enter some code. Don't submit, we're just testing that autocomplete appears
         const suggestion = waitForSuggestion(wrapper);
-        typeCode(wrapper, 'print');
+        typeCode(getInteractiveEditor(wrapper), 'print');
         await suggestion.promise;
         suggestion.disposable.dispose();
         verifyIntellisenseVisible(wrapper, 'print');
+    }, () => { return ioc; });
+
+    runMountedTest('Multiple interpreters', async (wrapper) => {
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+        await interactiveWindow.show();
+
+        // Then enter some code. Don't submit, we're just testing that autocomplete appears
+        let suggestion = waitForSuggestion(wrapper);
+        typeCode(getInteractiveEditor(wrapper), 'print');
+        await suggestion.promise;
+        suggestion.disposable.dispose();
+        verifyIntellisenseVisible(wrapper, 'print');
+
+        // Clear the code
+        const editor = getInteractiveEditor(wrapper);
+        const inst = editor.instance() as MonacoEditor;
+        inst.state.model!.setValue('');
+
+        // Then change our current interpreter
+        const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
+        const oldActive = await interpreterService.getActiveInterpreter();
+        const interpreters = await interpreterService.getInterpreters();
+        if (interpreters.length > 1 && oldActive) {
+            const firstOther = interpreters.filter(i => i.path !== oldActive.path);
+            ioc.forceSettingsChanged(firstOther[0].path);
+            const active = await interpreterService.getActiveInterpreter();
+            assert.notDeepEqual(active, oldActive, 'Should have changed interpreter');
+        }
+
+        // Type in again, make sure it works (should use the current interpreter in the server)
+        suggestion = waitForSuggestion(wrapper);
+        typeCode(getInteractiveEditor(wrapper), 'print');
+        await suggestion.promise;
+        suggestion.disposable.dispose();
+        verifyIntellisenseVisible(wrapper, 'print');
+
+        // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+        // while we're destroying the editor.
+        inst.state.model!.setValue('');
     }, () => { return ioc; });
 
     runMountedTest('Jupyter autocomplete', async (wrapper) => {
@@ -132,35 +152,35 @@ suite('DataScience Intellisense tests', () => {
             // This test only works when mocking.
 
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow();
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
             const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
+            typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
             verifyIntellisenseVisible(wrapper, 'printly');
         }
     }, () => { return ioc; });
 
-    runMountedTest('Jupyter autocomplete timeout', async (wrapper) => {
+    runMountedTest('Jupyter autocomplete not timeout', async (wrapper) => {
         if (ioc.mockJupyter) {
             // This test only works when mocking.
 
             // Create an interactive window so that it listens to the results.
-            const interactiveWindow = await getOrCreateInteractiveWindow();
+            const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
 
-            // Force a timeout on the jupyter completions
+            // Force a timeout on the jupyter completions so that it takes some amount of time
             ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
 
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
             const suggestion = waitForSuggestion(wrapper);
-            typeCode(wrapper, 'print');
+            typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
-            verifyIntellisenseMissing(wrapper, 'printly');
+            verifyIntellisenseVisible(wrapper, 'printly');
         }
     }, () => { return ioc; });
 });

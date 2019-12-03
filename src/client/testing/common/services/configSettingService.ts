@@ -26,6 +26,18 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
         const setting = this.getTestEnablingSetting(product);
         return this.updateSetting(testDirectory, setting, false);
     }
+    public getTestEnablingSetting(product: UnitTestProduct) {
+        switch (product) {
+            case Product.unittest:
+                return 'testing.unittestEnabled';
+            case Product.pytest:
+                return 'testing.pytestEnabled';
+            case Product.nosetest:
+                return 'testing.nosetestsEnabled';
+            default:
+                throw new Error('Invalid Test Product');
+        }
+    }
     private getTestArgSetting(product: UnitTestProduct) {
         switch (product) {
             case Product.unittest:
@@ -34,18 +46,6 @@ export class TestConfigSettingsService implements ITestConfigSettingsService {
                 return 'testing.pytestArgs';
             case Product.nosetest:
                 return 'testing.nosetestArgs';
-            default:
-                throw new Error('Invalid Test Product');
-        }
-    }
-    private getTestEnablingSetting(product: UnitTestProduct) {
-        switch (product) {
-            case Product.unittest:
-                return 'testing.unittestEnabled';
-            case Product.pytest:
-                return 'testing.pytestEnabled';
-            case Product.nosetest:
-                return 'testing.nosetestsEnabled';
             default:
                 throw new Error('Invalid Test Product');
         }
@@ -109,5 +109,8 @@ export class BufferedTestConfigSettingsService implements ITestConfigSettingsSer
                     break;
             }
         }
+    }
+    public getTestEnablingSetting(_: UnitTestProduct): string {
+        throw new Error('Method not implemented.');
     }
 }

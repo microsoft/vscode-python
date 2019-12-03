@@ -9,21 +9,18 @@ import { IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import { IDataViewer, IDataViewerProvider, IJupyterVariables } from '../types';
+import { IDataViewer, IDataViewerProvider, IJupyterVariables, INotebook } from '../types';
 
 @injectable()
 export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable {
-
     private activeExplorers: IDataViewer[] = [];
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IJupyterVariables) private variables: IJupyterVariables,
-        @inject(IPythonExecutionFactory) private pythonFactory : IPythonExecutionFactory,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService
-        ) {
+        @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory
+    ) {
         asyncRegistry.push(this);
     }
 
@@ -31,34 +28,37 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         await Promise.all(this.activeExplorers.map(d => d.dispose()));
     }
 
-    public async create(variable: string) : Promise<IDataViewer>{
+    public async create(variable: string, notebook: INotebook): Promise<IDataViewer> {
         // Make sure this is a valid variable
-        const variables = await this.variables.getVariables();
+        const variables = await this.variables.getVariables(notebook);
         const index = variables.findIndex(v => v && v.name === variable);
         if (index >= 0) {
             const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
             this.activeExplorers.push(dataExplorer);
-            await dataExplorer.showVariable(variables[index]);
+            await dataExplorer.showVariable(variables[index], notebook);
             return dataExplorer;
         }
 
         throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
     }
 
-    public async getPandasVersion() : Promise<{major: number; minor: number; build: number} | undefined> {
-        const interpreter = await this.interpreterService.getActiveInterpreter();
-        const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
-        try {
-            const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], {throwOnStdErr: true});
-            const versionMatch = /^\s*(\d+)\.(\d+)\.(\d+)\s*$/.exec(result.stdout);
-            if (versionMatch && versionMatch.length > 2) {
-                const major = parseInt(versionMatch[1], 10);
-                const minor = parseInt(versionMatch[2], 10);
-                const build = parseInt(versionMatch[3], 10);
-                return {major, minor, build};
+    public async getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined> {
+        const interpreter = await notebook.getMatchingInterpreter();
+
+        if (interpreter) {
+            const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+            try {
+                const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], { throwOnStdErr: true });
+                const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
+                if (versionMatch && versionMatch.length > 2) {
+                    const major = parseInt(versionMatch[1], 10);
+                    const minor = parseInt(versionMatch[2], 10);
+                    const build = parseInt(versionMatch[3], 10);
+                    return { major, minor, build };
+                }
+            } catch {
+                noop();
             }
-        } catch {
-            noop();
         }
     }
 }

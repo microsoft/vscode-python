@@ -3,7 +3,9 @@
 
 'use strict';
 
-import { expect } from 'chai';
+// tslint:disable:no-any
+
+import { assert, expect } from 'chai';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 // tslint:disable-next-line:no-require-imports
@@ -16,6 +18,7 @@ import {
     IAnalysisSettings,
     IAutoCompleteSettings,
     IDataScienceSettings,
+    IExperiments,
     IFormattingSettings,
     ILintingSettings,
     ISortImportSettings,
@@ -27,7 +30,7 @@ import { noop } from '../../../client/common/utils/misc';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 
 // tslint:disable-next-line:max-func-body-length
-suite('Python Settings', () => {
+suite('Python Settings', async () => {
     class CustomPythonSettings extends PythonSettings {
         // tslint:disable-next-line:no-unnecessary-override
         public update(pythonSettings: WorkspaceConfiguration) {
@@ -46,7 +49,7 @@ suite('Python Settings', () => {
 
     function initializeConfig(sourceSettings: PythonSettings) {
         // string settings
-        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath']) {
+        for (const name of ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel']) {
             config.setup(c => c.get<string>(name))
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
@@ -103,7 +106,40 @@ suite('Python Settings', () => {
             .returns(() => sourceSettings.terminal);
         config.setup(c => c.get<IDataScienceSettings>('dataScience'))
             .returns(() => sourceSettings.datascience);
+        config.setup(c => c.get<IExperiments>('experiments'))
+            .returns(() => sourceSettings.experiments);
     }
+
+    function testIfValueIsUpdated(settingName: string, value: any) {
+        test(`${settingName} updated`, async () => {
+            expected.pythonPath = 'python3';
+            (expected as any)[settingName] = value;
+            initializeConfig(expected);
+
+            settings.update(config.object);
+
+            expect((settings as any)[settingName]).to.be.equal((expected as any)[settingName]);
+            config.verifyAll();
+        });
+    }
+
+    suite('String settings', async () => {
+        ['pythonPath', 'venvPath', 'condaPath', 'pipenvPath', 'envFile', 'poetryPath', 'insidersChannel'].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, 'stringValue');
+        });
+    });
+
+    suite('Boolean settings', async () => {
+        ['downloadLanguageServer', 'jediEnabled', 'autoUpdateLanguageServer', 'globalModuleInstallation'].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, true);
+        });
+    });
+
+    suite('Number settings', async () => {
+        ['jediMemoryLimit'].forEach(async settingName => {
+            testIfValueIsUpdated(settingName, 1001);
+        });
+    });
 
     test('condaPath updated', () => {
         expected.pythonPath = 'python3';
@@ -119,7 +155,7 @@ suite('Python Settings', () => {
         config.verifyAll();
     });
 
-    test('condaPath (relative to home) updated', () => {
+    test('condaPath (relative to home) updated', async () => {
         expected.pythonPath = 'python3';
         expected.condaPath = path.join('~', 'anaconda3', 'bin', 'conda');
         initializeConfig(expected);
@@ -132,6 +168,29 @@ suite('Python Settings', () => {
         expect(settings.condaPath).to.be.equal(untildify(expected.condaPath));
         config.verifyAll();
     });
+
+    function testExperiments(enabled: boolean) {
+        expected.pythonPath = 'python3';
+        // tslint:disable-next-line:no-any
+        expected.experiments = {
+            enabled
+        };
+        initializeConfig(expected);
+        config.setup(c => c.get<IExperiments>('experiments'))
+            .returns(() => expected.experiments)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+
+        for (const key of Object.keys(expected.experiments)) {
+            // tslint:disable-next-line:no-any
+            expect((settings.experiments as any)[key]).to.be.deep.equal((expected.experiments as any)[key]);
+        }
+        config.verifyAll();
+    }
+    test('Experiments (not enabled)', () => testExperiments(false));
+
+    test('Experiments (enabled)', () => testExperiments(true));
 
     test('Formatter Paths and args', () => {
         expected.pythonPath = 'python3';
@@ -183,5 +242,44 @@ suite('Python Settings', () => {
             expect((settings.formatting as any)[key]).to.be.equal(expectedPath);
         }
         config.verifyAll();
+    });
+    test('File env variables remain in settings', () => {
+        expected.datascience = {
+            allowImportFromNotebook: true,
+            jupyterLaunchTimeout: 20000,
+            jupyterLaunchRetries: 3,
+            enabled: true,
+            jupyterServerURI: 'local',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${FileDirname}',
+            changeDirOnImportExport: true,
+            useDefaultConfigForJupyter: true,
+            jupyterInterruptTimeout: 10000,
+            searchForJupyter: true,
+            showCellInputCode: true,
+            collapseCellInputCodeByDefault: true,
+            allowInput: true,
+            maxOutputSize: 400,
+            errorBackgroundColor: '#FFFFFF',
+            sendSelectionToInteractiveWindow: false,
+            variableExplorerExclude: 'module;function;builtin_function_or_method',
+            codeRegularExpression: '',
+            markdownRegularExpression: '',
+            enablePlotViewer: true,
+            runStartupCommands: '',
+            debugJustMyCode: true
+        };
+        expected.pythonPath = 'python3';
+        // tslint:disable-next-line:no-any
+        expected.experiments = {
+            enabled: false
+        };
+        initializeConfig(expected);
+        config.setup(c => c.get<IExperiments>('experiments'))
+            .returns(() => expected.experiments)
+            .verifiable(TypeMoq.Times.once());
+
+        settings.update(config.object);
+        assert.equal(expected.datascience.notebookFileRoot, settings.datascience.notebookFileRoot);
     });
 });

@@ -7,7 +7,8 @@
                 "id": "./test_root.py",
                 "kind": "file",
                 "name": "test_root.py",
-                "parentid": "."
+                "parentid": ".",
+                "relpath": "./test_root.py"
             },
             {
                 "id": "./test_root.py::Test_Root_test1",
@@ -19,13 +20,15 @@
                 "id": "./tests",
                 "kind": "folder",
                 "name": "tests",
-                "parentid": "."
+                "parentid": ".",
+                "relpath": "./tests"
             },
             {
                 "id": "./tests/test_another_pytest.py",
                 "kind": "file",
                 "name": "test_another_pytest.py",
-                "parentid": "./tests"
+                "parentid": "./tests",
+                "relpath": "./tests/test_another_pytest.py"
             },
             {
                 "id": "./tests/test_another_pytest.py::test_parametrized_username",
@@ -37,7 +40,8 @@
                 "id": "./tests/test_foreign_nested_tests.py",
                 "kind": "file",
                 "name": "test_foreign_nested_tests.py",
-                "parentid": "./tests"
+                "parentid": "./tests",
+                "relpath": "./tests/test_foreign_nested_tests.py"
             },
             {
                 "id": "./tests/test_foreign_nested_tests.py::TestNestedForeignTests",
@@ -61,7 +65,8 @@
                 "id": "./tests/test_pytest.py",
                 "kind": "file",
                 "name": "test_pytest.py",
-                "parentid": "./tests"
+                "parentid": "./tests",
+                "relpath": "./tests/test_pytest.py"
             },
             {
                 "id": "./tests/test_pytest.py::Test_CheckMyApp",
@@ -91,7 +96,8 @@
                 "id": "./tests/test_unittest_one.py",
                 "kind": "file",
                 "name": "test_unittest_one.py",
-                "parentid": "./tests"
+                "parentid": "./tests",
+                "relpath": "./tests/test_unittest_one.py"
             },
             {
                 "id": "./tests/test_unittest_one.py::Test_test1",
@@ -103,7 +109,8 @@
                 "id": "./tests/test_unittest_two.py",
                 "kind": "file",
                 "name": "test_unittest_two.py",
-                "parentid": "./tests"
+                "parentid": "./tests",
+                "relpath": "./tests/test_unittest_two.py"
             },
             {
                 "id": "./tests/test_unittest_two.py::Test_test2",
@@ -121,7 +128,8 @@
                 "id": "./tests/unittest_three_test.py",
                 "kind": "file",
                 "name": "unittest_three_test.py",
-                "parentid": "./tests"
+                "parentid": "./tests",
+                "relpath": "./tests/unittest_three_test.py"
             },
             {
                 "id": "./tests/unittest_three_test.py::Test_test3",

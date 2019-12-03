@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ComponentClass, configure, ReactWrapper } from 'enzyme';
-import * as Adapter from 'enzyme-adapter-react-16';
-import { noop } from '../../client/common/utils/misc';
+
+// Note: Don't change this to a tsx file as it loads in the unit tests. That will mess up mocha
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load
 // inside of vscode
@@ -24,7 +23,6 @@ const Module = require('module');
                 }
             } catch {
                 // This should happen when not inside vscode.
-                noop();
             }
         }
         // tslint:disable-next-line:no-invalid-this
@@ -54,8 +52,12 @@ if (ssExports && ssExports.createStylesheet) {
     };
 }
 
+import { ComponentClass, configure, ReactWrapper } from 'enzyme';
+import * as Adapter from 'enzyme-adapter-react-16';
 import { DOMWindow, JSDOM } from 'jsdom';
 import * as React from 'react';
+
+import { noop } from '../../client/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
@@ -233,7 +235,7 @@ const mockCanvas = new MockCanvas();
 
 export function setUpDomEnvironment() {
     // tslint:disable-next-line:no-http-string
-    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost'});
+    const dom = new JSDOM('<!doctype html><html><body><div id="root"></div></body></html>', { pretendToBeVisual: true, url: 'http://localhost' });
     const { window } = dom;
 
     // tslint:disable: no-function-expression no-empty
@@ -270,6 +272,10 @@ export function setUpDomEnvironment() {
         userAgent: 'node.js',
         platform: 'node'
     };
+    (global as any)['Event'] = window.Event;
+    (global as any)['KeyboardEvent'] = window.KeyboardEvent;
+    (global as any)['MouseEvent'] = window.MouseEvent;
+    (global as any)['DocumentFragment'] = window.DocumentFragment;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['getComputedStyle'] = window.getComputedStyle;
     // tslint:disable-next-line:no-string-literal no-any
@@ -282,9 +288,9 @@ export function setUpDomEnvironment() {
     // Special case. Transform needs createRange
     (global as any)['document'].createRange = () => ({
         createContextualFragment: (str: string) => JSDOM.fragment(str),
-        setEnd : (_endNode: any, _endOffset: any) => noop(),
-        setStart : (_startNode: any, _startOffset: any) => noop(),
-        getBoundingClientRect : () => null,
+        setEnd: (_endNode: any, _endOffset: any) => noop(),
+        setStart: (_startNode: any, _startOffset: any) => noop(),
+        getBoundingClientRect: () => null,
         getClientRects: () => []
     });
 
@@ -335,7 +341,7 @@ export function setUpDomEnvironment() {
     // For the loc test to work, we have to have a global getter for loc strings
     // tslint:disable-next-line:no-string-literal no-eval no-any
     (global as any)['getLocStrings'] = () => {
-        return { 'DataScience.unknownMimeType' : 'Unknown mime type from helper' };
+        return { 'DataScience.unknownMimeType': 'Unknown mime type from helper' };
     };
 
     // tslint:disable-next-line:no-string-literal no-eval no-any
@@ -354,8 +360,7 @@ export function setUpDomEnvironment() {
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
             allowInput: true,
-            showJupyterVariableExplorer: true,
-            variableExplorerExclude: 'module;builtin_function_or_method'
+            variableExplorerExclude: 'module;function;builtin_function_or_method'
         };
     };
 
@@ -384,7 +389,7 @@ export function setupTranspile() {
     // Some special work for getting the monaco editor to work.
     // We need to babel transpile some modules. Monaco-editor is not in commonJS format so imports
     // can't be loaded.
-    require('@babel/register')({ plugins: ['@babel/transform-modules-commonjs'], only: [ /monaco-editor/ ] });
+    require('@babel/register')({ plugins: ['@babel/transform-modules-commonjs'], only: [/monaco-editor/] });
 
     // Special case for editor api. Webpack bundles editor.all.js as well. Tests don't.
     require('monaco-editor/esm/vs/editor/editor.api');
@@ -394,12 +399,12 @@ export function setupTranspile() {
 function copyProps(src: any, target: any) {
     const props = Object.getOwnPropertyNames(src)
         .filter(prop => typeof target[prop] === undefined);
-    props.forEach((p : string) => {
+    props.forEach((p: string) => {
         target[p] = src[p];
     });
 }
 
-function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>) : Promise<void> {
+function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>): Promise<void> {
     return new Promise((resolve, reject) => {
         if (component) {
             let originalUpdateFunc = component.componentDidUpdate;
@@ -426,7 +431,7 @@ function waitForComponentDidUpdate<P, S, C>(component: React.Component<P, S, C>)
     });
 }
 
-export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1) : Promise<void> {
+export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numberOfRenders: number = 1): Promise<void> {
     // tslint:disable-next-line:promise-must-complete
     return new Promise((resolve, reject) => {
         if (component) {
@@ -436,7 +441,7 @@ export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numb
             }
             let renderCount = 0;
             component.render = () => {
-                let result : React.ReactNode = null;
+                let result: React.ReactNode = null;
 
                 // When the render occurs, call the original function and resolve our promise
                 if (originalRenderFunc) {
@@ -458,7 +463,7 @@ export function waitForRender<P, S, C>(component: React.Component<P, S, C>, numb
     });
 }
 
-export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mainClass: ComponentClass<P>, numberOfRenders: number = 1) : Promise<void> {
+export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mainClass: ComponentClass<P>, numberOfRenders: number = 1): Promise<void> {
     const mainObj = wrapper.find(mainClass).instance();
     if (mainObj) {
         // Hook the render first.
@@ -472,6 +477,9 @@ export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mai
 
         // Wait for the render
         await renderPromise;
+
+        // Force a render
+        wrapper.update();
     }
 }
 
@@ -479,83 +487,83 @@ export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mai
 // this is necessary to generate keypress/keydown events.
 // There doesn't seem to be an official way to do this (according to stack overflow)
 // so just hardcoding it here.
-const keyMap : { [key: string] : { code: number; shift: boolean }} = {
-    'A' : { code: 65, shift: false },
-    'B' : { code: 66, shift: false },
-    'C' : { code: 67, shift: false },
-    'D' : { code: 68, shift: false },
-    'E' : { code: 69, shift: false },
-    'F' : { code: 70, shift: false },
-    'G' : { code: 71, shift: false },
-    'H' : { code: 72, shift: false },
-    'I' : { code: 73, shift: false },
-    'J' : { code: 74, shift: false },
-    'K' : { code: 75, shift: false },
-    'L' : { code: 76, shift: false },
-    'M' : { code: 77, shift: false },
-    'N' : { code: 78, shift: false },
-    'O' : { code: 79, shift: false },
-    'P' : { code: 80, shift: false },
-    'Q' : { code: 81, shift: false },
-    'R' : { code: 82, shift: false },
-    'S' : { code: 83, shift: false },
-    'T' : { code: 84, shift: false },
-    'U' : { code: 85, shift: false },
-    'V' : { code: 86, shift: false },
-    'W' : { code: 87, shift: false },
-    'X' : { code: 88, shift: false },
-    'Y' : { code: 89, shift: false },
-    'Z' : { code: 90, shift: false },
-    '0' : { code: 48, shift: false },
-    '1' : { code: 49, shift: false },
-    '2' : { code: 50, shift: false },
-    '3' : { code: 51, shift: false },
-    '4' : { code: 52, shift: false },
-    '5' : { code: 53, shift: false },
-    '6' : { code: 54, shift: false },
-    '7' : { code: 55, shift: false },
-    '8' : { code: 56, shift: false },
-    '9' : { code: 57, shift: false },
-    ')' : { code: 48, shift: true },
-    '!' : { code: 49, shift: true },
-    '@' : { code: 50, shift: true },
-    '#' : { code: 51, shift: true },
-    '$' : { code: 52, shift: true },
-    '%' : { code: 53, shift: true },
-    '^' : { code: 54, shift: true },
-    '&' : { code: 55, shift: true },
-    '*' : { code: 56, shift: true },
-    '(' : { code: 57, shift: true },
-    '[' : { code: 219, shift: false },
-    '\\' : { code: 209, shift: false },
-    ']' : { code: 221, shift: false },
-    '{' : { code: 219, shift: true },
-    '|' : { code: 209, shift: true },
-    '}' : { code: 221, shift: true },
-    ';' : { code: 186, shift: false },
-    '\'' : { code: 222, shift: false },
-    ':' : { code: 186, shift: true },
-    '"' : { code: 222, shift: true },
-    ',' : { code: 188, shift: false },
-    '.' : { code: 190, shift: false },
-    '/' : { code: 191, shift: false },
-    '<' : { code: 188, shift: true },
-    '>' : { code: 190, shift: true },
-    '?' : { code: 191, shift: true },
-    '`' : { code: 192, shift: false },
-    '~' : { code: 192, shift: true },
-    ' ' : { code: 32, shift: false },
-    '\n' : { code: 13, shift: false },
-    '\r' : { code: 0, shift: false } // remove \r from the text.
+const keyMap: { [key: string]: { code: number; shift: boolean } } = {
+    'A': { code: 65, shift: false },
+    'B': { code: 66, shift: false },
+    'C': { code: 67, shift: false },
+    'D': { code: 68, shift: false },
+    'E': { code: 69, shift: false },
+    'F': { code: 70, shift: false },
+    'G': { code: 71, shift: false },
+    'H': { code: 72, shift: false },
+    'I': { code: 73, shift: false },
+    'J': { code: 74, shift: false },
+    'K': { code: 75, shift: false },
+    'L': { code: 76, shift: false },
+    'M': { code: 77, shift: false },
+    'N': { code: 78, shift: false },
+    'O': { code: 79, shift: false },
+    'P': { code: 80, shift: false },
+    'Q': { code: 81, shift: false },
+    'R': { code: 82, shift: false },
+    'S': { code: 83, shift: false },
+    'T': { code: 84, shift: false },
+    'U': { code: 85, shift: false },
+    'V': { code: 86, shift: false },
+    'W': { code: 87, shift: false },
+    'X': { code: 88, shift: false },
+    'Y': { code: 89, shift: false },
+    'Z': { code: 90, shift: false },
+    '0': { code: 48, shift: false },
+    '1': { code: 49, shift: false },
+    '2': { code: 50, shift: false },
+    '3': { code: 51, shift: false },
+    '4': { code: 52, shift: false },
+    '5': { code: 53, shift: false },
+    '6': { code: 54, shift: false },
+    '7': { code: 55, shift: false },
+    '8': { code: 56, shift: false },
+    '9': { code: 57, shift: false },
+    ')': { code: 48, shift: true },
+    '!': { code: 49, shift: true },
+    '@': { code: 50, shift: true },
+    '#': { code: 51, shift: true },
+    '$': { code: 52, shift: true },
+    '%': { code: 53, shift: true },
+    '^': { code: 54, shift: true },
+    '&': { code: 55, shift: true },
+    '*': { code: 56, shift: true },
+    '(': { code: 57, shift: true },
+    '[': { code: 219, shift: false },
+    '\\': { code: 209, shift: false },
+    ']': { code: 221, shift: false },
+    '{': { code: 219, shift: true },
+    '|': { code: 209, shift: true },
+    '}': { code: 221, shift: true },
+    ';': { code: 186, shift: false },
+    '\'': { code: 222, shift: false },
+    ':': { code: 186, shift: true },
+    '"': { code: 222, shift: true },
+    ',': { code: 188, shift: false },
+    '.': { code: 190, shift: false },
+    '/': { code: 191, shift: false },
+    '<': { code: 188, shift: true },
+    '>': { code: 190, shift: true },
+    '?': { code: 191, shift: true },
+    '`': { code: 192, shift: false },
+    '~': { code: 192, shift: true },
+    ' ': { code: 32, shift: false },
+    '\n': { code: 13, shift: false },
+    '\r': { code: 0, shift: false } // remove \r from the text.
 };
 
-export function createMessageEvent(data: any) : MessageEvent {
-    const domWindow = window as DOMWindow;
+export function createMessageEvent(data: any): MessageEvent {
+    const domWindow = (window as any) as DOMWindow;
     return new domWindow.MessageEvent('message', { data });
 }
 
-export function createKeyboardEvent(type: string, options: KeyboardEventInit) : KeyboardEvent {
-    const domWindow = window as DOMWindow;
+export function createKeyboardEvent(type: string, options: KeyboardEventInit): KeyboardEvent {
+    const domWindow = (window as any) as DOMWindow;
     options.bubbles = true;
     options.cancelable = true;
 
@@ -572,14 +580,14 @@ export function createKeyboardEvent(type: string, options: KeyboardEventInit) : 
     return new domWindow.KeyboardEvent(type, (({ ...options, keyCode, shiftKey: shift } as any) as KeyboardEventInit));
 }
 
-export function createInputEvent() : Event {
-    const domWindow = window as DOMWindow;
-    return new domWindow.Event('input', {bubbles: true, cancelable: false});
+export function createInputEvent(): Event {
+    const domWindow = (window as any) as DOMWindow;
+    return new domWindow.Event('input', { bubbles: true, cancelable: false });
 }
 
 export function blurWindow() {
     // blur isn't implemented. We just need to dispatch the blur event
-    const domWindow = window as DOMWindow;
-    const blurEvent = new domWindow.Event('blur', {bubbles: true});
+    const domWindow = (window as any) as DOMWindow;
+    const blurEvent = new domWindow.Event('blur', { bubbles: true });
     domWindow.dispatchEvent(blurEvent);
 }

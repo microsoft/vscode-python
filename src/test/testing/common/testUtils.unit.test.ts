@@ -8,15 +8,15 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import {
-    getChildren, getParent, getParentFile, getParentSuite, getTestFile,
-    getTestFolder, getTestFunction, getTestSuite, getTestType
+    getChildren, getParent, getParentFile, getParentSuite, getTestDataItemType,
+    getTestFile, getTestFolder, getTestFunction, getTestSuite
 } from '../../../client/testing/common/testUtils';
 import {
     FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile,
-    TestFolder, TestFunction, Tests, TestSuite, TestType
+    TestFolder, TestFunction, Tests, TestSuite
 } from '../../../client/testing/common/types';
 import {
-    TestDataItem, TestWorkspaceFolder
+    TestDataItem, TestDataItemType, TestWorkspaceFolder
 } from '../../../client/testing/types';
 
 // tslint:disable:prefer-template
@@ -36,7 +36,7 @@ function longestCommonSubstring(strings: string[]): string {
 }
 
 export function createMockTestDataItem<T extends TestDataItem>(
-    type: TestType,
+    type: TestDataItemType,
     nameSuffix: string = '',
     name?: string,
     nameToRun?: string
@@ -78,18 +78,18 @@ export function createMockTestDataItem<T extends TestDataItem>(
     };
 
     switch (type) {
-        case TestType.testFile:
+        case TestDataItemType.file:
             return file as T;
-        case TestType.testFolder:
+        case TestDataItemType.folder:
             return folder as T;
-        case TestType.testFunction:
+        case TestDataItemType.function:
             return func as T;
-        case TestType.testSuite:
+        case TestDataItemType.suite:
             return suite as T;
-        case TestType.testWorkspaceFolder:
+        case TestDataItemType.workspaceFolder:
             return (new TestWorkspaceFolder({ uri: Uri.file(''), name: 'a', index: 0 })) as T;
         default:
-            throw new Error('Unknown type');
+            throw new Error(`Unknown type ${type}`);
     }
 }
 
@@ -147,24 +147,24 @@ export function createTests(
 
 // tslint:disable:max-func-body-length no-any
 suite('Unit Tests - TestUtils', () => {
-    test('Get TestType for Folders', () => {
-        const item = createMockTestDataItem(TestType.testFolder);
-        assert.equal(getTestType(item), TestType.testFolder);
+    test('Get TestDataItemType for Folders', () => {
+        const item = createMockTestDataItem(TestDataItemType.folder);
+        assert.equal(getTestDataItemType(item), TestDataItemType.folder);
     });
-    test('Get TestType for Files', () => {
-        const item = createMockTestDataItem(TestType.testFile);
-        assert.equal(getTestType(item), TestType.testFile);
+    test('Get TestDataItemType for Files', () => {
+        const item = createMockTestDataItem(TestDataItemType.file);
+        assert.equal(getTestDataItemType(item), TestDataItemType.file);
     });
-    test('Get TestType for Functions', () => {
-        const item = createMockTestDataItem(TestType.testFunction);
-        assert.equal(getTestType(item), TestType.testFunction);
+    test('Get TestDataItemType for Functions', () => {
+        const item = createMockTestDataItem(TestDataItemType.function);
+        assert.equal(getTestDataItemType(item), TestDataItemType.function);
     });
-    test('Get TestType for Suites', () => {
-        const item = createMockTestDataItem(TestType.testSuite);
-        assert.equal(getTestType(item), TestType.testSuite);
+    test('Get TestDataItemType for Suites', () => {
+        const item = createMockTestDataItem(TestDataItemType.suite);
+        assert.equal(getTestDataItemType(item), TestDataItemType.suite);
     });
     test('Casting to a specific items', () => {
-        for (const typeName of getNamesAndValues<TestType>(TestType)) {
+        for (const typeName of getNamesAndValues<TestDataItemType>(TestDataItemType)) {
             const item = createMockTestDataItem(typeName.value);
             const file = getTestFile(item);
             const folder = getTestFolder(item);
@@ -172,7 +172,7 @@ suite('Unit Tests - TestUtils', () => {
             const func = getTestFunction(item);
 
             switch (typeName.value) {
-                case TestType.testFile:
+                case TestDataItemType.file:
                     {
                         assert.equal(file, item);
                         assert.equal(folder, undefined);
@@ -180,7 +180,7 @@ suite('Unit Tests - TestUtils', () => {
                         assert.equal(func, undefined);
                         break;
                     }
-                case TestType.testFolder:
+                case TestDataItemType.folder:
                     {
                         assert.equal(file, undefined);
                         assert.equal(folder, item);
@@ -188,7 +188,7 @@ suite('Unit Tests - TestUtils', () => {
                         assert.equal(func, undefined);
                         break;
                     }
-                case TestType.testFunction:
+                case TestDataItemType.function:
                     {
                         assert.equal(file, undefined);
                         assert.equal(folder, undefined);
@@ -196,7 +196,7 @@ suite('Unit Tests - TestUtils', () => {
                         assert.equal(func, item);
                         break;
                     }
-                case TestType.testSuite:
+                case TestDataItemType.suite:
                     {
                         assert.equal(file, undefined);
                         assert.equal(folder, undefined);
@@ -204,7 +204,7 @@ suite('Unit Tests - TestUtils', () => {
                         assert.equal(func, undefined);
                         break;
                     }
-                case TestType.testWorkspaceFolder:
+                case TestDataItemType.workspaceFolder:
                     {
                         assert.equal(file, undefined);
                         assert.equal(folder, undefined);
@@ -218,11 +218,11 @@ suite('Unit Tests - TestUtils', () => {
         }
     });
     test('Get Parent of folder', () => {
-        const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder2 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder3 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder4 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder5 = createMockTestDataItem<TestFolder>(TestType.testFolder);
+        const folder1 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder2 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder3 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder4 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder5 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
         folder1.folders.push(folder2);
         folder1.folders.push(folder3);
         folder2.folders.push(folder4);
@@ -242,20 +242,20 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParent(tests, folder5), folder3);
     });
     test('Get Parent of file', () => {
-        const folder1 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder2 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder3 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder4 = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const folder5 = createMockTestDataItem<TestFolder>(TestType.testFolder);
+        const folder1 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder2 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder3 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder4 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const folder5 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
         folder1.folders.push(folder2);
         folder1.folders.push(folder3);
         folder2.folders.push(folder4);
         folder3.folders.push(folder5);
 
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file2 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file3 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file4 = createMockTestDataItem<TestFile>(TestDataItemType.file);
         folder1.testFiles.push(file1);
         folder3.testFiles.push(file2);
         folder3.testFiles.push(file3);
@@ -274,20 +274,20 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParent(tests, file4), folder5);
     });
     test('Get Parent File', () => {
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file2 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file3 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file4 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite3 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite4 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite5 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn2 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn3 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn4 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn5 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         file3.suites.push(suite3);
@@ -361,20 +361,20 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParentFile(tests, suite5), file3);
     });
     test('Get Parent Suite', () => {
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file2 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file3 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file4 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite3 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite4 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite5 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn2 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn3 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn4 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn5 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         file3.suites.push(suite3);
@@ -448,9 +448,9 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParentSuite(tests, suite5), suite4);
     });
     test('Get Parent file throws an exception', () => {
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
             xmlClassName: suite1.xmlName
@@ -471,9 +471,9 @@ suite('Unit Tests - TestUtils', () => {
         assert.throws(() => getParentFile(tests, suite1), new RegExp('No parent file for provided test item'));
     });
     test('Get parent of orphaned items', () => {
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const flattendSuite1: FlattenedTestSuite = {
             testSuite: suite1,
             xmlClassName: suite1.xmlName
@@ -494,15 +494,15 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParent(tests, suite1), undefined);
     });
     test('Get Parent of suite', () => {
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file2 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file3 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file4 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite3 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite4 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite5 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         file3.suites.push(suite3);
@@ -543,20 +543,20 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParent(tests, suite5), suite4);
     });
     test('Get Parent of function', () => {
-        const file1 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file2 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file3 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const file4 = createMockTestDataItem<TestFile>(TestType.testFile);
-        const suite1 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite2 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite3 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite4 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const suite5 = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const fn1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const fn5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const file1 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file2 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file3 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const file4 = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const suite1 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite2 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite3 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite4 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const suite5 = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const fn1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn2 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn3 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn4 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const fn5 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         file1.suites.push(suite1);
         file1.suites.push(suite2);
         file3.suites.push(suite3);
@@ -622,16 +622,16 @@ suite('Unit Tests - TestUtils', () => {
         assert.equal(getParent(tests, fn5), suite3);
     });
     test('Get parent of parameterized function', () => {
-        const folder = createMockTestDataItem<TestFolder>(TestType.testFolder);
-        const file = createMockTestDataItem<TestFile>(TestType.testFile);
-        const func1 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const func2 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const func3 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const folder = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
+        const file = createMockTestDataItem<TestFile>(TestDataItemType.file);
+        const func1 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const func2 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const func3 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const subParent1 = createSubtestParent([func2, func3]);
-        const suite = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const func4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const func5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const func6 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const suite = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const func4 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const func5 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const func6 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const subParent2 = createSubtestParent([func5, func6]);
         folder.testFiles.push(file);
         file.functions.push(func1);
@@ -662,16 +662,16 @@ suite('Unit Tests - TestUtils', () => {
     });
     test('Get children of parameterized function', () => {
         const filename = path.join('tests', 'test_spam.py');
-        const folder = createMockTestDataItem<TestFolder>(TestType.testFolder, 'tests');
-        const file = createMockTestDataItem<TestFile>(TestType.testFile, filename);
-        const func1 = createMockTestDataItem<TestFunction>(TestType.testFunction, 'test_x');
-        const func2 = createMockTestDataItem<TestFunction>(TestType.testFunction, 'test_y');
-        const func3 = createMockTestDataItem<TestFunction>(TestType.testFunction, 'test_z');
+        const folder = createMockTestDataItem<TestFolder>(TestDataItemType.folder, 'tests');
+        const file = createMockTestDataItem<TestFile>(TestDataItemType.file, filename);
+        const func1 = createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_x');
+        const func2 = createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_y');
+        const func3 = createMockTestDataItem<TestFunction>(TestDataItemType.function, 'test_z');
         const subParent1 = createSubtestParent([func2, func3]);
-        const suite = createMockTestDataItem<TestSuite>(TestType.testSuite);
-        const func4 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const func5 = createMockTestDataItem<TestFunction>(TestType.testFunction);
-        const func6 = createMockTestDataItem<TestFunction>(TestType.testFunction);
+        const suite = createMockTestDataItem<TestSuite>(TestDataItemType.suite);
+        const func4 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const func5 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
+        const func6 = createMockTestDataItem<TestFunction>(TestDataItemType.function);
         const subParent2 = createSubtestParent([func5, func6]);
         folder.testFiles.push(file);
         file.functions.push(func1);

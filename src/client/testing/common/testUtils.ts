@@ -5,7 +5,7 @@ import { IApplicationShell, ICommandManager } from '../../common/application/typ
 import * as constants from '../../common/constants';
 import { ITestingSettings, Product } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
-import { TestDataItem, TestWorkspaceFolder } from '../types';
+import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../types';
 import { CommandSource } from './constants';
 import { TestFlatteningVisitor } from './testVisitors/flatteningVisitor';
 import {
@@ -21,7 +21,6 @@ import {
     TestSettingsPropertyNames,
     TestsToRun,
     TestSuite,
-    TestType,
     UnitTestProduct
 } from './types';
 
@@ -244,21 +243,21 @@ export class TestsHelper implements ITestsHelper {
     }
 }
 
-export function getTestType(test: TestDataItem): TestType {
+export function getTestDataItemType(test: TestDataItem): TestDataItemType {
     if (test instanceof TestWorkspaceFolder) {
-        return TestType.testWorkspaceFolder;
+        return TestDataItemType.workspaceFolder;
     }
     if (getTestFile(test)) {
-        return TestType.testFile;
+        return TestDataItemType.file;
     }
     if (getTestFolder(test)) {
-        return TestType.testFolder;
+        return TestDataItemType.folder;
     }
     if (getTestSuite(test)) {
-        return TestType.testSuite;
+        return TestDataItemType.suite;
     }
     if (getTestFunction(test)) {
-        return TestType.testFunction;
+        return TestDataItemType.function;
     }
     throw new Error('Unknown test type');
 }
@@ -305,14 +304,14 @@ export function getTestFunction(test: TestDataItem): TestFunction | undefined {
  * @returns {(TestDataItem | undefined)}
  */
 export function getParent(tests: Tests, data: TestDataItem): TestDataItem | undefined {
-    switch (getTestType(data)) {
-        case TestType.testFile: {
+    switch (getTestDataItemType(data)) {
+        case TestDataItemType.file: {
             return getParentTestFolderForFile(tests, data as TestFile);
         }
-        case TestType.testFolder: {
+        case TestDataItemType.folder: {
             return getParentTestFolder(tests, data as TestFolder);
         }
-        case TestType.testSuite: {
+        case TestDataItemType.suite: {
             const suite = data as TestSuite;
             if (isSubtestsParent(suite)) {
                 const fn = suite.functions[0];
@@ -328,7 +327,7 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
             }
             return tests.testFiles.find(item => item.suites.indexOf(suite) >= 0);
         }
-        case TestType.testFunction: {
+        case TestDataItemType.function: {
             const fn = data as TestFunction;
             if (fn.subtestParent) {
                 return fn.subtestParent.asSuite;
@@ -354,7 +353,7 @@ export function getParent(tests: Tests, data: TestDataItem): TestDataItem | unde
  * @returns {(TestFolder | undefined)}
  */
 function getParentTestFolder(tests: Tests, item: TestFolder | TestFile): TestFolder | undefined {
-    if (getTestType(item) === TestType.testFolder) {
+    if (getTestDataItemType(item) === TestDataItemType.folder) {
         return getParentTestFolderForFolder(tests, item as TestFolder);
     }
     return getParentTestFolderForFile(tests, item as TestFile);
@@ -370,7 +369,7 @@ function getParentTestFolder(tests: Tests, item: TestFolder | TestFile): TestFol
 export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): TestFile {
     let parent = getParent(tests, suite);
     while (parent) {
-        if (getTestType(parent) === TestType.testFile) {
+        if (getTestDataItemType(parent) === TestDataItemType.file) {
             return parent as TestFile;
         }
         parent = getParent(tests, parent);
@@ -387,7 +386,7 @@ export function getParentFile(tests: Tests, suite: TestSuite | TestFunction): Te
 export function getParentSuite(tests: Tests, suite: TestSuite | TestFunction): TestSuite | undefined {
     let parent = getParent(tests, suite);
     while (parent) {
-        if (getTestType(parent) === TestType.testSuite) {
+        if (getTestDataItemType(parent) === TestDataItemType.suite) {
             return parent as TestSuite;
         }
         parent = getParent(tests, parent);
@@ -453,14 +452,14 @@ export function findFlattendTestSuite(tests: Tests, suite: TestSuite): Flattened
  * @returns {TestDataItem[]}
  */
 export function getChildren(item: TestDataItem): TestDataItem[] {
-    switch (getTestType(item)) {
-        case TestType.testFolder: {
+    switch (getTestDataItemType(item)) {
+        case TestDataItemType.folder: {
             return [
                 ...(item as TestFolder).folders,
                 ...(item as TestFolder).testFiles
             ];
         }
-        case TestType.testFile: {
+        case TestDataItemType.file: {
             const [subSuites, functions] = divideSubtests((item as TestFile).functions);
             return [
                 ...functions,
@@ -468,7 +467,7 @@ export function getChildren(item: TestDataItem): TestDataItem[] {
                 ...subSuites
             ];
         }
-        case TestType.testSuite: {
+        case TestDataItemType.suite: {
             let subSuites: TestSuite[] = [];
             let functions = (item as TestSuite).functions;
             if (!isSubtestsParent((item as TestSuite))) {
@@ -480,7 +479,7 @@ export function getChildren(item: TestDataItem): TestDataItem[] {
                 ...subSuites
             ];
         }
-        case TestType.testFunction: {
+        case TestDataItemType.function: {
             return [];
         }
         default: {

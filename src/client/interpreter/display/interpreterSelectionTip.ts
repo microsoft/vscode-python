@@ -4,25 +4,23 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IExtensionActivationService } from '../../activation/types';
+import { IExtensionSingleActivationService } from '../../activation/types';
 import { IApplicationShell } from '../../common/application/types';
-import { IPersistentState, IPersistentStateFactory, Resource } from '../../common/types';
+import { IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { Common, Interpreters } from '../../common/utils/localize';
 
 @injectable()
-export class InterpreterSelectionTip implements IExtensionActivationService {
+export class InterpreterSelectionTip implements IExtensionSingleActivationService {
     private readonly storage: IPersistentState<boolean>;
-    private displayedInSession: boolean = false;
     constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IPersistentStateFactory) private readonly factory: IPersistentStateFactory) {
         this.storage = this.factory.createGlobalPersistentState('InterpreterSelectionTip', false);
     }
-    public async activate(_resource: Resource): Promise<void> {
-        if (this.storage.value || this.displayedInSession) {
+    public async activate(): Promise<void> {
+        if (this.storage.value) {
             return;
         }
-        this.displayedInSession = true;
         this.showTip().ignoreErrors();
     }
     @swallowExceptions('Failed to display tip')

@@ -8,6 +8,7 @@ import { IServiceContainer } from '../../../ioc/types';
 import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
 const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
+    '-n', // -n is a pytest-xdist option
     '--assert', '--basetemp', '--capture', '--color', '--confcutdir',
     '--cov', '--cov-config', '--cov-fail-under', '--cov-report',
     '--deselect', '--dist', '--doctest-glob',

@@ -1,0 +1,5 @@
+blank_issues_enabled: true
+contact_links:
+  - name: Stack Overflow
+    url: https://stackoverflow.com/questions/tagged/visual-studio-code+python
+    about: Please ask questions here.

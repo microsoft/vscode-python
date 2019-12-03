@@ -15,11 +15,15 @@ import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
-import { compareFiles } from '../textUtils';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { compareFiles } from '../textUtils';
 
 const ch = window.createOutputChannel('Tests');
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
@@ -97,9 +101,15 @@ suite('Formatting - General', () => {
         ioc.registerUnitTestTypes();
         ioc.registerFormatterTypes();
 
+        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+
         // Mocks.
         ioc.registerMockProcessTypes();
-        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        ioc.registerMockInterpreterTypes();
     }
 
     async function injectFormatOutput(outputFileName: string) {

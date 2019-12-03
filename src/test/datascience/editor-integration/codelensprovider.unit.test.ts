@@ -5,9 +5,10 @@ import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, TextDocument } from 'vscode';
 
 import { ICommandManager, IDebugService, IDocumentManager } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, IDataScienceSettings, IPythonSettings } from '../../../client/common/types';
 import { DataScienceCodeLensProvider } from '../../../client/datascience/editor-integration/codelensprovider';
-import { ICodeWatcher, IDataScienceCodeLensProvider } from '../../../client/datascience/types';
+import { ICodeWatcher, IDataScienceCodeLensProvider, IDebugLocationTracker } from '../../../client/datascience/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line: max-func-body-length
@@ -20,7 +21,9 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
     let documentManager: TypeMoq.IMock<IDocumentManager>;
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let debugService: TypeMoq.IMock<IDebugService>;
-    let tokenSource : CancellationTokenSource;
+    let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
+    let fileSystem: TypeMoq.IMock<IFileSystem>;
+    let tokenSource: CancellationTokenSource;
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -30,16 +33,17 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
         debugService = TypeMoq.Mock.ofType<IDebugService>();
-
+        debugLocationTracker = TypeMoq.Mock.ofType<IDebugLocationTracker>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         dataScienceSettings = TypeMoq.Mock.ofType<IDataScienceSettings>();
+        fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         dataScienceSettings.setup(d => d.enabled).returns(() => true);
         pythonSettings.setup(p => p.datascience).returns(() => dataScienceSettings.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
         commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
         debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 
-        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, documentManager.object, configurationService.object, commandManager.object, disposables, debugService.object);
+        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, debugLocationTracker.object, documentManager.object, configurationService.object, commandManager.object, disposables, debugService.object, fileSystem.object);
     });
 
     test('Initialize Code Lenses one document', () => {
@@ -57,7 +61,7 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
 
         targetCodeWatcher.verifyAll();
         serviceContainer.verifyAll();
-     });
+    });
 
     test('Initialize Code Lenses same doc called', () => {
         // Create our document

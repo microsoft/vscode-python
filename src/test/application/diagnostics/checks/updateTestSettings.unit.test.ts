@@ -25,7 +25,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
     let appEnv: IApplicationEnvironment;
     let storage: IPersistentState<string[]>;
     let workspace: IWorkspaceService;
-    const sandbox = sinon.sandbox.create();
+    const sandbox = sinon.createSandbox();
     setup(() => {
         fs = mock(FileSystem);
         appEnv = mock(ApplicationEnvironment);
@@ -176,17 +176,27 @@ suite('Application Diagnostics - Check Test Settings', () => {
         {
             testTitle: 'Should replace python.unitTest.pyTest.',
             contents: '{"python.pythonPath":"1234", "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestArgs":[], "python.unitTest.pyTestPath":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
         },
         {
             testTitle: 'Should replace python.testing.pyTest.',
             contents: '{"python.pythonPath":"1234", "python.testing.pyTestArgs":[], "python.testing.pyTestArgs":[], "python.testing.pyTestPath":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+            expectedContents: '{"python.pythonPath":"1234", "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
         },
         {
             testTitle: 'Should not make any changes to the file',
             contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
             expectedContents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+        },
+        {
+            testTitle: 'Should replace python.jediEnabled.',
+            expectedContents: '{"python.jediEnabled": false}',
+            contents: '{"python.languageServer": "microsoft"}'
+        },
+        {
+            testTitle: 'Should replace python.jediEnabled.',
+            expectedContents: '{"python.jediEnabled": true}',
+            contents: '{"python.languageServer": "jedi"}'
         }
     ].forEach(item => {
         test(item.testTitle, async () => {

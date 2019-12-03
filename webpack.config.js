@@ -12,12 +12,16 @@ module.exports = [
     merge(datascience[0], {
         devtool: 'eval'
     }),
-    // data-explorer
+    // native-editor
     merge(datascience[1], {
         devtool: 'eval'
     }),
-    // plot
+    // data-explorer
     merge(datascience[2], {
+        devtool: 'eval'
+    }),
+    // plot
+    merge(datascience[3], {
         devtool: 'eval'
     }),
     merge(extensionDependencies, {

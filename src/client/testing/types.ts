@@ -70,6 +70,7 @@ export interface ITestConfigSettingsService {
     updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
     enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
     disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+    getTestEnablingSetting(product: UnitTestProduct): string;
 }
 
 export interface ITestConfigurationManager {
@@ -156,6 +157,13 @@ export interface ILocationStackFrameDetails {
 
 export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };
 
+export enum TestDataItemType {
+    workspaceFolder = 'workspaceFolder',
+    folder = 'folder',
+    file = 'file',
+    suite = 'suite',
+    function = 'function'
+}
 export type TestDataItem = TestWorkspaceFolder | TestFolder | TestFile | TestSuite | TestFunction;
 
 export class TestWorkspaceFolder {
