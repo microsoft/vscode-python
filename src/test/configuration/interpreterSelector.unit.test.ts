@@ -107,7 +107,7 @@ suite('Interpreters - selector', () => {
                 .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions();
+            const actual = await selector.getSuggestions(undefined);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),
