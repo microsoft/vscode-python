@@ -15,6 +15,7 @@ import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinde
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSelector } from './types';
+import { Cancellation } from '../../../common/cancellation';
 
 @injectable()
 export class KernelSelector implements IKernelSelector {
@@ -62,14 +63,11 @@ export class KernelSelector implements IKernelSelector {
     }
 
     private async isSelectionValid(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> {
-        // Do we have the ability to install kernels.
-        const specCmd = await this.getCreateCmd(cancelToken);
-        if (!specCmd) {
-            traceWarning('JupyterCommand not available to install a kernel');
-            return false;
-        }
         // Is ipykernel installed in this environment.
         if (!(await this.installer.isInstalled(Product.ipykernel, interpreter))) {
+            if (Cancellation.isCanceled(cancelToken)) {
+                return false;
+            }
             const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
             if (response !== InstallerResponse.Installed) {
                 traceWarning(`ipykernel not installed in the interpreter ${interpreter.path}`);
@@ -77,14 +75,5 @@ export class KernelSelector implements IKernelSelector {
             }
         }
         return true;
-    }
-    private async getCreateCmd(cancelToken?: CancellationToken): Promise<IJupyterCommand | undefined> {
-        const specCmd = await this.cmdFinder.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
-        if (specCmd.status === ModuleExistsStatus.NotFound) {
-            //this.applicationShell.showInformationMessage('Install?');
-        }
-        if (specCmd.command) {
-            return specCmd.command;
-        }
     }
 }
