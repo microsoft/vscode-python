@@ -79,7 +79,7 @@ export class KernelService {
      */
     public async findMatchingKernelSpec(
         interpreter: PythonInterpreter,
-        sessionManager: IJupyterSessionManager | undefined,
+        sessionManager?: IJupyterSessionManager | undefined,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
     public async findMatchingKernelSpec(
@@ -151,13 +151,16 @@ export class KernelService {
      */
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
-    public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec> {
-        if (!interpreter.displayName){
+    public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+        if (!interpreter.displayName) {
             throw new Error('Interpreter does not have a display name');
         }
         const ipykernelCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
-        if (ipykernelCommand.status === ModuleExistsStatus.NotFound || !ipykernelCommand.command){
+        if (ipykernelCommand.status === ModuleExistsStatus.NotFound || !ipykernelCommand.command) {
             throw new Error('Command not found to install the kernel');
+        }
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
         }
         const name = await this.generateKernelNameForIntepreter(interpreter);
         const output = await ipykernelCommand.command.exec(['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
@@ -165,8 +168,15 @@ export class KernelService {
             encoding: 'utf8',
             token: cancelToken
         });
-        const kernel = await this.findMatchingKernelSpec({display_name: interpreter.displayName, name}, undefined, cancelToken);
-        if (!kernel){
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
+
+        const kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
+        if (!kernel) {
             const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
@@ -174,7 +184,7 @@ export class KernelService {
             const error = `Kernel not registered locally, created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
-        if (!kernel.specFile){
+        if (!kernel.specFile) {
             const error = `kernel.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
             throw new Error(error);
         }
@@ -182,7 +192,7 @@ export class KernelService {
 
         // Ensure we use a fully qualified path to the python interpreter in `argv`.
         if (['python', 'python2', 'python3'].includes(specModel.argv[0].toLowerCase())) {
-            if (specModel.argv[0].toLowerCase() !== 'conda'){
+            if (specModel.argv[0].toLowerCase() !== 'conda') {
                 // If conda is the first word, its possible its a conda activation command.
                 specModel.argv[0] = interpreter.path;
             } else {
@@ -192,9 +202,14 @@ export class KernelService {
 
         // Get the activated environment variables (as a work around for `conda run` and similar).
         // This ensures the code runs within the context of an activated environment.
-        specModel.env = await this.activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)
-                                // tslint:disable-next-line: no-any
-                                .catch(noop).then(env => (env || {}) as any);
+        specModel.env = await this.activationHelper
+            .getActivatedEnvironmentVariables(undefined, interpreter, true)
+            .catch(noop)
+            // tslint:disable-next-line: no-any
+            .then(env => (env || {}) as any);
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
 
         // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
         // We'll need information such as interpreter type, display name, path, etc...
@@ -248,7 +263,7 @@ export class KernelService {
 
         // If no active interpreter, just act like everything is okay as we can't find a new spec anyway
         return true;
-    }
+    };
 
     private async addMatchingSpec(bestInterpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<void> {
         const displayName = localize.DataScience.historyTitle();
@@ -309,7 +324,7 @@ export class KernelService {
                 return js && js.name === specName;
             }) as JupyterKernelSpec;
         return match ? match.specFile : undefined;
-    }
+    };
 
     //tslint:disable-next-line:cyclomatic-complexity
     private findSpecMatch = async (enumerator: () => Promise<(IJupyterKernelSpec | undefined)[]>): Promise<IJupyterKernelSpec | undefined> => {
@@ -399,7 +414,7 @@ export class KernelService {
 
         traceInfo(`Found kernelspec match ${bestSpec ? `${bestSpec.name}' '${bestSpec.path}` : 'undefined'}`);
         return bestSpec;
-    }
+    };
 
     private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
         // Ignore errors if there are no kernels.
@@ -417,28 +432,30 @@ export class KernelService {
             traceInfo('Parsing kernelspecs from jupyter');
             // This should give us back a key value pair we can parse
             const kernelSpecs = JSON.parse(output.stdout.trim()) as Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }>;
-            const specs = await Promise.all(Object.keys(kernelSpecs).map(async kernelName => {
-                const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
-                const spec = kernelSpecs[kernelName].spec;
-                // Add the missing name property.
-                const model = {
-                    ...spec,
-                    name: kernelName
-                };
-                // Check if the spec file exists.
-                if (await this.fileSystem.fileExists(specFile)){
-                    return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
-                } else {
-                    return;
-                }
-            }));
+            const specs = await Promise.all(
+                Object.keys(kernelSpecs).map(async kernelName => {
+                    const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
+                    const spec = kernelSpecs[kernelName].spec;
+                    // Add the missing name property.
+                    const model = {
+                        ...spec,
+                        name: kernelName
+                    };
+                    // Check if the spec file exists.
+                    if (await this.fileSystem.fileExists(specFile)) {
+                        return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
+                    } else {
+                        return;
+                    }
+                })
+            );
             return specs.filter(item => !!item).map(item => item as JupyterKernelSpec);
         } catch (ex) {
             traceError('Failed to list kernels', ex);
             // This is failing for some folks. In that case return nothing
             return [];
         }
-    }
+    };
     private async getInterpreterDetailsFromProcess(baseProcessName: string): Promise<PythonInterpreter | undefined> {
         if (path.basename(baseProcessName) !== baseProcessName) {
             // This function should only be called with a non qualified path. We're using this
