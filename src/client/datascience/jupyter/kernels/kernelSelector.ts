@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation } from '../../../common/cancellation';
-import { traceWarning, traceInfo } from '../../../common/logger';
+import { traceInfo, traceWarning } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';

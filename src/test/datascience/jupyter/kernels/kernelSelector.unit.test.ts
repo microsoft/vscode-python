@@ -74,13 +74,6 @@ suite('Data Science - KernelSelector', () => {
     });
     test('Should return the selected remote kernelspec', async () => {
         when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve([]);
-        const kernelSpec = {
-            display_name: 'Something',
-            dispose: async () => noop(),
-            language: PYTHON_LANGUAGE,
-            name: '',
-            path: ''
-        };
         // tslint:disable-next-line: no-any
         when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve({ selection: { kernelSpec } } as any);
 
