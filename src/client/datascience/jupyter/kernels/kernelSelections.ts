@@ -135,6 +135,6 @@ export class KernelSelectionProvider {
         const jupyterKernelsPromise = new JupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
         const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
         const [activeKernels, jupyterKernels, interprters] = await Promise.all([activeKernelsPromise, jupyterKernelsPromise, interpretersPromise]);
-        return [...activeKernels!, ...jupyterKernels!, ...interprters];
+        return [...jupyterKernels!, ...activeKernels!, ...interprters];
     }
 }
