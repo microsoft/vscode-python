@@ -11,6 +11,7 @@ import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -43,6 +44,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
+        activationHelper: IEnvironmentActivationService,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
@@ -56,6 +58,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             new GuestJupyterSessionManagerFactory(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
+            activationHelper,
             serviceContainer);
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);

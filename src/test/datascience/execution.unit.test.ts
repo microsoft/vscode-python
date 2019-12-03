@@ -722,6 +722,7 @@ suite('Jupyter Execution', async () => {
                 mockSessionManager,
                 instance(workspaceService),
                 instance(configService),
+                instance(activationHelper),
                 instance(serviceContainer))
         };
     }

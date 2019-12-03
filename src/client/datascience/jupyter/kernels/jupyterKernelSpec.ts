@@ -18,8 +18,7 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public specFile: string | undefined;
     public display_name: string;
     // tslint:disable-next-line: no-any
-    public readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
-
+    public metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
     constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
         this.language = specModel.language;

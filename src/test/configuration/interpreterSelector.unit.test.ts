@@ -10,8 +10,8 @@ import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
-import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
-import { IInterpreterComparer, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
+import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
+import { IInterpreterComparer, IInterpreterQuickPickItem, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import { IInterpreterService, InterpreterType, IShebangCodeLensProvider, PythonInterpreter } from '../../client/interpreter/contracts';
 
 const info: PythonInterpreter = {
@@ -107,7 +107,7 @@ suite('Interpreters - selector', () => {
                 .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions();
+            const actual = await selector.getSuggestions(undefined);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),

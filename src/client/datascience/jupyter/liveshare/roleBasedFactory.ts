@@ -15,13 +15,13 @@ export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipan
 
 // tslint:disable:no-any
 export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> implements ILiveShareHasRole {
-    private ctorArgs: any[];
+    private ctorArgs: ConstructorParameters<CtorType>[];
     private firstTime: boolean = true;
     private createPromise: Promise<T> | undefined;
     private sessionChangedEmitter = new vscode.EventEmitter<void>();
     private _role: vsls.Role = vsls.Role.None;
 
-    constructor(private liveShare: ILiveShareApi, private hostCtor: CtorType, private guestCtor: CtorType, ...args: any[]) {
+    constructor(private liveShare: ILiveShareApi, private hostCtor: CtorType, private guestCtor: CtorType, ...args: ConstructorParameters<CtorType>) {
         this.ctorArgs = args;
         this.createPromise = this.createBasedOnRole(); // We need to start creation immediately or one side may call before we init.
     }

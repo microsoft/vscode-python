@@ -1,14 +1,10 @@
 import { inject, injectable } from 'inversify';
-import { ConfigurationTarget, Disposable, QuickPickItem, QuickPickOptions, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickPickOptions, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { Commands } from '../../common/constants';
-import { IConfigurationService, IPathUtils } from '../../common/types';
+import { IConfigurationService, IPathUtils, Resource } from '../../common/types';
 import { IInterpreterService, IShebangCodeLensProvider, PythonInterpreter, WorkspacePythonPath } from '../contracts';
-import { IInterpreterComparer, IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
-
-export interface IInterpreterQuickPickItem extends QuickPickItem {
-    path: string;
-}
+import { IInterpreterComparer, IInterpreterQuickPickItem, IInterpreterSelector, IPythonPathUpdaterServiceManager } from './types';
 
 @injectable()
 export class InterpreterSelector implements IInterpreterSelector {
@@ -34,10 +30,10 @@ export class InterpreterSelector implements IInterpreterSelector {
         this.disposables.push(this.commandManager.registerCommand(Commands.Set_ShebangInterpreter, this.setShebangInterpreter.bind(this)));
     }
 
-    public async getSuggestions(resourceUri?: Uri) {
-        const interpreters = await this.interpreterManager.getInterpreters(resourceUri);
+    public async getSuggestions(resource: Resource) {
+        const interpreters = await this.interpreterManager.getInterpreters(resource);
         interpreters.sort(this.interpreterComparer.compare.bind(this.interpreterComparer));
-        return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resourceUri)));
+        return Promise.all(interpreters.map(item => this.suggestionToQuickPickItem(item, resource)));
     }
     protected async suggestionToQuickPickItem(suggestion: PythonInterpreter, workspaceUri?: Uri): Promise<IInterpreterQuickPickItem> {
         const detail = this.pathUtils.getDisplayName(suggestion.path, workspaceUri ? workspaceUri.fsPath : undefined);

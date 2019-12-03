@@ -11,6 +11,7 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
+import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -45,6 +46,7 @@ export class HostJupyterExecution
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
+        activationHelper: IEnvironmentActivationService,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
@@ -58,6 +60,7 @@ export class HostJupyterExecution
             sessionManager,
             workspace,
             configService,
+            activationHelper,
             serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys);
     }
