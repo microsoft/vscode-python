@@ -91,7 +91,8 @@ export enum IncomingMessageActions {
     GETCSSREQUEST = 'action.get_css_request',
     GETCSSRESPONSE = 'action.get_css_response',
     GETMONACOTHEMEREQUEST = 'action.get_monaco_theme_request',
-    GETMONACOTHEMERESPONSE = 'action.get_monaco_theme_response'
+    GETMONACOTHEMERESPONSE = 'action.get_monaco_theme_response',
+    UPDATEKERNEL = 'action.update_kernel'
 }
 
 export const AllowedMessages = [...Object.values(InteractiveWindowMessages), ...Object.values(CssMessages)];

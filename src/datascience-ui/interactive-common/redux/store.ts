@@ -50,7 +50,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
             kernel: {
-                version: 'Python 3',
+                version: '3',
                 state: 'No Kernel',
                 status: 'Not started'
             }

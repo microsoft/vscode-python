@@ -3,7 +3,7 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
-import { IMainState } from '../../mainState';
+import { IKernel, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
 import { CommonReducerArg } from './types';
 
@@ -25,6 +25,17 @@ export namespace Kernel {
 
         // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
         return arg.prevState;
+    }
+
+    export function updateStatus<T>(arg: CommonReducerArg<T, IKernel>): IMainState {
+        return {
+            ...arg.prevState,
+            kernel: {
+                state: arg.payload.state,
+                status: arg.payload.status,
+                version: arg.payload.version
+            }
+        };
     }
 
     export function handleRestarted<T>(arg: CommonReducerArg<T>) {

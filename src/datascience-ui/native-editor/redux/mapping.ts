@@ -5,22 +5,9 @@ import { ILoadAllCells } from '../../../client/datascience/interactive-common/in
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
-import { IMainState } from '../../interactive-common/mainState';
+import { IKernel, IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import {
-    CommonActionType,
-    ICellAction,
-    ICellAndCursorAction,
-    IChangeCellTypeAction,
-    ICodeAction,
-    IEditCellAction,
-    IExecuteAction,
-    ILinkClickAction,
-    IRefreshVariablesAction,
-    ISendCommandAction,
-    IShowDataViewerAction,
-    IShowPlotAction
-} from '../../interactive-common/redux/reducers/types';
+import { CommonActionType, ICellAction, ICellAndCursorAction, IChangeCellTypeAction, ICodeAction, IEditCellAction, IExecuteAction, ILinkClickAction, IRefreshVariablesAction, ISendCommandAction, IShowDataViewerAction, IShowPlotAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 
 type NativeEditorReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
@@ -91,4 +78,5 @@ export class INativeEditorActionMapping {
     public [IncomingMessageActions.GETCSSRESPONSE]: NativeEditorReducerFunc<IGetCssResponse>;
     public [IncomingMessageActions.MONACOREADY]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
+    public [IncomingMessageActions.UPDATEKERNEL]: NativeEditorReducerFunc<IKernel>;
 }

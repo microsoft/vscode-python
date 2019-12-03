@@ -191,9 +191,9 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
                     </ImageButton>
                     <div onClick={selectKernel} className='kernel-status' style={dynamicFont} role='toolbar'>
-                        <div className='kernel-status-section'>{this.props.kernel.state}</div>
+                        <div className='kernel-status-section'>Jupyter Server: {this.props.kernel.state}</div>
                         <div className='kernel-status-divider'/>
-                        <div className='kernel-status-section'>{this.props.kernel.version}:</div>
+                        <div className='kernel-status-section'>Python {this.props.kernel.version}:</div>
                         <div className='kernel-status-section'>{this.props.kernel.status}</div>
                     </div>
                 </div>

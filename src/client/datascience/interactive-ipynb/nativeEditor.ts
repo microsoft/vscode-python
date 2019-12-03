@@ -892,7 +892,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async selectKernel() {
-        // use command
         await this.dataScience.selectJupyterURI();
+
+        const settings = this.configuration.getSettings();
+        await this.postMessage(InteractiveWindowMessages.UpdateKernel, { status: 'Idle', state: settings.datascience.jupyterServerURI, version: '3' });
     }
 }

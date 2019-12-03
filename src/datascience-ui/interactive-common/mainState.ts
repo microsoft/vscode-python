@@ -145,7 +145,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         testMode: true,
         kernel: {
             state: 'No Kernel',
-            version: 'Python 3',
+            version: '3',
             status: 'Not started'
         }
     };

@@ -1,25 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    IRefreshVariablesRequest,
-    IScrollToCell
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IRefreshVariablesRequest, IScrollToCell } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
-import { IMainState } from '../../interactive-common/mainState';
+import { IKernel, IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
-import {
-    CommonActionType,
-    ICellAction,
-    ICodeAction,
-    IEditCellAction,
-    ILinkClickAction,
-    IScrollAction,
-    IShowDataViewerAction,
-    IShowPlotAction
-} from '../../interactive-common/redux/reducers/types';
+import { CommonActionType, ICellAction, ICodeAction, IEditCellAction, ILinkClickAction, IScrollAction, IShowDataViewerAction, IShowPlotAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 
 type InteractiveReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
@@ -76,4 +64,5 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.STARTDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.STOPDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<IScrollToCell>;
+    public [IncomingMessageActions.UPDATEKERNEL]: InteractiveReducerFunc<IKernel>;
 }

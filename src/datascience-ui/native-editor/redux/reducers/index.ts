@@ -78,5 +78,6 @@ export const reducerMap: INativeEditorActionMapping = {
     [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
     [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
     [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,
-    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange
+    [IncomingMessageActions.GETMONACOTHEMERESPONSE]: CommonEffects.monacoThemeChange,
+    [IncomingMessageActions.UPDATEKERNEL]: Kernel.updateStatus
 };
