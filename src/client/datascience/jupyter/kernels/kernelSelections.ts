@@ -46,10 +46,10 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
  * Provider for kernel specs in a jupyter process (`python -m jupyter kernelspec list`).
  *
  * @export
- * @class JupyterKernelSelectionnListProvider
+ * @class JupyterKernelSelectionListProvider
  * @implements {IKernelSelectionListProvider}
  */
-export class JupyterKernelSelectionnListProvider implements IKernelSelectionListProvider {
+export class JupyterKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly kernelService: KernelService) {}
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getLocalKernelSpecs(cancelToken);
@@ -61,10 +61,10 @@ export class JupyterKernelSelectionnListProvider implements IKernelSelectionList
  * Provider for interpreters to be treated as kernel specs.
  *
  * @export
- * @class InterpreterKernelSelectionnListProvider
+ * @class InterpreterKernelSelectionListProvider
  * @implements {IKernelSelectionListProvider}
  */
-export class InterpreterKernelSelectionnListProvider implements IKernelSelectionListProvider {
+export class InterpreterKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly interpreterSelector: IInterpreterSelector) {}
     public async getKernelSelections(_cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.interpreterSelector.getSuggestions(undefined);
@@ -107,8 +107,8 @@ export class KernelSelectionProvider {
      */
     public async getLocalKernelSelectionProvider(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
         const activeKernelsPromise = session ? new ActiveJupyterSessionKernelSelectionListProvider(session).getKernelSelections(cancelToken) : Promise.resolve([]);
-        const jupyterKernelsPromise = new JupyterKernelSelectionnListProvider(this.kernelService).getKernelSelections(cancelToken);
-        const interpretersPromise = new InterpreterKernelSelectionnListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
+        const jupyterKernelsPromise = new JupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
+        const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
         const [activeKernels, jupyterKernels, interprters] = await Promise.all([activeKernelsPromise, jupyterKernelsPromise, interpretersPromise]);
         return [...activeKernels!, ...jupyterKernels!, ...interprters];
     }
