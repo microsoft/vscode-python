@@ -12,13 +12,13 @@ import { PythonInterpreter } from '../../../interpreter/contracts';
 import { JupyterCommands } from '../../constants';
 import { IJupyterCommand, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinder';
-import { KernelSelectionProviderFactory } from './kernelSelections';
+import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 
 @injectable()
 export class KernelSelector {
     constructor(
-        @inject(KernelSelectionProviderFactory) private readonly providerFactory: KernelSelectionProviderFactory,
+        @inject(KernelSelectionProvider) private readonly selectionProvider: KernelSelectionProvider,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(JupyterCommandFinder) private readonly cmdFinder: JupyterCommandFinder,
         @inject(KernelService) private readonly kernelService: KernelService,
@@ -28,14 +28,12 @@ export class KernelSelector {
         options: { session?: IJupyterSessionManager } | { session: IJupyterSessionManager; isRemoteConnection: true },
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
-        const provider =
+        const suggestions =
             'isRemoteConnection' in options
-                ? this.providerFactory.getRemoteKernelSelectionProvider(options.session)
-                : this.providerFactory.getLocalKernelSelectionProvider(options.session);
+                ? this.selectionProvider.getKernelSelectionsForRemoteSession(options.session)
+                : this.selectionProvider.getLocalKernelSelectionProvider(options.session);
 
-        const suggestions = (await provider).getKernelSelections(cancelToken);
         const selection = await this.applicationShell.showQuickPick(suggestions);
-
         if (!selection) {
             return;
         }
