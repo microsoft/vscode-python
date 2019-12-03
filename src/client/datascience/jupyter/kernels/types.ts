@@ -5,17 +5,25 @@
 
 import { CancellationToken, QuickPickItem } from 'vscode';
 import { PythonInterpreter } from '../../../interpreter/contracts';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernel, IJupyterKernelSpec } from '../../types';
 
 export interface IKernelSpecQuickPickItem extends QuickPickItem {
     /**
-     * Whether a kernel spec has been selected or interpter.
-     * If interpreter is selected, then we need to install this as a kernel to get the kernel spec.
+     * Whether a
+     * - Kernel spec (IJupyterKernelSpec)
+     * - Active kernel (IJupyterKernel) or
+     * - Interpreter has been selected.
+     * If interpreter is selected, then we might need to install this as a kernel to get the kernel spec.
      *
-     * @type {({ kernelSpec: IJupyterKernelSpec; interpreter: undefined } | { kernelSpec: undefined; interpreter: PythonInterpreter })}
+     * @type {({ kernelModel: IJupyterKernel; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
+     *         | { kernelModel: undefined; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
+     *         | { kernelModel: undefined; kernelSpec: undefined; interpreter: PythonInterpreter })}
      * @memberof IKernelSpecQuickPickItem
      */
-    selection: { kernelSpec: IJupyterKernelSpec; interpreter: undefined } | { kernelSpec: undefined; interpreter: PythonInterpreter };
+    selection:
+        | { kernelModel: IJupyterKernel & Partial<IJupyterKernelSpec>; kernelSpec: undefined; interpreter: undefined }
+        | { kernelModel: undefined; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
+        | { kernelModel: undefined; kernelSpec: undefined; interpreter: PythonInterpreter };
 }
 
 export interface IKernelSelectionListProvider {

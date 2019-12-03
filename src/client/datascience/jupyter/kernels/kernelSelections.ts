@@ -5,8 +5,9 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
+import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelService } from './kernelService';
 import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types';
 
@@ -20,11 +21,26 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types'
  * @param {IJupyterKernelSpec} kernelSpec
  * @returns {IKernelSpecQuickPickItem}
  */
-function getQuickPickFromKernelSpec(activeKernel: boolean, kernelSpec: IJupyterKernelSpec): IKernelSpecQuickPickItem {
+function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelSpecQuickPickItem {
     return {
         label: kernelSpec.display_name,
-        description: activeKernel ? '(active kernel)' : '(kernel)',
-        selection: { kernelSpec: kernelSpec, interpreter: undefined }
+        description: '(kernel)',
+        selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
+    };
+}
+
+/**
+ * Given a kernel spec, this will return a quick pick item with appropriate display names and the like.
+ *
+ * @param {boolean} activeKernel Whether this is an active kernel in a jupyter session.
+ * @param {IJupyterKernelSpec} kernelSpec
+ * @returns {IKernelSpecQuickPickItem}
+ */
+function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyterKernelSpec>): IKernelSpecQuickPickItem {
+    return {
+        label: kernel.display_name || kernel.name || '',
+        description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(kernel.lastActivityTime.toLocaleString(), kernel.numberOfConnections.toString()),
+        selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined }
     };
 }
 
@@ -36,10 +52,17 @@ function getQuickPickFromKernelSpec(activeKernel: boolean, kernelSpec: IJupyterK
  * @implements {IKernelSelectionListProvider}
  */
 export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
-    constructor(private readonly session: IJupyterSessionManager) {}
+    constructor(private readonly sessionManager: IJupyterSessionManager) {}
     public async getKernelSelections(_cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
-        const items = await this.session.getActiveKernelSpecs();
-        return items.filter(item => item.display_name || item.name).map(getQuickPickFromKernelSpec.bind(undefined, true));
+        const [activeKernels, kernelSpecs] = await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getKernelSpecs()]);
+        const items = activeKernels.map(item => {
+            const matchingSpec: Partial<IJupyterKernelSpec> = kernelSpecs.find(spec => spec.name === item.name) || {};
+            return {
+                ...item,
+                ...matchingSpec
+            };
+        });
+        return items.filter(item => item.display_name || item.name).map(getQuickPickItemForActiveKernel);
     }
 }
 
@@ -51,10 +74,10 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
  * @implements {IKernelSelectionListProvider}
  */
 export class JupyterKernelSelectionListProvider implements IKernelSelectionListProvider {
-    constructor(private readonly kernelService: KernelService) {}
+    constructor(private readonly kernelService: KernelService, private readonly sessionManager?: IJupyterSessionManager) {}
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
-        const items = await this.kernelService.getLocalKernelSpecs(cancelToken);
-        return items.filter(item => item.display_name || item.name).map(getQuickPickFromKernelSpec.bind(undefined, false));
+        const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
+        return items.map(getQuickPickItemForKernelSpec);
     }
 }
 
@@ -73,7 +96,7 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
             return {
                 ...item,
                 description: '(register and use interpreter as kernel)',
-                selection: { interpreter: item.interpreter, kernelSpec: undefined }
+                selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
     }
@@ -91,24 +114,24 @@ export class KernelSelectionProvider {
     /**
      * Gets a selection of kernel specs from a remote session.
      *
-     * @param {IJupyterSessionManager} session
+     * @param {IJupyterSessionManager} sessionManager
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<IKernelSpecQuickPickItem[]>}
      * @memberof KernelSelectionProvider
      */
-    public async getKernelSelectionsForRemoteSession(session: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        return new ActiveJupyterSessionKernelSelectionListProvider(session).getKernelSelections(cancelToken);
+    public async getKernelSelectionsForRemoteSession(sessionManager: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
+        return new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken);
     }
     /**
      * Gets a selection of kernel specs for a local session.
      *
-     * @param {IJupyterSessionManager} [session]
+     * @param {IJupyterSessionManager} [sessionManager]
      * @param {CancellationToken} [cancelToken]
      * @returns {Promise<IKernelSelectionListProvider>}
      * @memberof KernelSelectionProvider
      */
-    public async getLocalKernelSelectionProvider(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const activeKernelsPromise = session ? new ActiveJupyterSessionKernelSelectionListProvider(session).getKernelSelections(cancelToken) : Promise.resolve([]);
+    public async getLocalKernelSelectionProvider(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
+        const activeKernelsPromise = sessionManager ? new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken) : Promise.resolve([]);
         const jupyterKernelsPromise = new JupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
         const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
         const [activeKernels, jupyterKernels, interprters] = await Promise.all([activeKernelsPromise, jupyterKernelsPromise, interpretersPromise]);

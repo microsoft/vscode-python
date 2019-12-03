@@ -222,6 +222,22 @@ export class KernelService {
         return kernel;
     }
     /**
+     * Gets a list of all kernel specs.
+     *
+     * @param {IJupyterSessionManager} [sessionManager]
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<IJupyterKernelSpec[]>}
+     * @memberof KernelService
+     */
+    public async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
+        const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.enumerateSpecs(cancelToken);
+        if (Cancellation.isCanceled(cancelToken)) {
+            return [];
+        }
+        const specs = await enumerator;
+        return specs.filter(item => !!item);
+    }
+    /**
      * Not all characters are allowed in a kernel name.
      * This method will generate a name for a kernel based on display name and path.
      * Algorithm = <displayname - invalid characters> + <hash of path>
@@ -232,14 +248,6 @@ export class KernelService {
      */
     private async generateKernelNameForIntepreter(interpreter: PythonInterpreter): Promise<string> {
         return `${interpreter.displayName || ''}_${await this.fileSystem.getFileHash(interpreter.path)}`.replace(/[^A-Za-z0-9]/g, '');
-    }
-    private async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
-        const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.enumerateSpecs(cancelToken);
-        if (Cancellation.isCanceled(cancelToken)) {
-            return [];
-        }
-        const specs = await enumerator;
-        return specs.filter(item => !!item);
     }
     private hasSpecPathMatch = async (info: PythonInterpreter | undefined, cancelToken?: CancellationToken): Promise<boolean> => {
         if (info) {
