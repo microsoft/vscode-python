@@ -75,6 +75,26 @@ export class PostOffice implements IDisposable {
             window.addEventListener('message', this.baseHandler);
         }
 
+        if (this.vscodeApi) {
+            // Replace console.log with sending a message
+            const customConsole = {
+                log: (text: string) => {
+                    this.vscodeApi?.postMessage({ type: 'console_log', payload: text });
+                },
+                info: (text: string) => {
+                    this.vscodeApi?.postMessage({ type: 'console_info', payload: text });
+                },
+                error: (text: string) => {
+                    this.vscodeApi?.postMessage({ type: 'console_error', payload: text });
+                },
+                warn: (text: string) => {
+                    this.vscodeApi?.postMessage({ type: 'console_warn', payload: text });
+                }
+            };
+            // tslint:disable-next-line: no-any
+            (window as any).console = customConsole;
+        }
+
         return this.vscodeApi;
     }
 

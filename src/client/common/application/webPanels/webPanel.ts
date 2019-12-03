@@ -136,7 +136,26 @@ export class WebPanel implements IWebPanel {
                 <base href="${uriBase}"/>
             </head>
             <body>
-                <iframe src="http://localhost:${this.port}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&embeddedCss=${style}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <script type="text/javascript">
+                    const vscodeApi = acquireVsCodeApi ? acquireVsCodeApi() : undefined;
+                    window.addEventListener('message', (ev) => {
+                        const isFromFrame = ev.data && ev.data.command === 'onmessage';
+                        if (isFromFrame && vscodeApi) {
+                            window.console.log('posting to vscode');
+                            window.console.log(JSON.stringify(ev.data.data));
+                            vscodeApi.postMessage(ev.data.data);
+                        } else if (!isFromFrame) {
+                            window.console.log('posting to frame');
+                            window.console.log(ev.data.type);
+                            const hostFrame = document.getElementById('hostframe');
+                            if (hostFrame) {
+                                hostFrame.contentWindow.postMessage(ev.data, '*');
+                            }
+                        }
+                    });
+                    //# sourceURL=listener.js
+                </script>
+                <iframe id='hostframe' src="http://localhost:${this.port}?scripts=${encodedScripts.join('%')}&settings=${encodedSettings}&embeddedCss=${style}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }

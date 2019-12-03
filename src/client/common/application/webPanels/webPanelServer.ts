@@ -3,25 +3,30 @@
 import * as Cors from '@koa/cors';
 import * as fs from 'fs-extra';
 import * as Koa from 'koa';
-import * as compress from 'koa-compress';
 import * as logger from 'koa-logger';
+import * as path from 'path';
 import * as Stream from 'stream';
 
 import { Identifiers } from '../../../datascience/constants';
 import { noop } from '../../utils/misc';
 
+//import * as compress from 'koa-compress';
 const app = new Koa();
 app.use(Cors());
-app.use(compress());
+//app.use(compress());
 app.use(logger());
 app.use(async ctx => {
-    ctx.type = 'html';
     try {
-        const readable = new Stream.Readable();
-        readable._read = noop;
-        readable.push(await generateReactHtml(ctx.query));
-        readable.push(null);
-        ctx.body = readable;
+        if (ctx.query.scripts) {
+            const readable = new Stream.Readable();
+            readable._read = noop;
+            readable.push(await generateReactHtml(ctx.query));
+            readable.push(null);
+            ctx.body = readable;
+            ctx.type = 'html';
+        } else {
+            ctx.body = fs.createReadStream(path.join(process.cwd(), ctx.url));
+        }
     } catch (e) {
         ctx.body = `<div>${e}</div>`;
     }
@@ -33,14 +38,14 @@ console.log('9890');
 
 // tslint:disable: no-any
 async function generateReactHtml(query: any) {
-    const settings = query.settings ? query.settings : '';
+    //const settings = query.settings ? query.settings : '';
     const embeddedCss = query.embeddedCss ? query.embeddedCss : '';
     const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
     const scripts = query.scripts ? query.scripts : '';
     const loaded = await getIndexBundle(scripts);
     const locDatabase = '';
     const style = embeddedCss ? embeddedCss : '';
-    const settingsString = settings ? settings : '{}';
+    //const settingsString = settings ? settings : '{}';
 
     return `<!doctype html>
     <html lang="en">
@@ -73,7 +78,7 @@ async function generateReactHtml(query: any) {
                     return ${locDatabase};
                 }
                 function getInitialSettings() {
-                    return ${settingsString};
+                    return ${query.settings};
                 }
             </script>
             <script>
@@ -91,6 +96,7 @@ function getVsCodeApiScript(state: any) {
             let acquired = false;
 
             let state = ${state ? `JSON.parse("${JSON.stringify(state)}")` : undefined};
+            window.console.log('acquired vscode api');
 
             return () => {
                 if (acquired) {

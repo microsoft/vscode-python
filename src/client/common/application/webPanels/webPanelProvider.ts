@@ -29,7 +29,7 @@ export class WebPanelProvider implements IWebPanelProvider {
     private async ensureServerIsRunning(): Promise<number> {
         if (!this.port) {
             const procService = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create();
-            const server = procService.execObservable('node', [path.join(__dirname, 'webPanelServer.js')]);
+            const server = procService.execObservable('node', [path.join(__dirname, 'webPanelServer.js')], { cwd: 'D:\\Training\\SnakePython' });
             const promise = createDeferred<number>();
 
             // This should output the port number
