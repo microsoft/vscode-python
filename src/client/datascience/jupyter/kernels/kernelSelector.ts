@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation } from '../../../common/cancellation';
-import { traceWarning } from '../../../common/logger';
+import { traceWarning, traceInfo } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -29,8 +29,7 @@ export class KernelSelector {
             return;
         }
 
-        // Nothing to validate if this is a remote connection.
-        if (!selection.selection.kernelSpec) {
+        if (selection.selection.kernelSpec) {
             return selection.selection.kernelSpec;
         }
         // This is not possible (remote kernels selector can only display remote kernels).
@@ -45,14 +44,21 @@ export class KernelSelector {
         }
 
         // Check if ipykernel is installed in this kernel.
-        if (selection.selection.interpreter) {
-            const isValid = await this.isSelectionValid(selection.selection.interpreter, cancelToken);
-            if (!isValid) {
-                return;
+        const interpreter = selection.selection.interpreter;
+        if (interpreter) {
+            const isValid = await this.isSelectionValid(interpreter, cancelToken);
+            if (isValid) {
+                // Find the kernel associated with this interpter.
+                const kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
+                if (kernelSpec){
+                    traceInfo(`ipykernel installed in ${interpreter.path}, and matching found.`);
+                    return kernelSpec;
+                }
+                traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
             }
 
             // Try an install this interpreter as a kernel.
-            return this.kernelService.registerKernel(selection.selection.interpreter, cancelToken);
+            return this.kernelService.registerKernel(interpreter, cancelToken);
         } else {
             return selection.selection.kernelSpec;
         }
@@ -60,16 +66,17 @@ export class KernelSelector {
 
     private async isSelectionValid(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> {
         // Is ipykernel installed in this environment.
-        if (!(await this.installer.isInstalled(Product.ipykernel, interpreter))) {
-            if (Cancellation.isCanceled(cancelToken)) {
-                return false;
-            }
-            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
-            if (response !== InstallerResponse.Installed) {
-                traceWarning(`ipykernel not installed in the interpreter ${interpreter.path}`);
-                return false;
-            }
+        if ((await this.installer.isInstalled(Product.ipykernel, interpreter))) {
+            return true;
         }
-        return true;
+        if (Cancellation.isCanceled(cancelToken)) {
+            return false;
+        }
+        const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
+        if (response === InstallerResponse.Installed) {
+            return true;
+        }
+        traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}`);
+        return false;
     }
 }
