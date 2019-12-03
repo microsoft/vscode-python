@@ -299,7 +299,7 @@ suite('Data Science - KernelService', () => {
             const promise = kernelService.registerKernel(interpreter);
             await assert.isRejected(promise, `kernel.json not created with the name ${installedKernelName}, display_name ${interpreter.displayName}. Output is `);
         });
-        test('xKernel is installed and spec file is updated with interpreter information in metadata and interpreter path in argv', async () => {
+        test('Kernel is installed and spec file is updated with interpreter information in metadata and interpreter path in argv', async () => {
             when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
 
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);

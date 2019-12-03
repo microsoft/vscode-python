@@ -133,9 +133,6 @@ export class KernelService {
         }
     }
 
-    public getLocalKernelSpecs(cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
-        return this.enumerateSpecs(cancelToken);
-    }
     /**
      * Registers an interprter as a kernel.
      * The assumption is that `ipykernel` has been installed in the interpreter.
