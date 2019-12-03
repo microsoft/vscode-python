@@ -39,7 +39,7 @@ app.use(async ctx => {
 
 // Port should be passed in
 // args should be of form 'node', 'path to this file', '--port', 'port number'
-app.listen(parseInt(process.argv[3], 10));
+app.listen(parseInt(process.argv[3], 10), 'localhost');
 
 async function generateNotebookResponse(ctx: Koa.ParameterizedContext) {
     const readable = new Stream.Readable();
