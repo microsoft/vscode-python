@@ -85,7 +85,8 @@ export enum InteractiveWindowMessages {
     MonacoReady = 'monaco_ready',
     ClearAllOutputs = 'clear_all_outputs',
     SelectKernel = 'select_kernel',
-    UpdateKernel = 'update_kernel'
+    UpdateKernel = 'update_kernel',
+    SelectJupyterServer = 'select_jupyter_server'
 }
 
 export enum NativeCommandType {
@@ -110,6 +111,7 @@ export enum NativeCommandType {
     RunAndMove,
     RunBelow,
     SelectKernel,
+    SelectServer,
     ToggleLineNumbers,
     ToggleOutput,
     ToggleVariableExplorer,
@@ -287,6 +289,7 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.NotebookExecutionActivated]: string;
     public [InteractiveWindowMessages.RestartKernel]: never | undefined;
     public [InteractiveWindowMessages.SelectKernel]: IKernelState | undefined;
+    public [InteractiveWindowMessages.SelectJupyterServer]: never | undefined;
     public [InteractiveWindowMessages.Export]: ICell[];
     public [InteractiveWindowMessages.GetAllCells]: ICell;
     public [InteractiveWindowMessages.ReturnAllCells]: ICell[];

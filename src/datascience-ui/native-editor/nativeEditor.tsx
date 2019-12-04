@@ -154,6 +154,10 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             this.props.selectKernel();
             this.props.sendCommand(NativeCommandType.SelectKernel, 'mouse');
         };
+        const selectServer = () => {
+            this.props.selectServer();
+            this.props.sendCommand(NativeCommandType.SelectServer, 'mouse');
+        };
         const canRunAbove = selectedIndex > 0;
         const canRunBelow = selectedIndex < this.props.cellVMs.length - 1 && this.props.selectedCellId;
 
@@ -190,11 +194,10 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.export} disabled={!this.props.cellVMs.length} className='native-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
                     </ImageButton>
-                    <div onClick={selectKernel} className='kernel-status' style={dynamicFont} role='toolbar'>
-                        <div className='kernel-status-section'>{getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}</div>
+                    <div className='kernel-status' style={dynamicFont}>
+                        <div className='kernel-status-section' onClick={selectServer} role='button'>{getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}</div>
                         <div className='kernel-status-divider'/>
-                        <div className='kernel-status-section'>Python {this.props.kernel.version.raw}:</div>
-                        <div className='kernel-status-section'>{this.props.kernel.jupyterServerStatus}</div>
+                        <div className='kernel-status-section' onClick={selectKernel} role='button'>Python {this.props.kernel.version.raw}: {this.props.kernel.jupyterServerStatus}</div>
                     </div>
                 </div>
                 <div className='toolbar-divider'/>

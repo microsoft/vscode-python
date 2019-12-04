@@ -53,6 +53,7 @@ export class INativeEditorActionMapping {
     public [CommonActionType.LOADED_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.UNMOUNT]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_KERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_SERVER]: NativeEditorReducerFunc<never | undefined>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;

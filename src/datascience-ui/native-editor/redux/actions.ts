@@ -62,5 +62,6 @@ export const actionCreators = {
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } }),
     loadedAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.LOADED_ALL_CELLS }),
     editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT }),
-    selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL })
+    selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL }),
+    selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER })
 };

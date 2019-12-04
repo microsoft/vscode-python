@@ -237,6 +237,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 this.handleMessage(message, payload, this.selectKernel);
                 break;
 
+            case InteractiveWindowMessages.SelectJupyterServer:
+                this.handleMessage(message, payload, this.selectServer);
+                break;
+
             default:
                 break;
         }
@@ -914,8 +918,13 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         await this.setDirty();
     }
 
-    private async selectKernel() {
+    private async selectServer() {
         await this.dataScience.selectJupyterURI();
+        await this.updateKernelStatus(ServerStatus.Idle);
+    }
+
+    private async selectKernel() {
+        // show the kernel dropdown
         await this.updateKernelStatus(ServerStatus.Idle);
     }
 

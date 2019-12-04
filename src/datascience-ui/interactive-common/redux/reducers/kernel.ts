@@ -8,8 +8,13 @@ import { createPostableAction } from '../postOffice';
 import { CommonReducerArg } from './types';
 
 export namespace Kernel {
-    export function selectJupyterURI<T>(arg: CommonReducerArg<T>): IMainState {
+    export function selectKernel<T>(arg: CommonReducerArg<T>): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectKernel));
+
+        return arg.prevState;
+    }
+    export function selectJupyterURI<T>(arg: CommonReducerArg<T>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectJupyterServer));
 
         return arg.prevState;
     }

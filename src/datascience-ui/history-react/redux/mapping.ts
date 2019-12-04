@@ -19,6 +19,7 @@ export class IInteractiveActionMapping {
     public [CommonActionType.REFRESH_VARIABLES]: InteractiveReducerFunc<IRefreshVariablesRequest>;
     public [CommonActionType.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_KERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_SERVER]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.INTERRUPT_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.EXPORT]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SAVE]: InteractiveReducerFunc<never | undefined>;
