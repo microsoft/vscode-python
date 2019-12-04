@@ -386,7 +386,7 @@ export class FileSystemUtils implements IFileSystemUtils {
         if (fileType === undefined) {
             return true;
         }
-        return stat.type === fileType;
+        return (stat.type & fileType) === fileType;
     }
     public async fileExists(filename: string): Promise<boolean> {
         return this.pathExists(filename, FileType.File);
