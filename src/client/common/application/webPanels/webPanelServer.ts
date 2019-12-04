@@ -19,6 +19,7 @@ interface INotebookState {
 }
 
 const notebookState = new Map<string, INotebookState>();
+const expectedToken: string = process.argv[5];
 
 // Create a new Koa App to host our web server
 const app = new Koa();
@@ -27,10 +28,25 @@ app.use(compress());
 app.use(logger());
 app.use(async ctx => {
     try {
-        if (ctx.query.scripts) {
-            await generateNotebookResponse(ctx);
+        // Either token is passed or cookie exists, otherwise insecure connection
+        if (ctx.query.token) {
+            if (ctx.query.token === expectedToken) {
+                if (ctx.query.scripts) {
+                    await generateNotebookResponse(ctx);
+                } else {
+                    await generateFileResponse(ctx);
+                }
+            }
         } else {
-            await generateFileResponse(ctx);
+            const id = ctx.cookies.get('id');
+            const state = id ? notebookState.get(id) : undefined;
+            if (state) {
+                if (ctx.query.scripts) {
+                    await generateNotebookResponse(ctx);
+                } else {
+                    await generateFileResponse(ctx);
+                }
+            }
         }
     } catch (e) {
         ctx.body = `<div>${e}</div>`;

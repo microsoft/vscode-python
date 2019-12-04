@@ -23,6 +23,7 @@ export class WebPanel implements IWebPanel {
     constructor(
         private disposableRegistry: IDisposableRegistry,
         private port: number | undefined,
+        private token: string | undefined,
         private options: IWebPanelOptions) {
         this.panel = window.createWebviewPanel(
             options.title.toLowerCase().replace(' ', ''),
@@ -190,7 +191,7 @@ export class WebPanel implements IWebPanel {
                     });
                     //# sourceURL=listener.js
                 </script>
-                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}&token=${this.token}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }
