@@ -50,7 +50,7 @@ async function generateNotebookResponse(ctx: Koa.ParameterizedContext) {
         state = {
             cwd: ctx.query.cwd,
             outDir: ctx.query.rootPath,
-            bundle: await generateReactHtml(ctx.query)
+            bundle: generateReactHtml(ctx.query)
         };
         notebookState.set(id, state);
     }
@@ -65,12 +65,18 @@ async function generateFileResponse(ctx: Koa.ParameterizedContext) {
     const id = ctx.cookies.get('id');
     const state = id ? notebookState.get(id) : undefined;
     const cwd = state ? state.cwd : process.cwd();
+    const root = state ? state.outDir : cwd;
     let filePath = path.join(cwd, ctx.url);
 
     switch (ctx.url) {
         case '/editor.worker.js':
             // This is actually in the root out folder
             filePath = path.join(EXTENSION_ROOT_DIR, 'out', ctx.url);
+            break;
+
+        case '/index_bundle.js':
+            // This is in the root folder
+            filePath = path.join(root, ctx.url);
             break;
 
         // Here is where we'd likely support loading split bundles.
@@ -82,10 +88,9 @@ async function generateFileResponse(ctx: Koa.ParameterizedContext) {
 }
 
 // tslint:disable: no-any
-async function generateReactHtml(query: any) {
+function generateReactHtml(query: any) {
     const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
-    const scripts = query.scripts ? query.scripts : '';
-    const loaded = await getIndexBundle(scripts);
+    const scripts = query.scripts ? Array.isArray(query.scripts) ? query.Scripts : [query.scripts] : [''];
 
     return `<!doctype html>
     <html lang="en">
@@ -112,9 +117,7 @@ async function generateReactHtml(query: any) {
                     return "${uriBase}" + relativePath;
                 }
             </script>
-            <script>
-            ${loaded}
-            </script>
+            ${scripts.map((script: string) => `<script type="text/javascript" src="${script}"></script>`).join('\n')}
         </body>
     </html>`;
 }
@@ -153,8 +156,4 @@ function getVsCodeApiScript(state: any) {
         delete window.top;
         delete window.frameElement;
     `;
-}
-
-function getIndexBundle(script: string): Promise<string> {
-    return fs.readFile(script, 'utf-8');
 }

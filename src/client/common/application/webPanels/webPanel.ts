@@ -156,7 +156,8 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private generateServerReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
-        const encodedScripts = this.options.scripts.map(encodeURI);
+        const relativeScripts = this.options.scripts.map(s => `.${s.substr(this.options.rootPath.length)}`);
+        const encoded = relativeScripts.map(s => encodeURIComponent(s.replace(/\\/g, '/')));
 
         return `<!doctype html>
         <html lang="en">
@@ -189,7 +190,7 @@ export class WebPanel implements IWebPanel {
                     });
                     //# sourceURL=listener.js
                 </script>
-                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encodedScripts.join('%')}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }
