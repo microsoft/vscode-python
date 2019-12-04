@@ -1,45 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import {
-    CancellationToken,
-    CompletionContext,
-    ConfigurationChangeEvent,
-    Diagnostic,
-    Disposable,
-    Event,
-    EventEmitter,
-    Position,
-    TextDocument,
-    Uri,
-    WorkspaceFolder
-} from 'vscode';
-import {
-    DocumentFilter,
-    DocumentSelector,
-    HandleDiagnosticsSignature,
-    LanguageClientOptions,
-    ProvideCompletionItemsSignature,
-    RevealOutputChannelOn
-} from 'vscode-languageclient';
+import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, WorkspaceFolder } from 'vscode';
+import { DocumentFilter, DocumentSelector, LanguageClientOptions, RevealOutputChannelOn } from 'vscode-languageclient';
 
 import { IWorkspaceService } from '../../common/application/types';
-import { HiddenFilePrefix, isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
+import { isTestExecution, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceDecorators, traceError } from '../../common/logger';
-import {
-    BANNER_NAME_LS_SURVEY,
-    IConfigurationService,
-    IExtensionContext,
-    IOutputChannel,
-    IPathUtils,
-    IPythonExtensionBanner,
-    Resource
-} from '../../common/types';
+import { IConfigurationService, IExtensionContext, IOutputChannel, IPathUtils, Resource } from '../../common/types';
 import { debounceSync } from '../../common/utils/decorators';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { ILanguageServerAnalysisOptions, ILanguageServerFolderService, ILanguageServerOutputChannel } from '../types';
 
 @injectable()
@@ -50,28 +22,25 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     private disposables: Disposable[] = [];
     private languageServerFolder: string = '';
     private resource: Resource;
+    private interpreter: PythonInterpreter | undefined;
     private output: IOutputChannel;
     private readonly didChange = new EventEmitter<void>();
     constructor(@inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
-        @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
     ) {
         this.output = this.lsOutputChannel.channel;
     }
-    public async initialize(resource: Resource) {
+    public async initialize(resource: Resource, interpreter: PythonInterpreter | undefined) {
         this.resource = resource;
+        this.interpreter = interpreter;
         this.languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
 
         let disposable = this.workspace.onDidChangeConfiguration(this.onSettingsChangedHandler, this);
-        this.disposables.push(disposable);
-
-        disposable = this.interpreterService.onDidChangeInterpreter(() => this.didChange.fire(), this);
         this.disposables.push(disposable);
 
         disposable = this.envVarsProvider.onDidEnvironmentVariablesChange(this.onEnvVarChange, this);
@@ -84,11 +53,12 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         this.disposables.forEach(d => d.dispose());
         this.didChange.dispose();
     }
+    // tslint:disable-next-line: max-func-body-length
     @traceDecorators.error('Failed to get analysis options')
     public async getAnalysisOptions(): Promise<LanguageClientOptions> {
         const properties: Record<string, {}> = {};
 
-        const interpreterInfo = await this.interpreterService.getActiveInterpreter(this.resource);
+        const interpreterInfo = this.interpreter;
         if (!interpreterInfo) {
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: How do we handle this?  It is pretty unlikely...
@@ -163,20 +133,6 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
                 analysisUpdates: true,
                 traceLogging: true, // Max level, let LS decide through settings actual level of logging.
                 asyncStartup: true
-            },
-            middleware: {
-                provideCompletionItem: (document: TextDocument, position: Position, context: CompletionContext, token: CancellationToken, next: ProvideCompletionItemsSignature) => {
-                    this.surveyBanner.showBanner().ignoreErrors();
-                    return next(document, position, context, token);
-                },
-                handleDiagnostics: (uri: Uri, diagnostics: Diagnostic[], next: HandleDiagnosticsSignature) => {
-                    // Skip sending if this is a special file.
-                    const filePath = uri.fsPath;
-                    const baseName = filePath ? path.basename(filePath) : undefined;
-                    if (!baseName || !baseName.startsWith(HiddenFilePrefix)) {
-                        next(uri, diagnostics);
-                    }
-                }
             }
         };
     }

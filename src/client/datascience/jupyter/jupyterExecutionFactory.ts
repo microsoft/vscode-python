@@ -14,6 +14,7 @@ import {
     IDisposableRegistry,
     ILogger
 } from '../../common/types';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import {
@@ -42,6 +43,7 @@ type JupyterExecutionClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
+        activationHelper: IEnvironmentActivationService,
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };
@@ -64,6 +66,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
+        @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
@@ -81,6 +84,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             sessionManagerFactory,
             workspace,
             configuration,
+            activationHelper,
             serviceContainer
         );
         this.executionFactory.sessionChanged(() => this.onSessionChanged());

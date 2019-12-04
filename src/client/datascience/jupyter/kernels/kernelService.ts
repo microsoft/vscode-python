@@ -11,18 +11,32 @@ import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
-import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { traceDecorators, traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { IAsyncDisposableRegistry } from '../../../common/types';
+import { IAsyncDisposableRegistry, ReadWrite } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
+import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry } from '../../../telemetry';
 import { JupyterCommands, RegExpValues, Telemetry } from '../../constants';
 import { IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { JupyterCommandFinder } from '../jupyterCommandFinder';
+import { JupyterCommandFinder, ModuleExistsStatus } from '../jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+
+/**
+ * Helper to ensure we can differentiate between two types in union types, keeping typing information.
+ * (basically avoiding the need to case using `as`).
+ * We cannot use `xx in` as jupyter uses `JSONObject` which is too broad and captures anything and everything.
+ *
+ * @param {(nbformat.IKernelspecMetadata | PythonInterpreter)} item
+ * @returns {item is PythonInterpreter}
+ */
+function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): item is PythonInterpreter {
+    // Interpreters will not have a `display_name` property, but have `path` and `type` properties.
+    return !!(item as PythonInterpreter).path && !!(item as PythonInterpreter).type && !(item as nbformat.IKernelspecMetadata).display_name;
+}
 
 /**
  * Responsible for kernel management and the like.
@@ -37,7 +51,8 @@ export class KernelService {
         private readonly asyncRegistry: IAsyncDisposableRegistry,
         private readonly processServiceFactory: IProcessServiceFactory,
         private readonly interpreterService: IInterpreterService,
-        private readonly fileSystem: IFileSystem
+        private readonly fileSystem: IFileSystem,
+        private readonly activationHelper: IEnvironmentActivationService
     ) {}
     /**
      * Finds a kernel spec from a given session or jupyter process that matches a given spec.
@@ -64,7 +79,7 @@ export class KernelService {
      */
     public async findMatchingKernelSpec(
         interpreter: PythonInterpreter,
-        sessionManager: IJupyterSessionManager | undefined,
+        sessionManager?: IJupyterSessionManager | undefined,
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined>;
     public async findMatchingKernelSpec(
@@ -73,12 +88,10 @@ export class KernelService {
         cancelToken?: CancellationToken
     ): Promise<IJupyterKernelSpec | undefined> {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
-        if ('path' in option && 'type' in option) {
-            const interpreter = option as PythonInterpreter;
-            return specs.find(item => item.language === PYTHON_LANGUAGE && this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', interpreter.path));
+        if (isInterpreter(option)) {
+            return specs.find(item => item.language === PYTHON_LANGUAGE && this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path));
         } else {
-            const kernelSpec = option as nbformat.IKernelspecMetadata;
-            return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === kernelSpec.display_name && item.name === kernelSpec.name);
+            return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === option.display_name && item.name === option.name);
         }
     }
 
@@ -105,7 +118,7 @@ export class KernelService {
             }
 
             // Now enumerate them again
-            const enumerator = sessionManager ? () => sessionManager.getActiveKernelSpecs() : () => this.enumerateSpecs(cancelToken);
+            const enumerator = sessionManager ? () => sessionManager.getKernelSpecs() : () => this.enumerateSpecs(cancelToken);
 
             // Then find our match
             return this.findSpecMatch(enumerator);
@@ -119,8 +132,109 @@ export class KernelService {
             }
         }
     }
+
+    /**
+     * Registers an interprter as a kernel.
+     * The assumption is that `ipykernel` has been installed in the interpreter.
+     * Kernel created will have following characteristics:
+     * - display_name = Display name of the interpreter.
+     * - metadata.interperter = Interpreter information (useful in finding a kernel that matches a given interpreter)
+     * - env = Will have environment variables of the activated environment.
+     *
+     * @param {PythonInterpreter} interpreter
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<IJupyterKernelSpec>}
+     * @memberof KernelService
+     */
+    @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
+    @traceDecorators.error('Failed to register an interpreter as a kernel')
+    public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+        if (!interpreter.displayName) {
+            throw new Error('Interpreter does not have a display name');
+        }
+        const ipykernelCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelCreateCommand, cancelToken);
+        if (ipykernelCommand.status === ModuleExistsStatus.NotFound || !ipykernelCommand.command) {
+            throw new Error('Command not found to install the kernel');
+        }
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
+        const name = await this.generateKernelNameForIntepreter(interpreter);
+        const output = await ipykernelCommand.command.exec(['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
+            throwOnStdErr: true,
+            encoding: 'utf8',
+            token: cancelToken
+        });
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
+
+        const kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
+        if (!kernel) {
+            const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+            throw new Error(error);
+        }
+        if (!(kernel instanceof JupyterKernelSpec)) {
+            const error = `Kernel not registered locally, created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+            throw new Error(error);
+        }
+        if (!kernel.specFile) {
+            const error = `kernel.json not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
+            throw new Error(error);
+        }
+        const specModel: ReadWrite<Kernel.ISpecModel> = JSON.parse(await this.fileSystem.readFile(kernel.specFile));
+
+        // Ensure we use a fully qualified path to the python interpreter in `argv`.
+        if (specModel.argv[0].toLowerCase() === 'conda') {
+            // If conda is the first word, its possible its a conda activation command.
+            traceInfo(`Spec argv[0], not updated as it is using conda.`);
+        } else {
+            traceInfo(`Spec argv[0] updated from '${specModel.argv[0]}' to '${interpreter.path}'`);
+            specModel.argv[0] = interpreter.path;
+        }
+
+        // Get the activated environment variables (as a work around for `conda run` and similar).
+        // This ensures the code runs within the context of an activated environment.
+        specModel.env = await this.activationHelper
+            .getActivatedEnvironmentVariables(undefined, interpreter, true)
+            .catch(noop)
+            // tslint:disable-next-line: no-any
+            .then(env => (env || {}) as any);
+        if (Cancellation.isCanceled(cancelToken)) {
+            return;
+        }
+
+        // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
+        // We'll need information such as interpreter type, display name, path, etc...
+        // Its just a JSON file, and the information is small, hence might as well store everything.
+        specModel.metadata = specModel.metadata || {};
+        // tslint:disable-next-line: no-any
+        specModel.metadata.interpreter = interpreter as any;
+
+        // Update the kernel.json with our new stuff.
+        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2));
+        kernel.metadata = specModel.metadata;
+
+        traceInfo(`Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`);
+        return kernel;
+    }
+    /**
+     * Not all characters are allowed in a kernel name.
+     * This method will generate a name for a kernel based on display name and path.
+     * Algorithm = <displayname - invalid characters> + <hash of path>
+     *
+     * @private
+     * @param {PythonInterpreter} interpreter
+     * @memberof KernelService
+     */
+    private async generateKernelNameForIntepreter(interpreter: PythonInterpreter): Promise<string> {
+        return `${interpreter.displayName || ''}_${await this.fileSystem.getFileHash(interpreter.path)}`.replace(/[^A-Za-z0-9]/g, '');
+    }
     private async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
-        const enumerator = sessionManager ? sessionManager.getActiveKernelSpecs() : this.enumerateSpecs(cancelToken);
+        const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.enumerateSpecs(cancelToken);
         if (Cancellation.isCanceled(cancelToken)) {
             return [];
         }
@@ -298,7 +412,7 @@ export class KernelService {
         return bestSpec;
     }
 
-    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> => {
+    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
         // Ignore errors if there are no kernels.
         const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
 
@@ -314,22 +428,24 @@ export class KernelService {
             traceInfo('Parsing kernelspecs from jupyter');
             // This should give us back a key value pair we can parse
             const kernelSpecs = JSON.parse(output.stdout.trim()) as Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }>;
-            const specs = await Promise.all(Object.keys(kernelSpecs).map(async kernelName => {
-                const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
-                const spec = kernelSpecs[kernelName].spec;
-                // Add the missing name property.
-                const model = {
-                    ...spec,
-                    name: kernelName
-                };
-                // Check if the spec file exists.
-                if (await this.fileSystem.fileExists(specFile)){
-                    return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
-                } else {
-                    return;
-                }
-            }));
-            return specs.filter(item => !!item).map(item => item as IJupyterKernelSpec);
+            const specs = await Promise.all(
+                Object.keys(kernelSpecs).map(async kernelName => {
+                    const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
+                    const spec = kernelSpecs[kernelName].spec;
+                    // Add the missing name property.
+                    const model = {
+                        ...spec,
+                        name: kernelName
+                    };
+                    // Check if the spec file exists.
+                    if (await this.fileSystem.fileExists(specFile)) {
+                        return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
+                    } else {
+                        return;
+                    }
+                })
+            );
+            return specs.filter(item => !!item).map(item => item as JupyterKernelSpec);
         } catch (ex) {
             traceError('Failed to list kernels', ex);
             // This is failing for some folks. In that case return nothing

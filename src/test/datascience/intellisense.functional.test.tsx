@@ -7,6 +7,7 @@ import { IDisposable } from 'monaco-editor';
 import { Disposable } from 'vscode';
 
 import { createDeferred } from '../../client/common/utils/async';
+import { IInterpreterService } from '../../client/interpreter/contracts';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -20,8 +21,6 @@ suite('DataScience Intellisense tests', () => {
 
     setup(() => {
         ioc = new DataScienceIocContainer();
-        // For this test, jedi is turned off so we use our mock language server
-        ioc.enableJedi(false);
         ioc.registerDataScienceTypes();
     });
 
@@ -106,6 +105,46 @@ suite('DataScience Intellisense tests', () => {
         await suggestion.promise;
         suggestion.disposable.dispose();
         verifyIntellisenseVisible(wrapper, 'print');
+    }, () => { return ioc; });
+
+    runMountedTest('Multiple interpreters', async (wrapper) => {
+        // Create an interactive window so that it listens to the results.
+        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+        await interactiveWindow.show();
+
+        // Then enter some code. Don't submit, we're just testing that autocomplete appears
+        let suggestion = waitForSuggestion(wrapper);
+        typeCode(getInteractiveEditor(wrapper), 'print');
+        await suggestion.promise;
+        suggestion.disposable.dispose();
+        verifyIntellisenseVisible(wrapper, 'print');
+
+        // Clear the code
+        const editor = getInteractiveEditor(wrapper);
+        const inst = editor.instance() as MonacoEditor;
+        inst.state.model!.setValue('');
+
+        // Then change our current interpreter
+        const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
+        const oldActive = await interpreterService.getActiveInterpreter();
+        const interpreters = await interpreterService.getInterpreters();
+        if (interpreters.length > 1 && oldActive) {
+            const firstOther = interpreters.filter(i => i.path !== oldActive.path);
+            ioc.forceSettingsChanged(firstOther[0].path);
+            const active = await interpreterService.getActiveInterpreter();
+            assert.notDeepEqual(active, oldActive, 'Should have changed interpreter');
+        }
+
+        // Type in again, make sure it works (should use the current interpreter in the server)
+        suggestion = waitForSuggestion(wrapper);
+        typeCode(getInteractiveEditor(wrapper), 'print');
+        await suggestion.promise;
+        suggestion.disposable.dispose();
+        verifyIntellisenseVisible(wrapper, 'print');
+
+        // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+        // while we're destroying the editor.
+        inst.state.model!.setValue('');
     }, () => { return ioc; });
 
     runMountedTest('Jupyter autocomplete', async (wrapper) => {

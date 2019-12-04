@@ -32,7 +32,7 @@ const testDataModuleName = [
 ];
 
 // tslint:disable-next-line:max-func-body-length
-suite('Activation - platform data', () => {
+suite('Language Server Activation - platform data', () => {
     test('Name and hash (Windows/Mac)', async () => {
         for (const t of testDataWinMac) {
             const platformService = TypeMoq.Mock.ofType<IPlatformService>();

@@ -21,7 +21,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
 const downloadBaseFileName = 'Python-Language-Server';
 
-suite('Language', () => {
+suite('Language Server - Package Service', () => {
     let serviceContainer: typeMoq.IMock<IServiceContainer>;
     let platform: typeMoq.IMock<IPlatformService>;
     let lsPackageService: LanguageServerPackageService;

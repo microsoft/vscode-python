@@ -1,14 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
-// tslint:disable:max-func-body-length
-
 import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationChangeEvent, Disposable, Uri, WorkspaceConfiguration } from 'vscode';
+import { ConfigurationChangeEvent, Disposable, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import {
     FolderVersionPair,
@@ -22,12 +18,25 @@ import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagn
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../client/common/application/types';
 import { LSControl, LSEnabled } from '../../client/common/experimentGroups';
 import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService, IDisposable, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory, IPythonSettings, Resource } from '../../client/common/types';
+import {
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    IExperimentsManager,
+    IOutputChannel,
+    IPersistentState,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Resource
+} from '../../client/common/types';
+import { noop } from '../../client/common/utils/misc';
+import { Architecture } from '../../client/common/utils/platform';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { IServiceContainer } from '../../client/ioc/types';
 
-// tslint:disable:no-any
+// tslint:disable:max-func-body-length no-any
 
-suite('Activation - ActivationService', () => {
+suite('Language Server Activation - ActivationService', () => {
     [true, false].forEach(jediIsEnabled => {
         suite(`Test activation - ${jediIsEnabled ? 'Jedi is enabled' : 'Jedi is disabled'}`, () => {
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
@@ -41,6 +50,8 @@ suite('Activation - ActivationService', () => {
             let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
             let experiments: TypeMoq.IMock<IExperimentsManager>;
             let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+            let interpreterService: TypeMoq.IMock<IInterpreterService>;
+            let interpreterChangedHandler!: Function;
             setup(() => {
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
                 appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -61,6 +72,12 @@ suite('Activation - ActivationService', () => {
                 workspaceService.setup(w => w.hasWorkspaceFolders).returns(() => false);
                 workspaceService.setup(w => w.workspaceFolders).returns(() => []);
                 configService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
+                interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                const disposable = TypeMoq.Mock.ofType<IDisposable>();
+                interpreterService.setup(i => i.onDidChangeInterpreter(TypeMoq.It.isAny())).returns((cb) => {
+                    interpreterChangedHandler = cb;
+                    return disposable.object;
+                });
                 langFolderServiceMock
                     .setup(l => l.getCurrentLanguageServerDirectory())
                     .returns(() => Promise.resolve(folderVer));
@@ -94,6 +111,9 @@ suite('Activation - ActivationService', () => {
                     .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                     .returns(() => platformService.object);
                 serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                    .returns(() => interpreterService.object);
+                serviceContainer
                     .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                     .returns(() => langFolderServiceMock.object);
                 serviceContainer
@@ -112,8 +132,11 @@ suite('Activation - ActivationService', () => {
                 lsSupported: boolean = true
             ) {
                 activator
-                    .setup(a => a.activate(undefined))
+                    .setup(a => a.start(undefined, undefined))
                     .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+                activator
+                    .setup(a => a.activate())
                     .verifiable(TypeMoq.Times.once());
                 let activatorName = LanguageServerActivator.Jedi;
                 if (lsSupported && !jediIsEnabled) {
@@ -328,6 +351,142 @@ suite('Activation - ActivationService', () => {
                 appShell.verifyAll();
                 cmdManager.verifyAll();
             });
+            test('More than one LS is created for multiple interpreters', async () => {
+                const interpreter1: PythonInterpreter = {
+                    path: '/foo/bar/python',
+                    sysPrefix: '1',
+                    envName: '1',
+                    sysVersion: '3.1.1.1',
+                    architecture: Architecture.x64,
+                    type: InterpreterType.Unknown
+                };
+                const interpreter2: PythonInterpreter = {
+                    path: '/foo/baz/python',
+                    sysPrefix: '1',
+                    envName: '2',
+                    sysVersion: '3.1.1.1',
+                    architecture: Architecture.x64,
+                    type: InterpreterType.Unknown
+                };
+                const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                activator
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
+                    .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+                activator
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
+                    .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+                activator
+                    .setup(a => a.deactivate())
+                    .verifiable(TypeMoq.Times.never());
+                activator
+                    .setup(a => a.activate())
+                    .verifiable(TypeMoq.Times.never());
+                activator
+                    .setup(a => a.dispose()).returns(noop).verifiable(TypeMoq.Times.exactly(2));
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
+                    .returns(() => activator.object);
+                let diagnostics: IDiagnostic[];
+                if (!jediIsEnabled) {
+                    diagnostics = [TypeMoq.It.isAny()];
+                } else {
+                    diagnostics = [];
+                }
+                lsNotSupportedDiagnosticService
+                    .setup(l => l.diagnose(undefined))
+                    .returns(() => Promise.resolve(diagnostics));
+                lsNotSupportedDiagnosticService
+                    .setup(l => l.handle(TypeMoq.It.isValue(diagnostics)))
+                    .returns(() => Promise.resolve());
+
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
+                const ls1 = await activationService.get(folder1.uri, interpreter1);
+                const ls2 = await activationService.get(folder1.uri, interpreter2);
+                expect(ls1).not.to.be.equal(ls2, 'Interpreter does not create new LS');
+                const ls3 = await activationService.get(undefined, interpreter1);
+                expect(ls1).to.be.equal(ls3, 'Interpreter does return same LS');
+                ls3.dispose();
+                ls1.dispose();
+                ls2.dispose();
+                activator.verifyAll();
+            });
+            test('Changing interpreter will activate a new LS', async () => {
+                const interpreter1: PythonInterpreter = {
+                    path: '/foo/bar/python',
+                    sysPrefix: '1',
+                    envName: '1',
+                    sysVersion: '3.1.1.1',
+                    architecture: Architecture.x64,
+                    type: InterpreterType.Unknown
+                };
+                const interpreter2: PythonInterpreter = {
+                    path: '/foo/baz/python',
+                    sysPrefix: '1',
+                    envName: '2',
+                    sysVersion: '3.1.1.1',
+                    architecture: Architecture.x64,
+                    type: InterpreterType.Unknown
+                };
+                let getActiveCount = 0;
+                interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => {
+                    if (getActiveCount % 2 === 0) {
+                        getActiveCount += 1;
+                        return Promise.resolve(interpreter1);
+                    }
+                    getActiveCount += 1;
+                    return Promise.resolve(interpreter2);
+                });
+                const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
+                const activator = TypeMoq.Mock.ofType<ILanguageServerActivator>();
+                activator
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter1)))
+                    .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+                activator
+                    .setup(a => a.start(TypeMoq.It.isValue(folder1.uri), TypeMoq.It.isValue(interpreter2)))
+                    .returns(() => Promise.resolve())
+                    .verifiable(TypeMoq.Times.once());
+                let connectCount = 0;
+                activator
+                    .setup(a => a.activate())
+                    .returns(() => {
+                        connectCount = connectCount + 1;
+                    });
+                serviceContainer
+                    .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isAny()))
+                    .returns(() => activator.object);
+                let diagnostics: IDiagnostic[];
+                if (!jediIsEnabled) {
+                    diagnostics = [TypeMoq.It.isAny()];
+                } else {
+                    diagnostics = [];
+                }
+                lsNotSupportedDiagnosticService
+                    .setup(l => l.diagnose(undefined))
+                    .returns(() => Promise.resolve(diagnostics));
+                lsNotSupportedDiagnosticService
+                    .setup(l => l.handle(TypeMoq.It.isValue(diagnostics)))
+                    .returns(() => Promise.resolve());
+
+                pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
+                const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
+                await activationService.activate(folder1.uri);
+                await interpreterChangedHandler();
+                activator.verifyAll();
+
+                // Hold onto the second item and switch two more times. Verify that
+                // reconnect happens
+                const server = await activationService.get(folder1.uri);
+                await interpreterChangedHandler();
+                expect(connectCount).to.be.equal(3, 'Reconnect is not happening');
+                await interpreterChangedHandler();
+                expect(connectCount).to.be.equal(4, 'Reconnect is not happening');
+                server.dispose();
+            });
             if (!jediIsEnabled) {
                 test('Revert to jedi when LS activation fails', async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
@@ -351,7 +510,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activatorDotNet.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorDotNet
-                        .setup(a => a.activate(undefined))
+                        .setup(a => a.start(undefined, undefined))
                         .returns(() => Promise.reject(new Error('')))
                         .verifiable(TypeMoq.Times.once());
                     serviceContainer
@@ -364,7 +523,11 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activatorJedi.object)
                         .verifiable(TypeMoq.Times.once());
                     activatorJedi
-                        .setup(a => a.activate(undefined))
+                        .setup(a => a.start(undefined, undefined))
+                        .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.once());
+                    activatorJedi
+                        .setup(a => a.activate())
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
 
@@ -380,8 +543,11 @@ suite('Activation - ActivationService', () => {
                     resource: Resource
                 ) {
                     activator
-                        .setup(a => a.activate(TypeMoq.It.isValue(resource)))
+                        .setup(a => a.start(TypeMoq.It.isValue(resource), undefined))
                         .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.once());
+                    activator
+                        .setup(a => a.activate())
                         .verifiable(TypeMoq.Times.once());
                     lsNotSupportedDiagnosticService
                         .setup(l => l.diagnose(undefined))
@@ -451,12 +617,12 @@ suite('Activation - ActivationService', () => {
                     activator3
                         .setup(d => d.dispose())
                         .verifiable(TypeMoq.Times.once());
-                    workspaceFoldersChangedHandler.call(activationService);
+                    await workspaceFoldersChangedHandler.call(activationService);
                     workspaceService.verifyAll();
                     activator3.verifyAll();
                 });
             } else {
-                test('Jedi is only activated once', async () => {
+                test('Jedi is only started once', async () => {
                     pythonSettings.setup(p => p.jediEnabled).returns(() => jediIsEnabled);
                     const activator1 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     const activationService = new LanguageServerExtensionActivationService(serviceContainer.object, stateFactory.object, experiments.object);
@@ -467,7 +633,7 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activator1.object)
                         .verifiable(TypeMoq.Times.once());
                     activator1
-                        .setup(a => a.activate(folder1.uri))
+                        .setup(a => a.start(folder1.uri, undefined))
                         .returns(() => Promise.resolve())
                         .verifiable(TypeMoq.Times.once());
                     experiments
@@ -476,6 +642,7 @@ suite('Activation - ActivationService', () => {
                         .verifiable(TypeMoq.Times.never());
                     await activationService.activate(folder1.uri);
                     activator1.verifyAll();
+                    activator1.verify(a => a.activate(), TypeMoq.Times.once());
                     serviceContainer.verifyAll();
                     experiments.verifyAll();
 
@@ -485,8 +652,11 @@ suite('Activation - ActivationService', () => {
                         .returns(() => activator2.object)
                         .verifiable(TypeMoq.Times.once());
                     activator2
-                        .setup(a => a.activate(folder2.uri))
+                        .setup(a => a.start(folder2.uri, undefined))
                         .returns(() => Promise.resolve())
+                        .verifiable(TypeMoq.Times.never());
+                    activator2
+                        .setup(a => a.activate())
                         .verifiable(TypeMoq.Times.never());
                     experiments
                         .setup(ex => ex.inExperiment(TypeMoq.It.isAny()))
@@ -495,6 +665,7 @@ suite('Activation - ActivationService', () => {
                     await activationService.activate(folder2.uri);
                     serviceContainer.verifyAll();
                     activator1.verifyAll();
+                    activator1.verify(a => a.activate(), TypeMoq.Times.exactly(2));
                     activator2.verifyAll();
                     experiments.verifyAll();
                 });
@@ -514,6 +685,7 @@ suite('Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -525,6 +697,9 @@ suite('Activation - ActivationService', () => {
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            const e = new EventEmitter<void>();
+            interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
@@ -564,6 +739,9 @@ suite('Activation - ActivationService', () => {
                 .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
             serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
+            serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
             serviceContainer
@@ -582,8 +760,8 @@ suite('Activation - ActivationService', () => {
                 .verifiable(TypeMoq.Times.exactly(2));
             state.setup(s => s.updateValue(TypeMoq.It.isValue(true)))
                 .returns(() => {
-                state.setup(s => s.value).returns(() => true);
-                return Promise.resolve();
+                    state.setup(s => s.value).returns(() => true);
+                    return Promise.resolve();
                 })
                 .verifiable(TypeMoq.Times.once());
 
@@ -650,6 +828,7 @@ suite('Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -661,6 +840,9 @@ suite('Activation - ActivationService', () => {
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            const e = new EventEmitter<void>();
+            interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
@@ -699,6 +881,9 @@ suite('Activation - ActivationService', () => {
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);
@@ -819,6 +1004,7 @@ suite('Activation - ActivationService', () => {
         let state: TypeMoq.IMock<IPersistentState<boolean | undefined>>;
         let experiments: TypeMoq.IMock<IExperimentsManager>;
         let workspaceConfig: TypeMoq.IMock<WorkspaceConfiguration>;
+        let interpreterService: TypeMoq.IMock<IInterpreterService>;
         setup(() => {
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
             appShell = TypeMoq.Mock.ofType<IApplicationShell>();
@@ -830,6 +1016,9 @@ suite('Activation - ActivationService', () => {
             const configService = TypeMoq.Mock.ofType<IConfigurationService>();
             pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
             experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+            interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+            const e = new EventEmitter<void>();
+            interpreterService.setup(i => i.onDidChangeInterpreter).returns(() => e.event);
             const langFolderServiceMock = TypeMoq.Mock.ofType<ILanguageServerFolderService>();
             const folderVer: FolderVersionPair = {
                 path: '',
@@ -868,6 +1057,9 @@ suite('Activation - ActivationService', () => {
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(IPlatformService)))
                 .returns(() => platformService.object);
+            serviceContainer
+                .setup(c => c.get(TypeMoq.It.isValue(IInterpreterService)))
+                .returns(() => interpreterService.object);
             serviceContainer
                 .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerFolderService)))
                 .returns(() => langFolderServiceMock.object);

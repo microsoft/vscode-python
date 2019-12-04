@@ -4,10 +4,23 @@
 'use strict';
 
 import { SemVer } from 'semver';
-import { Event } from 'vscode';
+import {
+    CodeLensProvider,
+    CompletionItemProvider,
+    DefinitionProvider,
+    DocumentSymbolProvider,
+    Event,
+    HoverProvider,
+    ReferenceProvider,
+    RenameProvider,
+    SignatureHelpProvider,
+    TextDocument,
+    TextDocumentContentChangeEvent
+} from 'vscode';
 import { LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { NugetPackage } from '../common/nuget/types';
 import { IDisposable, IOutputChannel, LanguageServerDownloadChannels, Resource } from '../common/types';
+import { PythonInterpreter } from '../interpreter/contracts';
 
 export const IExtensionActivationManager = Symbol('IExtensionActivationManager');
 /**
@@ -55,9 +68,41 @@ export enum LanguageServerActivator {
     DotNet = 'DotNet'
 }
 
+// tslint:disable-next-line: interface-name
+export interface DocumentHandler {
+    handleOpen(document: TextDocument): void;
+    handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void;
+}
+
+// tslint:disable-next-line: interface-name
+export interface LanguageServerCommandHandler {
+    clearAnalysisCache(): void;
+}
+
+export interface ILanguageServer extends
+    RenameProvider,
+    DefinitionProvider,
+    HoverProvider,
+    ReferenceProvider,
+    CompletionItemProvider,
+    CodeLensProvider,
+    DocumentSymbolProvider,
+    SignatureHelpProvider,
+    Partial<DocumentHandler>,
+    Partial<LanguageServerCommandHandler>,
+    IDisposable {
+}
+
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
-export interface ILanguageServerActivator extends IDisposable {
-    activate(resource: Resource): Promise<void>;
+export interface ILanguageServerActivator extends ILanguageServer {
+    start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
+    activate(): void;
+    deactivate(): void;
+}
+
+export const ILanguageServerCache = Symbol('ILanguageServerCache');
+export interface ILanguageServerCache {
+    get(resource: Resource, interpreter?: PythonInterpreter): Promise<ILanguageServer>;
 }
 
 export type FolderVersionPair = { path: string; version: SemVer };
@@ -98,17 +143,20 @@ export enum LanguageClientFactory {
 }
 export const ILanguageClientFactory = Symbol('ILanguageClientFactory');
 export interface ILanguageClientFactory {
-    createLanguageClient(resource: Resource, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient>;
+    createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient>;
 }
 export const ILanguageServerAnalysisOptions = Symbol('ILanguageServerAnalysisOptions');
 export interface ILanguageServerAnalysisOptions extends IDisposable {
     readonly onDidChange: Event<void>;
-    initialize(resource: Resource): Promise<void>;
+    initialize(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
     getAnalysisOptions(): Promise<LanguageClientOptions>;
 }
 export const ILanguageServerManager = Symbol('ILanguageServerManager');
 export interface ILanguageServerManager extends IDisposable {
-    start(resource: Resource): Promise<void>;
+    readonly languageProxy: ILanguageServerProxy | undefined;
+    start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void>;
+    connect(): void;
+    disconnect(): void;
 }
 export const ILanguageServerExtension = Symbol('ILanguageServerExtension');
 export interface ILanguageServerExtension extends IDisposable {
@@ -116,19 +164,19 @@ export interface ILanguageServerExtension extends IDisposable {
     loadExtensionArgs?: {};
     register(): void;
 }
-export const ILanguageServer = Symbol('ILanguageServer');
-export interface ILanguageServer extends IDisposable {
+export const ILanguageServerProxy = Symbol('ILanguageServerProxy');
+export interface ILanguageServerProxy extends IDisposable {
     /**
      * LanguageClient in use
      */
     languageClient: LanguageClient | undefined;
-    start(resource: Resource, options: LanguageClientOptions): Promise<void>;
+    start(resource: Resource, interpreter: PythonInterpreter | undefined, options: LanguageClientOptions): Promise<void>;
     /**
      * Sends a request to LS so as to load other extensions.
      * This is used as a plugin loader mechanism.
      * Anyone (such as intellicode) wanting to interact with LS, needs to send this request to LS.
      * @param {{}} [args]
-     * @memberof ILanguageServer
+     * @memberof ILanguageServerProxy
      */
     loadExtension(args?: {}): void;
 }

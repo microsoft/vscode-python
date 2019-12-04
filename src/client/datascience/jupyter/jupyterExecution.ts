@@ -12,6 +12,7 @@ import { IFileSystem } from '../../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -54,11 +55,12 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
+        activationHelper: IEnvironmentActivationService,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
         this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
-            processServiceFactory, interpreterService, fileSystem);
+            processServiceFactory, interpreterService, fileSystem, activationHelper);
         this.notebookStarter = new NotebookStarter(executionFactory, this.commandFinder,
             this.kernelService, fileSystem, serviceContainer);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
@@ -251,7 +253,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
             const metadata = options?.metadata;
-            const launchResults = await this.startNotebookServer({useDefaultConfig, metadata}, cancelToken);
+            const launchResults = await this.startNotebookServer({ useDefaultConfig, metadata }, cancelToken);
             if (launchResults) {
                 connection = launchResults.connection;
                 kernelSpec = launchResults.kernelSpec;
@@ -287,7 +289,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(options: {useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata}, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startNotebookServer(options: { useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata }, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
@@ -313,6 +315,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // See if we can find the command
         try {
             const result = await this.findBestCommand(command, cancelToken);
+
+            // Note to self, if result is undefined, check that your test is actually
+            // setting up different services correctly. Some method must be undefined.
             return result.command !== undefined;
         } catch (err) {
             this.logger.logWarning(err);

@@ -29,7 +29,7 @@ import { MockOutputChannel } from '../../mockClasses';
 use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
-suite('Activation - Downloader', () => {
+suite('Language Server Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;

@@ -1,20 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
+
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
-import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
+import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import { ILanguageServer, ILanguageServerAnalysisOptions, ILanguageServerExtension } from '../../../client/activation/types';
+import {
+    ILanguageServerAnalysisOptions,
+    ILanguageServerExtension,
+    ILanguageServerProxy
+} from '../../../client/activation/types';
+import { IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { ProposeLanguageServerBanner } from '../../../client/languageServices/proposeLanguageServerBanner';
 import { sleep } from '../../core';
 
 use(chaiAsPromised);
@@ -25,19 +29,22 @@ suite('Language Server - Manager', () => {
     let manager: LanguageServerManager;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
-    let languageServer: ILanguageServer;
+    let languageServer: ILanguageServerProxy;
     let lsExtension: ILanguageServerExtension;
     let onChangeAnalysisHandler: Function;
+    let surveyBanner: IPythonExtensionBanner;
     const languageClientOptions = ({ x: 1 } as any) as LanguageClientOptions;
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         analysisOptions = mock(LanguageServerAnalysisOptions);
-        languageServer = mock(LanguageServer);
+        languageServer = mock(LanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
+        surveyBanner = mock(ProposeLanguageServerBanner);
         manager = new LanguageServerManager(
             instance(serviceContainer),
             instance(analysisOptions),
-            instance(lsExtension)
+            instance(lsExtension),
+            instance(surveyBanner)
         );
     });
 
@@ -54,18 +61,18 @@ suite('Language Server - Manager', () => {
                 analysisHandlerRegistered = true;
                 onChangeAnalysisHandler = handler;
             };
-            when(analysisOptions.initialize(resource)).thenResolve();
+            when(analysisOptions.initialize(resource, undefined)).thenResolve();
             when(analysisOptions.getAnalysisOptions()).thenResolve(languageClientOptions);
             when(analysisOptions.onDidChange).thenReturn(analysisChangeFn as any);
-            when(serviceContainer.get<ILanguageServer>(ILanguageServer)).thenReturn(instance(languageServer));
-            when(languageServer.start(resource, languageClientOptions)).thenResolve();
+            when(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).thenReturn(instance(languageServer));
+            when(languageServer.start(resource, undefined, languageClientOptions)).thenResolve();
 
-            await manager.start(resource);
+            await manager.start(resource, undefined);
 
-            verify(analysisOptions.initialize(resource)).once();
+            verify(analysisOptions.initialize(resource, undefined)).once();
             verify(analysisOptions.getAnalysisOptions()).once();
-            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).once();
-            verify(languageServer.start(resource, languageClientOptions)).once();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).once();
+            verify(languageServer.start(resource, undefined, languageClientOptions)).once();
             expect(invoked).to.be.true;
             expect(analysisHandlerRegistered).to.be.true;
             verify(languageServer.dispose()).never();
@@ -80,7 +87,7 @@ suite('Language Server - Manager', () => {
         test('Attempting to start LS will throw an exception', async () => {
             await startLanguageServer();
 
-            await expect(manager.start(resource)).to.eventually.be.rejectedWith('Language Server already started');
+            await expect(manager.start(resource, undefined)).to.eventually.be.rejectedWith('Language Server already started');
         });
         test('Changes in analysis options must restart LS', async () => {
             await startLanguageServer();
@@ -91,8 +98,8 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
-            verify(languageServer.start(resource, languageClientOptions)).twice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).twice();
+            verify(languageServer.start(resource, undefined, languageClientOptions)).twice();
         });
         test('Changes in analysis options must throttled when restarting LS', async () => {
             await startLanguageServer();
@@ -112,8 +119,8 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
-            verify(languageServer.start(resource, languageClientOptions)).twice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).twice();
+            verify(languageServer.start(resource, undefined, languageClientOptions)).twice();
         });
         test('Multiple changes in analysis options must restart LS twice', async () => {
             await startLanguageServer();
@@ -133,8 +140,8 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).once();
 
             verify(analysisOptions.getAnalysisOptions()).twice();
-            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).twice();
-            verify(languageServer.start(resource, languageClientOptions)).twice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).twice();
+            verify(languageServer.start(resource, undefined, languageClientOptions)).twice();
 
             await onChangeAnalysisHandler.call(manager);
             await onChangeAnalysisHandler.call(manager);
@@ -151,8 +158,8 @@ suite('Language Server - Manager', () => {
             verify(languageServer.dispose()).twice();
 
             verify(analysisOptions.getAnalysisOptions()).thrice();
-            verify(serviceContainer.get<ILanguageServer>(ILanguageServer)).thrice();
-            verify(languageServer.start(resource, languageClientOptions)).thrice();
+            verify(serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy)).thrice();
+            verify(languageServer.start(resource, undefined, languageClientOptions)).thrice();
         });
         test('Must load extension when command was been sent before starting LS', async () => {
             const args = { x: 1 };

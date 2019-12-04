@@ -39,6 +39,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private executedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
+    private metadataUpdatedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
@@ -172,6 +173,10 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         return this.savedEvent.event;
     }
 
+    public get metadataUpdated(): Event<INotebookEditor> {
+        return this.metadataUpdatedEvent.event;
+    }
+
     public get isDirty(): boolean {
         return this._dirty;
     }
@@ -283,8 +288,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     protected submitCode(code: string, file: string, line: number, id?: string, editor?: TextEditor, debug?: boolean): Promise<boolean> {
         // When code is executed, update the version number in the metadata.
-        this.updateVersionInfoInNotebook().ignoreErrors();
-        return super.submitCode(code, file, line, id, editor, debug);
+        return super.submitCode(code, file, line, id, editor, debug).then((value) => {
+            this.updateVersionInfoInNotebook().then(() => {
+                this.metadataUpdatedEvent.fire(this);
+            }).catch(ex => {
+                traceError('Failed to update version info in notebook file metadata', ex);
+            });
+            return value;
+        });
     }
 
     @captureTelemetry(Telemetry.SubmitCellThroughInput, undefined, false)
@@ -439,13 +450,24 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      * @memberof NativeEditor
      */
     private async updateVersionInfoInNotebook(): Promise<void> {
-        // Make sure we have notebook json
-        await this.ensureNotebookJson();
+        // Get our kernel_info and language_info from the current notebook
+        const notebook = this.getNotebook();
 
-        // Use the active interpreter
-        const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-        if (usableInterpreter && usableInterpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
-            this.notebookJson.metadata.language_info.version = `${usableInterpreter.version.major}.${usableInterpreter.version.minor}.${usableInterpreter.version.patch}`;
+        if (notebook) {
+            const [interpreter, kernelSpec] = await Promise.all([notebook.getMatchingInterpreter(), notebook.getKernelSpec()]);
+
+            if (interpreter && interpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
+                this.notebookJson.metadata.language_info.version = interpreter.version.raw;
+            }
+
+            if (kernelSpec && this.notebookJson.metadata && !this.notebookJson.metadata.kernelspec) {
+                // Add a new spec in this case
+                this.notebookJson.metadata.kernelspec = { name: kernelSpec.name, display_name: kernelSpec.display_name };
+            } else if (kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
+                // Spec exists, just update name and display_name
+                this.notebookJson.metadata.kernelspec.name = kernelSpec.name;
+                this.notebookJson.metadata.kernelspec.display_name = kernelSpec.display_name;
+            }
         }
     }
 

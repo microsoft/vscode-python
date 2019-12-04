@@ -9,7 +9,7 @@ import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
-import { LanguageServer } from '../../../client/activation/languageServer/languageServer';
+import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { ILanguageClientFactory } from '../../../client/activation/types';
 import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
@@ -21,7 +21,7 @@ import { ITestManagementService } from '../../../client/testing/types';
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
 suite('Language Server - LanguageServer', () => {
-    class LanguageServerTest extends LanguageServer {
+    class LanguageServerTest extends LanguageServerProxy {
         // tslint:disable-next-line:no-unnecessary-override
         public async registerTestServices() {
             return super.registerTestServices();
@@ -43,7 +43,7 @@ suite('Language Server - LanguageServer', () => {
         commandManager.setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).returns(() => {
             return typemoq.Mock.ofType<Disposable>().object;
         });
-        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object, commandManager.object);
+        server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
     });
     teardown(() => {
         client.setup(c => c.stop()).returns(() => Promise.resolve());
@@ -76,7 +76,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => onTelemetryDisposable.object);
 
         client.setup(c => (c as any).then).returns(() => undefined);
-        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
         client.setup(c => c.stop()).returns(() => Promise.resolve());
         client
@@ -96,7 +96,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => false as any)
             .verifiable(typemoq.Times.once());
 
-        server.start(uri, options).ignoreErrors();
+        server.start(uri, undefined, options).ignoreErrors();
 
         // Even though server has started request should not yet be sent out.
         // Not until language client has initialized.
@@ -132,7 +132,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => onTelemetryDisposable.object);
 
         client.setup(c => (c as any).then).returns(() => undefined);
-        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
         client.setup(c => c.stop()).returns(() => Promise.resolve());
         client
@@ -152,7 +152,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => false as any)
             .verifiable(typemoq.Times.once());
 
-        const promise = server.start(uri, options);
+        const promise = server.start(uri, undefined, options);
 
         // Even though server has started request should not yet be sent out.
         // Not until language client has initialized.
@@ -203,7 +203,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
 
         client.setup(c => (c as any).then).returns(() => undefined);
-        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
         client.setup(c => c.stop()).returns(() => Promise.resolve());
         client
@@ -211,7 +211,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
 
-        server.start(uri, options).ignoreErrors();
+        server.start(uri, undefined, options).ignoreErrors();
 
         // Initialize language client and verify that the request was sent out.
         client
@@ -249,7 +249,7 @@ suite('Language Server - LanguageServer', () => {
             .verifiable(typemoq.Times.once());
 
         client.setup(c => (c as any).then).returns(() => undefined);
-        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
         client.setup(c => c.stop()).returns(() => Promise.resolve());
         client
@@ -257,7 +257,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
 
-        server.start(uri, options).ignoreErrors();
+        server.start(uri, undefined, options).ignoreErrors();
 
         // Initialize language client and verify that the request was sent out.
         client
@@ -291,7 +291,7 @@ suite('Language Server - LanguageServer', () => {
             .setup(c => c.initializeResult)
             .returns(() => undefined)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(clientFactory.createLanguageClient(uri, options)).thenResolve(client.object);
+        when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
         const startDisposable = typemoq.Mock.ofType<IDisposable>();
         client.setup(c => c.stop()).returns(() => Promise.resolve());
         client
@@ -299,7 +299,7 @@ suite('Language Server - LanguageServer', () => {
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
 
-        const promise = server.start(uri, options);
+        const promise = server.start(uri, undefined, options);
         // Wait until we start ls client and check if it is ready.
         await sleep(200);
         // Confirm we checked if it is ready.

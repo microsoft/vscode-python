@@ -1,6 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
 //tslint:disable:trailing-comma no-any
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
@@ -18,11 +17,49 @@ import {
     Uri,
     ViewColumn,
     WorkspaceConfiguration,
-    WorkspaceFolder
+    WorkspaceFolder,
+    WorkspaceFoldersChangeEvent
 } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILanguageServer, ILanguageServerAnalysisOptions } from '../../client/activation/types';
+import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
+import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
+import { LanguageServerDownloader } from '../../client/activation/languageServer/downloader';
+import {
+    LanguageServerCompatibilityService
+} from '../../client/activation/languageServer/languageServerCompatibilityService';
+import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
+import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
+import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
+import { LanguageServerManager } from '../../client/activation/languageServer/manager';
+import {
+    ILanguageServerActivator,
+    ILanguageServerAnalysisOptions,
+    ILanguageServerCache,
+    ILanguageServerCompatibilityService,
+    ILanguageServerDownloader,
+    ILanguageServerExtension,
+    ILanguageServerFolderService,
+    ILanguageServerManager,
+    ILanguageServerPackageService,
+    ILanguageServerProxy,
+    LanguageServerActivator
+} from '../../client/activation/types';
+import {
+    LSNotSupportedDiagnosticService,
+    LSNotSupportedDiagnosticServiceId
+} from '../../client/application/diagnostics/checks/lsNotSupported';
+import { DiagnosticFilterService } from '../../client/application/diagnostics/filter';
+import {
+    DiagnosticCommandPromptHandlerService,
+    DiagnosticCommandPromptHandlerServiceId,
+    MessageCommandPrompt
+} from '../../client/application/diagnostics/promptHandler';
+import {
+    IDiagnosticFilterService,
+    IDiagnosticHandlerService,
+    IDiagnosticsService
+} from '../../client/application/diagnostics/types';
 import { TerminalManager } from '../../client/common/application/terminalManager';
 import {
     IApplicationShell,
@@ -42,6 +79,8 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
+import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { IInstallationChannelManager } from '../../client/common/installer/types';
@@ -82,6 +121,7 @@ import {
     TerminalActivationProviders
 } from '../../client/common/terminal/types';
 import {
+    BANNER_NAME_LS_SURVEY,
     IAsyncDisposableRegistry,
     IConfigurationService,
     ICurrentProcess,
@@ -91,6 +131,7 @@ import {
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
+    IPythonExtensionBanner,
     IsWindows
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
@@ -110,9 +151,7 @@ import { CodeWatcher } from '../../client/datascience/editor-integration/codewat
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { GatherExecution } from '../../client/datascience/gather/gather';
 import { GatherListener } from '../../client/datascience/gather/gatherListener';
-import {
-    DotNetIntellisenseProvider
-} from '../../client/datascience/interactive-common/intellisense/dotNetIntellisenseProvider';
+import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
 import { AutoSaveService } from '../../client/datascience/interactive-ipynb/autoSaveService';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
@@ -242,6 +281,7 @@ import {
 import { IPipEnvServiceHelper, IPythonInPathCommandProvider } from '../../client/interpreter/locators/types';
 import { VirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs';
 import { IVirtualEnvironmentManager } from '../../client/interpreter/virtualEnvs/types';
+import { LanguageServerSurveyBanner } from '../../client/languageServices/languageServerSurveyBanner';
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
@@ -253,8 +293,8 @@ import { MockDocumentManager } from './mockDocumentManager';
 import { MockExtensions } from './mockExtensions';
 import { MockJupyterManager, SupportedCommands } from './mockJupyterManager';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
-import { MockLanguageServer } from './mockLanguageServer';
 import { MockLanguageServerAnalysisOptions } from './mockLanguageServerAnalysisOptions';
+import { MockLanguageServerProxy } from './mockLanguageServerProxy';
 import { MockLiveShareApi } from './mockLiveShare';
 import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { blurWindow, createMessageEvent } from './reactHelpers';
@@ -283,10 +323,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     private shouldMockJupyter: boolean;
     private asyncRegistry: AsyncDisposableRegistry;
     private configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
+    private worksaceFoldersChangedEvent = new EventEmitter<WorkspaceFoldersChangeEvent>();
     private documentManager = new MockDocumentManager();
     private workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
+        sysVersion: '1.0.0.0',
+        sysPrefix: 'Python',
+        type: InterpreterType.Unknown,
+        architecture: Architecture.x64,
+    };
+    private workingPython2: PythonInterpreter = {
+        path: '/foo/baz/python.exe',
+        version: new SemVer('3.6.7-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
         type: InterpreterType.Unknown,
@@ -306,6 +355,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     public get workingInterpreter() {
         return this.workingPython;
+    }
+
+    public get workingInterpreter2() {
+        return this.workingPython2;
     }
 
     public get onContextSet(): Event<{ name: string; value: boolean }> {
@@ -399,9 +452,13 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-        this.serviceManager.addSingleton<ILanguageServer>(ILanguageServer, MockLanguageServer);
+        this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerActivator.DotNet);
+        this.serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
+        this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy);
+        this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
+        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
-        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
+        this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);
         this.serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser);
         this.serviceManager.addSingleton<IDebugService>(IDebugService, MockDebuggerService);
@@ -418,6 +475,28 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
         this.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
         this.serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
+        this.serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticService, LSNotSupportedDiagnosticServiceId);
+        this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(ILanguageServerCompatibilityService, LanguageServerCompatibilityService);
+        this.serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
+        this.serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
+
+        // Don't check for dot net compatibility
+        const dotNetCompability = mock(DotNetCompatibilityService);
+        when(dotNetCompability.isSupported()).thenResolve(true);
+        this.serviceManager.addSingletonInstance<IDotNetCompatibilityService>(IDotNetCompatibilityService, instance(dotNetCompability));
+
+        // Don't allow a banner to show up
+        const extensionBanner = mock(LanguageServerSurveyBanner);
+        this.serviceManager.addSingletonInstance<IPythonExtensionBanner>(IPythonExtensionBanner, instance(extensionBanner), BANNER_NAME_LS_SURVEY);
+
+        // Don't allow the download to happen
+        const downloader = mock(LanguageServerDownloader);
+        this.serviceManager.addSingletonInstance<ILanguageServerDownloader>(ILanguageServerDownloader, instance(downloader));
+
+        const folderService = mock(LanguageServerFolderService);
+        const packageService = mock(LanguageServerPackageService);
+        this.serviceManager.addSingletonInstance<ILanguageServerFolderService>(ILanguageServerFolderService, instance(folderService));
+        this.serviceManager.addSingletonInstance<ILanguageServerPackageService>(ILanguageServerPackageService, instance(packageService));
 
         // Disable experiments.
         const experimentManager = mock(ExperimentsManager);
@@ -471,6 +550,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             runStartupCommands: '',
             debugJustMyCode: true
         };
+        this.pythonSettings.jediEnabled = false;
+        this.pythonSettings.downloadLanguageServer = false;
 
         const workspaceConfig = this.mockedWorkspaceConfig = mock(MockWorkspaceConfiguration);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => this.pythonSettings);
@@ -480,6 +561,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.getConfiguration(anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         datascience.setup(d => d.activationStartTime).returns(() => startTime);
@@ -604,6 +686,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const interpreterManager = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         interpreterManager.initialize();
 
+        this.addInterpreter(this.workingPython2, SupportedCommands.all);
         this.addInterpreter(this.workingPython, SupportedCommands.all);
     }
 
@@ -716,10 +799,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         if (index >= 0) {
             this.extraListeners.splice(index, 1);
         }
-    }
-
-    public enableJedi(enabled: boolean) {
-        this.pythonSettings.jediEnabled = enabled;
     }
 
     public addInterpreter(newInterpreter: PythonInterpreter, commands: SupportedCommands) {

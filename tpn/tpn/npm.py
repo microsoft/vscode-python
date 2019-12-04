@@ -109,7 +109,9 @@ async def fill_in_licenses(requested_projects):
     failures = {}
     names = list(requested_projects.keys())
     urls = (requested_projects[name].url for name in names)
-    async with aiohttp.ClientSession(connector=aiohttp.TCPConnector(verify_ssl=False)) as session:
+    async with aiohttp.ClientSession(
+        connector=aiohttp.TCPConnector(ssl=False)
+    ) as session:
         tasks = (_fetch_license(session, url) for url in urls)
         for name, license_or_exc in zip(names, await asyncio.gather(*tasks)):
             details = requested_projects[name]

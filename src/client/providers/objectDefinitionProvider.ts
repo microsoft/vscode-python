@@ -85,9 +85,3 @@ export class PythonObjectDefinitionProvider {
         return vscode.window.showInputBox({ prompt: 'Enter Object Path', validateInput: this.intputValidation });
     }
 }
-
-export function activateGoToObjectDefinitionProvider(jediFactory: JediFactory): vscode.Disposable[] {
-    const def = new PythonObjectDefinitionProvider(jediFactory);
-    const commandRegistration = vscode.commands.registerCommand('python.goToPythonObject', () => def.goToObjectDefinition());
-    return [def, commandRegistration] as vscode.Disposable[];
-}

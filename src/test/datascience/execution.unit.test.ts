@@ -127,6 +127,10 @@ class MockJupyterNotebook implements INotebook {
     public getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
         return Promise.resolve(undefined);
     }
+
+    public getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
+        return Promise.resolve(undefined);
+    }
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
@@ -718,6 +722,7 @@ suite('Jupyter Execution', async () => {
                 mockSessionManager,
                 instance(workspaceService),
                 instance(configService),
+                instance(activationHelper),
                 instance(serviceContainer))
         };
     }
