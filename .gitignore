@@ -39,3 +39,7 @@ tmp/**
 test-results.xml
 uitests/out/**
 !build/
+
+# This is temporary.  We will remove it when we adjust to not leave 
+# a file behind in src/test/interpreters/locators/workspaceVirtualEnvService.test.ts.
+src/test/get-pip.py
