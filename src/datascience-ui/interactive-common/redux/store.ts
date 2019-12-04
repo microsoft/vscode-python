@@ -50,14 +50,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
             kernel: {
-                version: {
-                    raw: '3.6.9',
-                    major: 3,
-                    minor: 6,
-                    patch: 9,
-                    build: [],
-                    prerelease: []
-                },
+                displayName: 'Python',
                 uri: 'No Kernel',
                 jupyterServerStatus: ServerStatus.NotStarted
             }

@@ -38,7 +38,7 @@ export namespace Kernel {
             kernel: {
                 uri: arg.payload.uri,
                 jupyterServerStatus: arg.payload.jupyterServerStatus,
-                version: arg.payload.version
+                displayName: arg.payload.displayName
             }
         };
     }

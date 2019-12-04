@@ -7,7 +7,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
-import { IDataScienceSettings, Version } from '../../client/common/types';
+import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
@@ -83,7 +83,7 @@ export interface IFont {
 export interface IKernelState {
     jupyterServerStatus: ServerStatus;
     uri: string;
-    version: Version;
+    displayName: string;
 }
 
 export enum ServerStatus {
@@ -154,14 +154,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         testMode: true,
         kernel: {
             uri: 'No Kernel',
-            version: {
-                raw: '3.6.9',
-                major: 3,
-                minor: 6,
-                patch: 9,
-                build: [],
-                prerelease: []
-            },
+            displayName: 'Python',
             jupyterServerStatus: ServerStatus.NotStarted
         }
     };

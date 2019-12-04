@@ -5,19 +5,8 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import {
-    CancellationToken,
-    CodeLens,
-    CodeLensProvider,
-    DebugSession,
-    Disposable,
-    Event,
-    Range,
-    TextDocument,
-    TextEditor,
-    Uri
-} from 'vscode';
-
+import { CancellationToken, CodeLens, CodeLensProvider, DebugSession, Disposable, Event, Range, TextDocument, TextEditor, Uri } from 'vscode';
+import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
@@ -84,6 +73,8 @@ export interface INotebookServer extends IAsyncDisposable {
     getConnectionInfo(): IConnection | undefined;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     shutdown(): Promise<void>;
+    getServerStatus(): Promise<ServerStatus>;
+    getKernelDisplayName(): string;
 }
 
 export interface INotebook extends IAsyncDisposable {

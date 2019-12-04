@@ -27,13 +27,7 @@ import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonDaemonExecutionService } from '../../client/common/process/pythonDaemon';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
-import {
-    ExecutionResult,
-    IProcessService,
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    Output
-} from '../../client/common/process/types';
+import { ExecutionResult, IProcessService, IPythonExecutionService, ObservableExecutionResult, Output } from '../../client/common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
@@ -42,23 +36,14 @@ import { Identifiers, PythonDaemonModule } from '../../client/datascience/consta
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import {
-    ICell,
-    IConnection,
-    IJupyterKernelSpec,
-    INotebook,
-    INotebookCompletion,
-    INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo,
-    InterruptResult
-} from '../../client/datascience/types';
+import { ICell, IConnection, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
+import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { getOSType, OSType } from '../common';
 import { noop, sleep } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -191,7 +176,18 @@ class MockJupyterServer implements INotebookServer {
             this.notebookFile.dispose(); // This destroy any unwanted kernel specs if necessary
             this.notebookFile = undefined;
         }
+    }
 
+    public getServerStatus() {
+        return Promise.resolve(ServerStatus.NotStarted);
+    }
+
+    public getKernelDisplayName(): string {
+        if (this.launchInfo && this.launchInfo.kernelSpec) {
+            return this.launchInfo.kernelSpec.display_name;
+        }
+
+        return 'Python';
     }
 }
 
@@ -455,7 +451,7 @@ suite('Jupyter Execution', async () => {
             .returns(() => result);
     }
 
-    function createKernelSpecs(specs: {name: string; resourceDir: string}[]): Record<string, any> {
+    function createKernelSpecs(specs: { name: string; resourceDir: string }[]): Record<string, any> {
         const models: Record<string, any> = {};
         specs.forEach(spec => {
             models[spec.name] = {
@@ -480,18 +476,18 @@ suite('Jupyter Execution', async () => {
         setupPythonServiceWithFunc(service, 'jupyter', ['kernelspec', 'list', '--json'], () => {
             // Return different results after we install our kernel
             if (ipykernelInstallCount > 0) {
-                const kernelSpecs = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}, {name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
+                const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }, { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             } else {
-                const kernelSpecs = createKernelSpecs([{name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
+                const kernelSpecs = createKernelSpecs([{ name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
         });
-        const kernelSpecs2 = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}, {name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
+        const kernelSpecs2 = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }, { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }]);
         setupPythonService(service, 'jupyter', ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) }));
         setupPythonServiceWithFunc(service, 'ipykernel', ['install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
             ipykernelInstallCount += 1;
-            const kernelSpecs = createKernelSpecs([{name: 'somename', resourceDir: path.dirname(workingKernelSpec)}]);
+            const kernelSpecs = createKernelSpecs([{ name: 'somename', resourceDir: path.dirname(workingKernelSpec) }]);
             return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
         });
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
@@ -505,7 +501,7 @@ suite('Jupyter Execution', async () => {
         setupPythonService(service, 'jupyter', ['notebook', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         setupPythonService(service, 'jupyter', ['kernelspec', '--version'], Promise.resolve({ stdout: '1.1.1.1' }));
         service.setup(x => x.getInterpreterInformation()).returns(() => Promise.resolve(missingKernelPython));
-        const kernelSpecs = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}]);
+        const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
         setupPythonService(service, 'jupyter', ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs) }));
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupPythonService(service, undefined, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
@@ -526,18 +522,18 @@ suite('Jupyter Execution', async () => {
         setupProcessServiceExecWithFunc(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], () => {
             // Return different results after we install our kernel
             if (ipykernelInstallCount > 0) {
-                const kernelSpecs = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}, {name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
+                const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }, { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             } else {
-                const kernelSpecs = createKernelSpecs([{name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
+                const kernelSpecs = createKernelSpecs([{ name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }]);
                 return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
             }
         });
-        const kernelSpecs2 = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}, {name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0'}]);
-        setupProcessServiceExec(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2)}));
+        const kernelSpecs2 = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }, { name: '0e8519db-0895-416c-96df-fa80131ecea0', resourceDir: 'C:\\Users\\rchiodo\\AppData\\Roaming\\jupyter\\kernels\\0e8519db-0895-416c-96df-fa80131ecea0' }]);
+        setupProcessServiceExec(service, workingPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs2) }));
         setupProcessServiceExecWithFunc(service, workingPython.path, ['-m', 'ipykernel', 'install', '--user', '--name', /\w+-\w+-\w+-\w+-\w+/, '--display-name', `'Python Interactive'`], () => {
             ipykernelInstallCount += 1;
-            const kernelSpecs = createKernelSpecs([{name: 'somename', resourceDir: path.dirname(workingKernelSpec)}]);
+            const kernelSpecs = createKernelSpecs([{ name: 'somename', resourceDir: path.dirname(workingKernelSpec) }]);
             return Promise.resolve({ stdout: JSON.stringify(kernelSpecs) });
         });
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
@@ -547,7 +543,7 @@ suite('Jupyter Execution', async () => {
     }
 
     function setupMissingKernelProcessService(service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
-        const kernelSpecs = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}]);
+        const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
         setupProcessServiceExec(service, missingKernelPython.path, ['-m', 'jupyter', 'kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs) }));
         const getServerInfoPath = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
         setupProcessServiceExec(service, missingKernelPython.path, [getServerInfoPath], Promise.resolve({ stdout: 'failure to get server infos' }));
@@ -556,7 +552,7 @@ suite('Jupyter Execution', async () => {
     }
 
     function setupPathProcessService(jupyterPath: string, service: TypeMoq.IMock<IProcessService>, notebookStdErr?: string[]) {
-        const kernelSpecs = createKernelSpecs([{name: 'working', resourceDir: path.dirname(workingKernelSpec)}]);
+        const kernelSpecs = createKernelSpecs([{ name: 'working', resourceDir: path.dirname(workingKernelSpec) }]);
         setupProcessServiceExec(service, jupyterPath, ['kernelspec', 'list', '--json'], Promise.resolve({ stdout: JSON.stringify(kernelSpecs) }));
         setupProcessServiceExecObservable(service, jupyterPath, ['kernelspec', 'list', '--json'], [], []);
         setupProcessServiceExec(service, jupyterPath, ['--version'], Promise.resolve({ stdout: '1.1.1.1' }));

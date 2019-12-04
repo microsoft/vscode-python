@@ -197,7 +197,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     <div className='kernel-status' style={dynamicFont}>
                         <div className='kernel-status-section' onClick={selectServer} role='button'>{getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}</div>
                         <div className='kernel-status-divider'/>
-                        <div className='kernel-status-section' onClick={selectKernel} role='button'>Python {this.props.kernel.version.raw}: {this.props.kernel.jupyterServerStatus}</div>
+                        <div className='kernel-status-section' onClick={selectKernel} role='button'>{this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}</div>
                     </div>
                 </div>
                 <div className='toolbar-divider'/>

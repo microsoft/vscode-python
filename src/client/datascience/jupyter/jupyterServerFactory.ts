@@ -1,26 +1,17 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import {
-    IConnection,
-    IDataScience,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo
-} from '../types';
+import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../types';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
@@ -126,5 +117,18 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
     public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
         const server = await this.serverFactory.get();
         return server.waitForConnect();
+    }
+
+    public async getServerStatus(): Promise<ServerStatus> {
+        const server = await this.serverFactory.get();
+        return server.getServerStatus();
+    }
+
+    public getKernelDisplayName(): string {
+        if (this.launchInfo && this.launchInfo.kernelSpec) {
+            return this.launchInfo.kernelSpec.display_name;
+        }
+
+        return 'Python';
     }
 }

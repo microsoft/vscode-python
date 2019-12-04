@@ -5,21 +5,13 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
 import * as localize from '../../../common/utils/localize';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IConnection,
-    IDataScience,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo
-} from '../../types';
+import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../../types';
 import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ILiveShareParticipant } from './types';
@@ -31,6 +23,8 @@ export class GuestJupyterServer
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();
     private _id = uuid();
     private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
+    private status: ServerStatus = ServerStatus.NotStarted;
+
     constructor(
         private liveShare: ILiveShareApi,
         private dataScience: IDataScience,
@@ -70,6 +64,13 @@ export class GuestJupyterServer
             this.notebooks.delete(resource.toString());
             return oldDispose();
         };
+
+        if (this.status === ServerStatus.NotStarted) {
+            this.status = ServerStatus.Starting;
+        } else {
+            this.status = ServerStatus.Restarting;
+        }
+
         return result;
     }
 
@@ -93,6 +94,7 @@ export class GuestJupyterServer
         const service = await this.waitForService();
         if (service) {
             await service.request(LiveShareCommands.disposeServer, []);
+            this.status = ServerStatus.Dead;
         }
     }
 
@@ -138,5 +140,17 @@ export class GuestJupyterServer
                 throw new Error(localize.DataScience.liveShareSyncFailure());
             }
         }
+    }
+
+    public getServerStatus() {
+        return Promise.resolve(this.status);
+    }
+
+    public getKernelDisplayName(): string {
+        if (this.launchInfo && this.launchInfo.kernelSpec) {
+            return this.launchInfo.kernelSpec.display_name;
+        }
+
+        return 'Python';
     }
 }
