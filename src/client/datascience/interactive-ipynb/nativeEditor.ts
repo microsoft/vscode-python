@@ -139,11 +139,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Indicate we have our identity
         this.loadedPromise.resolve();
 
-        // Update our title to match
-        this.setTitle(path.basename(file.fsPath));
-
         // Load the web panel using our file path
         await super.loadWebPanel(path.dirname(file.fsPath));
+
+        // Update our title to match
+        this.setTitle(path.basename(file.fsPath));
 
         // Show ourselves
         await this.show();

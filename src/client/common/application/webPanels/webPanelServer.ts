@@ -10,6 +10,7 @@ import * as Stream from 'stream';
 
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { Identifiers } from '../../../datascience/constants';
+import { SharedMessages } from '../../../datascience/messages';
 import { noop } from '../../utils/misc';
 
 interface INotebookState {
@@ -103,6 +104,15 @@ async function generateFileResponse(ctx: Koa.ParameterizedContext) {
     ctx.body = fs.createReadStream(filePath);
 }
 
+// Debugging tips:
+// As the developer tools no longer work when using an http source for an iframe, it can be difficult to debug the code below.
+// Here's what I did:
+// 1) If you get no output, try entering the URL of the server into Chrome on the same machine as the extension.
+//    You can then debug this code outside of a frame, but only on startup
+// 2) If you get the wrong output, and you think the error is in the react code, set the 'python.dataScience.skipWebViewServer' to true in your settings.json.
+//    This will switch the code to use the old way to render.
+// 3) If you suspect some of the code below but you do get output on startup, copy some of the code into a codepen and debug it there.
+
 // tslint:disable: no-any
 function generateReactHtml(query: any) {
     const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
@@ -118,7 +128,7 @@ function generateReactHtml(query: any) {
             <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
             <title>React App</title>
         </head>
-        <body>
+        <body class='${query.baseTheme}'>
             <noscript>You need to enable JavaScript to run this app.</noscript>
             <div id="root"></div>
             <script type="text/javascript">
@@ -132,6 +142,9 @@ function generateReactHtml(query: any) {
 
                     return "${uriBase}" + relativePath;
                 }
+            </script>
+            <script type="text/javascript">
+            ${getStyleUpdateScript()}
             </script>
             ${scripts.map((script: string) => `<script type="text/javascript" src="${script}"></script>`).join('\n')}
         </body>
@@ -171,5 +184,42 @@ function getVsCodeApiScript(state: any) {
         delete window.parent;
         delete window.top;
         delete window.frameElement;
+    `;
+}
+
+function getStyleUpdateScript() {
+    return `
+        window.addEventListener('message', (ev) => {
+            // Do all of this here instead of in the react code so that whether or not we're using a server is
+            // transparent to the react code. It just assumes the root is correct.
+            if (ev.data && ev.data.type && ev.data.type === '${SharedMessages.StyleUpdate}') {
+                window.console.log('WebServer Frame: Received style update');
+                try {
+                    document.documentElement.setAttribute('style', ev.data.payload.styleText);
+                    document.body.classList.remove('vscode-light', 'vscode-dark', 'vscode-high-contrast');
+                    document.body.classList.add(ev.data.payload.bodyClass);
+                    let defaultStylesNode = document.getElementById('_defaultStyles');
+                    if (defaultStylesNode) {
+                        defaultStylesNode.remove();
+                    }
+                    defaultStylesNode = document.createElement('style');
+                    defaultStylesNode.appendChild(document.createTextNode(ev.data.payload.defaultStyles));
+                    document.head.appendChild(defaultStylesNode);
+
+                    // The body padding is off because of the assumptions made about frames being inside of each other
+                    // Remove the padding on the body style
+                    const rules = [...defaultStylesNode.sheet.cssRules];
+                    const index = rules.findIndex(r => r.selectorText === 'body');
+                    if (index >= 0) {
+                        rules[index].style.padding = '';
+                    }
+
+                } catch (e) {
+                    window.console.log('WebServer Frame: error ' + e.toString());
+                }
+            } else if (ev.data && ev.data.type) {
+                window.console.log('WebServer Frame: Received message ' + ev.data.type);
+            }
+        });
     `;
 }

@@ -8,6 +8,8 @@ import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewPanel, window } from 'vscode';
 
 import { Identifiers } from '../../../datascience/constants';
+import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
+import { SharedMessages } from '../../../datascience/messages';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
@@ -78,6 +80,7 @@ export class WebPanel implements IWebPanel {
     }
 
     public set title(newTitle: string) {
+        this.options.title = newTitle;
         if (this.panel) {
             this.panel.title = newTitle;
         }
@@ -173,6 +176,16 @@ export class WebPanel implements IWebPanel {
             </head>
             <body>
                 <script type="text/javascript">
+                    const copyStylesToHostFrame = () => {
+                        const hostFrame = document.getElementById('hostframe');
+                        if (hostFrame) {
+                            const styleText = document.documentElement.attributes['style'].nodeValue;
+                            const bodyClass = document.body.className;
+                            const defaultStyles = document.getElementById('_defaultStyles').innerText;
+                            window.console.log('posting styles to frame ');
+                            hostFrame.contentWindow.postMessage({ type: '${SharedMessages.StyleUpdate}', payload: { styleText, bodyClass, defaultStyles } }, '*');
+                        }
+                    };
                     const vscodeApi = acquireVsCodeApi ? acquireVsCodeApi() : undefined;
                     window.addEventListener('message', (ev) => {
                         const isFromFrame = ev.data && ev.data.command === 'onmessage';
@@ -180,6 +193,11 @@ export class WebPanel implements IWebPanel {
                             window.console.log('posting to vscode');
                             window.console.log(JSON.stringify(ev.data.data));
                             vscodeApi.postMessage(ev.data.data);
+
+                            // If the started message, send the styles over. This should mean the DOM is loaded on the other side
+                            if (ev.data.data.type && ev.data.data.type === '${InteractiveWindowMessages.Started}') {
+                                copyStylesToHostFrame();
+                            }
                         } else if (!isFromFrame) {
                             window.console.log('posting to frame');
                             window.console.log(ev.data.type);
@@ -189,9 +207,24 @@ export class WebPanel implements IWebPanel {
                             }
                         }
                     });
-                    //# sourceURL=listener.js
+                    const styleObserver = new MutationObserver(mutations => {
+                        copyStylesToHostFrame();
+                    });
+                    document.addEventListener('DOMContentLoaded', () => {
+                        styleObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
+                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${encodeURIComponent(this.options.cwd)}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${this.token}&baseTheme=' + document.body.className;
+                        const hostFrame = document.getElementById('hostframe');
+                        if (hostFrame) {
+                            hostFrame.src = newSrc;
+                        }
+                    });
+                    //# sourceURL=webPanel.js
                 </script>
-                <iframe id='hostframe' src="http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${this.options.cwd}&rootPath=${this.options.rootPath}&token=${this.token}" frameborder="0" style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
+                <iframe
+                    id='hostframe'
+                    src=''
+                    frameborder="0"
+                    style="left: 0px; display: block; margin: 0px; overflow: hidden; position: absolute; width: 100%; height: 100%; visibility: visible;"/>
             </body>
         </html>`;
     }
