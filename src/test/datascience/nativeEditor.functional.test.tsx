@@ -253,13 +253,15 @@ for _ in range(50):
             assert.equal(saveCalled, true, 'Save should have been called');
 
             // Click export and wait for a document to change
-            const documentChange = createDeferred();
+            const activeTextEditorChange = createDeferred();
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-            docManager.onDidChangeTextDocument(() => documentChange.resolve());
+            docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
             const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            // This can be slow, hence wait for a max of 5.
-            await waitForPromise(documentChange.promise, 5_000);
+
+            // This can be slow, hence wait for a max of 15.
+            await waitForPromise(activeTextEditorChange.promise, 15_000);
+
             // Verify the new document is valid python
             const newDoc = docManager.activeTextEditor;
             assert.ok(newDoc, 'New doc not created');
@@ -1228,7 +1230,7 @@ for _ in range(50):
 
                 // Now that the notebook is dirty, change the active editor.
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                docManager.didChangeEmitter.fire();
+                docManager.didChangeActiveTextEditorEmitter.fire();
                 // Also, send notification about changes to window state.
                 windowStateChangeHandlers.forEach(item => item({ focused: false }));
                 windowStateChangeHandlers.forEach(item => item({ focused: true }));
@@ -1251,7 +1253,7 @@ for _ in range(50):
 
                 // Now that the notebook is dirty, change the active editor.
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                docManager.didChangeEmitter.fire(newEditor);
+                docManager.didChangeActiveTextEditorEmitter.fire(newEditor);
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
@@ -1279,7 +1281,7 @@ for _ in range(50):
                 // Now that the notebook is dirty, change the active editor.
                 // This should not trigger a save of notebook (as its configured to save only when window state changes).
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                docManager.didChangeEmitter.fire();
+                docManager.didChangeActiveTextEditorEmitter.fire();
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                 await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
