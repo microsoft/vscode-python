@@ -5,7 +5,7 @@ import { IRefreshVariablesRequest, IScrollToCell } from '../../../client/datasci
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
-import { IKernel, IMainState } from '../../interactive-common/mainState';
+import { IKernelState, IMainState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import { CommonActionType, ICellAction, ICodeAction, IEditCellAction, ILinkClickAction, IScrollAction, IShowDataViewerAction, IShowPlotAction } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
@@ -64,5 +64,5 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.STARTDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.STOPDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<IScrollToCell>;
-    public [IncomingMessageActions.UPDATEKERNEL]: InteractiveReducerFunc<IKernel>;
+    public [IncomingMessageActions.UPDATEKERNEL]: InteractiveReducerFunc<IKernelState>;
 }

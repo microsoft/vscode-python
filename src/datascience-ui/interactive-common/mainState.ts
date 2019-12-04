@@ -7,7 +7,7 @@ import cloneDeep = require('lodash/cloneDeep');
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
-import { IDataScienceSettings } from '../../client/common/types';
+import { IDataScienceSettings, Version } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
@@ -72,7 +72,7 @@ export type IMainState = {
     activateCount: number;
     monacoReady: boolean;
     loaded: boolean;
-    kernel: IKernel;
+    kernel: IKernelState;
 };
 
 export interface IFont {
@@ -80,10 +80,19 @@ export interface IFont {
     family: string;
 }
 
-export interface IKernel {
-    status: string;
-    state: string;
-    version: string;
+export interface IKernelState {
+    jupyterServerStatus: ServerStatus;
+    uri: string;
+    version: Version;
+}
+
+export enum ServerStatus {
+    NotStarted = 'Not Started',
+    Busy = 'Busy',
+    Idle = 'Idle',
+    Dead = 'Dead',
+    Starting = 'Starting',
+    Restarting = 'Restarting'
 }
 
 // tslint:disable-next-line: no-multiline-string
@@ -144,9 +153,16 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         loaded: false,
         testMode: true,
         kernel: {
-            state: 'No Kernel',
-            version: '3',
-            status: 'Not started'
+            uri: 'No Kernel',
+            version: {
+                raw: '3.6.9',
+                major: 3,
+                minor: 6,
+                patch: 9,
+                build: [],
+                prerelease: []
+            },
+            jupyterServerStatus: ServerStatus.NotStarted
         }
     };
 }

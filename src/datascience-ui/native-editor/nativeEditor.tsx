@@ -110,7 +110,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     // tslint:disable: react-this-binding-issue
     private renderToolbarPanel() {
         const dynamicFont: React.CSSProperties = {
-            fontSize: this.props.font.size - 2,
+            fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
             fontFamily: this.props.font.family
         };
 
@@ -191,10 +191,10 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
                     </ImageButton>
                     <div onClick={selectKernel} className='kernel-status' style={dynamicFont} role='toolbar'>
-                        <div className='kernel-status-section'>Jupyter Server: {this.props.kernel.state}</div>
+                        <div className='kernel-status-section'>{getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}</div>
                         <div className='kernel-status-divider'/>
-                        <div className='kernel-status-section'>Python {this.props.kernel.version}:</div>
-                        <div className='kernel-status-section'>{this.props.kernel.status}</div>
+                        <div className='kernel-status-section'>Python {this.props.kernel.version.raw}:</div>
+                        <div className='kernel-status-section'>{this.props.kernel.jupyterServerStatus}</div>
                     </div>
                 </div>
                 <div className='toolbar-divider'/>

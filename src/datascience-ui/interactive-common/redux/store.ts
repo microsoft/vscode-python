@@ -8,7 +8,7 @@ import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState } from '../../interactive-common/mainState';
+import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
@@ -50,9 +50,16 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
             kernel: {
-                version: '3',
-                state: 'No Kernel',
-                status: 'Not started'
+                version: {
+                    raw: '3.6.9',
+                    major: 3,
+                    minor: 6,
+                    patch: 9,
+                    build: [],
+                    prerelease: []
+                },
+                uri: 'No Kernel',
+                jupyterServerStatus: ServerStatus.NotStarted
             }
         };
     }

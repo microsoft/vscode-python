@@ -7,12 +7,13 @@ import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem, TemporaryFile } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, WORKSPACE_MEMENTO } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, Version, WORKSPACE_MEMENTO } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -906,8 +907,24 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async selectKernel() {
         await this.dataScience.selectJupyterURI();
+        await this.updateKernelStatus(ServerStatus.Idle);
+    }
 
+    private async updateKernelStatus(status: ServerStatus) {
         const settings = this.configuration.getSettings();
-        await this.postMessage(InteractiveWindowMessages.UpdateKernel, { status: 'Idle', state: settings.datascience.jupyterServerURI, version: '3' });
+        const version: Version = {
+            raw: '3.6.9',
+            major: 3,
+            minor: 6,
+            patch: 9,
+            build: [],
+            prerelease: []
+        };
+
+        await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+            jupyterServerStatus: status,
+            uri: settings.datascience.jupyterServerURI,
+            version: version
+        });
     }
 }
