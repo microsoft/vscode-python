@@ -313,7 +313,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         }
     }
 
-    public getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {
+    public getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         return Promise.resolve([]);
     }
 

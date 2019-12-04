@@ -42,7 +42,8 @@ export class InterpreterSelector implements IInterpreterSelector {
             // tslint:disable-next-line:no-non-null-assertion
             label: suggestion.displayName!,
             detail: `${cachedPrefix}${detail}`,
-            path: suggestion.path
+            path: suggestion.path,
+            interpreter: suggestion
         };
     }
 

@@ -182,7 +182,7 @@ export interface IJupyterSessionManagerFactory {
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
     startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
-    getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]>;
+    getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
 }
@@ -281,6 +281,7 @@ export interface INotebookEditor extends IInteractiveBase {
     executed: Event<INotebookEditor>;
     modified: Event<INotebookEditor>;
     saved: Event<INotebookEditor>;
+    metadataUpdated: Event<INotebookEditor>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
