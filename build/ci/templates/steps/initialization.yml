@@ -41,6 +41,7 @@ steps:
     #
     # This task will only run if variable `NeedsPythonFunctionalReqs` is true.
     - bash: |
+        sudo apt-get update
         sudo apt-get install libsqlite3-dev
         version=$(python -V 2>&1 | grep -Po '(?<=Python )(.+)')
         wget https://www.python.org/ftp/python/$version/Python-$version.tar.xz
