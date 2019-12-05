@@ -130,12 +130,12 @@ class MockJupyterNotebook implements INotebook {
         return Promise.resolve();
     }
 
-    public getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
-        return Promise.resolve(undefined);
+    public getMatchingInterpreter(): PythonInterpreter | undefined {
+        return;
     }
 
-    public getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
-        return Promise.resolve(undefined);
+    public getKernelSpec(): IJupyterKernelSpec | undefined {
+        return;
     }
 }
 

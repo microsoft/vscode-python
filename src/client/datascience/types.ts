@@ -106,8 +106,8 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
-    getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
-    getKernelSpec(): Promise<IJupyterKernelSpec | undefined>;
+    getMatchingInterpreter(): PythonInterpreter | undefined;
+    getKernelSpec(): IJupyterKernelSpec | undefined;
 }
 
 export interface INotebookServerOptions {

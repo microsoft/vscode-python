@@ -464,11 +464,11 @@ export class JupyterNotebookBase implements INotebook {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    public async getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
+    public getMatchingInterpreter(): PythonInterpreter | undefined {
         return this.launchInfo.interpreter;
     }
 
-    public async getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
+    public getKernelSpec(): IJupyterKernelSpec | undefined {
         return this.launchInfo.kernelSpec;
     }
 

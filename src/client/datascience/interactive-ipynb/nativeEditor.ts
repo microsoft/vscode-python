@@ -454,7 +454,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const notebook = this.getNotebook();
 
         if (notebook) {
-            const [interpreter, kernelSpec] = await Promise.all([notebook.getMatchingInterpreter(), notebook.getKernelSpec()]);
+            const interpreter = notebook.getMatchingInterpreter();
+            const kernelSpec = notebook.getKernelSpec();
 
             if (interpreter && interpreter.version && this.notebookJson.metadata && this.notebookJson.metadata.language_info) {
                 this.notebookJson.metadata.language_info.version = interpreter.version.raw;
