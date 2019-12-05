@@ -19,7 +19,7 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { ProductInstaller } from '../../client/common/installer/productInstaller';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
@@ -37,7 +37,7 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IInstaller, ILogger } from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -46,7 +46,6 @@ import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterC
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
-import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import {
     ICell,
@@ -68,7 +67,6 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { getOSType, OSType } from '../common';
 import { noop, sleep } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-import { PYTHON_LANGUAGE } from '../../client/common/constants';
 
 class MockJupyterNotebook implements INotebook {
 
@@ -238,9 +236,7 @@ suite('Jupyter Execution', async () => {
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
     let kernelSelector: KernelSelector;
-    let kernelService: KernelService;
     let notebookStarter: NotebookStarter;
-    let installer: IInstaller;
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -720,8 +716,6 @@ suite('Jupyter Execution', async () => {
             path: ''
         }
         when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
-        installer = mock(ProductInstaller);
-        kernelService = new KernelService(commandFinder, instance(executionFactory), instance(interpreterService), instance(installer), instance(fileSystem), instance(activationHelper));
         notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService));
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
