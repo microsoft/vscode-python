@@ -118,7 +118,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
 
-
             if (!options || !options.uri) {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
