@@ -6,6 +6,8 @@
 import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../../../client/common/platform/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
@@ -23,13 +25,14 @@ suite('Data Science - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let interpreterSelector: IInterpreterSelector;
+    let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
     const activePython1KernelModel = { lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0), numberOfConnections: 10, name: 'py1' };
     const activeJuliaKernelModel = { lastActivityTime: new Date(2001, 1, 1, 12, 15, 0, 0), numberOfConnections: 10, name: 'julia' };
-    const python1KernelSpecModel = { display_name: 'Python display name', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'py1', path: 'somePath', metadata: {} };
-    const python3KernelSpecModel = { display_name: 'Python3', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'py3', path: 'somePath3', metadata: {} };
-    const juliaKernelSpecModel = { display_name: 'Julia display name', dispose: async () => noop(), language: 'julia', name: 'julia', path: 'j', metadata: {} };
-    const rKernelSpecModel = { display_name: 'R', dispose: async () => noop(), language: 'r', name: 'r', path: 'r', metadata: {} };
+    const python1KernelSpecModel = { argv: [], display_name: 'Python display name', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'py1', path: 'somePath', metadata: {} };
+    const python3KernelSpecModel = { argv: [], display_name: 'Python3', dispose: async () => noop(), language: PYTHON_LANGUAGE, name: 'py3', path: 'somePath3', metadata: {} };
+    const juliaKernelSpecModel = { argv: [], display_name: 'Julia display name', dispose: async () => noop(), language: 'julia', name: 'julia', path: 'j', metadata: {} };
+    const rKernelSpecModel = { argv: [], display_name: 'R', dispose: async () => noop(), language: 'r', name: 'r', path: 'r', metadata: {} };
 
     const allSpecs: IJupyterKernelSpec[] = [python1KernelSpecModel, python3KernelSpecModel, juliaKernelSpecModel, rKernelSpecModel];
 
@@ -58,7 +61,8 @@ suite('Data Science - KernelSelections', () => {
         interpreterSelector = mock(InterpreterSelector);
         sessionManager = mock(JupyterSessionManager);
         kernelService = mock(KernelService);
-        kernelSelectionProvider = new KernelSelectionProvider(instance(kernelService), instance(interpreterSelector));
+        fs = mock(FileSystem);
+        kernelSelectionProvider = new KernelSelectionProvider(instance(kernelService), instance(interpreterSelector), instance(fs));
     });
 
     test('Should return an empty list for remote kernels if there are none', async () => {

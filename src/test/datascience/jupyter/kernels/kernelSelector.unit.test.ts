@@ -17,7 +17,8 @@ import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IJupyterSessionManager } from '../../../../client/datascience/types';
-import { InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelSelector', () => {
@@ -25,9 +26,11 @@ suite('Data Science - KernelSelector', () => {
     let kernelService: KernelService;
     let sessionManager: IJupyterSessionManager;
     let kernelSelector: KernelSelector;
+    let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
     const kernelSpec = {
+        argv: [],
         display_name: 'Something',
         dispose: async () => noop(),
         language: PYTHON_LANGUAGE,
@@ -49,7 +52,8 @@ suite('Data Science - KernelSelector', () => {
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
         installer = mock(ProductInstaller);
-        kernelSelector = new KernelSelector(instance(kernelSelectionProvider), instance(appShell), instance(kernelService), instance(installer));
+        interpreterService = mock(InterpreterService);
+        kernelSelector = new KernelSelector(instance(kernelSelectionProvider), instance(appShell), instance(kernelService), instance(interpreterService), instance(installer));
     });
 
     test('Should display quick pick and return nothing when nothing is selected (remote sessions)', async () => {
