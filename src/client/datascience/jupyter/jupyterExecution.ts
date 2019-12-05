@@ -16,8 +16,6 @@ import { JupyterCommands, Telemetry } from '../constants';
 import {
     IConnection,
     IJupyterExecution,
-    IJupyterKernelSpec,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerLaunchInfo,
     INotebookServerOptions
@@ -27,7 +25,7 @@ import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { KernelSelector } from './kernels/kernelSelector';
+import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
 
 export class JupyterExecutionBase implements IJupyterExecution {
@@ -42,7 +40,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly interpreterService: IInterpreterService,
         private readonly logger: ILogger,
         private readonly disposableRegistry: IDisposableRegistry,
-        private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
         private readonly kernelSelector: KernelSelector,
@@ -105,11 +102,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelCreateCommand), cancelToken);
     }
 
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        // See if we can find the command kernelspec
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelSpecCommand), cancelToken);
-    }
-
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // Supported if we can run a notebook
         return this.isNotebookSupported(cancelToken);
@@ -120,8 +112,19 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
-            let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined; interpreter?: PythonInterpreter } | undefined;
+            // let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined; interpreter?: PythonInterpreter } | undefined;
+            let connection: IConnection | undefined;
+            let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
+            let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
+
+
+            if (!options || !options.uri) {
+                // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
+                // We can do this in parallel, while starting the server (faster).
+                traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
+                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(undefined, options?.metadata, cancelToken);
+            }
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
@@ -129,15 +132,15 @@ export class JupyterExecutionBase implements IJupyterExecution {
             while (tryCount < maxTries) {
                 try {
                     // Start or connect to the process
-                    startInfo = await this.startOrConnect(options, cancelToken);
+                    [connection, kernelSpecInterpreter] = await Promise.all([this.startOrConnect(options, cancelToken), kernelSpecInterpreterPromise]);
                     // Create a server that we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
-                        connectionInfo: startInfo.connection,
-                        interpreter: startInfo.interpreter,
-                        kernelSpec: startInfo.kernelSpec,
+                        connectionInfo: connection!,
+                        interpreter: kernelSpecInterpreter.interpreter,
+                        kernelSpec: kernelSpecInterpreter.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid(),
@@ -162,7 +165,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         traceInfo('Retry because of wait for idle problem.');
                         sendTelemetryEvent(Telemetry.SessionIdleTimeout);
                         tryCount += 1;
-                    } else if (startInfo) {
+                    } else if (connection) {
                         // Something else went wrong
                         if (options && options.uri) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
@@ -170,13 +173,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                                throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
+                                throw new JupyterSelfCertsError(connection.baseUrl);
                             } else {
-                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err));
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
+                            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err));
                         }
                     } else {
                         throw err;
@@ -230,16 +233,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
-        let connection: IConnection | undefined;
-        let kernelSpec: IJupyterKernelSpec | undefined;
-
+    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<IConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
+            traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
-            connection = await this.startNotebookServer(useDefaultConfig, cancelToken);
-            if (!connection) {
+            const connection = await this.startNotebookServer(useDefaultConfig, cancelToken);
+            if (connection) {
+                return connection;
+            } else {
                 // Throw a cancellation error if we were canceled.
                 Cancellation.throwIfCanceled(cancelToken);
 
@@ -248,19 +251,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            connection = createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
+            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
         }
-
-        // If we don't have a kernel spec yet, check using our current connection
-        if (connection?.localLaunch) {
-            const sessionManager = await this.sessionManagerFactory.create(connection);
-            traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-            kernelSpec = await this.kernelSelector.getKernelForLocalConnection(sessionManager, options?.metadata, cancelToken);
-            await sessionManager.dispose();
-        }
-
-        // Return the data we found.
-        return { connection, kernelSpec };
     }
 
     // tslint:disable-next-line: max-func-body-length

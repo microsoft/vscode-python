@@ -15,7 +15,6 @@ import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
@@ -23,7 +22,6 @@ import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { NotebookStarter } from '../notebookStarter';
-import { GuestJupyterSessionManagerFactory } from './guestJupyterSessionManagerFactory';
 import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ServerCache } from './serverCache';
 
@@ -39,7 +37,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -50,7 +47,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             interpreterService,
             logger,
             disposableRegistry,
-            new GuestJupyterSessionManagerFactory(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
             kernelSelector,
@@ -75,9 +71,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     }
     public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
-    }
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);

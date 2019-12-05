@@ -17,7 +17,6 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { IServiceContainer } from '../../ioc/types';
 import {
     IJupyterExecution,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../types';
@@ -38,7 +37,6 @@ type JupyterExecutionClassType = {
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -60,7 +58,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
@@ -77,7 +74,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             disposableRegistry,
             asyncRegistry,
             fileSystem,
-            sessionManagerFactory,
             workspace,
             configuration,
             kernelSelector,
@@ -119,10 +115,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     public async isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isKernelCreateSupported(cancelToken);
-    }
-    public async isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isKernelSpecSupported(cancelToken);
     }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();

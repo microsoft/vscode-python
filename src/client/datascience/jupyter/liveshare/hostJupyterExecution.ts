@@ -16,7 +16,6 @@ import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
     IJupyterExecution,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
@@ -41,7 +40,6 @@ export class HostJupyterExecution
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSys: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
         kernelSelector: KernelSelector,
@@ -52,7 +50,6 @@ export class HostJupyterExecution
             interpreterService,
             logger,
             disposableRegistry,
-            sessionManager,
             workspace,
             configService,
             kernelSelector,
@@ -101,7 +98,6 @@ export class HostJupyterExecution
                 service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
                 service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
                 service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
-                service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
                 service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                 service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
             }
@@ -137,10 +133,6 @@ export class HostJupyterExecution
     private onRemoteIsKernelCreateSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isKernelCreateSupported(cancellation);
-    }
-    private onRemoteIsKernelSpecSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.isKernelSpecSupported(cancellation);
     }
 
     private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {

@@ -343,7 +343,6 @@ export namespace LiveShareCommands {
     export const isNotebookSupported = 'isNotebookSupported';
     export const isImportSupported = 'isImportSupported';
     export const isKernelCreateSupported = 'isKernelCreateSupported';
-    export const isKernelSpecSupported = 'isKernelSpecSupported';
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
     export const executeObservable = 'executeObservable';
