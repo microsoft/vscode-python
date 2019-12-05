@@ -22,7 +22,6 @@ import {
 } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
-import { KernelService } from '../kernels/kernelService';
 import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
@@ -45,7 +44,6 @@ export class HostJupyterExecution
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        kernelService: KernelService,
         kernelSelector: KernelSelector,
         notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer) {
@@ -57,7 +55,6 @@ export class HostJupyterExecution
             sessionManager,
             workspace,
             configService,
-            kernelService,
             kernelSelector,
             notebookStarter,
             serviceContainer);

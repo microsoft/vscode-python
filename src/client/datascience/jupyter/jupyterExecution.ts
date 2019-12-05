@@ -28,7 +28,6 @@ import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelSelector } from './kernels/kernelSelector';
-import { KernelService } from './kernels/kernelService';
 import { NotebookStarter } from './notebookStarter';
 
 export class JupyterExecutionBase implements IJupyterExecution {
@@ -46,7 +45,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
-        private readonly kernelService: KernelService,
         private readonly kernelSelector: KernelSelector,
         private readonly notebookStarter: NotebookStarter,
         private readonly serviceContainer: IServiceContainer
@@ -257,30 +255,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         if (connection?.localLaunch) {
             const sessionManager = await this.sessionManagerFactory.create(connection);
             traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-            if (options?.metadata?.kernelspec){
-                kernelSpec = await this.kernelService.findMatchingKernelSpec(options?.metadata?.kernelspec, sessionManager, cancelToken);
-                if (!kernelSpec){
-                    // No kernel info, hence use current interpreter as a kernel.
-                    const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
-                    if (activeInterpreter){
-                        kernelSpec = await this.kernelSelector.useInterpreterOrSelectLocalKernel(`Kernel ${options.metadata.kernelspec.display_name} could not be found.`, activeInterpreter, sessionManager, cancelToken);
-                    } else {
-                        kernelSpec = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken);
-                    }
-                }
-            } else {
-                // No kernel info, hence use current interpreter as a kernel.
-                const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
-                if (activeInterpreter) {
-                    kernelSpec = await this.kernelService.searchAndRegisterKernel(activeInterpreter, cancelToken);
-                }
-            }
+            kernelSpec = await this.kernelSelector.getKernelForLocalConnection(sessionManager, options?.metadata, cancelToken);
             await sessionManager.dispose();
-
-            // If still not found, log an error (this seems possible for some people, so use the default)
-            if (!kernelSpec) {
-                this.logger.logError(localize.DataScience.jupyterKernelSpecNotFound());
-            }
         }
 
         // Return the data we found.

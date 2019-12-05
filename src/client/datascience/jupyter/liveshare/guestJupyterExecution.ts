@@ -22,7 +22,6 @@ import {
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
-import { KernelService } from '../kernels/kernelService';
 import { NotebookStarter } from '../notebookStarter';
 import { GuestJupyterSessionManagerFactory } from './guestJupyterSessionManagerFactory';
 import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
@@ -43,7 +42,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        kernelService: KernelService,
         kernelSelector: KernelSelector,
         notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer) {
@@ -55,7 +53,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             new GuestJupyterSessionManagerFactory(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
-            kernelService,
             kernelSelector,
             notebookStarter,
             serviceContainer);

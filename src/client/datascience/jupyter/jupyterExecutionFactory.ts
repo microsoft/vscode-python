@@ -22,7 +22,6 @@ import {
     INotebookServerOptions
 } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
-import { KernelService } from './kernels/kernelService';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
@@ -42,7 +41,6 @@ type JupyterExecutionClassType = {
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        kernelService: KernelService,
         kernelSelector: KernelSelector,
         notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer
@@ -65,7 +63,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(KernelService) kernelService: KernelService,
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(NotebookStarter) notebookStarter: NotebookStarter,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
@@ -83,7 +80,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             sessionManagerFactory,
             workspace,
             configuration,
-            kernelService,
             kernelSelector,
             notebookStarter,
             serviceContainer
