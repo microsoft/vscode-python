@@ -59,12 +59,17 @@ export class WebPanelServer {
 
     public start() {
         this.server = this.app.listen(this.port, 'localhost');
-        return this.server; // For testing
+        return this.server;
     }
 
     public dispose() {
+        this.close();
+    }
+
+    public close() {
         if (this.server) {
             this.server.close();
+            this.server = undefined;
         }
     }
 
