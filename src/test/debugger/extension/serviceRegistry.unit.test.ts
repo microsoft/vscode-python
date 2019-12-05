@@ -17,6 +17,7 @@ import { DjangoLaunchDebugConfigurationProvider } from '../../../client/debugger
 import { FileLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/fileLaunch';
 import { FlaskLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/flaskLaunch';
 import { ModuleLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/moduleLaunch';
+import { PidAttachDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/pidAttach';
 import { DebugConfigurationProviderFactory } from '../../../client/debugger/extension/configuration/providers/providerFactory';
 import { PyramidLaunchDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/pyramidLaunch';
 import { RemoteAttachDebugConfigurationProvider } from '../../../client/debugger/extension/configuration/providers/remoteAttach';
@@ -64,5 +65,6 @@ suite('Debugging - Service Registry', () => {
         verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach)).once();
         verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule)).once();
         verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid)).once();
+        verify(serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PidAttachDebugConfigurationProvider, DebugConfigurationType.pidAttach)).once();
     });
 });

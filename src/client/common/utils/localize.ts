@@ -363,6 +363,16 @@ export namespace DebugConfigStrings {
             invalid: localize('debug.attachRemotePortValidationError')
         };
     }
+    export namespace attachPid {
+        export const snippet = {
+            name: localize('python.snippet.launch.attachpid.label')
+        };
+        // tslint:disable-next-line:no-shadowed-variable
+        export const selectConfiguration = {
+            label: localize('debug.attachPidConfigurationLabel'),
+            description: localize('debug.attachPidConfigurationDescription')
+        };
+    }
     export namespace django {
         export const snippet = {
             name: localize('python.snippet.launch.django.label')

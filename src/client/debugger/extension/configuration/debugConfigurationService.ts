@@ -78,6 +78,10 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
                 type: DebugConfigurationType.remoteAttach,
                 description: DebugConfigStrings.attach.selectConfiguration.description()
             }, {
+                label: DebugConfigStrings.attachPid.selectConfiguration.label(),
+                type: DebugConfigurationType.pidAttach,
+                description: DebugConfigStrings.attachPid.selectConfiguration.description()
+            }, {
                 label: DebugConfigStrings.django.selectConfiguration.label(),
                 type: DebugConfigurationType.launchDjango,
                 description: DebugConfigStrings.django.selectConfiguration.description()

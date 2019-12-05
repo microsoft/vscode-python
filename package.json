@@ -1363,8 +1363,17 @@
                                 "default": true
                             },
                             "processId": {
-                                "type": "number",
-                                "description": "ID of the local process to attach to."
+                                "anyOf": [
+                                    {
+                                      "type": "string",
+                                      "description": "Use process picker to select a process to attach",
+                                      "default": "${command:pickProcess}"
+                                    },
+                                    {
+                                      "type": "integer",
+                                      "description": "ID of the local process to attach to."
+                                    }
+                                ]
                             }
                         }
                     }
