@@ -12,9 +12,9 @@ import { IMainState } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
+import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
-import { getDefaultSettings, computeEditorOptions } from '../../react-common/settingsReactSide';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     if (!skipDefault) {

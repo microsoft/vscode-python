@@ -17,6 +17,7 @@ import {
 } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { Commands } from '../../client/datascience/constants';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import {
     ICodeWatcher,
     IDataScienceCommandListener,
@@ -24,13 +25,11 @@ import {
     IInteractiveWindowProvider,
     IJupyterExecution
 } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
-//import { asyncDump } from '../common/asyncDump';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { waitForUpdate } from './reactHelpers';
-import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell } from './testHelpers';
+import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell, waitForMessage } from './testHelpers';
 
+//import { asyncDump } from '../common/asyncDump';
 //tslint:disable:trailing-comma no-any no-multiline-string
 
 // tslint:disable-next-line:max-func-body-length no-any
@@ -92,10 +91,12 @@ suite('DataScience LiveShare tests', () => {
         return result;
     }
 
-    function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
+    async function getOrCreateInteractiveWindow(role: vsls.Role): Promise<IInteractiveWindow> {
         // Get the container to use based on the role.
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
-        return container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
+        const window = await container!.get<IInteractiveWindowProvider>(IInteractiveWindowProvider).getOrCreateActive();
+        await window.show();
+        return window;
     }
 
     function isSessionStarted(role: vsls.Role): boolean {
@@ -104,13 +105,13 @@ suite('DataScience LiveShare tests', () => {
         return api.isSessionStarted;
     }
 
-    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    async function waitForResults(role: vsls.Role, resultGenerator: (both: boolean) => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         const container = role === vsls.Role.Host ? hostContainer : guestContainer;
 
         // If just the host session has started or nobody, just run the host.
         const guestStarted = isSessionStarted(vsls.Role.Guest);
         if (!guestStarted) {
-            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
+            const hostRenderPromise = waitForMessage(hostContainer, InteractiveWindowMessages.ExecutionRendered);
 
             // Generate our results
             await resultGenerator(false);
@@ -121,8 +122,8 @@ suite('DataScience LiveShare tests', () => {
             // Otherwise more complicated. We have to wait for renders on both
 
             // Get a render promise with the expected number of renders for both wrappers
-            const hostRenderPromise = waitForUpdate(hostContainer.wrapper!, InteractivePanel, expectedRenderCount);
-            const guestRenderPromise = waitForUpdate(guestContainer.wrapper!, InteractivePanel, expectedRenderCount);
+            const hostRenderPromise = waitForMessage(hostContainer, InteractiveWindowMessages.ExecutionRendered);
+            const guestRenderPromise = waitForMessage(guestContainer, InteractiveWindowMessages.ExecutionRendered);
 
             // Generate our results
             await resultGenerator(true);
@@ -133,7 +134,7 @@ suite('DataScience LiveShare tests', () => {
         return container.wrapper!;
     }
 
-    async function addCodeToRole(role: vsls.Role, code: string, expectedRenderCount: number = 5): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    async function addCodeToRole(role: vsls.Role, code: string): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         return waitForResults(role, async (both: boolean) => {
             if (!both) {
                 const history = await getOrCreateInteractiveWindow(role);
@@ -150,7 +151,7 @@ suite('DataScience LiveShare tests', () => {
                     await host.addCode(code, Uri.file('foo.py').fsPath, 2);
                 }
             }
-        }, expectedRenderCount);
+        });
     }
 
     function startSession(role: vsls.Role): Promise<void> {

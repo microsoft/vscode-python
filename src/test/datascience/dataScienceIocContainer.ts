@@ -16,7 +16,6 @@ import {
     EventEmitter,
     FileSystemWatcher,
     Uri,
-    ViewColumn,
     WorkspaceConfiguration,
     WorkspaceFolder
 } from 'vscode';
@@ -34,10 +33,10 @@ import {
     ITerminalManager,
     IWebPanel,
     IWebPanelMessageListener,
+    IWebPanelOptions,
     IWebPanelProvider,
     IWorkspaceService,
-    WebPanelMessage,
-    IWebPanelOptions
+    WebPanelMessage
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';

@@ -14,6 +14,7 @@ import { IPlotViewerMapping, PlotViewerMessages } from '../../client/datascience
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
+import { getDefaultSettings } from '../react-common/settingsReactSide';
 import { StyleInjector } from '../react-common/styleInjector';
 import { SvgList } from '../react-common/svgList';
 import { SvgViewer } from '../react-common/svgViewer';
@@ -64,7 +65,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const values = images.map(_i => undefined);
         const ids = images.map(_i => uuid());
 
-        this.state = { images, thumbnails, sizes, values, ids, tool: 'pan', currentImage: images.length > 0 ? 0 : -1 };
+        this.state = { images, thumbnails, sizes, values, ids, tool: 'pan', currentImage: images.length > 0 ? 0 : -1, settings: this.props.testMode ? getDefaultSettings() : undefined };
     }
 
     public componentWillMount() {

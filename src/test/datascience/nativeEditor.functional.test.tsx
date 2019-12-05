@@ -13,6 +13,7 @@ import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
@@ -50,6 +51,7 @@ import {
     addMockData,
     CellPosition,
     createKeyboardEventForCell,
+    defaultDataScienceSettings,
     escapePath,
     findButton,
     getLastOutputCell,
@@ -1219,7 +1221,7 @@ for _ in range(50):
                 when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1000);
                 // Update the settings and wait for the component to receive it and process it.
                 const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
-                ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                ioc.forceSettingsChanged(ioc.getSettings().pythonPath, { ...defaultDataScienceSettings(), showCellInputCode: false });
                 await promise;
 
                 await modifyNotebook();
