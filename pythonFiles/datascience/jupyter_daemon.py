@@ -1,6 +1,7 @@
 # Copyright (c) Microsoft Corporation. All rights reserved.
 # Licensed under the MIT License.
 
+import json
 import sys
 import logging
 import os
@@ -25,7 +26,9 @@ class PythonDaemon(BasePythonDaemon):
         self.log.info("Exec in DS Daemon %s with args %s", module_name, args)
         args = [] if args is None else args
 
-        if module_name == "jupyter" and args == ["kernelspec", "list"]:
+        if module_name == "jupyter" and args == ["kernelspec", "list", "--json"]:
+            return self._execute_and_capture_output(self._print_kernel_list_json)
+        elif module_name == "jupyter" and args == ["kernelspec", "list"]:
             return self._execute_and_capture_output(self._print_kernel_list)
         elif module_name == "jupyter" and args == ["kernelspec", "--version"]:
             return self._execute_and_capture_output(self._print_kernelspec_version)
@@ -76,7 +79,7 @@ class PythonDaemon(BasePythonDaemon):
         sys.stdout.flush()
 
     def _print_kernel_list(self):
-        self.log.info("check kernels")
+        self.log.info("listing kernels")
         # Get kernel specs.
         import jupyter_client.kernelspec
 
@@ -84,6 +87,17 @@ class PythonDaemon(BasePythonDaemon):
         sys.stdout.write(
             os.linesep.join(list("{0} {1}".format(k, v) for k, v in specs.items()))
         )
+        sys.stdout.flush()
+
+    def _print_kernel_list_json(self):
+        self.log.info("listing kernels as json")
+        # Get kernel specs.
+        import jupyter_client.kernelspec
+        specs = jupyter_client.kernelspec.KernelSpecManager().get_all_specs()
+        all_specs = {
+            "kernelspecs": specs
+        }
+        sys.stdout.write(json.dumps(all_specs))
         sys.stdout.flush()
 
     def _convert(self, args):

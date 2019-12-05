@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
 import { Cancellation } from '../../../common/cancellation';
-import { traceInfo, traceWarning } from '../../../common/logger';
+import { traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -37,7 +37,7 @@ export class KernelSelector {
     }
 
     public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
-        const suggestions = this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
+        const suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         const selection = await this.applicationShell.showQuickPick(suggestions, undefined, cancelToken);
         if (!selection) {
             return;
@@ -51,7 +51,7 @@ export class KernelSelector {
                 // Find the kernel associated with this interpter.
                 const kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
                 if (kernelSpec){
-                    traceInfo(`ipykernel installed in ${interpreter.path}, and matching found.`);
+                    traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
                     return kernelSpec;
                 }
                 traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);

@@ -13,19 +13,16 @@ import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
-import { ProcessServiceFactory } from '../../../../client/common/process/processFactory';
-import { IProcessServiceFactory } from '../../../../client/common/process/types';
 import { ReadWrite } from '../../../../client/common/types';
 import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder, ModuleExistsStatus } from '../../../../client/datascience/jupyter/jupyterCommandFinder';
-import { JupyterExecutionBase } from '../../../../client/datascience/jupyter/jupyterExecution';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IJupyterCommand, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IJupyterCommand, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
@@ -34,9 +31,7 @@ import { InterpreterService } from '../../../../client/interpreter/interpreterSe
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelService', () => {
     let kernelService: KernelService;
-    let jupyterExecution: IJupyterExecution;
     let cmdFinder: JupyterCommandFinder;
-    let processServiceFactory: IProcessServiceFactory;
     let interperterService: IInterpreterService;
     let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
@@ -45,9 +40,7 @@ suite('Data Science - KernelService', () => {
     let activationHelper: IEnvironmentActivationService;
 
     function initialize() {
-        jupyterExecution = mock(JupyterExecutionBase);
         cmdFinder = mock(JupyterCommandFinder);
-        processServiceFactory = mock(ProcessServiceFactory);
         interperterService = mock(InterpreterService);
         fs = mock(FileSystem);
         sessionManager = mock(JupyterSessionManager);
@@ -58,10 +51,7 @@ suite('Data Science - KernelService', () => {
         when(cmdFinder.findBestCommand(JupyterCommands.KernelCreateCommand, anything())).thenResolve({ status: ModuleExistsStatus.Found, command: instance(kernelCreateCmd) });
 
         kernelService = new KernelService(
-            instance(jupyterExecution),
             instance(cmdFinder),
-            { push: noop, dispose: async () => noop() },
-            instance(processServiceFactory),
             instance(interperterService),
             instance(fs),
             instance(activationHelper)

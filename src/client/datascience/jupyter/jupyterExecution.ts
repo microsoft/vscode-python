@@ -4,15 +4,11 @@
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -31,6 +27,7 @@ import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
+import { KernelSelector } from './kernels/kernelSelector';
 import { KernelService } from './kernels/kernelService';
 import { NotebookStarter } from './notebookStarter';
 
@@ -40,29 +37,21 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private disposed: boolean = false;
     private readonly commandFinder: JupyterCommandFinder;
-    private readonly kernelService: KernelService;
-    private readonly notebookStarter: NotebookStarter;
 
     constructor(
         _liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         private readonly interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         private readonly logger: ILogger,
         private readonly disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IFileSystem,
         private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        private readonly kernelService: KernelService,
+        private readonly kernelSelector: KernelSelector,
+        private readonly notebookStarter: NotebookStarter,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
-        this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
-            processServiceFactory, interpreterService, fileSystem, activationHelper);
-        this.notebookStarter = new NotebookStarter(executionFactory, this.commandFinder,
-            this.kernelService, fileSystem, serviceContainer);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -133,9 +122,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
-            let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined } | undefined;
+            let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined; interpreter?: PythonInterpreter } | undefined;
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
-            const interpreter = await this.interpreterService.getActiveInterpreter();
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
@@ -150,7 +138,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: startInfo.connection,
-                        currentInterpreter: interpreter,
+                        interpreter: startInfo.interpreter,
                         kernelSpec: startInfo.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
@@ -252,12 +240,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         if (!options || !options.uri) {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
-            const metadata = options?.metadata;
-            const launchResults = await this.startNotebookServer({ useDefaultConfig, metadata }, cancelToken);
-            if (launchResults) {
-                connection = launchResults.connection;
-                kernelSpec = launchResults.kernelSpec;
-            } else {
+            connection = await this.startNotebookServer(useDefaultConfig, cancelToken);
+            if (!connection) {
                 // Throw a cancellation error if we were canceled.
                 Cancellation.throwIfCanceled(cancelToken);
 
@@ -267,20 +251,24 @@ export class JupyterExecutionBase implements IJupyterExecution {
         } else {
             // If we have a URI spec up a connection info for it
             connection = createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
-            kernelSpec = undefined;
         }
 
         // If we don't have a kernel spec yet, check using our current connection
-        if (!kernelSpec && connection.localLaunch) {
-            traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
+        if (connection?.localLaunch) {
             const sessionManager = await this.sessionManagerFactory.create(connection);
-            kernelSpec = await this.kernelService.getMatchingKernelSpec(sessionManager, cancelToken);
+            traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
+            if (options?.metadata?.kernelspec){
+                kernelSpec = await this.kernelService.findMatchingKernelSpec(options?.metadata?.kernelspec, sessionManager, cancelToken);
+            }
+            if (!kernelSpec){
+                kernelSpec = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken);
+            }
             await sessionManager.dispose();
-        }
 
-        // If still not found, log an error (this seems possible for some people, so use the default)
-        if (!kernelSpec && connection.localLaunch) {
-            this.logger.logError(localize.DataScience.jupyterKernelSpecNotFound());
+            // If still not found, log an error (this seems possible for some people, so use the default)
+            if (!kernelSpec) {
+                this.logger.logError(localize.DataScience.jupyterKernelSpecNotFound());
+            }
         }
 
         // Return the data we found.
@@ -289,11 +277,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(options: { useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata }, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
-        return this.notebookStarter.start(options, cancelToken);
+        return this.notebookStarter.start(useDefaultConfig, cancelToken);
     }
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {

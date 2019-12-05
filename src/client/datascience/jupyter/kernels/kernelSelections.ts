@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
+import { IFileSystem } from '../../../common/platform/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -113,7 +114,10 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
  */
 @injectable()
 export class KernelSelectionProvider {
-    constructor(@inject(KernelService) private readonly kernelService: KernelService, @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector) {}
+    constructor(
+        @inject(KernelService) private readonly kernelService: KernelService,
+        @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem) {}
     /**
      * Gets a selection of kernel specs from a remote session.
      *
@@ -135,9 +139,24 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
         const activeKernelsPromise = sessionManager ? new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken) : Promise.resolve([]);
-        const jupyterKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
+        const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
         const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
-        const [activeKernels, jupyterKernels, interprters] = await Promise.all([activeKernelsPromise, jupyterKernelsPromise, interpretersPromise]);
-        return [...jupyterKernels!, ...activeKernels!, ...interprters];
+
+        // tslint:disable-next-line: prefer-const
+        let [activeKernels, installedKernels, interprters] = await Promise.all([activeKernelsPromise, installedKernelsPromise, interpretersPromise]);
+
+        interprters = interprters.filter(item => {
+            // If the interpreter is registered as a kernel then don't inlcude it.
+            if (installedKernels.find(installedKernel => installedKernel.selection.kernelSpec?.display_name === item.selection.interpreter?.displayName && (
+                this.fileSystem.arePathsSame((installedKernel.selection.kernelSpec?.argv || [])[0], item.selection.interpreter?.path || '') ||
+                this.fileSystem.arePathsSame(installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '', item.selection.interpreter?.path || '')))) {
+                return false;
+            }
+            return true;
+        });
+        // If kernel is listed as active, then don't list in installed kernels.
+        installedKernels = installedKernels.filter(item => !activeKernels.find(active => active.selection.kernelModel?.name === item.selection.kernelSpec?.name));
+
+        return [...installedKernels!, ...activeKernels!, ...interprters];
     }
 }

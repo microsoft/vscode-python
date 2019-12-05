@@ -57,7 +57,13 @@ export enum InterruptResult {
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
     connectionInfo: IConnection;
-    currentInterpreter: PythonInterpreter | undefined;
+    /**
+     * The python interpreter associated with the kernel.
+     *
+     * @type {(PythonInterpreter | undefined)}
+     * @memberof INotebookServerLaunchInfo
+     */
+    interpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
     workingDir: string | undefined;
@@ -210,6 +216,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
      */
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
+    readonly argv: string[];
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');

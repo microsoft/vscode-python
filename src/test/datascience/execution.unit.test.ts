@@ -30,6 +30,8 @@ import { PythonExecutionFactory } from '../../client/common/process/pythonExecut
 import {
     ExecutionResult,
     IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
     IPythonExecutionService,
     ObservableExecutionResult,
     Output
@@ -42,6 +44,9 @@ import { Identifiers, PythonDaemonModule } from '../../client/datascience/consta
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
+import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import {
     ICell,
     IConnection,
@@ -54,6 +59,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
+import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
@@ -237,7 +243,9 @@ suite('Jupyter Execution', async () => {
     const pythonSettings = new PythonSettings(undefined, new MockAutoSelectionService());
     const jupyterOnPath = getOSType() === OSType.Windows ? '/foo/bar/jupyter.exe' : '/foo/bar/jupyter';
     let ipykernelInstallCount = 0;
-
+    let kernelSelector: KernelSelector;
+    let kernelService: KernelService;
+    let notebookStarter: NotebookStarter;
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -708,13 +716,17 @@ suite('Jupyter Execution', async () => {
             instance(persistentSateFactory));
         when(serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder)).thenReturn(commandFinder);
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
+        when(serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)).thenReturn(instance(processServiceFactory));
+        when(serviceContainer.get<IEnvironmentActivationService>(IEnvironmentActivationService)).thenReturn(instance(activationHelper));
+        when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
+        kernelSelector = mock(KernelSelector);
+        kernelService = new KernelService(commandFinder, instance(interpreterService), instance(fileSystem), instance(activationHelper));
+        notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService));
         return {
             workingPythonExecutionService: workingService,
             jupyterExecutionFactory: new JupyterExecutionFactory(
                 instance(liveShare),
-                instance(executionFactory),
                 instance(interpreterService),
-                instance(processServiceFactory),
                 instance(logger),
                 disposableRegistry,
                 disposableRegistry,
@@ -722,7 +734,9 @@ suite('Jupyter Execution', async () => {
                 mockSessionManager,
                 instance(workspaceService),
                 instance(configService),
-                instance(activationHelper),
+                instance(kernelService),
+                instance(kernelSelector),
+                instance(notebookStarter),
                 instance(serviceContainer))
         };
     }

@@ -8,10 +8,8 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -23,6 +21,9 @@ import {
     INotebookServerOptions
 } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
+import { KernelSelector } from '../kernels/kernelSelector';
+import { KernelService } from '../kernels/kernelService';
+import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
@@ -36,9 +37,7 @@ export class HostJupyterExecution
     private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
@@ -46,23 +45,24 @@ export class HostJupyterExecution
         sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        kernelService: KernelService,
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
-            executionFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
-            asyncRegistry,
-            fileSys,
             sessionManager,
             workspace,
             configService,
-            activationHelper,
+            kernelService,
+            kernelSelector,
+            notebookStarter,
             serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys);
+        asyncRegistry.push(this);
     }
 
     public async dispose(): Promise<void> {
