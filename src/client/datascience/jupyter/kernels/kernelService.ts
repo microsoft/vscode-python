@@ -118,46 +118,72 @@ export class KernelService {
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
         // If promise is rejected and we do not use it, then ignore errors.
         allInterprtersPromise.ignoreErrors();
+
+        // 1. Check if current interpreter has the same path
         if (kernelSpec.metadata?.interpreter?.path){
             const interpreter = await this.interpreterService.getInterpreterDetails(kernelSpec.metadata?.interpreter?.path);
             if (interpreter){
                 traceInfo(`Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
-                return;
+                return interpreter;
             }
             traceError(`KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`);
         }
         if (Cancellation.isCanceled(cancelToken)){
             return;
         }
-        const activeInterpreter = await activeInterpreterPromise;
 
-        // If name=Python2 and current interpreter = 2,then use that,
-        // similarly if nam=Python3 and current interprter =3, then use that.
+        // 2. Check if current interpreter has the same display name
+        const activeInterpreter = await activeInterpreterPromise;
+        // If the display name matches the active interpreter then use that.
+        if (kernelSpec.display_name === activeInterpreter?.displayName){
+            return activeInterpreter;
+        }
+
+        // Check if kernel is `Python2` or `Python3` or a similar generic kernel.
         const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
         const match = regEx.exec(kernelSpec.name.toLowerCase());
-        if (!match){
-            traceWarning(`Unable to determine version of Python interprter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
+        if (match){
+            // 3. Look for interpreter with same major version
+
+            const majorVersion = parseInt(match.groups().version, 10) || 0;
+            // If the major versions match, that's sufficient.
+            if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
+                traceInfo(`Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                return activeInterpreter;
+            }
+
+            // Find an interpreter that matches the
+            const allInterpreters = await allInterprtersPromise;
+            const found = allInterpreters.find(item => item.version?.major === majorVersion);
+
+            // If we cannot find a matching one, then use the current interpreter.
+            if (found) {
+                traceVerbose(`Using interprter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                return found;
+            }
+
+            traceWarning(`Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
             return activeInterpreter;
-        }
-        const majorVersion = parseInt(match.groups().version, 10) || 0;
-        // If the major versions match, that's sufficient.
-        if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
-            traceInfo(`Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
-            return activeInterpreter;
-        }
+        } else {
+            // 4. Look for interpreter with same display name across all interpreters.
 
-        // Find an interpreter that matches the
-        const allInterpreters = await allInterprtersPromise;
-        const found = allInterpreters.find(item => item.version?.major === majorVersion);
+            // If the display name matches the active interpreter then use that.
+            // Look in all of our interpreters if we have somethign that matches this.
+            const allInterpreters = await allInterprtersPromise;
+            if (Cancellation.isCanceled(cancelToken)){
+                return;
+            }
 
-        // If we cannot find a matching one, then use the current interpreter.
-        if (found) {
-            traceVerbose(`Using interprter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
-            return found;
+            const found = allInterpreters.find(item => item.displayName === kernelSpec.display_name);
+
+            if (found) {
+                traceVerbose(`Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches ${found.path}`);
+                return found;
+            } else {
+                traceWarning(`Unable to determine version of Python interprter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
+                return activeInterpreter;
+            }
         }
-
-        traceWarning(`Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
-        return activeInterpreter;
     }
     public async searchAndRegisterKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         // If a kernelspec already exists for this, then use that.
