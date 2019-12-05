@@ -542,8 +542,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 traceInfo(`Finished execution for ${id}`);
             }
         } catch (err) {
-            const message = localize.DataScience.executingCodeFailure().format(err);
-            this.applicationShell.showErrorMessage(message);
+            await this.errorHandler.handleError(err);
         } finally {
             status.dispose();
 

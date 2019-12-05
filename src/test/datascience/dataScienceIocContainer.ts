@@ -36,7 +36,8 @@ import {
     IWebPanelMessageListener,
     IWebPanelProvider,
     IWorkspaceService,
-    WebPanelMessage
+    WebPanelMessage,
+    IWebPanelOptions
 } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
@@ -626,9 +627,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
         this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny())).returns(
-            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
+            (options: IWebPanelOptions) => {
                 // Keep track of the current listener. It listens to messages through the vscode api
-                this.webPanelListener = listener;
+                this.webPanelListener = options.listener;
 
                 // Send messages that were already posted but were missed.
                 // During normal operation, the react control will not be created before
@@ -657,6 +658,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         });
         webPanel.setup(p => p.show(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+
+        // See https://github.com/florinn/typemoq/issues/67 for why this is necessary
+        webPanel.setup((p: any) => p.then).returns(() => undefined);
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);
