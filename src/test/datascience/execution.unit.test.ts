@@ -65,11 +65,9 @@ import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../c
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
-import { ServiceManager } from '../../client/ioc/serviceManager';
 import { getOSType, OSType } from '../common';
 import { noop, sleep } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 
 class MockJupyterNotebook implements INotebook {
 
@@ -688,9 +686,6 @@ suite('Jupyter Execution', async () => {
         when(fileSystem.fileExists(workingKernelSpec)).thenResolve(true);
         when(fileSystem.readFile(workingKernelSpec)).thenResolve('{"display_name":"Python 3","language":"python","argv":["/foo/bar/python.exe","-m","ipykernel_launcher","-f","{connection_file}"]}');
 
-        const serviceManager = mock(ServiceManager);
-
-        const mockSessionManager = new MockJupyterManagerFactory(instance(serviceManager));
         const commandFactory = new JupyterCommandFactory(
             instance(executionFactory),
             instance(activationHelper),
