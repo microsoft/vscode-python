@@ -68,6 +68,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { getOSType, OSType } from '../common';
 import { noop, sleep } from '../core';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
+import { PYTHON_LANGUAGE } from '../../client/common/constants';
 
 class MockJupyterNotebook implements INotebook {
 
@@ -142,7 +143,6 @@ class MockJupyterNotebook implements INotebook {
 class MockJupyterServer implements INotebookServer {
 
     private launchInfo: INotebookServerLaunchInfo | undefined;
-    private kernelSpec: IJupyterKernelSpec | undefined;
     private notebookFile: TemporaryFile | undefined;
     private _id = uuid();
 
@@ -152,7 +152,6 @@ class MockJupyterServer implements INotebookServer {
     public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
         if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
             this.launchInfo = launchInfo;
-            this.kernelSpec = launchInfo.kernelSpec;
 
             // Validate connection info and kernel spec
             if (launchInfo.connectionInfo.baseUrl && launchInfo.kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)) {
@@ -187,10 +186,6 @@ class MockJupyterServer implements INotebookServer {
         if (this.launchInfo) {
             this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
             this.launchInfo = undefined;
-        }
-        if (this.kernelSpec) {
-            await this.kernelSpec.dispose(); // This destroy any unwanted kernel specs if necessary
-            this.kernelSpec = undefined;
         }
         if (this.notebookFile) {
             this.notebookFile.dispose(); // This destroy any unwanted kernel specs if necessary
@@ -717,9 +712,19 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IEnvironmentActivationService>(IEnvironmentActivationService)).thenReturn(instance(activationHelper));
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
         kernelSelector = mock(KernelSelector);
+        const kernelSpec: IJupyterKernelSpec = {
+            argv: [],
+            display_name: 'hello',
+            language: PYTHON_LANGUAGE,
+            name: 'hello',
+            path: ''
+        }
+        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
         installer = mock(ProductInstaller);
         kernelService = new KernelService(commandFinder, instance(executionFactory), instance(interpreterService), instance(installer), instance(fileSystem), instance(activationHelper));
         notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService));
+        when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
+        when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         return {
             workingPythonExecutionService: workingService,
             jupyterExecutionFactory: new JupyterExecutionFactory(
@@ -732,7 +737,7 @@ suite('Jupyter Execution', async () => {
                 instance(workspaceService),
                 instance(configService),
                 instance(kernelSelector),
-                instance(notebookStarter),
+                notebookStarter,
                 instance(serviceContainer))
         };
     }
@@ -897,18 +902,6 @@ suite('Jupyter Execution', async () => {
         await assert.eventually.notEqual(Promise.race([isNotebookSupported, sleep(500).then(() => 'timeout')]), 'timeout');
         verify(application.withProgress(anything(), anything())).atLeast(1);
     }).timeout(20_000);
-
-    test('Kernelspec is deleted on exit', async () => {
-        const { workingPythonExecutionService, jupyterExecutionFactory } = createExecutionAndReturnProcessService(missingKernelPython);
-        when(interpreterService.getActiveInterpreter(undefined)).thenResolve(missingKernelPython);
-        when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: missingKernelPython.path }))).thenResolve(workingPythonExecutionService.object);
-
-        // const execution = createExecution(missingKernelPython);
-        await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
-        await cleanupDisposables();
-        const exists = fs.existsSync(workingKernelSpec);
-        assert.notOk(exists, 'Temp kernel spec still exists');
-    }).timeout(10000);
 
     test('Jupyter found on the path', async () => {
         // Make sure we can find jupyter on the path if we

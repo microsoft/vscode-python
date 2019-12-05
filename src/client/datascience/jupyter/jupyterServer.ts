@@ -194,13 +194,6 @@ export class JupyterServerBase implements INotebookServer {
     }
 
     private async destroyKernelSpec() {
-        try {
-            if (this.launchInfo && this.launchInfo.kernelSpec) {
-                await this.launchInfo.kernelSpec.dispose(); // This should delete any old kernel specs
-            }
-        } catch {
-            noop();
-        }
         if (this.launchInfo) {
             this.launchInfo.kernelSpec = undefined;
         }

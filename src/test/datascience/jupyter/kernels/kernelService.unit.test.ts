@@ -17,7 +17,6 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { IPythonExecutionFactory } from '../../../../client/common/process/types';
 import { IInstaller, ReadWrite } from '../../../../client/common/types';
-import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/jupyterCommand';
@@ -71,8 +70,8 @@ suite('Data Science - KernelService', () => {
 
     test('Should not return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -83,8 +82,8 @@ suite('Data Science - KernelService', () => {
     });
     test('Should not return a matching spec from a session for a given interpeter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         const interpreter: PythonInterpreter = {
@@ -126,8 +125,8 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -142,9 +141,9 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a session for a given interpreter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: { interpreter: { path: 'myPath2' } } },
-            { argv: [], dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '3', path: 'Path3', display_name: 'Disp3', metadata: { interpreter: { path: 'myPath3' } } }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: { interpreter: { path: 'myPath2' } } },
+            { argv: [], language: PYTHON_LANGUAGE, name: '3', path: 'Path3', display_name: 'Disp3', metadata: { interpreter: { path: 'myPath3' } } }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         when(fs.arePathsSame('myPath2', 'myPath2')).thenReturn(true);

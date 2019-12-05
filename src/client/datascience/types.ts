@@ -198,7 +198,7 @@ export interface IJupyterKernel {
     numberOfConnections: number;
 }
 
-export interface IJupyterKernelSpec extends IAsyncDisposable {
+export interface IJupyterKernelSpec {
     name: string;
     language: string;
     path: string;
