@@ -3,6 +3,7 @@
 import * as chai from 'chai';
 import * as http from 'http';
 import * as path from 'path';
+import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -20,7 +21,7 @@ suite('WebPanelServer', () => {
     const token = uuid();
     const historyBundle = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
     setup(async () => {
-        host = new WebPanelServer(9890, token);
+        host = new WebPanelServer(await portfinder.getPortPromise(), token);
         server = host.start();
     });
 
