@@ -149,7 +149,8 @@ export namespace Creation {
             ...arg.prevState,
             cellVMs: [],
             undoStack: [],
-            redoStack: []
+            redoStack: [],
+            editCellVM: undefined
         };
     }
 }

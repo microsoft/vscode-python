@@ -14,6 +14,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import { getDefaultSettings, computeEditorOptions } from '../../react-common/settingsReactSide';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     if (!skipDefault) {
@@ -44,7 +45,9 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             codeTheme: Identifiers.GeneratedThemeName,
             activateCount: 0,
             monacoReady: testMode, // When testing, monaco starts out ready
-            loaded: false
+            loaded: false,
+            settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
+            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
         };
     }
 }

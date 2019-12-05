@@ -95,6 +95,12 @@ suite('DataScience Intellisense tests', () => {
         };
     }
 
+    function clearEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) {
+        const editor = getInteractiveEditor(wrapper);
+        const inst = editor.instance() as MonacoEditor;
+        inst.state.model!.setValue('');
+    }
+
     runMountedTest('Simple autocomplete', async (wrapper) => {
         // Create an interactive window so that it listens to the results.
         const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
@@ -106,6 +112,10 @@ suite('DataScience Intellisense tests', () => {
         await suggestion.promise;
         suggestion.disposable.dispose();
         verifyIntellisenseVisible(wrapper, 'print');
+
+        // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+        // while we're destroying the editor.
+        clearEditor(wrapper);
     }, () => { return ioc; });
 
     runMountedTest('Jupyter autocomplete', async (wrapper) => {
@@ -122,6 +132,10 @@ suite('DataScience Intellisense tests', () => {
             await suggestion.promise;
             suggestion.disposable.dispose();
             verifyIntellisenseVisible(wrapper, 'printly');
+
+            // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+            // while we're destroying the editor.
+            clearEditor(wrapper);
         }
     }, () => { return ioc; });
 
@@ -142,6 +156,10 @@ suite('DataScience Intellisense tests', () => {
             await suggestion.promise;
             suggestion.disposable.dispose();
             verifyIntellisenseVisible(wrapper, 'printly');
+
+            // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+            // while we're destroying the editor.
+            clearEditor(wrapper);
         }
     }, () => { return ioc; });
 });
