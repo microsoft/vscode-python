@@ -71,7 +71,6 @@ export class KernelSelector {
         if (!selection) {
             return {};
         }
-
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
             return this.userInterpreterAsKernel(selection.selection.interpreter, session, cancelToken);
@@ -113,7 +112,6 @@ export class KernelSelector {
                 selection.kernelSpec = await this.kernelService.searchAndRegisterKernel(activeInterpreter, cancelToken);
             }
         }
-
         // If still not found, log an error (this seems possible for some people, so use the default)
         if (!selection.kernelSpec) {
             traceError('Jupyter Kernel Spec not found for a local connection');
