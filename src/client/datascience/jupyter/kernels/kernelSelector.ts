@@ -6,10 +6,8 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
-import { Cancellation } from '../../../common/cancellation';
-import { traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
-import { IInstaller, InstallerResponse, Product } from '../../../common/types';
-import { PythonInterpreter } from '../../../interpreter/contracts';
+import { traceInfo, traceVerbose } from '../../../common/logger';
+import { IInstaller, Product } from '../../../common/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
@@ -46,8 +44,7 @@ export class KernelSelector {
         // Check if ipykernel is installed in this kernel.
         const interpreter = selection.selection.interpreter;
         if (interpreter) {
-            const isValid = await this.isSelectionValid(interpreter, cancelToken);
-            if (isValid) {
+            if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
                 // Find the kernel associated with this interpter.
                 const kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
                 if (kernelSpec){
@@ -62,21 +59,5 @@ export class KernelSelector {
         } else {
             return selection.selection.kernelSpec;
         }
-    }
-
-    private async isSelectionValid(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<boolean> {
-        // Is ipykernel installed in this environment.
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return true;
-        }
-        if (Cancellation.isCanceled(cancelToken)) {
-            return false;
-        }
-        const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
-        if (response === InstallerResponse.Installed) {
-            return true;
-        }
-        traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}`);
-        return false;
     }
 }

@@ -15,7 +15,7 @@ import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
-import { ReadWrite } from '../../../common/types';
+import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
@@ -53,6 +53,7 @@ export class KernelService {
         @inject(JupyterCommandFinder) private readonly commandFinder: JupyterCommandFinder,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IInstaller) private readonly installer: IInstaller,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService
     ) {}
@@ -178,12 +179,26 @@ export class KernelService {
         if (!interpreter.displayName) {
             throw new Error('Interpreter does not have a display name');
         }
-        const execService = await this.execFactory.create({pythonPath: interpreter.path});
+        const execServicePromise = this.execFactory.create({pythonPath: interpreter.path});
+        // Swallow errors if we get out of here and not resolve this.
+        execServicePromise.ignoreErrors();
+        const name = this.generateKernelNameForIntepreter(interpreter);
+
+        // If ipykernel is not installed, prompt to install it.
+        if (!(await this.installer.isInstalled(Product.ipykernel))) {
+            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
+            if (response === InstallerResponse.Installed) {
+                traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`);
+                return;
+            }
+        }
+
         if (Cancellation.isCanceled(cancelToken)) {
             return;
         }
-        const name = await this.generateKernelNameForIntepreter(interpreter);
+
         // Assumption is that ipykernel is installed, if not, we'll throw an error here.
+        const execService = await execServicePromise;
         const output = await execService.execModule('ipykernel', ['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
             throwOnStdErr: true,
             encoding: 'utf8',
@@ -270,7 +285,7 @@ export class KernelService {
      * @param {PythonInterpreter} interpreter
      * @memberof KernelService
      */
-    private async generateKernelNameForIntepreter(interpreter: PythonInterpreter): Promise<string> {
+    private generateKernelNameForIntepreter(interpreter: PythonInterpreter): string {
         return `${interpreter.displayName || ''}${uuid()}`.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
     }
 
