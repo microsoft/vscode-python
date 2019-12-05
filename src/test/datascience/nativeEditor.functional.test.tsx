@@ -259,8 +259,8 @@ for _ in range(50):
             const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
 
-            // This can be slow, hence wait for a max of 15.
-            await waitForPromise(activeTextEditorChange.promise, 15_000);
+            // This can be slow, hence wait for a max of 60.
+            await waitForPromise(activeTextEditorChange.promise, 60_000);
 
             // Verify the new document is valid python
             const newDoc = docManager.activeTextEditor;
