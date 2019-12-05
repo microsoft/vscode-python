@@ -125,7 +125,7 @@ export class WebPanelServer {
     // 1) If you get no output, try entering the URL of the server into Chrome on the same machine as the extension.
     //    You can then debug this code outside of a frame, but only the raw startup of the frame.
     //    Note, the URL is usually http://localhost:9000?queryparams, not http://localhost:9890 as this is the remapped URL
-    // 2) If you get the wrong output, and you think the error is in the react code, set the 'python.dataScience.skipWebViewServer' to true in your settings.json.
+    // 2) If you get the wrong output, and you think the error is in the react code, set the 'python.dataScience.useWebViewServer' to false in your settings.json.
     //    This will switch the code to use the old way to render.
     // 3) If you suspect some of the code below but you do get output on startup, copy some of the code into a codepen and debug it there.
 

@@ -221,8 +221,13 @@ export class WebViewHost<IMapping> implements IDisposable {
 
             // Get our settings to pass along to the react control
             const settings = this.generateDataScienceExtraSettings();
+            const insiders = this.configService.getSettings().insidersChannel;
 
             traceInfo('Loading web view...');
+
+            // Determine if we should start an HTTP server or not based on if in the insider's channel or
+            // if it's forced on.
+            const startHttpServer = settings.useWebViewServer !== undefined ? settings.useWebViewServer : insiders !== 'off';
 
             // Use this script to create our web view panel. It should contain all of the necessary
             // script to communicate with this class.
@@ -233,7 +238,7 @@ export class WebViewHost<IMapping> implements IDisposable {
                 rootPath: this.rootPath,
                 scripts: this.scripts,
                 settings,
-                startHttpServer: settings.skipWebViewServer ? !settings.skipWebViewServer : true,
+                startHttpServer,
                 cwd
             });
 
