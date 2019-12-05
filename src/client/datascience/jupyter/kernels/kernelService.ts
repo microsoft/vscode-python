@@ -159,6 +159,14 @@ export class KernelService {
         traceWarning(`Unable to find an interpreter that matches the kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
         return activeInterpreter;
     }
+    public async searchAndRegisterKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+        // If a kernelspec already exists for this, then use that.
+        const found = await this.findMatchingKernelSpec(interpreter, undefined, cancelToken);
+        if (found){
+            return found;
+        }
+        return this.registerKernel(interpreter, cancelToken);
+    }
 
     /**
      * Registers an interprter as a kernel.
@@ -179,6 +187,7 @@ export class KernelService {
         if (!interpreter.displayName) {
             throw new Error('Interpreter does not have a display name');
         }
+
         const execServicePromise = this.execFactory.create({pythonPath: interpreter.path});
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();

@@ -259,9 +259,21 @@ export class JupyterExecutionBase implements IJupyterExecution {
             traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
             if (options?.metadata?.kernelspec){
                 kernelSpec = await this.kernelService.findMatchingKernelSpec(options?.metadata?.kernelspec, sessionManager, cancelToken);
-            }
-            if (!kernelSpec){
-                kernelSpec = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken);
+                if (!kernelSpec){
+                    // No kernel info, hence use current interpreter as a kernel.
+                    const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+                    if (activeInterpreter){
+                        kernelSpec = await this.kernelSelector.useInterpreterOrSelectLocalKernel(`Kernel ${options.metadata.kernelspec.display_name} could not be found.`, activeInterpreter, sessionManager, cancelToken);
+                    } else {
+                        kernelSpec = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken);
+                    }
+                }
+            } else {
+                // No kernel info, hence use current interpreter as a kernel.
+                const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
+                if (activeInterpreter) {
+                    kernelSpec = await this.kernelService.searchAndRegisterKernel(activeInterpreter, cancelToken);
+                }
             }
             await sessionManager.dispose();
 
