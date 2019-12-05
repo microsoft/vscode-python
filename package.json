@@ -1365,13 +1365,15 @@
                             "processId": {
                                 "anyOf": [
                                     {
-                                      "type": "string",
-                                      "description": "Use process picker to select a process to attach",
-                                      "default": "${command:pickProcess}"
+                                        "enum": [
+                                            "${command:pickProcess}"
+                                        ],
+                                        "description": "Use process picker to select a process to attach, or Process ID as integer.",
+                                        "default": "${command:pickProcess}"
                                     },
                                     {
-                                      "type": "integer",
-                                      "description": "ID of the local process to attach to."
+                                        "type": "integer",
+                                        "description": "ID of the local process to attach to."
                                     }
                                 ]
                             }
