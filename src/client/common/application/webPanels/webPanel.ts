@@ -49,9 +49,7 @@ export class WebPanel implements IWebPanel {
 
     public updateCwd(_cwd: string) {
         if (this.options.startHttpServer && this.port) {
-            // tslint:disable-next-line: no-suspicious-comment
-            // TODO: Make a post to the server to indicate this notebook should serve
-            // files from the new cwd.
+            // See issue https://github.com/microsoft/vscode-python/issues/8933 for implementing this.
         }
     }
 
