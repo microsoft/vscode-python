@@ -40,6 +40,6 @@ test-results.xml
 uitests/out/**
 !build/
 
-# This is temporary.  We will remove it when we adjust to not leave 
-# a file behind in src/test/interpreters/locators/workspaceVirtualEnvService.test.ts.
+# TODO (GH-8925) This is temporary.  We will remove it when we adjust
+# tests to not leave the file behind.
 src/test/get-pip.py
