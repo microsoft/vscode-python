@@ -158,7 +158,7 @@ export class JupyterNotebookBase implements INotebook {
         resource: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
-        private applicationService: IApplicationShell,
+        private applicationService: IApplicationShell
     ) {
         this.sessionStartTime = Date.now();
         this._resource = resource;
