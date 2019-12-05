@@ -19,6 +19,7 @@ import { IApplicationShell, IWorkspaceService } from '../../client/common/applic
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
+import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
@@ -36,7 +37,7 @@ import {
     ObservableExecutionResult,
     Output
 } from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../client/common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IInstaller, ILogger } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
@@ -246,6 +247,7 @@ suite('Jupyter Execution', async () => {
     let kernelSelector: KernelSelector;
     let kernelService: KernelService;
     let notebookStarter: NotebookStarter;
+    let installer: IInstaller;
     const workingPython: PythonInterpreter = {
         path: '/foo/bar/python.exe',
         version: new SemVer('3.6.6-final'),
@@ -720,7 +722,8 @@ suite('Jupyter Execution', async () => {
         when(serviceContainer.get<IEnvironmentActivationService>(IEnvironmentActivationService)).thenReturn(instance(activationHelper));
         when(serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory)).thenReturn(instance(executionFactory));
         kernelSelector = mock(KernelSelector);
-        kernelService = new KernelService(commandFinder, instance(interpreterService), instance(fileSystem), instance(activationHelper));
+        installer = mock(ProductInstaller);
+        kernelService = new KernelService(commandFinder, instance(executionFactory), instance(interpreterService), instance(installer), instance(fileSystem), instance(activationHelper));
         notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService));
         return {
             workingPythonExecutionService: workingService,
@@ -731,10 +734,8 @@ suite('Jupyter Execution', async () => {
                 disposableRegistry,
                 disposableRegistry,
                 instance(fileSystem),
-                mockSessionManager,
                 instance(workspaceService),
                 instance(configService),
-                instance(kernelService),
                 instance(kernelSelector),
                 instance(notebookStarter),
                 instance(serviceContainer))
