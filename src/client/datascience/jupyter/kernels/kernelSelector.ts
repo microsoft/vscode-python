@@ -75,7 +75,7 @@ export class KernelSelector {
         }
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
-            return this.useCurrentInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
+            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
         } else {
             const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
             return { kernelSpec: selection.selection.kernelSpec, interpreter };
@@ -105,7 +105,7 @@ export class KernelSelector {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
                 if (activeInterpreter) {
-                    selection = await this.useCurrentInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, cancelToken);
+                    selection = await this.useInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, cancelToken);
                 } else {
                     selection = await this.selectLocalKernel(sessionManager, cancelToken);
                 }
@@ -125,10 +125,10 @@ export class KernelSelector {
         return selection;
     }
     /**
-     * Use the current interpreter as a kerne.
-     * If `displayNameOfKernelNotFound` is provided, then display a message.
+     * Use the provided interpreter as a kernel.
+     * If `displayNameOfKernelNotFound` is provided, then display a message indicating we're using the `current interpreter`.
      * This would happen when we're starting a notebook.
-     * Otherwise, if not provided user is chaning the kernel after starting a notebook.
+     * Otherwise, if not provided user is changing the kernel after starting a notebook.
      *
      * @private
      * @param {PythonInterpreter} interpreter
@@ -138,13 +138,12 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    private async useCurrentInterpreterAsKernel(
+    private async useInterpreterAsKernel(
         interpreter: PythonInterpreter,
         displayNameOfKernelNotFound?: string,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
-
         let kernelSpec: IJupyterKernelSpec | undefined;
 
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {

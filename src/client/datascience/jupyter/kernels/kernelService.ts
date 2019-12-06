@@ -219,7 +219,7 @@ export class KernelService {
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
-        if (!(await this.installer.isInstalled(Product.ipykernel))) {
+        if (!(await this.installer.isInstalled(Product.ipykernel, interpreter))) {
             const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
             if (response === InstallerResponse.Installed) {
                 traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`);
