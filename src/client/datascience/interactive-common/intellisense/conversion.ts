@@ -139,11 +139,11 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
     }
 
     // tslint:disable-next-line: no-any
-    if ((result.insertText as any).value) {
+    const snippet = (result.insertText as any) as vscode.SnippetString;
+    if (snippet.value) {
         result.insertTextRules = SnippetEscape;
         // Monaco can't handle the snippetText value, so rewrite it.
-        // tslint:disable-next-line: no-any
-        result.insertText = (result.insertText as any).value;
+        result.insertText = snippet.value;
     }
 
     // Make sure we don't have _documentPosition. It holds onto a huge tree of information
