@@ -75,7 +75,7 @@ export class KernelSelector {
         }
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
-            return this.useCurrentInterpreterAsKernel(selection.selection.interpreter, session, cancelToken);
+            return this.useCurrentInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
         } else {
             const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
             return { kernelSpec: selection.selection.kernelSpec, interpreter };
@@ -105,12 +105,7 @@ export class KernelSelector {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
                 if (activeInterpreter) {
-                    selection = await this.useCurrentInterpreterOrSelectLocalKernel(
-                        localize.DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel().format(notebookMetadata.kernelspec.display_name),
-                        activeInterpreter,
-                        sessionManager,
-                        cancelToken
-                    );
+                    selection = await this.useCurrentInterpreterOrSelectLocalKernel(notebookMetadata.kernelspec.display_name, activeInterpreter, sessionManager, cancelToken);
                 } else {
                     selection = await this.selectLocalKernel(sessionManager, cancelToken);
                 }
@@ -130,47 +125,94 @@ export class KernelSelector {
         return selection;
     }
 
+    /**
+     * If possible use the current interpreter as a kernel (i.e. if ipykernel is already installed).
+     * Else display a prompt asking user to use (install ipykernel) current interprter as kernel or to select a different kernel/interpreter.
+     *
+     * @private
+     * @param {string} displayNameOfKernelNotFound
+     * @param {PythonInterpreter} interpreter
+     * @param {IJupyterSessionManager} [session]
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<KernelSpecInterpreter>}
+     * @memberof KernelSelector
+     */
     private async useCurrentInterpreterOrSelectLocalKernel(
-        message: string,
+        displayNameOfKernelNotFound: string,
         interpreter: PythonInterpreter,
         session?: IJupyterSessionManager,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
         // If interpreter has ipykernel installed, then use that without any prompts.
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return this.useCurrentInterpreterAsKernel(interpreter, session, cancelToken);
+            return this.useCurrentInterpreterAsKernel(interpreter, displayNameOfKernelNotFound, session, cancelToken);
         }
 
         // tslint:disable-next-line: messages-must-be-localized
         const selection = await this.applicationShell.showInformationMessage(
-            message,
+            localize.DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel().format(displayNameOfKernelNotFound),
             localize.DataScience.promptToUseActiveInterpreterAsKernel(),
             localize.DataScience.promptToSelectKernel()
         );
         switch (selection) {
             case localize.DataScience.promptToUseActiveInterpreterAsKernel():
-                return this.useCurrentInterpreterAsKernel(interpreter, session, cancelToken);
+                return this.useCurrentInterpreterAsKernel(interpreter, displayNameOfKernelNotFound, session, cancelToken);
             case localize.DataScience.promptToSelectKernel():
                 return this.selectLocalKernel(session, cancelToken);
             default:
                 return {};
         }
     }
-    private async useCurrentInterpreterAsKernel(interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+    /**
+     * Use the current interpreter as a kerne.
+     * If `displayNameOfKernelNotFound` is provided, then display a message.
+     * This would happen when we're starting a notebook.
+     * Otherwise, if not provided user is chaning the kernel after starting a notebook.
+     *
+     * @private
+     * @param {PythonInterpreter} interpreter
+     * @param {string} [displayNameOfKernelNotFound]
+     * @param {IJupyterSessionManager} [session]
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<KernelSpecInterpreter>}
+     * @memberof KernelSelector
+     */
+    private async useCurrentInterpreterAsKernel(
+        interpreter: PythonInterpreter,
+        displayNameOfKernelNotFound?: string,
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<KernelSpecInterpreter> {
+
         let kernelSpec: IJupyterKernelSpec | undefined;
+
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
             // Find the kernel associated with this interpter.
             kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
+
             if (kernelSpec) {
                 traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
-                this.applicationShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel()).then(noop, noop);
+                // If we have a display name of a kernel that could not be found,
+                // then notify user that we're using current interpreter instead.
+                if (displayNameOfKernelNotFound) {
+                    this.applicationShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound)).then(noop, noop);
+                }
                 return { kernelSpec, interpreter };
             }
             traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
         }
+
         // Try an install this interpreter as a kernel.
         kernelSpec = await this.kernelService.registerKernel(interpreter, cancelToken);
-        this.applicationShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel()).then(noop, noop);
+
+        // If we have a display name of a kernel that could not be found,
+        // then notify user that we're using current interpreter instead.
+        if (displayNameOfKernelNotFound) {
+            this.applicationShell
+                .showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound))
+                .then(noop, noop);
+        }
+
         return { kernelSpec, interpreter };
     }
 }

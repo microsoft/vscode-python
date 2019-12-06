@@ -303,10 +303,10 @@ export namespace DataScience {
     export const gatheredScriptDescription = localize('DataScience.gatheredScriptDescription', '# This file contains only the code required to produce the results of the gathered cell.\n');
     export const gatheredNotebookDescriptionInMarkdown = localize('DataScience.gatheredNotebookDescriptionInMarkdown', '# Gathered Notebook\nGenerated from ```{0}```\n\nThis notebook contains only the code and cells required to produce the same results as the gathered cell.\n\nPlease note that the python analysis is quite conservative, so if it is unsure whether a line of code is necessary for execution, it will err on the side of including it.');
     export const savePngTitle = localize('DataScience.savePngTitle', 'Save Image');
-    export const fallbackToUseActiveInterpeterAsKernel = localize('DataScience.fallbackToUseActiveInterpeterAsKernel', 'Couldn\'t find kernel notebook was created with. Using the current interpreter.');
-    export const fallBackToRegisterAndUseActiveInterpeterAsKernel = localize('DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel', 'Couldn\'t find kernel notebook was created with. Registering a new one using the current interpreter.');
+    export const fallbackToUseActiveInterpeterAsKernel = localize('DataScience.fallbackToUseActiveInterpeterAsKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with. Using the current interpreter.');
+    export const fallBackToRegisterAndUseActiveInterpeterAsKernel = localize('DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with. Registering a new Kernel using the current interpreter.');
     export const kernelDescriptionForKernelPicker = localize('DataScience.kernelDescriptionForKernelPicker', '(kernel)');
-    export const fallBackToPromptToUseActiveInterpreterOrSelectAKernel = localize('DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel', 'Couldn\'t find kernel notebook was created with \'{0}\'.');
+    export const fallBackToPromptToUseActiveInterpreterOrSelectAKernel = localize('DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with.');
     export const promptToUseActiveInterpreterAsKernel = localize('DataScience.promptToUseActiveInterpreterAsKernel', 'Use current interpreter');
     export const promptToSelectKernel = localize('DataScience.promptToSelectKernel', 'Select Kernel');
 }
