@@ -19,6 +19,7 @@ module.exports = [
             filename: 'datascience-ui/history-react/index_bundle.js',
             publicPath: './'
         },
+        stats: 'errors-only',
 
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         // Use 'eval' for release and `eval-source-map` for development.
