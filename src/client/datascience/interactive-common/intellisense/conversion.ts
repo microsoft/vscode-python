@@ -9,91 +9,93 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 
 // See the comment on convertCompletionItemKind below
 // Here's the monaco enum:
-// Method = 0,
-// Function = 1,
-// Constructor = 2,
-// Field = 3,
-// Variable = 4,
-// Class = 5,
-// Struct = 6,
-// Interface = 7,
-// Module = 8,
-// Property = 9,
-// Event = 10,
-// Operator = 11,
-// Unit = 12,
-// Value = 13,
-// Constant = 14,
-// Enum = 15,
-// EnumMember = 16,
-// Keyword = 17,
-// Text = 18,
-// Color = 19,
-// File = 20,
-// Reference = 21,
-// Customcolor = 22,
-// Folder = 23,
-// TypeParameter = 24,
-// Snippet = 25
+enum monacoCompletionItemKind {
+    Method = 0,
+    Function = 1,
+    Constructor = 2,
+    Field = 3,
+    Variable = 4,
+    Class = 5,
+    Struct = 6,
+    Interface = 7,
+    Module = 8,
+    Property = 9,
+    Event = 10,
+    Operator = 11,
+    Unit = 12,
+    Value = 13,
+    Constant = 14,
+    Enum = 15,
+    EnumMember = 16,
+    Keyword = 17,
+    Text = 18,
+    Color = 19,
+    File = 20,
+    Reference = 21,
+    Customcolor = 22,
+    Folder = 23,
+    TypeParameter = 24,
+    Snippet = 25
+}
 //
 
 // Left side is the vscode value.
 const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
-    [vscode.CompletionItemKind.Text, 18], // Text
-    [vscode.CompletionItemKind.Method, 0],  // Method
-    [vscode.CompletionItemKind.Function, 1],  // Function
-    [vscode.CompletionItemKind.Constructor, 2],  // Constructor
-    [vscode.CompletionItemKind.Field, 3],  // Field
-    [vscode.CompletionItemKind.Variable, 4],  // Variable
-    [vscode.CompletionItemKind.Class, 5],  // Class
-    [vscode.CompletionItemKind.Interface, 7],  // Interface
-    [vscode.CompletionItemKind.Module, 8],  // Module
-    [vscode.CompletionItemKind.Property, 9], // Property
-    [vscode.CompletionItemKind.Unit, 12], // Unit
-    [vscode.CompletionItemKind.Value, 13], // Value
-    [vscode.CompletionItemKind.Enum, 15], // Enum
-    [vscode.CompletionItemKind.Keyword, 17], // Keyword
-    [vscode.CompletionItemKind.Snippet, 25], // Snippet
-    [vscode.CompletionItemKind.Color, 19], // Color
-    [vscode.CompletionItemKind.File, 20], // File
-    [vscode.CompletionItemKind.Reference, 21], // Reference
-    [vscode.CompletionItemKind.Folder, 23], // Folder
-    [vscode.CompletionItemKind.EnumMember, 16], // EnumMember
-    [vscode.CompletionItemKind.Constant, 14], // Constant
-    [vscode.CompletionItemKind.Struct, 6], // Struct
-    [vscode.CompletionItemKind.Event, 10], // Event
-    [vscode.CompletionItemKind.Operator, 11], // Operator
-    [vscode.CompletionItemKind.TypeParameter, 24]  // TypeParameter
+    [vscode.CompletionItemKind.Text, monacoCompletionItemKind.Text], // Text
+    [vscode.CompletionItemKind.Method, monacoCompletionItemKind.Method],  // Method
+    [vscode.CompletionItemKind.Function, monacoCompletionItemKind.Function],  // Function
+    [vscode.CompletionItemKind.Constructor, monacoCompletionItemKind.Constructor],  // Constructor
+    [vscode.CompletionItemKind.Field, monacoCompletionItemKind.Field],  // Field
+    [vscode.CompletionItemKind.Variable, monacoCompletionItemKind.Variable],  // Variable
+    [vscode.CompletionItemKind.Class, monacoCompletionItemKind.Class],  // Class
+    [vscode.CompletionItemKind.Interface, monacoCompletionItemKind.Interface],  // Interface
+    [vscode.CompletionItemKind.Module, monacoCompletionItemKind.Module],  // Module
+    [vscode.CompletionItemKind.Property, monacoCompletionItemKind.Property], // Property
+    [vscode.CompletionItemKind.Unit, monacoCompletionItemKind.Unit], // Unit
+    [vscode.CompletionItemKind.Value, monacoCompletionItemKind.Value], // Value
+    [vscode.CompletionItemKind.Enum, monacoCompletionItemKind.Enum], // Enum
+    [vscode.CompletionItemKind.Keyword, monacoCompletionItemKind.Keyword], // Keyword
+    [vscode.CompletionItemKind.Snippet, monacoCompletionItemKind.Snippet], // Snippet
+    [vscode.CompletionItemKind.Color, monacoCompletionItemKind.Color], // Color
+    [vscode.CompletionItemKind.File, monacoCompletionItemKind.File], // File
+    [vscode.CompletionItemKind.Reference, monacoCompletionItemKind.Reference], // Reference
+    [vscode.CompletionItemKind.Folder, monacoCompletionItemKind.Folder], // Folder
+    [vscode.CompletionItemKind.EnumMember, monacoCompletionItemKind.EnumMember], // EnumMember
+    [vscode.CompletionItemKind.Constant, monacoCompletionItemKind.Constant], // Constant
+    [vscode.CompletionItemKind.Struct, monacoCompletionItemKind.Struct], // Struct
+    [vscode.CompletionItemKind.Event, monacoCompletionItemKind.Event], // Event
+    [vscode.CompletionItemKind.Operator, monacoCompletionItemKind.Operator], // Operator
+    [vscode.CompletionItemKind.TypeParameter, monacoCompletionItemKind.TypeParameter]  // TypeParameter
 ]);
 
 const mapJupyterKind: Map<string, number> = new Map<string, number>([
-    ['method', 0],
-    ['function', 1],
-    ['constructor', 2],
-    ['field', 3],
-    ['variable', 4],
-    ['class', 5],
-    ['struct', 6],
-    ['interface', 7],
-    ['module', 8],
-    ['property', 9],
-    ['event', 10],
-    ['operator', 11],
-    ['unit', 12],
-    ['value', 13],
-    ['constant', 14],
-    ['enum', 15],
-    ['enumMember', 16],
-    ['keyword', 17],
-    ['text', 18],
-    ['color', 19],
-    ['file', 20],
-    ['reference', 21],
-    ['customcolor', 22],
-    ['folder', 23],
-    ['typeParameter', 24],
-    ['snippet', 25],
-    ['<unknown>', 25]
+    ['method', monacoCompletionItemKind.Method],
+    ['function', monacoCompletionItemKind.Function],
+    ['constructor', monacoCompletionItemKind.Constructor],
+    ['field', monacoCompletionItemKind.Field],
+    ['variable', monacoCompletionItemKind.Variable],
+    ['class', monacoCompletionItemKind.Class],
+    ['struct', monacoCompletionItemKind.Struct],
+    ['interface', monacoCompletionItemKind.Interface],
+    ['module', monacoCompletionItemKind.Module],
+    ['property', monacoCompletionItemKind.Property],
+    ['event', monacoCompletionItemKind.Event],
+    ['operator', monacoCompletionItemKind.Operator],
+    ['unit', monacoCompletionItemKind.Unit],
+    ['value', monacoCompletionItemKind.Value],
+    ['constant', monacoCompletionItemKind.Constant],
+    ['enum', monacoCompletionItemKind.Enum],
+    ['enumMember', monacoCompletionItemKind.EnumMember],
+    ['keyword', monacoCompletionItemKind.Keyword],
+    ['text', monacoCompletionItemKind.Text],
+    ['color', monacoCompletionItemKind.Color],
+    ['file', monacoCompletionItemKind.File],
+    ['reference', monacoCompletionItemKind.Reference],
+    ['customcolor', monacoCompletionItemKind.Customcolor],
+    ['folder', monacoCompletionItemKind.Folder],
+    ['typeParameter', monacoCompletionItemKind.TypeParameter],
+    ['snippet', monacoCompletionItemKind.Snippet],
+    ['<unknown>', monacoCompletionItemKind.Snippet]
 ]);
 
 function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): monacoEditor.IRange | undefined {
@@ -114,12 +116,14 @@ function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): mo
 // import { EDITOR_DEFAULTS } from './common/config/editorOptions.js';
 // Instead just use a map
 function convertToMonacoCompletionItemKind(kind?: number): number {
-    const value = kind ? mapCompletionItemKind.get(kind) : 9; // Property is 9
+    const value = kind ? mapCompletionItemKind.get(kind) : monacoCompletionItemKind.Property; // Property is 9
     if (value) {
         return value;
     }
-    return 9; // Property
+    return monacoCompletionItemKind.Property;
 }
+
+const SnippetEscape = 4;
 
 function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean): monacoEditor.languages.CompletionItem {
     // They should be pretty much identical? Except for ranges.
@@ -136,7 +140,8 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
 
     // tslint:disable-next-line: no-any
     if ((result.insertText as any).value) {
-        result.insertTextRules = 4; // Monaco can't handle the snippetText value, so rewrite it.
+        result.insertTextRules = SnippetEscape;
+        // Monaco can't handle the snippetText value, so rewrite it.
         // tslint:disable-next-line: no-any
         result.insertText = (result.insertText as any).value;
     }
