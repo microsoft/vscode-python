@@ -56,14 +56,14 @@
     {
         "name": "Reload - control",
         "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
+        "min": 47,
+        "max": 50
     },
     {
         "name": "Reload - experiment",
         "salt": "DebugAdapterFactory",
-        "min": 0,
-        "max": 0
+        "min": 50,
+        "max": 53
     },
     {
         "name": "LS - enabled",
