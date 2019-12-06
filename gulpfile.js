@@ -179,7 +179,7 @@ async function buildWebPack(webpackConfigName, args) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
-        throw new Error(`Warnings in ${webpackConfigName}, \n\n${stdOut}`);
+        throw new Error(`Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`);
     }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
