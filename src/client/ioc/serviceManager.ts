@@ -23,8 +23,8 @@ export class ServiceManager implements IServiceManager {
     }
 
     // tslint:disable-next-line:no-any
-    public addBinding<T1, T2>(serviceIdentifier1: identifier<T1>, serviceIdentifier2: identifier<T2>): void {
-        this.container.bind(serviceIdentifier2).toService(serviceIdentifier1);
+    public addBinding<T1, T2>(from: identifier<T1>, to: identifier<T2>): void {
+        this.container.bind(to).toService(from);
     }
 
     // tslint:disable-next-line:no-any

@@ -246,12 +246,18 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         try {
             const mimeBundle = copy.data as nbformat.IMimeBundle;
             let data: nbformat.MultilineString | JSONObject = mimeBundle[mimeType];
+            // For un-executed output we might get text or svg output as multiline string arrays
+            // we want to concat those so we don't display a bunch of weird commas as we expect
+            // Single strings in our output
+            if (Array.isArray(data)) {
+                data = concatMultilineStringOutput(data as nbformat.MultilineString);
+            }
 
             // Text based mimeTypes don't get a white background
             if (/^text\//.test(mimeType)) {
                 return {
                     mimeType,
-                    data: concatMultilineStringOutput(data as nbformat.MultilineString),
+                    data,
                     isText,
                     isError,
                     renderWithScrollbars: true,

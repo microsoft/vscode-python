@@ -1,4 +1,5 @@
-import { ConfigurationTarget, Disposable, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, QuickPickItem, Uri } from 'vscode';
+import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../contracts';
 
 export interface IPythonPathUpdaterService {
@@ -20,6 +21,18 @@ export interface IPythonPathUpdaterServiceManager {
 export const IInterpreterSelector = Symbol('IInterpreterSelector');
 export interface IInterpreterSelector extends Disposable {
     initialize(): void;
+    getSuggestions(resource: Resource): Promise<IInterpreterQuickPickItem[]>;
+}
+
+export interface IInterpreterQuickPickItem extends QuickPickItem {
+    path: string;
+    /**
+     * The interpreter related to this quickpick item.
+     *
+     * @type {PythonInterpreter}
+     * @memberof IInterpreterQuickPickItem
+     */
+    interpreter: PythonInterpreter;
 }
 
 export const IInterpreterComparer = Symbol('IInterpreterComparer');

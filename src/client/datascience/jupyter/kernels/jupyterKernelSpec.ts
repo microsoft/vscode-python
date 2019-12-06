@@ -6,6 +6,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 
 import { noop } from '../../../common/utils/misc';
+import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec } from '../../types';
 
 const IsGuidRegEx = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -15,11 +16,16 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     public language: string;
     public path: string;
     public specFile: string | undefined;
+    public display_name: string;
+    // tslint:disable-next-line: no-any
+    public metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
     constructor(specModel: Kernel.ISpecModel, file?: string) {
         this.name = specModel.name;
         this.language = specModel.language;
         this.path = specModel.argv && specModel.argv.length > 0 ? specModel.argv[0] : '';
         this.specFile = file;
+        this.display_name = specModel.display_name;
+        this.metadata = specModel.metadata;
     }
     public dispose = async () => {
         if (this.specFile &&

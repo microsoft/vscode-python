@@ -97,6 +97,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Run]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Debug]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
     [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];

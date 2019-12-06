@@ -10,7 +10,7 @@ import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { IDataViewer, IDataViewerProvider, IJupyterExecution, IJupyterVariables, INotebook } from '../types';
+import { IDataViewer, IDataViewerProvider, IJupyterVariables, INotebook } from '../types';
 
 @injectable()
 export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable {
@@ -19,8 +19,7 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IJupyterVariables) private variables: IJupyterVariables,
-        @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory,
-        @inject(IJupyterExecution) private readonly jupyterExecution: IJupyterExecution
+        @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory
     ) {
         asyncRegistry.push(this);
     }
@@ -43,20 +42,23 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
     }
 
-    public async getPandasVersion(): Promise<{ major: number; minor: number; build: number } | undefined> {
-        const interpreter = await this.jupyterExecution.getUsableJupyterPython();
-        const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
-        try {
-            const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], { throwOnStdErr: true });
-            const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
-            if (versionMatch && versionMatch.length > 2) {
-                const major = parseInt(versionMatch[1], 10);
-                const minor = parseInt(versionMatch[2], 10);
-                const build = parseInt(versionMatch[3], 10);
-                return { major, minor, build };
+    public async getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined> {
+        const interpreter = await notebook.getMatchingInterpreter();
+
+        if (interpreter) {
+            const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });
+            try {
+                const result = await launcher.exec(['-c', 'import pandas;print(pandas.__version__)'], { throwOnStdErr: true });
+                const versionMatch = /^\s*(\d+)\.(\d+)\.(.+)\s*$/.exec(result.stdout);
+                if (versionMatch && versionMatch.length > 2) {
+                    const major = parseInt(versionMatch[1], 10);
+                    const minor = parseInt(versionMatch[2], 10);
+                    const build = parseInt(versionMatch[3], 10);
+                    return { major, minor, build };
+                }
+            } catch {
+                noop();
             }
-        } catch {
-            noop();
         }
     }
 }

@@ -7,6 +7,7 @@ import { Request as RequestResult } from 'request';
 import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
+import { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
 export interface IOutputChannel extends OutputChannel { }
@@ -31,6 +32,10 @@ export type Version = {
     patch: number;
     build: string[];
     prerelease: string[];
+};
+
+export type ReadWrite<T> = {
+    -readonly [P in keyof T]: T[P];
 };
 
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
@@ -109,9 +114,9 @@ export enum ModuleNamePurpose {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
-    promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
-    install(product: Product, resource?: Uri): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
+    promptToInstall(product: Product, resource?: InterpreterUri): Promise<InstallerResponse>;
+    install(product: Product, resource?: InterpreterUri): Promise<InstallerResponse>;
+    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 

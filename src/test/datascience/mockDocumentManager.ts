@@ -31,7 +31,7 @@ export class MockDocumentManager implements IDocumentManager {
     public textDocuments: TextDocument[] = [];
     public activeTextEditor: TextEditor | undefined;
     public visibleTextEditors: TextEditor[] = [];
-    public didChangeEmitter = new EventEmitter<TextEditor>();
+    public didChangeActiveTextEditorEmitter = new EventEmitter<TextEditor>();
     private didOpenEmitter = new EventEmitter<TextDocument>();
     private didChangeVisibleEmitter = new EventEmitter<TextEditor[]>();
     private didChangeTextEditorSelectionEmitter = new EventEmitter<TextEditorSelectionChangeEvent>();
@@ -40,8 +40,8 @@ export class MockDocumentManager implements IDocumentManager {
     private didCloseEmitter = new EventEmitter<TextDocument>();
     private didSaveEmitter = new EventEmitter<TextDocument>();
     private didChangeTextDocumentEmitter = new EventEmitter<TextDocumentChangeEvent>();
-    public get onDidChangeActiveTextEditor(): Event<TextEditor> {
-        return this.didChangeEmitter.event;
+    public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
+        return this.didChangeActiveTextEditorEmitter.event;
     }
     public get onDidChangeTextDocument(): Event<TextDocumentChangeEvent> {
         return this.didChangeTextDocumentEmitter.event;
@@ -73,6 +73,7 @@ export class MockDocumentManager implements IDocumentManager {
         this.visibleTextEditors.push(document);
         const mockEditor = new MockEditor(this, this.lastDocument as MockDocument);
         this.activeTextEditor = mockEditor;
+        this.didChangeActiveTextEditorEmitter.fire(this.activeTextEditor);
         return Promise.resolve(mockEditor);
     }
     public openTextDocument(_fileName: string | Uri): Thenable<TextDocument>;

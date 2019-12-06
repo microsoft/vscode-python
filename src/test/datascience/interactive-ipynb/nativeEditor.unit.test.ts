@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { nbformat } from '@jupyterlab/coreutils';
 import { expect } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
@@ -28,7 +27,7 @@ import { ConfigurationService } from '../../../client/common/configuration/servi
 import { LiveShareApi } from '../../../client/common/liveshare/liveshare';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService, Version } from '../../../client/common/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewerProvider } from '../../../client/datascience/data-viewing/dataViewerProvider';
 import { DataScienceErrorHandler } from '../../../client/datascience/errorHandler/errorHandler';
@@ -57,7 +56,6 @@ import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
 import { waitForCondition } from '../../common';
-import { noop } from '../../core';
 import { MockMemento } from '../../mocks/mementos';
 import { MockStatusProvider } from '../mockStatusProvider';
 
@@ -436,60 +434,6 @@ suite('Data Science - Native Editor', () => {
         // Meaning it was not loaded from file, but loaded from our storage.
         expect(await newEditor.getContents()).to.be.equal(baseFile);
         expect(newEditor.cells).to.be.lengthOf(3);
-    });
-
-    test('Python version info is not queried on creating a blank editor', async () => {
-        const file = Uri.parse('file:///Untitled1.ipynb');
-
-        // When a cell is executed, then ensure we store the python version info in the notebook data.
-        when(executionProvider.getUsableJupyterPython()).thenReject();
-
-        const editor = createEditor();
-        await editor.load('', file);
-
-        try {
-            await editor.getContents();
-            expect(false, 'Did not throw an error');
-        } catch {
-            // This should throw an error
-            noop();
-        }
-    });
-
-    test('Pyton version info will be updated in notebook when a cell has been executed', async () => {
-        const file = Uri.parse('file:///foo.ipynb');
-
-        const editor = createEditor();
-        await editor.load(baseFile, file);
-        expect(await editor.getContents()).to.be.equal(baseFile);
-        // At the begining version info is NOT in the file (at least not the same as what we are using to run cells).
-        let contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
-        expect(contents.metadata!.language_info!.version).to.not.equal('10.11.12');
-
-        // When a cell is executed, then ensure we store the python version info in the notebook data.
-        const version: Version = { build: [], major: 10, minor: 11, patch: 12, prerelease: [], raw: '10.11.12' };
-        when(executionProvider.getUsableJupyterPython()).thenResolve(({ version } as any));
-
-        try {
-            editor.onMessage(InteractiveWindowMessages.SubmitNewCell, { code: 'hello', id: '1' });
-        } catch {
-            // Ignore errors related to running cells, assume that works.
-            noop();
-        }
-
-        // Wait for the version info to be retrieved (done in the background).
-        await waitForCondition(async () => {
-            try {
-                verify(executionProvider.getUsableJupyterPython()).atLeast(1);
-                return true;
-            } catch {
-                return false;
-            }
-        }, 5_000, 'Timeout');
-
-        // Verify the version info is in the notbook.
-        contents = JSON.parse(await editor.getContents()) as nbformat.INotebookContent;
-        expect(contents.metadata!.language_info!.version).to.equal('10.11.12');
     });
 
     test('Opening file with local storage but no global will still open with old contents', async () => {

@@ -39,3 +39,7 @@ tmp/**
 test-results.xml
 uitests/out/**
 !build/
+
+# TODO (GH-8925) This is temporary.  We will remove it when we adjust
+# tests to not leave the file behind.
+src/test/get-pip.py

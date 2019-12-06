@@ -65,9 +65,9 @@ export class TestDisplay implements ITestDisplay {
             return fn.parentTestFile.name === testFile.name &&
                 testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
         });
-
-        this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
-            { matchOnDescription: true, matchOnDetail: true })
+        const runAllItem = buildRunAllParametrizedItem(flattenedFunctions, debug);
+        const functionItems = buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug);
+        this.appShell.showQuickPick(runAllItem.concat(...functionItems), { matchOnDescription: true, matchOnDetail: true })
             .then(testItem => testItem ? onItemSelected(this.commandManager, cmdSource, wkspace, testItem, debug) : Promise.resolve());
     }
 }
@@ -84,7 +84,8 @@ export enum Type {
     Null = 8,
     SelectAndRunMethod = 9,
     DebugMethod = 10,
-    Configure = 11
+    Configure = 11,
+    RunParametrized = 12
 }
 const statusIconMapping = new Map<TestStatus, string>();
 statusIconMapping.set(TestStatus.Pass, constants.Octicons.Test_Pass);
@@ -95,6 +96,7 @@ statusIconMapping.set(TestStatus.Skipped, constants.Octicons.Test_Skip);
 type TestItem = QuickPickItem & {
     type: Type;
     fn?: FlattenedTestFunction;
+    fns?: TestFunction[];
 };
 
 type TestFileItem = QuickPickItem & {
@@ -150,6 +152,18 @@ const statusSortPrefix = {
     [TestStatus.Unknown]: undefined
 };
 
+function buildRunAllParametrizedItem(tests: FlattenedTestFunction[], debug: boolean = false): TestItem[] {
+    const testFunctions: TestFunction[] = [];
+    tests.forEach(fn => {
+        testFunctions.push(fn.testFunction);
+    });
+    return [{
+        description: '',
+        label: debug ? 'Debug All' : 'Run All',
+        type: Type.RunParametrized,
+        fns: testFunctions
+    }];
+}
 function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false, debug: boolean = false): TestItem[] {
     const functionItems: TestItem[] = [];
     tests.forEach(fn => {
@@ -217,6 +231,9 @@ export function onItemSelected(commandManager: ICommandManager, cmdSource: Comma
         }
         case Type.RunAll: {
             return commandManager.executeCommand(constants.Commands.Tests_Run, undefined, cmdSource, wkspace, undefined);
+        }
+        case Type.RunParametrized: {
+            return commandManager.executeCommand(constants.Commands.Tests_Run_Parametrized, undefined, cmdSource, wkspace, selection.fns!, debug!);
         }
         case Type.ReDiscover: {
             return commandManager.executeCommand(constants.Commands.Tests_Discover, undefined, cmdSource, wkspace);

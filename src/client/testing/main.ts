@@ -225,6 +225,13 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const testDisplay = this.serviceContainer.get<ITestDisplay>(ITestDisplay);
         testDisplay.displayFunctionTestPickerUI(cmdSource, testManager.workspaceFolder, testManager.workingDirectory, file, testFunctions, debug);
     }
+    public async runParametrizedTests(cmdSource: CommandSource, resource: Uri, testFunctions: TestFunction[], debug?: boolean) {
+        const testManager = await this.getTestManager(true, resource);
+        if (!testManager) {
+            return;
+        }
+        await this.runTestsImpl(cmdSource, resource, { testFunction: testFunctions }, undefined, debug);
+    }
     public viewOutput(_cmdSource: CommandSource) {
         sendTelemetryEvent(EventName.UNITTEST_VIEW_OUTPUT);
         this.outputChannel.show();
@@ -397,6 +404,10 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             commandManager.registerCommand(
                 constants.Commands.Tests_Picker_UI_Debug,
                 (_, cmdSource: CommandSource = CommandSource.commandPalette, file: Uri, testFunctions: TestFunction[]) => this.displayPickerUI(cmdSource, file, testFunctions, true)
+            ),
+            commandManager.registerCommand(
+                constants.Commands.Tests_Run_Parametrized,
+                (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri, testFunctions: TestFunction[], debug: boolean) => this.runParametrizedTests(cmdSource, resource, testFunctions, debug)
             ),
             commandManager.registerCommand(constants.Commands.Tests_Stop, (_, resource: Uri) => this.stopTests(resource)),
             commandManager.registerCommand(constants.Commands.Tests_ViewOutput, (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.viewOutput(cmdSource)),

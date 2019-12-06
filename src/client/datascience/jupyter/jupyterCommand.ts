@@ -113,7 +113,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
  * @class InterpreterJupyterNotebookCommand
  * @implements {IJupyterCommand}
  */
-class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
+export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand {
     constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
         super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
     }

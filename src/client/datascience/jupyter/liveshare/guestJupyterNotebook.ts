@@ -17,6 +17,7 @@ import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     ICell,
+    IJupyterKernelSpec,
     INotebook,
     INotebookCompletion,
     INotebookExecutionLogger,
@@ -181,6 +182,10 @@ export class GuestJupyterNotebook
     }
 
     public getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
+        return Promise.resolve(undefined);
+    }
+
+    public getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
         return Promise.resolve(undefined);
     }
 

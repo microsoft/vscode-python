@@ -86,7 +86,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         return session;
     }
 
-    public async getActiveKernelSpecs(): Promise<IJupyterKernelSpec[]> {
+    public async getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager) {
             throw new Error(localize.DataScience.sessionDisposed());
         }

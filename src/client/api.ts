@@ -3,9 +3,9 @@
 
 'use strict';
 
-import { DebugAdapterDescriptorFactory as DebugAdapterExperiment } from './common/experimentGroups';
+import { DebugAdapterDescriptorFactory as DebugAdapterExperiment, DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
-import { IConfigurationService, IExperimentsManager } from './common/types';
+import { IExperimentsManager } from './common/types';
 import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
 import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
 
@@ -36,25 +36,24 @@ export interface IExtensionApi {
 }
 
 // tslint:disable-next-line:no-any
-export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory, configuration: IConfigurationService) {
+export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory) {
     return {
-        // 'ready' will propogate the exception, but we must log it here first.
+        // 'ready' will propagate the exception, but we must log it here first.
         ready: ready.catch((ex) => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                const pythonSettings = configuration.getSettings(undefined);
-                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && (await debugFactory.useNewPtvsd(pythonSettings.pythonPath));
+                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
-                if (!useNewDAPtvsd) {
-                    return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
+                if (useNewDAPtvsd) {
+                    // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
+                    const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
+                    return [debugFactory.getPtvsdPath(), ...args];
                 }
 
-                // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
-                const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
-                return [debugFactory.getPtvsdPath(), ...args];
+                return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
         }
     };

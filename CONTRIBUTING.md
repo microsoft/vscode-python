@@ -20,13 +20,13 @@
 ### Prerequisites
 
 1. [Node.js](https://nodejs.org/) 10.x
-1. [Python](https://www.python.org/) 2.7 or later (required only for testing the extension and running unit tests)
+1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
 1. The following VS Code extensions:
     * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
     * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
-1. Have an issue which has been accepted with a "needs PR" label (feel free to indicate you would be happy to provide a PR for the issue)
+1. Have an issue which has a "needs PR" label (feel free to indicate you would like to provide a PR for the issue so others don't work on it as well)
 
 ### Setup
 
@@ -35,17 +35,25 @@ git clone https://github.com/microsoft/vscode-python
 cd vscode-python
 npm ci
 python3 -m venv .venv
-# Activate the virtual environment as appropriate for your shell.
+# Activate the virtual environment as appropriate for your shell, For example ...
+source .venv/bin/activate
+# Install Python dependencies using `python3`.
+# If you want to use a different interpreter then specify it in the
+# CI_PYTHON_PATH environment variable.
 npx gulp installPythonLibs
-# If your terminal doesn't recogonise the keyword `python3`, update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter.
 ```
-You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
+If you see warnings that `The engine "vscode" appears to be invalid.`, you can ignore these.
 
 ### Incremental Build
 
 Run the `Compile` and `Hygiene` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build and hygiene tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
-You can also compile from the command-line. For a full compile you can use `npx gulp prePublishNonBundle`. For incremental builds you can use the following commands depending on your needs:
+You can also compile from the command-line. For a full compile you can use:
+```shell
+npx gulp prePublishNonBundle
+```
+
+For incremental builds you can use the following commands depending on your needs:
 ```shell
 npm run compile
 npm run compile-webviews-watch # For data science (React Code)
@@ -56,7 +64,7 @@ This is especially true if you have added or removed files.
 
 ### Errors and Warnings
 
-TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code:
+TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code.
 
 ### Validate your changes
 

@@ -472,7 +472,7 @@ export interface IEventNamePropertyMapping {
          */
         pyspark: boolean;
         /**
-         * Whether using `gevent` when deugging.
+         * Whether using `gevent` when debugging.
          *
          * @type {boolean}
          */
@@ -489,11 +489,15 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS]: never | undefined;
     /**
+     * Telemetry event sent when attaching to a local process.
+     */
+    [EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS]: never | undefined;
+    /**
      * Telemetry sent after building configuration for debugger
      */
     [EventName.DEBUGGER_CONFIGURATION_PROMPTS]: {
         /**
-         * The type of debug configuration to build configuration fore
+         * The type of debug configuration to build configuration for
          *
          * @type {DebugConfigurationType}
          */
@@ -1488,6 +1492,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.WebviewMonacoStyleUpdate]: never | undefined;
     [Telemetry.WebviewStartup]: { type: string };
     [Telemetry.WebviewStyleUpdate]: never | undefined;
+    [Telemetry.RegisterInterpreterAsKernel]: never | undefined;
     [NativeKeyboardCommandTelemetry.AddToEnd]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowDown]: never | undefined;
     [NativeKeyboardCommandTelemetry.ArrowUp]: never | undefined;

@@ -18,8 +18,7 @@ import { DataScienceErrorHandler } from './errorHandler/errorHandler';
 import { GatherExecution } from './gather/gather';
 import { GatherListener } from './gather/gatherListener';
 import { DebugListener } from './interactive-common/debugListener';
-import { DotNetIntellisenseProvider } from './interactive-common/intellisense/dotNetIntellisenseProvider';
-import { JediIntellisenseProvider } from './interactive-common/intellisense/jediIntellisenseProvider';
+import { IntellisenseProvider } from './interactive-common/intellisense/intellisenseProvider';
 import { LinkProvider } from './interactive-common/linkProvider';
 import { ShowPlotListener } from './interactive-common/showPlotListener';
 import { AutoSaveService } from './interactive-ipynb/autoSaveService';
@@ -39,6 +38,8 @@ import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
+import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
+import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
@@ -99,8 +100,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDataViewerProvider>(IDataViewerProvider, DataViewerProvider);
     serviceManager.add<IDataViewer>(IDataViewer, DataViewer);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Decorator);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DotNetIntellisenseProvider);
-    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, JediIntellisenseProvider);
+    serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, LinkProvider);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, ShowPlotListener);
     serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, DebugListener);
@@ -123,4 +123,6 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
     serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
+    serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
+    serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
 }

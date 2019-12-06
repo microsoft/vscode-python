@@ -94,6 +94,10 @@ export class IntellisenseDocument implements TextDocument {
     public get isUntitled(): boolean {
         return true;
     }
+
+    public get isReadOnly(): boolean {
+        return !this.inEditMode;
+    }
     public get languageId(): string {
         return PYTHON_LANGUAGE;
     }
@@ -146,6 +150,18 @@ export class IntellisenseDocument implements TextDocument {
             return this._contents.substr(startOffset, endOffset - startOffset);
         }
     }
+
+    public getFullContentChanges(): TextDocumentContentChangeEvent[] {
+        return [
+            {
+                range: this.createSerializableRange(new Position(0, 0), new Position(0, 0)),
+                rangeOffset: 0,
+                rangeLength: 0, // Adds are always zero
+                text: this._contents
+            }
+        ];
+    }
+
     public getWordRangeAtPosition(position: Position, regexp?: RegExp | undefined): Range | undefined {
         if (!regexp) {
             // use default when custom-regexp isn't provided

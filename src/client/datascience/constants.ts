@@ -210,6 +210,7 @@ export enum Telemetry {
     NotebookExecutionActivated = 'DATASCIENCE.NOTEBOOK.EXECUTION.ACTIVATED',
     JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
     JupyterCommandSearch = 'DATASCIENCE.JUPYTER_COMMAND_SEARCH',
+    RegisterInterpreterAsKernel = 'DATASCIENCE.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER'
 }

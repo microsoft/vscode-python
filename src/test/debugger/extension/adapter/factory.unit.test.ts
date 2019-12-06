@@ -182,7 +182,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, nodeExecutable);
     });
 
-    test('Return Debug Adapter server if attach configuration and we are in experiment', async () => {
+    test('Return Debug Adapter server if in DA experiment, configuration is attach and port is specified', async () => {
         const session = createSession({ request: 'attach', port: 5678, host: 'localhost' });
         const debugServer = new DebugAdapterServer(session.configuration.port, session.configuration.host);
 
@@ -194,22 +194,22 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugServer);
     });
 
-    test('Throw error if configuration is attach and in experiment and port is 0', async () => {
+    test('Throw error if in DA experiment, configuration is attach, port is 0 and process ID is not specified', async () => {
         const session = createSession({ request: 'attach', port: 0, host: 'localhost' });
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        await expect(promise).to.eventually.be.rejectedWith('Port must be specified for request type attach');
+        await expect(promise).to.eventually.be.rejectedWith('Port or processId must be specified for request type attach');
     });
 
-    test('Throw error if configuration is attach and in experiment and port is not specified', async () => {
-        const session = createSession({ request: 'attach', port: undefined });
+    test('Throw error if in DA experiment, configuration is attach and port and process ID are not specified', async () => {
+        const session = createSession({ request: 'attach', port: undefined, processId: undefined });
 
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         const promise = factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
-        await expect(promise).to.eventually.be.rejectedWith('Port must be specified for request type attach');
+        await expect(promise).to.eventually.be.rejectedWith('Port or processId must be specified for request type attach');
     });
 
     test('Return old node debugger when not in the experiment', async () => {
@@ -219,6 +219,19 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, nodeExecutable);
     });
 
+    test('Return Python debug adapter without wheels executable if configuration is attach, process ID is specified and active interpreter is not Python 3.7', async () => {
+        const debugExecutable = new DebugAdapterExecutable(python36Path, [ptvsdAdapterPathWithoutWheels]);
+        const session = createSession({ request: 'attach', processId: 1234 });
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        when(interpreterService.getInterpreters(anything())).thenResolve([interpreterPython36Details]);
+        when(interpreterService.getInterpreterDetails(python36Path)).thenResolve(interpreterPython36Details);
+
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(descriptor, debugExecutable);
+    });
+
     test('Return Python debug adapter without wheels executable when the active interpreter is not Python 3.7', async () => {
         const debugExecutable = new DebugAdapterExecutable(python36Path, [ptvsdAdapterPathWithoutWheels]);
         const session = createSession({});
@@ -226,6 +239,17 @@ suite('Debugging - Adapter Factory', () => {
         when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
         when(interpreterService.getInterpreters(anything())).thenResolve([interpreterPython36Details]);
         when(interpreterService.getInterpreterDetails(python36Path)).thenResolve(interpreterPython36Details);
+
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(descriptor, debugExecutable);
+    });
+
+    test('Return Python debug adapter with wheels executable if configuration is attach, process ID is specified and active interpreter is Python 3.7', async () => {
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPathWithWheels]);
+        const session = createSession({ request: 'attach', processId: 1234 });
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
 
         const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
 
@@ -332,7 +356,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }, { usingWheels: 'true' }]);
     });
 
-    test('Send experiment group telemetry if inside the wheels experiment, with active interpreter not Python 3.6', async () => {
+    test('Send experiment group telemetry if inside the wheels experiment, with active interpreter not Python 3.7', async () => {
         const session = createSession({});
         when(spiedInstance.userExperiments).thenReturn([{ name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 }]);
         when(interpreterService.getInterpreters(anything())).thenResolve([interpreterPython36Details]);
@@ -342,6 +366,15 @@ suite('Debugging - Adapter Factory', () => {
 
         assert.deepEqual(Reporter.eventNames, [EventName.PYTHON_EXPERIMENTS, EventName.DEBUG_ADAPTER_USING_WHEELS_PATH]);
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.experiment }, { usingWheels: 'false' }]);
+    });
+
+    test('Send attach to local process telemetry if inside the DA experiment and attaching to a local process', async () => {
+        const session = createSession({ request: 'attach', processId: 1234 });
+        when(spiedInstance.userExperiments).thenReturn([{ name: DebugAdapterNewPtvsd.experiment, salt: DebugAdapterNewPtvsd.experiment, min: 0, max: 0 }]);
+
+        await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.ok(Reporter.eventNames.includes(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS));
     });
 
     test('Send control group telemetry if inside the DA experiment control group', async () => {
