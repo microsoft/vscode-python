@@ -97,9 +97,6 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
         return items.map(item => {
             return {
                 ...item,
-        // tslint:disable-next-line: no-suspicious-comment
-                // TODO: Localize & fix as per spec.
-                description: '(register and use interpreter as kernel)',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
