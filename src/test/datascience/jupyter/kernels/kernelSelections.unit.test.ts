@@ -105,10 +105,7 @@ suite('Data Science - KernelSelections', () => {
         verify(sessionManager.getKernelSpecs()).once();
         assert.deepEqual(items, expectedItems);
     });
-    test('Should return a list Active + Local Kernels + Interpreters for local connection', async () => {
-        const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
-
-        when(sessionManager.getRunningKernels()).thenResolve(activeKernels);
+    test('Should return a list of Local Kernels + Interpreters for local connection', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
@@ -117,25 +114,7 @@ suite('Data Science - KernelSelections', () => {
         // - kernel spec display name
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
-        const expectedRemoteItems: IKernelSpecQuickPickItem[] = [
-            {
-                label: python1KernelSpecModel.display_name,
-                selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel }, kernelSpec: undefined },
-                description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
-                    activePython1KernelModel.lastActivityTime.toLocaleString(),
-                    activePython1KernelModel.numberOfConnections.toString()
-                )
-            },
-            {
-                label: juliaKernelSpecModel.display_name,
-                selection: { interpreter: undefined, kernelModel: { ...activeJuliaKernelModel, ...juliaKernelSpecModel }, kernelSpec: undefined },
-                description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
-                    activeJuliaKernelModel.lastActivityTime.toLocaleString(),
-                    activeJuliaKernelModel.numberOfConnections.toString()
-                )
-            }
-        ];
-        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python3KernelSpecModel, rKernelSpecModel].map(item => {
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = allSpecs.map(item => {
             return {
                 label: item.display_name,
                 selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item },
@@ -150,12 +129,10 @@ suite('Data Science - KernelSelections', () => {
             };
         });
         expectedKernelItems.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
-        expectedRemoteItems.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
 
         const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager));
 
-        verify(sessionManager.getRunningKernels()).once();
-        verify(sessionManager.getKernelSpecs()).once();
-        assert.deepEqual(items, [...expectedKernelItems, ...expectedRemoteItems, ...expectedInterpreterItems]);
+        verify(kernelService.getKernelSpecs(anything(), anything())).once();
+        assert.deepEqual(items, [...expectedKernelItems, ...expectedInterpreterItems]);
     });
 });
