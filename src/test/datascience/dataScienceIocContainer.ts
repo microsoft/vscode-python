@@ -909,4 +909,3 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         window.addEventListener = oldListener;
     }
 }
-
