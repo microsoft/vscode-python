@@ -153,9 +153,17 @@ export class KernelSelectionProvider {
                 return false;
             }
             return true;
+        }).map(item => {
+            item.label = `$(plus) ${item.label}`;
+            return item;
         });
         // If kernel is listed as active, then don't list in installed kernels.
         installedKernels = installedKernels.filter(item => !activeKernels.find(active => active.selection.kernelModel?.name === item.selection.kernelSpec?.name));
+
+        // Sorty by name.
+        // Do not sort interpreter list, as that's pre-sorted (there's an algorithm for that).
+        installedKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        activeKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
 
         return [...installedKernels!, ...activeKernels!, ...interprters];
     }
