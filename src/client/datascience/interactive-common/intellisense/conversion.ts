@@ -36,61 +36,34 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 // TypeParameter = 24,
 // Snippet = 25
 //
-// Here's the vscode enum
-// const Text: 1;
-// const Method: 2;
-// const Function: 3;
-// const Constructor: 4;
-// const Field: 5;
-// const Variable: 6;
-// const Class: 7;
-// const Interface: 8;
-// const Module: 9;
-// const Property: 10;
-// const Unit: 11;
-// const Value: 12;
-// const Enum: 13;
-// const Keyword: 14;
-// const Snippet: 15;
-// const Color: 16;
-// const File: 17;
-// const Reference: 18;
-// const Folder: 19;
-// const EnumMember: 20;
-// const Constant: 21;
-// const Struct: 22;
-// const Event: 23;
-// const Operator: 24;
-// const TypeParameter: 25;
 
 // Left side is the vscode value.
 const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
-    [0, 9],  // No value for zero in vscode
-    [1, 18], // Text
-    [2, 0],  // Method
-    [3, 1],  // Function
-    [4, 2],  // Constructor
-    [5, 3],  // Field
-    [6, 4],  // Variable
-    [7, 5],  // Class
-    [8, 7],  // Interface
-    [9, 8],  // Module
-    [10, 9], // Property
-    [11, 12], // Unit
-    [12, 13], // Value
-    [13, 15], // Enum
-    [14, 17], // Keyword
-    [15, 25], // Snippet
-    [16, 19], // Color
-    [17, 20], // File
-    [18, 21], // Reference
-    [19, 23], // Folder
-    [20, 16], // EnumMember
-    [21, 14], // Constant
-    [22, 6], // Struct
-    [23, 10], // Event
-    [24, 11], // Operator
-    [25, 24]  // TypeParameter
+    [vscode.CompletionItemKind.Text, 18], // Text
+    [vscode.CompletionItemKind.Method, 0],  // Method
+    [vscode.CompletionItemKind.Function, 1],  // Function
+    [vscode.CompletionItemKind.Constructor, 2],  // Constructor
+    [vscode.CompletionItemKind.Field, 3],  // Field
+    [vscode.CompletionItemKind.Variable, 4],  // Variable
+    [vscode.CompletionItemKind.Class, 5],  // Class
+    [vscode.CompletionItemKind.Interface, 7],  // Interface
+    [vscode.CompletionItemKind.Module, 8],  // Module
+    [vscode.CompletionItemKind.Property, 9], // Property
+    [vscode.CompletionItemKind.Unit, 12], // Unit
+    [vscode.CompletionItemKind.Value, 13], // Value
+    [vscode.CompletionItemKind.Enum, 15], // Enum
+    [vscode.CompletionItemKind.Keyword, 17], // Keyword
+    [vscode.CompletionItemKind.Snippet, 25], // Snippet
+    [vscode.CompletionItemKind.Color, 19], // Color
+    [vscode.CompletionItemKind.File, 20], // File
+    [vscode.CompletionItemKind.Reference, 21], // Reference
+    [vscode.CompletionItemKind.Folder, 23], // Folder
+    [vscode.CompletionItemKind.EnumMember, 16], // EnumMember
+    [vscode.CompletionItemKind.Constant, 14], // Constant
+    [vscode.CompletionItemKind.Struct, 6], // Struct
+    [vscode.CompletionItemKind.Event, 10], // Event
+    [vscode.CompletionItemKind.Operator, 11], // Operator
+    [vscode.CompletionItemKind.TypeParameter, 24]  // TypeParameter
 ]);
 
 const mapJupyterKind: Map<string, number> = new Map<string, number>([
@@ -159,6 +132,13 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
     // Make sure we have insert text, otherwise the monaco editor will crash on trying to hit tab or enter on the text
     if (!result.insertText && result.label) {
         result.insertText = result.label;
+    }
+
+    // tslint:disable-next-line: no-any
+    if ((result.insertText as any).value) {
+        result.insertTextRules = 4; // Monaco can't handle the snippetText value, so rewrite it.
+        // tslint:disable-next-line: no-any
+        result.insertText = (result.insertText as any).value;
     }
 
     // Make sure we don't have _documentPosition. It holds onto a huge tree of information
