@@ -127,7 +127,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(kernelService.registerKernel(anything(), anything())).never();
-            verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).once();
+            verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).never();
             verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).never();
         });
         test('If seleted interpreter has ipykernel installed and there is no matching kernelSpec, then register a new kernel and return the new kernelspec and interpreter', async () => {
@@ -148,7 +148,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).never();
-            verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).once();
+            verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).never();
         });
         test('If seleted interpreter does not have ipykernel installed and there is no matching kernelspec, then register a new kernel and return the new kernelspec and interpreter', async () => {
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
@@ -168,7 +168,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelService.registerKernel(interpreter, anything())).once();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).never();
-            verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).once();
+            verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).never();
         });
     });
     // tslint:disable-next-line: max-func-body-length
@@ -222,26 +222,6 @@ suite('Data Science - KernelSelector', () => {
             verify(appShell.showQuickPick(anything(), undefined, anything())).never();
             verify(kernelService.registerKernel(anything(), anything())).never();
         });
-        test('If metadata contains kernel information, and there is matching kernelspec, then prompt user to select a kernel', async () => {
-            // tslint:disable-next-line: no-any messages-must-be-localized
-            when(appShell.showInformationMessage(anything(), localize.DataScience.promptToUseActiveInterpreterAsKernel(), localize.DataScience.promptToSelectKernel())).thenResolve(
-                // tslint:disable-next-line: no-any
-                localize.DataScience.promptToSelectKernel() as any
-            );
-            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
-            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
-
-            const kernel = await kernelSelector.getKernelForLocalConnection(instance(sessionManager), nbMetadata);
-
-            assert.isOk(kernel.kernelSpec === kernelSpec);
-            assert.isOk(kernel.interpreter === interpreter);
-            assert.isOk(selectLocalKernelStub.calledOnce);
-            verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
-            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).once();
-            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
-            verify(appShell.showQuickPick(anything(), undefined, anything())).never();
-            verify(kernelService.registerKernel(anything(), anything())).never();
-        });
         test('If metadata contains kernel information, and there is matching kernelspec, then use current interpreter as a kernel', async () => {
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
             when(appShell.showInformationMessage(anything(), localize.DataScience.promptToUseActiveInterpreterAsKernel(), localize.DataScience.promptToSelectKernel())).thenResolve(
@@ -251,20 +231,22 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.registerKernel(anything(), anything())).thenResolve(kernelSpec);
-            when(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).thenResolve();
+            when(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).thenResolve();
+            when(
+                appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(nbMetadata.kernelspec?.display_name!))
+            ).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(instance(sessionManager), nbMetadata);
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
             assert.isOk(selectLocalKernelStub.notCalled);
-            verify(appShell.showInformationMessage(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
             verify(appShell.showQuickPick(anything(), undefined, anything())).never();
             verify(kernelService.registerKernel(anything(), anything())).once();
             verify(appShell.showInformationMessage(localize.DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel())).never();
-            verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).once();
+            verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(nbMetadata.kernelspec?.display_name!))).once();
         });
         test('If metadata is empty, then use active interperter and find a kernel matching active interpreter', async () => {
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);

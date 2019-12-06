@@ -105,7 +105,7 @@ export class KernelSelector {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
                 if (activeInterpreter) {
-                    selection = await this.useCurrentInterpreterOrSelectLocalKernel(notebookMetadata.kernelspec.display_name, activeInterpreter, sessionManager, cancelToken);
+                    selection = await this.useCurrentInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, cancelToken);
                 } else {
                     selection = await this.selectLocalKernel(sessionManager, cancelToken);
                 }
@@ -123,45 +123,6 @@ export class KernelSelector {
             traceError('Jupyter Kernel Spec not found for a local connection');
         }
         return selection;
-    }
-
-    /**
-     * If possible use the current interpreter as a kernel (i.e. if ipykernel is already installed).
-     * Else display a prompt asking user to use (install ipykernel) current interprter as kernel or to select a different kernel/interpreter.
-     *
-     * @private
-     * @param {string} displayNameOfKernelNotFound
-     * @param {PythonInterpreter} interpreter
-     * @param {IJupyterSessionManager} [session]
-     * @param {CancellationToken} [cancelToken]
-     * @returns {Promise<KernelSpecInterpreter>}
-     * @memberof KernelSelector
-     */
-    private async useCurrentInterpreterOrSelectLocalKernel(
-        displayNameOfKernelNotFound: string,
-        interpreter: PythonInterpreter,
-        session?: IJupyterSessionManager,
-        cancelToken?: CancellationToken
-    ): Promise<KernelSpecInterpreter> {
-        // If interpreter has ipykernel installed, then use that without any prompts.
-        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return this.useCurrentInterpreterAsKernel(interpreter, displayNameOfKernelNotFound, session, cancelToken);
-        }
-
-        // tslint:disable-next-line: messages-must-be-localized
-        const selection = await this.applicationShell.showInformationMessage(
-            localize.DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel().format(displayNameOfKernelNotFound),
-            localize.DataScience.promptToUseActiveInterpreterAsKernel(),
-            localize.DataScience.promptToSelectKernel()
-        );
-        switch (selection) {
-            case localize.DataScience.promptToUseActiveInterpreterAsKernel():
-                return this.useCurrentInterpreterAsKernel(interpreter, displayNameOfKernelNotFound, session, cancelToken);
-            case localize.DataScience.promptToSelectKernel():
-                return this.selectLocalKernel(session, cancelToken);
-            default:
-                return {};
-        }
     }
     /**
      * Use the current interpreter as a kerne.
