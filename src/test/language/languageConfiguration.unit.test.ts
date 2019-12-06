@@ -145,6 +145,7 @@ suite('Language Configuration', () => {
             'async def :',
             'async :',
             'async for spam in bacon:',
+            'async with context:',
             'async with context in manager:',
             'class Test:',
             'class Test(object):',
