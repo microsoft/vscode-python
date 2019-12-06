@@ -205,7 +205,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/any-promise/register.js'
             ];
         case 'debugAdapter':
             return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
