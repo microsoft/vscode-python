@@ -24,9 +24,7 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types'
 function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelSpecQuickPickItem {
     return {
         label: kernelSpec.display_name,
-        // tslint:disable-next-line: no-suspicious-comment
-        // TODO: Localize & fix as per spec.
-        description: '(kernel)',
+        description: localize.DataScience.kernelDescriptionForKernelPicker(),
         selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
     };
 }
@@ -151,6 +149,7 @@ export class KernelSelectionProvider {
             }
             return true;
         }).map(item => {
+            // to indicate we're registering/adding these as kernels.
             item.label = `$(plus) ${item.label}`;
             return item;
         });

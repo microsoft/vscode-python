@@ -9,6 +9,8 @@ import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IInstaller, Product } from '../../../common/types';
+import * as localize from '../../../common/utils/localize';
+import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
@@ -52,7 +54,7 @@ export class KernelSelector {
 
         if (selection.selection.kernelSpec) {
             const interpreter = await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken);
-            return {kernelSpec: selection.selection.kernelSpec, interpreter};
+            return { kernelSpec: selection.selection.kernelSpec, interpreter };
         }
         // This is not possible (remote kernels selector can only display remote kernels).
         throw new Error('Invalid Selection in kernel spec (somehow a local kernel/interpreter has been selected for a remote session!');
@@ -73,10 +75,10 @@ export class KernelSelector {
         }
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
-            return this.useInterpreterAsKernel(selection.selection.interpreter, session, cancelToken);
+            return this.useCurrentInterpreterAsKernel(selection.selection.interpreter, session, cancelToken);
         } else {
             const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
-            return {kernelSpec: selection.selection.kernelSpec, interpreter};
+            return { kernelSpec: selection.selection.kernelSpec, interpreter };
         }
     }
     /**
@@ -89,17 +91,26 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async getKernelForLocalConnection(sessionManager?: IJupyterSessionManager, notebookMetadata?: nbformat.INotebookMetadata, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+    public async getKernelForLocalConnection(
+        sessionManager?: IJupyterSessionManager,
+        notebookMetadata?: nbformat.INotebookMetadata,
+        cancelToken?: CancellationToken
+    ): Promise<KernelSpecInterpreter> {
         let selection: KernelSpecInterpreter = {};
-        if (notebookMetadata?.kernelspec){
+        if (notebookMetadata?.kernelspec) {
             selection.kernelSpec = await this.kernelService.findMatchingKernelSpec(notebookMetadata?.kernelspec, sessionManager, cancelToken);
-            if (selection.kernelSpec){
+            if (selection.kernelSpec) {
                 selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken);
             } else {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
                 if (activeInterpreter) {
-                    selection = await this.useInterpreterOrSelectLocalKernel(`Kernel ${notebookMetadata.kernelspec.display_name} could not be found.`, activeInterpreter, sessionManager, cancelToken);
+                    selection = await this.useCurrentInterpreterOrSelectLocalKernel(
+                        localize.DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel().format(notebookMetadata.kernelspec.display_name),
+                        activeInterpreter,
+                        sessionManager,
+                        cancelToken
+                    );
                 } else {
                     selection = await this.selectLocalKernel(sessionManager, cancelToken);
                 }
@@ -119,36 +130,47 @@ export class KernelSelector {
         return selection;
     }
 
-    private async useInterpreterOrSelectLocalKernel(message: string, interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
-        // If interpreter has ipykernel installed, then use start without any prompts.
+    private async useCurrentInterpreterOrSelectLocalKernel(
+        message: string,
+        interpreter: PythonInterpreter,
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken
+    ): Promise<KernelSpecInterpreter> {
+        // If interpreter has ipykernel installed, then use that without any prompts.
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
-            return this.useInterpreterAsKernel(interpreter, session, cancelToken);
+            return this.useCurrentInterpreterAsKernel(interpreter, session, cancelToken);
         }
 
         // tslint:disable-next-line: messages-must-be-localized
-        const selection = await this.applicationShell.showInformationMessage(message, 'Use current interpreter', 'Select Kernel');
+        const selection = await this.applicationShell.showInformationMessage(
+            message,
+            localize.DataScience.promptToUseActiveInterpreterAsKernel(),
+            localize.DataScience.promptToSelectKernel()
+        );
         switch (selection) {
-            case 'Use current interpreter':
-                return this.useInterpreterAsKernel(interpreter, session, cancelToken);
-            case 'Select Kernel':
+            case localize.DataScience.promptToUseActiveInterpreterAsKernel():
+                return this.useCurrentInterpreterAsKernel(interpreter, session, cancelToken);
+            case localize.DataScience.promptToSelectKernel():
                 return this.selectLocalKernel(session, cancelToken);
             default:
                 return {};
         }
     }
-    private async useInterpreterAsKernel(interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+    private async useCurrentInterpreterAsKernel(interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
         let kernelSpec: IJupyterKernelSpec | undefined;
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
             // Find the kernel associated with this interpter.
             kernelSpec = await this.kernelService.findMatchingKernelSpec(interpreter, session, cancelToken);
-            if (kernelSpec){
+            if (kernelSpec) {
                 traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
+                this.applicationShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel()).then(noop, noop);
                 return { kernelSpec, interpreter };
             }
             traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);
         }
         // Try an install this interpreter as a kernel.
         kernelSpec = await this.kernelService.registerKernel(interpreter, cancelToken);
+        this.applicationShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel()).then(noop, noop);
         return { kernelSpec, interpreter };
     }
 }
