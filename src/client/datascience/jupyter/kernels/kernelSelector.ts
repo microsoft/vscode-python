@@ -94,7 +94,7 @@ export class KernelSelector {
         if (notebookMetadata?.kernelspec){
             selection.kernelSpec = await this.kernelService.findMatchingKernelSpec(notebookMetadata?.kernelspec, sessionManager, cancelToken);
             if (selection.kernelSpec){
-                selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec);
+                selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken);
             } else {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
