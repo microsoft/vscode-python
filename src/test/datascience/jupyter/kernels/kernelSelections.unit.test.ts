@@ -71,7 +71,7 @@ suite('Data Science - KernelSelections', () => {
 
         assert.equal(items.length, 0);
     });
-    test('Should return a list with the proper details in the quick pick for remote connections', async () => {
+    test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
 
         when(sessionManager.getRunningKernels()).thenResolve(activeKernels);
@@ -89,14 +89,6 @@ suite('Data Science - KernelSelections', () => {
                     activePython1KernelModel.lastActivityTime.toLocaleString(),
                     activePython1KernelModel.numberOfConnections.toString()
                 )
-            },
-            {
-                label: juliaKernelSpecModel.display_name,
-                selection: { interpreter: undefined, kernelModel: { ...activeJuliaKernelModel, ...juliaKernelSpecModel }, kernelSpec: undefined },
-                description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
-                    activeJuliaKernelModel.lastActivityTime.toLocaleString(),
-                    activeJuliaKernelModel.numberOfConnections.toString()
-                )
             }
         ];
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
@@ -105,7 +97,7 @@ suite('Data Science - KernelSelections', () => {
         verify(sessionManager.getKernelSpecs()).once();
         assert.deepEqual(items, expectedItems);
     });
-    test('Should return a list of Local Kernels + Interpreters for local connection', async () => {
+    test('Should return a list of Local Kernels + Interpreters for local connection (excluding non-python kernels)', async () => {
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
         when(kernelService.getKernelSpecs(anything(), anything())).thenResolve(allSpecs);
         when(interpreterSelector.getSuggestions(undefined)).thenResolve(allInterpreters);
@@ -114,7 +106,7 @@ suite('Data Science - KernelSelections', () => {
         // - kernel spec display name
         // - selection = kernel model + kernel spec
         // - description = last activity and # of connections.
-        const expectedKernelItems: IKernelSpecQuickPickItem[] = allSpecs.map(item => {
+        const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(item => {
             return {
                 label: item.display_name,
                 selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item },

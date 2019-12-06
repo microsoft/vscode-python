@@ -92,7 +92,7 @@ export class KernelService {
     ): Promise<IJupyterKernelSpec | undefined> {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
         if (isInterpreter(option)) {
-            return specs.find(item => item.language === PYTHON_LANGUAGE &&
+            return specs.find(item => item.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase() &&
                 item.display_name === option.displayName &&
                 (this.fileSystem.arePathsSame(item.argv[0], option.path)) || this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path));
         } else {
@@ -110,6 +110,9 @@ export class KernelService {
      * @memberof KernelService
      */
     public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+        if (kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE){
+            return;
+        }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
         const allInterprtersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).

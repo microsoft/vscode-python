@@ -5,6 +5,7 @@
 
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
+import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { IFileSystem } from '../../../common/platform/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
@@ -61,7 +62,10 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
                 ...matchingSpec
             };
         });
-        return items.filter(item => item.display_name || item.name).map(getQuickPickItemForActiveKernel);
+        return items
+            .filter(item => item.display_name || item.name)
+            .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+            .map(getQuickPickItemForActiveKernel);
     }
 }
 
@@ -76,7 +80,9 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     constructor(private readonly kernelService: KernelService, private readonly sessionManager?: IJupyterSessionManager) {}
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
-        return items.map(getQuickPickItemForKernelSpec);
+        return items
+            .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+            .map(getQuickPickItemForKernelSpec);
     }
 }
 
