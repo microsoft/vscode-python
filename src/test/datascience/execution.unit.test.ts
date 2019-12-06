@@ -714,7 +714,7 @@ suite('Jupyter Execution', async () => {
             language: PYTHON_LANGUAGE,
             name: 'hello',
             path: ''
-        }
+        };
         when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
         notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService));
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
