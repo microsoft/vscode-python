@@ -97,7 +97,6 @@ export class HostJupyterExecution
             if (service) {
                 service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
                 service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
-                service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
                 service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                 service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
             }
@@ -128,11 +127,6 @@ export class HostJupyterExecution
     private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
-    }
-
-    private onRemoteIsKernelCreateSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.isKernelCreateSupported(cancellation);
     }
 
     private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {

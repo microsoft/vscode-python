@@ -218,7 +218,6 @@ export class KernelService {
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
-
         // If ipykernel is not installed, prompt to install it.
         if (!(await this.installer.isInstalled(Product.ipykernel))) {
             const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
@@ -232,7 +231,6 @@ export class KernelService {
             return;
         }
 
-        // Assumption is that ipykernel is installed, if not, we'll throw an error here.
         const execService = await execServicePromise;
         const output = await execService.execModule('ipykernel', ['install', '--user', '--name', name, '--display-name', interpreter.displayName], {
             throwOnStdErr: true,

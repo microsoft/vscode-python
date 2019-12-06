@@ -112,10 +112,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         const execution = await this.executionFactory.get();
         return execution.isImportSupported(cancelToken);
     }
-    public async isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isKernelCreateSupported(cancelToken);
-    }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isSpawnSupported(cancelToken);

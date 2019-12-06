@@ -83,7 +83,7 @@ import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibi
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
-import { IInstallationChannelManager } from '../../client/common/installer/types';
+import { ProductInstaller } from '../../client/common/installer/productInstaller';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -94,6 +94,7 @@ import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
+import { IInstallationChannelManager, IProductService, IProductPathService } from '../../client/common/installer/types';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import {
     IBufferDecoder,
@@ -128,11 +129,13 @@ import {
     IDataScienceSettings,
     IExperimentsManager,
     IExtensions,
+    IInstaller,
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
     IPythonExtensionBanner,
-    IsWindows
+    IsWindows,
+    ProductType
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -169,6 +172,10 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
+import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
+import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
+import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { StatusProvider } from '../../client/datascience/statusProvider';
@@ -212,10 +219,12 @@ import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
+import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import {
     IInterpreterComparer,
+    IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
@@ -242,7 +251,8 @@ import {
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE
+    WORKSPACE_VIRTUAL_ENV_SERVICE,
+    IShebangCodeLensProvider
 } from '../../client/interpreter/contracts';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -300,6 +310,9 @@ import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
+import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
+import { DataScienceProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService, LinterProductPathService, FormatterProductPathService, CTagsProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -330,6 +343,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
+        displayName: 'Python',
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
     };
@@ -338,6 +352,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         version: new SemVer('3.6.7-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
+        displayName: 'Python',
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
     };
@@ -479,6 +494,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(ILanguageServerCompatibilityService, LanguageServerCompatibilityService);
         this.serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
         this.serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
+        this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
+        this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
+        this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
+        this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
+        this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
+        this.serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
+        this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
 
         // Don't check for dot net compatibility
         const dotNetCompability = mock(DotNetCompatibilityService);
@@ -658,7 +686,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
+            // When using mocked Jupyter, default to using default kernel.
+            const kernelService = mock(KernelService);
+            when(kernelService.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
+            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(kernelService));
         } else {
+            this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);

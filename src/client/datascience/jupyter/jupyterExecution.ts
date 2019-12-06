@@ -97,11 +97,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(() => this.isCommandSupported(JupyterCommands.ConvertCommand), cancelToken);
     }
 
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        // See if we can find the command ipykernel
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelCreateCommand), cancelToken);
-    }
-
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // Supported if we can run a notebook
         return this.isNotebookSupported(cancelToken);

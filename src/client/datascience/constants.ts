@@ -320,9 +320,7 @@ export namespace CodeSnippits {
 export enum JupyterCommands {
     NotebookCommand = 'notebook',
     ConvertCommand = 'nbconvert',
-    KernelSpecCommand = 'kernelspec',
-    KernelCreateCommand = 'ipykernel'
-
+    KernelSpecCommand = 'kernelspec'
 }
 
 export namespace LiveShare {
@@ -342,7 +340,6 @@ export namespace LiveShare {
 export namespace LiveShareCommands {
     export const isNotebookSupported = 'isNotebookSupported';
     export const isImportSupported = 'isImportSupported';
-    export const isKernelCreateSupported = 'isKernelCreateSupported';
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
     export const executeObservable = 'executeObservable';

@@ -742,7 +742,6 @@ suite('Jupyter Execution', async () => {
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
-        await assert.eventually.equal(jupyterExecutionFactory.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
         await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
@@ -754,7 +753,6 @@ suite('Jupyter Execution', async () => {
 
         await assert.eventually.equal(jupyterExecutionFactory.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(jupyterExecutionFactory.isImportSupported(), true, 'Import not supported');
-        await assert.eventually.equal(jupyterExecutionFactory.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await jupyterExecutionFactory.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
         await assert.isFulfilled(jupyterExecutionFactory.connectToNotebookServer(), 'Should be able to start a server');
@@ -788,7 +786,6 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         await assert.eventually.equal(execution.isNotebookSupported(), true, 'Notebook not supported');
         await assert.eventually.equal(execution.isImportSupported(), true, 'Import not supported');
-        await assert.eventually.equal(execution.isKernelCreateSupported(), true, 'Kernel Create not supported');
         const usableInterpreter = await execution.getUsableJupyterPython();
         assert.isOk(usableInterpreter, 'Usable interpreter not found');
         if (usableInterpreter) {

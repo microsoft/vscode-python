@@ -378,19 +378,16 @@ export class JupyterCommandFinderImpl {
             const newOptions: SpawnOptions = { throwOnStdErr: false, encoding: 'utf8', token: cancelToken };
             const pythonService = await this.createExecutionService(interpreter);
 
-            // For commands not 'ipykernel' first try them as jupyter commands
-            if (moduleName !== JupyterCommands.KernelCreateCommand) {
-                try {
-                    const execResult = await pythonService.execModule('jupyter', [moduleName, '--version'], newOptions);
-                    if (execResult.stderr) {
-                        this.logger.logWarning(`${execResult.stderr} for ${interpreter.path}`);
-                        result.error = execResult.stderr;
-                    } else {
-                        result.status = ModuleExistsStatus.FoundJupyter;
-                    }
-                } catch (err) {
-                    this.logger.logWarning(`${err} for ${interpreter.path}`);
+            try {
+                const execResult = await pythonService.execModule('jupyter', [moduleName, '--version'], newOptions);
+                if (execResult.stderr) {
+                    this.logger.logWarning(`${execResult.stderr} for ${interpreter.path}`);
+                    result.error = execResult.stderr;
+                } else {
+                    result.status = ModuleExistsStatus.FoundJupyter;
                 }
+            } catch (err) {
+                this.logger.logWarning(`${err} for ${interpreter.path}`);
             }
 
             // After trying first as "-m jupyter <module> --version" then try "-m <module> --version" as this works in some cases

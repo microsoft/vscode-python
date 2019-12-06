@@ -69,9 +69,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
     }
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
-    }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
     }
