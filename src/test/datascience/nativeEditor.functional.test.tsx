@@ -1197,7 +1197,7 @@ for _ in range(50):
             test('File saved with same format', async () => {
                 // Configure notebook to save automatically ever 1s.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('afterDelay');
-                when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1_000);
+                when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(2_000);
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
 
