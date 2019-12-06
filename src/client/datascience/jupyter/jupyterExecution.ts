@@ -107,7 +107,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
         // Return nothing if we cancel
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
-            // let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined; interpreter?: PythonInterpreter } | undefined;
             let connection: IConnection | undefined;
             let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
@@ -230,7 +229,6 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<IConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
-            traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
             const connection = await this.startNotebookServer(useDefaultConfig, cancelToken);

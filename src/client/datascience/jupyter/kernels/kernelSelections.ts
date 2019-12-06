@@ -133,12 +133,11 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForLocalSession(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const activeKernelsPromise = sessionManager ? new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken) : Promise.resolve([]);
-        const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService).getKernelSelections(cancelToken);
+        const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, sessionManager).getKernelSelections(cancelToken);
         const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
 
         // tslint:disable-next-line: prefer-const
-        let [activeKernels, installedKernels, interprters] = await Promise.all([activeKernelsPromise, installedKernelsPromise, interpretersPromise]);
+        let [installedKernels, interprters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
 
         interprters = interprters.filter(item => {
             // If the interpreter is registered as a kernel then don't inlcude it.
@@ -153,14 +152,10 @@ export class KernelSelectionProvider {
             item.label = `$(plus) ${item.label}`;
             return item;
         });
-        // If kernel is listed as active, then don't list in installed kernels.
-        installedKernels = installedKernels.filter(item => !activeKernels.find(active => active.selection.kernelModel?.name === item.selection.kernelSpec?.name));
-
         // Sorty by name.
         // Do not sort interpreter list, as that's pre-sorted (there's an algorithm for that).
         installedKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
-        activeKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
 
-        return [...installedKernels!, ...activeKernels!, ...interprters];
+        return [...installedKernels!, ...interprters];
     }
 }

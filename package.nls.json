@@ -169,7 +169,6 @@
     "DataScience.redo": "Redo",
     "DataScience.clearAll": "Remove all cells",
     "DataScience.pythonVersionHeader": "Python version:",
-    "DataScience.pythonVersionHeaderNoPyKernel": "Python version may not match, no ipykernel found:",
     "DataScience.pythonRestartHeader": "Restarted kernel:",
     "DataScience.pythonNewHeader": "Started new kernel:",
     "DataScience.executingCodeFailure": "Executing code failed : {0}",
@@ -387,5 +386,9 @@
     "DataScience.jupyterSelectURINewLabel" : "Existing",
     "DataScience.jupyterSelectURINewDetail" : "Specify the URI of an existing server",
     "DataScience.jupyterSelectURIRunningDetailFormat" : "Last activity {0}. {1} existing connections.",
-    "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown."
+    "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown.",
+    "DataScience.fallbackToUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Using the current interpreter.",
+    "DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Registering a new kernel using the current interpreter.",
+    "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": "Couldn't find kernel '{0}' that the notebook was created with.",
+    "DataScience.kernelDescriptionForKernelPicker": "(kernel)"
 }
