@@ -131,7 +131,6 @@ export class WebPanelServer {
 
     // tslint:disable: no-any
     private generateReactHtml(query: any) {
-        const uriBase = ''; //webView.asWebviewUri(Uri.file(this.rootPath));
         const scripts = query.scripts ? Array.isArray(query.scripts) ? query.Scripts : [query.scripts] : [''];
 
         return `<!doctype html>
@@ -153,10 +152,10 @@ export class WebPanelServer {
                 <script type="text/javascript">
                     function resolvePath(relativePath) {
                         if (relativePath && relativePath[0] == '.' && relativePath[1] != '.') {
-                            return "${uriBase}" + relativePath.substring(1);
+                            return relativePath.substring(1);
                         }
 
-                        return "${uriBase}" + relativePath;
+                        return relativePath;
                     }
                 </script>
                 <script type="text/javascript">

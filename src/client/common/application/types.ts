@@ -939,7 +939,7 @@ export type WebPanelMessage = {
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
-    title: string;
+    setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
      * @return A Promise that can be waited on

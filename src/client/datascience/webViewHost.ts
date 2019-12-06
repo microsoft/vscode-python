@@ -96,7 +96,7 @@ export class WebViewHost<IMapping> implements IDisposable {
 
     public setTitle(newTitle: string) {
         if (!this.isDisposed && this.webPanel) {
-            this.webPanel.title = newTitle;
+            this.webPanel.setTitle(newTitle);
         }
     }
 

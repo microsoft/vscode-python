@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { nbformat } from '@jupyterlab/coreutils';
 import { expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
-import * as sinon from 'sinon';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { DocumentManager } from '../../../client/common/application/documentManager';
@@ -15,9 +16,11 @@ import {
     ICommandManager,
     IDocumentManager,
     ILiveShareApi,
+    IWebPanelMessageListener,
     IWebPanelProvider,
     IWorkspaceService
 } from '../../../client/common/application/types';
+import { WebPanel } from '../../../client/common/application/webPanels/webPanel';
 import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -224,6 +227,20 @@ suite('Data Science - Native Editor', () => {
         const sessionChangedEvent = new EventEmitter<void>();
         when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
 
+        let listener: IWebPanelMessageListener;
+        const webPanel = mock(WebPanel);
+        class WebPanelCreateMatcher extends Matcher {
+            public match(value: any) {
+                listener = value.listener;
+                listener.onMessage(InteractiveWindowMessages.Started, undefined);
+                return true;
+            }
+            public toString() { return ''; }
+        }
+        const matcher = (): any => {
+            return new WebPanelCreateMatcher();
+        };
+        when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
     });
 
     teardown(() => {
