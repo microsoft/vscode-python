@@ -224,10 +224,6 @@ suite('Data Science - KernelSelector', () => {
         });
         test('If metadata contains kernel information, and there is matching kernelspec, then use current interpreter as a kernel', async () => {
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-            when(appShell.showInformationMessage(anything(), localize.DataScience.promptToUseActiveInterpreterAsKernel(), localize.DataScience.promptToSelectKernel())).thenResolve(
-                // tslint:disable-next-line: no-any
-                localize.DataScience.promptToUseActiveInterpreterAsKernel() as any
-            );
             when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.registerKernel(anything(), anything())).thenResolve(kernelSpec);

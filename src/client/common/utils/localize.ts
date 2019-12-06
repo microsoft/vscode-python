@@ -307,8 +307,6 @@ export namespace DataScience {
     export const fallBackToRegisterAndUseActiveInterpeterAsKernel = localize('DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with. Registering a new Kernel using the current interpreter.');
     export const kernelDescriptionForKernelPicker = localize('DataScience.kernelDescriptionForKernelPicker', '(kernel)');
     export const fallBackToPromptToUseActiveInterpreterOrSelectAKernel = localize('DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with.');
-    export const promptToUseActiveInterpreterAsKernel = localize('DataScience.promptToUseActiveInterpreterAsKernel', 'Use current interpreter');
-    export const promptToSelectKernel = localize('DataScience.promptToSelectKernel', 'Select Kernel');
 }
 
 export namespace DebugConfigStrings {
