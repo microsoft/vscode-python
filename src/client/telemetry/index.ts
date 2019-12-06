@@ -1467,7 +1467,6 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ScrolledToCell]: never | undefined;
     [Telemetry.CellCount]: { count: number };
     [Telemetry.Save]: never | undefined;
-    [Telemetry.AutoSaveEnabled]: { enabled: boolean };
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;

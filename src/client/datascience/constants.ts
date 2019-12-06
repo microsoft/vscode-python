@@ -135,7 +135,6 @@ export enum Telemetry {
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
-    AutoSaveEnabled = 'DATASCIENCE.AUTO_SAVE_ENABLED',
     ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
