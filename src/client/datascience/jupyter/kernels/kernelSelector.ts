@@ -73,7 +73,7 @@ export class KernelSelector {
         }
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
-            return this.userInterpreterAsKernel(selection.selection.interpreter, session, cancelToken);
+            return this.useInterpreterAsKernel(selection.selection.interpreter, session, cancelToken);
         } else {
             const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
             return {kernelSpec: selection.selection.kernelSpec, interpreter};
@@ -120,18 +120,23 @@ export class KernelSelector {
     }
 
     private async useInterpreterOrSelectLocalKernel(message: string, interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+        // If interpreter has ipykernel installed, then use start without any prompts.
+        if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
+            return this.useInterpreterAsKernel(interpreter, session, cancelToken);
+        }
+
         // tslint:disable-next-line: messages-must-be-localized
         const selection = await this.applicationShell.showInformationMessage(message, 'Use current interpreter', 'Select Kernel');
         switch (selection) {
             case 'Use current interpreter':
-                return this.userInterpreterAsKernel(interpreter, session, cancelToken);
+                return this.useInterpreterAsKernel(interpreter, session, cancelToken);
             case 'Select Kernel':
                 return this.selectLocalKernel(session, cancelToken);
             default:
                 return {};
         }
     }
-    private async userInterpreterAsKernel(interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+    private async useInterpreterAsKernel(interpreter: PythonInterpreter, session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
         let kernelSpec: IJupyterKernelSpec | undefined;
         if (await this.installer.isInstalled(Product.ipykernel, interpreter)) {
             // Find the kernel associated with this interpter.
