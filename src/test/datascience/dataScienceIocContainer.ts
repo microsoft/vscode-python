@@ -84,6 +84,9 @@ import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
+import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
+import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -94,7 +97,6 @@ import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessLogger } from '../../client/common/process/logger';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
-import { IInstallationChannelManager, IProductService, IProductPathService } from '../../client/common/installer/types';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import {
     IBufferDecoder,
@@ -246,14 +248,15 @@ import {
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
     IPipEnvService,
+    IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
     PythonInterpreter,
     WINDOWS_REGISTRY_SERVICE,
-    WORKSPACE_VIRTUAL_ENV_SERVICE,
-    IShebangCodeLensProvider
+    WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
+import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
@@ -310,9 +313,6 @@ import { MockWorkspaceConfiguration } from './mockWorkspaceConfig';
 import { blurWindow, createMessageEvent } from './reactHelpers';
 import { TestInteractiveWindowProvider } from './testInteractiveWindowProvider';
 import { TestNativeEditorProvider } from './testNativeEditorProvider';
-import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
-import { DataScienceProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService, LinterProductPathService, FormatterProductPathService, CTagsProductPathService } from '../../client/common/installer/productPath';
-import { ProductService } from '../../client/common/installer/productService';
 
 export class DataScienceIocContainer extends UnitTestIocContainer {
 
@@ -909,3 +909,4 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         window.addEventListener = oldListener;
     }
 }
+
