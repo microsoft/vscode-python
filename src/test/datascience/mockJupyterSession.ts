@@ -4,9 +4,9 @@
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
-
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import { ICell, IJupyterSession } from '../../client/datascience/types';
+import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
 
@@ -16,6 +16,7 @@ const LineFeedRegEx = /(\r\n|\n)/g;
 export class MockJupyterSession implements IJupyterSession {
     private dict: Record<string, ICell>;
     private restartedEvent: EventEmitter<void> = new EventEmitter<void>();
+    private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
     private timedelay: number;
     private executionCount: number = 0;
     private outstandingRequestTokenSources: CancellationTokenSource[] = [];
@@ -31,6 +32,13 @@ export class MockJupyterSession implements IJupyterSession {
 
     public get onRestarted(): Event<void> {
         return this.restartedEvent.event;
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
     }
 
     public async restart(_timeout: number): Promise<void> {

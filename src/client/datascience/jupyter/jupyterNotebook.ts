@@ -1,10 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import '../../common/extensions';
-
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
-
 import { nbformat } from '@jupyterlab/coreutils';
 import { Kernel, KernelMessage } from '@jupyterlab/services';
 import * as fs from 'fs-extra';
@@ -13,9 +8,10 @@ import { Subscriber } from 'rxjs/Subscriber';
 import * as uuid from 'uuid/v4';
 import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, CancellationError } from '../../common/cancellation';
+import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
@@ -28,19 +24,11 @@ import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
-import {
-    CellState,
-    ICell,
-    IJupyterKernelSpec,
-    IJupyterSession,
-    INotebook,
-    INotebookCompletion,
-    INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo,
-    InterruptResult
-} from '../types';
+import { CellState, ICell, IJupyterKernelSpec, IJupyterSession, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../types';
 import { expandWorkingDir } from './jupyterUtils';
+
+// tslint:disable-next-line: no-require-imports
+import cloneDeep = require('lodash/cloneDeep');
 
 class CellSubscriber {
     private deferred: Deferred<CellState> = createDeferred<CellState>();
@@ -147,6 +135,7 @@ export class JupyterNotebookBase implements INotebook {
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
     private interpreterPromise: Promise<PythonInterpreter | undefined>;
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -163,6 +152,13 @@ export class JupyterNotebookBase implements INotebook {
         private interpreterService: IInterpreterService
     ) {
         this.sessionStartTime = Date.now();
+
+        const statusChangeHandler = (status: ServerStatus) => {
+            if (this.onStatusChangedEvent) {
+                this.onStatusChangedEvent.fire(status);
+            }
+        };
+        this.session.onSessionStatusChanged(statusChangeHandler);
         this._resource = resource;
         this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
@@ -175,6 +171,9 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public dispose(): Promise<void> {
+        if (this.onStatusChangedEvent) {
+            this.onStatusChangedEvent.dispose();
+        }
         traceInfo(`Shutting down session ${this.resource.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
@@ -182,6 +181,13 @@ export class JupyterNotebookBase implements INotebook {
             return dispose ? dispose : Promise.resolve();
         }
         return Promise.resolve();
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
     }
 
     public get resource(): Uri {
@@ -366,21 +372,24 @@ export class JupyterNotebookBase implements INotebook {
 
             // Listen to status change events so we can tell if we're restarting
             const restartHandler = () => {
-                // We restarted the kernel.
-                this.sessionStartTime = Date.now();
-                traceWarning('Kernel restarting during interrupt');
+                if (status === ServerStatus.Restarting) {
+                    // We restarted the kernel.
+                    this.sessionStartTime = Date.now();
+                    traceWarning('Kernel restarting during interrupt');
 
-                // Indicate we have to redo initial setup. We can't wait for starting though
-                // because sometimes it doesn't happen
-                this.ranInitialSetup = false;
+                    // Indicate we have to redo initial setup. We can't wait for starting though
+                    // because sometimes it doesn't happen
+                    this.ranInitialSetup = false;
 
-                // Indicate we restarted the race below
-                restarted.resolve([]);
+                    // Indicate we restarted the race below
+                    restarted.resolve([]);
 
-                // Fail all of the active (might be new ones) pending cell executes. We restarted.
-                this.finishUncompletedCells();
+                    // Fail all of the active (might be new ones) pending cell executes. We restarted.
+                    this.finishUncompletedCells();
+                }
             };
-            const restartHandlerToken = this.session.onRestarted(restartHandler);
+            // const restartHandlerToken = this.session.onRestarted(restartHandler);
+            const restartHandlerToken = this.session.onSessionStatusChanged(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
             this.session.interrupt(timeoutMs)
@@ -754,7 +763,11 @@ export class JupyterNotebookBase implements INotebook {
                                 subscriber.error(this.sessionStartTime, e);
                             }
                         })
-                        .finally(() => exitHandlerDisposable?.dispose()).ignoreErrors();
+                        .finally(() => {
+                            if (exitHandlerDisposable) {
+                                exitHandlerDisposable.dispose();
+                            }
+                        }).ignoreErrors();
                 } else {
                     subscriber.error(this.sessionStartTime, this.getDisposedError());
                 }

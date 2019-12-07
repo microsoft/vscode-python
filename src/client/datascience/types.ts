@@ -73,13 +73,12 @@ export interface INotebookServer extends IAsyncDisposable {
     getConnectionInfo(): IConnection | undefined;
     waitForConnect(): Promise<INotebookServerLaunchInfo | undefined>;
     shutdown(): Promise<void>;
-    getServerStatus(): Promise<ServerStatus>;
-    getKernelDisplayName(): string;
 }
 
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Uri;
     readonly server: INotebookServer;
+    onSessionStatusChanged: Event<ServerStatus>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]>;
@@ -157,7 +156,7 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
-    onRestarted: Event<void>;
+    onSessionStatusChanged: Event<ServerStatus>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;

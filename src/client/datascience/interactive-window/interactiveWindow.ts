@@ -1,21 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { inject, injectable, multiInject } from 'inversify';
 import * as path from 'path';
 import { Event, EventEmitter, TextEditor, Uri, ViewColumn } from 'vscode';
-
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -23,26 +14,10 @@ import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
+import { DataScience } from '../datascience';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
-import {
-    ICell,
-    ICodeCssGenerator,
-    IDataScienceErrorHandler,
-    IDataViewerProvider,
-    IInteractiveWindow,
-    IInteractiveWindowInfo,
-    IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterDebugger,
-    IJupyterExecution,
-    IJupyterVariables,
-    INotebookEditorProvider,
-    INotebookExporter,
-    INotebookServerOptions,
-    IStatusProvider,
-    IThemeFinder
-} from '../types';
+import { ICell, ICodeCssGenerator, IDataScience, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindow, IInteractiveWindowInfo, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditorProvider, INotebookExporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react');
 
@@ -74,6 +49,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
+        @inject(IDataScience) dataScience: DataScience,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
     ) {
@@ -97,6 +73,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             jupyterVariables,
             jupyterDebugger,
             editorProvider,
+            dataScience,
             errorHandler,
             historyReactDir,
             [path.join(historyReactDir, 'index_bundle.js')],
@@ -259,7 +236,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected startServer(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
-        if (!this.trackedJupyterStart){
+        if (!this.trackedJupyterStart) {
             this.trackedJupyterStart = true;
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();

@@ -45,5 +45,7 @@ export const actionCreators = {
     scroll: (isAtBottom: boolean): CommonAction<IScrollAction> => ({ type: CommonActionType.SCROLL, payload: { isAtBottom } }),
     unfocus: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId } }),
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } }),
-    editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT })
+    editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT }),
+    selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL }),
+    selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER })
 };

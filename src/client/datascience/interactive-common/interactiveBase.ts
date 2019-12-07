@@ -1,8 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import * as fs from 'fs-extra';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
@@ -11,16 +9,11 @@ import * as uuid from 'uuid/v4';
 import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
-import {
-    IApplicationShell,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
+import { IApplicationShell, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
+import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -33,46 +26,13 @@ import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
-import {
-    IAddedSysInfo,
-    ICopyCode,
-    IGotoCode,
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages,
-    IRemoteAddCode,
-    IRemoteReexecuteCode,
-    IShowDataViewer,
-    ISubmitNewCell,
-    SysInfoReason
-} from '../interactive-common/interactiveWindowTypes';
+import { DataScience } from '../datascience';
+import { IAddedSysInfo, ICopyCode, IGotoCode, IInteractiveWindowMapping, InteractiveWindowMessages, IRemoteAddCode, IRemoteReexecuteCode, IShowDataViewer, ISubmitNewCell, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { CssMessages } from '../messages';
-import {
-    CellState,
-    ICell,
-    ICodeCssGenerator,
-    IConnection,
-    IDataScienceErrorHandler,
-    IDataViewerProvider,
-    IInteractiveBase,
-    IInteractiveWindowInfo,
-    IInteractiveWindowListener,
-    IJupyterDebugger,
-    IJupyterExecution,
-    IJupyterVariable,
-    IJupyterVariables,
-    IJupyterVariablesResponse,
-    IMessageCell,
-    INotebook,
-    INotebookEditorProvider,
-    INotebookExporter,
-    INotebookServerOptions,
-    InterruptResult,
-    IStatusProvider,
-    IThemeFinder
-} from '../types';
+import { CellState, ICell, ICodeCssGenerator, IConnection, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveBase, IInteractiveWindowInfo, IInteractiveWindowListener, IJupyterDebugger, IJupyterExecution, IJupyterVariable, IJupyterVariables, IJupyterVariablesResponse, IMessageCell, INotebook, INotebookEditorProvider, INotebookExporter, INotebookServerOptions, InterruptResult, IStatusProvider, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 
@@ -110,6 +70,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() private jupyterVariables: IJupyterVariables,
         @unmanaged() private jupyterDebugger: IJupyterDebugger,
         @unmanaged() protected ipynbProvider: INotebookEditorProvider,
+        @unmanaged() private dataScience: DataScience,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
@@ -259,6 +220,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             case InteractiveWindowMessages.LoadOnigasmAssemblyRequest:
                 this.handleMessage(message, payload, this.requestOnigasm);
+                break;
+
+            case InteractiveWindowMessages.SelectKernel:
+                this.handleMessage(message, payload, this.selectKernel);
+                break;
+
+            case InteractiveWindowMessages.SelectJupyterServer:
+                this.handleMessage(message, payload, this.selectServer);
                 break;
 
             default:
@@ -1069,6 +1038,24 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         if (this.notebook) {
             const uri: Uri = await this.getNotebookIdentity();
             this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri.toString()).ignoreErrors();
+
+            const statusChangeHandler = async (status: ServerStatus) => {
+                if (this.notebook) {
+                    const settings = this.configuration.getSettings();
+                    const kernelSpec = await this.notebook.getKernelSpec();
+
+                    if (kernelSpec) {
+                        const name = kernelSpec.display_name;
+
+                        await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                            jupyterServerStatus: status,
+                            uri: settings.datascience.jupyterServerURI,
+                            displayName: name.substring(1, name.length - 1)
+                        });
+                    }
+                }
+            };
+            this.notebook.onSessionStatusChanged(statusChangeHandler);
         }
 
         traceInfo('Connected to jupyter server.');
@@ -1269,5 +1256,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             traceWarning('File system not found. Colorization will not be available.');
             this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, undefined).ignoreErrors();
         }
+    }
+
+    private async selectServer() {
+        await this.dataScience.selectJupyterURI();
+    }
+
+    private async selectKernel() {
+        // show the kernel dropdown
     }
 }

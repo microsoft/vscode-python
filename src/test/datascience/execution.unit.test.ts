@@ -13,7 +13,7 @@ import { anyString, anything, deepEqual, instance, match, mock, reset, verify, w
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter, Uri } from 'vscode';
+import { CancellationToken, CancellationTokenSource, ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -50,7 +50,7 @@ import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockJupyterManagerFactory } from './mockJupyterManagerFactory';
 
 class MockJupyterNotebook implements INotebook {
-
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     constructor(private owner: INotebookServer) {
         noop();
     }
@@ -106,6 +106,9 @@ class MockJupyterNotebook implements INotebook {
     }
 
     public async dispose(): Promise<void> {
+        if (this.onStatusChangedEvent) {
+            this.onStatusChangedEvent.dispose();
+        }
         return Promise.resolve();
     }
 
@@ -115,6 +118,12 @@ class MockJupyterNotebook implements INotebook {
 
     public getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
         return Promise.resolve(undefined);
+    }
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
     }
 }
 
@@ -176,18 +185,6 @@ class MockJupyterServer implements INotebookServer {
             this.notebookFile.dispose(); // This destroy any unwanted kernel specs if necessary
             this.notebookFile = undefined;
         }
-    }
-
-    public getServerStatus() {
-        return Promise.resolve(ServerStatus.NotStarted);
-    }
-
-    public getKernelDisplayName(): string {
-        if (this.launchInfo && this.launchInfo.kernelSpec) {
-            return this.launchInfo.kernelSpec.display_name;
-        }
-
-        return 'Python';
     }
 }
 

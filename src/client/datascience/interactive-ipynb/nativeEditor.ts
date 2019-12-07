@@ -73,8 +73,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookImporter) private importer: INotebookImporter,
+        @inject(IDataScience) dataScience: DataScience,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IDataScience) private dataScience: DataScience,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento
     ) {
@@ -98,6 +98,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             jupyterVariables,
             jupyterDebugger,
             editorProvider,
+            dataScience,
             errorHandler,
             nativeEditorDir,
             [path.join(nativeEditorDir, 'index_bundle.js')],
@@ -230,14 +231,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             case InteractiveWindowMessages.ClearAllOutputs:
                 this.handleMessage(message, payload, this.clearAllOutputs);
-                break;
-
-            case InteractiveWindowMessages.SelectKernel:
-                this.handleMessage(message, payload, this.selectKernel);
-                break;
-
-            case InteractiveWindowMessages.SelectJupyterServer:
-                this.handleMessage(message, payload, this.selectServer);
                 break;
 
             default:
@@ -915,30 +908,5 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         });
 
         await this.setDirty();
-    }
-
-    private async selectServer() {
-        await this.dataScience.selectJupyterURI();
-        await this.updateServerStatus();
-    }
-
-    private async selectKernel() {
-        // show the kernel dropdown
-        await this.updateServerStatus();
-    }
-
-    private async updateServerStatus() {
-        const settings = this.configuration.getSettings();
-        const server = await this.jupyterExecution.connectToNotebookServer();
-        // const server = await this.jupyterExecution.getServer();
-        if (server) {
-            const status = await server.getServerStatus();
-
-            await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                jupyterServerStatus: status,
-                uri: settings.datascience.jupyterServerURI,
-                displayName: server.getKernelDisplayName()
-            });
-        }
     }
 }

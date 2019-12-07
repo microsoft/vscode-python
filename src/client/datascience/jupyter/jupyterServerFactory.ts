@@ -6,7 +6,6 @@ import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -117,18 +116,5 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
     public async waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
         const server = await this.serverFactory.get();
         return server.waitForConnect();
-    }
-
-    public async getServerStatus(): Promise<ServerStatus> {
-        const server = await this.serverFactory.get();
-        return server.getServerStatus();
-    }
-
-    public getKernelDisplayName(): string {
-        if (this.launchInfo && this.launchInfo.kernelSpec) {
-            return this.launchInfo.kernelSpec.display_name;
-        }
-
-        return 'Python';
     }
 }

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
-import { Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
@@ -15,15 +15,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    ICell,
-    IJupyterKernelSpec,
-    INotebook,
-    INotebookCompletion,
-    INotebookExecutionLogger,
-    INotebookServer,
-    InterruptResult
-} from '../../types';
+import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -32,6 +24,8 @@ export class GuestJupyterNotebook
     extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
     private responseQueue: ResponseQueue = new ResponseQueue();
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+
     constructor(
         liveShare: ILiveShareApi,
         private disposableRegistry: IDisposableRegistry,
@@ -57,6 +51,9 @@ export class GuestJupyterNotebook
     }
 
     public dispose(): Promise<void> {
+        if (this.onStatusChangedEvent) {
+            this.onStatusChangedEvent.dispose();
+        }
         return this.shutdown();
     }
 
@@ -67,6 +64,13 @@ export class GuestJupyterNotebook
     public clear(_id: string): void {
         // We don't do anything as we don't cache results in this class.
         noop();
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
     }
 
     public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {

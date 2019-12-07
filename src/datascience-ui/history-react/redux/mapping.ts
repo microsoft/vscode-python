@@ -43,6 +43,8 @@ export class IInteractiveActionMapping {
     public [CommonActionType.CLICK_CELL]: InteractiveReducerFunc<ICellAction>;
     public [CommonActionType.UNFOCUS_CELL]: InteractiveReducerFunc<ICellAction>;
     public [CommonActionType.UNMOUNT]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_KERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_SERVER]: InteractiveReducerFunc<never | undefined>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: InteractiveReducerFunc<ICell>;

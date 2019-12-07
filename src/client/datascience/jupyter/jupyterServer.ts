@@ -4,7 +4,6 @@
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { ILiveShareApi } from '../../common/application/types';
 import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
@@ -26,7 +25,6 @@ export class JupyterServerBase implements INotebookServer {
     private notebooks: Map<string, INotebook> = new Map<string, INotebook>();
     private sessionManager: IJupyterSessionManager | undefined;
     private savedSession: IJupyterSession | undefined;
-    private status: ServerStatus = ServerStatus.NotStarted;
 
     constructor(
         _liveShare: ILiveShareApi,
@@ -78,12 +76,6 @@ export class JupyterServerBase implements INotebookServer {
         const savedSession = this.savedSession;
         this.savedSession = undefined;
 
-        if (this.status === ServerStatus.NotStarted) {
-            this.status = ServerStatus.Starting;
-        } else {
-            this.status = ServerStatus.Restarting;
-        }
-
         // Create a notebook and return it.
         return this.createNotebookInstance(resource, this.sessionManager, savedSession, this.disposableRegistry, this.configService, this.loggers, cancelToken);
     }
@@ -102,7 +94,6 @@ export class JupyterServerBase implements INotebookServer {
 
         // Destroy the kernel spec
         await this.destroyKernelSpec();
-        this.status = ServerStatus.Dead;
 
         // Remove the saved session if we haven't passed it onto a notebook
         if (this.savedSession) {
@@ -163,18 +154,6 @@ export class JupyterServerBase implements INotebookServer {
 
     public async getNotebook(resource: Uri): Promise<INotebook | undefined> {
         return this.notebooks.get(resource.toString());
-    }
-
-    public getServerStatus(): Promise<ServerStatus> {
-        return Promise.resolve(this.status);
-    }
-
-    public getKernelDisplayName(): string {
-        if (this.launchInfo && this.launchInfo.kernelSpec) {
-            return this.launchInfo.kernelSpec.display_name;
-        }
-
-        return 'Python';
     }
 
     protected getNotebooks(): INotebook[] {

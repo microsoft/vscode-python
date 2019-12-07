@@ -4,12 +4,12 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
-
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
 import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
+import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
@@ -51,7 +51,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             loaded: false,
             kernel: {
                 displayName: 'Python',
-                uri: 'No Kernel',
+                uri: getLocString('DataScience.noKernel', 'No Kernel'),
                 jupyterServerStatus: ServerStatus.NotStarted
             }
         };

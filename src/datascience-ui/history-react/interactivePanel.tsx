@@ -89,6 +89,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
             getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
+        const dynamicFont: React.CSSProperties = {
+            fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
+            fontFamily: this.props.font.family
+        };
+
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
@@ -120,6 +125,11 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.collapseAll} disabled={this.props.cellVMs.length === 0} tooltip={getLocString('DataScience.collapseAll', 'Collapse all cell inputs')}>
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.CollapseAll} />
                         </ImageButton>
+                    </div>
+                    <div className='kernel-status' style={dynamicFont}>
+                        <div className='kernel-status-section' onClick={this.props.selectServer} role='button'>{getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}</div>
+                        <div className='kernel-status-divider'/>
+                        <div className='kernel-status-section' onClick={this.props.selectKernel} role='button'>{this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}</div>
                     </div>
                 </div>
             </div>

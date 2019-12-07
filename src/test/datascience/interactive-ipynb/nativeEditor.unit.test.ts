@@ -237,8 +237,8 @@ suite('Data Science - Native Editor', () => {
             instance(jupyterVariables),
             instance(jupyterDebugger),
             instance(importer),
-            instance(dsErrorHandler),
             instance(ds),
+            instance(dsErrorHandler),
             storage,
             localStorage
         );
