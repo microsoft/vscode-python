@@ -143,9 +143,9 @@ export class KernelSelectionProvider {
         const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
 
         // tslint:disable-next-line: prefer-const
-        let [installedKernels, interprters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
+        let [installedKernels, interpreters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
 
-        interprters = interprters.filter(item => {
+        interpreters = interpreters.filter(item => {
             // If the interpreter is registered as a kernel then don't inlcude it.
             if (installedKernels.find(installedKernel => installedKernel.selection.kernelSpec?.display_name === item.selection.interpreter?.displayName && (
                 this.fileSystem.arePathsSame((installedKernel.selection.kernelSpec?.argv || [])[0], item.selection.interpreter?.path || '') ||
@@ -162,6 +162,6 @@ export class KernelSelectionProvider {
         // Do not sort interpreter list, as that's pre-sorted (there's an algorithm for that).
         installedKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
 
-        return [...installedKernels!, ...interprters];
+        return [...installedKernels!, ...interpreters];
     }
 }
