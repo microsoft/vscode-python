@@ -92,9 +92,15 @@ export class KernelService {
     ): Promise<IJupyterKernelSpec | undefined> {
         const specs = await this.getKernelSpecs(sessionManager, cancelToken);
         if (isInterpreter(option)) {
-            return specs.find(item => item.language.toLowerCase() === PYTHON_LANGUAGE.toLowerCase() &&
-                item.display_name === option.displayName &&
-                (this.fileSystem.arePathsSame(item.argv[0], option.path)) || this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path));
+            return specs.find(item => {
+                if (item.language.toLowerCase() !== PYTHON_LANGUAGE.toLowerCase()) {
+                    return false;
+                }
+                if (item.display_name === option.displayName) {
+                    return false;
+                }
+                return this.fileSystem.arePathsSame(item.argv[0], option.path) || this.fileSystem.arePathsSame(item.metadata?.interpreter?.path || '', option.path);
+            });
         } else {
             return specs.find(item => item.language === PYTHON_LANGUAGE && item.display_name === option.display_name && item.name === option.name);
         }
@@ -110,7 +116,7 @@ export class KernelService {
      * @memberof KernelService
      */
     public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        if (kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE){
+        if (kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE) {
             return;
         }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
@@ -123,29 +129,29 @@ export class KernelService {
         allInterprtersPromise.ignoreErrors();
 
         // 1. Check if current interpreter has the same path
-        if (kernelSpec.metadata?.interpreter?.path){
+        if (kernelSpec.metadata?.interpreter?.path) {
             const interpreter = await this.interpreterService.getInterpreterDetails(kernelSpec.metadata?.interpreter?.path);
-            if (interpreter){
+            if (interpreter) {
                 traceInfo(`Found matching interpreter based on metadata, for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
                 return interpreter;
             }
             traceError(`KernelSpec has interpreter information, however a matching interepter could not be found for ${kernelSpec.metadata?.interpreter?.path}`);
         }
-        if (Cancellation.isCanceled(cancelToken)){
+        if (Cancellation.isCanceled(cancelToken)) {
             return;
         }
 
         // 2. Check if current interpreter has the same display name
         const activeInterpreter = await activeInterpreterPromise;
         // If the display name matches the active interpreter then use that.
-        if (kernelSpec.display_name === activeInterpreter?.displayName){
+        if (kernelSpec.display_name === activeInterpreter?.displayName) {
             return activeInterpreter;
         }
 
         // Check if kernel is `Python2` or `Python3` or a similar generic kernel.
         const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
         const match = regEx.exec(kernelSpec.name.toLowerCase());
-        if (match){
+        if (match) {
             // 3. Look for interpreter with same major version
 
             const majorVersion = parseInt(match.groups().version, 10) || 0;
@@ -173,7 +179,7 @@ export class KernelService {
             // If the display name matches the active interpreter then use that.
             // Look in all of our interpreters if we have somethign that matches this.
             const allInterpreters = await allInterprtersPromise;
-            if (Cancellation.isCanceled(cancelToken)){
+            if (Cancellation.isCanceled(cancelToken)) {
                 return;
             }
 
@@ -191,7 +197,7 @@ export class KernelService {
     public async searchAndRegisterKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         // If a kernelspec already exists for this, then use that.
         const found = await this.findMatchingKernelSpec(interpreter, undefined, cancelToken);
-        if (found){
+        if (found) {
             return found;
         }
         return this.registerKernel(interpreter, cancelToken);
@@ -217,7 +223,7 @@ export class KernelService {
             throw new Error('Interpreter does not have a display name');
         }
 
-        const execServicePromise = this.execFactory.create({pythonPath: interpreter.path});
+        const execServicePromise = this.execFactory.create({ pythonPath: interpreter.path });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
@@ -340,7 +346,7 @@ export class KernelService {
 
             traceInfo('Parsing kernelspecs from jupyter');
             // This should give us back a key value pair we can parse
-            const jsOut = JSON.parse(output.stdout.trim()) as { kernelspecs: Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }>};
+            const jsOut = JSON.parse(output.stdout.trim()) as { kernelspecs: Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }> };
             const kernelSpecs = jsOut.kernelspecs;
             const specs = await Promise.all(
                 Object.keys(kernelSpecs).map(async kernelName => {
@@ -365,5 +371,5 @@ export class KernelService {
             // This is failing for some folks. In that case return nothing
             return [];
         }
-    }
+    };
 }
