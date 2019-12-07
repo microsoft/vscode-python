@@ -106,7 +106,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
         verify(state.updateValue(anything())).never();
         verify(fs.fileExists(interpreterInfo.path)).once();
     });
-    test('Get undefined if there\'s nothing in state store', async () => {
+    test("Get undefined if there's nothing in state store", async () => {
         when(state.value).thenReturn(undefined);
 
         expect(rule.getPreviouslyAutoSelectedInterpreter(Uri.parse('x'))).to.be.equal(undefined, 'Must be undefined');
@@ -121,7 +121,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
 
         verify(state.value).atLeast(1);
     });
-    test('setGlobalInterpreter should do nothing if interprter is undefined or version is empty', async () => {
+    test('setGlobalInterpreter should do nothing if interpreter is undefined or version is empty', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const interpreterInfo = { path: '1324' } as any;
 

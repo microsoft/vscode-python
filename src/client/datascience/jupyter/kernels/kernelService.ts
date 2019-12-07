@@ -120,13 +120,13 @@ export class KernelService {
             return;
         }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
-        const allInterprtersPromise = this.interpreterService.getInterpreters(undefined);
+        const allInterpretersPromise = this.interpreterService.getInterpreters(undefined);
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
         // If promise is rejected and we do not use it, then ignore errors.
         activeInterpreterPromise.ignoreErrors();
         // Ensure we handle errors if any (this is required to ensure we do not exit this function without using this promise).
         // If promise is rejected and we do not use it, then ignore errors.
-        allInterprtersPromise.ignoreErrors();
+        allInterpretersPromise.ignoreErrors();
 
         // 1. Check if current interpreter has the same path
         if (kernelSpec.metadata?.interpreter?.path) {
@@ -162,12 +162,12 @@ export class KernelService {
             }
 
             // Find an interpreter that matches the
-            const allInterpreters = await allInterprtersPromise;
+            const allInterpreters = await allInterpretersPromise;
             const found = allInterpreters.find(item => item.version?.major === majorVersion);
 
             // If we cannot find a matching one, then use the current interpreter.
             if (found) {
-                traceVerbose(`Using interprter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
+                traceVerbose(`Using interpreter ${found.path} for the kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
                 return found;
             }
 
@@ -178,7 +178,7 @@ export class KernelService {
 
             // If the display name matches the active interpreter then use that.
             // Look in all of our interpreters if we have somethign that matches this.
-            const allInterpreters = await allInterprtersPromise;
+            const allInterpreters = await allInterpretersPromise;
             if (Cancellation.isCanceled(cancelToken)) {
                 return;
             }
@@ -189,7 +189,7 @@ export class KernelService {
                 traceVerbose(`Found an interpreter that has the same display name as kernelspec ${kernelSpec.display_name}, matches ${found.path}`);
                 return found;
             } else {
-                traceWarning(`Unable to determine version of Python interprter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
+                traceWarning(`Unable to determine version of Python interpreter to use for kernel ${kernelSpec.name}, ${kernelSpec.display_name}, some features might not work.`);
                 return activeInterpreter;
             }
         }
@@ -204,7 +204,7 @@ export class KernelService {
     }
 
     /**
-     * Registers an interprter as a kernel.
+     * Registers an interpreter as a kernel.
      * The assumption is that `ipykernel` has been installed in the interpreter.
      * Kernel created will have following characteristics:
      * - display_name = Display name of the interpreter.

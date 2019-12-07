@@ -222,7 +222,7 @@ suite('Data Science - KernelService', () => {
         let findMatchingKernelSpecStub: sinon.SinonStub<[PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?], Promise<IJupyterKernelSpec | undefined>>;
         const interpreter: PythonInterpreter = {
             architecture: Architecture.Unknown,
-            path: path.join('interprter', 'python'),
+            path: path.join('interpreter', 'python'),
             sysPrefix: '',
             sysVersion: '',
             type: InterpreterType.Conda,
