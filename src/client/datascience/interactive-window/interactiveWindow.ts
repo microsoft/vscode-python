@@ -124,6 +124,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
 
     public async show(): Promise<void> {
+        // When showing we have to load the web panel. Make sure
+        // we use the last file sent through add code.
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
         return super.show();
     }
@@ -133,7 +135,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.lastFile = file;
 
         // Make sure our web panel opens.
-        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+        await this.show();
 
         // Tell the webpanel about the new directory.
         this.updateCwd(path.dirname(file));

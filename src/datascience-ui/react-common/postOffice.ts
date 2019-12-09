@@ -70,25 +70,37 @@ export class PostOffice implements IDisposable {
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
             this.vscodeApi = acquireVsCodeApi(); // NOSONAR
         }
+        let rewireConsole = false;
         if (!this.registered) {
+            rewireConsole = true;
             this.registered = true;
             window.addEventListener('message', this.baseHandler);
         }
 
-        if (this.vscodeApi) {
+        if (this.vscodeApi && rewireConsole) {
+            const originalConsole = window.console;
+            const vscodeApi = this.vscodeApi;
             // Replace console.log with sending a message
             const customConsole = {
-                log: (text: string) => {
-                    this.vscodeApi?.postMessage({ type: 'console_log', payload: text });
+                // tslint:disable-next-line: no-any no-function-expression
+                log: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.log.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_log', payload: message });
                 },
-                info: (text: string) => {
-                    this.vscodeApi?.postMessage({ type: 'console_info', payload: text });
+                // tslint:disable-next-line: no-any no-function-expression
+                info: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.info.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_info', payload: message });
                 },
-                error: (text: string) => {
-                    this.vscodeApi?.postMessage({ type: 'console_error', payload: text });
+                // tslint:disable-next-line: no-any no-function-expression
+                error: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.error.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_error', payload: message });
                 },
-                warn: (text: string) => {
-                    this.vscodeApi?.postMessage({ type: 'console_warn', payload: text });
+                // tslint:disable-next-line: no-any no-function-expression
+                warn: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.warn.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_warn', payload: message });
                 }
             };
             // tslint:disable-next-line: no-any

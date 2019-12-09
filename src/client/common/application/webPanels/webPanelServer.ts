@@ -14,16 +14,16 @@ import { Identifiers } from '../../../datascience/constants';
 import { SharedMessages } from '../../../datascience/messages';
 import { noop } from '../../utils/misc';
 
-interface INotebookState {
+interface IState {
     cwd: string;
     outDir: string;
-    bundle: string;
+    html: string;
 }
 
 export class WebPanelServer {
     private app: Koa = new Koa();
     private server: http.Server | undefined;
-    private notebookState = new Map<string, INotebookState>();
+    private state = new Map<string, IState>();
 
     constructor(private port: number, private token: string) {
         this.app.use(Cors());
@@ -35,17 +35,17 @@ export class WebPanelServer {
                 if (ctx.query.token) {
                     if (ctx.query.token === this.token) {
                         if (ctx.query.scripts) {
-                            await this.generateNotebookResponse(ctx);
+                            await this.generateMainResponse(ctx);
                         } else {
                             await this.generateFileResponse(ctx);
                         }
                     }
                 } else {
                     const id = ctx.cookies.get('id');
-                    const state = id ? this.notebookState.get(id) : undefined;
+                    const state = id ? this.state.get(id) : undefined;
                     if (state) {
                         if (ctx.query.scripts) {
-                            await this.generateNotebookResponse(ctx);
+                            await this.generateMainResponse(ctx);
                         } else {
                             await this.generateFileResponse(ctx);
                         }
@@ -73,20 +73,20 @@ export class WebPanelServer {
         }
     }
 
-    private async generateNotebookResponse(ctx: Koa.ParameterizedContext) {
+    private async generateMainResponse(ctx: Koa.ParameterizedContext) {
         const readable = new Stream.Readable();
         readable._read = noop;
         const id = ctx.path.substr(1);
-        let state = this.notebookState.get(id);
+        let state = this.state.get(id);
         if (!state) {
             state = {
                 cwd: ctx.query.cwd,
                 outDir: ctx.query.rootPath,
-                bundle: this.generateReactHtml(ctx.query)
+                html: this.generateReactHtml(ctx.query)
             };
-            this.notebookState.set(id, state);
+            this.state.set(id, state);
         }
-        readable.push(state.bundle);
+        readable.push(state.html);
         readable.push(null);
         ctx.body = readable;
         ctx.cookies.set('id', id);
@@ -95,7 +95,7 @@ export class WebPanelServer {
 
     private async generateFileResponse(ctx: Koa.ParameterizedContext) {
         const id = ctx.cookies.get('id');
-        const state = id ? this.notebookState.get(id) : undefined;
+        const state = id ? this.state.get(id) : undefined;
         const cwd = state ? state.cwd : process.cwd();
         const root = state ? state.outDir : cwd;
         let filePath = path.join(cwd, ctx.url);

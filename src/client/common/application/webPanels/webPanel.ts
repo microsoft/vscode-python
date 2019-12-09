@@ -14,6 +14,9 @@ import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
 
+// Pick a static port to remap the remote port to one that VS code will route traffic to.
+// According to this, it should be a static number:
+// https://code.visualstudio.com/api/advanced-topics/remote-extensions
 const RemappedPort = 9890;
 
 export class WebPanel implements IWebPanel {

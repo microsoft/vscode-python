@@ -8,7 +8,6 @@ import * as uuid from 'uuid/v4';
 import { IDisposableRegistry } from '../../types';
 import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';
 import { WebPanel } from './webPanel';
-import { WebPanelServer } from './webPanelServer';
 
 @injectable()
 export class WebPanelProvider implements IWebPanelProvider {
@@ -31,8 +30,13 @@ export class WebPanelProvider implements IWebPanelProvider {
             this.port = await portfinder.getPortPromise({ startPort: 9000, port: 9000 });
             this.token = uuid();
 
+            // Import webpanel server dynamically so doesn't load in the main extension until we
+            // get to here.
+            // tslint:disable-next-line:no-require-imports
+            const webPanelServerModule = require('./webPanelServer') as typeof import('./webPanelServer');
+
             // Start the server listening.
-            const webPanelServer = new WebPanelServer(this.port, this.token);
+            const webPanelServer = new webPanelServerModule.WebPanelServer(this.port, this.token);
             webPanelServer.start();
             this.disposableRegistry.push(webPanelServer);
         }
