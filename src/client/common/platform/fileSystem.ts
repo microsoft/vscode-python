@@ -387,6 +387,10 @@ export class FileSystemUtils implements IFileSystemUtils {
         if (fileType === undefined) {
             return true;
         }
+        if (fileType === FileType.Unknown) {
+            // FileType.Unknown == 0, hence do not use bitwise operations.
+            return stat.type === FileType.Unknown;
+        }
         return (stat.type & fileType) === fileType;
     }
     public async fileExists(filename: string): Promise<boolean> {
