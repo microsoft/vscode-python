@@ -404,17 +404,15 @@ suite('FileSystem Utils', () => {
 
             const exists = await utils.pathExists(symlink, FileType.SymbolicLink);
 
-            expect(exists).to.equal(true);
+            expect(exists).to.equal(false);
         });
 
-        test('unknown', async function () {
-            // tslint:disable-next-line: no-invalid-this
-            return this.skip();
-            // const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+        test('unknown', async () => {
+            const sockFile = await fix.createSocket('x/y/z/ipc.sock');
 
-            // const exists = await utils.pathExists(sockFile, FileType.Unknown);
+            const exists = await utils.pathExists(sockFile, FileType.Unknown);
 
-            // expect(exists).to.equal(true);
+            expect(exists).to.equal(false);
         });
     });
 
