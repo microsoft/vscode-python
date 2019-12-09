@@ -296,7 +296,7 @@ export class KernelService {
         specModel.metadata.interpreter = interpreter as any;
 
         // Update the kernel.json with our new stuff.
-        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2));
+        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2), { flag: 'w', encoding: 'utf8' });
         kernel.metadata = specModel.metadata;
 
         traceInfo(`Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`);

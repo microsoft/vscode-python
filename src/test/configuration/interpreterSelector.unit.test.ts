@@ -83,6 +83,9 @@ suite('Interpreters - selector', () => {
         fileSystem
             .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
             .returns((a: string, b: string) => a === b);
+        fileSystem
+            .setup(x => x.getRealPath(TypeMoq.It.isAnyString()))
+            .returns((a: string) => new Promise(resolve => resolve(a)));
         configurationService
             .setup(x => x.getSettings(TypeMoq.It.isAny()))
             .returns(() => pythonSettings.object);

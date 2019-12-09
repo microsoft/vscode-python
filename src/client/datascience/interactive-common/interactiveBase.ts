@@ -634,7 +634,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             try {
                 // tslint:disable-next-line: no-any
                 const contents = JSON.stringify(notebook);
-                await this.fileSystem.writeFile(file, contents);
+                await this.fileSystem.writeFile(file, contents, { encoding: 'utf8', flag: 'w' });
                 const openQuestion1 = localize.DataScience.exportOpenQuestion1();
                 const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
                 this.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1, openQuestion2).then(async (str: string | undefined) => {

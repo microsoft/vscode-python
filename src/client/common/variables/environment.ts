@@ -1,37 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { IFileSystem } from '../platform/types';
 import { IPathUtils } from '../types';
 import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
     private readonly pathVariable: 'PATH' | 'Path';
-    constructor(
-        @inject(IPathUtils) pathUtils: IPathUtils,
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) {
+    constructor(@inject(IPathUtils) pathUtils: IPathUtils) {
         this.pathVariable = pathUtils.getPathVariableName();
     }
-    public async parseFile(
-        filePath?: string,
-        baseVars?: EnvironmentVariables
-    ): Promise<EnvironmentVariables | undefined> {
-        if (!filePath) {
+    public async parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined> {
+        if (!filePath || !await fs.pathExists(filePath)) {
             return;
         }
-        if (!await this.fs.fileExists(filePath)) {
+        if (!fs.lstatSync(filePath).isFile()) {
             return;
         }
-        return parseEnvFile(
-            await this.fs.readFile(filePath),
-            baseVars
-        );
+        return parseEnvFile(await fs.readFile(filePath), baseVars);
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {

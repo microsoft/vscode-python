@@ -40,7 +40,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
         return this.fileSystem.getSubDirectories(pathToCheck)
             .then(subDirs => Promise.all(this.getProspectiveDirectoriesForLookup(subDirs)))
             .then(dirs => dirs.filter(dir => dir.length > 0))
-            .then(dirs => Promise.all(dirs.map(d => lookForInterpretersInDirectory(d, this.fileSystem))))
+            .then(dirs => Promise.all(dirs.map(lookForInterpretersInDirectory)))
             .then(pathsWithInterpreters => flatten(pathsWithInterpreters))
             .then(interpreters => Promise.all(interpreters.map(interpreter => this.getVirtualEnvDetails(interpreter, resource))))
             .then(interpreters => interpreters.filter(interpreter => !!interpreter).map(interpreter => interpreter!))

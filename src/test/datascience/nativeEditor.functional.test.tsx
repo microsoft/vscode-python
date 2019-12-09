@@ -16,9 +16,9 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
-import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
+import { createTemporaryFile } from '../../client/common/utils/fs';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -491,7 +491,10 @@ for _ in range(50):
            });
         const addedJSONFile = JSON.stringify(addedJSON, null, ' ');
 
-        let notebookFile: TemporaryFile;
+        let notebookFile: {
+            filePath: string;
+            cleanupCallback: Function;
+        };
         function initIoc() {
             ioc = new DataScienceIocContainer();
             ioc.registerDataScienceTypes();
@@ -505,8 +508,7 @@ for _ in range(50):
                 addMockData(ioc, 'c=3\nc', 3);
                 // Use a real file so we can save notebook to a file.
                 // This is used in some tests (saving).
-                const filesystem = new FileSystem();
-                notebookFile = await filesystem.createTemporaryFile('.ipynb');
+                notebookFile = await createTemporaryFile('.ipynb');
                 await fs.writeFile(notebookFile.filePath, fileContents ? fileContents : baseFile);
                 await Promise.all([waitForUpdate(wrapper, NativeEditor, 1), openEditor(ioc, fileContents ? fileContents : baseFile, notebookFile.filePath)]);
             } else {
@@ -528,7 +530,7 @@ for _ in range(50):
             }
             await ioc.dispose();
             try {
-                notebookFile.dispose();
+                notebookFile.cleanupCallback();
             } catch {
                 noop();
             }

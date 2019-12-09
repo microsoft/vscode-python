@@ -8,6 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, EventEmitter } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
+import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
@@ -56,7 +57,6 @@ suite('Interpreters Conda Service', () => {
     let workspaceService : TypeMoq.IMock<IWorkspaceService>;
     let mockState: MockState;
     let terminalProvider: TypeMoq.IMock<ITerminalActivationCommandProvider>;
-    let arePathsSame: (p1: string, p2: string) => boolean;
     setup(async () => {
         condaPathSetting = '';
         logger = TypeMoq.Mock.ofType<ILogger>();
@@ -93,9 +93,9 @@ suite('Interpreters Conda Service', () => {
         serviceContainer.setup(c => c.getAll(TypeMoq.It.isValue(ITerminalActivationCommandProvider), TypeMoq.It.isAny())).returns(() => [terminalProvider.object]);
         config.setup(c => c.getSettings(TypeMoq.It.isValue(undefined))).returns(() => settings.object);
         settings.setup(p => p.condaPath).returns(() => condaPathSetting);
-        arePathsSame = (() => false);
-        // tslint:disable-next-line:no-unnecessary-callback-wrapper
-        fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1, p2) => arePathsSame(p1, p2));
+        fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1, p2) => {
+            return new FileSystem(platformService.object).arePathsSame(p1, p2);
+        });
 
         condaService = new CondaService(
             procServiceFactory.object,
@@ -112,18 +112,6 @@ suite('Interpreters Conda Service', () => {
 
     function resetMockState(data: any) {
         mockState = new MockState(data);
-    }
-
-    function fsArePathsSame(path1: string, path2: string): boolean {
-        if (path1 === path2) {
-            return true;
-        }
-        if (!platformService.object.isWindows) {
-            return false;
-        }
-        path1 = path.normalize(path1).toUpperCase();
-        path2 = path.normalize(path2).toUpperCase();
-        return path1 === path2;
     }
 
     async function identifyPythonPathAsCondaEnvironment(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string) {
@@ -180,90 +168,74 @@ suite('Interpreters Conda Service', () => {
         await identifyPythonPathAsNonCondaEnvironment(false, true, false, pythonPath);
     });
 
-    suite('Correctly retrieves conda environment...', () => {
-        setup(() => {
-            // FWIW, relying on the actual filesystem in a unit test
-            // is a bit of a hack...
-            arePathsSame = fsArePathsSame;
-        });
+    async function checkCondaNameAndPathForCondaEnvironments(isWindows: boolean, isOsx: boolean, isLinux: boolean, pythonPath: string, condaEnvsPath: string, expectedCondaEnv?: { name: string; path: string }) {
+        const condaEnvironments = [
+            { name: 'One', path: path.join(condaEnvsPath, 'one') },
+            { name: 'Three', path: path.join(condaEnvsPath, 'three') },
+            { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
+            { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
+            { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
+        ];
 
-        async function checkCondaNameAndPathForCondaEnvironments(
-            isWindows: boolean,
-            isOsx: boolean,
-            isLinux: boolean,
-            pythonPath: string,
-            condaEnvsPath: string,
-            expectedCondaEnv?: { name: string; path: string }
-        ) {
-            const condaEnvironments = [
-                { name: 'One', path: path.join(condaEnvsPath, 'one') },
-                { name: 'Three', path: path.join(condaEnvsPath, 'three') },
-                { name: 'Seven', path: path.join(condaEnvsPath, 'seven') },
-                { name: 'Eight', path: path.join(condaEnvsPath, 'Eight 8') },
-                { name: 'nine 9', path: path.join(condaEnvsPath, 'nine 9') }
-            ];
+        platformService.setup(p => p.isLinux).returns(() => isLinux);
+        platformService.setup(p => p.isWindows).returns(() => isWindows);
+        platformService.setup(p => p.isMac).returns(() => isOsx);
 
-            platformService.setup(p => p.isLinux).returns(() => isLinux);
-            platformService.setup(p => p.isWindows).returns(() => isWindows);
-            platformService.setup(p => p.isMac).returns(() => isOsx);
+        resetMockState({ data: condaEnvironments });
 
-            resetMockState({ data: condaEnvironments });
+        const condaEnv = await condaService.getCondaEnvironment(pythonPath);
+        expect(condaEnv).deep.equal(expectedCondaEnv, 'Conda environment not identified');
+    }
 
-            const condaEnv = await condaService.getCondaEnvironment(pythonPath);
-            expect(condaEnv).deep.equal(expectedCondaEnv, 'Conda environment not identified');
-        }
+    test('Correctly retrieves conda environment (windows)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'python.exe');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
-        test('windows', async () => {
-            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'python.exe');
-            const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, { name: 'One', path: path.dirname(pythonPath) });
+    });
 
-            fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
-            await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, { name: 'One', path: path.dirname(pythonPath) });
-        });
+    test('Correctly retrieves conda environment with spaces in env name (windows)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'eight 8', 'python.exe');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
-        test('with spaces in env name (windows)', async () => {
-            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'eight 8', 'python.exe');
-            const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, { name: 'Eight', path: path.dirname(pythonPath) });
+    });
 
-            fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), 'conda-meta')))).returns(() => Promise.resolve(true));
-            await checkCondaNameAndPathForCondaEnvironments(true, false, false, pythonPath, condaEnvDir, { name: 'Eight', path: path.dirname(pythonPath) });
-        });
+    test('Correctly retrieves conda environment (osx)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
-        test('osx', async () => {
-            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'bin', 'python');
-            const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, { name: 'One', path: path.join(path.dirname(pythonPath), '..') });
+    });
 
-            fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
-            await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, { name: 'One', path: path.join(path.dirname(pythonPath), '..') });
-        });
+    test('Correctly retrieves conda environment with spaces in env name (osx)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'Eight 8', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
-        test('with spaces in env name (osx)', async () => {
-            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'Eight 8', 'bin', 'python');
-            const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, { name: 'Eight', path: path.join(path.dirname(pythonPath), '..') });
+    });
 
-            fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
-            await checkCondaNameAndPathForCondaEnvironments(false, true, false, pythonPath, condaEnvDir, { name: 'Eight', path: path.join(path.dirname(pythonPath), '..') });
-        });
+    test('Correctly retrieves conda environment (linux)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
-        test('linux', async () => {
-            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'one', 'bin', 'python');
-            const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, { name: 'One', path: path.join(path.dirname(pythonPath), '..') });
+    });
 
-            fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
-            await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, { name: 'One', path: path.join(path.dirname(pythonPath), '..') });
-        });
+    test('Correctly retrieves conda environment with spaces in env name (linux)', async () => {
+        const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'Eight 8', 'bin', 'python');
+        const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
-        test('with spaces in env name (linux)', async () => {
-            const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'Eight 8', 'bin', 'python');
-            const condaEnvDir = path.join('c', 'users', 'xyz', '.conda', 'envs');
-
-            fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
-            await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, { name: 'Eight', path: path.join(path.dirname(pythonPath), '..') });
-        });
+        fileSystem.setup(f => f.directoryExists(TypeMoq.It.isValue(path.join(path.dirname(pythonPath), '..', 'conda-meta')))).returns(() => Promise.resolve(true));
+        await checkCondaNameAndPathForCondaEnvironments(false, false, true, pythonPath, condaEnvDir, { name: 'Eight', path: path.join(path.dirname(pythonPath), '..') });
     });
 
     test('Ignore cache if environment is not found in the cache (conda env is detected second time round)', async () => {
-        arePathsSame = fsArePathsSame;
         const pythonPath = path.join('c', 'users', 'xyz', '.conda', 'envs', 'newEnvironment', 'python.exe');
         const condaEnvsPath = path.join('c', 'users', 'xyz', '.conda', 'envs');
 
