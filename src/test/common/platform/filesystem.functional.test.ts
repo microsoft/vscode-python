@@ -51,14 +51,7 @@ export class FSFixture {
         if (this.tempDir) {
             const tempDir = this.tempDir;
             this.tempDir = undefined;
-            try {
-                tempDir.removeCallback();
-            } catch {
-                // The "unsafeCleanup: true" option is supposed
-                // to support a non-empty directory, but apparently
-                // that isn't always the case.  (see #8804)
-                await fsextra.remove(tempDir.name);
-            }
+            tempDir.removeCallback();
         }
         if (this.sockServer) {
             const srv = this.sockServer;
@@ -382,12 +375,6 @@ suite('Raw FileSystem', () => {
     });
 
     suite('createWriteStream', () => {
-        setup(function() {
-            // Tests disabled due to CI failures: https://github.com/microsoft/vscode-python/issues/8804
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        });
-
         test('returns the correct WriteStream', async () => {
             const filename = await fix.resolve('x/y/z/spam.py');
             const expected = fsextra.createWriteStream(filename);
@@ -551,12 +538,6 @@ suite('FileSystem Utils', () => {
     });
 
     suite('search', () => {
-        setup(function() {
-            // Tests disabled due to CI failures: https://github.com/microsoft/vscode-python/issues/8804
-            // tslint:disable-next-line:no-invalid-this
-            return this.skip();
-        });
-
         test('found matches', async () => {
             const pattern = await fix.resolve(`x/y/z/spam.*`);
             const expected: string[] = [
