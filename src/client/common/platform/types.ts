@@ -101,6 +101,7 @@ export interface IRawFileSystem {
 }
 
 // High-level filesystem operations used by the extension.
+export const IFileSystemUtils = Symbol('IFileSystemUtils');
 export interface IFileSystemUtils {
     readonly raw: IRawFileSystem;
     readonly paths: IFileSystemPaths;

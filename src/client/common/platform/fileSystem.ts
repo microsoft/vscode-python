@@ -318,6 +318,7 @@ export class RawFileSystem implements IRawFileSystem {
 }
 
 // High-level filesystem operations used by the extension.
+@injectable()
 export class FileSystemUtils implements IFileSystemUtils {
     constructor(
         public readonly raw: IRawFileSystem,
