@@ -23,9 +23,6 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
         if (!filePath || !await this.fs.fileExists(filePath)) {
             return;
         }
-        if (!fsextra.lstatSync(filePath)) {
-            return;
-        }
         return parseEnvFile(await fsextra.readFile(filePath), baseVars);
     }
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
