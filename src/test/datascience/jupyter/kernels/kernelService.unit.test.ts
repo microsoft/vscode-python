@@ -144,6 +144,7 @@ suite('Data Science - KernelService', () => {
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         when(fs.arePathsSame('myPath2', 'myPath2')).thenReturn(true);
         const interpreter: PythonInterpreter = {
+            displayName: 'Disp2',
             path: 'myPath2',
             sysPrefix: 'xyz',
             type: InterpreterType.Conda,
@@ -199,6 +200,7 @@ suite('Data Science - KernelService', () => {
         when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
         when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const interpreter: PythonInterpreter = {
+            displayName: 'disp2',
             path: 'Some Path2',
             sysPrefix: 'xyz',
             type: InterpreterType.Conda,
