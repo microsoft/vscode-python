@@ -260,7 +260,7 @@ for _ in range(50):
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
 
             // This can be slow, hence wait for a max of 60.
-            const waitResult = await waitForPromise(activeTextEditorChange.promise, 60_000);
+            const waitResult = await waitForPromise(activeTextEditorChange.promise, 120_000);
             if (waitResult === null) {
                 // tslint:disable-next-line:no-console
                 console.log('**** Wait timedout ****');
