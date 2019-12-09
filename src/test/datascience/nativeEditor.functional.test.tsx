@@ -262,6 +262,7 @@ for _ in range(50):
             // This can be slow, hence wait for a max of 60.
             const waitResult = await waitForPromise(activeTextEditorChange.promise, 60_000);
             if (waitResult === null) {
+                // tslint:disable-next-line:no-console
                 console.log('**** Wait timedout ****');
             }
 
