@@ -14,6 +14,7 @@ import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
@@ -51,6 +52,7 @@ import {
     addMockData,
     CellPosition,
     createKeyboardEventForCell,
+    defaultDataScienceSettings,
     escapePath,
     findButton,
     getLastOutputCell,
@@ -253,13 +255,15 @@ for _ in range(50):
             assert.equal(saveCalled, true, 'Save should have been called');
 
             // Click export and wait for a document to change
-            const documentChange = createDeferred();
+            const activeTextEditorChange = createDeferred();
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-            docManager.onDidChangeTextDocument(() => documentChange.resolve());
+            docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
             const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-            // This can be slow, hence wait for a max of 5.
-            await waitForPromise(documentChange.promise, 5_000);
+
+            // This can be slow, hence wait for a max of 60.
+            await waitForPromise(activeTextEditorChange.promise, 60_000);
+
             // Verify the new document is valid python
             const newDoc = docManager.activeTextEditor;
             assert.ok(newDoc, 'New doc not created');
@@ -1195,7 +1199,7 @@ for _ in range(50):
             test('File saved with same format', async () => {
                 // Configure notebook to save automatically ever 1s.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('afterDelay');
-                when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1_000);
+                when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(2_000);
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
 
@@ -1219,8 +1223,8 @@ for _ in range(50):
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('off');
                 when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(1000);
                 // Update the settings and wait for the component to receive it and process it.
-                const promise = waitForMessage(ioc, InteractiveWindowMessages.UpdateSettings);
-                ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
+                const promise = waitForMessage(ioc, InteractiveWindowMessages.SettingsUpdated);
+                ioc.forceSettingsChanged(ioc.getSettings().pythonPath, { ...defaultDataScienceSettings(), showCellInputCode: false });
                 await promise;
 
                 await modifyNotebook();
@@ -1228,7 +1232,7 @@ for _ in range(50):
 
                 // Now that the notebook is dirty, change the active editor.
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                docManager.didChangeEmitter.fire();
+                docManager.didChangeActiveTextEditorEmitter.fire();
                 // Also, send notification about changes to window state.
                 windowStateChangeHandlers.forEach(item => item({ focused: false }));
                 windowStateChangeHandlers.forEach(item => item({ focused: true }));
@@ -1251,7 +1255,7 @@ for _ in range(50):
 
                 // Now that the notebook is dirty, change the active editor.
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                docManager.didChangeEmitter.fire(newEditor);
+                docManager.didChangeActiveTextEditorEmitter.fire(newEditor);
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
@@ -1279,7 +1283,7 @@ for _ in range(50):
                 // Now that the notebook is dirty, change the active editor.
                 // This should not trigger a save of notebook (as its configured to save only when window state changes).
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-                docManager.didChangeEmitter.fire();
+                docManager.didChangeActiveTextEditorEmitter.fire();
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
                 await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;

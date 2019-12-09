@@ -27,6 +27,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
+import { ModuleExistsStatus } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import {
@@ -668,7 +669,6 @@ suite('DataScience notebook tests', () => {
 
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isKernelCreateSupported(t), 'Cancel did not cancel isKernel after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isImportSupported(t), 'Cancel did not cancel isImport after {0}ms', true));
     });
 
@@ -1121,19 +1121,16 @@ plt.show()`,
     }
 
     test('Notebook launch failure', async function () {
-        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
         if (!ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
             const application = mock(ApplicationShell);
-            when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
-                return new Promise((resolve, reject) => {
-                    cb({ report: noop }, new CancellationTokenSource().token).then(resolve).catch(reject);
-                });
-            });
+            when(application.withProgress(anything(), anything())).thenResolve({status: ModuleExistsStatus.NotFound} as any);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
+
+            jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
 
             // Change notebook command to fail with some goofy output
             await disableJupyter(ioc.workingInterpreter.path);
@@ -1146,7 +1143,7 @@ plt.show()`,
                 await jupyterExecution.connectToNotebookServer({ usingDarkTheme: false, useDefaultConfig: true, workingDir: testDir, purpose: '1' });
             } catch (e) {
                 threw = true;
-                assert.ok(e.message.includes('Not supported'), 'Wrong error thrown when notebook is created');
+                assert.ok(e.message.includes('Not supported'), `Wrong error thrown when notebook is created. Error is ${e.message}`);
             }
 
             assert.ok(threw, 'No exception thrown during notebook creation');

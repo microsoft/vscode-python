@@ -112,44 +112,45 @@ suite('Interpreters service', () => {
     }
     suite('Misc', () => {
         setup(setupSuite);
-        [undefined, Uri.file('xyz')]
-            .forEach(resource => {
-                const resourceTestSuffix = `(${resource ? 'with' : 'without'} a resource)`;
+        [undefined, Uri.file('xyz')].forEach(resource => {
+            const resourceTestSuffix = `(${resource ? 'with' : 'without'} a resource)`;
 
-                test(`Refresh invokes refresh of display ${resourceTestSuffix}`, async () => {
-                    interpreterDisplay
-                        .setup(i => i.refresh(TypeMoq.It.isValue(resource)))
-                        .returns(() => Promise.resolve(undefined))
-                        .verifiable(TypeMoq.Times.once());
+            test(`Refresh invokes refresh of display ${resourceTestSuffix}`, async () => {
+                interpreterDisplay
+                    .setup(i => i.refresh(TypeMoq.It.isValue(resource)))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
 
-                    const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
-                    await service.refresh(resource);
+                const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+                await service.refresh(resource);
 
-                    interpreterDisplay.verifyAll();
-                });
-
-                test(`get Interpreters uses interpreter locactors to get interpreters ${resourceTestSuffix}`, async () => {
-                    locator
-                        .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                        .returns(() => Promise.resolve([]))
-                        .verifiable(TypeMoq.Times.once());
-
-                    const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
-                    await service.getInterpreters(resource);
-
-                    locator.verifyAll();
-                });
+                interpreterDisplay.verifyAll();
             });
+
+            test(`get Interpreters uses interpreter locactors to get interpreters ${resourceTestSuffix}`, async () => {
+                locator
+                    .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                    .returns(() => Promise.resolve([]))
+                    .verifiable(TypeMoq.Times.once());
+
+                const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+                await service.getInterpreters(resource);
+
+                locator.verifyAll();
+            });
+        });
 
         test('Changes to active document should invoke interpreter.refresh method', async () => {
             const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             let activeTextEditorChangeHandler: Function | undefined;
-            documentManager.setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
-                activeTextEditorChangeHandler = handler;
-                return { dispose: noop };
-            });
+            documentManager
+                .setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(handler => {
+                    activeTextEditorChangeHandler = handler;
+                    return { dispose: noop };
+                });
             serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
             // tslint:disable-next-line:no-any
@@ -169,10 +170,12 @@ suite('Interpreters service', () => {
             const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
 
             let activeTextEditorChangeHandler: Function | undefined;
-            documentManager.setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(handler => {
-                activeTextEditorChangeHandler = handler;
-                return { dispose: noop };
-            });
+            documentManager
+                .setup(d => d.onDidChangeActiveTextEditor(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns(handler => {
+                    activeTextEditorChangeHandler = handler;
+                    return { dispose: noop };
+                });
             serviceManager.addSingletonInstance(IDocumentManager, documentManager.object);
 
             // tslint:disable-next-line:no-any
@@ -181,45 +184,43 @@ suite('Interpreters service', () => {
 
             interpreterDisplay.verify(i => i.refresh(TypeMoq.It.isValue(undefined)), TypeMoq.Times.never());
         });
-
     });
 
     suite('Get Interpreter Details', () => {
         setup(setupSuite);
-        [undefined, Uri.file('some workspace')]
-            .forEach(resource => {
-                test(`Ensure undefined is returned if we're unable to retrieve interpreter info (Resource is ${resource})`, async () => {
-                    const pythonPath = 'SOME VALUE';
-                    const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
-                    locator
-                        .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
-                        .returns(() => Promise.resolve([]))
-                        .verifiable(TypeMoq.Times.once());
-                    helper
-                        .setup(h => h.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))
-                        .returns(() => Promise.resolve(undefined))
-                        .verifiable(TypeMoq.Times.once());
-                    virtualEnvMgr
-                        .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
-                        .returns(() => Promise.resolve(''))
-                        .verifiable(TypeMoq.Times.once());
-                    virtualEnvMgr
-                        .setup(v => v.getEnvironmentType(TypeMoq.It.isValue(pythonPath)))
-                        .returns(() => Promise.resolve(InterpreterType.Unknown))
-                        .verifiable(TypeMoq.Times.once());
-                    pythonExecutionService
-                        .setup(p => p.getExecutablePath())
-                        .returns(() => Promise.resolve(pythonPath))
-                        .verifiable(TypeMoq.Times.once());
+        [undefined, Uri.file('some workspace')].forEach(resource => {
+            test(`Ensure undefined is returned if we're unable to retrieve interpreter info (Resource is ${resource})`, async () => {
+                const pythonPath = 'SOME VALUE';
+                const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+                locator
+                    .setup(l => l.getInterpreters(TypeMoq.It.isValue(resource)))
+                    .returns(() => Promise.resolve([]))
+                    .verifiable(TypeMoq.Times.once());
+                helper
+                    .setup(h => h.getInterpreterInformation(TypeMoq.It.isValue(pythonPath)))
+                    .returns(() => Promise.resolve(undefined))
+                    .verifiable(TypeMoq.Times.once());
+                virtualEnvMgr
+                    .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(pythonPath)))
+                    .returns(() => Promise.resolve(''))
+                    .verifiable(TypeMoq.Times.once());
+                virtualEnvMgr
+                    .setup(v => v.getEnvironmentType(TypeMoq.It.isValue(pythonPath)))
+                    .returns(() => Promise.resolve(InterpreterType.Unknown))
+                    .verifiable(TypeMoq.Times.once());
+                pythonExecutionService
+                    .setup(p => p.getExecutablePath())
+                    .returns(() => Promise.resolve(pythonPath))
+                    .verifiable(TypeMoq.Times.once());
 
-                    const details = await service.getInterpreterDetails(pythonPath, resource);
+                const details = await service.getInterpreterDetails(pythonPath, resource);
 
-                    locator.verifyAll();
-                    pythonExecutionService.verifyAll();
-                    helper.verifyAll();
-                    expect(details).to.be.equal(undefined, 'Not undefined');
-                });
+                locator.verifyAll();
+                pythonExecutionService.verifyAll();
+                helper.verifyAll();
+                expect(details).to.be.equal(undefined, 'Not undefined');
             });
+        });
     });
 
     suite('Caching Display name', () => {
@@ -263,9 +264,7 @@ suite('Interpreters service', () => {
                 .setup(provider => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
                 .verifiable(TypeMoq.Times.once());
-            hashProvider
-                .setup(provider => (provider as any).then)
-                .returns(() => undefined);
+            hashProvider.setup(provider => (provider as any).then).returns(() => undefined);
             const expectedDisplayName = 'Formatted display name';
             persistentStateFactory
                 .setup(p => p.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -298,82 +297,90 @@ suite('Interpreters service', () => {
                 (EnumEx.getNamesAndValues<Architecture>(Architecture) as ({ name: string; value: Architecture } | undefined)[]).concat(undefined).forEach(arch => {
                     [undefined, path.join('a', 'b', 'c', 'd', 'bin', 'python')].forEach(pythonPath => {
                         // Forced cast to ignore TS warnings.
-                        (EnumEx.getNamesAndValues<InterpreterType>(InterpreterType) as ({ name: string; value: InterpreterType } | undefined)[]).concat(undefined).forEach(interpreterType => {
-                            [undefined, 'my env name'].forEach(envName => {
-                                ['', 'my pipenv name'].forEach(pipEnvName => {
-                                    const testName = [`${resource ? 'With' : 'Without'} a workspace`,
-                                    `${version ? 'with' : 'without'} version information`,
-                                    `${arch ? arch.name : 'without'} architecture`,
-                                    `${pythonPath ? 'with' : 'without'} python Path`,
-                                    `${interpreterType ? `${interpreterType.name} interpreter type` : 'without interpreter type'}`,
-                                    `${envName ? 'with' : 'without'} environment name`,
-                                    `${pipEnvName ? 'with' : 'without'} pip environment`
-                                    ].join(', ');
+                        (EnumEx.getNamesAndValues<InterpreterType>(InterpreterType) as ({ name: string; value: InterpreterType } | undefined)[])
+                            .concat(undefined)
+                            .forEach(interpreterType => {
+                                [undefined, 'my env name'].forEach(envName => {
+                                    ['', 'my pipenv name'].forEach(pipEnvName => {
+                                        const testName = [
+                                            `${resource ? 'With' : 'Without'} a workspace`,
+                                            `${version ? 'with' : 'without'} version information`,
+                                            `${arch ? arch.name : 'without'} architecture`,
+                                            `${pythonPath ? 'with' : 'without'} python Path`,
+                                            `${interpreterType ? `${interpreterType.name} interpreter type` : 'without interpreter type'}`,
+                                            `${envName ? 'with' : 'without'} environment name`,
+                                            `${pipEnvName ? 'with' : 'without'} pip environment`
+                                        ].join(', ');
 
-                                    test(testName, async () => {
-                                        const interpreterInfo: Partial<PythonInterpreter> = {
-                                            version,
-                                            architecture: arch ? arch.value : undefined,
-                                            envName,
-                                            type: interpreterType ? interpreterType.value : undefined,
-                                            path: pythonPath
-                                        };
+                                        test(testName, async () => {
+                                            const interpreterInfo: Partial<PythonInterpreter> = {
+                                                version,
+                                                architecture: arch ? arch.value : undefined,
+                                                envName,
+                                                type: interpreterType ? interpreterType.value : undefined,
+                                                path: pythonPath
+                                            };
 
-                                        if (interpreterInfo.path && interpreterType && interpreterType.value === InterpreterType.Pipenv) {
-                                            virtualEnvMgr
-                                                .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(interpreterInfo.path!), TypeMoq.It.isAny()))
-                                                .returns(() => Promise.resolve(pipEnvName));
+                                            if (interpreterInfo.path && interpreterType && interpreterType.value === InterpreterType.Pipenv) {
+                                                virtualEnvMgr
+                                                    .setup(v => v.getEnvironmentName(TypeMoq.It.isValue(interpreterInfo.path!), TypeMoq.It.isAny()))
+                                                    .returns(() => Promise.resolve(pipEnvName));
+                                            }
+                                            if (interpreterType) {
+                                                helper
+                                                    .setup(h => h.getInterpreterTypeDisplayName(TypeMoq.It.isValue(interpreterType.value)))
+                                                    .returns(() => `${interpreterType!.name}_display`);
+                                            }
+
+                                            const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
+                                            const expectedDisplayName = buildDisplayName(interpreterInfo);
+
+                                            const displayName = await service.getDisplayName(interpreterInfo, resource);
+                                            expect(displayName).to.equal(expectedDisplayName);
+                                        });
+
+                                        function buildDisplayName(interpreterInfo: Partial<PythonInterpreter>) {
+                                            const displayNameParts: string[] = ['Python'];
+                                            const envSuffixParts: string[] = [];
+
+                                            if (interpreterInfo.version) {
+                                                displayNameParts.push(`${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`);
+                                            }
+                                            if (interpreterInfo.architecture) {
+                                                displayNameParts.push(getArchitectureDisplayName(interpreterInfo.architecture));
+                                            }
+                                            if (
+                                                !interpreterInfo.envName &&
+                                                interpreterInfo.path &&
+                                                interpreterInfo.type &&
+                                                interpreterInfo.type === InterpreterType.Pipenv &&
+                                                pipEnvName
+                                            ) {
+                                                // If we do not have the name of the environment, then try to get it again.
+                                                // This can happen based on the context (i.e. resource).
+                                                // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
+                                                interpreterInfo.envName = pipEnvName;
+                                            }
+                                            if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
+                                                envSuffixParts.push(`'${interpreterInfo.envName}'`);
+                                            }
+                                            if (interpreterInfo.type) {
+                                                envSuffixParts.push(`${interpreterType!.name}_display`);
+                                            }
+
+                                            const envSuffix = envSuffixParts.length === 0 ? '' : `(${envSuffixParts.join(': ')})`;
+                                            return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
                                         }
-                                        if (interpreterType) {
-                                            helper
-                                                .setup(h => h.getInterpreterTypeDisplayName(TypeMoq.It.isValue(interpreterType.value)))
-                                                .returns(() => `${interpreterType!.name}_display`);
-                                        }
-
-                                        const service = new InterpreterService(serviceContainer, hashProviderFactory.object);
-                                        const expectedDisplayName = buildDisplayName(interpreterInfo);
-
-                                        const displayName = await service.getDisplayName(interpreterInfo, resource);
-                                        expect(displayName).to.equal(expectedDisplayName);
                                     });
-
-                                    function buildDisplayName(interpreterInfo: Partial<PythonInterpreter>) {
-                                        const displayNameParts: string[] = ['Python'];
-                                        const envSuffixParts: string[] = [];
-
-                                        if (interpreterInfo.version) {
-                                            displayNameParts.push(`${interpreterInfo.version.major}.${interpreterInfo.version.minor}.${interpreterInfo.version.patch}`);
-                                        }
-                                        if (interpreterInfo.architecture) {
-                                            displayNameParts.push(getArchitectureDisplayName(interpreterInfo.architecture));
-                                        }
-                                        if (!interpreterInfo.envName && interpreterInfo.path && interpreterInfo.type && interpreterInfo.type === InterpreterType.Pipenv && pipEnvName) {
-                                            // If we do not have the name of the environment, then try to get it again.
-                                            // This can happen based on the context (i.e. resource).
-                                            // I.e. we can determine if an environment is PipEnv only when giving it the right workspacec path (i.e. resource).
-                                            interpreterInfo.envName = pipEnvName;
-                                        }
-                                        if (interpreterInfo.envName && interpreterInfo.envName.length > 0) {
-                                            envSuffixParts.push(`'${interpreterInfo.envName}'`);
-                                        }
-                                        if (interpreterInfo.type) {
-                                            envSuffixParts.push(`${interpreterType!.name}_display`);
-                                        }
-
-                                        const envSuffix = envSuffixParts.length === 0 ? '' :
-                                            `(${envSuffixParts.join(': ')})`;
-                                        return `${displayNameParts.join(' ')} ${envSuffix}`.trim();
-                                    }
                                 });
                             });
-                        });
                     });
                 });
             });
         });
     });
 
-    suite('Interprter Cache', () => {
+    suite('Interpreter Cache', () => {
         setup(() => {
             setupSuite();
             fileSystem.reset();
@@ -391,9 +398,7 @@ suite('Interpreters service', () => {
                 .setup(provider => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve(fileHash))
                 .verifiable(TypeMoq.Times.once());
-            hashProvider
-                .setup(provider => (provider as any).then)
-                .returns(() => undefined);
+            hashProvider.setup(provider => (provider as any).then).returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
             const info = { path: 'hell', type: InterpreterType.Venv };
@@ -410,9 +415,7 @@ suite('Interpreters service', () => {
                 .setup(s => s.updateValue(TypeMoq.It.isAny()))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.never());
-            state
-                .setup(s => (s as any).then)
-                .returns(() => undefined);
+            state.setup(s => (s as any).then).returns(() => undefined);
             persistentStateFactory
                 .setup(f => f.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => state.object)
@@ -440,9 +443,7 @@ suite('Interpreters service', () => {
                 .setup(provider => provider.getInterpreterHash(TypeMoq.It.isValue(pythonPath)))
                 .returns(() => Promise.resolve('different value'))
                 .verifiable(TypeMoq.Times.once());
-            hashProvider
-                .setup(provider => (provider as any).then)
-                .returns(() => undefined);
+            hashProvider.setup(provider => (provider as any).then).returns(() => undefined);
 
             const state = TypeMoq.Mock.ofType<IPersistentState<{ fileHash: string; info?: PythonInterpreter }>>();
             const info = { path: 'hell', type: InterpreterType.Venv };
@@ -456,12 +457,10 @@ suite('Interpreters service', () => {
                 })
                 .verifiable(TypeMoq.Times.atLeastOnce());
             state
-                .setup(s => s.updateValue(TypeMoq.It.isValue({fileHash: 'different value'})))
+                .setup(s => s.updateValue(TypeMoq.It.isValue({ fileHash: 'different value' })))
                 .returns(() => Promise.resolve())
                 .verifiable(TypeMoq.Times.once());
-            state
-                .setup(s => (s as any).then)
-                .returns(() => undefined);
+            state.setup(s => (s as any).then).returns(() => undefined);
             persistentStateFactory
                 .setup(f => f.createGlobalPersistentState(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns(() => state.object)

@@ -80,4 +80,5 @@ export class INativeEditorActionMapping {
     public [IncomingMessageActions.MONACOREADY]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
     public [IncomingMessageActions.UPDATEKERNEL]: NativeEditorReducerFunc<IKernelState>;
+    public [IncomingMessageActions.LOCINIT]: NativeEditorReducerFunc<string>;
 }

@@ -15,7 +15,6 @@ import {
     EventEmitter,
     FileSystemWatcher,
     Uri,
-    ViewColumn,
     WorkspaceConfiguration,
     WorkspaceFolder,
     WorkspaceFoldersChangeEvent
@@ -71,6 +70,7 @@ import {
     ITerminalManager,
     IWebPanel,
     IWebPanelMessageListener,
+    IWebPanelOptions,
     IWebPanelProvider,
     IWorkspaceService,
     WebPanelMessage
@@ -83,7 +83,10 @@ import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibi
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
-import { IInstallationChannelManager } from '../../client/common/installer/types';
+import { ProductInstaller } from '../../client/common/installer/productInstaller';
+import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import { ProductService } from '../../client/common/installer/productService';
+import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
@@ -128,11 +131,13 @@ import {
     IDataScienceSettings,
     IExperimentsManager,
     IExtensions,
+    IInstaller,
     ILogger,
     IPathUtils,
     IPersistentStateFactory,
     IPythonExtensionBanner,
-    IsWindows
+    IsWindows,
+    ProductType
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
@@ -169,6 +174,10 @@ import { JupyterPasswordConnect } from '../../client/datascience/jupyter/jupyter
 import { JupyterServerFactory } from '../../client/datascience/jupyter/jupyterServerFactory';
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from '../../client/datascience/jupyter/jupyterVariables';
+import { KernelSelectionProvider } from '../../client/datascience/jupyter/kernels/kernelSelections';
+import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
+import { KernelService } from '../../client/datascience/jupyter/kernels/kernelService';
+import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
 import { StatusProvider } from '../../client/datascience/statusProvider';
@@ -212,10 +221,12 @@ import { IProtocolParser } from '../../client/debugger/debugAdapter/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { InterpreterComparer } from '../../client/interpreter/configuration/interpreterComparer';
+import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
 import { PythonPathUpdaterService } from '../../client/interpreter/configuration/pythonPathUpdaterService';
 import { PythonPathUpdaterServiceFactory } from '../../client/interpreter/configuration/pythonPathUpdaterServiceFactory';
 import {
     IInterpreterComparer,
+    IInterpreterSelector,
     IPythonPathUpdaterServiceFactory,
     IPythonPathUpdaterServiceManager
 } from '../../client/interpreter/configuration/types';
@@ -237,6 +248,7 @@ import {
     INTERPRETER_LOCATOR_SERVICE,
     InterpreterType,
     IPipEnvService,
+    IShebangCodeLensProvider,
     IVirtualEnvironmentsSearchPathProvider,
     KNOWN_PATH_SERVICE,
     PIPENV_SERVICE,
@@ -244,6 +256,7 @@ import {
     WINDOWS_REGISTRY_SERVICE,
     WORKSPACE_VIRTUAL_ENV_SERVICE
 } from '../../client/interpreter/contracts';
+import { ShebangCodeLensProvider } from '../../client/interpreter/display/shebangCodeLensProvider';
 import { InterpreterHelper } from '../../client/interpreter/helpers';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { InterpreterVersionService } from '../../client/interpreter/interpreterVersion';
@@ -330,6 +343,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         version: new SemVer('3.6.6-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
+        displayName: 'Python',
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
     };
@@ -338,6 +352,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         version: new SemVer('3.6.7-final'),
         sysVersion: '1.0.0.0',
         sysPrefix: 'Python',
+        displayName: 'Python',
         type: InterpreterType.Unknown,
         architecture: Architecture.x64,
     };
@@ -479,6 +494,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerCompatibilityService>(ILanguageServerCompatibilityService, LanguageServerCompatibilityService);
         this.serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId);
         this.serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService);
+        this.serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
+        this.serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
+        this.serviceManager.addSingleton<IInstaller>(IInstaller, ProductInstaller);
+        this.serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
+        this.serviceManager.addSingleton<IInterpreterSelector>(IInterpreterSelector, InterpreterSelector);
+        this.serviceManager.addSingleton<IShebangCodeLensProvider>(IShebangCodeLensProvider, ShebangCodeLensProvider);
+        this.serviceManager.addSingleton<IProductService>(IProductService, ProductService);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, CTagsProductPathService, ProductType.WorkspaceSymbols);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, FormatterProductPathService, ProductType.Formatter);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, LinterProductPathService, ProductType.Linter);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
+        this.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
 
         // Don't check for dot net compatibility
         const dotNetCompability = mock(DotNetCompatibilityService);
@@ -658,7 +686,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
+            // When using mocked Jupyter, default to using default kernel.
+            const kernelService = mock(KernelService);
+            when(kernelService.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
+            this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(kernelService));
         } else {
+            this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);
             this.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
@@ -708,10 +741,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const webPanel = TypeMoq.Mock.ofType<IWebPanel>();
 
         // Setup the webpanel provider so that it returns our dummy web panel. It will have to talk to our global JSDOM window so that the react components can link into it
-        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(
-            (_viewColumn: ViewColumn, listener: IWebPanelMessageListener, _title: string, _script: string, _css: string) => {
+        this.webPanelProvider.setup(p => p.create(TypeMoq.It.isAny())).returns(
+            (options: IWebPanelOptions) => {
                 // Keep track of the current listener. It listens to messages through the vscode api
-                this.webPanelListener = listener;
+                this.webPanelListener = options.listener;
 
                 // Send messages that were already posted but were missed.
                 // During normal operation, the react control will not be created before
@@ -729,7 +762,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                 }
 
                 // Return our dummy web panel
-                return webPanel.object;
+                return Promise.resolve(webPanel.object);
             });
         webPanel.setup(p => p.postMessage(TypeMoq.It.isAny())).callback((m: WebPanelMessage) => {
             const message = createMessageEvent(m);
@@ -740,6 +773,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         });
         webPanel.setup(p => p.show(TypeMoq.It.isAny())).returns(() => Promise.resolve());
+
+        // See https://github.com/florinn/typemoq/issues/67 for why this is necessary
+        webPanel.setup((p: any) => p.then).returns(() => undefined);
 
         // We need to mount the react control before we even create an interactive window object. Otherwise the mount will miss rendering some parts
         this.mountReactControl(mount);

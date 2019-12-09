@@ -939,7 +939,7 @@ export type WebPanelMessage = {
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
-    title: string;
+    setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
      * @return A Promise that can be waited on
@@ -964,6 +964,23 @@ export interface IWebPanel {
      * Indicates if the webview has the focus or not.
      */
     isActive(): boolean;
+    /**
+     * Updates the current working directory for serving up files.
+     * @param cwd
+     */
+    updateCwd(cwd: string): void;
+}
+
+export interface IWebPanelOptions {
+    viewColumn: ViewColumn;
+    listener: IWebPanelMessageListener;
+    title: string;
+    rootPath: string;
+    scripts: string[];
+    startHttpServer: boolean;
+    cwd: string;
+    // tslint:disable-next-line: no-any
+    settings?: any;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -972,17 +989,11 @@ export interface IWebPanelProvider {
     /**
      * Creates a new webpanel
      *
-     * @param {ViewColumn} viewColumn
-     * @param {IWebPanelMessageListener} listener
-     * @param {string} title
-     * @param {string} rootPath
-     * @param {string[]} scripts
-     * @param {string} [embeddedCss]
-     * @param {*} [settings]
+     * @param {IWebPanelOptions} options - params for creating an IWebPanel
      * @returns {IWebPanel}
      * @memberof IWebPanelProvider
      */
-    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, rootPath: string, scripts: string[], embeddedCss?: string, settings?: any): IWebPanel;
+    create(options: IWebPanelOptions): Promise<IWebPanel>;
 }
 
 // Wraps the vsls liveshare API

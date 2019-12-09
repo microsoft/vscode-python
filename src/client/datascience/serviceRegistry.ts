@@ -38,6 +38,10 @@ import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
 import { JupyterVariables } from './jupyter/jupyterVariables';
+import { KernelSelectionProvider } from './jupyter/kernels/kernelSelections';
+import { KernelSelector } from './jupyter/kernels/kernelSelector';
+import { KernelService } from './jupyter/kernels/kernelService';
+import { NotebookStarter } from './jupyter/notebookStarter';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
 import { StatusProvider } from './statusProvider';
@@ -121,4 +125,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugLocationTracker>(IDebugLocationTracker, DebugLocationTrackerFactory);
     serviceManager.addSingleton<JupyterCommandFinder>(JupyterCommandFinder, JupyterCommandFinder);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, Activation);
+    serviceManager.addSingleton<KernelService>(KernelService, KernelService);
+    serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
+    serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
+    serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
 }

@@ -20,13 +20,13 @@
 ### Prerequisites
 
 1. [Node.js](https://nodejs.org/) 10.x
-1. [Python](https://www.python.org/) 2.7 or later (required only for testing the extension and running unit tests)
+1. [Python](https://www.python.org/) 2.7 or later
 1. Windows, macOS, or Linux
 1. [Visual Studio Code](https://code.visualstudio.com/)
 1. The following VS Code extensions:
     * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
     * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
-1. Have an issue which has been accepted with a "needs PR" label (feel free to indicate you would be happy to provide a PR for the issue)
+1. Have an issue which has a "needs PR" label (feel free to indicate you would like to provide a PR for the issue so others don't work on it as well)
 
 ### Setup
 
@@ -35,17 +35,25 @@ git clone https://github.com/microsoft/vscode-python
 cd vscode-python
 npm ci
 python3 -m venv .venv
-# Activate the virtual environment as appropriate for your shell.
+# Activate the virtual environment as appropriate for your shell, For example ...
+source .venv/bin/activate
+# Install Python dependencies using `python3`.
+# If you want to use a different interpreter then specify it in the
+# CI_PYTHON_PATH environment variable.
 npx gulp installPythonLibs
-# If your terminal doesn't recogonise the keyword `python3`, update `launch.json` to set a value for the environment variable `CI_PYTHON_PATH` pointing to the fully qualified path of the above interpreter.
 ```
-You may see warnings that ```The engine "vscode" appears to be invalid.```, you can ignore these.
+If you see warnings that `The engine "vscode" appears to be invalid.`, you can ignore these.
 
 ### Incremental Build
 
 Run the `Compile` and `Hygiene` build Tasks from the [Run Build Task...](https://code.visualstudio.com/docs/editor/tasks) command picker (short cut `CTRL+SHIFT+B` or `⇧⌘B`). This will leave build and hygiene tasks running in the background and which will re-run as files are edited and saved. You can see the output from either task in the Terminal panel (use the selector to choose which output to look at).
 
-You can also compile from the command-line. For a full compile you can use `npx gulp prePublishNonBundle`. For incremental builds you can use the following commands depending on your needs:
+You can also compile from the command-line. For a full compile you can use:
+```shell
+npx gulp prePublishNonBundle
+```
+
+For incremental builds you can use the following commands depending on your needs:
 ```shell
 npm run compile
 npm run compile-webviews-watch # For data science (React Code)
@@ -56,15 +64,16 @@ This is especially true if you have added or removed files.
 
 ### Errors and Warnings
 
-TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code:
+TypeScript errors and warnings will be displayed in the `Problems` window of Visual Studio Code.
 
 ### Validate your changes
 
 To test the changes you launch a development version of VS Code on the workspace vscode, which you are currently editing.
 Use the `Extension` launch option.
 
-### Debugging Unit Tests
+### Running Unit Tests
 
+1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
 1. Run the Tests via the `Unit Tests`  launch option.
@@ -87,8 +96,9 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ```
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
 
-### Debugging System Tests
+### Running System Tests
 
+1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally by using the `./requirements.txt` and `build/test-requirements.txt` files
 1. Run the tests via `npm run` or the Debugger launch options (you can "Start Without Debugging").
@@ -243,12 +253,11 @@ in the [pull request template](https://github.com/Microsoft/vscode-python/blob/m
 Starting in 2018, the extension switched to
 [calendar versioning](http://calver.org/) since the extension
 auto-updates and thus there is no need to track its version
-number for backwards-compatibility. As such, the major version
-is the current year, the minor version is the month when feature
-freeze was reached, and the build number is a number that increments for every build.
-For example the release made when we reach feature freeze in July 2018
-would be `2018.7.<some number>`, and if there is a second release in that month
-it would be `2018.7.<some larger number>`.
+number for backwards-compatibility. In 2020, the extension switched to
+having the the major version be the year of release, the minor version the
+release count for that year, and the build number is a number that increments
+for every build.
+For example the first release made in 2020 is `2020.1.<build number>`.
 
 ## Releasing
 

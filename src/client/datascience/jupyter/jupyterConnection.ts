@@ -7,6 +7,7 @@ import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
+import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
 import { IConfigurationService, ILogger } from '../../common/types';
@@ -171,10 +172,8 @@ class JupyterConnectionWaiter {
         if (httpMatch && this.notebook_dir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
             // .then so that we can keep from pushing aync up to the subscribed observable function
             this.getServerInfo(this.cancelToken)
-                .then(serverInfos => {
-                    this.getJupyterURL(serverInfos, data);
-                })
-                .ignoreErrors();
+                .then(serverInfos => this.getJupyterURL(serverInfos, data))
+                .catch(ex => traceWarning('Failed to get server info', ex));
         }
 
         // Sometimes jupyter will return a 403 error. Not sure why. We used

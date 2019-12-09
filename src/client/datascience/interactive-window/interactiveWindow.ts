@@ -26,6 +26,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
+    private lastFile: string | undefined;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -83,11 +84,6 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         this.startServer().ignoreErrors();
     }
 
-    public get ready(): Promise<void> {
-        // We need this to ensure the interactive window is up and ready to receive messages.
-        return this.startServer();
-    }
-
     public dispose() {
         super.dispose();
         if (this.closedEvent) {
@@ -104,7 +100,23 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async show(): Promise<void> {
+        // When showing we have to load the web panel. Make sure
+        // we use the last file sent through add code.
+        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+        return super.show();
+    }
+
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        // Save the last file we ran with.
+        this.lastFile = file;
+
+        // Make sure our web panel opens.
+        await this.show();
+
+        // Tell the webpanel about the new directory.
+        this.updateCwd(path.dirname(file));
+
         // Call the internal method.
         return this.submitCode(code, file, line, undefined, editor, false);
     }

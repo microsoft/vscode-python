@@ -14,7 +14,7 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { Cancellation } from '../../client/common/cancellation';
 import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService } from '../../client/common/types';
+import { IConfigurationService } from '../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
@@ -71,7 +71,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private processServiceFactory = this.createTypeMoq<IProcessServiceFactory>('Process Exec Factory');
     private processService: MockProcessService = new MockProcessService();
     private interpreterService = this.createTypeMoq<IInterpreterService>('Interpreter Service');
-    private asyncRegistry: IAsyncDisposableRegistry;
     private changedInterpreterEvent: EventEmitter<void> = new EventEmitter<void>();
     private installedInterpreters: PythonInterpreter[] = [];
     private pythonServices: MockPythonService[] = [];
@@ -83,9 +82,6 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private connInfo: IConnection | undefined;
 
     constructor(serviceManager: IServiceManager) {
-        // Save async registry. Need to stick servers created into it
-        this.asyncRegistry = serviceManager.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry);
-
         // Make our process service factory always return this item
         this.processServiceFactory.setup(p => p.create()).returns(() => Promise.resolve(this.processService));
 
@@ -298,10 +294,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.connInfo = connInfo;
     }
 
-    public startNew(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IJupyterSession> {
-        if (kernelSpec) {
-            this.asyncRegistry.push(kernelSpec);
-        }
+    public startNew(_kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         if (this.sessionTimeout && cancelToken) {
             const localTimeout = this.sessionTimeout;
             return Cancellation.race(async () => {

@@ -8,24 +8,24 @@ import { assert } from 'chai';
 import { cloneDeep } from 'lodash';
 import * as path from 'path';
 import * as sinon from 'sinon';
-import { anything, capture, deepEqual, instance, mock, reset, verify, when } from 'ts-mockito';
+import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
+import { ProductInstaller } from '../../../../client/common/installer/productInstaller';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../../client/common/platform/types';
-import { ProcessServiceFactory } from '../../../../client/common/process/processFactory';
-import { IProcessServiceFactory } from '../../../../client/common/process/types';
-import { ReadWrite } from '../../../../client/common/types';
-import { noop } from '../../../../client/common/utils/misc';
+import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
+import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
+import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
+import { IInstaller, Product, ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder, ModuleExistsStatus } from '../../../../client/datascience/jupyter/jupyterCommandFinder';
-import { JupyterExecutionBase } from '../../../../client/datascience/jupyter/jupyterExecution';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { JupyterKernelSpec } from '../../../../client/datascience/jupyter/kernels/jupyterKernelSpec';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IJupyterCommand, IJupyterExecution, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IJupyterCommand, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { EnvironmentActivationService } from '../../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
@@ -34,46 +34,40 @@ import { InterpreterService } from '../../../../client/interpreter/interpreterSe
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelService', () => {
     let kernelService: KernelService;
-    let jupyterExecution: IJupyterExecution;
     let cmdFinder: JupyterCommandFinder;
-    let processServiceFactory: IProcessServiceFactory;
     let interperterService: IInterpreterService;
     let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
     let kernelSpecCmd: IJupyterCommand;
-    let kernelCreateCmd: IJupyterCommand;
+    let execFactory: IPythonExecutionFactory;
+    let execService: IPythonExecutionService;
     let activationHelper: IEnvironmentActivationService;
+    let installer: IInstaller;
 
     function initialize() {
-        jupyterExecution = mock(JupyterExecutionBase);
         cmdFinder = mock(JupyterCommandFinder);
-        processServiceFactory = mock(ProcessServiceFactory);
         interperterService = mock(InterpreterService);
         fs = mock(FileSystem);
         sessionManager = mock(JupyterSessionManager);
         kernelSpecCmd = mock(InterpreterJupyterNotebookCommand);
-        kernelCreateCmd = mock(InterpreterJupyterNotebookCommand);
         activationHelper = mock(EnvironmentActivationService);
+        execFactory = mock(PythonExecutionFactory);
+        execService = mock(PythonExecutionService);
+        installer = mock(ProductInstaller);
+        when(execFactory.create(anything())).thenResolve(instance(execService));
+        // tslint:disable-next-line: no-any
+        (instance(execService) as any).then = undefined;
         when(cmdFinder.findBestCommand(JupyterCommands.KernelSpecCommand)).thenResolve({ status: ModuleExistsStatus.Found, command: instance(kernelSpecCmd) });
-        when(cmdFinder.findBestCommand(JupyterCommands.KernelCreateCommand, anything())).thenResolve({ status: ModuleExistsStatus.Found, command: instance(kernelCreateCmd) });
 
-        kernelService = new KernelService(
-            instance(jupyterExecution),
-            instance(cmdFinder),
-            { push: noop, dispose: async () => noop() },
-            instance(processServiceFactory),
-            instance(interperterService),
-            instance(fs),
-            instance(activationHelper)
-        );
+        kernelService = new KernelService(instance(cmdFinder), instance(execFactory), instance(interperterService), instance(installer), instance(fs), instance(activationHelper));
     }
     setup(initialize);
     teardown(() => sinon.restore());
 
     test('Should not return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -84,8 +78,8 @@ suite('Data Science - KernelService', () => {
     });
     test('Should not return a matching spec from a session for a given interpeter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: '', display_name: '1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: '', display_name: '2', metadata: {} }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         const interpreter: PythonInterpreter = {
@@ -127,8 +121,8 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a session for a given kernelspec', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: {} }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
 
@@ -143,13 +137,14 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a session for a given interpreter', async () => {
         const activeKernelSpecs: IJupyterKernelSpec[] = [
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: { interpreter: { path: 'myPath2' } } },
-            { dispose: async () => noop(), language: PYTHON_LANGUAGE, name: '3', path: 'Path3', display_name: 'Disp3', metadata: { interpreter: { path: 'myPath3' } } }
+            { argv: [], language: PYTHON_LANGUAGE, name: '1', path: 'Path1', display_name: 'Disp1', metadata: {} },
+            { argv: [], language: PYTHON_LANGUAGE, name: '2', path: 'Path2', display_name: 'Disp2', metadata: { interpreter: { path: 'myPath2' } } },
+            { argv: [], language: PYTHON_LANGUAGE, name: '3', path: 'Path3', display_name: 'Disp3', metadata: { interpreter: { path: 'myPath3' } } }
         ];
         when(sessionManager.getKernelSpecs()).thenResolve(activeKernelSpecs);
         when(fs.arePathsSame('myPath2', 'myPath2')).thenReturn(true);
         const interpreter: PythonInterpreter = {
+            displayName: 'Disp2',
             path: 'myPath2',
             sysPrefix: 'xyz',
             type: InterpreterType.Conda,
@@ -169,10 +164,16 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a jupyter process for a given kernelspec', async () => {
         const kernelSpecs = {
-            K1: { resource_dir: 'dir1', spec: { display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } } },
-            K2: { resource_dir: 'dir2', spec: { display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } } }
+            K1: {
+                resource_dir: 'dir1',
+                spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+            },
+            K2: {
+                resource_dir: 'dir2',
+                spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+            }
         };
-        when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify(kernelSpecs) });
+        when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
         when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const matchingKernel = await kernelService.findMatchingKernelSpec({ name: 'K2', display_name: 'disp2' }, undefined);
 
@@ -186,13 +187,20 @@ suite('Data Science - KernelService', () => {
     });
     test('Should return a matching spec from a jupyter process for a given interpreter', async () => {
         const kernelSpecs = {
-            K1: { resource_dir: 'dir1', spec: { display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } } },
-            K2: { resource_dir: 'dir2', spec: { display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } } }
+            K1: {
+                resource_dir: 'dir1',
+                spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+            },
+            K2: {
+                resource_dir: 'dir2',
+                spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+            }
         };
-        when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify(kernelSpecs) });
+        when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
         when(fs.arePathsSame('Some Path2', 'Some Path2')).thenReturn(true);
         when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
         const interpreter: PythonInterpreter = {
+            displayName: 'disp2',
             path: 'Some Path2',
             sysPrefix: 'xyz',
             type: InterpreterType.Conda,
@@ -213,27 +221,21 @@ suite('Data Science - KernelService', () => {
     });
     // tslint:disable-next-line: max-func-body-length
     suite('Registering Interpreters as Kernels', () => {
-        let findMatchingKernelSpecStub: sinon.SinonStub<
-            [PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?],
-            Promise<IJupyterKernelSpec | undefined>
-        >;
+        let findMatchingKernelSpecStub: sinon.SinonStub<[PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?], Promise<IJupyterKernelSpec | undefined>>;
         const interpreter: PythonInterpreter = {
             architecture: Architecture.Unknown,
-            path: path.join('interprter', 'python'),
+            path: path.join('interpreter', 'python'),
             sysPrefix: '',
             sysVersion: '',
             type: InterpreterType.Conda,
             displayName: 'Hello'
         };
-        const interpreterPathHash = 'SomeHash';
-        const installedKernelName = `${interpreter.displayName || ''}_${interpreterPathHash}`.replace(/[^A-Za-z0-9]/g, '');
-        const kernelInstallArgs = ['install', '--user', '--name', installedKernelName, '--display-name', interpreter.displayName];
         // Marked as readonly, to ensure we do not update this in tests.
         const kernelSpecModel: Readonly<Kernel.ISpecModel> = {
             argv: ['python', '-m', 'ipykernel'],
             display_name: interpreter.displayName!,
             language: PYTHON_LANGUAGE,
-            name: installedKernelName,
+            name: 'somme name',
             resources: {},
             env: {},
             metadata: {
@@ -245,7 +247,6 @@ suite('Data Science - KernelService', () => {
         setup(() => {
             findMatchingKernelSpecStub = sinon.stub(KernelService.prototype, 'findMatchingKernelSpec');
             initialize();
-            when(fs.getFileHash(interpreter.path)).thenResolve(interpreterPathHash);
         });
 
         test('Fail if interpreter does not have a display name', async () => {
@@ -261,49 +262,53 @@ suite('Data Science - KernelService', () => {
 
             await assert.isRejected(promise, 'Interpreter does not have a display name');
         });
-        test('Fail if kernel create command is not found', async () => {
-            reset(cmdFinder);
-            when(cmdFinder.findBestCommand(JupyterCommands.KernelCreateCommand, anything())).thenResolve({ status: ModuleExistsStatus.NotFound });
-
-            const promise = kernelService.registerKernel(interpreter);
-            await assert.isRejected(promise, 'Command not found to install the kernel');
-        });
-        test('Fail if kernel create command is found and command is not defined', async () => {
-            reset(cmdFinder);
-            when(cmdFinder.findBestCommand(JupyterCommands.KernelCreateCommand, anything())).thenResolve({ status: ModuleExistsStatus.Found });
-
-            const promise = kernelService.registerKernel(interpreter);
-            await assert.isRejected(promise, 'Command not found to install the kernel');
-        });
         test('Fail if installed kernel cannot be found', async () => {
-            when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
             findMatchingKernelSpecStub.resolves(undefined);
 
             const promise = kernelService.registerKernel(interpreter);
-            await assert.isRejected(promise, `Kernel not created with the name ${installedKernelName}, display_name ${interpreter.displayName}. Output is `);
+
+            await assert.isRejected(promise);
+            verify(execService.execModule('ipykernel', anything(), anything())).once();
+            const installArgs = capture(execService.execModule).first()[1] as string[];
+            const kernelName = installArgs[3];
+            assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
+            await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
         });
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
-            when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
             // tslint:disable-next-line: no-any
             findMatchingKernelSpecStub.resolves({} as any);
 
             const promise = kernelService.registerKernel(interpreter);
-            await assert.isRejected(promise, `Kernel not registered locally, created with the name ${installedKernelName}, display_name ${interpreter.displayName}. Output is `);
+
+            await assert.isRejected(promise);
+            verify(execService.execModule('ipykernel', anything(), anything())).once();
+            const installArgs = capture(execService.execModule).first()[1] as string[];
+            const kernelName = installArgs[3];
+            await assert.isRejected(promise, `Kernel not registered locally, created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
         });
         test('Fail if installed kernel spec does not have a specFile setup', async () => {
-            when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
             // tslint:disable-next-line: no-any
             const kernel = new JupyterKernelSpec({} as any);
             findMatchingKernelSpecStub.resolves(kernel);
 
             const promise = kernelService.registerKernel(interpreter);
-            await assert.isRejected(promise, `kernel.json not created with the name ${installedKernelName}, display_name ${interpreter.displayName}. Output is `);
+
+            await assert.isRejected(promise);
+            verify(execService.execModule('ipykernel', anything(), anything())).once();
+            const installArgs = capture(execService.execModule).first()[1] as string[];
+            const kernelName = installArgs[3];
+            await assert.isRejected(promise, `kernel.json not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
         });
         test('Kernel is installed and spec file is updated with interpreter information in metadata and interpreter path in argv', async () => {
-            when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
-
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
-
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
             when(activationHelper.getActivatedEnvironmentVariables(undefined, interpreter, true)).thenResolve(undefined);
@@ -322,10 +327,9 @@ suite('Data Science - KernelService', () => {
             assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
         });
         test('Kernel is installed and spec file is updated with interpreter information in metadata along with environment variables', async () => {
-            when(kernelCreateCmd.exec(deepEqual(kernelInstallArgs), anything())).thenResolve({ stdout: '' });
-
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
             const kernel = new JupyterKernelSpec(kernelSpecModel, kernelJsonFile);
-
             when(fs.readFile(kernelJsonFile)).thenResolve(JSON.stringify(kernelSpecModel));
             when(fs.writeFile(kernelJsonFile, anything())).thenResolve();
             const envVariables = { MYVAR: '1' };

@@ -54,6 +54,9 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
 
     public async showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void> {
         if (!this.isDisposed) {
+            // Load the web panel using our current directory as we don't expect to load any other files
+            await super.loadWebPanel(process.cwd());
+
             // Save notebook this is tied to
             this.notebook = notebook;
 

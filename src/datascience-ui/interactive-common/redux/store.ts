@@ -12,12 +12,11 @@ import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/r
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
-import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
+import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
-    const defaultSettings = loadDefaultSettings();
     if (!skipDefault) {
         return generateTestState('', editable);
     } else {
@@ -25,8 +24,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             // tslint:disable-next-line: no-typeof-undefined
             skipDefault,
             testMode,
-            baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
-            editorOptions: computeEditorOptions(defaultSettings),
+            baseTheme: baseTheme,
             cellVMs: [],
             busy: true,
             undoStack: [],
@@ -45,7 +43,6 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
                 family: 'Consolas, \'Courier New\', monospace'
             },
             codeTheme: Identifiers.GeneratedThemeName,
-            settings: defaultSettings,
             activateCount: 0,
             monacoReady: testMode, // When testing, monaco starts out ready
             loaded: false,
@@ -53,7 +50,9 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
                 displayName: 'Python',
                 uri: getLocString('DataScience.noKernel', 'No Kernel'),
                 jupyterServerStatus: ServerStatus.NotStarted
-            }
+            },
+            settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
+            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
         };
     }
 }
@@ -105,7 +104,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         // Indicate settings updates
         if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.UpdateSettings)));
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.SettingsUpdated)));
         }
 
         // Indicate clean changes

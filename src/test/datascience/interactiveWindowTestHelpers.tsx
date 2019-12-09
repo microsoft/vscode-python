@@ -4,8 +4,9 @@
 import * as assert from 'assert';
 import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
-
 import { Uri } from 'vscode';
+
+import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
@@ -16,9 +17,11 @@ export function getInteractiveCellResults(wrapper: ReactWrapper<any, Readonly<{}
     return getCellResults(wrapper, InteractivePanel, 'InteractiveCell', expectedRenders, updater);
 }
 
-export function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
+export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
     const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-    return interactiveWindowProvider.getOrCreateActive();
+    const window = (await interactiveWindowProvider.getOrCreateActive()) as InteractiveWindow;
+    await window.show();
+    return window;
 }
 
 // tslint:disable-next-line:no-any

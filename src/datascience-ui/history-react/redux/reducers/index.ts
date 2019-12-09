@@ -65,5 +65,6 @@ export const reducerMap: IInteractiveActionMapping = {
     [IncomingMessageActions.STARTDEBUGGING]: Execution.startDebugging,
     [IncomingMessageActions.STOPDEBUGGING]: Execution.stopDebugging,
     [IncomingMessageActions.SCROLLTOCELL]: Effects.scrollToCell,
-    [IncomingMessageActions.UPDATEKERNEL]: Kernel.updateStatus
+    [IncomingMessageActions.UPDATEKERNEL]: Kernel.updateStatus,
+    [IncomingMessageActions.LOCINIT]: CommonEffects.handleLocInit
 };

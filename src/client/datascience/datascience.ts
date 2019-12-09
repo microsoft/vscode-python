@@ -95,7 +95,6 @@ export class DataScience implements IDataScience {
 
         // Send telemetry for all of our settings
         this.sendSettingsTelemetry().ignoreErrors();
-        this.sendStartupTelemetry();
     }
 
     public async dispose() {
@@ -621,11 +620,6 @@ export class DataScience implements IDataScience {
             }
             sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
         }
-    }
-    @swallowExceptions('Error in sending DS Startup telemetry')
-    private sendStartupTelemetry() {
-        const filesConfig = this.workspace.getConfiguration('files');
-        sendTelemetryEvent(Telemetry.AutoSaveEnabled, undefined, { enabled: filesConfig.get('autoSave', 'off') !== 'off' });
     }
 
     private async createNewNotebook(): Promise<void> {

@@ -19,6 +19,10 @@ const throttle = require('lodash/throttle') as typeof import('lodash/throttle');
 import './monacoEditor.css';
 
 const LINE_HEIGHT = 18;
+
+const HOVER_DISPOSABLE_EVENT_COUNT = 8;
+const HOVER_DISPOSABLE_LEAVE_INDEX = 5;
+
 enum WidgetCSSSelector {
     /**
      * CSS Selector for the parameters widget displayed by Monaco.
@@ -704,17 +708,21 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                                 // mean the mouse has left the editor.
                                 // tslint:disable-next-line: no-any
                                 const hover = editor.getContribution('editor.contrib.hover') as any;
-                                if (hover._toUnhook && hover._toUnhook.length === 8 && hover.contentWidget) {
+                                if (hover._toUnhook && hover._toUnhook._toDispose && hover._toUnhook._toDispose && hover.contentWidget) {
                                     // This should mean our 5th element is the event handler for mouse leave. Remove it.
-                                    const array = hover._toUnhook as IDisposable[];
-                                    array[5].dispose();
-                                    array.splice(5, 1);
+                                    const set = hover._toUnhook._toDispose as Set<IDisposable>;
+                                    if (set.size === HOVER_DISPOSABLE_EVENT_COUNT) {
+                                        // This is horribly flakey, Is set always guaranteed to put stuff in the same order?
+                                        const array = Array.from(set);
+                                        array[HOVER_DISPOSABLE_LEAVE_INDEX].dispose();
+                                        set.delete(array[HOVER_DISPOSABLE_LEAVE_INDEX]);
 
-                                    // Instead listen to mouse leave for our hover widget
-                                    const hoverWidget = this.widgetParent.getElementsByClassName('monaco-editor-hover')[0] as HTMLElement;
-                                    if (hoverWidget) {
-                                        hoverWidget.addEventListener('mouseenter', this.onHoverEnter);
-                                        hoverWidget.addEventListener('mouseleave', this.onHoverLeave);
+                                        // Instead listen to mouse leave for our hover widget
+                                        const hoverWidget = this.widgetParent.getElementsByClassName('monaco-editor-hover')[0] as HTMLElement;
+                                        if (hoverWidget) {
+                                            hoverWidget.addEventListener('mouseenter', this.onHoverEnter);
+                                            hoverWidget.addEventListener('mouseleave', this.onHoverLeave);
+                                        }
                                     }
                                 }
                             }

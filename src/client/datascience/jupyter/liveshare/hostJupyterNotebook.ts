@@ -10,7 +10,6 @@ import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
-import { IInterpreterService } from '../../../interpreter/contracts';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
 import { IExecuteInfo } from '../../interactive-common/interactiveWindowTypes';
 import { ICell, IJupyterSession, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../../types';
@@ -44,10 +43,9 @@ export class HostJupyterNotebook
         resource: vscode.Uri,
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
-        appService: IApplicationShell,
-        interpreterService: IInterpreterService
+        appService: IApplicationShell
     ) {
-        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, interpreterService);
+        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService);
     }
 
     public dispose = async (): Promise<void> => {

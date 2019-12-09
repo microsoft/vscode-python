@@ -13,6 +13,7 @@ import { mountConnectedMainPanel } from './testHelpers';
 
 suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
+    let channels: TypeMoq.IMock<IInstallationChannelManager>;
 
     setup(() => {
         ioc = createContainer();
@@ -27,7 +28,7 @@ suite('DataScience Error Handler Functional Tests', () => {
         result.registerDataScienceTypes();
 
         const jupyterExecution = TypeMoq.Mock.ofType<IJupyterExecution>();
-        const channels = TypeMoq.Mock.ofType<IInstallationChannelManager>();
+        channels = TypeMoq.Mock.ofType<IInstallationChannelManager>();
         const installers: IModuleInstaller[] = [
             {
                 name: 'Pip',
@@ -69,6 +70,7 @@ suite('DataScience Error Handler Functional Tests', () => {
 
         cw.setDocument(docManager.textDocuments[0]);
         await cw.runAllCells();
+        channels.verifyAll();
         await ioc.dispose();
     });
 });

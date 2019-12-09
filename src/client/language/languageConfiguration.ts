@@ -54,10 +54,12 @@ export function getLanguageConfiguration(): LanguageConfiguration {
                                 async \\s+ def |
                                 except |
                                 for |
+                                async \\s+ for |
                                 if |
                                 elif |
                                 while |
-                                with
+                                with |
+                                async \\s+ with
                             )
                             \\b .*
                         ) |

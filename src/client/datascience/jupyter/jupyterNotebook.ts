@@ -18,7 +18,7 @@ import { createDeferred, Deferred, waitForPromise } from '../../common/utils/asy
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
+import { PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
@@ -134,7 +134,6 @@ export class JupyterNotebookBase implements INotebook {
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
-    private interpreterPromise: Promise<PythonInterpreter | undefined>;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
     constructor(
@@ -148,8 +147,7 @@ export class JupyterNotebookBase implements INotebook {
         resource: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
-        private applicationService: IApplicationShell,
-        private interpreterService: IInterpreterService
+        private applicationService: IApplicationShell
     ) {
         this.sessionStartTime = Date.now();
 
@@ -163,7 +161,6 @@ export class JupyterNotebookBase implements INotebook {
         this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
         // are possible, recompute it.
-        this.interpreterPromise = this.interpreterService.getActiveInterpreter(resource);
     }
 
     public get server(): INotebookServer {
@@ -476,11 +473,11 @@ export class JupyterNotebookBase implements INotebook {
         throw new Error(localize.DataScience.sessionDisposed());
     }
 
-    public async getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
-        return this.interpreterPromise;
+    public getMatchingInterpreter(): PythonInterpreter | undefined {
+        return this.launchInfo.interpreter;
     }
 
-    public async getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
+    public getKernelSpec(): IJupyterKernelSpec | undefined {
         return this.launchInfo.kernelSpec;
     }
 

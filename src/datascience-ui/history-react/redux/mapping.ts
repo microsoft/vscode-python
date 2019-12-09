@@ -68,4 +68,5 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.STOPDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<IScrollToCell>;
     public [IncomingMessageActions.UPDATEKERNEL]: InteractiveReducerFunc<IKernelState>;
+    public [IncomingMessageActions.LOCINIT]: InteractiveReducerFunc<string>;
 }

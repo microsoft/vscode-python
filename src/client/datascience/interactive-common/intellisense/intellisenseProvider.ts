@@ -157,7 +157,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         // Interpreter should be the interpreter currently active in the notebook
         const activeNotebook = await this.getNotebook();
-        const interpreter = activeNotebook ? await activeNotebook.getMatchingInterpreter() : await this.interpreterService.getActiveInterpreter(resource);
+        const interpreter = activeNotebook ? activeNotebook.getMatchingInterpreter() : await this.interpreterService.getActiveInterpreter(resource);
 
         // See if the resource or the interpreter are different
         if (resource?.toString() !== this.resource?.toString() || interpreter?.path !== this.interpreter?.path || this.languageServer === undefined) {

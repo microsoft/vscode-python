@@ -7,23 +7,21 @@ import { CancellationToken } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
-import { GuestJupyterSessionManagerFactory } from './guestJupyterSessionManagerFactory';
+import { KernelSelector } from '../kernels/kernelSelector';
+import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ServerCache } from './serverCache';
 
@@ -34,31 +32,25 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
 
     constructor(
         liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
-            executionFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
-            asyncRegistry,
-            fileSystem,
-            new GuestJupyterSessionManagerFactory(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
-            activationHelper,
+            kernelSelector,
+            notebookStarter,
             serviceContainer);
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);
@@ -76,12 +68,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     }
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
-    }
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
-    }
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);

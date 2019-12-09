@@ -46,7 +46,13 @@ export enum InterruptResult {
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
     connectionInfo: IConnection;
-    currentInterpreter: PythonInterpreter | undefined;
+    /**
+     * The python interpreter associated with the kernel.
+     *
+     * @type {(PythonInterpreter | undefined)}
+     * @memberof INotebookServerLaunchInfo
+     */
+    interpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
     kernelSpec: IJupyterKernelSpec | undefined;
     workingDir: string | undefined;
@@ -90,8 +96,8 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
-    getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
-    getKernelSpec(): Promise<IJupyterKernelSpec | undefined>;
+    getMatchingInterpreter(): PythonInterpreter | undefined;
+    getKernelSpec(): IJupyterKernelSpec | undefined;
 }
 
 export interface INotebookServerOptions {
@@ -123,8 +129,6 @@ export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
@@ -183,7 +187,7 @@ export interface IJupyterKernel {
     numberOfConnections: number;
 }
 
-export interface IJupyterKernelSpec extends IAsyncDisposable {
+export interface IJupyterKernelSpec {
     name: string;
     language: string;
     path: string;
@@ -200,6 +204,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
      */
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
+    readonly argv: string[];
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -242,7 +247,6 @@ export interface IInteractiveBase extends Disposable {
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends IInteractiveBase {
     closed: Event<IInteractiveWindow>;
-    ready: Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;

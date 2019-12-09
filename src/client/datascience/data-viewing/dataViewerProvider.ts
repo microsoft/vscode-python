@@ -43,7 +43,7 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
     }
 
     public async getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined> {
-        const interpreter = await notebook.getMatchingInterpreter();
+        const interpreter = notebook.getMatchingInterpreter();
 
         if (interpreter) {
             const launcher = await this.pythonFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true });

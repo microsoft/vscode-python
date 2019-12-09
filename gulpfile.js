@@ -32,7 +32,7 @@ const os = require('os');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
-const noop = function() {};
+const noop = function () { };
 /**
  * Hygiene works by creating cascading subsets of all our files and
  * passing them through a sequence of checks. Here are the current subsets,
@@ -72,7 +72,7 @@ gulp.task('compile', done => {
         .on('error', () => (failed = true))
         .js.pipe(gulp.dest('out'))
         .on('finish', () => (failed ? done(new Error('TypeScript compilation errors')) : done()));
-    });
+});
 
 gulp.task('precommit', done => run({ exitOnError: true, mode: 'staged' }, done));
 
@@ -179,7 +179,7 @@ async function buildWebPack(webpackConfigName, args) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
-        throw new Error(`Warnings in ${webpackConfigName}, \n\n${stdOut}`);
+        throw new Error(`Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`);
     }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
@@ -196,7 +196,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/Validation.js',
                 'WARNING in ./node_modules/ws/lib/validation.js',
                 'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
-                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/any-promise/register.js'
             ];
         case 'extension':
             return [
@@ -204,7 +205,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/any-promise/register.js'
             ];
         case 'debugAdapter':
             return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
@@ -261,7 +263,7 @@ gulp.task('installPythonRequirements', async () => {
 // See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installNewPtvsd', async () => {
     // Install new PTVSD with wheels for python 3.7
-    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', './pythonFiles/install_ptvsd.py')
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', ['./pythonFiles/install_ptvsd.py'])
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install new PTVSD wheels using 'python3'", ex);
@@ -273,7 +275,7 @@ gulp.task('installNewPtvsd', async () => {
     }
 
     // Install source only version of new PTVSD for use with all other python versions.
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a8']
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a9']
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)
         .catch(ex => {
@@ -491,7 +493,7 @@ const hygiene = (options, done) => {
     options = options || {};
     let errorCount = 0;
 
-    const indentation = es.through(function(file) {
+    const indentation = es.through(function (file) {
         file.contents
             .toString('utf8')
             .split(/\r\n|\r|\n/)
@@ -510,7 +512,7 @@ const hygiene = (options, done) => {
     });
 
     const formatOptions = { verify: true, tsconfig: true, tslint: true, editorconfig: true, tsfmt: true };
-    const formatting = es.map(function(file, cb) {
+    const formatting = es.map(function (file, cb) {
         tsfmt
             .processString(file.path, file.contents.toString('utf8'), formatOptions)
             .then(result => {
@@ -568,7 +570,7 @@ const hygiene = (options, done) => {
     }
 
     const { linter, configuration } = getLinter(options);
-    const tsl = es.through(function(file) {
+    const tsl = es.through(function (file) {
         const contents = file.contents.toString('utf8');
         if (isCI) {
             // Don't print anything to the console, we'll do that.
@@ -576,7 +578,7 @@ const hygiene = (options, done) => {
         }
         // Yes this is a hack, but tslinter doesn't provide an option to prevent this.
         const oldWarn = console.warn;
-        console.warn = () => {};
+        console.warn = () => { };
         linter.failures = [];
         linter.fixes = [];
         linter.lint(file.relative, contents, configuration.results);
@@ -595,7 +597,7 @@ const hygiene = (options, done) => {
     });
 
     const tsFiles = [];
-    const tscFilesTracker = es.through(function(file) {
+    const tscFilesTracker = es.through(function (file) {
         tsFiles.push(file.path.replace(/\\/g, '/'));
         tsFiles.push(file.path);
         this.emit('data', file);
@@ -603,10 +605,10 @@ const hygiene = (options, done) => {
 
     const tsProject = getTsProject(options);
 
-    const tsc = function() {
+    const tsc = function () {
         function customReporter() {
             return {
-                error: function(error, typescript) {
+                error: function (error, typescript) {
                     const fullFilename = error.fullFilename || '';
                     const relativeFilename = error.relativeFilename || '';
                     if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
@@ -615,7 +617,7 @@ const hygiene = (options, done) => {
                     console.error(`Error: ${error.message}`);
                     errorCount += 1;
                 },
-                finish: function() {
+                finish: function () {
                     // forget the summary.
                     console.log('Finished compilation');
                 }
@@ -649,7 +651,7 @@ const hygiene = (options, done) => {
         .pipe(sourcemaps.init())
         .pipe(tsc())
         .pipe(
-            sourcemaps.mapSources(function(sourcePath, file) {
+            sourcemaps.mapSources(function (sourcePath, file) {
                 let tsFileName = path.basename(file.path).replace(/js$/, 'ts');
                 const qualifiedSourcePath = path
                     .dirname(file.path)
@@ -669,7 +671,7 @@ const hygiene = (options, done) => {
         .pipe(sourcemaps.write('.', { includeContent: false }))
         .pipe(gulp.dest(dest))
         .pipe(
-            es.through(null, function() {
+            es.through(null, function () {
                 if (errorCount > 0) {
                     const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js' (completed in ${new Date().getTime() - started}ms).`;
                     console.error(colors.red(errorMessage));
@@ -879,5 +881,5 @@ exports.hygiene = hygiene;
 
 // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
 if (require.main === module) {
-    run({ exitOnError: true, mode: 'staged' }, () => {});
+    run({ exitOnError: true, mode: 'staged' }, () => { });
 }

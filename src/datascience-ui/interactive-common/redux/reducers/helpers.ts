@@ -15,8 +15,8 @@ import { Variables } from './variables';
 const StackLimit = 10;
 
 export namespace Helpers {
-    export function computeKnownDark(settings: IDataScienceExtraSettings): boolean {
-        const ignore = settings.ignoreVscodeTheme ? true : false;
+    export function computeKnownDark(settings?: IDataScienceExtraSettings): boolean {
+        const ignore = settings?.ignoreVscodeTheme ? true : false;
         const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
         return baseTheme !== 'vscode-light';
     }
@@ -39,7 +39,7 @@ export namespace Helpers {
         return undefined;
     }
 
-    export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, settings: IDataScienceExtraSettings) => ICellViewModel): IMainState {
+    export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, settings?: IDataScienceExtraSettings) => ICellViewModel): IMainState {
         // First compute new execution count.
         const newExecutionCount = arg.payload.data.execution_count ?
             Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10)) :

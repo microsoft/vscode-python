@@ -109,7 +109,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(handler);
         this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
-        await this.activeInteractiveWindow.ready;
         return this.activeInteractiveWindow;
     }
 

@@ -19,6 +19,8 @@ const NEEDS_INDENT = [
 ];
 const INDENT_ON_ENTER = [  // block-beginning statements
     /^async\s+def\b/,
+    /^async\s+for\b/,
+    /^async\s+with\b/,
     /^class\b/,
     /^def\b/,
     /^with\b/,
@@ -142,6 +144,9 @@ suite('Language Configuration', () => {
             'async def test(self):',
             'async def :',
             'async :',
+            'async for spam in bacon:',
+            'async with context:',
+            'async with context in manager:',
             'class Test:',
             'class Test(object):',
             'class :',

@@ -8,21 +8,20 @@ import * as vsls from 'vsls/vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
     IJupyterExecution,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
+import { KernelSelector } from '../kernels/kernelSelector';
+import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
@@ -36,33 +35,28 @@ export class HostJupyterExecution
     private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSys: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
-            executionFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
-            asyncRegistry,
-            fileSys,
-            sessionManager,
             workspace,
             configService,
-            activationHelper,
+            kernelSelector,
+            notebookStarter,
             serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys);
+        asyncRegistry.push(this);
     }
 
     public async dispose(): Promise<void> {
@@ -103,8 +97,6 @@ export class HostJupyterExecution
             if (service) {
                 service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
                 service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
-                service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
-                service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
                 service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                 service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
             }
@@ -135,15 +127,6 @@ export class HostJupyterExecution
     private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
-    }
-
-    private onRemoteIsKernelCreateSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.isKernelCreateSupported(cancellation);
-    }
-    private onRemoteIsKernelSpecSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.isKernelSpecSupported(cancellation);
     }
 
     private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {

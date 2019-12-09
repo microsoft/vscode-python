@@ -58,6 +58,9 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
 
     public async show(): Promise<void> {
         if (!this.isDisposed) {
+            // Load the web panel using our current directory as we don't expect to load any other files
+            await super.loadWebPanel(process.cwd());
+
             // Then show our web panel.
             return super.show(true);
         }

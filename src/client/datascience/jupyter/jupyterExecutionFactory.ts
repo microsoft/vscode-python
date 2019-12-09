@@ -6,7 +6,6 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
 import {
     IAsyncDisposable,
     IAsyncDisposableRegistry,
@@ -14,18 +13,18 @@ import {
     IDisposableRegistry,
     ILogger
 } from '../../common/types';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import {
     IJupyterExecution,
-    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerOptions
 } from '../types';
+import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+import { NotebookStarter } from './notebookStarter';
 
 interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {
 }
@@ -33,17 +32,15 @@ interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution
 // tslint:disable:callable-types
 type JupyterExecutionClassType = {
     new(liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };
@@ -56,17 +53,15 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
     constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
         @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
+        @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(NotebookStarter) notebookStarter: NotebookStarter,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
@@ -74,17 +69,15 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             HostJupyterExecution,
             GuestJupyterExecution,
             liveShare,
-            pythonFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
             asyncRegistry,
             fileSystem,
-            sessionManagerFactory,
             workspace,
             configuration,
-            activationHelper,
+            kernelSelector,
+            notebookStarter,
             serviceContainer
         );
         this.executionFactory.sessionChanged(() => this.onSessionChanged());
@@ -118,14 +111,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isImportSupported(cancelToken);
-    }
-    public async isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isKernelCreateSupported(cancelToken);
-    }
-    public async isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isKernelSpecSupported(cancelToken);
     }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();

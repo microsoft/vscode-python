@@ -34,6 +34,12 @@ export class ConnectionClosedError extends Error {
         super();
     }
 }
+
+export class DaemonError extends Error {
+    constructor(public readonly message: string){
+        super();
+    }
+}
 export class PythonDaemonExecutionService implements IPythonDaemonExecutionService {
     private connectionClosedMessage: string = '';
     private outputObservale = new Subject<Output<string>>();
@@ -66,8 +72,8 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         this.disposables.forEach(item => item.dispose());
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
-        this.throwIfRPCConnectionIsDead();
         try {
+            this.throwIfRPCConnectionIsDead();
             type InterpreterInfoResponse = ErrorResponse & { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             const request = new RequestType0<InterpreterInfoResponse, void, void>('get_interpreter_information');
             const response = await this.sendRequestWithoutArgs(request);
@@ -79,21 +85,23 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                 sysVersion: response.sysVersion,
                 sysPrefix: response.sysPrefix
             };
-        } catch {
+        } catch (ex) {
+            traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
             return this.pythonExecutionService.getInterpreterInformation();
         }
     }
     public async getExecutablePath(): Promise<string> {
-        this.throwIfRPCConnectionIsDead();
         try {
+            this.throwIfRPCConnectionIsDead();
             type ExecutablePathResponse = ErrorResponse & { path: string };
             const request = new RequestType0<ExecutablePathResponse, void, void>('get_executable');
             const response = await this.sendRequestWithoutArgs(request);
             if (response.error) {
-                throw new Error(response.error);
+                throw new DaemonError(response.error);
             }
             return response.path;
-        } catch {
+        } catch (ex) {
+            traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
             return this.pythonExecutionService.getExecutablePath();
         }
     }
@@ -101,47 +109,80 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        this.throwIfRPCConnectionIsDead();
         try {
+            this.throwIfRPCConnectionIsDead();
             type ModuleInstalledResponse = ErrorResponse & { exists: boolean };
             const request = new RequestType<{ module_name: string }, ModuleInstalledResponse, void, void>('is_module_installed');
             const response = await this.sendRequest(request, { module_name: moduleName });
             if (response.error) {
-                throw new Error(response.error);
+                throw new DaemonError(response.error);
             }
             return response.exists;
-        } catch {
+        } catch (ex) {
+            traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
             return this.pythonExecutionService.isModuleInstalled(moduleName);
         }
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        this.throwIfRPCConnectionIsDead();
-        if (this.canExecFileUsingDaemon(args, options)) {
-            return this.execFileWithDaemonAsObservable(args[0], args.slice(1), options);
+        if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
+            try {
+                return this.execAsObservable({ fileName: args[0] }, args.slice(1), options);
+            } catch (ex) {
+                if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
+                    traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.execObservable(args, options);
+                } else {
+                    throw ex;
+                }
+            }
         } else {
             return this.pythonExecutionService.execObservable(args, options);
         }
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        this.throwIfRPCConnectionIsDead();
-        if (this.canExecModuleUsingDaemon(moduleName, args, options)) {
-            return this.execModuleWithDaemonAsObservable(moduleName, args, options);
+        if (this.isAlive && this.canExecModuleUsingDaemon(moduleName, args, options)) {
+            try {
+                return this.execAsObservable({ moduleName }, args, options);
+            } catch (ex) {
+                if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
+                    traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.execModuleObservable(moduleName, args, options);
+                } else {
+                    throw ex;
+                }
+            }
         } else {
             return this.pythonExecutionService.execModuleObservable(moduleName, args, options);
         }
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        this.throwIfRPCConnectionIsDead();
-        if (this.canExecFileUsingDaemon(args, options)) {
-            return this.execFileWithDaemon(args[0], args.slice(1), options);
+        if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
+            try {
+                return await this.execFileWithDaemon(args[0], args.slice(1), options);
+            } catch (ex) {
+                if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
+                    traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.exec(args, options);
+                } else {
+                    throw ex;
+                }
+            }
         } else {
             return this.pythonExecutionService.exec(args, options);
         }
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        this.throwIfRPCConnectionIsDead();
-        if (this.canExecModuleUsingDaemon(moduleName, args, options)) {
-            return this.execModuleWithDaemon(moduleName, args, options);
+        if (this.isAlive && this.canExecModuleUsingDaemon(moduleName, args, options)) {
+            try {
+                return await this.execModuleWithDaemon(moduleName, args, options);
+            } catch (ex) {
+                if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
+                    traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.execModule(moduleName, args, options);
+                } else {
+                    throw ex;
+                }
+            }
         } else {
             return this.pythonExecutionService.execModule(moduleName, args, options);
         }
@@ -174,7 +215,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
      */
     private processResponse(response: { error?: string | undefined; stdout: string; stderr?: string }, options: SpawnOptions) {
         if (response.error) {
-            throw new StdErrError(`Failed to execute using the daemon, ${response.error}`);
+            throw new DaemonError(`Failed to execute using the daemon, ${response.error}`);
         }
         // Throw an error if configured to do so if there's any output in stderr.
         if (response.stderr && options.throwOnStdErr) {
@@ -193,9 +234,6 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         this.processResponse(response, options);
         return response;
     }
-    private execFileWithDaemonAsObservable(fileName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        return this.execAsObservable({ fileName }, args, options);
-    }
     private async execModuleWithDaemon(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         type ExecResponse = ErrorResponse & { stdout: string; stderr?: string };
         // tslint:disable-next-line: no-any
@@ -203,9 +241,6 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         const response = await this.sendRequest(request, { module_name: moduleName, args, cwd: options.cwd, env: options.env });
         this.processResponse(response, options);
         return response;
-    }
-    private execModuleWithDaemonAsObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        return this.execAsObservable({ moduleName }, args, options);
     }
     private execAsObservable(moduleOrFile: { moduleName: string } | { fileName: string }, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         const subject = new Subject<Output<string>>();
@@ -223,7 +258,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             }
             // Might not get a response object back, as its observable.
             if (response && response.error){
-                throw new StdErrError(response.error);
+                throw new DaemonError(response.error);
             }
         };
         let stdErr = '';
@@ -280,21 +315,22 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         this.connection.onNotification(OuputNotification, output => this.outputObservale.next(output));
         const logNotification = new NotificationType<{level: 'WARN'|'WARNING'|'INFO'|'DEBUG'|'NOTSET'; msg: string}, void>('log');
         this.connection.onNotification(logNotification, output => {
+            const msg = `Python Daemon: ${output.msg}`;
             if (output.level === 'DEBUG' || output.level === 'NOTSET'){
-                traceVerbose(output.msg);
+                traceVerbose(msg);
             } else if (output.level === 'INFO'){
-                traceInfo(output.msg);
+                traceInfo(msg);
             } else if (output.level === 'WARN' || output.level === 'WARNING') {
-                traceWarning(output.msg);
+                traceWarning(msg);
             } else {
-                traceError(output.msg);
+                traceError(msg);
             }
         });
         this.connection.onUnhandledNotification(traceError);
     }
     private throwIfRPCConnectionIsDead() {
-        if (this.connectionClosedMessage) {
-            throw new Error(this.connectionClosedMessage);
+        if (!this.isAlive) {
+            throw new ConnectionClosedError(this.connectionClosedMessage);
         }
     }
 }

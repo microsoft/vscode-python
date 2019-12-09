@@ -504,8 +504,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 traceInfo(`Finished execution for ${id}`);
             }
         } catch (err) {
-            const message = localize.DataScience.executingCodeFailure().format(err);
-            this.applicationShell.showErrorMessage(message);
+            await this.errorHandler.handleError(err);
         } finally {
             status.dispose();
 
@@ -1042,7 +1041,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const statusChangeHandler = async (status: ServerStatus) => {
                 if (this.notebook) {
                     const settings = this.configuration.getSettings();
-                    const kernelSpec = await this.notebook.getKernelSpec();
+                    const kernelSpec = this.notebook.getKernelSpec();
 
                     if (kernelSpec) {
                         const name = kernelSpec.display_name;
@@ -1093,10 +1092,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
         switch (reason) {
             case SysInfoReason.Start:
-                // Message depends upon if ipykernel is supported or not.
-                if (!(await this.jupyterExecution.isKernelCreateSupported())) {
-                    return localize.DataScience.pythonVersionHeaderNoPyKernel();
-                }
                 return localize.DataScience.pythonVersionHeader();
                 break;
             case SysInfoReason.Restart:

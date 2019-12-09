@@ -6,6 +6,7 @@ import { IGetCssResponse } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { storeLocStrings } from '../../../react-common/locReactSide';
 import { CommonReducerArg } from './types';
 
 export namespace CommonEffects {
@@ -43,6 +44,13 @@ export namespace CommonEffects {
             ...arg.prevState,
             activateCount: arg.prevState.activateCount + 1
         };
+    }
+
+    export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
+        // Read in the loc strings
+        const locJSON = JSON.parse(arg.payload);
+        storeLocStrings(locJSON);
+        return arg.prevState;
     }
 
     export function handleCss<T>(arg: CommonReducerArg<T, IGetCssResponse>): IMainState {

@@ -23,7 +23,7 @@ import { actionCreators } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Creation {
-    function prepareCellVM(cell: ICell, hasBeenRun: boolean, settings: IDataScienceExtraSettings): ICellViewModel {
+    function prepareCellVM(cell: ICell, hasBeenRun: boolean, settings?: IDataScienceExtraSettings): ICellViewModel {
         const cellVM: ICellViewModel = createCellVM(cell, settings, true);
 
         // Set initial cell visibility and collapse
@@ -124,15 +124,15 @@ export namespace Creation {
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
+        return Helpers.updateOrAdd(arg, (c: ICell, s?: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
     }
 
     export function updateCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
+        return Helpers.updateOrAdd(arg, (c: ICell, s?: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
     }
 
     export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
+        return Helpers.updateOrAdd(arg, (c: ICell, s?: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
     }
 
     export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {
