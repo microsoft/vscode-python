@@ -7,12 +7,10 @@ import * as Koa from 'koa';
 import * as compress from 'koa-compress';
 import * as logger from 'koa-logger';
 import * as path from 'path';
-import * as Stream from 'stream';
 
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { Identifiers } from '../../../datascience/constants';
 import { SharedMessages } from '../../../datascience/messages';
-import { noop } from '../../utils/misc';
 
 interface IState {
     cwd: string;
@@ -35,7 +33,7 @@ export class WebPanelServer {
                 if (ctx.query.token) {
                     if (ctx.query.token === this.token) {
                         if (ctx.query.scripts) {
-                            await this.generateMainResponse(ctx);
+                            this.generateMainResponse(ctx);
                         } else {
                             await this.generateFileResponse(ctx);
                         }
@@ -45,7 +43,7 @@ export class WebPanelServer {
                     const state = id ? this.state.get(id) : undefined;
                     if (state) {
                         if (ctx.query.scripts) {
-                            await this.generateMainResponse(ctx);
+                            this.generateMainResponse(ctx);
                         } else {
                             await this.generateFileResponse(ctx);
                         }
@@ -73,9 +71,7 @@ export class WebPanelServer {
         }
     }
 
-    private async generateMainResponse(ctx: Koa.ParameterizedContext) {
-        const readable = new Stream.Readable();
-        readable._read = noop;
+    private generateMainResponse(ctx: Koa.ParameterizedContext) {
         const id = ctx.path.substr(1);
         let state = this.state.get(id);
         if (!state) {
@@ -86,9 +82,7 @@ export class WebPanelServer {
             };
             this.state.set(id, state);
         }
-        readable.push(state.html);
-        readable.push(null);
-        ctx.body = readable;
+        ctx.body = state.html;
         ctx.cookies.set('id', id);
         ctx.type = 'html';
     }
