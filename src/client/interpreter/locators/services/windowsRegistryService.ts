@@ -1,10 +1,10 @@
 // tslint:disable:no-require-imports no-var-requires underscore-consistent-invocation
-import * as fs from 'fs-extra';
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
-import { IPlatformService, IRegistry, RegistryHive } from '../../../common/platform/types';
+import { IFileSystem, IPlatformService, IRegistry, RegistryHive } from '../../../common/platform/types';
 import { IPathUtils } from '../../../common/types';
 import { Architecture } from '../../../common/utils/platform';
 import { parsePythonVersion } from '../../../common/utils/version';
@@ -34,6 +34,7 @@ type CompanyInterpreter = {
 @injectable()
 export class WindowsRegistryService extends CacheableLocatorService {
     private readonly pathUtils: IPathUtils;
+    private readonly fs: IFileSystem;
     constructor(
         @inject(IRegistry) private registry: IRegistry,
         @inject(IPlatformService) private readonly platform: IPlatformService,
@@ -42,6 +43,7 @@ export class WindowsRegistryService extends CacheableLocatorService {
     ) {
         super('WindowsRegistryService', serviceContainer);
         this.pathUtils = serviceContainer.get<IPathUtils>(IPathUtils);
+        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
     }
     // tslint:disable-next-line:no-empty
     public dispose() {}
@@ -158,8 +160,8 @@ export class WindowsRegistryService extends CacheableLocatorService {
             })
             .then(interpreter =>
                 interpreter
-                    ? fs
-                          .pathExists(interpreter.path)
+                    ? this.fs
+                          .fileExists(interpreter.path)
                           .catch(() => false)
                           .then(exists => (exists ? interpreter : null))
                     : null

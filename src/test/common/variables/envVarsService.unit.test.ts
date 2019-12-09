@@ -6,7 +6,9 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import * as path from 'path';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import { IPathUtils } from '../../../client/common/types';
 import { OSType } from '../../../client/common/utils/platform';
 import { EnvironmentVariablesService, parseEnvFile } from '../../../client/common/variables/environment';
@@ -23,7 +25,10 @@ suite('Environment Variables Service', () => {
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
         pathUtils = new PathUtils(getOSType() === OSType.Windows);
-        variablesService = new EnvironmentVariablesService(pathUtils);
+        const fs = new FileSystem(
+            new PlatformService()
+        );
+        variablesService = new EnvironmentVariablesService(pathUtils, fs);
     });
 
     test('Custom variables should be undefined with no argument', async () => {

@@ -3,13 +3,13 @@
 'use strict';
 import '../../extensions';
 
-import * as fs from 'fs-extra';
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewPanel, window } from 'vscode';
 
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../datascience/messages';
+import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
@@ -26,10 +26,12 @@ export class WebPanel implements IWebPanel {
     private id = uuid();
 
     constructor(
+        private fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
         private port: number | undefined,
         private token: string | undefined,
-        private options: IWebPanelOptions) {
+        private options: IWebPanelOptions
+    ) {
         this.panel = window.createWebviewPanel(
             options.title.toLowerCase().replace(' ', ''),
             options.title,
@@ -86,7 +88,7 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private async load() {
         if (this.panel) {
-            const localFilesExist = await Promise.all(this.options.scripts.map(s => fs.pathExists(s)));
+            const localFilesExist = await Promise.all(this.options.scripts.map(s => this.fs.fileExists(s)));
             if (localFilesExist.every(exists => exists === true)) {
 
                 // Call our special function that sticks this script inside of an html page

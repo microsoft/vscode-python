@@ -1,6 +1,8 @@
 import * as fs from 'fs-extra';
 import { IS_WINDOWS } from './platform/constants';
+import { FileSystem } from './platform/fileSystem';
 import { PathUtils } from './platform/pathUtils';
+import { PlatformService } from './platform/platformService';
 import { EnvironmentVariablesService } from './variables/environment';
 import { EnvironmentVariables } from './variables/types';
 function parseEnvironmentVariables(contents: string): EnvironmentVariables | undefined {
@@ -37,7 +39,12 @@ export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean =
  * @returns {EnvironmentVariables}
  */
 export function mergeEnvVariables(targetEnvVars: EnvironmentVariables, sourceEnvVars: EnvironmentVariables = process.env): EnvironmentVariables {
-    const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
+    const service = new EnvironmentVariablesService(
+        new PathUtils(IS_WINDOWS),
+        new FileSystem(
+            new PlatformService()
+        )
+    );
     service.mergeVariables(sourceEnvVars, targetEnvVars);
     if (sourceEnvVars.PYTHONPATH) {
         service.appendPythonPath(targetEnvVars, sourceEnvVars.PYTHONPATH);
@@ -57,7 +64,12 @@ export function mergePythonPath(env: EnvironmentVariables, currentPythonPath: st
     if (typeof currentPythonPath !== 'string' || currentPythonPath.length === 0) {
         return env;
     }
-    const service = new EnvironmentVariablesService(new PathUtils(IS_WINDOWS));
+    const service = new EnvironmentVariablesService(
+        new PathUtils(IS_WINDOWS),
+        new FileSystem(
+            new PlatformService()
+        )
+    );
     service.appendPythonPath(env, currentPythonPath);
     return env;
 }

@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as portfinder from 'portfinder';
 import * as uuid from 'uuid/v4';
 
+import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import { IWebPanel, IWebPanelOptions, IWebPanelProvider } from '../types';
 import { WebPanel } from './webPanel';
@@ -15,13 +16,15 @@ export class WebPanelProvider implements IWebPanelProvider {
     private port: number | undefined;
     private token: string | undefined;
 
-    constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry) {
-    }
+    constructor(
+        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
+        @inject(IFileSystem) private fs: IFileSystem
+    ) { }
 
     // tslint:disable-next-line:no-any
     public async create(options: IWebPanelOptions): Promise<IWebPanel> {
         const serverData = options.startHttpServer ? await this.ensureServerIsRunning() : { port: undefined, token: undefined };
-        return new WebPanel(this.disposableRegistry, serverData.port, serverData.token, options);
+        return new WebPanel(this.fs, this.disposableRegistry, serverData.port, serverData.token, options);
     }
 
     private async ensureServerIsRunning(): Promise<{ port: number; token: string }> {
