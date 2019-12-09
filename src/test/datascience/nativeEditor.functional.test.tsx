@@ -227,7 +227,7 @@ for _ in range(50):
             assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
         }, () => { return ioc; });
 
-        runMountedTest('Convert to python', async (wrapper) => {
+        runMountedTest('IANHU Convert to python', async (wrapper) => {
             // Export should cause the export dialog to come up. Remap appshell so we can check
             const dummyDisposable = {
                 dispose: () => { return; }
@@ -253,14 +253,17 @@ for _ in range(50):
             assert.equal(saveCalled, true, 'Save should have been called');
 
             // Click export and wait for a document to change
-            const activeTextEditorChange = createDeferred();
+            const activeTextEditorChange = createDeferred<boolean>();
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-            docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
+            docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve(true));
             const exportButton = findButton(wrapper, NativeEditor, 9);
             await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
 
             // This can be slow, hence wait for a max of 60.
-            await waitForPromise(activeTextEditorChange.promise, 60_000);
+            const waitResult = await waitForPromise(activeTextEditorChange.promise, 60_000);
+            if (waitResult === null) {
+                console.log('**** Wait timedout ****');
+            }
 
             // Verify the new document is valid python
             const newDoc = docManager.activeTextEditor;
