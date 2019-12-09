@@ -293,11 +293,17 @@ suite('Raw FileSystem', () => {
         if (stat.type === FileType.File) {
             old!.setup(s => s.isFile())
                 .returns(() => true);
+            old!.setup(s => s.isDirectory())
+                .returns(() => false);
+            old!.setup(s => s.isSymbolicLink())
+                .returns(() => false);
         } else if (stat.type === FileType.Directory) {
             old!.setup(s => s.isFile())
                 .returns(() => false);
             old!.setup(s => s.isDirectory())
                 .returns(() => true);
+                old!.setup(s => s.isSymbolicLink())
+                .returns(() => false);
         } else if (stat.type === FileType.SymbolicLink) {
             old!.setup(s => s.isFile())
                 .returns(() => false);
