@@ -3,31 +3,7 @@
 
 'use strict';
 
-import * as fs from 'fs';
-import * as path from 'path';
 import * as tmp from 'tmp';
-
-export function getSubDirectories(rootDir: string): Promise<string[]> {
-    return new Promise<string[]>(resolve => {
-        fs.readdir(rootDir, (error, files) => {
-            if (error) {
-                return resolve([]);
-            }
-            const subDirs: string[] = [];
-            files.forEach(name => {
-                const fullPath = path.join(rootDir, name);
-                try {
-                    if (fs.statSync(fullPath).isDirectory()) {
-                        subDirs.push(fullPath);
-                    }
-                }
-                // tslint:disable-next-line:no-empty one-line
-                catch (ex) { }
-            });
-            resolve(subDirs);
-        });
-    });
-}
 
 export function createTemporaryFile(extension: string, temporaryDirectory?: string): Promise<{ filePath: string; cleanupCallback: Function }> {
     // tslint:disable-next-line:no-any
