@@ -1,7 +1,8 @@
 import * as assert from 'assert';
+import * as fsextra from 'fs-extra';
 import * as path from 'path';
 import * as TypeMoq from 'typemoq';
-import { IPlatformService, RegistryHive } from '../../client/common/platform/types';
+import { IFileSystem, IPlatformService, RegistryHive } from '../../client/common/platform/types';
 import { IPathUtils, IPersistentStateFactory } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
 import { IInterpreterHelper, InterpreterType } from '../../client/interpreter/contracts';
@@ -18,6 +19,7 @@ suite('Interpreters from Windows Registry (unit)', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let interpreterHelper: TypeMoq.IMock<IInterpreterHelper>;
     let platformService: TypeMoq.IMock<IPlatformService>;
+    let fs: TypeMoq.IMock<IFileSystem>;
     let windowsStoreInterpreter: TypeMoq.IMock<IWindowsStoreInterpreter>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
@@ -25,13 +27,20 @@ suite('Interpreters from Windows Registry (unit)', () => {
         interpreterHelper = TypeMoq.Mock.ofType<IInterpreterHelper>();
         const pathUtils = TypeMoq.Mock.ofType<IPathUtils>();
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        fs = TypeMoq.Mock.ofType<IFileSystem>();
         windowsStoreInterpreter = TypeMoq.Mock.ofType<IWindowsStoreInterpreter>();
         windowsStoreInterpreter.setup(w => w.isHiddenInterpreter(TypeMoq.It.isAny())).returns(() => false);
         windowsStoreInterpreter.setup(w => w.isWindowsStoreInterpreter(TypeMoq.It.isAny())).returns(() => false);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterHelper))).returns(() => interpreterHelper.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPathUtils))).returns(() => pathUtils.object);
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IFileSystem))).returns(() => fs.object);
         pathUtils.setup(p => p.basename(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p: string) => p.split(/[\\,\/]/).reverse()[0]);
+        // So effectively these are functional tests...
+        fs.setup(f => f.fileExists(TypeMoq.It.isAny()))
+            .returns(filename => {
+                return fsextra.pathExists(filename);
+            });
         const state = new MockState(undefined);
         // tslint:disable-next-line:no-empty no-any
         interpreterHelper.setup(h => h.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({} as any));
