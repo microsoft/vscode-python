@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as Cors from '@koa/cors';
-import * as fs from 'fs-extra';
 import * as http from 'http';
 import * as Koa from 'koa';
 import * as compress from 'koa-compress';
@@ -11,6 +10,8 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { Identifiers } from '../../../datascience/constants';
 import { SharedMessages } from '../../../datascience/messages';
+import { FileSystem } from '../../platform/fileSystem';
+import { PlatformService } from '../../platform/platformService';
 
 interface IState {
     cwd: string;
@@ -110,6 +111,9 @@ export class WebPanelServer {
                 break;
 
         }
+        const fs = new FileSystem(
+            new PlatformService()
+        );
         ctx.body = fs.createReadStream(filePath);
     }
 

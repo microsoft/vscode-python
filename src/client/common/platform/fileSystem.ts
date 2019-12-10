@@ -190,6 +190,10 @@ export class FileSystem implements IFileSystem {
         });
     }
 
+    public createReadStream(filePath: string): fileSystem.ReadStream {
+        return fileSystem.createReadStream(filePath);
+    }
+
     public createWriteStream(filePath: string): fileSystem.WriteStream {
         return fileSystem.createWriteStream(filePath);
     }
