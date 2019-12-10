@@ -3,9 +3,10 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { FileSystem } from '../platform/fileSystem';
+import { PlatformService } from '../platform/platformService';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
@@ -505,13 +506,17 @@ function getString(key: string, defValue?: string) {
 }
 
 function load() {
+    const fs = new FileSystem(
+        new PlatformService()
+    );
+
     // Figure out our current locale.
     loadedLocale = parseLocale();
 
     // Find the nls file that matches (if there is one)
     const nlsFile = path.join(EXTENSION_ROOT_DIR, `package.nls.${loadedLocale}.json`);
-    if (fs.existsSync(nlsFile)) {
-        const contents = fs.readFileSync(nlsFile, 'utf8');
+    if (fs.fileExistsSync(nlsFile)) {
+        const contents = fs.readFileSync(nlsFile);
         loadedCollection = JSON.parse(contents);
     } else {
         // If there isn't one, at least remember that we looked so we don't try to load a second time
@@ -521,8 +526,8 @@ function load() {
     // Get the default collection if necessary. Strings may be in the default or the locale json
     if (!defaultCollection) {
         const defaultNlsFile = path.join(EXTENSION_ROOT_DIR, 'package.nls.json');
-        if (fs.existsSync(defaultNlsFile)) {
-            const contents = fs.readFileSync(defaultNlsFile, 'utf8');
+        if (fs.fileExistsSync(defaultNlsFile)) {
+            const contents = fs.readFileSync(defaultNlsFile);
             defaultCollection = JSON.parse(contents);
         } else {
             defaultCollection = {};
