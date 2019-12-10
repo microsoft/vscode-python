@@ -13,12 +13,16 @@ import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/t
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
+import { KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience extends Disposable {
     activationStartTime: number;
     activate(): Promise<void>;
+    selectJupyterURI(): Promise<void>;
+    selectLocalJupyterKernel(): Promise<KernelSpecInterpreter>;
+    selectRemoteJupyterKernel(connInfo: IConnection): Promise<KernelSpecInterpreter>;
 }
 
 export const IDataScienceCommandListener = Symbol('IDataScienceCommandListener');

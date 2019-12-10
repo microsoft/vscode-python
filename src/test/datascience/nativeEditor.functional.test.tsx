@@ -20,11 +20,10 @@ import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
-import { DataScience } from '../../client/datascience/datascience';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { KernelSelector, KernelSpecInterpreter } from '../../client/datascience/jupyter/kernels/kernelSelector';
-import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
+import { KernelSpecInterpreter } from '../../client/datascience/jupyter/kernels/kernelSelector';
+import { ICell, IConnection, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
@@ -204,8 +203,7 @@ for _ in range(50):
         runMountedTest('Select Jupyter Server', async (wrapper) => {
             let selectorCalled = false;
 
-            const serverSelector = TypeMoq.Mock.ofType<DataScience>();
-            serverSelector.setup(ss => ss.selectJupyterURI()).returns(() => {
+            ioc.datascience.setup(ds => ds.selectJupyterURI()).returns(() => {
                 selectorCalled = true;
                 return Promise.resolve();
             });
@@ -214,7 +212,7 @@ for _ in range(50):
             const editor = wrapper.find(NativeEditor);
             const kernelSelectionUI = editor.find(KernelSelection);
             const buttons = kernelSelectionUI.find('div');
-            await waitForMessageResponse(ioc, () => buttons!.at(0).simulate('click'));
+            buttons!.at(1).simulate('click');
 
             assert.equal(selectorCalled, true, 'Server Selector should have been called');
         }, () => { return ioc; });
@@ -222,8 +220,13 @@ for _ in range(50):
         runMountedTest('Select Jupyter Kernel', async (wrapper) => {
             let selectorCalled = false;
 
-            const kernelSelector = TypeMoq.Mock.ofType<KernelSelector>();
-            kernelSelector.setup(ks => ks.selectLocalKernel()).returns(() => {
+            ioc.datascience.setup(ds => ds.selectLocalJupyterKernel()).returns(() => {
+                selectorCalled = true;
+                const spec: KernelSpecInterpreter = {};
+                return Promise.resolve(spec);
+            });
+            const connection = TypeMoq.Mock.ofType<IConnection>();
+            ioc.datascience.setup(ds => ds.selectRemoteJupyterKernel(connection.object)).returns(() => {
                 selectorCalled = true;
                 const spec: KernelSpecInterpreter = {};
                 return Promise.resolve(spec);
@@ -233,7 +236,7 @@ for _ in range(50):
             const editor = wrapper.find(NativeEditor);
             const kernelSelectionUI = editor.find(KernelSelection);
             const buttons = kernelSelectionUI.find('div');
-            await waitForMessageResponse(ioc, () => buttons!.at(2).simulate('click'));
+            buttons!.at(4).simulate('click');
 
             assert.equal(selectorCalled, true, 'Kernel Selector should have been called');
         }, () => { return ioc; });

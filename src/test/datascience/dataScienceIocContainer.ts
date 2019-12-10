@@ -323,6 +323,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
     public mockedWorkspaceConfig!: WorkspaceConfiguration;
     public applicationShell!: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
+    public datascience!: TypeMoq.IMock<IDataScience>;
     private missedMessages: any[] = [];
     private pythonSettings = new class extends PythonSettings {
         public fireChangeEvent() {
@@ -546,7 +547,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const workspaceService = mock(WorkspaceService);
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const interpreterDisplay = TypeMoq.Mock.ofType<IInterpreterDisplay>();
-        const datascience = TypeMoq.Mock.ofType<IDataScience>();
+        this.datascience = TypeMoq.Mock.ofType<IDataScience>();
 
         // Setup default settings
         this.pythonSettings.datascience = {
@@ -592,7 +593,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
-        datascience.setup(d => d.activationStartTime).returns(() => startTime);
+        this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
 
         class MockFileSystemWatcher implements FileSystemWatcher {
             public ignoreCreateEvents: boolean = false;
@@ -649,7 +650,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
         this.serviceManager.addSingletonInstance<IConfigurationService>(IConfigurationService, configurationService.object);
-        this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, datascience.object);
+        this.serviceManager.addSingletonInstance<IDataScience>(IDataScience, this.datascience.object);
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);
         this.serviceManager.addSingleton<IEnvironmentVariablesService>(IEnvironmentVariablesService, EnvironmentVariablesService);
         this.serviceManager.addSingleton<IPathUtils>(IPathUtils, PathUtils);
