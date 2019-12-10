@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
@@ -107,14 +106,10 @@ export class ThemeFinder implements IThemeFinder {
 
         // Search through all package.json files in the directory and below, looking
         // for the themeName in them.
-        const foundPackages = await new Promise<string[]>((resolve, reject) => {
-            glob('**/package.json', { cwd: rootPath }, (err, matches) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(matches);
-            });
-        });
+        const fs = new FileSystem(
+            new PlatformService()
+        );
+        const foundPackages = await fs.search('**/package.json', rootPath);
         if (foundPackages.length > 0) {
             // For each one, open it up and look for the theme name.
             for (const f of foundPackages) {
@@ -167,14 +162,10 @@ export class ThemeFinder implements IThemeFinder {
     private async findMatchingThemes(rootPath: string, themeName: string) : Promise<IThemeData | undefined> {
         // Search through all package.json files in the directory and below, looking
         // for the themeName in them.
-        const foundPackages = await new Promise<string []>((resolve, reject) => {
-            glob('**/package.json', { cwd: rootPath }, (err, matches) => {
-                if (err) {
-                    reject(err);
-                }
-                resolve(matches);
-            });
-        });
+        const fs = new FileSystem(
+            new PlatformService()
+        );
+        const foundPackages = await fs.search('**/package.json', rootPath);
         if (foundPackages.length > 0) {
             // For each one, open it up and look for the theme name.
             for (const f of foundPackages) {

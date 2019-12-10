@@ -62,7 +62,7 @@ export interface IFileSystem {
     copyFile(src: string, dest: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
     getFileHash(filePath: string): Promise<string>;
-    search(globPattern: string): Promise<string[]>;
+    search(globPattern: string, cwd?: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
     createReadStream(path: string): fs.ReadStream;
     createWriteStream(path: string): fs.WriteStream;

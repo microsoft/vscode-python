@@ -9,10 +9,13 @@ import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
+import { promisify } from 'util';
 import { FileStat } from 'vscode';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
+
+const globAsync = promisify(glob);
 
 @injectable()
 export class FileSystem implements IFileSystem {
@@ -173,15 +176,17 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
-    public search(globPattern: string): Promise<string[]> {
-        return new Promise<string[]>((resolve, reject) => {
-            glob(globPattern, (ex, files) => {
-                if (ex) {
-                    return reject(ex);
-                }
-                resolve(Array.isArray(files) ? files : []);
-            });
-        });
+    public async search(globPattern: string, cwd?: string): Promise<string[]> {
+        let found: string[];
+        if (cwd) {
+            const options = {
+                cwd: cwd
+            };
+            found = await globAsync(globPattern, options);
+        } else {
+            found = await globAsync(globPattern);
+        }
+        return Array.isArray(found) ? found : [];
     }
     public createTemporaryFile(extension: string): Promise<TemporaryFile> {
         return new Promise<TemporaryFile>((resolve, reject) => {
