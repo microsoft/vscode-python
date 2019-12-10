@@ -16,11 +16,11 @@ import { PythonDaemonExecutionService } from '../../../client/common/process/pyt
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
-import { createTemporaryFile } from '../../../client/common/utils/fs';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { isPythonVersion, PYTHON_PATH } from '../../common';
+import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
 // tslint:disable-next-line: max-func-body-length
