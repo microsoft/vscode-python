@@ -275,7 +275,7 @@ suite('Data Science - KernelService', () => {
             const kernelName = installArgs[3];
             assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
             await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
-        });
+        }).timeout(5_000);
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);

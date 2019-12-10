@@ -8,26 +8,31 @@ A [Visual Studio Code](https://code.visualstudio.com/) [extension](https://marke
 * **Step 2.** Install the Python extension for Visual Studio Code.
 * **Step 3.** Open or create a Python file and start coding!
 
-## Set up your environment 
+## Set up your environment
 <!-- use less words -->
 * Select your Python interpreter by clicking on the status bar
 
    <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/InterpreterSelectionZoom.gif width=280 height=100>
-   
-* Configure the debugger through the Debug Activity Bar   
+
+* Configure the debugger through the Debug Activity Bar
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureDebugger.gif width=734 height=413>
 
-* Configure tests by running the ``Configure Tests`` command 
+* Configure tests by running the ``Configure Tests`` command
 
     <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/ConfigureTests.gif width=734 height=413>
 
+## Jupyter Notebook quick start
 
+* Open or create a Jupyter Notebook file (.ipynb) and start coding in our Notebook Editor!
+
+    <img src=https://raw.githubusercontent.com/microsoft/vscode-python/master/images/OpenOrCreateNotebook.gif width=1029 height=602>
 
 
 For more information you can:
 * [Follow our Python tutorial](https://code.visualstudio.com/docs/python/python-tutorial#_prerequisites) with step-by-step instructions for building a simple app.
 * Check out the [Python documentation on the VS Code site](https://code.visualstudio.com/docs/languages/python) for general information about using the extension.
+* Check out the [Jupyter Notebook documentation on the VS Code site](https://code.visualstudio.com/docs/python/jupyter-support) for information about using Jupyter Notebooks in VS Code.
 
 ## Useful commands
 Open the Command Palette (Command+Shift+P on macOS and Ctrl+Shift+P on Windows/Linux) and type in one of the following commands:
@@ -52,11 +57,11 @@ Learn more about the rich features of the Python extension:
 * [Linting](https://code.visualstudio.com/docs/python/linting): Get additional code analysis with Pylint, Flake8 and more
 * [Code formatting](https://code.visualstudio.com/docs/python/editing#_formatting): Format your code with black, autopep or yapf
 
-* [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes   
+* [Debugging](https://code.visualstudio.com/docs/python/debugging): Debug your Python scripts, web apps, remote or multi-threaded processes
 
 * [Testing](https://code.visualstudio.com/docs/python/unit-testing): Run and debug tests through the Test Explorer with unittest, pytest or nose
 
-* [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Define and run code cells, render plots, visualize variables through the variable explorer and more
+* [Jupyter Notebooks](https://code.visualstudio.com/docs/python/jupyter-support): Create and edit Jupyter Notebooks, add and run code cells, render plots, visualize variables through the variable explorer, visualize dataframes with the data viewer, and more
 
 * [Environments](https://code.visualstudio.com/docs/python/environments): Automatically activate and switch between virtualenv, venv, pipenv, conda and pyenv environments
 

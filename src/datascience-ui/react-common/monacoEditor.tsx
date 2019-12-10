@@ -72,9 +72,9 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private styleObserver : MutationObserver | undefined;
     private watchingMargin: boolean = false;
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
-    private throttledScrollOntoScreen = throttle(this.scrollOntoScreen.bind(this), 100);
+    private throttledScrollCurrentPosition = throttle(this.scrollToCurrentPosition.bind(this), 100);
     private monacoContainer : HTMLDivElement | undefined;
-    private lineTops: number[] = [];
+    private lineTops: {top: number; index: number}[] = [];
     private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
 
     /**
@@ -192,13 +192,17 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 this.throttledUpdateWidgetPosition();
                 this.updateWidgetParent(editor);
                 this.hideAllOtherHoverAndParameterWidgets();
-                this.throttledScrollOntoScreen(editor);
+
+                // Also update our scroll position, but do that after focus is established.
+                // This is necessary so that markdown can switch to edit mode before we
+                // try to scroll to it.
+                setTimeout(() => this.throttledScrollCurrentPosition(editor), 0) ;
             }));
 
             // Track cursor changes and make sure line is on the screen
             this.subscriptions.push(editor.onDidChangeCursorPosition(() => {
                 this.throttledUpdateWidgetPosition();
-                this.throttledScrollOntoScreen(editor);
+                this.throttledScrollCurrentPosition(editor);
             }));
 
             // Update our margin to include the correct line number style
@@ -311,6 +315,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     public getCurrentVisibleLine(): number | undefined {
+        return this.getCurrentVisibleLinePosOrIndex((pos, _i) => pos);
+    }
+
+    public getVisibleLineCount(): number {
+        return this.getVisibleLines().length;
+    }
+
+    private getCurrentVisibleLinePosOrIndex(pickResult: (pos: number, index: number) => number): number | undefined {
         // Convert the current cursor into a top and use that to find which visible
         // line it is in.
         if (this.state.editor) {
@@ -320,16 +332,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 const count = this.getVisibleLineCount();
                 const lineTops = count === this.lineTops.length ? this.lineTops : this.computeLineTops();
                 for (let i = 0; i < count; i += 1) {
-                    if (top <= lineTops[i]) {
-                        return i;
+                    if (top <= lineTops[i].top) {
+                        return pickResult(i, lineTops[i].index);
                     }
                 }
             }
         }
     }
 
-    public getVisibleLineCount(): number {
-        return this.getVisibleLines().length;
+    private getCurrentVisibleLineIndex(): number | undefined {
+        return this.getCurrentVisibleLinePosOrIndex((_pos, i) => i);
     }
 
     private getVisibleLines(): HTMLDivElement[] {
@@ -343,23 +355,24 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         return [];
     }
 
-    private computeLineTops(): number[] {
+    private computeLineTops() {
         const lines = this.getVisibleLines();
 
         // Lines are not sorted by monaco, so we have to sort them by their top value
-        this.lineTops = lines.map(l => {
+        this.lineTops = lines.map((l, i) => {
             const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
-            return match ? parseInt(match[0], 10) : Infinity;
-        }).sort((a, b) => a - b);
+            return { top: match ? parseInt(match[0], 10) : Infinity, index: i };
+        }).sort((a, b) => a.top - b.top);
         return this.lineTops;
     }
 
-    private scrollOntoScreen(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
-        // Scroll to the visible line that has our current line
+    private scrollToCurrentPosition(_editor: monacoEditor.editor.IStandaloneCodeEditor) {
+        // Scroll to the visible line that has our current line. Note: Visible lines are not sorted by monaco
+        // so we have to retrieve the current line's index (not its visible position)
         const visibleLineDivs = this.getVisibleLines();
-        const current = this.getCurrentVisibleLine();
+        const current = this.getCurrentVisibleLineIndex();
         if (current !== undefined && current >= 0 && visibleLineDivs[current].scrollIntoView) {
-            visibleLineDivs[current].scrollIntoView({ behavior: 'auto', block: 'nearest', inline: 'nearest' });
+            visibleLineDivs[current].scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
         }
     }
 
