@@ -5,6 +5,7 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Uri, WorkspaceFolder } from 'vscode';
 import { ITerminalManager, IWorkspaceService } from '../../../client/common/application/types';
+import { IFileSystem } from '../../../client/common/platform/types';
 import { TerminalServiceFactory } from '../../../client/common/terminal/factory';
 import { TerminalService } from '../../../client/common/terminal/service';
 import { ITerminalHelper, ITerminalServiceFactory } from '../../../client/common/terminal/types';
@@ -17,9 +18,11 @@ suite('Terminal Service Factory', () => {
     let factory: ITerminalServiceFactory;
     let disposables: Disposable[] = [];
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
+    let fs: TypeMoq.IMock<IFileSystem>;
     setup(() => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+        fs = TypeMoq.Mock.ofType<IFileSystem>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
         disposables = [];
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
@@ -27,7 +30,7 @@ suite('Terminal Service Factory', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny())).returns(() => terminalHelper.object);
         const terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny())).returns(() => terminalManager.object);
-        factory = new TerminalServiceFactory(serviceContainer.object);
+        factory = new TerminalServiceFactory(serviceContainer.object, fs.object);
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);

@@ -132,9 +132,9 @@ export class CTagsInstaller extends BaseInstaller {
         }
         return InstallerResponse.Ignore;
     }
-    protected async promptToInstallImplementation(product: Product, resource?: Uri, cancel?: CancellationToken): Promise<InstallerResponse> {
+    protected async promptToInstallImplementation(product: Product, resource?: Uri, _cancel?: CancellationToken): Promise<InstallerResponse> {
         const item = await this.appShell.showErrorMessage('Install CTags to enable Python workspace symbols?', 'Yes', 'No');
-        return item === 'Yes' ? this.install(product, resource, cancel) : InstallerResponse.Ignore;
+        return item === 'Yes' ? this.install(product, resource) : InstallerResponse.Ignore;
     }
 }
 
