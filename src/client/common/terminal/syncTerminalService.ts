@@ -29,6 +29,7 @@ class ExecutionState implements Disposable {
     private disposable?: Disposable;
     constructor(public readonly lockFile: string, private readonly fs: IFileSystem, private readonly command: string[]) {
         this.registerStateUpdate();
+        this._completed.promise.finally(() => this.dispose()).ignoreErrors();
     }
     public get completed(): Promise<void> {
         return this._completed.promise;
@@ -46,6 +47,11 @@ class ExecutionState implements Disposable {
                 traceVerbose(`Command state changed to ${state}. ${this.command.join(' ')}`);
             }
             this.state = state;
+            if (state & State.errored) {
+                this._completed.reject(new Error(`Command failed with errors, check the terminal for details. Command: ${this.command.join(' ')}`));
+            } else if (state & State.completed) {
+                this._completed.resolve();
+            }
         }, 100);
 
         this.disposable = {
