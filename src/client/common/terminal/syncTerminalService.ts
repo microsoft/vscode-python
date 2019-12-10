@@ -7,6 +7,7 @@ import { inject } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
@@ -86,7 +87,11 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalService.onDidCloseTerminal;
     }
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem, private readonly terminalService: ITerminalService) {}
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
+        private readonly terminalService: ITerminalService
+    ) {}
     public dispose() {
         while (this.disposables.length) {
             const disposable = this.disposables.shift();
@@ -108,7 +113,13 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         const lockFile = await this.createLockFile();
         const state = new ExecutionState(lockFile.filePath, this.fs, [command, ...args]);
         try {
-            await this.terminalService.sendCommand(shellExecFile, [command.fileToCommandArgument(), ...args, lockFile.filePath.fileToCommandArgument()]);
+            const pythonExec = await this.interpreter.getActiveInterpreter(undefined);
+            await this.terminalService.sendCommand(pythonExec?.path || 'python', [
+                shellExecFile.fileToCommandArgument(),
+                command.fileToCommandArgument(),
+                ...args,
+                lockFile.filePath.fileToCommandArgument()
+            ]);
             await Cancellation.race(() => state.completed.catch(noop), cancel);
         } finally {
             state.dispose();

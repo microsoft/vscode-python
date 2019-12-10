@@ -30,7 +30,7 @@ suite('Terminal Service Factory', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalHelper), TypeMoq.It.isAny())).returns(() => terminalHelper.object);
         const terminalManager = TypeMoq.Mock.ofType<ITerminalManager>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalManager), TypeMoq.It.isAny())).returns(() => terminalManager.object);
-        factory = new TerminalServiceFactory(serviceContainer.object, fs.object);
+        factory = new TerminalServiceFactory(serviceContainer.object, fs.object, interpreterService.object);
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);

@@ -39,21 +39,21 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
                 const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
-                    await terminalService.sendCommand(pythonPath, args);
+                    await terminalService.sendCommand(pythonPath, args, cancel);
                 } else if (settings.globalModuleInstallation) {
                     const dirname = path.dirname(pythonPath);
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                     const isWritable = ! await fs.isDirReadonly(dirname);
                     if (isWritable) {
-                        await terminalService.sendCommand(pythonPath, args);
+                        await terminalService.sendCommand(pythonPath, args, cancel);
                     } else {
                         this.elevatedInstall(pythonPath, args);
                     }
                 } else {
-                    await terminalService.sendCommand(pythonPath, args.concat(['--user']));
+                    await terminalService.sendCommand(pythonPath, args.concat(['--user']), cancel);
                 }
             } else {
-                await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs);
+                await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs, cancel);
             }
         };
 
