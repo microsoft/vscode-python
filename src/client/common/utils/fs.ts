@@ -7,13 +7,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
 
-export function fsExistsAsync(filePath: string): Promise<boolean> {
-    return new Promise<boolean>(resolve => {
-        fs.exists(filePath, exists => {
-            return resolve(exists);
-        });
-    });
-}
 export function fsReaddirAsync(root: string): Promise<string[]> {
     return new Promise<string[]>(resolve => {
         // Now look for Interpreters in this directory

@@ -1,6 +1,7 @@
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { fsExistsAsync } from '../common/utils/fs';
+import { FileSystem } from '../common/platform/fileSystem';
+import { PlatformService } from '../common/platform/platformService';
 import { ITag } from './contracts';
 
 // tslint:disable:no-require-imports no-var-requires no-suspicious-comment
@@ -109,7 +110,10 @@ export function parseTags(
     query: string,
     token: vscode.CancellationToken
 ): Promise<ITag[]> {
-    return fsExistsAsync(tagFile).then(exists => {
+    const fs = new FileSystem(
+        new PlatformService()
+    );
+    return fs.fileExists(tagFile).then(exists => {
         if (!exists) {
             return Promise.resolve([]);
         }

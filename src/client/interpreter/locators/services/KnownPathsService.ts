@@ -2,9 +2,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IPlatformService } from '../../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../common/types';
-import { fsExistsAsync } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
@@ -73,7 +72,8 @@ export class KnownPathsService extends CacheableLocatorService {
      * Return the interpreters in the given directory.
      */
     private getInterpretersInDirectory(dir: string) {
-        return fsExistsAsync(dir)
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        return fs.directoryExists(dir)
             .then(exists => exists ? lookForInterpretersInDirectory(dir) : Promise.resolve<string[]>([]));
     }
 }
