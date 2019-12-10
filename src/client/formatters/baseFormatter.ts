@@ -1,4 +1,3 @@
-import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../common/application/types';
@@ -6,6 +5,7 @@ import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { isNotInstalledError } from '../common/helpers';
 import { traceError } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -109,7 +109,8 @@ export abstract class BaseFormatter {
 
     private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
         if (originalFile !== tempFile) {
-            return fs.unlink(tempFile);
+            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+            return fs.deleteFile(tempFile);
         }
         return Promise.resolve();
     }
