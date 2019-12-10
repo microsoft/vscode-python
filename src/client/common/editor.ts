@@ -106,6 +106,9 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
             return;
         }
 
+        const fs = new FileSystem(
+            new PlatformService()
+        );
         let fileName = fileNameLines[0].substring(fileNameLines[0].indexOf(' a') + 3).trim();
         fileName = workspaceRoot && !path.isAbsolute(fileName) ? path.resolve(workspaceRoot, fileName) : fileName;
         if (!fs.fileExistsSync(fileName)) {
@@ -124,7 +127,7 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
             throw new Error('Unable to parse Patch string');
         }
 
-        const fileSource = fsextra.readFileSync(fileName).toString('utf8');
+        const fileSource = fs.readFileSync(fileName);
         const fileUri = Uri.file(fileName);
 
         // Add line feeds and build the text edits
@@ -230,7 +233,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
 export async function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
     const ext = path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
-    // look into configuration files in the workspace and are not able
+    // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
     // This means temp file has to be created in the same folder
     // as the original one and then removed.

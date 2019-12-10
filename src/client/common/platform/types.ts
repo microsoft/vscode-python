@@ -50,6 +50,7 @@ export interface IFileSystem {
     arePathsSame(path1: string, path2: string): boolean;
     readFile(filePath: string): Promise<string>;
     writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
+    readFileSync(filename: string): string;
     appendFileSync(filename: string, data: {}, encoding: string): void;
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures

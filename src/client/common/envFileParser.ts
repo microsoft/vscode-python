@@ -1,4 +1,3 @@
-import * as fs from 'fs-extra';
 import { IS_WINDOWS } from './platform/constants';
 import { FileSystem } from './platform/fileSystem';
 import { PathUtils } from './platform/pathUtils';
@@ -25,7 +24,10 @@ function parseEnvironmentVariables(contents: string): EnvironmentVariables | und
 }
 
 export function parseEnvFile(envFile: string, mergeWithProcessEnvVars: boolean = true): EnvironmentVariables {
-    const buffer = fs.readFileSync(envFile, 'utf8');
+    const fs = new FileSystem(
+        new PlatformService()
+    );
+    const buffer = fs.readFileSync(envFile);
     const env = parseEnvironmentVariables(buffer)!;
     return mergeWithProcessEnvVars ? mergeEnvVariables(env, process.env) : mergePythonPath(env, process.env.PYTHONPATH as string);
 }

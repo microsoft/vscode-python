@@ -204,4 +204,8 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
+
+    public readFileSync(filePath: string): string {
+        return fs.readFileSync(filePath, 'utf8');
+    }
 }
