@@ -67,7 +67,6 @@ export interface IFileSystem {
     createWriteStream(path: string): fs.WriteStream;
 
     // utils
-    objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
     fileExists(path: string): Promise<boolean>;
     fileExistsSync(path: string): boolean;
     directoryExists(path: string): Promise<boolean>;
