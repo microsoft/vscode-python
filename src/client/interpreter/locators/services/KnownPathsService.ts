@@ -74,7 +74,7 @@ export class KnownPathsService extends CacheableLocatorService {
      * Return the interpreters in the given directory.
      */
     private async getInterpretersInDirectory(dir: string): Promise<string[]> {
-        if (await this.fs.fileExists(dir)) {
+        if (await this.fs.directoryExists(dir)) {
             return lookForInterpretersInDirectory(dir, this.fs);
         } else {
             return [];

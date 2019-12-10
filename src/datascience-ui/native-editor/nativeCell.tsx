@@ -219,13 +219,13 @@ export class NativeCell extends React.Component<INativeCellProps> {
         switch (e.code) {
             case 'ArrowUp':
             case 'k':
-                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isFirstLine) || !this.isFocused()) {
+                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isFirstLine && !e.shiftKey) || !this.isFocused()) {
                     this.arrowUpFromCell(e);
                 }
                 break;
             case 'ArrowDown':
             case 'j':
-                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isLastLine) || !this.isFocused()) {
+                if ((isFocusedWhenNotSuggesting && e.editorInfo!.isLastLine && !e.shiftKey) || !this.isFocused()) {
                     this.arrowDownFromCell(e);
                 }
                 break;

@@ -38,11 +38,13 @@ function isFileExistsError(err: Error): boolean {
 function convertFileStat(stat: fsextra.Stats): FileStat {
     let fileType = FileType.Unknown;
     if (stat.isFile()) {
-        fileType = FileType.File;
-    } else if (stat.isDirectory()) {
-        fileType = FileType.Directory;
-    } else if (stat.isSymbolicLink()) {
-        fileType = FileType.SymbolicLink;
+        fileType = fileType | FileType.File;
+    }
+    if (stat.isDirectory()) {
+        fileType = fileType | FileType.Directory;
+    }
+    if (stat.isSymbolicLink()) {
+        fileType = fileType | FileType.SymbolicLink;
     }
     return {
         type: fileType,
@@ -385,7 +387,11 @@ export class FileSystemUtils implements IFileSystemUtils {
         if (fileType === undefined) {
             return true;
         }
-        return stat.type === fileType;
+        if (fileType === FileType.Unknown) {
+            // FileType.Unknown == 0, hence do not use bitwise operations.
+            return stat.type === FileType.Unknown;
+        }
+        return (stat.type & fileType) === fileType;
     }
     public async fileExists(filename: string): Promise<boolean> {
         return this.pathExists(filename, FileType.File);
@@ -403,12 +409,12 @@ export class FileSystemUtils implements IFileSystemUtils {
     }
     public async getSubDirectories(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
-            .filter(([_name, fileType]) => fileType === FileType.Directory)
+            .filter(([_name, fileType]) => fileType & FileType.Directory)
             .map(([name, _fileType]) => this.paths.join(dirname, name));
     }
     public async getFiles(dirname: string): Promise<string[]> {
         return (await this.listdir(dirname))
-            .filter(([_name, fileType]) => fileType === FileType.File)
+            .filter(([_name, fileType]) => fileType & FileType.File)
             .map(([name, _fileType]) => this.paths.join(dirname, name));
     }
 

@@ -290,29 +290,12 @@ suite('Raw FileSystem', () => {
             old = createMockLegacyStat();
         }
 
-        if (stat.type === FileType.File) {
-            old!.setup(s => s.isFile())
-                .returns(() => true);
-        } else if (stat.type === FileType.Directory) {
-            old!.setup(s => s.isFile())
-                .returns(() => false);
-            old!.setup(s => s.isDirectory())
-                .returns(() => true);
-        } else if (stat.type === FileType.SymbolicLink) {
-            old!.setup(s => s.isFile())
-                .returns(() => false);
-            old!.setup(s => s.isDirectory())
-                .returns(() => false);
-            old!.setup(s => s.isSymbolicLink())
-                .returns(() => true);
-        } else {
-            old!.setup(s => s.isFile())
-                .returns(() => false);
-            old!.setup(s => s.isDirectory())
-                .returns(() => false);
-            old!.setup(s => s.isSymbolicLink())
-                .returns(() => false);
-        }
+        old!.setup(s => s.isFile())
+            .returns(() => (stat.type & FileType.File) === FileType.File);
+        old!.setup(s => s.isDirectory())
+            .returns(() => (stat.type & FileType.Directory) === FileType.Directory);
+        old!.setup(s => s.isSymbolicLink())
+            .returns(() => (stat.type & FileType.SymbolicLink) === FileType.SymbolicLink);
         old!.setup(s => s.size)
             .returns(() => stat.size);
         old!.setup(s => s.ctimeMs)

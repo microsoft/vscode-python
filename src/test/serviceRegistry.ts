@@ -86,11 +86,13 @@ class LegacyRawFileSystem extends RawFileSystem {
         const stat = await fsextra.stat(filename);
         let fileType = FileType.Unknown;
         if (stat.isFile()) {
-            fileType = FileType.File;
-        } else if (stat.isDirectory()) {
-            fileType = FileType.Directory;
-        } else if (stat.isSymbolicLink()) {
-            fileType = FileType.SymbolicLink;
+            fileType = fileType | FileType.File;
+        }
+        if (stat.isDirectory()) {
+            fileType = fileType | FileType.Directory;
+        }
+        if (stat.isSymbolicLink()) {
+            fileType = fileType | FileType.SymbolicLink;
         }
         return {
             type: fileType,
