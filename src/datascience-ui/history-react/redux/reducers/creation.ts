@@ -41,13 +41,13 @@ export namespace Creation {
             if (cellVM.inputBlockOpen !== expanded && cellVM.inputBlockCollapseNeeded && cellVM.inputBlockShow) {
                 if (expanded) {
                     // Expand the cell
-                    const newText = extractInputText(cellVM.cell, settings);
+                    const newText = extractInputText(cellVM, settings);
 
                     newCellVM.inputBlockOpen = true;
                     newCellVM.inputBlockText = newText;
                 } else {
                     // Collapse the cell
-                    let newText = extractInputText(cellVM.cell, settings);
+                    let newText = extractInputText(cellVM, settings);
                     if (newText.length > 0) {
                         newText = newText.split('\n', 1)[0];
                         newText = newText.slice(0, 255); // Slice to limit length, slicing past length is fine
@@ -65,14 +65,14 @@ export namespace Creation {
         return cellVM;
     }
 
-    export function prepareCellVM(cell: ICell, settings?: IDataScienceExtraSettings): ICellViewModel {
-        let cellVM: ICellViewModel = createCellVM(cell, settings, false);
+    export function prepareCellVM(cell: ICell, mainState: IMainState): ICellViewModel {
+        let cellVM: ICellViewModel = createCellVM(cell, mainState.settings, false, mainState.debugging);
 
-        const visible = settings ? settings.showCellInputCode : false;
-        const expanded = !settings?.collapseCellInputCodeByDefault;
+        const visible = mainState.settings ? mainState.settings.showCellInputCode : false;
+        const expanded = !mainState.settings?.collapseCellInputCodeByDefault;
 
         // Set initial cell visibility and collapse
-        cellVM = alterCellVM(cellVM, settings, visible, expanded);
+        cellVM = alterCellVM(cellVM, mainState.settings, visible, expanded);
         cellVM.hasBeenRun = true;
 
         return cellVM;
@@ -88,7 +88,7 @@ export namespace Creation {
                 arg.queueAction(createPostableAction(
                     InteractiveWindowMessages.AddCell,
                     {
-                        fullText: extractInputText(cellVM.cell, result.settings),
+                        fullText: extractInputText(cellVM, result.settings),
                         currentText: cellVM.inputBlockText,
                         cell: cellVM.cell
                     }));

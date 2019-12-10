@@ -12,9 +12,10 @@ import { IApplicationShell } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { IExtensionContext } from '../../client/common/types';
+import { IDataScienceSettings, IExtensionContext } from '../../client/common/types';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { generateCells } from '../../client/datascience/cellFactory';
+import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { formatStreamText, stripComments } from '../../client/datascience/common';
 import { Settings } from '../../client/datascience/constants';
 import { DataScience } from '../../client/datascience/datascience';
@@ -24,11 +25,18 @@ import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/j
 import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
 import { ServiceContainer } from '../../client/ioc/container';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
+import {
+    createEmptyCell,
+    CursorPos,
+    extractInputText,
+    ICellViewModel
+} from '../../datascience-ui/interactive-common/mainState';
 import { MockMemento } from '../mocks/mementos';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
+import { defaultDataScienceSettings } from './testHelpers';
 
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {
@@ -338,6 +346,59 @@ class Pizza(object):
         await ds.selectJupyterURI();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');
+    });
+
+    function cloneVM(cvm: ICellViewModel, newCode: string, debugging?: boolean): ICellViewModel {
+        return {
+            ...cvm,
+            cell: {
+                ...cvm.cell,
+                data: {
+                    ...cvm.cell.data,
+                    source: newCode
+                }
+            },
+            inputBlockText: newCode,
+            runDuringDebug: debugging
+        };
+    }
+
+    test('ExtractInputText', () => {
+        const settings: IDataScienceSettings = defaultDataScienceSettings();
+        settings.stopOnFirstLineWhileDebugging = true;
+        const cvm: ICellViewModel = {
+            cell: createEmptyCell('1', null),
+            inputBlockCollapseNeeded: false,
+            inputBlockText: '',
+            inputBlockOpen: false,
+            inputBlockShow: false,
+            editable: false,
+            focused: false,
+            selected: false,
+            scrollCount: 0,
+            cursorPos: CursorPos.Current,
+            hasBeenRun: false
+        };
+        assert.equal(extractInputText(cloneVM(cvm, '# %%\na=1'), settings), 'a=1', 'Cell marker not removed');
+        assert.equal(extractInputText(cloneVM(cvm, '# %%\nbreakpoint()\na=1'), settings), 'breakpoint()\na=1', 'Cell marker not removed');
+        assert.equal(extractInputText(cloneVM(cvm, '# %%\nbreakpoint()\na=1', true), settings), 'a=1', 'Cell marker not removed');
+    });
+
+    test('CellMatcher', () => {
+        const settings: IDataScienceSettings = defaultDataScienceSettings();
+        const matcher1 = new CellMatcher(settings);
+        assert.ok(matcher1.isCode('# %%'), 'Base code is wrong');
+        assert.ok(matcher1.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
+        assert.equal(matcher1.exec('# %% TITLE'), 'TITLE', 'Title not found');
+
+        settings.defaultCellMarker = '# %% CODE HERE';
+        const matcher2 = new CellMatcher(settings);
+        assert.ok(matcher2.isCode('# %%'), 'Code not found');
+        assert.ok(matcher2.isCode('# %% CODE HERE'), 'Code not found');
+        assert.ok(matcher2.isCode('# %% CODE HERE TOO'), 'Code not found');
+        assert.ok(matcher2.isMarkdown('# %% [markdown]'), 'Base markdown is wrong');
+        assert.equal(matcher2.exec('# %% CODE HERE'), '', 'Should not have a title');
+        assert.equal(matcher2.exec('# %% CODE HERE FOO'), 'FOO', 'Should have a title');
     });
 
 });

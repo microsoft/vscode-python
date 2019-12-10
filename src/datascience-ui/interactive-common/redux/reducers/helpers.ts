@@ -39,7 +39,7 @@ export namespace Helpers {
         return undefined;
     }
 
-    export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, settings?: IDataScienceExtraSettings) => ICellViewModel): IMainState {
+    export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, mainState: IMainState) => ICellViewModel): IMainState {
         // First compute new execution count.
         const newExecutionCount = arg.payload.data.execution_count ?
             Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10)) :
@@ -88,7 +88,7 @@ export namespace Helpers {
             };
         } else {
             // This is an entirely new cell (it may have started out as finished)
-            const newVM = generateVM(arg.payload, arg.prevState.settings);
+            const newVM = generateVM(arg.payload, arg.prevState);
             const newVMs = [
                 ...arg.prevState.cellVMs,
                 newVM];

@@ -99,7 +99,7 @@ export namespace Execution {
             }
 
             // Update input controls (always show expanded since we just edited it.)
-            newCell = createCellVM(newCell.cell, arg.prevState.settings, false);
+            newCell = createCellVM(newCell.cell, arg.prevState.settings, false, false);
             const collapseInputs = arg.prevState.settings ? arg.prevState.settings.collapseCellInputCodeByDefault : false;
             newCell = Creation.alterCellVM(newCell, arg.prevState.settings, true, !collapseInputs);
             newCell.useQuickEdit = false;

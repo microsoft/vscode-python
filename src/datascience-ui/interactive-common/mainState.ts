@@ -36,6 +36,7 @@ export interface ICellViewModel {
     scrollCount: number;
     cursorPos: CursorPos;
     hasBeenRun: boolean;
+    runDuringDebug?: boolean;
 }
 
 export type IMainState = {
@@ -172,7 +173,8 @@ export function createEditableCellVM(executionCount: number): ICellViewModel {
     };
 }
 
-export function extractInputText(inputCell: ICell, settings: IDataScienceSettings | undefined): string {
+export function extractInputText(inputCellVM: ICellViewModel, settings: IDataScienceSettings | undefined): string {
+    const inputCell = inputCellVM.cell;
     let source: string[] = [];
     if (inputCell.data.source) {
         source = splitMultilineString(cloneDeep(inputCell.data.source));
@@ -192,35 +194,49 @@ export function extractInputText(inputCell: ICell, settings: IDataScienceSetting
         }
     }
 
+    // Eliminate breakpoint on the front if we're debugging and breakpoints are expected to be prefixed
+    if (inputCellVM.runDuringDebug && (!settings || settings.stopOnFirstLineWhileDebugging)) {
+        if (source[0].trim() === 'breakpoint()') {
+            source.splice(0, 1);
+        }
+    }
+
     return concatMultilineStringInput(source);
 }
 
-export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, editable: boolean): ICellViewModel {
-    let inputLinesCount = 0;
-    const inputText = inputCell.data.cell_type === 'code' ? extractInputText(inputCell, settings) : '';
-    if (inputText) {
-        inputLinesCount = inputText.split('\n').length;
-    }
-
-    return {
+export function createCellVM(inputCell: ICell, settings: IDataScienceSettings | undefined, editable: boolean, runDuringDebug: boolean): ICellViewModel {
+    const vm = {
         cell: inputCell,
         editable,
         inputBlockOpen: true,
         inputBlockShow: true,
-        inputBlockText: inputText,
-        inputBlockCollapseNeeded: (inputLinesCount > 1),
+        inputBlockText: '',
+        inputBlockCollapseNeeded: false,
         selected: false,
         focused: false,
         cursorPos: CursorPos.Current,
         hasBeenRun: false,
-        scrollCount: 0
+        scrollCount: 0,
+        runDuringDebug
     };
+
+    // Update the input text
+    let inputLinesCount = 0;
+    const inputText = inputCell.data.cell_type === 'code' ? extractInputText(vm, settings) : '';
+    if (inputText) {
+        inputLinesCount = inputText.split('\n').length;
+    }
+
+    vm.inputBlockText = inputText;
+    vm.inputBlockCollapseNeeded = inputLinesCount > 1;
+
+    return vm;
 }
 
 function generateTestVMs(filePath: string, editable: boolean): ICellViewModel[] {
     const cells = generateTestCells(filePath, 10);
     return cells.map((cell: ICell) => {
-        const vm = createCellVM(cell, undefined, editable);
+        const vm = createCellVM(cell, undefined, editable, false);
         vm.useQuickEdit = false;
         vm.hasBeenRun = true;
         return vm;

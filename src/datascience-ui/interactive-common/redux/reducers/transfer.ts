@@ -77,7 +77,7 @@ export namespace Transfer {
 
         // Send a message to the other side to jump to a particular cell
         if (cellVM) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, arg.prevState.settings) }));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM, arg.prevState.settings) }));
         }
 
         return arg.prevState;
