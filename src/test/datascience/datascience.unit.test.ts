@@ -6,7 +6,6 @@ import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-
 import { DebugService } from '../../client/common/application/debugService';
 import { IApplicationShell } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -22,6 +21,7 @@ import { DataScienceCodeLensProvider } from '../../client/datascience/editor-int
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { JupyterSessionManagerFactory } from '../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils';
+import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { ServiceContainer } from '../../client/ioc/container';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
 import { MockMemento } from '../mocks/mementos';
@@ -33,6 +33,7 @@ import { MockQuickPick } from './mockQuickPick';
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {
     const workspaceService = mock(WorkspaceService);
+    const kernelSelector = mock(KernelSelector);
 
     test('formatting stream text', async () => {
         assert.equal(formatStreamText('\rExecute\rExecute 1'), 'Execute 1');
@@ -314,7 +315,8 @@ class Pizza(object):
             instance(debugService),
             storage,
             instance(jupyterSessionManagerFactory),
-            multiStepFactory
+            multiStepFactory,
+            kernelSelector
         );
     }
 

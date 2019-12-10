@@ -3,10 +3,10 @@
 'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
-
 import { Identifiers } from '../../client/datascience/constants';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
+import { KernelSelection } from '../interactive-common/kernelSelection';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -16,9 +16,9 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { getConnectedInteractiveCell } from './interactiveCell';
+import './interactivePanel.less';
 import { actionCreators } from './redux/actions';
 
-import './interactivePanel.less';
 type IInteractivePanelProps = IMainState & typeof actionCreators;
 
 function mapStateToProps(state: IStore): IMainState {
@@ -89,11 +89,6 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
             getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
 
-        const dynamicFont: React.CSSProperties = {
-            fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
-            fontFamily: this.props.font.family
-        };
-
         return (
             <div id='toolbar-panel'>
                 <div className='toolbar-menu-bar'>
@@ -126,11 +121,13 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                             <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.CollapseAll} />
                         </ImageButton>
                     </div>
-                    <div className='kernel-status' style={dynamicFont}>
-                        <div className='kernel-status-section' onClick={this.props.selectServer} role='button'>{getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}</div>
-                        <div className='kernel-status-divider'/>
-                        <div className='kernel-status-section' onClick={this.props.selectKernel} role='button'>{this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}</div>
-                    </div>
+                    <KernelSelection
+                        baseTheme={this.props.baseTheme}
+                        font={this.props.font}
+                        kernel={this.props.kernel}
+                        selectServer={this.props.selectServer}
+                        selectKernel={this.props.selectKernel}
+                    />
                 </div>
             </div>
         );

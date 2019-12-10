@@ -1049,7 +1049,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                             jupyterServerStatus: status,
                             uri: settings.datascience.jupyterServerURI,
-                            displayName: name.substring(1, name.length - 1)
+                            displayName: name
                         });
                     }
                 }
@@ -1258,6 +1258,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async selectKernel() {
-        // show the kernel dropdown
+        const settings = this.configuration.getSettings();
+
+        if (settings.datascience.jupyterServerURI === localize.DataScience.localJupyterServer()) {
+            return this.dataScience.selectLocalJupyterKernel();
+        } else if (this.notebook) {
+            const connInfo = this.notebook.server.getConnectionInfo();
+
+            if (connInfo) {
+                await this.dataScience.selectRemoteJupyterKernel(connInfo);
+            }
+        }
     }
 }

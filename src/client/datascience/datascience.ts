@@ -1,27 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
-
 import { JSONObject } from '@phosphor/coreutils';
 import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
-
 import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
+import '../common/extensions';
 import { traceError } from '../common/logger';
-import {
-    BANNER_NAME_DS_SURVEY,
-    GLOBAL_MEMENTO,
-    IConfigurationService,
-    IDisposable,
-    IDisposableRegistry,
-    IExtensionContext,
-    IMemento,
-    IPythonExtensionBanner
-} from '../common/types';
+import { BANNER_NAME_DS_SURVEY, GLOBAL_MEMENTO, IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext, IMemento, IPythonExtensionBanner } from '../common/types';
 import { waitForPromise } from '../common/utils/async';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
@@ -32,14 +21,8 @@ import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { createRemoteConnectionInfo } from './jupyter/jupyterUtils';
-import {
-    ICodeWatcher,
-    IDataScience,
-    IDataScienceCodeLensProvider,
-    IDataScienceCommandListener,
-    IJupyterSessionManagerFactory,
-    INotebookEditorProvider
-} from './types';
+import { KernelSelector, KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
+import { ICodeWatcher, IConnection, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterSessionManagerFactory, INotebookEditorProvider } from './types';
 
 interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
     newChoice: boolean;
@@ -66,7 +49,8 @@ export class DataScience implements IDataScience {
         @inject(IDebugService) private debugService: IDebugService,
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(KernelSelector) private kernelSelector: KernelSelector
     ) {
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
@@ -240,6 +224,17 @@ export class DataScience implements IDataScience {
     public selectJupyterURI(): Promise<void> {
         const multiStep = this.multiStepFactory.create<{}>();
         return multiStep.run(this.startSelectingURI.bind(this), {});
+    }
+
+    @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
+    public async selectLocalJupyterKernel(): Promise<KernelSpecInterpreter> {
+        return this.kernelSelector.selectLocalKernel();
+    }
+
+    @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
+    public async selectRemoteJupyterKernel(connInfo: IConnection): Promise<KernelSpecInterpreter> {
+        const session = await this.jupyterSessionManagerFactory.create(connInfo);
+        return this.kernelSelector.selectRemoteKernel(session);
     }
 
     public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {

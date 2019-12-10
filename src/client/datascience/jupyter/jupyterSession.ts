@@ -103,7 +103,7 @@ export class JupyterSession implements IJupyterSession {
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.
-            this.statusHandler = this.onStatusChanged.bind(this.onStatusChanged);
+            this.statusHandler = this.onStatusChanged.bind(this);
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
@@ -120,6 +120,10 @@ export class JupyterSession implements IJupyterSession {
 
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
+            // Rewire our status changed event.
+            this.statusHandler = this.onStatusChanged.bind(this);
+            this.session.statusChanged.connect(this.statusHandler);
+
             await this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed());
         }
     }

@@ -464,6 +464,17 @@ body, html {
     float: left;
 }
 
+.kernel-status-text {
+    float: left;
+    padding-right: 5px;
+}
+
+.kernel-status-icon {
+    float: right;
+    width: 16px;
+    height: 0px;
+}
+
 .kernel-status:hover {
     cursor: pointer;
 }

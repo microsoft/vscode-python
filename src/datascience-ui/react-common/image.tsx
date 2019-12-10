@@ -43,7 +43,9 @@ export enum ImageName {
     Delete,
     VariableExplorer,
     ExportToPython,
-    ClearAllOutput
+    ClearAllOutput,
+    JupyterServerConnected,
+    JupyterServerDisconnected
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -220,6 +222,16 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/ClearAllOutput/clear_all_output_light.svg'),
             dark : require('./images/ClearAllOutput/clear_all_output_dark.svg')
+        },
+    JupyterServerConnected:
+        {
+            light: require('./images/JupyterServerConnected/connected-light.svg'),
+            dark : require('./images/JupyterServerConnected/connected-dark.svg')
+        },
+    JupyterServerDisconnected:
+        {
+            light: require('./images/JupyterServerDisconnected/disconnected-light.svg'),
+            dark : require('./images/JupyterServerDisconnected/disconnected-dark.svg')
         }
 };
 
