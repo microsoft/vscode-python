@@ -14,12 +14,12 @@ import { IProcessServiceFactory } from '../process/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { InterpreterUri } from './types';
 export const poetryName = 'poetry';
 const poetryFile = 'poetry.lock';
 
 @injectable()
-export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller {
+export class PoetryInstaller extends ModuleInstaller {
 
     public get name(): string {
         return 'poetry';

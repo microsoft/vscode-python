@@ -4,50 +4,67 @@
 import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { OutputChannel, window } from 'vscode';
+import { CancellationToken, OutputChannel, ProgressLocation, window } from 'vscode';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
+import { IApplicationShell } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
-import { isResource, noop } from '../utils/misc';
-import { InterpreterUri } from './types';
+import { isResource } from '../utils/misc';
+import { IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
-export abstract class ModuleInstaller {
+export abstract class ModuleInstaller implements IModuleInstaller {
+    public abstract get priority(): number;
     public abstract get name(): string;
     public abstract get displayName(): string
     constructor(protected serviceContainer: IServiceContainer) { }
-    public async installModule(name: string, resource?: InterpreterUri): Promise<void> {
+    public async installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
         const executionInfo = await this.getExecutionInfo(name, resource);
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri, undefined);
+        const install = async () => {
+            const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
+            if (executionInfo.moduleName) {
+                const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+                const settings = configService.getSettings(uri);
+                const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
 
-        const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
-        if (executionInfo.moduleName) {
-            const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const settings = configService.getSettings(uri);
-            const args = ['-m', executionInfo.moduleName].concat(executionInfoArgs);
-
-            const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-            const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
-            const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
-            if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
-                await terminalService.sendCommand(pythonPath, args);
-            } else if (settings.globalModuleInstallation) {
-                if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
+                const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+                const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+                const pythonPath = isResource(resource) ? settings.pythonPath : resource.path;
+                if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args);
+                } else if (settings.globalModuleInstallation) {
+                    const dirname = path.dirname(pythonPath);
+                    const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+                    const isWritable = ! await fs.isDirReadonly(dirname);
+                    if (isWritable) {
+                        await terminalService.sendCommand(pythonPath, args);
+                    } else {
+                        this.elevatedInstall(pythonPath, args);
+                    }
                 } else {
-                    this.elevatedInstall(pythonPath, args);
+                    await terminalService.sendCommand(pythonPath, args.concat(['--user']));
                 }
             } else {
-                await terminalService.sendCommand(pythonPath, args.concat(['--user']));
+                await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs);
             }
+        };
+
+        // Display progress indicator if we have ability to cancel this operation from calling code.
+        // This is required as its possible the installation can take a long time.
+        // (i.e. if installation takes a long time in terminal or like, a progress indicator is necessary to let user know what is being waited on).
+        if (cancel) {
+            const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+            await shell.withProgress({location: ProgressLocation.Notification, cancellable: false, title: `Installing ${name}` }, async (_, __) => install());
         } else {
-            await terminalService.sendCommand(executionInfo.execPath!, executionInfoArgs);
+            await install();
         }
     }
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;

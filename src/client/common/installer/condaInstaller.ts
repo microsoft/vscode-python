@@ -8,13 +8,13 @@ import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { InterpreterUri } from './types';
 
 /**
  * A Python module installer for a conda environment.
  */
 @injectable()
-export class CondaInstaller extends ModuleInstaller implements IModuleInstaller {
+export class CondaInstaller extends ModuleInstaller {
     private isCondaAvailable: boolean | undefined;
 
     constructor(

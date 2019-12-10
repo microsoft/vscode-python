@@ -7,12 +7,12 @@ import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { InterpreterUri } from './types';
 
 export const pipenvName = 'pipenv';
 
 @injectable()
-export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller {
+export class PipEnvInstaller extends ModuleInstaller {
     private readonly pipenv: IInterpreterLocatorService;
 
     public get name(): string {

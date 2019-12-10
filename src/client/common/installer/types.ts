@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Uri } from 'vscode';
+import { CancellationToken, Uri } from 'vscode';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { Product, ProductType, Resource } from '../types';
 
@@ -12,7 +12,7 @@ export interface IModuleInstaller {
     readonly name: string;
     readonly displayName: string;
     readonly priority: number;
-    installModule(name: string, resource?: InterpreterUri): Promise<void>;
+    installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void>;
     isSupported(resource?: InterpreterUri): Promise<boolean>;
 }
 

@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { Event, Terminal, Uri } from 'vscode';
+import { CancellationToken, Event, Terminal, Uri } from 'vscode';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
 import { Resource } from '../types';
@@ -33,7 +33,7 @@ export enum TerminalShellType {
 
 export interface ITerminalService {
     readonly onDidCloseTerminal: Event<void>;
-    sendCommand(command: string, args: string[]): Promise<void>;
+    sendCommand(command: string, args: string[], cancel?: CancellationToken): Promise<void>;
     sendText(text: string): Promise<void>;
     show(preserveFocus?: boolean): Promise<void>;
 }

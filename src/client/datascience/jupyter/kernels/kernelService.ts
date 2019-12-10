@@ -8,8 +8,8 @@ import { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
-import { Cancellation } from '../../../common/cancellation';
+import { CancellationToken, CancellationTokenSource } from 'vscode';
+import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
@@ -230,7 +230,9 @@ export class KernelService {
         const name = this.generateKernelNameForIntepreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
         if (!(await this.installer.isInstalled(Product.ipykernel, interpreter))) {
-            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter);
+            // If we wish to wait for installation to complete, we must provide a cancel token.
+            const token = new CancellationTokenSource();
+            const response = await this.installer.promptToInstall(Product.ipykernel, interpreter, wrapCancellationTokens(cancelToken, token.token));
             if (response === InstallerResponse.Installed) {
                 traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`);
                 return;
