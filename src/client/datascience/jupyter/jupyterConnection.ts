@@ -83,14 +83,14 @@ class JupyterConnectionWaiter {
         if (launchResult.proc) {
             launchResult.proc.on('exit', c => (exitCode = c ? c.toString() : '0'));
         }
-        let stdout = '';
+        let stderr = '';
         // Listen on stderr for its connection information
         launchResult.out.subscribe(
             (output: Output<string>) => {
                 if (output.source === 'stderr') {
-                    stdout += output.out;
+                    stderr += output.out;
                     this.stderr.push(output.out);
-                    this.extractConnectionInformation(stdout);
+                    this.extractConnectionInformation(stderr);
                 } else {
                     this.output(output.out);
                 }
