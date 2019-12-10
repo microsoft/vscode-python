@@ -7,18 +7,6 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as tmp from 'tmp';
 
-export function fsReaddirAsync(root: string): Promise<string[]> {
-    return new Promise<string[]>(resolve => {
-        // Now look for Interpreters in this directory
-        fs.readdir(root, (err, subDirs) => {
-            if (err) {
-                return resolve([]);
-            }
-            resolve(subDirs.map(subDir => path.join(root, subDir)));
-        });
-    });
-}
-
 export function getSubDirectories(rootDir: string): Promise<string[]> {
     return new Promise<string[]>(resolve => {
         fs.readdir(rootDir, (error, files) => {

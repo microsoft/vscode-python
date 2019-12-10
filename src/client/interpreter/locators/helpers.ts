@@ -3,17 +3,16 @@ import * as path from 'path';
 import { traceError } from '../../common/logger';
 import { IS_WINDOWS } from '../../common/platform/constants';
 import { IFileSystem } from '../../common/platform/types';
-import { fsReaddirAsync } from '../../common/utils/fs';
 import { IInterpreterLocatorHelper, InterpreterType, PythonInterpreter } from '../contracts';
 import { IPipEnvServiceHelper } from './types';
 
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
-export function lookForInterpretersInDirectory(pathToCheck: string): Promise<string[]> {
-    return fsReaddirAsync(pathToCheck)
+export function lookForInterpretersInDirectory(pathToCheck: string, fs: IFileSystem): Promise<string[]> {
+    return fs.getFiles(pathToCheck)
         .then(subDirs => subDirs.filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName))))
         .catch(err => {
-            traceError('Python Extension (lookForInterpretersInDirectory.fsReaddirAsync):', err);
+            traceError('Python Extension (lookForInterpretersInDirectory.fs.getFiles):', err);
             return [] as string[];
         });
 }
