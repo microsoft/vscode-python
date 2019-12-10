@@ -39,36 +39,42 @@ export type WriteStream = fs.WriteStream;
 
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
+    // path-related
     directorySeparatorChar: string;
+    arePathsSame(path1: string, path2: string): boolean;
+    getRealPath(path: string): Promise<string>;
+
+    // "raw" operations
     stat(filePath: string): Promise<FileStat>;
-    objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
-    fileExists(path: string): Promise<boolean>;
-    fileExistsSync(path: string): boolean;
-    directoryExists(path: string): Promise<boolean>;
     createDirectory(path: string): Promise<void>;
     deleteDirectory(path: string): Promise<void>;
     listdir(dirname: string): Promise<string[]>;
-    getSubDirectories(rootDir: string): Promise<string[]>;
-    getFiles(rootDir: string): Promise<string[]>;
-    arePathsSame(path1: string, path2: string): boolean;
-    readData(filePath: string): Promise<Buffer>;
     readFile(filePath: string): Promise<string>;
+    readData(filePath: string): Promise<Buffer>;
     writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
-    readFileSync(filename: string): string;
     appendFile(filename: string, data: {}): Promise<void>;
+    copyFile(src: string, dest: string): Promise<void>;
+    deleteFile(filename: string): Promise<void>;
+    chmod(path: string, mode: string): Promise<void>;
+    move(src: string, tgt: string): Promise<void>;
+    // sync
+    readFileSync(filename: string): string;
     appendFileSync(filename: string, data: {}, encoding: string): void;
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures
     appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
-    getRealPath(path: string): Promise<string>;
-    copyFile(src: string, dest: string): Promise<void>;
-    deleteFile(filename: string): Promise<void>;
+    createReadStream(path: string): fs.ReadStream;
+    createWriteStream(path: string): fs.WriteStream;
+
+    // utils
+    objectExists(path: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean>;
+    fileExists(path: string): Promise<boolean>;
+    fileExistsSync(path: string): boolean;
+    directoryExists(path: string): Promise<boolean>;
+    getSubDirectories(rootDir: string): Promise<string[]>;
+    getFiles(rootDir: string): Promise<string[]>;
     getFileHash(filePath: string): Promise<string>;
     search(globPattern: string, cwd?: string): Promise<string[]>;
     createTemporaryFile(extension: string): Promise<TemporaryFile>;
-    createReadStream(path: string): fs.ReadStream;
-    createWriteStream(path: string): fs.WriteStream;
-    chmod(path: string, mode: string): Promise<void>;
-    move(src: string, tgt: string): Promise<void>;
     isDirReadonly(dirname: string): Promise<boolean>;
 }
