@@ -364,7 +364,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
                 output_type: 'stream',
                 text: result,
                 name: 'stdout'
-            }
+            };
         } else if (typeof result === 'string') {
             const data = {};
             (data as any)[mimeType ? mimeType : 'text/plain'] = result;

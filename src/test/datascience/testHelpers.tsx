@@ -7,6 +7,7 @@ import { min } from 'lodash';
 import * as path from 'path';
 import * as React from 'react';
 import { Provider } from 'react-redux';
+import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
@@ -23,7 +24,6 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
-import { isString } from 'util';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
