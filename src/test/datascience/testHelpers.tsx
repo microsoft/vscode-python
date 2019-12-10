@@ -23,6 +23,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { isString } from 'util';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -131,7 +132,7 @@ export function mountWebView(ioc: DataScienceIocContainer, type: 'native' | 'int
     return ioc.wrapper!;
 }
 
-export function addMockData(ioc: DataScienceIocContainer, code: string, result: string | number | undefined, mimeType?: string, cellType?: string) {
+export function addMockData(ioc: DataScienceIocContainer, code: string, result: string | number | undefined | string[], mimeType?: string | string[], cellType?: string) {
     if (ioc.mockJupyter) {
         if (cellType && cellType === 'error') {
             ioc.mockJupyter.addError(code, result ? result.toString() : '');
@@ -201,7 +202,7 @@ export function getLastOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React
     return getOutputCell(wrapper, cellType, foundResult.length - count)!;
 }
 
-export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, html: string | undefined, cellIndex: number | CellPosition) {
+export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, html: string | undefined | RegExp, cellIndex: number | CellPosition) {
     wrapper.update();
 
     const foundResult = wrapper.find(cellType);
@@ -234,16 +235,17 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     assert.ok(targetCell!, 'Target cell doesn\'t exist');
 
     // If html is specified, check it
-    if (html) {
+    const output = targetCell!.find('div.cell-output');
+    const outputHtml = output.length > 0 ? output.html() : undefined;
+    if (html && isString(html)) {
         // Extract only the first 100 chars from the input string
         const sliced = html.substr(0, min([html.length, 100]));
-        const output = targetCell!.find('div.cell-output');
         assert.ok(output.length > 0, 'No output cell found');
-        const outHtml = output.html();
-        assert.ok(outHtml.includes(sliced), `${outHtml} does not contain ${sliced}`);
+        assert.ok(outputHtml?.includes(sliced), `${outputHtml} does not contain ${sliced}`);
+    } else if (html && outputHtml) {
+        const regex = html as RegExp;
+        assert.ok(regex.test(outputHtml), `${outputHtml} does not match ${html}`);
     } else {
-        const output = targetCell!.find('div.cell-output');
-        const outputHtml = output.length > 0 ? output.html() : undefined;
         // html not specified, look for an empty render
         assert.ok(targetCell!.isEmptyRender() || outputHtml === undefined, `Target cell is not empty render, got this instead: ${outputHtml}`);
     }

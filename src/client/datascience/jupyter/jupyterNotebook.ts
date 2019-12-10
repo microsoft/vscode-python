@@ -805,23 +805,20 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private addToCellData = (cell: ICell, output: nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, clearState: Map<string, boolean>) => {
+        const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
+
         // If a clear is pending, replace the output with the new one
         if (clearState.get(output.output_type)) {
             clearState.delete(output.output_type);
-            const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-            const index = data.outputs.findIndex(o => o.output_type === output.output_type);
-            if (index >= 0) {
-                data.outputs.splice(index, 1, output);
-            } else {
-                data.outputs = [...data.outputs, output];
+            // Clear all with the same type up till we have a different one
+            for (let i = data.outputs.length - 1; i >= 0 && data.outputs[i]?.output_type === output.output_type; i -= 1) {
+                data.outputs.splice(i, 1);
             }
-            cell.data = data;
-        } else {
-            // Then append this data onto the end.
-            const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-            data.outputs = [...data.outputs, output];
-            cell.data = data;
         }
+
+        // Then append this data onto the end.
+        data.outputs = [...data.outputs, output];
+        cell.data = data;
     }
 
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
@@ -851,7 +848,7 @@ export class JupyterNotebookBase implements INotebook {
     private handleStreamMesssage(msg: KernelMessage.IStreamMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Might already have a stream message. If so, just add on to it.
         const data: nbformat.ICodeCell = cell.data as nbformat.ICodeCell;
-        const existing = data.outputs.find(o => o.output_type === 'stream');
+        const existing = data.outputs.length > 0 && data.outputs[data.outputs.length - 1].output_type === 'stream' ? data.outputs[data.outputs.length - 1] : undefined;
         if (existing) {
             // If clear pending, then don't add.
             if (clearState.get('stream')) {
