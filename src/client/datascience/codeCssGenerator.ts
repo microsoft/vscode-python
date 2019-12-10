@@ -2,13 +2,13 @@
 // Licensed under the MIT License.
 'use strict';
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 
 import { IWorkspaceService } from '../common/application/types';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, ILogger } from '../common/types';
 import { DefaultTheme } from './constants';
 import { ICodeCssGenerator, IThemeFinder } from './types';
@@ -98,8 +98,9 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IThemeFinder) private themeFinder: IThemeFinder,
         @inject(IConfigurationService) private configService: IConfigurationService,
-        @inject(ILogger) private logger: ILogger) {
-    }
+        @inject(ILogger) private logger: ILogger,
+        @inject(IFileSystem) private fs: IFileSystem
+    ) { }
 
     public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
         return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
@@ -330,7 +331,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
-        const tokenContent = await fs.readFile(themeFile, 'utf8');
+        const tokenContent = await this.fs.readFile(themeFile);
         const theme = parse(tokenContent);
         const tokenColors = theme.tokenColors as JSONArray;
         if (tokenColors && tokenColors.length > 0) {
@@ -356,7 +357,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
     }
 
     private readBaseColors = async (themeFile: string): Promise<JSONObject> => {
-        const tokenContent = await fs.readFile(themeFile, 'utf8');
+        const tokenContent = await this.fs.readFile(themeFile);
         const theme = parse(tokenContent);
         const colors = theme.colors as JSONObject;
 
@@ -383,7 +384,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 this.logger.logInformation(`Loading colors from ${themeRoot} ...`);
 
                 // This should be the path to the file. Load it as a json object
-                const contents = await fs.readFile(themeRoot, 'utf8');
+                const contents = await this.fs.readFile(themeRoot);
                 const json = parse(contents);
 
                 // There should be a theme colors section
@@ -436,7 +437,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                 this.logger.logInformation(`Loading base colors from ${themeRoot} ...`);
 
                 // This should be the path to the file. Load it as a json object
-                const contents = await fs.readFile(themeRoot, 'utf8');
+                const contents = await this.fs.readFile(themeRoot);
                 const json = parse(contents);
 
                 // There should be a theme colors section

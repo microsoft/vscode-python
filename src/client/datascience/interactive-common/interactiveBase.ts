@@ -3,7 +3,6 @@
 'use strict';
 import '../../common/extensions';
 
-import * as fs from 'fs-extra';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -955,7 +954,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async gotoCodeInternal(file: string, line: number) {
         let editor: TextEditor | undefined;
 
-        if (await fs.pathExists(file)) {
+        if (await this.fileSystem.fileExists(file)) {
             editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
@@ -1265,14 +1264,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         traceInfo(`Request for onigasm file at ${filePath}`);
         if (this.fileSystem) {
             if (await this.fileSystem.fileExists(filePath)) {
-                const contents = await fs.readFile(filePath);
+                const contents = Buffer.from(await this.fileSystem.readFile(filePath), 'utf8');
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
                 // During development it's actually in the node_modules folder
                 filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
                 traceInfo(`Backup request for onigasm file at ${filePath}`);
                 if (await this.fileSystem.fileExists(filePath)) {
-                    const contents = await fs.readFile(filePath);
+                    const contents = Buffer.from(await this.fileSystem.readFile(filePath), 'utf8');
                     this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {
                     traceWarning('Onigasm file not found. Colorization will not be available.');

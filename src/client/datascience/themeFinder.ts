@@ -1,12 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../common/constants';
+import { FileSystem } from '../common/platform/fileSystem';
+import { PlatformService } from '../common/platform/platformService';
 import { ICurrentProcess, IExtensions, ILogger } from '../common/types';
 import { IThemeFinder } from './types';
 
@@ -78,7 +79,10 @@ export class ThemeFinder implements IThemeFinder {
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file
         let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
-        if (!(await fs.pathExists(extensionsPath))) {
+        const fs = new FileSystem(
+            new PlatformService()
+        );
+        if (!(await fs.directoryExists(extensionsPath))) {
             // Might be on mac or linux. try a different path
             currentPath = path.resolve(currentPath, '../../../..');
             extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
@@ -89,7 +93,7 @@ export class ThemeFinder implements IThemeFinder {
 
         // If that didn't work, see if it's our MagicPython predefined tmLanguage
         if (!results && language === PYTHON_LANGUAGE) {
-            results = await fs.readFile(path.join(EXTENSION_ROOT_DIR, 'resources', 'MagicPython.tmLanguage.json'), 'utf-8');
+            results = await fs.readFile(path.join(EXTENSION_ROOT_DIR, 'resources', 'MagicPython.tmLanguage.json'));
         }
 
         return results;
@@ -146,7 +150,10 @@ export class ThemeFinder implements IThemeFinder {
 
         // Should be somewhere under currentPath/resources/app/extensions inside of a json file
         let extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
-        if (!(await fs.pathExists(extensionsPath))) {
+        const fs = new FileSystem(
+            new PlatformService()
+        );
+        if (!(await fs.directoryExists(extensionsPath))) {
             // Might be on mac or linux. try a different path
             currentPath = path.resolve(currentPath, '../../../..');
             extensionsPath = path.join(currentPath, 'resources', 'app', 'extensions');
@@ -181,8 +188,12 @@ export class ThemeFinder implements IThemeFinder {
     }
 
     private async findMatchingLanguageFromJson(packageJson: string, language: string) : Promise<string | undefined> {
+        const fs = new FileSystem(
+            new PlatformService()
+        );
         // Read the contents of the json file
-        const json = await fs.readJSON(packageJson, { encoding: 'utf-8'});
+        const text = await fs.readFile(packageJson);
+        const json = JSON.parse(text);
 
         // Should have a name entry and a contributes entry
         if (json.hasOwnProperty('name') && json.hasOwnProperty('contributes')) {
@@ -195,7 +206,7 @@ export class ThemeFinder implements IThemeFinder {
                     if (t.hasOwnProperty('language') && t.language === language) {
                         // Path is relative to the package.json file.
                         const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
-                        return fs.readFile(rootFile, 'utf-8');
+                        return fs.readFile(rootFile);
                     }
                 }
             }
@@ -203,8 +214,12 @@ export class ThemeFinder implements IThemeFinder {
     }
 
     private async findMatchingThemeFromJson(packageJson: string, themeName: string) : Promise<IThemeData | undefined> {
+        const fs = new FileSystem(
+            new PlatformService()
+        );
         // Read the contents of the json file
-        const json = await fs.readJSON(packageJson, { encoding: 'utf-8'});
+        const text = await fs.readFile(packageJson);
+        const json = JSON.parse(text);
 
         // Should have a name entry and a contributes entry
         if (json.hasOwnProperty('name') && json.hasOwnProperty('contributes')) {
