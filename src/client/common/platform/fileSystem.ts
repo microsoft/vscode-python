@@ -217,6 +217,10 @@ export class FileSystem implements IFileSystem {
         return fs.readFileSync(filePath, 'utf8');
     }
 
+    public async move(src: string, tgt: string) {
+        await fs.rename(src, tgt);
+    }
+
     public async isDirReadonly(dirname: string): Promise<boolean> {
         const filePath = `${dirname}${path.sep}___vscpTest___`;
         return new Promise<boolean>(resolve => {

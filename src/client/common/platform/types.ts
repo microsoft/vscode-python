@@ -67,5 +67,6 @@ export interface IFileSystem {
     createReadStream(path: string): fs.ReadStream;
     createWriteStream(path: string): fs.WriteStream;
     chmod(path: string, mode: string): Promise<void>;
+    move(src: string, tgt: string): Promise<void>;
     isDirReadonly(dirname: string): Promise<boolean>;
 }
