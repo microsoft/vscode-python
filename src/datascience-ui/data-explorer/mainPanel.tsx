@@ -102,7 +102,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     public render = () => {
         if (!this.state.settings) {
-            return null;
+            return <div className='main-panel'/>;
         }
 
         // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
