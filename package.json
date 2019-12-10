@@ -2908,6 +2908,7 @@
         "retyped-diff-match-patch-tsd-ambient": "^1.0.0-0",
         "rewiremock": "^3.13.0",
         "sass-loader": "^7.1.0",
+        "serialize-javascript": "^2.1.2",
         "shortid": "^2.2.8",
         "sinon": "^7.3.2",
         "source-map-support": "^0.5.12",
