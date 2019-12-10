@@ -11,6 +11,7 @@ import * as path from 'path';
 import * as tmp from 'tmp';
 import { FileStat } from 'vscode';
 import { createDeferred } from '../utils/async';
+import { noop } from '../utils/misc';
 import { IFileSystem, IPlatformService, TemporaryFile } from './types';
 
 @injectable()
@@ -214,5 +215,19 @@ export class FileSystem implements IFileSystem {
 
     public readFileSync(filePath: string): string {
         return fs.readFileSync(filePath, 'utf8');
+    }
+
+    public async isDirReadonly(dirname: string): Promise<boolean> {
+        const filePath = `${dirname}${path.sep}___vscpTest___`;
+        return new Promise<boolean>(resolve => {
+            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
+                if (!error) {
+                    fs.close(fd, () => {
+                        fs.unlink(filePath, noop);
+                    });
+                }
+                return resolve(!error);
+            });
+        });
     }
 }

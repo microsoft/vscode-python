@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions, window } from 'vscode';
@@ -12,10 +11,11 @@ import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';
 import { wrapCancellationTokens } from '../cancellation';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
 import { Products } from '../utils/localize';
-import { isResource, noop } from '../utils/misc';
+import { isResource } from '../utils/misc';
 import { IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
@@ -42,10 +42,11 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, token);
                 } else if (settings.globalModuleInstallation) {
-                    if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
-                        await terminalService.sendCommand(pythonPath, args, token);
-                    } else {
+                    const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+                    if (await fs.isDirReadonly(path.dirname(pythonPath))) {
                         this.elevatedInstall(pythonPath, args);
+                    } else {
+                        await terminalService.sendCommand(pythonPath, args, token);
                     }
                 } else {
                     await terminalService.sendCommand(pythonPath, args.concat(['--user']), token);
@@ -87,19 +88,6 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return newArgs;
         }
         return args;
-    }
-    private async isPathWritableAsync(directoryPath: string): Promise<boolean> {
-        const filePath = `${directoryPath}${path.sep}___vscpTest___`;
-        return new Promise<boolean>(resolve => {
-            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
-                if (!error) {
-                    fs.close(fd, () => {
-                        fs.unlink(filePath, noop);
-                    });
-                }
-                return resolve(!error);
-            });
-        });
     }
 
     private elevatedInstall(execPath: string, args: string[]) {
