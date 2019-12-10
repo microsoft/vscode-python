@@ -2,19 +2,18 @@
 // Licensed under the MIT License.
 'use strict';
 
-import * as fs from 'fs';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { DebugAdapterTracker, DebugAdapterTrackerFactory, DebugConfiguration, DebugSession, ProviderResult } from 'vscode';
 import { DebugProtocol } from 'vscode-debugprotocol';
 
-import { IFileSystem } from '../../../common/platform/types';
+import { IFileSystem, WriteStream } from '../../../common/platform/types';
 import { StopWatch } from '../../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 
 class DebugSessionLoggingTracker implements DebugAdapterTracker {
     private readonly enabled: boolean = false;
-    private stream: fs.WriteStream | undefined;
+    private stream: WriteStream | undefined;
     private timer = new StopWatch();
 
     constructor(private readonly session: DebugSession, fileSystem: IFileSystem) {

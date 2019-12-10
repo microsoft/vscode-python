@@ -35,6 +35,8 @@ export interface IPlatformService {
 export type TemporaryFile = { filePath: string } & Disposable;
 export type TemporaryDirectory = { path: string } & Disposable;
 
+export type WriteStream = fs.WriteStream;
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     directorySeparatorChar: string;
