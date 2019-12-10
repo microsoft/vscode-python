@@ -11,10 +11,9 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell } from '../application/types';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
-import { isResource } from '../utils/misc';
+import { isResource, noop } from '../utils/misc';
 import { IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
@@ -27,7 +26,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
         const executionInfo = await this.getExecutionInfo(name, resource);
-        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri, undefined);
+        const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(uri);
         const install = async () => {
             const executionInfoArgs = await this.processInstallArgs(executionInfo.args, resource);
             if (executionInfo.moduleName) {
@@ -41,10 +40,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                     await terminalService.sendCommand(pythonPath, args, cancel);
                 } else if (settings.globalModuleInstallation) {
-                    const dirname = path.dirname(pythonPath);
-                    const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-                    const isWritable = ! await fs.isDirReadonly(dirname);
-                    if (isWritable) {
+                    if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
                         await terminalService.sendCommand(pythonPath, args, cancel);
                     } else {
                         this.elevatedInstall(pythonPath, args);
