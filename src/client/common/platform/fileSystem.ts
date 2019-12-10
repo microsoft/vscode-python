@@ -116,6 +116,9 @@ export class FileSystem implements IFileSystem {
         }
     }
 
+    public appendFile(filename: string, data: {}): Promise<void> {
+        return fs.appendFile(filename, data);
+    }
     public appendFileSync(filename: string, data: {}, encoding: string): void;
     public appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
     // tslint:disable-next-line:unified-signatures

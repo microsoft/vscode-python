@@ -4,7 +4,6 @@
 import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -185,7 +184,7 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await fs.appendFile(file.filePath, this.nbconvertTemplateFormat.format(this.defaultCellMarker));
+                await this.fileSystem.appendFile(file.filePath, this.nbconvertTemplateFormat.format(this.defaultCellMarker));
 
                 // Now we should have a template that will convert
                 return file.filePath;
