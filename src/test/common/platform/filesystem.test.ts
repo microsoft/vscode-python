@@ -6,13 +6,12 @@
 
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
-import * as vscode from 'vscode';
 import {
     FileSystem
 } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import {
-    IFileSystem
+    FileStat, FileType, IFileSystem
 } from '../../../client/common/platform/types';
 import {
     assertDoesNotExist, DOES_NOT_EXIST, FSFixture, SUPPORTS_SYMLINKS
@@ -20,9 +19,6 @@ import {
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
 // are found in filesystem.functional.test.ts.
-
-import FileType = vscode.FileType;
-type FileStat = vscode.FileStat;
 
 suite('FileSystem', () => {
     let filesystem: IFileSystem;

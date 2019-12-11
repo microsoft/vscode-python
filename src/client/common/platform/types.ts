@@ -4,7 +4,7 @@
 import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import { SemVer } from 'semver';
-import { Disposable, FileStat } from 'vscode';
+import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
 
 export enum RegistryHive {
@@ -32,9 +32,11 @@ export interface IPlatformService {
     getVersion(): Promise<SemVer>;
 }
 
-export type TemporaryFile = { filePath: string } & Disposable;
-export type TemporaryDirectory = { path: string } & Disposable;
+export type TemporaryFile = { filePath: string } & vscode.Disposable;
+export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
+export import FileType = vscode.FileType;
+export import FileStat = vscode.FileStat;
 export type WriteStream = fs.WriteStream;
 
 export const IFileSystem = Symbol('IFileSystem');

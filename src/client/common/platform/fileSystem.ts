@@ -10,10 +10,9 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
-import { FileStat } from 'vscode';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
-import { IFileSystem, IPlatformService, TemporaryFile } from './types';
+import { FileStat, FileType, IFileSystem, IPlatformService, TemporaryFile } from './types';
 
 const globAsync = promisify(glob);
 

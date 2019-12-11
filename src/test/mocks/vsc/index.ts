@@ -183,4 +183,11 @@ export namespace vscMock {
     export class DebugAdapterExecutable {
         constructor(public readonly command: string, public readonly args: string[] = [], public readonly options?: DebugAdapterExecutableOptions) { }
     }
+
+    export enum FileType {
+        Unknown = 0,
+        File = 1,
+        Directory = 2,
+        SymbolicLink = 64
+    }
 }
