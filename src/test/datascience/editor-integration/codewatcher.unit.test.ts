@@ -382,7 +382,8 @@ testing2`;
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
-            `#%%
+            `testing0
+#%%
 testing1
 #%%
 testing2`;
@@ -391,7 +392,7 @@ testing2`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting1'),
+        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('testing0\n#%%\ntesting1'),
             TypeMoq.It.isValue(fileName),
             TypeMoq.It.isValue(0),
             TypeMoq.It.isAny(),
@@ -400,7 +401,7 @@ testing2`;
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'),
             TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
+            TypeMoq.It.isValue(3),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
@@ -492,14 +493,16 @@ testing3`;
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
         const inputText =
-            `#%%
+            `testing0
+#%%
 testing1
 #%%
 testing2
 #%%
 testing3`;
         const targetText1 =
-            `#%%
+            `testing0
+#%%
 testing1`;
 
         const targetText2 =
@@ -513,14 +516,14 @@ testing2`;
         // Set up our expected calls to add code
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
             TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
+            TypeMoq.It.isValue(1),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
 
         activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
             TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
+            TypeMoq.It.isValue(3),
             TypeMoq.It.isAny(),
             TypeMoq.It.isAny()
         )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
