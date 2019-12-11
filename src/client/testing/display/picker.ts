@@ -3,6 +3,7 @@ import * as path from 'path';
 import { QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from '../common/constants';
 import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
@@ -12,7 +13,7 @@ import { ITestDisplay } from '../types';
 export class TestDisplay implements ITestDisplay {
     private readonly testCollectionStorage: ITestCollectionStorageService;
     private readonly appShell: IApplicationShell;
-    constructor(@inject(IServiceContainer) serviceRegistry: IServiceContainer,
+    constructor(@inject(IServiceContainer) private readonly serviceRegistry: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager) {
         this.testCollectionStorage = serviceRegistry.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.appShell = serviceRegistry.get<IApplicationShell>(IApplicationShell);
@@ -57,7 +58,8 @@ export class TestDisplay implements ITestDisplay {
             return;
         }
         const fileName = file.fsPath;
-        const testFile = tests.testFiles.find(item => item.name === fileName || item.fullPath === fileName);
+        const fs = this.serviceRegistry.get<IFileSystem>(IFileSystem);
+        const testFile = tests.testFiles.find(item => item.name === fileName || fs.arePathsSame(item.fullPath, fileName));
         if (!testFile) {
             return;
         }
@@ -65,9 +67,9 @@ export class TestDisplay implements ITestDisplay {
             return fn.parentTestFile.name === testFile.name &&
                 testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
         });
-
-        this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug),
-            { matchOnDescription: true, matchOnDetail: true })
+        const runAllItem = buildRunAllParametrizedItem(flattenedFunctions, debug);
+        const functionItems = buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug);
+        this.appShell.showQuickPick(runAllItem.concat(...functionItems), { matchOnDescription: true, matchOnDetail: true })
             .then(testItem => testItem ? onItemSelected(this.commandManager, cmdSource, wkspace, testItem, debug) : Promise.resolve());
     }
 }
@@ -84,7 +86,8 @@ export enum Type {
     Null = 8,
     SelectAndRunMethod = 9,
     DebugMethod = 10,
-    Configure = 11
+    Configure = 11,
+    RunParametrized = 12
 }
 const statusIconMapping = new Map<TestStatus, string>();
 statusIconMapping.set(TestStatus.Pass, constants.Octicons.Test_Pass);
@@ -95,6 +98,7 @@ statusIconMapping.set(TestStatus.Skipped, constants.Octicons.Test_Skip);
 type TestItem = QuickPickItem & {
     type: Type;
     fn?: FlattenedTestFunction;
+    fns?: TestFunction[];
 };
 
 type TestFileItem = QuickPickItem & {
@@ -150,6 +154,18 @@ const statusSortPrefix = {
     [TestStatus.Unknown]: undefined
 };
 
+function buildRunAllParametrizedItem(tests: FlattenedTestFunction[], debug: boolean = false): TestItem[] {
+    const testFunctions: TestFunction[] = [];
+    tests.forEach(fn => {
+        testFunctions.push(fn.testFunction);
+    });
+    return [{
+        description: '',
+        label: debug ? 'Debug All' : 'Run All',
+        type: Type.RunParametrized,
+        fns: testFunctions
+    }];
+}
 function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false, debug: boolean = false): TestItem[] {
     const functionItems: TestItem[] = [];
     tests.forEach(fn => {
@@ -217,6 +233,9 @@ export function onItemSelected(commandManager: ICommandManager, cmdSource: Comma
         }
         case Type.RunAll: {
             return commandManager.executeCommand(constants.Commands.Tests_Run, undefined, cmdSource, wkspace, undefined);
+        }
+        case Type.RunParametrized: {
+            return commandManager.executeCommand(constants.Commands.Tests_Run_Parametrized, undefined, cmdSource, wkspace, selection.fns!, debug!);
         }
         case Type.ReDiscover: {
             return commandManager.executeCommand(constants.Commands.Tests_Discover, undefined, cmdSource, wkspace);

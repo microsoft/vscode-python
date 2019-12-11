@@ -9,11 +9,12 @@ import { Disposable, Event, EventEmitter, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager } from '../../common/application/types';
 import { Commands } from '../../common/constants';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IDisposableRegistry, IPythonExtensionBanner } from '../../common/types';
+import { BANNER_NAME_INTERACTIVE_SHIFTENTER, IDisposableRegistry, IPythonExtensionBanner, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService } from '../../terminals/types';
 
@@ -29,29 +30,31 @@ export class CodeExecutionManager implements ICodeExecutionManager {
 
     }
 
-    public get onExecutedCode() : Event<string> {
+    public get onExecutedCode(): Event<string> {
         return this.eventEmitter.event;
     }
 
     public registerCommands() {
         [
             Commands.Exec_In_Terminal,
-            Commands.Exec_In_Terminal_Icon_1,
-            Commands.Exec_In_Terminal_Icon_2
+            Commands.Exec_In_Terminal_Icon
         ].forEach(cmd => {
             this.disposableRegistry.push(
                 this.commandManager.registerCommand(
                     // tslint:disable-next-line:no-any
                     cmd as any,
-                    this.executeFileInTerminal.bind(this)
+                    async (file: Resource) => {
+                        const trigger = cmd === Commands.Exec_In_Terminal ? 'command' : 'icon';
+                        await this.executeFileInTerminal(file, trigger).catch(ex => traceError('Failed to execute file in terminal', ex));
+                    }
                 )
             );
         });
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Terminal, this.executeSelectionInTerminal.bind(this)));
         this.disposableRegistry.push(this.commandManager.registerCommand(Commands.Exec_Selection_In_Django_Shell, this.executeSelectionInDjangoShell.bind(this)));
     }
-    @captureTelemetry(EventName.EXECUTION_CODE, { scope: 'file' }, false)
-    private async executeFileInTerminal(file?: Uri) {
+    private async executeFileInTerminal(file: Resource, trigger: 'command' | 'icon') {
+        sendTelemetryEvent(EventName.EXECUTION_CODE, undefined, { scope: 'file', trigger });
         const codeExecutionHelper = this.serviceContainer.get<ICodeExecutionHelper>(ICodeExecutionHelper);
         file = file instanceof Uri ? file : undefined;
         const fileToExecute = file ? file : await codeExecutionHelper.getFileToExecute();

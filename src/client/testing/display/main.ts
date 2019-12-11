@@ -4,6 +4,7 @@ import { Event, EventEmitter, StatusBarAlignment, StatusBarItem } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
 import { isNotInstalledError } from '../../common/helpers';
+import { traceError } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import { Testing } from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
@@ -79,31 +80,25 @@ export class TestResultDisplay implements ITestResultDisplay {
         // Treat errors as a special case, as we generally wouldn't have any errors
         const statusText: string[] = [];
         const toolTip: string[] = [];
-        let foreColor = '';
 
         if (tests.summary.passed > 0) {
             statusText.push(`${constants.Octicons.Test_Pass} ${tests.summary.passed}`);
             toolTip.push(`${tests.summary.passed} Passed`);
-            foreColor = '#66ff66';
         }
         if (tests.summary.skipped > 0) {
             statusText.push(`${constants.Octicons.Test_Skip} ${tests.summary.skipped}`);
             toolTip.push(`${tests.summary.skipped} Skipped`);
-            foreColor = '#66ff66';
         }
         if (tests.summary.failures > 0) {
             statusText.push(`${constants.Octicons.Test_Fail} ${tests.summary.failures}`);
             toolTip.push(`${tests.summary.failures} Failed`);
-            foreColor = 'yellow';
         }
         if (tests.summary.errors > 0) {
             statusText.push(`${constants.Octicons.Test_Error} ${tests.summary.errors}`);
             toolTip.push(`${tests.summary.errors} Error${tests.summary.errors > 1 ? 's' : ''}`);
-            foreColor = 'yellow';
         }
         this.statusBar.tooltip = toolTip.length === 0 ? 'No Tests Ran' : `${toolTip.join(', ')} (Tests)`;
         this.statusBar.text = statusText.length === 0 ? 'No Tests Ran' : statusText.join(' ');
-        this.statusBar.color = foreColor;
         this.statusBar.command = constants.Commands.Tests_View_UI;
         this.didChange.fire();
         if (statusText.length === 0 && !debug) {
@@ -133,7 +128,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.statusBar.tooltip = tooltip;
         this.statusBar.show();
         this.clearProgressTicker();
-        this.progressTimeout = setInterval(() => this.updateProgressTicker(), 150);
+        this.progressTimeout = setInterval(() => this.updateProgressTicker(), 1000);
     }
     private updateProgressTicker() {
         const text = `${this.progressPrefix} ${this.ticker[this.discoverCounter % 7]}`;
@@ -177,7 +172,7 @@ export class TestResultDisplay implements ITestResultDisplay {
                 .showInformationMessage('No tests discovered, please check the configuration settings for the tests.', Testing.disableTests(), Testing.configureTests())
                 .then(item => {
                     if (item === Testing.disableTests()) {
-                        this.disableTests().catch(ex => console.error('Python Extension: disableTests', ex));
+                        this.disableTests().catch(ex => traceError('Python Extension: disableTests', ex));
                     } else if (item === Testing.configureTests()) {
                         this.cmdManager.executeCommand(constants.Commands.Tests_Configure, undefined, undefined, undefined).then(noop);
                     }
@@ -192,7 +187,6 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.statusBar.tooltip = 'Discover Tests';
         this.statusBar.command = constants.Commands.Tests_Discover;
         this.statusBar.show();
-        this.statusBar.color = 'yellow';
         if (reason !== CANCELLATION_REASON) {
             this.statusBar.text = '$(alert) Test discovery failed';
             this.statusBar.tooltip = 'Discovering Tests failed (view \'Python Test Log\' output panel for details)';

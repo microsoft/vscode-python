@@ -4,19 +4,21 @@
 
 import { WebPanelMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
+import { logMessage } from './logger';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
-    postMessage(msg: any) : void;
+    postMessage(msg: any): void;
     // tslint:disable-next-line:no-any
-    setState(state: any) : void;
+    setState(state: any): void;
     // tslint:disable-next-line:no-any
-    getState() : any;
+    getState(): any;
 }
 
 export interface IMessageHandler {
     // tslint:disable-next-line:no-any
-    handleMessage(type: string, payload?: any) : boolean;
+    handleMessage(type: string, payload?: any): boolean;
+    dispose?(): void;
 }
 
 // This special function talks to vscode from a web panel
@@ -26,7 +28,7 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 export class PostOffice implements IDisposable {
 
     private registered: boolean = false;
-    private vscodeApi : IVsCodeApi | undefined;
+    private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
     private baseHandler = this.handleMessages.bind(this);
 
@@ -37,18 +39,18 @@ export class PostOffice implements IDisposable {
         }
     }
 
-    public sendMessage<M, T extends keyof M>(type: T, payload?: M[T]) {
-        const api = this.acquireApi();
-        if (api) {
-            api.postMessage({ type: type.toString(), payload });
-        }
+    public sendMessage<M, T extends keyof M = keyof M>(type: T, payload?: M[T]) {
+        return this.sendUnsafeMessage(type.toString(), payload);
     }
 
     // tslint:disable-next-line:no-any
     public sendUnsafeMessage(type: string, payload?: any) {
         const api = this.acquireApi();
         if (api) {
+            logMessage(`Posting message ${type} to extension.`);
             api.postMessage({ type: type, payload });
+        } else {
+            logMessage(`No vscode API to post message ${type}`);
         }
     }
 
@@ -62,15 +64,47 @@ export class PostOffice implements IDisposable {
         this.handlers = this.handlers.filter(f => f !== handler);
     }
 
-    private acquireApi() : IVsCodeApi | undefined {
+    private acquireApi(): IVsCodeApi | undefined {
         // Only do this once as it crashes if we ask more than once
         // tslint:disable-next-line:no-typeof-undefined
         if (!this.vscodeApi && typeof acquireVsCodeApi !== 'undefined') {
-            this.vscodeApi = acquireVsCodeApi();
+            this.vscodeApi = acquireVsCodeApi(); // NOSONAR
         }
+        let rewireConsole = false;
         if (!this.registered) {
+            rewireConsole = true;
             this.registered = true;
             window.addEventListener('message', this.baseHandler);
+        }
+
+        if (this.vscodeApi && rewireConsole) {
+            const originalConsole = window.console;
+            const vscodeApi = this.vscodeApi;
+            // Replace console.log with sending a message
+            const customConsole = {
+                // tslint:disable-next-line: no-any no-function-expression
+                log: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.log.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_log', payload: message });
+                },
+                // tslint:disable-next-line: no-any no-function-expression
+                info: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.info.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_info', payload: message });
+                },
+                // tslint:disable-next-line: no-any no-function-expression
+                error: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.error.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_error', payload: message });
+                },
+                // tslint:disable-next-line: no-any no-function-expression
+                warn: function (message?: any, ..._optionalParams: any[]) {
+                    originalConsole.warn.apply(arguments);
+                    vscodeApi?.postMessage({ type: 'console_warn', payload: message });
+                }
+            };
+            // tslint:disable-next-line: no-any
+            (window as any).console = customConsole;
         }
 
         return this.vscodeApi;
@@ -80,7 +114,7 @@ export class PostOffice implements IDisposable {
         if (this.handlers) {
             const msg = ev.data as WebPanelMessage;
             if (msg) {
-                this.handlers.forEach((h : IMessageHandler | null) => {
+                this.handlers.forEach((h: IMessageHandler | null) => {
                     if (h) {
                         h.handleMessage(msg.type, msg.payload);
                     }

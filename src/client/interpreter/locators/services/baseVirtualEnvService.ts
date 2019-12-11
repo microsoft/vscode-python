@@ -6,7 +6,7 @@ import { Uri } from 'vscode';
 import { traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IServiceContainer } from '../../../ioc/types';
-import { IInterpreterHelper, IVirtualEnvironmentsSearchPathProvider, PythonInterpreter } from '../../contracts';
+import { IInterpreterHelper, InterpreterType, IVirtualEnvironmentsSearchPathProvider, PythonInterpreter } from '../../contracts';
 import { IVirtualEnvironmentManager } from '../../virtualEnvs/types';
 import { lookForInterpretersInDirectory } from '../helpers';
 import { CacheableLocatorService } from './cacheableLocatorService';
@@ -63,7 +63,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                     return scriptOrBinDirs.length === 1 ? scriptOrBinDirs[0] : '';
                 })
                 .catch((err) => {
-                    console.error('Python Extension (getProspectiveDirectoriesForLookup):', err);
+                    traceError('Python Extension (getProspectiveDirectoriesForLookup):', err);
                     // Ignore exceptions.
                     return '';
                 }));
@@ -82,7 +82,7 @@ export class BaseVirtualEnvService extends CacheableLocatorService {
                 return {
                     ...(details as PythonInterpreter),
                     envName: virtualEnvName,
-                    type: type
+                    type: type! as InterpreterType
                 };
             });
     }

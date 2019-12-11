@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { interfaces } from 'inversify';
-import { IExtensionActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { ClassType } from '../ioc/types';
 import { ExtensionActivationForTerminalActivation, TerminalAutoActivation } from './activation';
 import { CodeExecutionManager } from './codeExecution/codeExecutionManager';
@@ -27,8 +27,8 @@ export function registerTypes(serviceManager: IServiceRegistry) {
 
     serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation);
 
-    serviceManager.addSingleton<IExtensionActivationService>(
-        IExtensionActivationService,
+    serviceManager.addSingleton<IExtensionSingleActivationService>(
+        IExtensionSingleActivationService,
         ExtensionActivationForTerminalActivation
     );
 }

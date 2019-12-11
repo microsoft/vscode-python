@@ -4,6 +4,7 @@
 'use strict';
 
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
+import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
@@ -25,8 +26,11 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Set_ShebangInterpreter]: [];
     [Commands.Run_Linter]: [];
     [Commands.Enable_Linter]: [];
+    ['workbench.action.debug.continue']: [];
+    ['workbench.action.debug.stepOver']: [];
     ['workbench.action.debug.stop']: [];
     ['workbench.action.reloadWindow']: [];
+    ['workbench.action.closeActiveEditor']: [];
     ['editor.action.formatDocument']: [];
     ['editor.action.rename']: [];
     [Commands.ViewOutput]: [];
@@ -50,10 +54,20 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [DSCommands.RemoveAllCells]: [];
     [DSCommands.InterruptKernel]: [];
     [DSCommands.RestartKernel]: [];
+    [DSCommands.NotebookEditorUndoCells]: [];
+    [DSCommands.NotebookEditorRedoCells]: [];
+    [DSCommands.NotebookEditorRemoveAllCells]: [];
+    [DSCommands.NotebookEditorInterruptKernel]: [];
+    [DSCommands.NotebookEditorRestartKernel]: [];
+    [DSCommands.NotebookEditorRunAllCells]: [];
+    [DSCommands.NotebookEditorRunSelectedCell]: [];
+    [DSCommands.NotebookEditorAddCellBelow]: [];
     [DSCommands.ExpandAllCells]: [];
     [DSCommands.CollapseAllCells]: [];
     [DSCommands.ExportOutputAsNotebook]: [];
     [DSCommands.AddCellBelow]: [];
+    [DSCommands.CreateNewNotebook]: [];
+    [LSCommands.ClearAnalyisCache]: [];
 }
 
 /**
@@ -69,11 +83,11 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     ['revealLine']: [{ lineNumber: number; at: 'top' | 'center' | 'bottom' }];
     ['python._loadLanguageServerExtension']: {}[];
     ['python.SelectAndInsertDebugConfiguration']: [TextDocument, Position, CancellationToken];
+    ['python.viewLanguageServerOutput']: [];
     [Commands.Build_Workspace_Symbols]: [boolean, CancellationToken];
     [Commands.Sort_Imports]: [undefined, Uri];
     [Commands.Exec_In_Terminal]: [undefined, Uri];
-    [Commands.Exec_In_Terminal_Icon_1]: [undefined, Uri];
-    [Commands.Exec_In_Terminal_Icon_2]: [undefined, Uri];
+    [Commands.Exec_In_Terminal_Icon]: [undefined, Uri];
     [Commands.Tests_ViewOutput]: [undefined, CommandSource];
     [Commands.Tests_Select_And_Run_File]: [undefined, CommandSource];
     [Commands.Tests_Run_Current_File]: [undefined, CommandSource];
@@ -83,6 +97,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Run]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Debug]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
     [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
@@ -111,10 +126,15 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.RunToLine]: [string, number, number];
     [DSCommands.RunFromLine]: [string, number, number];
     [DSCommands.ImportNotebook]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.ImportNotebookFile]: [undefined | Uri, undefined | CommandSource];
+    [DSCommands.OpenNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.ExportFileAsNotebook]: [undefined | Uri, undefined | CommandSource];
     [DSCommands.RunFileInInteractiveWindows]: [string];
     [DSCommands.DebugFileInInteractiveWindows]: [string];
     [DSCommands.DebugCell]: [string, number, number, number, number];
+    [DSCommands.DebugStepOver]: [];
+    [DSCommands.DebugStop]: [];
+    [DSCommands.DebugContinue]: [];
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.ScrollToCell]: [string, string];
 }

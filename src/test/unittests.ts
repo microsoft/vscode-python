@@ -57,10 +57,16 @@ const Module = require('module');
     };
 })();
 
-// nteract/transforms-full expects to run in the browser so we have to fake
-// parts of the browser here.
-setUpDomEnvironment();
+// Setting up DOM env and transpile is required for the react & monaco related tests.
+// However this takes around 40s to setup on Mac, hence slowing down testing/development.
+// Allowing ability to disable this (faster local development & testing, saving minutes).
+if (process.argv.indexOf('--fast') === -1) {
+    // nteract/transforms-full expects to run in the browser so we have to fake
+    // parts of the browser here.
+    setUpDomEnvironment();
 
-// Also have to setup babel to get the monaco editor to work.
-setupTranspile();
+    // Also have to setup babel to get the monaco editor to work.
+    setupTranspile();
+}
+
 initialize();

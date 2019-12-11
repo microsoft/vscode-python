@@ -12,7 +12,8 @@ import * as vscode from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { ProductNames } from '../../../client/common/installer/productNames';
-import { IFileSystem } from '../../../client/common/platform/types';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../client/common/platform/platformService';
 import { Product } from '../../../client/common/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
@@ -20,7 +21,7 @@ import { CondaService } from '../../../client/interpreter/locators/services/cond
 import { TestDiscoveredTestParser } from '../../../client/testing/common/services/discoveredTestParser';
 import { TestResultsService } from '../../../client/testing/common/services/testResultsService';
 import { DiscoveredTests } from '../../../client/testing/common/services/types';
-import { ITestVisitor, PassCalculationFormulae, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
+import { ITestVisitor, TestDiscoveryOptions, Tests, TestStatus } from '../../../client/testing/common/types';
 import { XUnitParser } from '../../../client/testing/common/xUnitParser';
 import { TestMessageService } from '../../../client/testing/pytest/services/testMessageService';
 import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeverity } from '../../../client/testing/types';
@@ -100,6 +101,8 @@ async function getExpectedLocationStackFromTestDetails(testDetails: ITestDetails
 
 suite('Unit Tests - PyTest - TestMessageService', () => {
     let ioc: UnitTestIocContainer;
+    const platformService = new PlatformService();
+    const filesystem = new FileSystem(platformService);
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     suiteSetup(async () => {
         await initialize();
@@ -137,14 +140,13 @@ suite('Unit Tests - PyTest - TestMessageService', () => {
                 };
                 // Setup the parser.
                 const workspaceService = ioc.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
-                const fileSystem = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
-                const parser = new TestDiscoveredTestParser(workspaceService, fileSystem);
+                const parser = new TestDiscoveredTestParser(workspaceService);
                 const discoveryOutput = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, scenario.discoveryOutput), 'utf8').replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH)).replace(/\\/g, '/');
                 const discoveredTest: DiscoveredTests[] = JSON.parse(discoveryOutput);
                 options.workspaceFolder = vscode.Uri.file(discoveredTest[0].root);
                 const parsedTests: Tests = parser.parse(options.workspaceFolder, discoveredTest);
-                const xUnitParser = new XUnitParser();
-                await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput), PassCalculationFormulae.pytest);
+                const xUnitParser = new XUnitParser(filesystem);
+                await xUnitParser.updateResultsFromXmlLogFile(parsedTests, path.join(PYTEST_RESULTS_PATH, scenario.runOutput));
                 const testResultsService = new TestResultsService(testVisitor.object);
                 testResultsService.updateResults(parsedTests);
                 const testMessageService = new TestMessageService(ioc.serviceContainer);

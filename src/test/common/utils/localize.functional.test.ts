@@ -122,12 +122,12 @@ suite('Localization', () => {
         done();
     });
 
-    test('all keys used', function(done) {
+    test('all keys used', function (done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Unused keys need to be cleaned up.
         // tslint:disable-next-line:no-invalid-this
         this.skip();
-    //test('all keys used', done => {
+        //test('all keys used', done => {
         const nlsCollection = getDefaultCollection();
         useEveryLocalization(localize);
 
@@ -162,7 +162,7 @@ suite('Localization', () => {
 function addLocaleFile(locale: string, nls: Record<string, string>) {
     const filename = path.join(EXTENSION_ROOT_DIR, `package.nls.${locale}.json`);
     if (fs.existsSync(filename)) {
-        throw Error('NLS file already exists');
+        throw Error(`NLS file ${filename} already exists`);
     }
     const contents = JSON.stringify(nls);
     fs.writeFileSync(filename, contents);

@@ -6,8 +6,9 @@ import { Uri } from 'vscode';
 import { ICondaService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller } from './types';
+import { IModuleInstaller, InterpreterUri } from './types';
 
 /**
  * A Python module installer for a conda environment.
@@ -39,10 +40,10 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
      * We need to perform two checks:
      * 1. Ensure we have conda.
      * 2. Check if the current environment is a conda environment.
-     * @param {Uri} [resource=] Resource used to identify the workspace.
+     * @param {InterpreterUri} [resource=] Resource used to identify the workspace.
      * @returns {Promise<boolean>} Whether conda is supported as a module installer or not.
      */
-    public async isSupported(resource?: Uri): Promise<boolean> {
+    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (this.isCondaAvailable === false) {
             return false;
         }
@@ -83,11 +84,13 @@ export class CondaInstaller extends ModuleInstaller implements IModuleInstaller 
     }
 
     /**
-     * Is anaconda the current interpreter?
+     * Is the provided interprter a conda environment
      */
-    private async isCurrentEnvironmentACondaEnvironment(resource?: Uri): Promise<boolean> {
+    private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath;
+        const pythonPath = isResource(resource) ?
+                            this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath :
+                            resource.path;
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

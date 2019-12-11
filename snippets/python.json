@@ -242,12 +242,12 @@
     },
     "add/new/cell": {
         "prefix": "add/new/cell",
-        "body": "#%%",
+        "body": "# %%",
         "description": "Code snippet to add a new cell"
     },
     "mark/markdown": {
         "prefix": "mark/markdown",
-        "body": "#%% [markdown]",
+        "body": "# %% [markdown]",
         "description": "Code snippet to add a new markdown cell"
     }
 }

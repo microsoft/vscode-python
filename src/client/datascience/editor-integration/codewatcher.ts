@@ -22,7 +22,7 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { ICodeExecutionHelper } from '../../terminals/types';
 import { CellMatcher } from '../cellMatcher';
-import { Commands, Telemetry } from '../constants';
+import { Commands, Identifiers, Telemetry } from '../constants';
 import { ICodeLensFactory, ICodeWatcher, IDataScienceErrorHandler, IInteractiveWindowProvider } from '../types';
 
 @injectable()
@@ -101,8 +101,13 @@ export class CodeWatcher implements ICodeWatcher {
         // run them one by one
         for (const lens of runCellCommands) {
             // Make sure that we have the correct command (RunCell) lenses
-            const range: Range = new Range(lens.command!.arguments![1], lens.command!.arguments![2], lens.command!.arguments![3], lens.command!.arguments![4]);
-            if (this.document && range) {
+            let range: Range = new Range(lens.command!.arguments![1], lens.command!.arguments![2], lens.command!.arguments![3], lens.command!.arguments![4]);
+            if (this.document) {
+                // Special case, if this is the first, expand our range to always include the top.
+                if (leftCount === runCellCommands.length) {
+                    range = new Range(new Position(0, 0), range.end);
+                }
+
                 const code = this.document.getText(range);
                 leftCount -= 1;
 
@@ -140,15 +145,23 @@ export class CodeWatcher implements ICodeWatcher {
         if (leftCount < 0) {
             leftCount = runCellCommands.length;
         }
+        const startCount = leftCount;
 
         // Run our code lenses up to this point, lenses are created in order on document load
         // so we can rely on them being in linear order for this
         for (const lens of runCellCommands) {
             // Make sure we are dealing with run cell based code lenses in case more types are added later
             if (leftCount > 0 && this.document) {
+                let range: Range = new Range(lens.range.start, lens.range.end);
+
+                // If this is the first, make sure it extends to the top
+                if (leftCount === startCount) {
+                    range = new Range(new Position(0, 0), range.end);
+                }
+
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
-                const code = this.document.getText(lens.range);
+                const code = this.document.getText(range);
                 const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
                 if (!success) {
                     await this.addErrorMessage(leftCount);
@@ -268,9 +281,10 @@ export class CodeWatcher implements ICodeWatcher {
 
     public async addEmptyCellToBottom(): Promise<void> {
         const editor = this.documentManager.activeTextEditor;
+        const cellDelineator = this.defaultCellMarker;
         if (editor) {
             editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(editor.document.lineCount, 0), '\n\n#%%\n');
+                editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
             });
 
             const newPosition = new Position(editor.document.lineCount + 3, 0); // +3 to account for the added spaces and to position after the new mark
@@ -286,6 +300,7 @@ export class CodeWatcher implements ICodeWatcher {
         const editor = this.documentManager.activeTextEditor;
         const cellMatcher = new CellMatcher();
         let index = 0;
+        const cellDelineator = this.defaultCellMarker;
 
         if (editor) {
             editor.edit((editBuilder) => {
@@ -295,14 +310,14 @@ export class CodeWatcher implements ICodeWatcher {
                     if (cellMatcher.isCell(editor.document.lineAt(i).text)) {
                         lastCell = false;
                         index = i;
-                        editBuilder.insert(new Position(i, 0), '#%%\n\n');
+                        editBuilder.insert(new Position(i, 0), `${cellDelineator}\n\n`);
                         break;
                     }
                 }
 
                 if (lastCell) {
                     index = editor.document.lineCount;
-                    editBuilder.insert(new Position(editor.document.lineCount, 0), '\n#%%\n');
+                    editBuilder.insert(new Position(editor.document.lineCount, 0), `\n${cellDelineator}\n`);
                 }
             });
         }
@@ -311,6 +326,10 @@ export class CodeWatcher implements ICodeWatcher {
         const newPosition = new Position(index + 1, 0);
         return this.runMatchingCell(editor.selection, false)
             .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
+    }
+
+    private get defaultCellMarker(): string {
+        return this.configService.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
     }
 
     private onCodeLensFactoryUpdated(): void {
@@ -333,7 +352,7 @@ export class CodeWatcher implements ICodeWatcher {
             }
             this.sendPerceivedCellExecute(stopWatch);
         } catch (err) {
-            this.dataScienceErrorHandler.handleError(err).ignoreErrors();
+            await this.dataScienceErrorHandler.handleError(err);
         }
 
         return result;
@@ -347,7 +366,7 @@ export class CodeWatcher implements ICodeWatcher {
                 const activeInteractiveWindow = await this.interactiveWindowProvider.getOrCreateActive();
                 return activeInteractiveWindow.addMessage(message);
             } catch (err) {
-                this.dataScienceErrorHandler.handleError(err).ignoreErrors();
+                await this.dataScienceErrorHandler.handleError(err);
             }
         }
     }
@@ -419,7 +438,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         if (editor) {
             editor.edit((editBuilder) => {
-                editBuilder.insert(new Position(currentRange.end.line + 1, 0), '\n\n#%%\n');
+                editBuilder.insert(new Position(currentRange.end.line + 1, 0), `\n\n${this.defaultCellMarker}\n`);
             });
         }
 

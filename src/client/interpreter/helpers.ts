@@ -2,11 +2,13 @@ import { inject, injectable } from 'inversify';
 import { compare } from 'semver';
 import { ConfigurationTarget } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { IFileSystem } from '../common/platform/types';
+import { traceError } from '../common/logger';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../common/process/types';
 import { IPersistentStateFactory, Resource } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { IInterpreterHelper, InterpreterType, PythonInterpreter, WorkspacePythonPath } from './contracts';
+import { InterpeterHashProviderFactory } from './locators/services/hashProviderFactory';
+import { IInterpreterHashProviderFactory } from './locators/types';
 
 const EXPITY_DURATION = 24 * 60 * 60 * 1000;
 type CachedPythonInterpreter = Partial<PythonInterpreter> & { fileHash: string };
@@ -21,11 +23,10 @@ export function getFirstNonEmptyLineFromMultilineString(stdout: string) {
 
 @injectable()
 export class InterpreterHelper implements IInterpreterHelper {
-    private readonly fs: IFileSystem;
     private readonly persistentFactory: IPersistentStateFactory;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(InterpeterHashProviderFactory) private readonly hashProviderFactory: IInterpreterHashProviderFactory) {
         this.persistentFactory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
-        this.fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
     }
     public getActiveWorkspaceUri(resource: Resource): WorkspacePythonPath | undefined {
         const workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -52,8 +53,12 @@ export class InterpreterHelper implements IInterpreterHelper {
         }
     }
     public async getInterpreterInformation(pythonPath: string): Promise<undefined | Partial<PythonInterpreter>> {
-        let fileHash = await this.fs.getFileHash(pythonPath).catch(() => '');
-        fileHash = fileHash ? fileHash : '';
+        const fileHash = await this.hashProviderFactory.create({pythonPath})
+                            .then(provider => provider.getInterpreterHash(pythonPath))
+                            .catch(ex => {
+                                traceError(`Failed to create File hash for interpreter ${pythonPath}`, ex);
+                                return '';
+                            });
         const store = this.persistentFactory.createGlobalPersistentState<CachedPythonInterpreter>(`${pythonPath}.v3`, undefined, EXPITY_DURATION);
         if (store.value && fileHash && store.value.fileHash === fileHash) {
             return store.value;
@@ -72,7 +77,7 @@ export class InterpreterHelper implements IInterpreterHelper {
             await store.updateValue(details);
             return details;
         } catch (ex) {
-            console.error(`Failed to get interpreter information for '${pythonPath}'`, ex);
+            traceError(`Failed to get interpreter information for '${pythonPath}'`, ex);
             return;
         }
     }

@@ -14,3 +14,16 @@ export enum OSType {
     OSX = 'OSX',
     Linux = 'Linux'
 }
+
+// Return the OS type for the given platform string.
+export function getOSType(platform: string = process.platform): OSType {
+    if (/^win/.test(platform)) {
+        return OSType.Windows;
+    } else if (/^darwin/.test(platform)) {
+        return OSType.OSX;
+    } else if (/^linux/.test(platform)) {
+        return OSType.Linux;
+    } else {
+        return OSType.Unknown;
+    }
+}

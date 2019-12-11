@@ -53,7 +53,8 @@ suite('DataScience Error Handler Unit Tests', () => {
     test('Jupyter Install Error', async () => {
         applicationShell.setup(app => app.showInformationMessage(typemoq.It.isAny(),
             typemoq.It.isValue(localize.DataScience.jupyterInstall()),
-            typemoq.It.isValue(localize.DataScience.notebookCheckForImportNo())))
+            typemoq.It.isValue(localize.DataScience.notebookCheckForImportNo()),
+            typemoq.It.isAny()))
             .returns(() => Promise.resolve(localize.DataScience.jupyterInstall()))
             .verifiable(typemoq.Times.once());
 

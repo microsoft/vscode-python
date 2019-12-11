@@ -8,6 +8,7 @@ import * as path from 'path';
 import { promisify } from 'util';
 import { WorkspaceConfiguration } from 'vscode';
 import './common/extensions';
+import { traceError } from './common/logger';
 import { EXTENSION_ROOT_DIR } from './constants';
 
 type VSCode = typeof import('vscode');
@@ -25,6 +26,7 @@ export class SourceMapSupport {
             return;
         }
         await this.enableSourceMaps(true);
+        require('source-map-support').install();
         const localize = require('./common/utils/localize') as typeof import('./common/utils/localize');
         const disable = localize.Diagnostics.disableSourceMaps();
         this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable).then(selection => {
@@ -71,6 +73,6 @@ export function initialize(vscode: VSCode = require('vscode')) {
         return;
     }
     new SourceMapSupport(vscode).initialize().catch(_ex => {
-        console.error('Failed to initialize source map support in extension');
+        traceError('Failed to initialize source map support in extension');
     });
 }

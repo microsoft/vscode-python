@@ -27,7 +27,7 @@ type SetupOptions = Mocha.MochaOptions & {
     exit: boolean;
 };
 
-process.on('unhandledRejection', (ex: string | Error, _a) => {
+process.on('unhandledRejection', (ex: any, _a) => {
     const message = [`${ex}`];
     if (typeof ex !== 'string' && ex && ex.message) {
         message.push(ex.name);
@@ -36,7 +36,8 @@ process.on('unhandledRejection', (ex: string | Error, _a) => {
             message.push(ex.stack);
         }
     }
-    console.error(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
+    // tslint:disable-next-line: no-console
+    console.log(`Unhandled Promise Rejection with the message ${message.join(', ')}`);
 });
 
 /**

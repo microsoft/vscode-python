@@ -10,8 +10,8 @@ import { PathUtils } from '../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService, IPythonSettings } from '../../client/common/types';
 import { Architecture } from '../../client/common/utils/platform';
-import { IInterpreterQuickPickItem, InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
-import { IInterpreterComparer, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
+import { InterpreterSelector } from '../../client/interpreter/configuration/interpreterSelector';
+import { IInterpreterComparer, IInterpreterQuickPickItem, IPythonPathUpdaterServiceManager } from '../../client/interpreter/configuration/types';
 import { IInterpreterService, InterpreterType, IShebangCodeLensProvider, PythonInterpreter } from '../../client/interpreter/contracts';
 
 const info: PythonInterpreter = {
@@ -31,6 +31,8 @@ class InterpreterQuickPickItem implements IInterpreterQuickPickItem {
     public label: string;
     public description!: string;
     public detail?: string;
+    // tslint:disable-next-line: no-any
+    public interpreter = {} as any;
     constructor(l: string, p: string) {
         this.path = p;
         this.label = l;
@@ -110,7 +112,7 @@ suite('Interpreters - selector', () => {
                 .setup(x => x.getInterpreters(TypeMoq.It.isAny()))
                 .returns(() => new Promise((resolve) => resolve(initial)));
 
-            const actual = await selector.getSuggestions();
+            const actual = await selector.getSuggestions(undefined);
 
             const expected: InterpreterQuickPickItem[] = [
                 new InterpreterQuickPickItem('1', 'c:/path1/path1'),
@@ -139,7 +141,9 @@ suite('Interpreters - selector', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         workspace.setup(w => w.workspaceFolders).returns(() => undefined);
@@ -169,7 +173,9 @@ suite('Interpreters - selector', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         const folder = { name: 'one', uri: Uri.parse('one'), index: 0 };
@@ -200,7 +206,9 @@ suite('Interpreters - selector', () => {
         pythonSettings.setup(p => p.pythonPath).returns(() => 'python');
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
@@ -235,7 +243,9 @@ suite('Interpreters - selector', () => {
 
         const selectedItem: IInterpreterQuickPickItem = {
             description: '', detail: '', label: '',
-            path: 'This is the selected Python path'
+            path: 'This is the selected Python path',
+            // tslint:disable-next-line: no-any
+            interpreter: {} as any
         };
 
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };

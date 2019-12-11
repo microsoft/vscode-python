@@ -6,6 +6,7 @@ import * as assert from 'assert';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import { instance, mock } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import {
     CancellationTokenSource,
@@ -35,6 +36,8 @@ import {
 import {
     IEnvironmentActivationService
 } from '../../client/interpreter/activation/types';
+import { ICondaService, IInterpreterService } from '../../client/interpreter/contracts';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../client/ioc/types';
 import { LINTERID_BY_PRODUCT } from '../../client/linters/constants';
 import {
@@ -58,7 +61,7 @@ const fileToLint = path.join(pythonFilesDir, 'file.py');
 
 const linterConfigDirs = new Map<LinterId, string>([
     ['flake8', path.join(pythonFilesDir, 'flake8config')],
-    ['pep8', path.join(pythonFilesDir, 'pep8config')],
+    ['pycodestyle', path.join(pythonFilesDir, 'pycodestyleconfig')],
     ['pydocstyle', path.join(pythonFilesDir, 'pydocstyleconfig27')],
     ['pylint', path.join(pythonFilesDir, 'pylintconfig')]
 ]);
@@ -98,7 +101,7 @@ const flake8MessagesToBeReturned: ILintMessage[] = [
     { line: 80, column: 5, severity: LintMessageSeverity.Error, code: 'E303', message: 'too many blank lines (2)', provider: '', type: 'E' },
     { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: 'E' }
 ];
-const pep8MessagesToBeReturned: ILintMessage[] = [
+const pycodestyleMessagesToBeReturned: ILintMessage[] = [
     { line: 5, column: 1, severity: LintMessageSeverity.Error, code: 'E302', message: 'expected 2 blank lines, found 1', provider: '', type: 'E' },
     { line: 19, column: 15, severity: LintMessageSeverity.Error, code: 'E127', message: 'continuation line over-indented for visual indent', provider: '', type: 'E' },
     { line: 24, column: 23, severity: LintMessageSeverity.Error, code: 'E261', message: 'at least two spaces before inline comment', provider: '', type: 'E' },
@@ -133,7 +136,7 @@ const pydocstyleMessagesToBeReturned: ILintMessage[] = [
 const filteredFlake8MessagesToBeReturned: ILintMessage[] = [
     { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: '' }
 ];
-const filteredPep8MessagesToBeReturned: ILintMessage[] = [
+const filteredPycodestyleMessagesToBeReturned: ILintMessage[] = [
     { line: 87, column: 24, severity: LintMessageSeverity.Warning, code: 'W292', message: 'no newline at end of file', provider: '', type: '' }
 ];
 
@@ -145,8 +148,8 @@ function getMessages(product: Product): ILintMessage[] {
         case Product.flake8: {
             return flake8MessagesToBeReturned;
         }
-        case Product.pep8: {
-            return pep8MessagesToBeReturned;
+        case Product.pycodestyle: {
+            return pycodestyleMessagesToBeReturned;
         }
         case Product.pydocstyle: {
             return pydocstyleMessagesToBeReturned;
@@ -170,8 +173,8 @@ async function getInfoForConfig(product: Product) {
             messagesToBeReceived = filteredFlake8MessagesToBeReturned;
             break;
         }
-        case Product.pep8: {
-            messagesToBeReceived = filteredPep8MessagesToBeReturned;
+        case Product.pycodestyle: {
+            messagesToBeReceived = filteredPycodestyleMessagesToBeReturned;
             break;
         }
         default: { break; }
@@ -244,6 +247,15 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IBufferDecoder), TypeMoq.It.isAny()))
             .returns(() => decoder);
 
+        const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>(undefined, TypeMoq.MockBehavior.Strict);
+        interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
+        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
+
+        const condaService = TypeMoq.Mock.ofType<ICondaService>(undefined, TypeMoq.MockBehavior.Strict);
+        condaService.setup(c => c.getCondaEnvironment(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
+        condaService.setup(c => c.getCondaVersion()).returns(() => Promise.resolve(undefined));
+        condaService.setup(c => c.getCondaFile()).returns(() => Promise.resolve('conda'));
+
         const processLogger = TypeMoq.Mock.ofType<IProcessLogger>(undefined, TypeMoq.MockBehavior.Strict);
         processLogger
             .setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
@@ -251,13 +263,15 @@ class TestFixture extends BaseTestFixture {
                 return;
             });
         const procServiceFactory = new ProcessServiceFactory(envVarsService.object, processLogger.object, decoder, disposableRegistry);
-
+        const windowsStoreInterpreter = mock(WindowsStoreInterpreter);
         return new PythonExecutionFactory(
             serviceContainer.object,
             envActivationService.object,
             procServiceFactory,
             configService,
-            decoder
+            condaService.object,
+            decoder,
+            instance(windowsStoreInterpreter)
         );
     }
 

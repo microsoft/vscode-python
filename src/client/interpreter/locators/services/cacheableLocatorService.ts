@@ -11,8 +11,9 @@ import '../../../common/extensions';
 import { Logger, traceDecorators, traceVerbose } from '../../../common/logger';
 import { IDisposableRegistry, IPersistentStateFactory } from '../../../common/types';
 import { createDeferred, Deferred } from '../../../common/utils/async';
+import { StopWatch } from '../../../common/utils/stopWatch';
 import { IServiceContainer } from '../../../ioc/types';
-import { sendTelemetryWhenDone } from '../../../telemetry';
+import { sendTelemetryEvent } from '../../../telemetry';
 import { EventName } from '../../../telemetry/constants';
 import { IInterpreterLocatorService, IInterpreterWatcher, PythonInterpreter } from '../../contracts';
 
@@ -33,7 +34,7 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
         return this.locating.event;
     }
     public get hasInterpreters(): Promise<boolean> {
-        return this._hasInterpreters.promise;
+        return this._hasInterpreters.completed ? this._hasInterpreters.promise : Promise.resolve(false);
     }
     public abstract dispose(): void;
     @traceDecorators.verbose('Get Interpreters in CacheableLocatorService')
@@ -48,16 +49,20 @@ export abstract class CacheableLocatorService implements IInterpreterLocatorServ
             this.addHandlersForInterpreterWatchers(cacheKey, resource)
                 .ignoreErrors();
 
-            const promise = this.getInterpretersImplementation(resource)
+            const stopWatch = new StopWatch();
+            this.getInterpretersImplementation(resource)
                 .then(async items => {
                     await this.cacheInterpreters(items, resource);
                     traceVerbose(`Interpreters returned by ${this.name} are of count ${Array.isArray(items) ? items.length : 0}`);
                     traceVerbose(`Interpreters returned by ${this.name} are ${JSON.stringify(items)}`);
+                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, { locator: this.name, interpreters: Array.isArray(items) ? items.length : 0 });
                     deferred!.resolve(items);
                 })
-                .catch(ex => deferred!.reject(ex));
+                .catch(ex => {
+                    sendTelemetryEvent(EventName.PYTHON_INTERPRETER_DISCOVERY, stopWatch.elapsedTime, { locator: this.name }, ex);
+                    deferred!.reject(ex);
+                });
 
-            sendTelemetryWhenDone(EventName.PYTHON_INTERPRETER_DISCOVERY, promise, undefined, { locator: this.name });
             this.locating.fire(deferred.promise);
         }
         deferred.promise

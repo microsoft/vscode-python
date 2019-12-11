@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length no-invalid-this
+// tslint:disable:max-func-body-length no-invalid-this messages-must-be-localized
 
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
@@ -10,11 +10,9 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
-// tslint:disable-next-line:ordered-imports
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
-// tslint:disable-next-line:ordered-imports
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
 import { LinterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';

@@ -54,7 +54,7 @@ export class ShellDetector {
         for (const detector of shellDetectors) {
             shell = detector.identify(telemetryProperties, terminal);
             traceVerbose(`${detector}. Shell identified as ${shell} ${terminal ? `(Terminal name is ${terminal.name})` : ''}`);
-            if (shell) {
+            if (shell && shell !== TerminalShellType.other) {
                 break;
             }
         }

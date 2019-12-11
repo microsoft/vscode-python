@@ -7,66 +7,56 @@ import { CancellationToken } from 'vscode';
 
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
 import {
     IConnection,
-    IJupyterCommandFactory,
-    IJupyterSessionManager,
     INotebookServer,
     INotebookServerOptions
 } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
-import { GuestJupyterSessionManager } from './guestJupyterSessionManager';
+import { KernelSelector } from '../kernels/kernelSelector';
+import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ServerCache } from './serverCache';
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
 @injectable()
 export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExecutionBase, LiveShare.JupyterExecutionService) {
-    private serverCache : ServerCache;
+    private serverCache: ServerCache;
 
     constructor(
         liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
-        knownSearchPaths: IKnownSearchPathsForInterpreters,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManager,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        commandFactory : IJupyterCommandFactory,
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
-            executionFactory,
             interpreterService,
-            processServiceFactory,
-            knownSearchPaths,
             logger,
             disposableRegistry,
-            asyncRegistry,
-            fileSystem,
-            new GuestJupyterSessionManager(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
-            commandFactory,
+            kernelSelector,
+            notebookStarter,
             serviceContainer);
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);
     }
 
-    public async dispose() : Promise<void> {
+    public async dispose(): Promise<void> {
         await super.dispose();
 
         // Dispose of all of our cached servers
@@ -78,12 +68,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     }
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
-    }
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
-    }
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
     }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
@@ -141,11 +125,11 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         }
     }
 
-    public async getServer(options?: INotebookServerOptions) : Promise<INotebookServer | undefined> {
+    public async getServer(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         return this.serverCache.get(options);
     }
 
-    private async checkSupported(command: string, cancelToken?: CancellationToken) : Promise<boolean> {
+    private async checkSupported(command: string, cancelToken?: CancellationToken): Promise<boolean> {
         const service = await this.waitForService();
 
         // Make a remote call on the proxy

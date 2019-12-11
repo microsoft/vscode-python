@@ -1,6 +1,7 @@
 import * as vscode from 'vscode';
 import { Commands } from '../common/constants';
 import { getTextEditsFromPatch } from '../common/editor';
+import { traceError } from '../common/logger';
 import { IConfigurationService, IInstaller, Product } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
@@ -150,7 +151,7 @@ function extractName(textEditor: vscode.TextEditor, newName: string,
     }).catch(error => {
         if (error === 'Not installed') {
             installer.promptToInstall(Product.rope, textEditor.document.uri)
-                .catch(ex => console.error('Python Extension: simpleRefactorProvider.promptToInstall', ex));
+                .catch(ex => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
             return Promise.reject('');
         }
         let errorMessage = `${error}`;

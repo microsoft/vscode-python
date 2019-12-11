@@ -1,9 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ComponentClass, configure, ReactWrapper } from 'enzyme';
-import * as Adapter from 'enzyme-adapter-react-16';
-import { noop } from '../../client/common/utils/misc';
+
+// Note: Don't change this to a tsx file as it loads in the unit tests. That will mess up mocha
 
 // Custom module loader so we can skip loading the 'canvas' module which won't load
 // inside of vscode
@@ -24,7 +23,6 @@ const Module = require('module');
                 }
             } catch {
                 // This should happen when not inside vscode.
-                noop();
             }
         }
         // tslint:disable-next-line:no-invalid-this
@@ -54,8 +52,12 @@ if (ssExports && ssExports.createStylesheet) {
     };
 }
 
+import { ComponentClass, configure, ReactWrapper } from 'enzyme';
+import * as Adapter from 'enzyme-adapter-react-16';
 import { DOMWindow, JSDOM } from 'jsdom';
 import * as React from 'react';
+
+import { noop } from '../../client/common/utils/misc';
 
 class MockCanvas implements CanvasRenderingContext2D {
     public canvas!: HTMLCanvasElement;
@@ -270,6 +272,10 @@ export function setUpDomEnvironment() {
         userAgent: 'node.js',
         platform: 'node'
     };
+    (global as any)['Event'] = window.Event;
+    (global as any)['KeyboardEvent'] = window.KeyboardEvent;
+    (global as any)['MouseEvent'] = window.MouseEvent;
+    (global as any)['DocumentFragment'] = window.DocumentFragment;
     // tslint:disable-next-line:no-string-literal no-any
     (global as any)['getComputedStyle'] = window.getComputedStyle;
     // tslint:disable-next-line:no-string-literal no-any
@@ -354,7 +360,6 @@ export function setUpDomEnvironment() {
             showCellInputCode: true,
             collapseCellInputCodeByDefault: true,
             allowInput: true,
-            showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method'
         };
     };
@@ -472,6 +477,9 @@ export async function waitForUpdate<P, S, C>(wrapper: ReactWrapper<P, S, C>, mai
 
         // Wait for the render
         await renderPromise;
+
+        // Force a render
+        wrapper.update();
     }
 }
 
@@ -550,12 +558,12 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
 };
 
 export function createMessageEvent(data: any): MessageEvent {
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     return new domWindow.MessageEvent('message', { data });
 }
 
 export function createKeyboardEvent(type: string, options: KeyboardEventInit): KeyboardEvent {
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     options.bubbles = true;
     options.cancelable = true;
 
@@ -573,13 +581,13 @@ export function createKeyboardEvent(type: string, options: KeyboardEventInit): K
 }
 
 export function createInputEvent(): Event {
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     return new domWindow.Event('input', { bubbles: true, cancelable: false });
 }
 
 export function blurWindow() {
     // blur isn't implemented. We just need to dispatch the blur event
-    const domWindow = window as DOMWindow;
+    const domWindow = (window as any) as DOMWindow;
     const blurEvent = new domWindow.Event('blur', { bubbles: true });
     domWindow.dispatchEvent(blurEvent);
 }

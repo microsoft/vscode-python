@@ -121,7 +121,7 @@ suite('Interpreters - Auto Selection - Base Rule', () => {
 
         verify(state.value).atLeast(1);
     });
-    test('setGlobalInterpreter should do nothing if interprter is undefined or version is empty', async () => {
+    test('setGlobalInterpreter should do nothing if interpreter is undefined or version is empty', async () => {
         const manager = mock(InterpreterAutoSelectionService);
         const interpreterInfo = { path: '1324' } as any;
 

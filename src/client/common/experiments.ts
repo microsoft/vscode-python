@@ -8,7 +8,7 @@
 import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IHttpClient } from '../common/types';
+import { IConfigurationService, IHttpClient } from '../common/types';
 import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
@@ -31,6 +31,8 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/experiments.json';
 export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
+// The old experiments which are working fine using the `SHA512` algorithm
+export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
 
 /**
  * Manages and stores experiments, implements the AB testing functionality
@@ -58,6 +60,14 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     /**
+     * Returns `true` if experiments are enabled, else `false`.
+     *
+     * @private
+     * @type {boolean}
+     * @memberof ExperimentsManager
+     */
+    private readonly enabled: boolean;
+    /**
      * Keeps track if the storage needs updating or not.
      * Note this has to be separate from the actual storage as
      * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
@@ -72,11 +82,13 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
         @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
     ) {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
+        this.enabled = configurationService.getSettings(undefined).experiments.enabled;
     }
 
     @swallowExceptions('Failed to activate experiments')
@@ -85,6 +97,10 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
         this.activatedOnce = true;
+        if (!this.enabled) {
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DISABLED);
+            return;
+        }
         await this.updateExperimentStorage();
         this.populateUserExperiments();
         for (const exp of this.userExperiments || []) {
@@ -96,6 +112,9 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to identify if user is in experiment')
     public inExperiment(experimentName: string): boolean {
+        if (!this.enabled) {
+            return false;
+        }
         this.sendTelemetryIfInExperiment(experimentName);
         return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
     }
@@ -160,7 +179,12 @@ export class ExperimentsManager implements IExperimentsManager {
         if (typeof (this.appEnvironment.machineId) !== 'string') {
             throw new Error('Machine ID should be a string');
         }
-        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number');
+        let hash: number;
+        if (oldExperimentSalts.find(oldSalt => oldSalt === salt)) {
+            hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'SHA512');
+        } else {
+            hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'FNV');
+        }
         return hash % 100 >= min && hash % 100 < max;
     }
 

@@ -11,7 +11,8 @@ import { ExtensionActivationManager } from '../../client/activation/activationMa
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { IExtensionActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
-import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
+import { ActiveResourceService } from '../../client/common/application/activeResource';
+import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { IDisposable } from '../../client/common/types';
@@ -21,7 +22,7 @@ import { InterpreterService } from '../../client/interpreter/interpreterService'
 import { sleep } from '../core';
 
 // tslint:disable:max-func-body-length no-any
-suite('Activation - ActivationManager', () => {
+suite('Language Server Activation - ActivationManager', () => {
     class ExtensionActivationManagerTest extends ExtensionActivationManager {
         // tslint:disable-next-line:no-unnecessary-override
         public addHandlers() {
@@ -41,11 +42,13 @@ suite('Activation - ActivationManager', () => {
     let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
     let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
     let interpreterService: IInterpreterService;
+    let activeResourceService: IActiveResourceService;
     let documentManager: typemoq.IMock<IDocumentManager>;
     let activationService1: IExtensionActivationService;
     let activationService2: IExtensionActivationService;
     setup(() => {
         workspaceService = mock(WorkspaceService);
+        activeResourceService = mock(ActiveResourceService);
         appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
         autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
         interpreterService = mock(InterpreterService);
@@ -53,12 +56,13 @@ suite('Activation - ActivationManager', () => {
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
-            [instance(activationService1), instance(activationService2)],
+            [instance(activationService1), instance(activationService2)], [],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,
             appDiagnostics.object,
-            instance(workspaceService)
+            instance(workspaceService),
+            instance(activeResourceService)
         );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {

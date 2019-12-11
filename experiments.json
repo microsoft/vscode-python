@@ -15,18 +15,78 @@
         "name": "ShowPlayIcon - start",
         "salt": "ShowPlayIcon",
         "max": 100,
+        "min": 0
+    },
+    {
+        "name": "ShowExtensionSurveyPrompt - enabled",
+        "salt": "ShowExtensionSurveyPrompt",
+        "max": 100,
         "min": 80
     },
     {
-        "name": "ShowPlayIcon - runFile",
-        "salt": "ShowPlayIcon",
-        "max": 60,
-        "min": 40
-    },
-    {
-        "name": "ShowPlayIcon - control",
-        "salt": "ShowPlayIcon",
+        "name": "ShowExtensionSurveyPrompt - control",
+        "salt": "ShowExtensionSurveyPrompt",
         "min": 0,
         "max": 20
+    },
+    {
+        "name": "DebugAdapterFactory - control",
+        "salt": "DebugAdapterFactory",
+        "min": 0,
+        "max": 20
+    },
+    {
+        "name": "DebugAdapterFactory - experiment",
+        "salt": "DebugAdapterFactory",
+        "min": 80,
+        "max": 100
+    },
+    {
+        "name": "PtvsdWheels37 - control",
+        "salt": "DebugAdapterFactory",
+        "min": 80,
+        "max": 87
+    },
+    {
+        "name": "PtvsdWheels37 - experiment",
+        "salt": "DebugAdapterFactory",
+        "min": 93,
+        "max": 100
+    },
+    {
+        "name": "Reload - control",
+        "salt": "DebugAdapterFactory",
+        "min": 93,
+        "max": 96
+    },
+    {
+        "name": "Reload - experiment",
+        "salt": "DebugAdapterFactory",
+        "min": 97,
+        "max": 100
+    },
+    {
+        "name": "LS - enabled",
+        "salt": "LS",
+        "min": 0,
+        "max": 4
+    },
+    {
+        "name": "LS - control",
+        "salt": "LS",
+        "min": 20,
+        "max": 24
+    },
+    {
+        "name": "AA_testing - control",
+        "salt": "AA_testing",
+        "min": 0,
+        "max": 10
+    },
+    {
+        "name": "AA_testing - experiment",
+        "salt": "AA_testing",
+        "min": 90,
+        "max": 100
     }
 ]

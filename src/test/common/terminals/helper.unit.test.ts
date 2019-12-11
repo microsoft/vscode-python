@@ -150,7 +150,6 @@ suite('Terminal Service helpers', () => {
         });
     });
 
-
     function title(resource?: Uri, interpreter?: PythonInterpreter) {
         return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
     }

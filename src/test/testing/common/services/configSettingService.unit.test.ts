@@ -22,7 +22,7 @@ import { ITestConfigSettingsService } from '../../../../client/testing/types';
 
 use(chaiPromise);
 
-const updateMethods: (keyof ITestConfigSettingsService)[] = ['updateTestArgs', 'disable', 'enable'];
+const updateMethods: (keyof Omit<ITestConfigSettingsService, 'getTestEnablingSetting'>)[] = ['updateTestArgs', 'disable', 'enable'];
 
 suite('Unit Tests - ConfigSettingsService', () => {
     UNIT_TEST_PRODUCTS.forEach(product => {

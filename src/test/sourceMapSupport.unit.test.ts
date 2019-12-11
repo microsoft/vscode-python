@@ -3,10 +3,12 @@
 
 'use strict';
 
-// tslint:disable:no-any no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file
+// tslint:disable:no-unused-expression chai-vague-errors no-unnecessary-override max-func-body-length max-classes-per-file match-default-export-name
 
 import { expect } from 'chai';
 import * as path from 'path';
+import rewiremock from 'rewiremock';
+import * as sinon from 'sinon';
 import { ConfigurationTarget, Disposable } from 'vscode';
 import { Diagnostics } from '../client/common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../client/constants';
@@ -22,6 +24,7 @@ suite('Source Map Support', () => {
         };
         const vscode = {
             workspace: {
+                // tslint:disable-next-line: no-any
                 getConfiguration: (setting: string, _defaultValue: any) => {
                     if (setting !== 'python.diagnostics') {
                         return;
@@ -52,6 +55,7 @@ suite('Source Map Support', () => {
 
     const disposables: Disposable[] = [];
     teardown(() => {
+        rewiremock.disable();
         disposables.forEach(disposable => {
             try {
                 disposable.dispose();
@@ -60,19 +64,26 @@ suite('Source Map Support', () => {
     });
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(false);
+        // tslint:disable-next-line: no-any
         initialize(stub.vscode as any);
         await sleep(100);
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
         expect(stub.stubInfo.messageDisplayed).to.be.equal(false, 'Message displayed');
     });
-    test('Test message is not displayed when source maps are not enabled', async () => {
+    test('Test message is displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true);
         const instance = new class extends SourceMapSupport {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
+        // tslint:disable-next-line: no-any
         }(stub.vscode as any);
+        rewiremock.enable();
+        const installStub = sinon.stub();
+        rewiremock('source-map-support').with({ install: installStub });
         await instance.initialize();
+
+        expect(installStub.callCount).to.be.equal(1);
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
         expect(stub.stubInfo.messageDisplayed).to.be.equal(true, 'Message displayed');
         expect(stub.stubInfo.configValueUpdated).to.be.equal(false, 'Config Value updated');
@@ -83,6 +94,7 @@ suite('Source Map Support', () => {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
+        // tslint:disable-next-line: no-any
         }(stub.vscode as any);
 
         await instance.initialize();
@@ -102,6 +114,7 @@ suite('Source Map Support', () => {
                 sourceFilesPassed.push(sourceFile);
                 return Promise.resolve();
             }
+        // tslint:disable-next-line: no-any
         }(stub.vscode as any);
 
         await instance.enableSourceMaps(enableSourceMaps);

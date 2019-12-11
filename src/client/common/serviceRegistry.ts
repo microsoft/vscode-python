@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { IExtensionActivationService } from '../activation/types';
+import { IExtensionSingleActivationService } from '../activation/types';
 import { IFileDownloader, IHttpClient } from '../common/types';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
@@ -9,6 +9,7 @@ import { ApplicationEnvironment } from './application/applicationEnvironment';
 import { ApplicationShell } from './application/applicationShell';
 import { CommandManager } from './application/commandManager';
 import { DebugService } from './application/debugService';
+import { DebugSessionTelemetry } from './application/debugSessionTelemetry';
 import { DocumentManager } from './application/documentManager';
 import { Extensions } from './application/extensions';
 import { LanguageService } from './application/languageService';
@@ -31,11 +32,20 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentsManager } from './experiments';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from './insidersBuild/downloadChannelRules';
+import {
+    ExtensionInsidersDailyChannelRule,
+    ExtensionInsidersOffChannelRule,
+    ExtensionInsidersWeeklyChannelRule
+} from './insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './insidersBuild/types';
+import {
+    ExtensionChannel,
+    IExtensionChannelRule,
+    IExtensionChannelService,
+    IInsiderExtensionPrompt
+} from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
 import { LiveShareApi } from './liveshare/liveshare';
 import { Logger } from './logger';
@@ -145,9 +155,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IShellDetector>(IShellDetector, UserEnvironmentShellDetector);
     serviceManager.addSingleton<IShellDetector>(IShellDetector, VSCEnvironmentShellDetector);
     serviceManager.addSingleton<IInsiderExtensionPrompt>(IInsiderExtensionPrompt, InsidersExtensionPrompt);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, InsidersExtensionService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, InsidersExtensionService);
     serviceManager.addSingleton<IExtensionChannelService>(IExtensionChannelService, ExtensionChannelService);
     serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersOffChannelRule, ExtensionChannel.off);
     serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersDailyChannelRule, ExtensionChannel.daily);
     serviceManager.addSingleton<IExtensionChannelRule>(IExtensionChannelRule, ExtensionInsidersWeeklyChannelRule, ExtensionChannel.weekly);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugSessionTelemetry);
 }

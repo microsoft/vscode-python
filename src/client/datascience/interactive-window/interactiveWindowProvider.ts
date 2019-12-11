@@ -23,19 +23,19 @@ interface ISyncData {
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
 
-    private activeInteractiveWindow : IInteractiveWindow | undefined;
-    private postOffice : PostOffice;
+    private activeInteractiveWindow: IInteractiveWindow | undefined;
+    private postOffice: PostOffice;
     private id: string;
-    private pendingSyncs : Map<string, ISyncData> = new Map<string, ISyncData>();
+    private pendingSyncs: Map<string, ISyncData> = new Map<string, ISyncData>();
     private executedCode: EventEmitter<string> = new EventEmitter<string>();
     private activeInteractiveWindowExecuteHandler: Disposable | undefined;
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IAsyncDisposableRegistry) asyncRegistry : IAsyncDisposableRegistry,
+        @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IConfigurationService) private configService: IConfigurationService
-        ) {
+    ) {
         asyncRegistry.push(this);
 
         // Create a post office so we can make sure interactive windows are created at the same time
@@ -53,15 +53,15 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.id = uuid();
     }
 
-    public getActive() : IInteractiveWindow | undefined {
+    public getActive(): IInteractiveWindow | undefined {
         return this.activeInteractiveWindow;
     }
 
-    public get onExecutedCode() : Event<string> {
+    public get onExecutedCode(): Event<string> {
         return this.executedCode.event;
     }
 
-    public async getOrCreateActive() : Promise<IInteractiveWindow> {
+    public async getOrCreateActive(): Promise<IInteractiveWindow> {
         if (!this.activeInteractiveWindow) {
             await this.create();
         }
@@ -77,14 +77,14 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         throw new Error(localize.DataScience.pythonInteractiveCreateFailed());
     }
 
-    public async getNotebookOptions() : Promise<INotebookServerOptions> {
+    public async getNotebookOptions(): Promise<INotebookServerOptions> {
         // Find the settings that we are going to launch our server with
         const settings = this.configService.getSettings();
         let serverURI: string | undefined = settings.datascience.jupyterServerURI;
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI === Settings.JupyterServerLocalLaunch) {
+        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
             serverURI = undefined;
         }
 
@@ -96,11 +96,11 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         };
     }
 
-    public dispose() : Promise<void> {
+    public dispose(): Promise<void> {
         return this.postOffice.dispose();
     }
 
-    private async create() : Promise<void> {
+    private async create(): Promise<IInteractiveWindow> {
         // Set it as soon as we create it. The .ctor for the interactive window
         // may cause a subclass to talk to the IInteractiveWindowProvider to get the active interactive window.
         this.activeInteractiveWindow = this.serviceContainer.get<IInteractiveWindow>(IInteractiveWindow);
@@ -109,7 +109,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(handler);
         this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
-        await this.activeInteractiveWindow.ready;
+        return this.activeInteractiveWindow;
     }
 
     private onPeerCountChanged(newCount: number) {
@@ -162,7 +162,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         }
     }
 
-    private async synchronizeCreate() : Promise<void> {
+    private async synchronizeCreate(): Promise<void> {
         // Create a new pending wait if necessary
         if (this.postOffice.peerCount > 0 || this.postOffice.role === vsls.Role.Guest) {
             const key = uuid();

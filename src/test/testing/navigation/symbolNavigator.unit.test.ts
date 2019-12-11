@@ -5,45 +5,49 @@
 
 import { expect } from 'chai';
 import * as path from 'path';
-import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { CancellationToken, CancellationTokenSource, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
-import { ConfigurationService } from '../../../client/common/configuration/service';
-import { ProcessService } from '../../../client/common/process/proc';
-import { ProcessServiceFactory } from '../../../client/common/process/processFactory';
-import { ExecutionResult, IProcessService, IProcessServiceFactory } from '../../../client/common/process/types';
-import { IConfigurationService, IDocumentSymbolProvider } from '../../../client/common/types';
+import { ExecutionResult, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import { IDocumentSymbolProvider } from '../../../client/common/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { TestFileSymbolProvider } from '../../../client/testing/navigation/symbolProvider';
 
 // tslint:disable:max-func-body-length no-any
 suite('Unit Tests - Navigation Command Handler', () => {
     let symbolProvider: IDocumentSymbolProvider;
-    let configService: IConfigurationService;
-    let processFactory: IProcessServiceFactory;
-    let processService: IProcessService;
+    let pythonExecFactory: typemoq.IMock<IPythonExecutionFactory>;
+    let pythonService: typemoq.IMock<IPythonExecutionService>;
     let doc: typemoq.IMock<TextDocument>;
     let token: CancellationToken;
     setup(() => {
-        configService = mock(ConfigurationService);
-        processFactory = mock(ProcessServiceFactory);
-        processService = mock(ProcessService);
+        pythonService = typemoq.Mock.ofType<IPythonExecutionService>();
+        pythonExecFactory = typemoq.Mock.ofType<IPythonExecutionFactory>();
+
+        // Both typemoq and ts-mockito fail to resolve promises on dynamically created mocks
+        // A solution is to mock the `then` on the mock that the `Promise` resolves to.
+        // typemoq: https://github.com/florinn/typemoq/issues/66#issuecomment-315681245
+        // ts-mockito: https://github.com/NagRock/ts-mockito/issues/163#issuecomment-536210863
+        // In this case, the factory below returns a promise that is a mock of python service
+        // so we need to mock the `then` on the service.
+        pythonService.setup((x: any) => x.then).returns(() => undefined);
+
+        pythonExecFactory.setup(factory => factory.create(typemoq.It.isAny())).returns(async () => pythonService.object);
+
         doc = typemoq.Mock.ofType<TextDocument>();
         token = new CancellationTokenSource().token;
-        symbolProvider = new TestFileSymbolProvider(instance(configService), instance(processFactory));
     });
     test('Ensure no symbols are returned when file has not been saved', async () => {
         doc.setup(d => d.isUntitled)
             .returns(() => true)
             .verifiable(typemoq.Times.once());
 
+        symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = await symbolProvider.provideDocumentSymbols(doc.object, token);
 
         expect(symbols).to.be.lengthOf(0);
         doc.verifyAll();
     });
     test('Ensure no symbols are returned when there are errors in running the code', async () => {
-        when(configService.getSettings(anything())).thenThrow(new Error('Kaboom'));
         doc.setup(d => d.isUntitled)
             .returns(() => false)
             .verifiable(typemoq.Times.once());
@@ -54,14 +58,19 @@ suite('Unit Tests - Navigation Command Handler', () => {
             .returns(() => Uri.file(__filename))
             .verifiable(typemoq.Times.atLeastOnce());
 
+        pythonService
+            .setup(service => service.exec(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(async () => {
+                return { stdout: '' };
+            });
+
+        symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = await symbolProvider.provideDocumentSymbols(doc.object, token);
 
-        verify(configService.getSettings(anything())).once();
         expect(symbols).to.be.lengthOf(0);
         doc.verifyAll();
     });
     test('Ensure no symbols are returned when there are no symbols to be returned', async () => {
-        const pythonPath = 'Hello There';
         const docUri = Uri.file(__filename);
         const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'), docUri.fsPath];
         const proc: ExecutionResult<string> = {
@@ -76,22 +85,20 @@ suite('Unit Tests - Navigation Command Handler', () => {
         doc.setup(d => d.uri)
             .returns(() => docUri)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(configService.getSettings(anything())).thenReturn({ pythonPath } as any);
-        when(processFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.exec(pythonPath, anything(), anything())).thenResolve(proc);
-        doc.setup(d => d.isDirty).returns(() => false);
-        doc.setup(d => d.uri).returns(() => docUri);
 
+        pythonService
+            .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
+            .returns(async () => proc)
+            .verifiable(typemoq.Times.once());
+
+        symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = await symbolProvider.provideDocumentSymbols(doc.object, token);
 
-        verify(configService.getSettings(anything())).once();
-        verify(processFactory.create(anything())).once();
-        verify(processService.exec(pythonPath, deepEqual(args), deepEqual({ throwOnStdErr: true, token }))).once();
         expect(symbols).to.be.lengthOf(0);
         doc.verifyAll();
+        pythonService.verifyAll();
     });
     test('Ensure symbols are returned', async () => {
-        const pythonPath = 'Hello There';
         const docUri = Uri.file(__filename);
         const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'symbolProvider.py'), docUri.fsPath];
         const proc: ExecutionResult<string> = {
@@ -131,19 +138,18 @@ suite('Unit Tests - Navigation Command Handler', () => {
         doc.setup(d => d.uri)
             .returns(() => docUri)
             .verifiable(typemoq.Times.atLeastOnce());
-        when(configService.getSettings(anything())).thenReturn({ pythonPath } as any);
-        when(processFactory.create(anything())).thenResolve(instance(processService));
-        when(processService.exec(pythonPath, anything(), anything())).thenResolve(proc);
-        doc.setup(d => d.isDirty).returns(() => false);
-        doc.setup(d => d.uri).returns(() => docUri);
 
+        pythonService
+            .setup(service => service.exec(typemoq.It.isValue(args), typemoq.It.isAny()))
+            .returns(async () => proc)
+            .verifiable(typemoq.Times.once());
+
+        symbolProvider = new TestFileSymbolProvider(pythonExecFactory.object);
         const symbols = (await symbolProvider.provideDocumentSymbols(doc.object, token)) as SymbolInformation[];
 
-        verify(configService.getSettings(anything())).once();
-        verify(processFactory.create(anything())).once();
-        verify(processService.exec(pythonPath, deepEqual(args), deepEqual({ throwOnStdErr: true, token }))).once();
         expect(symbols).to.be.lengthOf(3);
         doc.verifyAll();
+        pythonService.verifyAll();
         expect(symbols[0].kind).to.be.equal(SymbolKind.Class);
         expect(symbols[0].name).to.be.equal('one');
         expect(symbols[0].location.range).to.be.deep.equal(new Range(1, 2, 3, 4));

@@ -5,6 +5,7 @@ import { IApplicationShell, IWorkspaceService } from '../common/application/type
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import '../common/extensions';
 import { isNotInstalledError } from '../common/helpers';
+import { traceError } from '../common/logger';
 import { IPythonToolExecutionService } from '../common/process/types';
 import { IDisposableRegistry, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
@@ -93,7 +94,7 @@ export abstract class BaseFormatter {
             const isInstalled = await installer.isInstalled(this.product, resource);
             if (!isInstalled) {
                 customError += `\nYou could either install the '${this.Id}' formatter, turn it off or use another formatter.`;
-                installer.promptToInstall(this.product, resource).catch(ex => console.error('Python Extension: promptToInstall', ex));
+                installer.promptToInstall(this.product, resource).catch(ex => traceError('Python Extension: promptToInstall', ex));
             }
         }
 

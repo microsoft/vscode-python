@@ -3,26 +3,30 @@
 
 from __future__ import absolute_import, print_function
 
-import os.path
 import unittest
 
+from testing_tools.adapter.util import fix_path, fix_relpath
 from testing_tools.adapter.info import TestInfo, TestPath, ParentInfo
-from testing_tools.adapter.discovery import DiscoveredTests
+from testing_tools.adapter.discovery import fix_nodeid, DiscoveredTests
 
 
-def fix_path(nodeid):
-    return nodeid.replace('/', os.path.sep)
+def _fix_nodeid(nodeid):
+
+    nodeid = nodeid.replace('\\', '/')
+    if not nodeid.startswith('./'):
+        nodeid = './' + nodeid
+    return nodeid
 
 
 class DiscoveredTestsTests(unittest.TestCase):
 
     def test_list(self):
         testroot = fix_path('/a/b/c')
-        relfile = 'test_spam.py'
-        relfileid = os.path.join('.', relfile)
+        relfile = fix_path('./test_spam.py')
         tests = [
             TestInfo(
-                id=relfile + '::test_each[10-10]',
+                # missing "./":
+                id='test_spam.py::test_each[10-10]',
                 name='test_each[10-10]',
                 path=TestPath(
                     root=testroot,
@@ -32,10 +36,11 @@ class DiscoveredTestsTests(unittest.TestCase):
                     ),
                 source='{}:{}'.format(relfile, 10),
                 markers=None,
-                parentid=relfile + '::test_each',
+                # missing "./":
+                parentid='test_spam.py::test_each',
                 ),
             TestInfo(
-                id=relfile + '::All::BasicTests::test_first',
+                id='test_spam.py::All::BasicTests::test_first',
                 name='test_first',
                 path=TestPath(
                     root=testroot,
@@ -45,22 +50,22 @@ class DiscoveredTestsTests(unittest.TestCase):
                     ),
                 source='{}:{}'.format(relfile, 62),
                 markers=None,
-                parentid=relfile + '::All::BasicTests',
+                parentid='test_spam.py::All::BasicTests',
                 ),
             ]
         allparents= [
-            [(relfileid + '::test_each', 'test_each', 'function'),
-             (relfileid, relfile, 'file'),
+            [(fix_path('./test_spam.py::test_each'), 'test_each', 'function'),
+             (fix_path('./test_spam.py'), 'test_spam.py', 'file'),
              ('.', testroot, 'folder'),
              ],
-            [(relfileid + '::All::BasicTests', 'BasicTests', 'suite'),
-             (relfileid + '::All', 'All', 'suite'),
-             (relfileid, relfile, 'file'),
+            [(fix_path('./test_spam.py::All::BasicTests'), 'BasicTests', 'suite'),
+             (fix_path('./test_spam.py::All'), 'All', 'suite'),
+             (fix_path('./test_spam.py'), 'test_spam.py', 'file'),
              ('.', testroot, 'folder'),
              ],
             ]
-        expected = [test._replace(id=os.path.join('.', test.id),
-                                  parentid=os.path.join('.', test.parentid))
+        expected = [test._replace(id=_fix_nodeid(test.id),
+                                  parentid=_fix_nodeid(test.parentid))
                     for test in tests]
         discovered = DiscoveredTests()
         for test, parents in zip(tests, allparents):
@@ -86,7 +91,7 @@ class DiscoveredTestsTests(unittest.TestCase):
                     relfile='test_spam.py',
                     func='test_each',
                     ),
-                source='{}:{}'.format('test_spam.py', 11),
+                source='test_spam.py:11',
                 markers=[],
                 parentid='./test_spam.py',
                 ),
@@ -104,45 +109,50 @@ class DiscoveredTestsTests(unittest.TestCase):
     def test_parents(self):
         testroot = fix_path('/a/b/c')
         relfile = fix_path('x/y/z/test_spam.py')
-        relfileid = os.path.join('.', relfile)
         tests = [
             TestInfo(
+                # missing "./", using pathsep:
                 id=relfile + '::test_each[10-10]',
                 name='test_each[10-10]',
                 path=TestPath(
                     root=testroot,
-                    relfile=relfile,
+                    relfile=fix_relpath(relfile),
                     func='test_each',
                     sub=['[10-10]'],
                     ),
                 source='{}:{}'.format(relfile, 10),
                 markers=None,
+                # missing "./", using pathsep:
                 parentid=relfile + '::test_each',
                 ),
             TestInfo(
+                # missing "./", using pathsep:
                 id=relfile + '::All::BasicTests::test_first',
                 name='test_first',
                 path=TestPath(
                     root=testroot,
-                    relfile=relfile,
+                    relfile=fix_relpath(relfile),
                     func='All.BasicTests.test_first',
                     sub=None,
                     ),
                 source='{}:{}'.format(relfile, 61),
                 markers=None,
+                # missing "./", using pathsep:
                 parentid=relfile + '::All::BasicTests',
                 ),
             ]
         allparents= [
-            [(relfileid + '::test_each', 'test_each', 'function'),
-             (relfileid, relfile, 'file'),
+            # missing "./", using pathsep:
+            [(relfile + '::test_each', 'test_each', 'function'),
+             (relfile, relfile, 'file'),
              ('.', testroot, 'folder'),
              ],
-            [(relfileid + '::All::BasicTests', 'BasicTests', 'suite'),
-             (relfileid + '::All', 'All', 'suite'),
-             (relfileid, 'test_spam.py', 'file'),
-             (fix_path('./x/y/z'), 'z', 'folder'),
-             (fix_path('./x/y'), 'y', 'folder'),
+            # missing "./", using pathsep:
+            [(relfile + '::All::BasicTests', 'BasicTests', 'suite'),
+             (relfile + '::All', 'All', 'suite'),
+             (relfile, 'test_spam.py', 'file'),
+             (fix_path('x/y/z'), 'z', 'folder'),
+             (fix_path('x/y'), 'y', 'folder'),
              (fix_path('./x'), 'x', 'folder'),
              ('.', testroot, 'folder'),
              ],
@@ -161,74 +171,81 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot,
                 ),
             ParentInfo(
-                id=fix_path('./x'),
+                id='./x',
                 kind='folder',
                 name='x',
                 root=testroot,
+                relpath=fix_path('./x'),
                 parentid='.',
                 ),
             ParentInfo(
-                id=fix_path('./x/y'),
+                id='./x/y',
                 kind='folder',
                 name='y',
                 root=testroot,
-                parentid=fix_path('./x'),
+                relpath=fix_path('./x/y'),
+                parentid='./x',
                 ),
             ParentInfo(
-                id=fix_path('./x/y/z'),
+                id='./x/y/z',
                 kind='folder',
                 name='z',
                 root=testroot,
-                parentid=fix_path('./x/y'),
+                relpath=fix_path('./x/y/z'),
+                parentid='./x/y',
                 ),
             ParentInfo(
-                id=relfileid,
+                id='./x/y/z/test_spam.py',
                 kind='file',
-                name=os.path.basename(relfile),
+                name='test_spam.py',
                 root=testroot,
-                parentid=os.path.dirname(relfileid),
+                relpath=fix_relpath(relfile),
+                parentid='./x/y/z',
                 ),
             ParentInfo(
-                id=relfileid + '::All',
+                id='./x/y/z/test_spam.py::All',
                 kind='suite',
                 name='All',
                 root=testroot,
-                parentid=relfileid,
+                parentid='./x/y/z/test_spam.py',
                 ),
             ParentInfo(
-                id=relfileid + '::All::BasicTests',
+                id='./x/y/z/test_spam.py::All::BasicTests',
                 kind='suite',
                 name='BasicTests',
                 root=testroot,
-                parentid=relfileid + '::All',
+                parentid='./x/y/z/test_spam.py::All',
                 ),
             ParentInfo(
-                id=relfileid + '::test_each',
+                id='./x/y/z/test_spam.py::test_each',
                 kind='function',
                 name='test_each',
                 root=testroot,
-                parentid=relfileid,
+                parentid='./x/y/z/test_spam.py',
                 ),
             ])
 
     def test_add_test_simple(self):
         testroot = fix_path('/a/b/c')
         relfile = 'test_spam.py'
-        relfileid = os.path.join('.', relfile)
         test = TestInfo(
+            # missing "./":
             id=relfile + '::test_spam',
             name='test_spam',
             path=TestPath(
                 root=testroot,
+                # missing "./":
                 relfile=relfile,
                 func='test_spam',
                 ),
+            # missing "./":
             source='{}:{}'.format(relfile, 11),
             markers=[],
+            # missing "./":
             parentid=relfile,
             )
-        expected = test._replace(id=os.path.join('.', test.id),
-                                 parentid=relfileid)
+        expected = test._replace(id=_fix_nodeid(test.id),
+                                 parentid=_fix_nodeid(test.parentid))
         discovered = DiscoveredTests()
 
         before = list(discovered), discovered.parents
@@ -247,10 +264,11 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot,
                 ),
             ParentInfo(
-                id=relfileid,
+                id='./test_spam.py',
                 kind='file',
                 name=relfile,
                 root=testroot,
+                relpath=relfile,
                 parentid='.',
                 ),
             ]))
@@ -259,37 +277,38 @@ class DiscoveredTestsTests(unittest.TestCase):
         # the first root
         testroot1 = fix_path('/a/b/c')
         relfile1 = 'test_spam.py'
-        relfileid1 = os.path.join('.', relfile1)
         alltests = [
             TestInfo(
+                # missing "./":
                 id=relfile1 + '::test_spam',
                 name='test_spam',
                 path=TestPath(
                     root=testroot1,
-                    relfile=relfile1,
+                    relfile=fix_relpath(relfile1),
                     func='test_spam',
                     ),
                 source='{}:{}'.format(relfile1, 10),
                 markers=[],
+                # missing "./":
                 parentid=relfile1,
                 ),
             ]
         allparents = [
-            [(relfileid1, 'test_spam.py', 'file'),
+            # missing "./":
+            [(relfile1, 'test_spam.py', 'file'),
              ('.', testroot1, 'folder'),
              ],
             ]
         # the second root
         testroot2 = fix_path('/x/y/z')
-        relfile2 = 'w/test_eggs.py'
-        relfileid2 = os.path.join('.', relfile2)
+        relfile2 = fix_path('w/test_eggs.py')
         alltests.extend([
             TestInfo(
-                id=relfile2 + 'BasicTests::test_first',
+                id=relfile2 + '::BasicTests::test_first',
                 name='test_first',
                 path=TestPath(
                     root=testroot2,
-                    relfile=relfile2,
+                    relfile=fix_relpath(relfile2),
                     func='BasicTests.test_first',
                     ),
                 source='{}:{}'.format(relfile2, 61),
@@ -298,8 +317,9 @@ class DiscoveredTestsTests(unittest.TestCase):
                 ),
             ])
         allparents.extend([
-            [(relfileid2 + '::BasicTests', 'BasicTests', 'suite'),
-             (relfileid2, 'test_eggs.py', 'file'),
+            # missing "./", using pathsep:
+            [(relfile2 + '::BasicTests', 'BasicTests', 'suite'),
+             (relfile2, 'test_eggs.py', 'file'),
              (fix_path('./w'), 'w', 'folder'),
              ('.', testroot2, 'folder'),
              ],
@@ -315,29 +335,29 @@ class DiscoveredTestsTests(unittest.TestCase):
         self.assertEqual(tests, [
             # the first root
             TestInfo(
-                id=relfileid1 + '::test_spam',
+                id='./test_spam.py::test_spam',
                 name='test_spam',
                 path=TestPath(
                     root=testroot1,
-                    relfile=relfile1,
+                    relfile=fix_relpath(relfile1),
                     func='test_spam',
                     ),
                 source='{}:{}'.format(relfile1, 10),
                 markers=[],
-                parentid=relfileid1,
+                parentid='./test_spam.py',
                 ),
             # the secondroot
             TestInfo(
-                id=relfileid2 + 'BasicTests::test_first',
+                id='./w/test_eggs.py::BasicTests::test_first',
                 name='test_first',
                 path=TestPath(
                     root=testroot2,
-                    relfile=relfile2,
+                    relfile=fix_relpath(relfile2),
                     func='BasicTests.test_first',
                     ),
                 source='{}:{}'.format(relfile2, 61),
                 markers=[],
-                parentid=relfileid2 + '::BasicTests',
+                parentid='./w/test_eggs.py::BasicTests',
                 ),
             ])
         self.assertEqual(parents, [
@@ -348,11 +368,12 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot1,
                 ),
             ParentInfo(
-                id=relfileid1,
+                id='./test_spam.py',
                 kind='file',
-                name=os.path.basename(relfile1),
+                name='test_spam.py',
                 root=testroot1,
-                parentid=os.path.dirname(relfileid1),
+                relpath=fix_relpath(relfile1),
+                parentid='.',
                 ),
             # the secondroot
             ParentInfo(
@@ -361,25 +382,27 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot2,
                 ),
             ParentInfo(
-                id=fix_path('./w'),
+                id='./w',
                 kind='folder',
                 name='w',
                 root=testroot2,
+                relpath=fix_path('./w'),
                 parentid='.',
                 ),
             ParentInfo(
-                id=relfileid2,
+                id='./w/test_eggs.py',
                 kind='file',
-                name=os.path.basename(relfile2),
+                name='test_eggs.py',
                 root=testroot2,
-                parentid=os.path.dirname(relfileid2),
+                relpath=fix_relpath(relfile2),
+                parentid='./w',
                 ),
             ParentInfo(
-                id=relfileid2 + '::BasicTests',
+                id='./w/test_eggs.py::BasicTests',
                 kind='suite',
                 name='BasicTests',
                 root=testroot2,
-                parentid=relfileid2,
+                parentid='./w/test_eggs.py',
                 ),
             ])
 
@@ -462,6 +485,9 @@ class DiscoveredTestsTests(unittest.TestCase):
                  ('.', testroot, 'folder'),
                  ],
                 ]
+        expected = [test._replace(id=_fix_nodeid(test.id),
+                                  parentid=_fix_nodeid(test.parentid))
+                    for test in alltests]
 
         discovered = DiscoveredTests()
 
@@ -471,7 +497,7 @@ class DiscoveredTestsTests(unittest.TestCase):
         parents = discovered.parents
 
         self.maxDiff = None
-        self.assertEqual(tests, alltests)
+        self.assertEqual(tests, expected)
         self.assertEqual(parents, [
             ParentInfo(
                 id='.',
@@ -479,39 +505,44 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot,
                 ),
             ParentInfo(
-                id=fix_path('./x'),
+                id='./x',
                 kind='folder',
                 name='x',
                 root=testroot,
+                relpath=fix_path('./x'),
                 parentid='.',
                 ),
             ParentInfo(
-                id=doctestfile,
+                id='./x/test_doctest.txt',
                 kind='file',
-                name=os.path.basename(doctestfile),
+                name='test_doctest.txt',
                 root=testroot,
-                parentid=os.path.dirname(doctestfile),
+                relpath=fix_path(doctestfile),
+                parentid='./x',
                 ),
             ParentInfo(
-                id=fix_path('./x/y'),
+                id='./x/y',
                 kind='folder',
                 name='y',
                 root=testroot,
-                parentid=fix_path('./x'),
+                relpath=fix_path('./x/y'),
+                parentid='./x',
                 ),
             ParentInfo(
-                id=fix_path('./x/y/z'),
+                id='./x/y/z',
                 kind='folder',
                 name='z',
                 root=testroot,
-                parentid=fix_path('./x/y'),
+                relpath=fix_path('./x/y/z'),
+                parentid='./x/y',
                 ),
             ParentInfo(
-                id=relfile,
+                id='./x/y/z/test_eggs.py',
                 kind='file',
-                name=os.path.basename(relfile),
+                name='test_eggs.py',
                 root=testroot,
-                parentid=os.path.dirname(relfile),
+                relpath=fix_relpath(relfile),
+                parentid='./x/y/z',
                 ),
             ])
 
@@ -556,6 +587,9 @@ class DiscoveredTestsTests(unittest.TestCase):
              ('.', testroot, 'folder'),
              ],
             ]
+        expected = [test._replace(id=_fix_nodeid(test.id),
+                                  parentid=_fix_nodeid(test.parentid))
+                    for test in alltests]
 
         discovered = DiscoveredTests()
         for test, parents in zip(alltests, allparents):
@@ -564,7 +598,7 @@ class DiscoveredTestsTests(unittest.TestCase):
         parents = discovered.parents
 
         self.maxDiff = None
-        self.assertEqual(tests, alltests)
+        self.assertEqual(tests, expected)
         self.assertEqual(parents, [
             ParentInfo(
                 id='.',
@@ -572,24 +606,25 @@ class DiscoveredTestsTests(unittest.TestCase):
                 name=testroot,
                 ),
             ParentInfo(
-                id=relfile,
+                id='./test_eggs.py',
                 kind='file',
-                name=os.path.basename(relfile),
+                name='test_eggs.py',
                 root=testroot,
-                parentid=os.path.dirname(relfile),
+                relpath=fix_relpath(relfile),
+                parentid='.'
                 ),
             ParentInfo(
-                id=relfile + '::TestOuter',
+                id='./test_eggs.py::TestOuter',
                 kind='suite',
                 name='TestOuter',
                 root=testroot,
-                parentid=relfile,
+                parentid='./test_eggs.py',
                 ),
             ParentInfo(
-                id=relfile + '::TestOuter::TestInner',
+                id='./test_eggs.py::TestOuter::TestInner',
                 kind='suite',
                 name='TestInner',
                 root=testroot,
-                parentid=relfile + '::TestOuter',
+                parentid='./test_eggs.py::TestOuter',
                 ),
             ])

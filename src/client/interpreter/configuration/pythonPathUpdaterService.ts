@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { ConfigurationTarget, Uri, window } from 'vscode';
+import { traceError } from '../../common/logger';
 import { InterpreterInfomation, IPythonExecutionFactory } from '../../common/process/types';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
@@ -31,11 +32,11 @@ export class PythonPathUpdaterService implements IPythonPathUpdaterServiceManage
             // tslint:disable-next-line:no-unsafe-any prefer-type-cast
             const message = reason && typeof reason.message === 'string' ? reason.message as string : '';
             window.showErrorMessage(`Failed to set 'pythonPath'. Error: ${message}`);
-            console.error(reason);
+            traceError(reason);
         }
         // do not wait for this to complete
         this.sendTelemetry(stopWatch.elapsedTime, failed, trigger, pythonPath)
-            .catch(ex => console.error('Python Extension: sendTelemetry', ex));
+            .catch(ex => traceError('Python Extension: sendTelemetry', ex));
     }
     private async sendTelemetry(duration: number, failed: boolean, trigger: 'ui' | 'shebang' | 'load', pythonPath: string) {
         const telemtryProperties: PythonInterpreterTelemetry = {

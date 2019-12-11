@@ -1,5 +1,5 @@
 .measure-width-div {
-    width: 100vw;
+    width: 95vw;
 	visibility: hidden;
 	position: absolute;
 }
@@ -105,4 +105,12 @@
 
 .monaco-editor-hover .hover-row.status-bar .actions .action-container .action .icon {
 	padding-right: 4px;
+}
+
+.monaco-editor .margin {
+    background-color: transparent !important;
+}
+
+.monaco-editor .parameter-hints-widget > .wrapper {
+	overflow: hidden;
 }

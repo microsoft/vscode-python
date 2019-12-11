@@ -24,7 +24,6 @@ import {
     DebugConfigurationProvider,
     Disposable,
     ExtensionContext,
-    extensions,
     languages,
     Memento,
     OutputChannel,
@@ -62,7 +61,7 @@ import {
     WORKSPACE_MEMENTO
 } from './common/types';
 import { createDeferred } from './common/utils/async';
-import { Common } from './common/utils/localize';
+import { Common, OutputChannelNames } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
@@ -70,15 +69,19 @@ import { DebuggerTypeName } from './debugger/constants';
 import { DebugSessionEventDispatcher } from './debugger/extension/hooks/eventHandlerDispatcher';
 import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
-import { IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
+import { IDebugAdapterDescriptorFactory, IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
+import {
+    AutoSelectionRule,
+    IInterpreterAutoSelectionRule,
+    IInterpreterAutoSelectionService
+} from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
 import {
     ICondaService,
+    IInterpreterLocatorProgressHandler,
     IInterpreterLocatorProgressService,
     IInterpreterService,
-    InterpreterLocatorProgressHandler,
     PythonInterpreter
 } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
@@ -88,7 +91,6 @@ import { IServiceContainer, IServiceManager } from './ioc/types';
 import { getLanguageConfiguration } from './language/languageConfiguration';
 import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
-import { ILintingEngine } from './linters/types';
 import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
 import { LinterProvider } from './providers/linterProvider';
@@ -97,7 +99,6 @@ import { registerTypes as providersRegisterTypes } from './providers/serviceRegi
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
 import { TerminalProvider } from './providers/terminalProvider';
 import { ISortImportsEditingProvider } from './providers/types';
-import { activateUpdateSparkLibraryProvider } from './providers/updateSparkLibraryProvider';
 import { sendTelemetryEvent } from './telemetry';
 import { EventName } from './telemetry/constants';
 import { EditorLoadTelemetry, IImportTracker } from './telemetry/types';
@@ -155,11 +156,7 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
     interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
-        .catch(ex => console.error('Python Extension: interpreterManager.refresh', ex));
-
-    const jupyterExtension = extensions.getExtension('donjayamanne.jupyter');
-    const lintingEngine = serviceManager.get<ILintingEngine>(ILintingEngine);
-    lintingEngine.linkJupyterExtension(jupyterExtension).ignoreErrors();
+        .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
 
     // Activate data science features
     const dataScience = serviceManager.get<IDataScience>(IDataScience);
@@ -185,10 +182,11 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     deprecationMgr.initialize();
     context.subscriptions.push(deprecationMgr);
 
-    context.subscriptions.push(activateUpdateSparkLibraryProvider());
-
     context.subscriptions.push(new ReplProvider(serviceContainer));
-    context.subscriptions.push(new TerminalProvider(serviceContainer));
+
+    const terminalProvider = new TerminalProvider(serviceContainer);
+    await terminalProvider.initialize(window.activeTerminal);
+    context.subscriptions.push(terminalProvider);
 
     context.subscriptions.push(languages.registerCodeActionsProvider(PYTHON, new PythonCodeActionProvider(), { providedCodeActionKinds: [CodeActionKind.SourceOrganizeImports] }));
 
@@ -200,7 +198,11 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     durations.endActivateTime = stopWatch.elapsedTime;
     activationDeferred.resolve();
 
-    const api = buildApi(Promise.all([activationDeferred.promise, activationPromise]));
+    const api = buildApi(
+        Promise.all([activationDeferred.promise, activationPromise]),
+        serviceContainer.get<IExperimentsManager>(IExperimentsManager),
+        serviceContainer.get<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory)
+    );
     // In test environment return the DI Container.
     if (isTestExecution()) {
         // tslint:disable:no-any
@@ -237,8 +239,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     serviceManager.addSingletonInstance<Memento>(IMemento, context.workspaceState, WORKSPACE_MEMENTO);
     serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, context);
 
-    const standardOutputChannel = window.createOutputChannel('Python');
-    const unitTestOutChannel = window.createOutputChannel('Python Test Log');
+    const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
+    const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
 
@@ -280,7 +282,7 @@ async function initializeServices(context: ExtensionContext, serviceManager: Ser
     disposables.push(cmdManager.registerCommand(Commands.ViewOutput, () => outputChannel.show()));
 
     // Display progress of interpreter refreshes only after extension has activated.
-    serviceContainer.get<InterpreterLocatorProgressHandler>(InterpreterLocatorProgressHandler).register();
+    serviceContainer.get<IInterpreterLocatorProgressHandler>(IInterpreterLocatorProgressHandler).register();
     serviceContainer.get<IInterpreterLocatorProgressService>(IInterpreterLocatorProgressService).register();
     serviceContainer.get<IApplicationDiagnostics>(IApplicationDiagnostics).register();
     serviceContainer.get<ITestCodeNavigatorCommandHandler>(ITestCodeNavigatorCommandHandler).register();
@@ -353,7 +355,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
     const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : false;
-    const hasPython3 = interpreters
+    const hasPython3 = interpreters!
         .filter(item => item && item.version ? item.version.major === 3 : false)
         .length > 0;
 

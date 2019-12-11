@@ -1,40 +1,41 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../common/extensions';
-
 import { JSONObject } from '@phosphor/coreutils';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, multiInject, named, optional } from 'inversify';
 import { URL } from 'url';
 import * as vscode from 'vscode';
-
-import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
+import { ICommandManager, IDebugService, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
+import '../common/extensions';
 import { traceError } from '../common/logger';
-import {
-    BANNER_NAME_DS_SURVEY,
-    IConfigurationService,
-    IDisposable,
-    IDisposableRegistry,
-    IExtensionContext,
-    IPythonExtensionBanner
-} from '../common/types';
-import { debounceAsync } from '../common/utils/decorators';
+import { BANNER_NAME_DS_SURVEY, GLOBAL_MEMENTO, IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext, IMemento, IPythonExtensionBanner } from '../common/types';
+import { waitForPromise } from '../common/utils/async';
+import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
+import { noop } from '../common/utils/misc';
+import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameters } from '../common/utils/multiStepInput';
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
-import { ICodeWatcher, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener } from './types';
+import { createRemoteConnectionInfo } from './jupyter/jupyterUtils';
+import { KernelSelector, KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
+import { ICodeWatcher, IConnection, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterSessionManagerFactory, INotebookEditorProvider } from './types';
+
+interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
+    newChoice: boolean;
+}
 
 @injectable()
 export class DataScience implements IDataScience {
     public isDisposed: boolean = false;
-    private readonly commandListeners: IDataScienceCommandListener[];
     private readonly dataScienceSurveyBanner: IPythonExtensionBanner;
     private changeHandler: IDisposable | undefined;
     private startTime: number = Date.now();
+    private localLabel = `$(zap) ${localize.DataScience.jupyterSelectURILocalLabel()}`;
+    private newLabel = `$(server) ${localize.DataScience.jupyterSelectURINewLabel()}`;
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
@@ -42,10 +43,15 @@ export class DataScience implements IDataScience {
         @inject(IDataScienceCodeLensProvider) private dataScienceCodeLensProvider: IDataScienceCodeLensProvider,
         @inject(IConfigurationService) private configuration: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
-        @inject(IApplicationShell) private appShell: IApplicationShell,
-        @inject(IWorkspaceService) private workspace: IWorkspaceService
+        @inject(IWorkspaceService) private workspace: IWorkspaceService,
+        @multiInject(IDataScienceCommandListener) @optional() private commandListeners: IDataScienceCommandListener[] | undefined,
+        @inject(INotebookEditorProvider) private notebookProvider: INotebookEditorProvider,
+        @inject(IDebugService) private debugService: IDebugService,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
+        @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
+        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
+        @inject(KernelSelector) private kernelSelector: KernelSelector
     ) {
-        this.commandListeners = this.serviceContainer.getAll<IDataScienceCommandListener>(IDataScienceCommandListener);
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
 
@@ -215,20 +221,20 @@ export class DataScience implements IDataScience {
     }
 
     @captureTelemetry(Telemetry.SelectJupyterURI)
-    public async selectJupyterURI(): Promise<void> {
-        const quickPickOptions = [localize.DataScience.jupyterSelectURILaunchLocal(), localize.DataScience.jupyterSelectURISpecifyURI()];
-        const selection = await this.appShell.showQuickPick(quickPickOptions, { ignoreFocusOut: true });
-        switch (selection) {
-            case localize.DataScience.jupyterSelectURILaunchLocal():
-                return this.setJupyterURIToLocal();
-                break;
-            case localize.DataScience.jupyterSelectURISpecifyURI():
-                return this.selectJupyterLaunchURI();
-                break;
-            default:
-                // If user cancels quick pick we will get undefined as the selection and fall through here
-                break;
-        }
+    public selectJupyterURI(): Promise<void> {
+        const multiStep = this.multiStepFactory.create<{}>();
+        return multiStep.run(this.startSelectingURI.bind(this), {});
+    }
+
+    @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
+    public async selectLocalJupyterKernel(): Promise<KernelSpecInterpreter> {
+        return this.kernelSelector.selectLocalKernel();
+    }
+
+    @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
+    public async selectRemoteJupyterKernel(connInfo: IConnection): Promise<KernelSpecInterpreter> {
+        const session = await this.jupyterSessionManagerFactory.create(connInfo);
+        return this.kernelSelector.selectRemoteKernel(session);
     }
 
     public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {
@@ -243,22 +249,94 @@ export class DataScience implements IDataScience {
         }
     }
 
+    @captureTelemetry(Telemetry.DebugStepOver)
+    public async debugStepOver(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        // Make sure that we are in debug mode
+        if (this.debugService.activeDebugSession) {
+            this.commandManager.executeCommand('workbench.action.debug.stepOver');
+        }
+    }
+
+    @captureTelemetry(Telemetry.DebugStop)
+    public async debugStop(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        // Make sure that we are in debug mode
+        if (this.debugService.activeDebugSession) {
+            this.commandManager.executeCommand('workbench.action.debug.stop');
+        }
+    }
+
+    @captureTelemetry(Telemetry.DebugContinue)
+    public async debugContinue(): Promise<void> {
+        this.dataScienceSurveyBanner.showBanner().ignoreErrors();
+
+        // Make sure that we are in debug mode
+        if (this.debugService.activeDebugSession) {
+            this.commandManager.executeCommand('workbench.action.debug.continue');
+        }
+    }
+    private validateSelectJupyterURI = async (inputText: string): Promise<string | undefined> => {
+        try {
+            // tslint:disable-next-line:no-unused-expression
+            new URL(inputText);
+
+            // Double check http
+            if (!inputText.toLowerCase().includes('http')) {
+                throw new Error('Has to be http');
+            }
+        } catch {
+            return localize.DataScience.jupyterSelectURIInvalidURI();
+        }
+    }
+
+    private async startSelectingURI(
+        input: IMultiStepInput<{}>,
+        _state: {}): Promise<InputStep<{}> | void> {
+
+        // First step, show a quick pick to choose either the remote or the local.
+        // newChoice element will be set if the user picked 'enter a new server'
+        const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
+            placeholder: localize.DataScience.jupyterSelectURIQuickPickPlaceholder(),
+            items: await this.getUriPickList(),
+            title: localize.DataScience.jupyterSelectURIQuickPickTitle()
+        });
+        if (item.label === this.localLabel) {
+            await this.setJupyterURIToLocal();
+        } else if (!item.newChoice) {
+            await this.setJupyterURIToRemote(item.label);
+        } else {
+            return this.selectRemoteURI.bind(this);
+        }
+    }
+
+    private async selectRemoteURI(
+        input: IMultiStepInput<{}>,
+        _state: {}): Promise<InputStep<{}> | void> {
+        // Ask the user to enter a URI to connect to.
+        const uri = await input.showInputBox({
+            title: localize.DataScience.jupyterSelectURIPrompt(),
+            value: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe',
+            validate: this.validateSelectJupyterURI,
+            prompt: ''
+        });
+
+        if (uri) {
+            await this.setJupyterURIToRemote(uri);
+        }
+    }
+
     @captureTelemetry(Telemetry.SetJupyterURIToLocal)
     private async setJupyterURIToLocal(): Promise<void> {
         await this.configuration.updateSetting('dataScience.jupyterServerURI', Settings.JupyterServerLocalLaunch, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
-    private async selectJupyterLaunchURI(): Promise<void> {
-        // First get the proposed URI from the user
-        const userURI = await this.appShell.showInputBox({
-            prompt: localize.DataScience.jupyterSelectURIPrompt(),
-            placeHolder: 'https://hostname:8080/?token=849d61a414abafab97bc4aab1f3547755ddc232c2b8cb7fe', validateInput: this.validateURI, ignoreFocusOut: true
-        });
-
-        if (userURI) {
-            await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
-        }
+    private async setJupyterURIToRemote(userURI: string): Promise<void> {
+        this.addToUriList(userURI);
+        await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
     @captureTelemetry(Telemetry.AddCellBelow)
@@ -268,6 +346,80 @@ export class DataScience implements IDataScience {
         if (activeEditor && activeCodeWatcher) {
             return activeCodeWatcher.addEmptyCellToBottom();
         }
+    }
+
+    private async getRunningServerDetails(uri: string): Promise<{ label: string; detail: string } | undefined> {
+        try {
+            const connection = createRemoteConnectionInfo(uri, this.configuration.getSettings().datascience);
+            const sessionManager = await waitForPromise(this.jupyterSessionManagerFactory.create(connection, true), 2000);
+            if (sessionManager) {
+                const kernels = await sessionManager.getRunningKernels();
+                const lastActiveTime = kernels.map(k => k.lastActivityTime).reduce((p, c) => {
+                    if (!p || c > p) {
+                        return c;
+                    }
+                    return p;
+                });
+                const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
+                return {
+                    label: uri,
+                    detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(lastActiveTime.toLocaleString(), activeConnectCount.toString())
+                };
+            }
+        } catch (e) {
+            traceError('Error getting running server details', e);
+        }
+        return {
+            label: uri,
+            detail: localize.DataScience.jupyterSelectURINotRunningDetail() // Cannot compute right now.
+        };
+    }
+
+    private async getUriPickList(): Promise<ISelectUriQuickPickItem[]> {
+        // Always have 'local' and 'add new'
+        const items: ISelectUriQuickPickItem[] = [];
+        items.push({ label: this.localLabel, detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+        items.push({ label: this.newLabel, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
+
+        // Then our already picked list. Filter out those that aren't actually running.
+        const alreadyPicked = this.getSavedUriList();
+        if (alreadyPicked && alreadyPicked.length) {
+            const possiblyRunning = await Promise.all(alreadyPicked.map(p => this.getRunningServerDetails(p)));
+            const alreadyRunning = possiblyRunning.filter(p => p);
+            if (alreadyRunning && alreadyRunning.length) {
+                // First stick in a separator (this doesn't work. Although it looks like it should based on VS code's usage of it)
+                //items.push({ label: '-', type: 'separator' });
+
+                // Then one per item
+                alreadyRunning.forEach(a => {
+                    if (a) {
+                        items.push({ label: a.label, detail: a.detail, newChoice: false });
+                    }
+                });
+            }
+        }
+
+        // Then an option for pick new
+        return items;
+    }
+
+    private getSavedUriList(): string[] {
+        const results = this.globalState.get<string[]>(Settings.JupyterServerUriList);
+        if (results && results.length) {
+            return results;
+        }
+        return [];
+    }
+
+    private addToUriList(uri: string) {
+        const list = this.getSavedUriList();
+
+        // Filter to without this item and max size 10
+        const without = list.filter((f, i) => f !== uri && i < Settings.JupyterServerUriListMax - 1);
+        without.splice(0, 0, uri);
+
+        // Save to global storage.
+        this.globalState.update(Settings.JupyterServerUriList, without).then(noop, noop);
     }
 
     private async runCurrentCellAndAddBelow(): Promise<void> {
@@ -338,18 +490,6 @@ export class DataScience implements IDataScience {
         }
     }
 
-    private validateURI = (testURI: string): string | undefined | null => {
-        try {
-            // tslint:disable-next-line:no-unused-expression
-            new URL(testURI);
-        } catch {
-            return localize.DataScience.jupyterSelectURIInvalidURI();
-        }
-
-        // Return null tells the dialog that our string is valid
-        return null;
-    }
-
     private onSettingsChanged = () => {
         const settings = this.configuration.getSettings();
         const enabled = settings.datascience.enabled;
@@ -417,11 +557,21 @@ export class DataScience implements IDataScience {
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.DebugCell, this.debugCell, this);
         this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugStepOver, this.debugStepOver, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugContinue, this.debugContinue, this);
+        this.disposableRegistry.push(disposable);
+        disposable = this.commandManager.registerCommand(Commands.DebugStop, this.debugStop, this);
+        this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor, this);
         this.disposableRegistry.push(disposable);
-        this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
-            listener.register(this.commandManager);
-        });
+        disposable = this.commandManager.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook, this);
+        this.disposableRegistry.push(disposable);
+        if (this.commandListeners) {
+            this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
+                listener.register(this.commandManager);
+            });
+        }
     }
 
     private onChangedActiveTextEditor() {
@@ -439,34 +589,35 @@ export class DataScience implements IDataScience {
     }
 
     @debounceAsync(1)
+    @swallowExceptions('Sending DataScience Settings Telemetry failed')
     private async sendSettingsTelemetry(): Promise<void> {
-        try {
-            // Get our current settings. This is what we want to send.
-            // tslint:disable-next-line:no-any
-            const settings = this.configuration.getSettings().datascience as any;
+        // Get our current settings. This is what we want to send.
+        // tslint:disable-next-line:no-any
+        const settings = this.configuration.getSettings().datascience as any;
 
-            // Translate all of the 'string' based settings into known values or not.
-            const pythonConfig = this.workspace.getConfiguration('python');
-            if (pythonConfig) {
-                const keys = Object.keys(settings);
-                const resultSettings: JSONObject = {};
-                for (const k of keys) {
-                    const currentValue = settings[k];
-                    if (typeof currentValue === 'string') {
-                        const inspectResult = pythonConfig.inspect<string>(`dataScience.${k}`);
-                        if (inspectResult && inspectResult.defaultValue !== currentValue) {
-                            resultSettings[k] = 'non-default';
-                        } else {
-                            resultSettings[k] = 'default';
-                        }
+        // Translate all of the 'string' based settings into known values or not.
+        const pythonConfig = this.workspace.getConfiguration('python');
+        if (pythonConfig) {
+            const keys = Object.keys(settings);
+            const resultSettings: JSONObject = {};
+            for (const k of keys) {
+                const currentValue = settings[k];
+                if (typeof currentValue === 'string') {
+                    const inspectResult = pythonConfig.inspect<string>(`dataScience.${k}`);
+                    if (inspectResult && inspectResult.defaultValue !== currentValue) {
+                        resultSettings[k] = 'non-default';
                     } else {
-                        resultSettings[k] = currentValue;
+                        resultSettings[k] = 'default';
                     }
+                } else {
+                    resultSettings[k] = currentValue;
                 }
-                sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
             }
-        } catch (err) {
-            traceError(err);
+            sendTelemetryEvent(Telemetry.DataScienceSettings, 0, resultSettings);
         }
+    }
+
+    private async createNewNotebook(): Promise<void> {
+        await this.notebookProvider.createNew();
     }
 }

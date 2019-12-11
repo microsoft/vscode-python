@@ -65,11 +65,12 @@ suite('Theme colors', () => {
             maxOutputSize: 400,
             errorBackgroundColor: '#FFFFFF',
             sendSelectionToInteractiveWindow: false,
-            showJupyterVariableExplorer: true,
             variableExplorerExclude: 'module;function;builtin_function_or_method',
             codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
             markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-            enablePlotViewer: true
+            enablePlotViewer: true,
+            runStartupCommands: '',
+            debugJustMyCode: true
         };
         configService = TypeMoq.Mock.ofType<IConfigurationService>();
         configService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings);

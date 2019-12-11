@@ -2,17 +2,22 @@
 {
     "files.exclude": {
         "out": true, // set this to true to hide the "out" folder with the compiled JS files
+        "uitests/out": true,
         "**/*.pyc": true,
         ".nyc_output": true,
         "obj": true,
         "bin": true,
         "**/__pycache__": true,
-        "node_modules": true,
+        "**/node_modules": true,
+        ".vscode-test": false,
+        ".vscode test": false,
         "**/.mypy_cache/**": true,
         "**/.ropeproject/**": true
     },
     "search.exclude": {
         "out": true, // set this to false to include "out" folder in search results
+        "uitests/out": true,
+        "**/node_modules": true,
         "coverage": true,
         "languageServer*/**": true,
         ".vscode-test": true,
@@ -39,10 +44,11 @@
     "python.jediEnabled": false,
     "python.analysis.logLevel": "Trace",
     "python.analysis.downloadChannel": "beta",
-   "python.linting.pylintEnabled": false,
+    "python.linting.pylintEnabled": false,
     "python.linting.flake8Enabled": true,
     "cucumberautocomplete.skipDocStringsFormat": true,
     "python.linting.flake8Args": [
         "--max-line-length=120"
-    ]
+    ],
+    "typescript.preferences.importModuleSpecifier": "relative"
 }

@@ -10,5 +10,5 @@ export const ExtensionRootDir = util.ExtensionRootDir;
 // This is a list of files that existed before MS got the extension.
 export const existingFiles: string[] = util.getListOfFiles('existingFiles.json');
 export const contributedFiles: string[] = util.getListOfFiles('contributedFiles.json');
-
+export const isWindows = /^win/.test(process.platform);
 export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;

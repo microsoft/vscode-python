@@ -17,11 +17,11 @@ import { createDeferred, Deferred } from '../common/utils/async';
 import { swallowExceptions } from '../common/utils/decorators';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IEnvironmentVariablesProvider } from '../common/variables/types';
-import { IInterpreterService } from '../interpreter/contracts';
+import { PythonInterpreter } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
-import { Logger } from './../common/logger';
+import { Logger, traceError } from './../common/logger';
 
 const pythonVSCodeTypeMappings = new Map<string, CompletionItemKind>();
 pythonVSCodeTypeMappings.set('none', CompletionItemKind.Value);
@@ -155,15 +155,12 @@ export class JediProxy implements Disposable {
     private readonly disposables: Disposable[] = [];
     private timer?: NodeJS.Timer | number;
 
-    public constructor(private extensionRootDir: string, workspacePath: string, private serviceContainer: IServiceContainer) {
+    public constructor(private extensionRootDir: string, workspacePath: string, interpreter: PythonInterpreter | undefined, private serviceContainer: IServiceContainer) {
         this.workspacePath = workspacePath;
         const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         this.pythonSettings = configurationService.getSettings(Uri.file(workspacePath));
-        this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
+        this.lastKnownPythonInterpreter = interpreter ? interpreter.path : this.pythonSettings.pythonPath;
         this.logger = serviceContainer.get<ILogger>(ILogger);
-        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const disposable = interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter.bind(this));
-        this.disposables.push(disposable);
         this.initialized = createDeferred<void>();
         this.startLanguageServer()
             .then(() => this.initialized.resolve())
@@ -212,7 +209,7 @@ export class JediProxy implements Disposable {
             this.commands.set(executionCmd.id, executionCmd);
             this.commandQueue.push(executionCmd.id);
         } catch (ex) {
-            console.error(ex);
+            traceError(ex);
             //If 'This socket is closed.' that means process didn't start at all (at least not properly).
             if (ex.message === 'This socket is closed.') {
                 this.killProcess();
@@ -278,7 +275,7 @@ export class JediProxy implements Disposable {
                     this.pidUsageFailures.counter = 0;
                     this.pidUsageFailures.timer.reset();
                 }
-                console.error('Python Extension: (pidusage)', err);
+                traceError('Python Extension: (pidusage)', err);
             } else {
                 const limit = Math.min(Math.max(this.pythonSettings.jediMemoryLimit, 1024), 8192);
                 let restartJedi = false;
@@ -306,15 +303,6 @@ export class JediProxy implements Disposable {
         return deferred.promise;
     }
 
-    @swallowExceptions('JediProxy')
-    private async onDidChangeInterpreter() {
-        if (this.lastKnownPythonInterpreter === this.pythonSettings.pythonPath) {
-            return;
-        }
-        this.lastKnownPythonInterpreter = this.pythonSettings.pythonPath;
-        this.additionalAutoCompletePaths = await this.buildAutoCompletePaths();
-        this.restartLanguageServer().ignoreErrors();
-    }
     // @debounce(1500)
     @swallowExceptions('JediProxy')
     private async environmentVariablesChangeHandler() {
@@ -355,7 +343,7 @@ export class JediProxy implements Disposable {
                 this.proc.kill();
             }
             // tslint:disable-next-line:no-empty
-        } catch (ex) {}
+        } catch (ex) { }
         this.proc = undefined;
     }
 
@@ -369,7 +357,7 @@ export class JediProxy implements Disposable {
             this.languageServerStarted.reject(new Error('Language Server not started.'));
         }
         this.languageServerStarted = createDeferred<void>();
-        const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath) });
+        const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
         // Check if the python path is valid.
         if ((await pythonProcess.getExecutablePath().catch(() => '')).length === 0) {
             return;
@@ -646,7 +634,7 @@ export class JediProxy implements Disposable {
 
     private async getPathFromPythonCommand(args: string[]): Promise<string> {
         try {
-            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath) });
+            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
             const result = await pythonProcess.exec(args, { cwd: this.workspacePath });
             const lines = result.stdout.trim().splitLines();
             if (lines.length === 0) {
@@ -690,7 +678,7 @@ export class JediProxy implements Disposable {
             const filePaths = await Promise.all(filePathPromises);
             return filePaths.concat(...pythonPaths, ...resolvedPaths).filter(p => p.length > 0);
         } catch (ex) {
-            console.error('Python Extension: jediProxy.filePaths', ex);
+            traceError('Python Extension: jediProxy.filePaths', ex);
             return [];
         }
     }
@@ -705,14 +693,14 @@ export class JediProxy implements Disposable {
         // Add support for paths relative to workspace.
         const extraPaths = this.pythonSettings.autoComplete
             ? this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
-                  if (path.isAbsolute(extraPath)) {
-                      return extraPath;
-                  }
-                  if (typeof this.workspacePath !== 'string') {
-                      return '';
-                  }
-                  return path.join(this.workspacePath, extraPath);
-              })
+                if (path.isAbsolute(extraPath)) {
+                    return extraPath;
+                }
+                if (typeof this.workspacePath !== 'string') {
+                    return '';
+                }
+                return path.join(this.workspacePath, extraPath);
+            })
             : [];
 
         // Always add workspace path into extra paths.
@@ -872,7 +860,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         executionCmd.token = cancellation.token;
 
         return this.jediProxy.sendCommand<R>(executionCmd).catch(reason => {
-            console.error(reason);
+            traceError(reason);
             return undefined;
         });
     }
@@ -885,7 +873,7 @@ export class JediProxyHandler<R extends ICommandResult> implements Disposable {
         }
 
         return this.jediProxy.sendCommand<R>(executionCmd).catch(reason => {
-            console.error(reason);
+            traceError(reason);
             return undefined;
         });
     }

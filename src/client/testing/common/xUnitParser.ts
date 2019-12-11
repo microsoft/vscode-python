@@ -1,6 +1,10 @@
-import * as fs from 'fs';
-import { injectable } from 'inversify';
-import { IXUnitParser, PassCalculationFormulae, Tests, TestStatus } from './types';
+import { inject, injectable } from 'inversify';
+import { IFileSystem } from '../../common/platform/types';
+import {
+    FlattenedTestFunction, IXUnitParser,
+    TestFunction, TestResult, Tests, TestStatus, TestSummary
+} from './types';
+
 type TestSuiteResult = {
     $: {
         errors: string;
@@ -44,104 +48,162 @@ function getSafeInt(value: string, defaultValue: any = 0): number {
 
 @injectable()
 export class XUnitParser implements IXUnitParser {
-    public updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void> {
-        return updateResultsFromXmlLogFile(tests, outputXmlFile, passCalculationFormulae);
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem
+    ) { }
+
+    // Update "tests" with the results parsed from the given file.
+    public async updateResultsFromXmlLogFile(
+        tests: Tests,
+        outputXmlFile: string
+    ) {
+        const data = await this.fs.readFile(outputXmlFile);
+
+        const parserResult = await parseXML(data);
+        const junitResults = getJunitResults(parserResult);
+        if (junitResults) {
+            updateTests(tests, junitResults);
+        }
     }
 }
-export function updateResultsFromXmlLogFile(tests: Tests, outputXmlFile: string, passCalculationFormulae: PassCalculationFormulae): Promise<void> {
+
+// An async wrapper around xml2js.parseString().
+// tslint:disable-next-line:no-any
+async function parseXML(data: string): Promise<any> {
+    const xml2js = await import('xml2js');
     // tslint:disable-next-line:no-any
     return new Promise<any>((resolve, reject) => {
-        fs.readFile(outputXmlFile, 'utf8', (err, data) => {
-            if (err) {
-                return reject(err);
+        // tslint:disable-next-line:no-any
+        xml2js.parseString(data, (error: Error, result: any) => {
+            if (error) {
+                return reject(error);
             }
-            // tslint:disable-next-line:no-require-imports
-            const xml2js = require('xml2js');
-            xml2js.parseString(data, (error: Error, parserResult: { testsuite: TestSuiteResult }) => {
-                if (error) {
-                    return reject(error);
-                }
-                try {
-                    const testSuiteResult: TestSuiteResult = parserResult.testsuite;
-                    tests.summary.errors = getSafeInt(testSuiteResult.$.errors);
-                    tests.summary.failures = getSafeInt(testSuiteResult.$.failures);
-                    tests.summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
-                    const testCount = getSafeInt(testSuiteResult.$.tests);
-
-                    switch (passCalculationFormulae) {
-                        case PassCalculationFormulae.pytest: {
-                            tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
-                            break;
-                        }
-                        case PassCalculationFormulae.nosetests: {
-                            tests.summary.passed = testCount - tests.summary.failures - tests.summary.skipped - tests.summary.errors;
-                            break;
-                        }
-                        default: {
-                            throw new Error('Unknown Test Pass Calculation');
-                        }
-                    }
-
-                    if (!Array.isArray(testSuiteResult.testcase)) {
-                        return resolve();
-                    }
-
-                    testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
-                        const xmlClassName = testcase.$.classname.replace(/\(\)/g, '').replace(/\.\./g, '.').replace(/\.\./g, '.').replace(/\.+$/, '');
-                        const result = tests.testFunctions.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === testcase.$.name);
-                        if (!result) {
-                            // Possible we're dealing with nosetests, where the file name isn't returned to us
-                            // When dealing with nose tests
-                            // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
-                            // And unforutnately xunit log doesn't ouput the filename
-
-                            // result = tests.testFunctions.find(fn => fn.testFunction.name === testcase.$.name &&
-                            //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
-
-                            // Look for failed file test
-                            const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
-                            if (fileTest && testcase.error) {
-                                fileTest.status = TestStatus.Error;
-                                fileTest.passed = false;
-                                fileTest.message = testcase.error[0].$.message;
-                                fileTest.traceback = testcase.error[0]._;
-                            }
-                            return;
-                        }
-
-                        result.testFunction.line = getSafeInt(testcase.$.line, null);
-                        result.testFunction.file = testcase.$.file;
-                        result.testFunction.time = parseFloat(testcase.$.time);
-                        result.testFunction.passed = true;
-                        result.testFunction.status = TestStatus.Pass;
-
-                        if (testcase.failure) {
-                            result.testFunction.status = TestStatus.Fail;
-                            result.testFunction.passed = false;
-                            result.testFunction.message = testcase.failure[0].$.message;
-                            result.testFunction.traceback = testcase.failure[0]._;
-                        }
-
-                        if (testcase.error) {
-                            result.testFunction.status = TestStatus.Error;
-                            result.testFunction.passed = false;
-                            result.testFunction.message = testcase.error[0].$.message;
-                            result.testFunction.traceback = testcase.error[0]._;
-                        }
-
-                        if (testcase.skipped) {
-                            result.testFunction.status = TestStatus.Skipped;
-                            result.testFunction.passed = undefined;
-                            result.testFunction.message = testcase.skipped[0].$.message;
-                            result.testFunction.traceback = '';
-                        }
-                    });
-                } catch (ex) {
-                    return reject(ex);
-                }
-
-                resolve();
-            });
+            return resolve(result);
         });
     });
+}
+
+// Return the actual test results from the given data.
+// tslint:disable-next-line:no-any
+function getJunitResults(parserResult: any): TestSuiteResult | undefined {
+    // This is the newer JUnit XML format (e.g. pytest 5.1 and later).
+    const fullResults = parserResult as { testsuites: { testsuite: TestSuiteResult[] }};
+    if (!fullResults.testsuites) {
+        return (parserResult as { testsuite: TestSuiteResult }).testsuite;
+    }
+
+    const junitSuites = fullResults.testsuites.testsuite;
+    if (!Array.isArray(junitSuites)) {
+        throw Error('bad JUnit XML data');
+    }
+    if (junitSuites.length === 0) {
+        return;
+    }
+    if (junitSuites.length > 1) {
+        throw Error('got multiple XML results');
+    }
+    return junitSuites[0];
+}
+
+// Update "tests" with the given results.
+function updateTests(
+    tests: Tests,
+    testSuiteResult: TestSuiteResult
+) {
+    updateSummary(tests.summary, testSuiteResult);
+
+    if (!Array.isArray(testSuiteResult.testcase)) {
+        return;
+    }
+
+    // Update the results for each test.
+    // Previously unknown tests are ignored.
+    testSuiteResult.testcase.forEach((testcase: TestCaseResult) => {
+        const testFunc = findTestFunction(
+            tests.testFunctions,
+            testcase.$.classname,
+            testcase.$.name
+        );
+        if (testFunc) {
+            updateResultInfo(testFunc, testcase);
+            updateResultStatus(testFunc, testcase);
+        } else {
+            // Possible we're dealing with nosetests, where the file name isn't returned to us
+            // When dealing with nose tests
+            // It is possible to have a test file named x in two separate test sub directories and have same functions/classes
+            // And unforutnately xunit log doesn't ouput the filename
+
+            // result = tests.testFunctions.find(fn => fn.testFunction.name === testcase.$.name &&
+            //     fn.parentTestSuite && fn.parentTestSuite.name === testcase.$.classname);
+
+            // Look for failed file test
+            const fileTest = testcase.$.file && tests.testFiles.find(file => file.nameToRun === testcase.$.file);
+            if (fileTest && testcase.error) {
+                updateResultStatus(fileTest, testcase);
+            }
+        }
+    });
+}
+
+// Update the summary with the information in the given results.
+function updateSummary(
+    summary: TestSummary,
+    testSuiteResult: TestSuiteResult
+) {
+    summary.errors = getSafeInt(testSuiteResult.$.errors);
+    summary.failures = getSafeInt(testSuiteResult.$.failures);
+    summary.skipped = getSafeInt(testSuiteResult.$.skips ? testSuiteResult.$.skips : testSuiteResult.$.skip);
+    const testCount = getSafeInt(testSuiteResult.$.tests);
+    summary.passed = testCount - summary.failures - summary.skipped - summary.errors;
+}
+
+function findTestFunction(
+    candidates: FlattenedTestFunction[],
+    className: string,
+    funcName: string
+): TestFunction | undefined {
+    const xmlClassName = className
+        .replace(/\(\)/g, '')
+        .replace(/\.\./g, '.')
+        .replace(/\.\./g, '.')
+        .replace(/\.+$/, '');
+    const flattened = candidates.find(fn => fn.xmlClassName === xmlClassName && fn.testFunction.name === funcName);
+    if (!flattened) {
+        return;
+    }
+    return flattened.testFunction;
+}
+
+function updateResultInfo(
+    result: TestResult,
+    testCase: TestCaseResult
+) {
+    result.file = testCase.$.file;
+    result.line = getSafeInt(testCase.$.line, null);
+    result.time = parseFloat(testCase.$.time);
+}
+
+function updateResultStatus(
+    result: TestResult,
+    testCase: TestCaseResult
+) {
+    if (testCase.error) {
+        result.status = TestStatus.Error;
+        result.passed = false;
+        result.message = testCase.error[0].$.message;
+        result.traceback = testCase.error[0]._;
+    } else if (testCase.failure) {
+        result.status = TestStatus.Fail;
+        result.passed = false;
+        result.message = testCase.failure[0].$.message;
+        result.traceback = testCase.failure[0]._;
+    } else if (testCase.skipped) {
+        result.status = TestStatus.Skipped;
+        result.passed = undefined;
+        result.message = testCase.skipped[0].$.message;
+        result.traceback = '';
+    } else {
+        result.status = TestStatus.Pass;
+        result.passed = true;
+    }
 }

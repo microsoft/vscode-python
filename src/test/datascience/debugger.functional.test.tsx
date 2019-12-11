@@ -2,30 +2,31 @@
 // Licensed under the MIT License.
 'use strict';
 import * as assert from 'assert';
-import { mount } from 'enzyme';
 import * as path from 'path';
-import * as React from 'react';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
+import { CodeLens, Disposable, Position, Range, SourceBreakpoint, Uri } from 'vscode';
+import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, IDebugService, IDocumentManager } from '../../client/common/application/types';
 import { IProcessServiceFactory, Output } from '../../client/common/process/types';
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
+import { noop } from '../../client/common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-window/interactiveWindowMessageListener';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-window/interactiveWindowTypes';
-import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
-import { MainPanel } from '../../datascience-ui/history-react/MainPanel';
-import { noop } from '../core';
+    IDataScienceCodeLensProvider,
+    IDebugLocationTracker,
+    IInteractiveWindowProvider,
+    IJupyterExecution
+} from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { getCellResults } from './interactiveWindowTestHelpers';
+import { getInteractiveCellResults, getOrCreateInteractiveWindow } from './interactiveWindowTestHelpers';
 import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpers';
 import { MockDebuggerService } from './mockDebugService';
+import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
+import { mountConnectedMainPanel } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -40,18 +41,6 @@ suite('DataScience Debugger tests', () => {
     suiteSetup(function () {
         // Debugger tests require jupyter to run. Othewrise can't not really testing them
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
-
-        // Currently these test fail on Mac / Python 3.7 so disable for that
-        // https://github.com/microsoft/ptvsd/issues/1587
-        const isMac = process.env ? (process.env.VMIMAGENAME !== undefined && process.env.VMIMAGENAME === 'macos-10.13') : false;
-        const py37 = process.env ? (process.env.PYTHONVERSION !== undefined && process.env.PYTHONVERSION === '3.7') : false;
-
-        if (isMac && py37) {
-            // tslint:disable-next-line:no-console
-            console.log('Skipping debugger tests on mac / py3.7 for debugger issue');
-            // tslint:disable-next-line:no-invalid-this
-            this.skip();
-        }
 
         if (!isRollingBuild) {
             // tslint:disable-next-line:no-console
@@ -117,25 +106,13 @@ suite('DataScience Debugger tests', () => {
         result.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
 
         // Setup our webview panel
-        result.createWebView(() => mount(<MainPanel baseTheme='vscode-light' codeTheme='light_vs' testMode={true} skipDefault={true} />), vsls.Role.None);
+        result.createWebView(() => mountConnectedMainPanel('interactive'), vsls.Role.None);
 
         // Make sure the history provider and execution factory in the container is created (the extension does this on startup in the extension)
         // This is necessary to get the appropriate live share services up and running.
         result.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         result.get<IJupyterExecution>(IJupyterExecution);
-        return result;
-    }
-
-    async function getOrCreateInteractiveWindow(): Promise<IInteractiveWindow> {
-        const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
-        const result = await interactiveWindowProvider.getOrCreateActive();
-
-        // During testing the MainPanel sends the init message before our interactive window is created.
-        // Pretend like it's happening now
-        // tslint:disable-next-line: no-any
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
-        listener.onMessage(InteractiveWindowMessages.Started, {});
-
+        result.get<IDebugLocationTracker>(IDebugLocationTracker);
         return result;
     }
 
@@ -159,12 +136,12 @@ suite('DataScience Debugger tests', () => {
         }
 
         // Start the jupyter server
-        const history = await getOrCreateInteractiveWindow();
+        const history = await getOrCreateInteractiveWindow(ioc);
 
         const expectedBreakLine = breakpoint && !breakpointFile ? breakpoint.start.line : 2; // 2 because of the 'breakpoint()' that gets added
 
         // Debug this code. We should either hit the breakpoint or stop on entry
-        const resultPromise = getCellResults(ioc.wrapper!, 5, async () => {
+        const resultPromise = getInteractiveCellResults(ioc.wrapper!, 5, async () => {
             const breakPromise = createDeferred<void>();
             disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
             const done = history.debugCode(code, fileName, 0, docManager.activeTextEditor);
@@ -179,8 +156,13 @@ suite('DataScience Debugger tests', () => {
                 assert.ok(stackTrace, 'Stack trace not computable');
                 assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
                 assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+
+                verifyCodeLenses(expectedBreakLine);
+
                 // Verify break location
                 await mockDebuggerService!.continue();
+
+                verifyCodeLenses(undefined);
             }
         });
 
@@ -197,20 +179,34 @@ suite('DataScience Debugger tests', () => {
         await history.dispose();
     }
 
+    function verifyCodeLenses(expectedBreakLine: number | undefined) {
+        // We should have three debug code lenses which should all contain the break line
+        const codeLenses = getCodeLenses();
+
+        if (expectedBreakLine) {
+            assert.equal(codeLenses.length, 3, 'Incorrect number of debug code lenses stop');
+            codeLenses.forEach(codeLens => {
+                assert.ok(codeLens.range.contains(new Position(expectedBreakLine - 1, 0)));
+            });
+        } else {
+            assert.equal(codeLenses.length, 0, 'Incorrect number of debug code lenses continue');
+        }
+    }
+
+    function getCodeLenses(): CodeLens[] {
+        const documentManager = ioc.serviceManager.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+        const codeLensProvider = ioc.serviceManager.get<IDataScienceCodeLensProvider>(IDataScienceCodeLensProvider);
+        const doc = documentManager.textDocuments[0];
+        const result = codeLensProvider.provideCodeLenses(doc, CancellationToken.None);
+        // tslint:disable-next-line:no-any
+        if ((result as any).length) {
+            return result as CodeLens[];
+        }
+        return [];
+    }
+
     test('Debug cell without breakpoint', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
-
         await debugCell('#%%\nprint("bar")');
-    });
-
-    test('Debug cell with breakpoint', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = false;
-        await debugCell('#%%\nprint("bar")\nprint("baz")\n\n\n', new Range(new Position(3, 0), new Position(3, 0)));
-    });
-
-    test('Debug cell with breakpoint in another file', async () => {
-        ioc.getSettings().datascience.stopOnFirstLineWhileDebugging = true;
-        await debugCell('#%%\nprint("bar")\nprint("baz")', new Range(new Position(3, 0), new Position(3, 0)), 'bar.py');
     });
 
     test('Debug remote', async () => {
@@ -240,4 +236,42 @@ suite('DataScience Debugger tests', () => {
             await debugCell('#%%\nprint("bar")', undefined, undefined, true);
         }
     });
+
+    test('Debug temporary file', async () => {
+        const code = '#%%\nprint("bar")';
+
+        // Create a dummy document with just this code
+        const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+        const fileName = 'Untitled-1';
+        docManager.addDocument(code, fileName);
+        const mockDoc = docManager.textDocuments[0] as MockDocument;
+        mockDoc.forceUntitled();
+
+        // Start the jupyter server
+        const history = await getOrCreateInteractiveWindow(ioc);
+        const expectedBreakLine = 2; // 2 because of the 'breakpoint()' that gets added
+
+        // Debug this code. We should either hit the breakpoint or stop on entry
+        const resultPromise = getInteractiveCellResults(ioc.wrapper!, 5, async () => {
+            const breakPromise = createDeferred<void>();
+            disposables.push(mockDebuggerService!.onBreakpointHit(() => breakPromise.resolve()));
+            const targetUri = Uri.file(fileName);
+            const done = history.debugCode(code, targetUri.fsPath, 0, docManager.activeTextEditor);
+            await waitForPromise(Promise.race([done, breakPromise.promise]), 60000);
+            assert.ok(breakPromise.resolved, 'Breakpoint event did not fire');
+            assert.ok(!lastErrorMessage, `Error occurred ${lastErrorMessage}`);
+            const stackTrace = await mockDebuggerService!.getStackTrace();
+            assert.ok(stackTrace, 'Stack trace not computable');
+            assert.ok(stackTrace!.body.stackFrames.length >= 1, 'Not enough frames');
+            assert.equal(stackTrace!.body.stackFrames[0].line, expectedBreakLine, 'Stopped on wrong line number');
+            assert.ok(stackTrace!.body.stackFrames[0].source!.path!.includes('baz.py'), 'Stopped on wrong file name. Name should have been saved');
+            // Verify break location
+            await mockDebuggerService!.continue();
+        });
+
+        const cellResults = await resultPromise;
+        assert.ok(cellResults, 'No cell results after finishing debugging');
+        await history.dispose();
+    });
+
 });

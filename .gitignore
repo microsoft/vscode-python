@@ -1,7 +1,8 @@
 .DS_Store
 .huskyrc.json
 out
-node_modules
+log.log
+**/node_modules
 *.pyc
 *.vsix
 **/.vscode/.ropeproject/**
@@ -14,9 +15,10 @@ npm-debug.log
 **/.mypy_cache/**
 !yarn.lock
 coverage/
-.vscode-test/**
-.vscode test/**
-.vscode-smoke/**
+cucumber-report.json
+**/.vscode-test/**
+**/.vscode test/**
+**/.vscode-smoke/**
 **/.venv*/
 port.txt
 precommit.hook
@@ -25,6 +27,9 @@ pythonFiles/lib/**
 debug_coverage*/**
 languageServer/**
 languageServer.*/**
+!uitests/features/languageServer/**
+!uitests/src/languageServer/**
+!uitests/code/**/languageServer/**
 bin/**
 obj/**
 .pytest_cache
@@ -32,4 +37,5 @@ tmp/**
 .python-version
 .vs/
 test-results.xml
+uitests/out/**
 !build/

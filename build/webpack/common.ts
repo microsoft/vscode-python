@@ -33,7 +33,11 @@ export const nodeModulesToExternalize = [
     'crypto-js',
     'fontkit',
     'linebreak',
-    'png-js'
+    'png-js',
+    '@koa/cors',
+    'koa',
+    'koa-compress',
+    'koa-logger'
 ];
 
 export const nodeModulesToReplacePaths = [

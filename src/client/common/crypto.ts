@@ -14,8 +14,15 @@ import { ICryptoUtils, IHashFormat } from './types';
  */
 @injectable()
 export class CryptoUtils implements ICryptoUtils {
-    public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E] {
-        const hash = createHash('sha512').update(data).digest('hex');
+    public createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm: 'SHA512' | 'FNV' = 'FNV'): IHashFormat[E] {
+        let hash: string;
+        if (algorithm === 'FNV') {
+            // tslint:disable-next-line:no-require-imports
+            const fnv = require('@enonic/fnv-plus');
+            hash = fnv.fast1a32hex(data) as string;
+        } else {
+            hash = createHash('sha512').update(data).digest('hex');
+        }
         if (hashFormat === 'number') {
             const result = parseInt(hash, 16);
             if (isNaN(result)) {

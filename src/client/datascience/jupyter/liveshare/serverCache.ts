@@ -66,7 +66,8 @@ export class ServerCache implements IAsyncDisposable {
             useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
-            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory()
+            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
+            metadata: options?.metadata
         };
     }
 
@@ -78,8 +79,6 @@ export class ServerCache implements IAsyncDisposable {
             const uri = options.uri ? options.uri : '';
             const useFlag = options.useDefaultConfig ? 'true' : 'false';
             const debug = options.enableDebugging ? 'true' : 'false';
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Should there be some separator in the key?
             return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}`;
         }
     }
@@ -102,7 +101,7 @@ export class ServerCache implements IAsyncDisposable {
                     // User setting is absolute and doesn't exist, use workspace
                     workingDir = workspaceFolderPath;
                 }
-            } else {
+            } else if (!fileRoot.includes('${')) {
                 // fileRoot is a relative path, combine it with the workspace folder
                 const combinedPath = path.join(workspaceFolderPath, fileRoot);
                 if (await this.fileSystem.directoryExists(combinedPath)) {
@@ -112,6 +111,9 @@ export class ServerCache implements IAsyncDisposable {
                     // Combined path doesn't exist, use workspace
                     workingDir = workspaceFolderPath;
                 }
+            } else {
+                // fileRoot is a variable that hasn't been expanded
+                workingDir = fileRoot;
             }
         }
         return workingDir;

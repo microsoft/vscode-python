@@ -27,7 +27,25 @@ export enum ImageName {
     ZoomOut,
     Next,
     Prev,
-    Copy
+    Copy,
+    GatherCode,
+    Up,
+    Down,
+    Run,
+    RunAbove,
+    RunBelow,
+    InsertAbove,
+    InsertBelow,
+    SwitchToCode,
+    SwitchToMarkdown,
+    OpenPlot,
+    RunAll,
+    Delete,
+    VariableExplorer,
+    ExportToPython,
+    ClearAllOutput,
+    JupyterServerConnected,
+    JupyterServerDisconnected
 }
 
 // All of the images must be 'require' so that webpack doesn't rewrite the import as requiring a .default.
@@ -47,6 +65,11 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/ExpandAll/ExpandAll_16x_vscode.svg'),
             dark : require('./images/ExpandAll/ExpandAll_16x_vscode_dark.svg')
+        },
+    GatherCode:
+        {
+            light: require('./images/GatherCode/gather_light.svg'),
+            dark : require('./images/GatherCode/gather_dark.svg')
         },
     GoToSourceCode:
         {
@@ -124,6 +147,91 @@ const images: { [key: string] : { light: string; dark: string } } = {
         {
             light: require('./images/Copy/copy.svg'),
             dark : require('./images/Copy/copy_inverse.svg')
+        },
+    Up:
+        {
+            light: require('./images/Up/up.svg'),
+            dark : require('./images/Up/up-inverse.svg')
+        },
+    Down:
+        {
+            light: require('./images/Down/down.svg'),
+            dark : require('./images/Down/down-inverse.svg')
+        },
+    Run:
+        {
+            light: require('./images/Run/run-light.svg'),
+            dark : require('./images/Run/run-dark.svg')
+        },
+    RunAbove:
+        {
+            light: require('./images/RunAbove/runabove.svg'),
+            dark : require('./images/RunAbove/runabove-inverse.svg')
+        },
+    RunBelow:
+        {
+            light: require('./images/RunBelow/runbelow.svg'),
+            dark : require('./images/RunBelow/runbelow-inverse.svg')
+        },
+    InsertAbove:
+        {
+            light: require('./images/InsertAbove/above.svg'),
+            dark : require('./images/InsertAbove/above-inverse.svg')
+        },
+    InsertBelow:
+        {
+            light: require('./images/InsertBelow/below.svg'),
+            dark : require('./images/InsertBelow/below-inverse.svg')
+        },
+    SwitchToCode:
+        {
+            light: require('./images/SwitchToCode/switchtocode.svg'),
+            dark : require('./images/SwitchToCode/switchtocode-inverse.svg')
+        },
+    SwitchToMarkdown:
+        {
+            light: require('./images/SwitchToMarkdown/switchtomarkdown.svg'),
+            dark : require('./images/SwitchToMarkdown/switchtomarkdown-inverse.svg')
+        },
+    OpenPlot:
+        {
+            light: require('./images/OpenPlot/plot_light.svg'),
+            dark : require('./images/OpenPlot/plot_dark.svg')
+        },
+    RunAll:
+        {
+            light: require('./images/RunAll/run_all_light.svg'),
+            dark : require('./images/RunAll/run_all_dark.svg')
+        },
+    Delete:
+        {
+            light: require('./images/Delete/delete_light.svg'),
+            dark : require('./images/Delete/delete_dark.svg')
+        },
+    VariableExplorer:
+        {
+            light: require('./images/VariableExplorer/variable_explorer_light.svg'),
+            dark : require('./images/VariableExplorer/variable_explorer_dark.svg')
+        },
+    ExportToPython:
+        {
+            light: require('./images/ExportToPython/export_to_python_light.svg'),
+            dark : require('./images/ExportToPython/export_to_python_dark.svg')
+        },
+    ClearAllOutput:
+        {
+            light: require('./images/ClearAllOutput/clear_all_output_light.svg'),
+            dark : require('./images/ClearAllOutput/clear_all_output_dark.svg')
+        },
+    JupyterServerConnected:
+        {
+            light: require('./images/JupyterServerConnected/connected-light.svg'),
+            dark : require('./images/JupyterServerConnected/connected-dark.svg')
+        },
+    JupyterServerDisconnected:
+        {
+            light: require('./images/JupyterServerDisconnected/disconnected-light.svg'),
+            dark : require('./images/JupyterServerDisconnected/disconnected-dark.svg')
         }
 };
 

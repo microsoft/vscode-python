@@ -25,7 +25,9 @@ export interface IInsiderExtensionPrompt {
      * Gets updated to `true` once user has been prompted to install insiders.
      */
     readonly hasUserBeenNotified: IPersistentState<boolean>;
-    notifyToInstallInsiders(): Promise<void>;
+    readonly hasUserBeenAskedToOptInAgain: IPersistentState<boolean>;
+    promptToInstallInsiders(): Promise<void>;
+    promptToEnrollBackToInsiders(): Promise<void>;
     promptToReload(): Promise<void>;
 }
 

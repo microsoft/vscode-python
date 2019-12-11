@@ -126,29 +126,29 @@ suite('Code lenses - Test files', () => {
         const workspaceUri = Uri.file('path/to/workspace');
         const workspace = { uri: workspaceUri };
         const testFile2 = {
-            fullPath: 'path/to/document2'
+            fullPath: Uri.file('path/to/document2').fsPath
         };
         const tests = {
             testFiles: [
                 {
-                    fullPath: 'path/to/document1'
+                    fullPath: Uri.file('path/to/document1').fsPath
                 },
                 testFile2
             ]
         };
         workspaceService
-            .setup(w => w.getWorkspaceFolder(document.uri))
+            .setup(w => w.getWorkspaceFolder(typemoq.It.isValue(document.uri)))
             .returns(() => workspace as any)
             .verifiable(typemoq.Times.once());
         testCollectionStorage
-            .setup(w => w.getTests(workspaceUri))
+            .setup(w => w.getTests(typemoq.It.isValue(workspaceUri)))
             .returns(() => tests as any)
             .verifiable(typemoq.Times.once());
         fileSystem
-            .setup(f => f.arePathsSame('path/to/document1', 'path/to/document2'))
+            .setup(f => f.arePathsSame(Uri.file('/path/to/document1').fsPath, Uri.file('/path/to/document2').fsPath))
             .returns(() => false);
         fileSystem
-            .setup(f => f.arePathsSame('path/to/document2', 'path/to/document2'))
+            .setup(f => f.arePathsSame(Uri.file('/path/to/document2').fsPath, Uri.file('/path/to/document2').fsPath))
             .returns(() => true);
         const files = codeLensProvider.getTestFileWhichNeedsCodeLens(document as any);
         assert.deepEqual(files, testFile2 as any);

@@ -38,7 +38,7 @@ export function initialize() {
             return mockedVSCode;
         }
         if (request === 'vscode-extension-telemetry') {
-            return { default: vscMockTelemetryReporter };
+            return { default: vscMockTelemetryReporter as any };
         }
         // less files need to be in import statements to be converted to css
         // But we don't want to try to load them in the mock vscode
@@ -54,7 +54,8 @@ mockedVSCode.EventEmitter = vscodeMocks.vscMock.EventEmitter;
 mockedVSCode.CancellationTokenSource = vscodeMocks.vscMock.CancellationTokenSource;
 mockedVSCode.CompletionItemKind = vscodeMocks.vscMock.CompletionItemKind;
 mockedVSCode.SymbolKind = vscodeMocks.vscMock.SymbolKind;
-mockedVSCode.Uri = vscodeMocks.vscMock.Uri as any;
+mockedVSCode.IndentAction = vscodeMocks.vscMock.IndentAction;
+mockedVSCode.Uri = vscodeMocks.vscUri.URI as any;
 mockedVSCode.Range = vscodeMocks.vscMockExtHostedTypes.Range;
 mockedVSCode.Position = vscodeMocks.vscMockExtHostedTypes.Position;
 mockedVSCode.Selection = vscodeMocks.vscMockExtHostedTypes.Selection;
@@ -78,6 +79,9 @@ mockedVSCode.TextEditorRevealType = vscodeMocks.vscMockExtHostedTypes.TextEditor
 mockedVSCode.TreeItem = vscodeMocks.vscMockExtHostedTypes.TreeItem;
 mockedVSCode.TreeItemCollapsibleState = vscodeMocks.vscMockExtHostedTypes.TreeItemCollapsibleState;
 mockedVSCode.CodeActionKind = vscodeMocks.vscMock.CodeActionKind;
+mockedVSCode.DebugAdapterExecutable = vscodeMocks.vscMock.DebugAdapterExecutable;
+mockedVSCode.DebugAdapterServer = vscodeMocks.vscMock.DebugAdapterServer;
+mockedVSCode.QuickInputButtons = vscodeMocks.vscMockExtHostedTypes.QuickInputButtons;
 
 // This API is used in src/client/telemetry/telemetry.ts
 const extensions = TypeMoq.Mock.ofType<typeof vscode.extensions>();

@@ -160,5 +160,31 @@ suite('Shell Detector', () => {
             verify(detector3.identify(anything(), anything())).once();
             verify(detector4.identify(anything(), anything())).once();
         });
+        test(`Fall back to detectors that can identify a shell ${testSuffix} (even if detected shell is other)`, () => {
+            when(platformService.osType).thenReturn(os.value);
+            const detector1 = mock(UserEnvironmentShellDetector);
+            const detector2 = mock(UserEnvironmentShellDetector);
+            const detector3 = mock(UserEnvironmentShellDetector);
+            const detector4 = mock(UserEnvironmentShellDetector);
+            const detectedShell = TerminalShellType.xonsh;
+            when(detector1.priority).thenReturn(1);
+            when(detector2.priority).thenReturn(2);
+            when(detector3.priority).thenReturn(3);
+            when(detector4.priority).thenReturn(4);
+            when(detector1.identify(anything(), anything())).thenReturn(TerminalShellType.ksh);
+            when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
+            when(detector3.identify(anything(), anything())).thenReturn(TerminalShellType.other);
+            when(detector4.identify(anything(), anything())).thenReturn(TerminalShellType.other);
+            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2),
+            instance(detector3), instance(detector4)]);
+
+            const shell = shellDetector.identifyTerminalShell();
+
+            expect(shell).to.be.equal(detectedShell);
+            verify(detector1.identify(anything(), anything())).never();
+            verify(detector2.identify(anything(), undefined)).once();
+            verify(detector3.identify(anything(), anything())).once();
+            verify(detector4.identify(anything(), anything())).once();
+        });
     });
 });

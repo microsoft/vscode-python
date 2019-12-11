@@ -7,8 +7,9 @@ import * as path from 'path';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem, IPlatformService, TemporaryFile } from '../../../client/common/platform/types';
-// tslint:disable-next-line:no-require-imports no-var-requires
+// tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
+use(require('chai-as-promised'));
 use(assertArrays);
 
 // tslint:disable-next-line:max-func-body-length
@@ -98,7 +99,7 @@ suite('FileSystem', () => {
         await fileSystem.createTemporaryFile('.tmp').then((tf: TemporaryFile) => {
             expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
             const writeStream = fileSystem.createWriteStream(tf.filePath);
-            writeStream.write('hello', 'utf8', (err: Error) => {
+            writeStream.write('hello', 'utf8', (err: Error | null | undefined) => {
                 expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
             });
         }, (failReason) => {
@@ -115,5 +116,15 @@ suite('FileSystem', () => {
                     expect(failReason).to.equal('There was no error using chmod', `Failed to perform chmod operation successfully, got error ${failReason}`);
                 });
         });
+    });
+    test('Getting hash for non existent file should throw error', async () => {
+        const promise = fileSystem.getFileHash('some unknown file');
+
+        await expect(promise).to.eventually.be.rejected;
+    });
+    test('Getting hash for a file should return non-empty string', async () => {
+        const hash = await fileSystem.getFileHash(__filename);
+
+        expect(hash).to.be.length.greaterThan(0);
     });
 });
