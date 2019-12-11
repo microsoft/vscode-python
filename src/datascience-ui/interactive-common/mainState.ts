@@ -195,7 +195,7 @@ export function extractInputText(inputCellVM: ICellViewModel, settings: IDataSci
     }
 
     // Eliminate breakpoint on the front if we're debugging and breakpoints are expected to be prefixed
-    if (inputCellVM.runDuringDebug && (!settings || settings.stopOnFirstLineWhileDebugging)) {
+    if (source.length > 0 && inputCellVM.runDuringDebug && (!settings || settings.stopOnFirstLineWhileDebugging)) {
         if (source[0].trim() === 'breakpoint()') {
             source.splice(0, 1);
         }
