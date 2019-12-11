@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-// tslint:disable:max-func-body-length
+// tslint:disable:max-func-body-length chai-vague-errors
 
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
@@ -9,6 +9,12 @@ import * as path from 'path';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
+import { sleep } from '../../../client/common/utils/async';
+import {
+    assertDoesNotExist, assertExists, DOES_NOT_EXIST, FSFixture,
+    SUPPORTS_SYMLINKS, WINDOWS
+} from './utils';
+
 // tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
@@ -16,10 +22,17 @@ use(assertArrays);
 
 suite('FileSystem', () => {
     let fileSystem: IFileSystem;
-    setup(() => {
+    let fix: FSFixture;
+    setup(async () => {
         fileSystem = new FileSystem(
             new PlatformService()
         );
+        fix = new FSFixture();
+
+        await assertDoesNotExist(DOES_NOT_EXIST);
+    });
+    teardown(async () => {
+        await fix.cleanUp();
     });
 
     suite('path-related', () => {
@@ -32,8 +45,41 @@ suite('FileSystem', () => {
         });
 
         suite('arePathsSame', () => {
-            test('', () => {
-                // XXX
+            test('identical', () => {
+                const filename = 'x/y/z/spam.py';
+
+                const result = fileSystem.arePathsSame(filename, filename);
+
+                expect(result).to.equal(true);
+            });
+
+            test('not the same', () => {
+                const file1 = 'x/y/z/spam.py';
+                const file2 = 'a/b/c/spam.py';
+
+                const result = fileSystem.arePathsSame(file1, file2);
+
+                expect(result).to.equal(false);
+            });
+
+            test('with different separators', () => {
+                const file1 = 'x/y/z/spam.py';
+                const file2 = 'x\\y\\z\\spam.py';
+                const expected = WINDOWS;
+
+                const result = fileSystem.arePathsSame(file1, file2);
+
+                expect(result).to.equal(expected);
+            });
+
+            test('with different case', () => {
+                const file1 = 'x/y/z/spam.py';
+                const file2 = 'x/Y/z/Spam.py';
+                const expected = WINDOWS;
+
+                const result = fileSystem.arePathsSame(file1, file2);
+
+                expect(result).to.equal(expected);
             });
         });
 
@@ -46,41 +92,126 @@ suite('FileSystem', () => {
 
     suite('raw', () => {
         suite('createDirectory', () => {
-            test('', async () => {
-                // XXX
+            test('creates the directory and all missing parents', async () => {
+                await fix.createDirectory('x');
+                // x/y, x/y/z, and x/y/z/spam are all missing.
+                const dirname = await fix.resolve('x/y/z/spam', false);
+                await assertDoesNotExist(dirname);
+
+                await fileSystem.createDirectory(dirname);
+
+                await assertExists(dirname);
+            });
+
+            test('works if the directory already exists', async () => {
+                const dirname = await fix.createDirectory('spam');
+                await assertExists(dirname);
+
+                await fileSystem.createDirectory(dirname);
+
+                await assertExists(dirname);
             });
         });
 
         suite('deleteDirectory', () => {
-            test('', async () => {
-                // XXX
+            test('deletes the directory if empty', async () => {
+                const dirname = await fix.createDirectory('x');
+                await assertExists(dirname);
+
+                await fileSystem.deleteDirectory(dirname);
+
+                await assertDoesNotExist(dirname);
+            });
+
+            test('fails if the directory is not empty', async () => {
+                const dirname = await fix.createDirectory('x');
+                const filename = await fix.createFile('x/y/z/spam.py');
+                await assertExists(filename);
+
+                const promise = fileSystem.deleteDirectory(dirname);
+
+                await expect(promise).to.eventually.be.rejected;
+            });
+
+            test('fails if the directory does not exist', async () => {
+                const promise = fileSystem.deleteDirectory(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
         suite('readFile', () => {
             test('returns contents of a file', async () => {
-                const filename = __filename;
-                const expected = await fs.readFile(filename, 'utf8');
+                const expected = '<some text>';
+                const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+                const content = await fileSystem.readFile(filename);
+
+                expect(content).to.be.equal(expected);
+            });
+
+            test('always UTF-8', async () => {
+                const expected = '... 😁 ...';
+                const filename = await fix.createFile('x/y/z/spam.py', expected);
 
                 const text = await fileSystem.readFile(filename);
 
-                expect(text).to.be.equal(expected);
+                expect(text).to.equal(expected);
+            });
+
+            test('returns garbage if encoding is UCS-2', async () => {
+                const filename = await fix.resolve('spam.py');
+                // There are probably cases where this would fail too.
+                // However, the extension never has to deal with non-UTF8
+                // cases, so it doesn't matter too much.
+                const original = '... 😁 ...';
+                await fs.writeFile(filename, original, { encoding: 'ucs2' });
+
+                const text = await fileSystem.readFile(filename);
+
+                expect(text).to.equal('.\u0000.\u0000.\u0000 \u0000=�\u0001� \u0000.\u0000.\u0000.\u0000');
             });
 
             test('throws an exception if file does not exist', async () => {
-                const readPromise = fileSystem.readFile('xyz');
+                const promise = fileSystem.readFile(DOES_NOT_EXIST);
 
-                await expect(readPromise).to.be.rejectedWith();
-            });
-
-            test('', async () => {
-                // XXX
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
         suite('writeFile', () => {
-            test('', async () => {
-                // XXX
+            test('creates the file if missing', async () => {
+                const filename = await fix.resolve('x/y/z/spam.py');
+                await assertDoesNotExist(filename);
+                const data = 'line1\nline2\n';
+
+                await fileSystem.writeFile(filename, data);
+
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
+            });
+
+            test('always UTF-8', async () => {
+                const filename = await fix.resolve('x/y/z/spam.py');
+                const data = '... 😁 ...';
+
+                await fileSystem.writeFile(filename, data);
+
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
+            });
+
+            test('overwrites existing file', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                const data = 'line1\nline2\n';
+
+                await fileSystem.writeFile(filename, data);
+
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
             });
         });
 
@@ -91,20 +222,128 @@ suite('FileSystem', () => {
         });
 
         suite('copyFile', () => {
-            test('', async () => {
-                // XXX
+            test('the source file gets copied (same directory)', async () => {
+                const data = '<content>';
+                const src = await fix.createFile('x/y/z/spam.py', data);
+                const dest = await fix.resolve('x/y/z/spam.py.bak');
+                await assertDoesNotExist(dest);
+
+                await fileSystem.copyFile(src, dest);
+
+                const actual = await fs.readFile(dest)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
+                const original = await fs.readFile(src)
+                    .then(buffer => buffer.toString());
+                expect(original).to.equal(data);
+            });
+
+            test('the source file gets copied (different directory)', async () => {
+                const data = '<content>';
+                const src = await fix.createFile('x/y/z/spam.py', data);
+                const dest = await fix.resolve('x/y/eggs.py');
+                await assertDoesNotExist(dest);
+
+                await fileSystem.copyFile(src, dest);
+
+                const actual = await fs.readFile(dest)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
+                const original = await fs.readFile(src)
+                    .then(buffer => buffer.toString());
+                expect(original).to.equal(data);
+            });
+
+            test('fails if the source does not exist', async () => {
+                const dest = await fix.resolve('x/spam.py');
+
+                const promise = fileSystem.copyFile(DOES_NOT_EXIST, dest);
+
+                await expect(promise).to.eventually.be.rejected;
+            });
+
+            test('fails if the target parent directory does not exist', async () => {
+                const src = await fix.createFile('x/spam.py', '...');
+                const dest = await fix.resolve('y/eggs.py', false);
+                await assertDoesNotExist(path.dirname(dest));
+
+                const promise = fileSystem.copyFile(src, dest);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
         suite('deleteFile', () => {
-            test('', async () => {
-                // XXX
+            test('deletes the file', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                await assertExists(filename);
+
+                await fileSystem.deleteFile(filename);
+
+                await assertDoesNotExist(filename);
+            });
+
+            test('fails if the file does not exist', async () => {
+                const promise = fileSystem.deleteFile(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
-        suite('chmod', () => {
-            test('', async () => {
-                // XXX
+        suite('chmod (non-Windows)', () => {
+            suiteSetup(function () {
+                // On Windows, chmod won't have any effect on the file itself.
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+            });
+
+            async function checkMode(filename: string, expected: number) {
+                const stat = await fs.stat(filename);
+                expect(stat.mode & 0o777).to.equal(expected);
+            }
+
+            test('the file mode gets updated (string)', async () => {
+                const filename = await fix.createFile('spam.py', '...');
+                await fs.chmod(filename, 0o644);
+
+                await fileSystem.chmod(filename, '755');
+
+                await checkMode(filename, 0o755);
+            });
+
+            test('the file mode gets updated (number)', async () => {
+                const filename = await fix.createFile('spam.py', '...');
+                await fs.chmod(filename, 0o644);
+
+                await fileSystem.chmod(filename, 0o755);
+
+                await checkMode(filename, 0o755);
+            });
+
+            test('the file mode gets updated for a directory', async () => {
+                const dirname = await fix.createDirectory('spam');
+                await fs.chmod(dirname, 0o755);
+
+                await fileSystem.chmod(dirname, 0o700);
+
+                await checkMode(dirname, 0o700);
+            });
+
+            test('nothing happens if the file mode already matches', async () => {
+                const filename = await fix.createFile('spam.py', '...');
+                await fs.chmod(filename, 0o644);
+
+                await fileSystem.chmod(filename, 0o644);
+
+                await checkMode(filename, 0o644);
+            });
+
+            test('fails if the file does not exist', async () => {
+                const promise = fileSystem.chmod(DOES_NOT_EXIST, 0o755);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
@@ -118,8 +357,28 @@ suite('FileSystem', () => {
         // sync methods
 
         suite('readFileSync', () => {
-            test('', async () => {
-                // XXX
+            test('returns contents of a file', async () => {
+                const expected = '<some text>';
+                const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+                const text = fileSystem.readFileSync(filename);
+
+                expect(text).to.be.equal(expected);
+            });
+
+            test('always UTF-8', async () => {
+                const expected = '... 😁 ...';
+                const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+                const text = fileSystem.readFileSync(filename);
+
+                expect(text).to.equal(expected);
+            });
+
+            test('throws an exception if file does not exist', async () => {
+                expect(
+                    () => fileSystem.readFileSync(DOES_NOT_EXIST)
+                ).to.throw(Error);
             });
         });
 
@@ -154,110 +413,337 @@ suite('FileSystem', () => {
         });
 
         suite('createWriteStream', () => {
-            test('', async () => {
-                // XXX
+            test('returns the correct WriteStream', async () => {
+                const filename = await fix.resolve('x/y/z/spam.py');
+                const expected = fs.createWriteStream(filename);
+                expected.destroy();
+
+                const stream = fileSystem.createWriteStream(filename);
+                stream.destroy();
+
+                expect(stream.path).to.deep.equal(expected.path);
+            });
+
+            test('creates the file if missing', async () => {
+                const filename = await fix.resolve('x/y/z/spam.py');
+                await assertDoesNotExist(filename);
+                const data = 'line1\nline2\n';
+
+                const stream = fileSystem.createWriteStream(filename);
+                stream.write(data);
+                stream.destroy();
+
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
+            });
+
+            test('always UTF-8', async () => {
+                const filename = await fix.resolve('x/y/z/spam.py');
+                const data = '... 😁 ...';
+
+                const stream = fileSystem.createWriteStream(filename);
+                stream.write(data);
+                stream.destroy();
+
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
+            });
+
+            test('overwrites existing file', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                const data = 'line1\nline2\n';
+
+                const stream = fileSystem.createWriteStream(filename);
+                stream.write(data);
+                stream.destroy();
+
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
+                expect(actual).to.equal(data);
             });
         });
     });
 
     suite('utils', () => {
         suite('fileExists', () => {
+            test('want file, got file', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py');
+
+                const exists = await fileSystem.fileExists(filename);
+
+                expect(exists).to.equal(true);
+            });
+
             test('', async () => {
                 // XXX
             });
         });
 
         suite('directoryExists', () => {
+            test('want directory, got directory', async () => {
+                const dirname = await fix.createDirectory('x/y/z/spam');
+
+                const exists = await fileSystem.directoryExists(dirname);
+
+                expect(exists).to.equal(true);
+            });
+
             test('', async () => {
                 // XXX
             });
         });
 
         suite('getSubDirectories', () => {
+            if (SUPPORTS_SYMLINKS) {
+                test('mixed types', async () => {
+                    const symlinkSource = await fix.createFile('x/info.py');
+                    const dirname = await fix.createDirectory('x/y/z/scripts');
+                    const subdir1 = await fix.createDirectory('x/y/z/scripts/w');
+                    await fix.createFile('x/y/z/scripts/spam.py');
+                    const subdir2 = await fix.createDirectory('x/y/z/scripts/v');
+                    await fix.createFile('x/y/z/scripts/eggs.py');
+                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                    await fix.createSymlink('x/y/z/scripts/other', symlinkSource);
+                    await fix.createFile('x/y/z/scripts/data.json');
+
+                    const results = await fileSystem.getSubDirectories(dirname);
+
+                    expect(results.sort()).to.deep.equal([
+                        subdir2,
+                        subdir1
+                    ]);
+                });
+            } else {
+                test('mixed types', async () => {
+                    const dirname = await fix.createDirectory('x/y/z/scripts');
+                    const subdir1 = await fix.createDirectory('x/y/z/scripts/w');
+                    await fix.createFile('x/y/z/scripts/spam.py');
+                    const subdir2 = await fix.createDirectory('x/y/z/scripts/v');
+                    await fix.createFile('x/y/z/scripts/eggs.py');
+                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                    await fix.createFile('x/y/z/scripts/data.json');
+
+                    const results = await fileSystem.getSubDirectories(dirname);
+
+                    expect(results.sort()).to.deep.equal([
+                        subdir2,
+                        subdir1
+                    ]);
+                });
+            }
+
+            test('empty if the directory does not exist', async () => {
+                const entries = await fileSystem.getSubDirectories(DOES_NOT_EXIST);
+
+                expect(entries).to.deep.equal([]);
+            });
+
             test('', async () => {
                 // XXX
             });
         });
 
         suite('getFiles', () => {
+            if (SUPPORTS_SYMLINKS) {
+                test('mixed types', async () => {
+                    const symlinkSource = await fix.createFile('x/info.py');
+                    const dirname = await fix.createDirectory('x/y/z/scripts');
+                    await fix.createDirectory('x/y/z/scripts/w');
+                    const file1 = await fix.createFile('x/y/z/scripts/spam.py');
+                    await fix.createDirectory('x/y/z/scripts/v');
+                    const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
+                    const sock = await fix.createSocket('x/y/z/scripts/spam.sock');
+                    const symlink = await fix.createSymlink('x/y/z/scripts/other', symlinkSource);
+                    const file3 = await fix.createFile('x/y/z/scripts/data.json');
+
+                    const results = await fileSystem.getFiles(dirname);
+
+                    expect(results.sort()).to.deep.equal([
+                        file3,
+                        file2,
+                        symlink,
+                        file1,
+                        sock
+                    ]);
+                });
+            } else {
+                test('mixed types', async () => {
+                    const dirname = await fix.createDirectory('x/y/z/scripts');
+                    await fix.createDirectory('x/y/z/scripts/w');
+                    const file1 = await fix.createFile('x/y/z/scripts/spam.py');
+                    await fix.createDirectory('x/y/z/scripts/v');
+                    const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
+                    const sock = await fix.createSocket('x/y/z/scripts/spam.sock');
+                    const file3 = await fix.createFile('x/y/z/scripts/data.json');
+
+                    const results = await fileSystem.getFiles(dirname);
+
+                    expect(results.sort()).to.deep.equal([
+                        file3,
+                        file2,
+                        file1,
+                        sock
+                    ]);
+                });
+            }
+
+            test('empty if the directory does not exist', async () => {
+                const entries = await fileSystem.getFiles(DOES_NOT_EXIST);
+
+                expect(entries).to.deep.equal([]);
+            });
+
             test('', async () => {
                 // XXX
             });
         });
 
         suite('getFileHash', () => {
-            test('Getting hash for non existent file should throw error', async () => {
-                const promise = fileSystem.getFileHash('some unknown file');
-
-                await expect(promise).to.eventually.be.rejected;
-            });
+            // Since getFileHash() relies on timestamps, we have to take
+            // into account filesystem timestamp resolution.  For instance
+            // on FAT and HFS it is 1 second.
+            // See: https://nodejs.org/api/fs.html#fs_stat_time_values
 
             test('Getting hash for a file should return non-empty string', async () => {
-                const hash = await fileSystem.getFileHash(__filename);
+                const filename = await fix.createFile('x/y/z/spam.py');
 
-                expect(hash).to.be.length.greaterThan(0); // weak
+                const hash = await fileSystem.getFileHash(filename);
+
+                expect(hash).to.not.equal('');
             });
 
-            test('', async () => {
-                // XXX
+            test('the returned hash is stable', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py');
+
+                const hash1 = await fileSystem.getFileHash(filename);
+                const hash2 = await fileSystem.getFileHash(filename);
+                await sleep(2_000); // just in case
+                const hash3 = await fileSystem.getFileHash(filename);
+
+                expect(hash1).to.equal(hash2);
+                expect(hash1).to.equal(hash3);
+                expect(hash2).to.equal(hash3);
+            });
+
+            test('the returned hash changes with modification', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py', 'original text');
+
+                const hash1 = await fileSystem.getFileHash(filename);
+                await sleep(2_000); // for filesystems with 1s resolution
+                await fs.writeFile(filename, 'new text');
+                const hash2 = await fileSystem.getFileHash(filename);
+
+                expect(hash1).to.not.equal(hash2);
+            });
+
+            test('the returned hash is unique', async () => {
+                const file1 = await fix.createFile('spam.py');
+                await sleep(2_000); // for filesystems with 1s resolution
+                const file2 = await fix.createFile('x/y/z/spam.py');
+                await sleep(2_000); // for filesystems with 1s resolution
+                const file3 = await fix.createFile('eggs.py');
+
+                const hash1 = await fileSystem.getFileHash(file1);
+                const hash2 = await fileSystem.getFileHash(file2);
+                const hash3 = await fileSystem.getFileHash(file3);
+
+                expect(hash1).to.not.equal(hash2);
+                expect(hash1).to.not.equal(hash3);
+                expect(hash2).to.not.equal(hash3);
+            });
+
+            test('Getting hash for non existent file should throw error', async () => {
+                const promise = fileSystem.getFileHash(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
         suite('search', () => {
-            test('Test searching for files', async () => {
-                const expected = __filename.replace(/\\/g, '/');
-                const searchPattern = `${path.basename(__filename, __filename.substring(__filename.length - 3))}.*`;
+            test('found matches', async () => {
+                const pattern = await fix.resolve(`x/y/z/spam.*`);
+                const expected: string[] = [
+                    await fix.createFile('x/y/z/spam.py'),
+                    await fix.createFile('x/y/z/spam.pyc'),
+                    await fix.createFile('x/y/z/spam.so'),
+                    await fix.createDirectory('x/y/z/spam.data')
+                ];
+                // non-matches
+                await fix.createFile('x/spam.py');
+                await fix.createFile('x/y/z/eggs.py');
+                await fix.createFile('x/y/z/spam-all.py');
+                await fix.createFile('x/y/z/spam');
+                await fix.createFile('x/spam.py');
 
-                const files = await fileSystem.search(path.join(__dirname, searchPattern));
+                const files = await fileSystem.search(pattern);
 
-                expect(files).to.be.array();
-                expect(files.length).to.be.at.least(1);
-                const fileName = files[0].replace(/\\/g, '/');
-                expect(fileName).to.equal(expected);
+                expect(files.sort()).to.deep.equal(expected.sort());
             });
 
-            test('', async () => {
-                // XXX
+            test('no matches', async () => {
+                const pattern = await fix.resolve(`x/y/z/spam.*`);
+
+                const files = await fileSystem.search(pattern);
+
+                expect(files).to.deep.equal([]);
             });
         });
 
         suite('createTemporaryFile', () => {
-            test('Ensure creating a temporary file results in a unique temp file path', async () => {
-                const tempFile = await fileSystem.createTemporaryFile('.tmp');
-                const tempFile2 = await fileSystem.createTemporaryFile('.tmp');
+            async function createTemporaryFile(suffix: string): Promise<TemporaryFile> {
+                const tempfile = await fileSystem.createTemporaryFile(suffix);
+                fix.addFSCleanup(tempfile.filePath, tempfile.dispose);
+                return tempfile;
+            }
 
-                expect(tempFile.filePath).to.not.equal(tempFile2.filePath, 'Temp files must be unique, implementation of createTemporaryFile is off.');
+            test('TemporaryFile is created properly', async () => {
+                const tempfile = await fileSystem.createTemporaryFile('.tmp');
+                fix.addFSCleanup(tempfile.filePath, tempfile.dispose);
+                await assertExists(tempfile.filePath);
+
+                expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, `bad suffix on ${tempfile.filePath}`);
             });
 
-            test('Ensure chmod works against a temporary file', async () => {
-                await fileSystem.createTemporaryFile('.tmp')
-                    .then(async (fl: TemporaryFile) => {
-                        await fileSystem.chmod(fl.filePath, '7777')
-                            .then(
-                                (_success: void) => {
-                                    // cannot check for success other than we got here, chmod in Windows won't have any effect on the file itself.
-                                },
-                                (failReason) => {
-                                    expect(failReason).to.equal('There was no error using chmod', `Failed to perform chmod operation successfully, got error ${failReason}`);
-                                }
-                            );
-                    });
+            test('TemporaryFile is disposed properly', async () => {
+                const tempfile = await createTemporaryFile('.tmp');
+                await assertExists(tempfile.filePath);
+
+                tempfile.dispose();
+
+                await assertDoesNotExist(tempfile.filePath);
+            });
+
+            test('Ensure creating a temporary file results in a unique temp file path', async () => {
+                const tempFile = await createTemporaryFile('.tmp');
+                const tempFile2 = await createTemporaryFile('.tmp');
+
+                const filename1 = tempFile.filePath;
+                const filename2 = tempFile2.filePath;
+
+                expect(filename1).to.not.equal(filename2);
             });
 
             test('Ensure writing to a temp file is supported via file stream', async () => {
-                await fileSystem.createTemporaryFile('.tmp')
-                    .then(
-                        (tf: TemporaryFile) => {
-                            expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
-                            const writeStream = fileSystem.createWriteStream(tf.filePath);
-                            writeStream.write('hello', 'utf8', (err: Error | null | undefined) => {
-                                expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
-                            });
-                        },
-                        (failReason) => {
-                            expect(failReason).to.equal('No errors occurred', `Failed to create a temporary file with error ${failReason}`);
-                        }
-                    );
+                const tempfile = await createTemporaryFile('.tmp');
+                const stream = fileSystem.createWriteStream(tempfile.filePath);
+                fix.addCleanup(() => stream.destroy());
+                const data = '...';
+
+                stream.write(data, 'utf8');
+
+                const actual = await fs.readFile(tempfile.filePath, 'utf8');
+                expect(actual).to.equal(data);
+            });
+
+            test('Ensure chmod works against a temporary file', async () => {
+                // Note that on Windows chmod is a noop.
+                const tempfile = await createTemporaryFile('.tmp');
+
+                await expect(
+                    fs.chmod(tempfile.filePath, '7777')
+                ).to.not.eventually.be.rejected;
             });
 
             test('', async () => {
@@ -266,8 +752,37 @@ suite('FileSystem', () => {
         });
 
         suite('isDirReadonly', () => {
-            test('', async () => {
-                // XXX
+            suite('non-Windows', () => {
+                suiteSetup(function () {
+                    if (WINDOWS) {
+                        // tslint:disable-next-line:no-invalid-this
+                        this.skip();
+                    }
+                });
+
+                // On Windows, chmod won't have any effect on the file itself.
+                test('is readonly', async () => {
+                    const dirname = await fix.createDirectory('x/y/z/spam');
+                    await fs.chmod(dirname, 0o444);
+
+                    const isReadonly = await fileSystem.isDirReadonly(dirname);
+
+                    expect(isReadonly).to.equal(false);
+                });
+            });
+
+            test('is not readonly', async () => {
+                const dirname = await fix.createDirectory('x/y/z/spam');
+
+                const isReadonly = await fileSystem.isDirReadonly(dirname);
+
+                expect(isReadonly).to.equal(true);
+            });
+
+            test('fails if the directory does not exist', async () => {
+                const promise = fileSystem.isDirReadonly(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 

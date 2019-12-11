@@ -15,7 +15,7 @@ import {
     IFileSystem
 } from '../../../client/common/platform/types';
 import {
-    assertDoesNotExist, DOES_NOT_EXIST, FSFixture
+    assertDoesNotExist, DOES_NOT_EXIST, FSFixture, SUPPORTS_SYMLINKS
 } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
@@ -75,7 +75,11 @@ suite('FileSystem', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('for symlinks, gets the info for the linked file', async () => {
+        test('for symlinks, gets the info for the linked file', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
             const old = await fsextra.stat(filename);
