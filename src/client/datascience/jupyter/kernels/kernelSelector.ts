@@ -78,6 +78,10 @@ export class KernelSelector {
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
+        // When this method is called, we know we've started a local jupyter server.
+        // Lets pre-warm the list of local kernels.
+        this.selectionProvider.getKernelSelectionsForLocalSession(sessionManager, cancelToken).ignoreErrors();
+
         let selection: KernelSpecInterpreter = {};
         if (notebookMetadata?.kernelspec) {
             selection.kernelSpec = await this.kernelService.findMatchingKernelSpec(notebookMetadata?.kernelspec, sessionManager, cancelToken);

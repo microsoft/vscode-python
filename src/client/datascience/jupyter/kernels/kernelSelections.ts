@@ -117,6 +117,8 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
  */
 @injectable()
 export class KernelSelectionProvider {
+    private localSuggestionsCache: IKernelSpecQuickPickItem[] = [];
+    private remoteSuggestionsCache: IKernelSpecQuickPickItem[] = [];
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
@@ -130,11 +132,16 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForRemoteSession(sessionManager: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const list = await new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken);
-        // Sorty by name.
-        list.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        const liveItems = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken).then(items => {
+            // Sorty by name.
+            items.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            this.remoteSuggestionsCache = items;
+            return items;
+        });
 
-        return list;
+        // If we have someting in cache, return that, while fetching in the background.
+        const cachedItems = this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
+        return Promise.race([cachedItems, liveItems]);
     }
     /**
      * Gets a selection of kernel specs for a local session.
@@ -145,29 +152,36 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForLocalSession(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, sessionManager).getKernelSelections(cancelToken);
-        const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
+        const getSelections = async () => {
+            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, sessionManager).getKernelSelections(cancelToken);
+            const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
 
-        // tslint:disable-next-line: prefer-const
-        let [installedKernels, interpreters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
+            // tslint:disable-next-line: prefer-const
+            let [installedKernels, interpreters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
 
-        interpreters = interpreters.filter(item => {
-            // If the interpreter is registered as a kernel then don't inlcude it.
-            if (installedKernels.find(installedKernel => installedKernel.selection.kernelSpec?.display_name === item.selection.interpreter?.displayName && (
-                this.fileSystem.arePathsSame((installedKernel.selection.kernelSpec?.argv || [])[0], item.selection.interpreter?.path || '') ||
-                this.fileSystem.arePathsSame(installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '', item.selection.interpreter?.path || '')))) {
-                return false;
-            }
-            return true;
-        }).map(item => {
-            // We don't want details & descriptions.
-            return {...item, detail: '', description: ''};
-        });
+            interpreters = interpreters.filter(item => {
+                // If the interpreter is registered as a kernel then don't inlcude it.
+                if (installedKernels.find(installedKernel => installedKernel.selection.kernelSpec?.display_name === item.selection.interpreter?.displayName && (
+                    this.fileSystem.arePathsSame((installedKernel.selection.kernelSpec?.argv || [])[0], item.selection.interpreter?.path || '') ||
+                    this.fileSystem.arePathsSame(installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '', item.selection.interpreter?.path || '')))) {
+                    return false;
+                }
+                return true;
+            }).map(item => {
+                // We don't want details & descriptions.
+                return {...item, detail: '', description: ''};
+            });
 
-        const unifiedList = [...installedKernels!, ...interpreters];
-        // Sorty by name.
-        unifiedList.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            const unifiedList = [...installedKernels!, ...interpreters];
+            // Sorty by name.
+            unifiedList.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
 
-        return unifiedList;
+            return unifiedList;
+        };
+
+        const liveItems = getSelections().then(items => this.localSuggestionsCache = items);
+        // If we have someting in cache, return that, while fetching in the background.
+        const cachedItems = this.localSuggestionsCache.length > 0 ? Promise.resolve(this.localSuggestionsCache) : liveItems;
+        return Promise.race([cachedItems, liveItems]);
     }
 }
