@@ -680,6 +680,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
             const condaService = TypeMoq.Mock.ofType<ICondaService>();
+            this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
             condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
             condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
             condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
