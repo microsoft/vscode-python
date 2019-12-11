@@ -61,10 +61,6 @@ export interface IFileSystem {
     move(src: string, tgt: string): Promise<void>;
     // sync
     readFileSync(filename: string): string;
-    appendFileSync(filename: string, data: {}, encoding: string): void;
-    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: number; flag?: string }): void;
-    // tslint:disable-next-line:unified-signatures
-    appendFileSync(filename: string, data: {}, options?: { encoding?: string; mode?: string; flag?: string }): void;
     createReadStream(path: string): fs.ReadStream;
     createWriteStream(path: string): fs.WriteStream;
 

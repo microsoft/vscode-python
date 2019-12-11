@@ -382,30 +382,6 @@ suite('FileSystem', () => {
             });
         });
 
-        suite('appendFileSync', () => {
-            const fileToAppendTo = path.join(__dirname, 'created_for_testing_dummy.txt');
-            setup(cleanTestFiles);
-            teardown(cleanTestFiles);
-            function cleanTestFiles() {
-                if (fs.existsSync(fileToAppendTo)) {
-                    fs.unlinkSync(fileToAppendTo);
-                }
-            }
-
-            test('appending to a file works', async () => {
-                const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
-
-                fileSystem.appendFileSync(fileToAppendTo, dataToAppend);
-
-                const actual = await fs.readFile(fileToAppendTo, 'utf8');
-                expect(actual).to.be.equal(dataToAppend);
-            });
-
-            test('', async () => {
-                // XXX
-            });
-        });
-
         suite('createReadStream', () => {
             test('', async () => {
                 // XXX
