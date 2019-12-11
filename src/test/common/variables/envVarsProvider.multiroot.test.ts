@@ -10,7 +10,6 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { IS_WINDOWS, NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from '../../../client/common/platform/constants';
 import { PlatformService } from '../../../client/common/platform/platformService';
-import { IFileSystem } from '../../../client/common/platform/types';
 import { IDisposableRegistry, IPathUtils } from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { EnvironmentVariablesService } from '../../../client/common/variables/environment';
@@ -67,9 +66,8 @@ suite('Multiroot Environment Variables Provider', () => {
 
     function getVariablesProvider(mockVariables: EnvironmentVariables = { ...process.env }) {
         const pathUtils = ioc.serviceContainer.get<IPathUtils>(IPathUtils);
-        const fs = ioc.serviceContainer.get<IFileSystem>(IFileSystem);
         const mockProcess = new MockProcess(mockVariables);
-        const variablesService = new EnvironmentVariablesService(pathUtils, fs);
+        const variablesService = new EnvironmentVariablesService(pathUtils);
         const disposables = ioc.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
         const cfgService = new ConfigurationService(ioc.serviceContainer);

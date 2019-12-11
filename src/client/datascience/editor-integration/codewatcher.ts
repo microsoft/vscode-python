@@ -101,8 +101,13 @@ export class CodeWatcher implements ICodeWatcher {
         // run them one by one
         for (const lens of runCellCommands) {
             // Make sure that we have the correct command (RunCell) lenses
-            const range: Range = new Range(lens.command!.arguments![1], lens.command!.arguments![2], lens.command!.arguments![3], lens.command!.arguments![4]);
-            if (this.document && range) {
+            let range: Range = new Range(lens.command!.arguments![1], lens.command!.arguments![2], lens.command!.arguments![3], lens.command!.arguments![4]);
+            if (this.document) {
+                // Special case, if this is the first, expand our range to always include the top.
+                if (leftCount === runCellCommands.length) {
+                    range = new Range(new Position(0, 0), range.end);
+                }
+
                 const code = this.document.getText(range);
                 leftCount -= 1;
 
@@ -140,15 +145,23 @@ export class CodeWatcher implements ICodeWatcher {
         if (leftCount < 0) {
             leftCount = runCellCommands.length;
         }
+        const startCount = leftCount;
 
         // Run our code lenses up to this point, lenses are created in order on document load
         // so we can rely on them being in linear order for this
         for (const lens of runCellCommands) {
             // Make sure we are dealing with run cell based code lenses in case more types are added later
             if (leftCount > 0 && this.document) {
+                let range: Range = new Range(lens.range.start, lens.range.end);
+
+                // If this is the first, make sure it extends to the top
+                if (leftCount === startCount) {
+                    range = new Range(new Position(0, 0), range.end);
+                }
+
                 // We have a cell and we are not past or at the stop point
                 leftCount -= 1;
-                const code = this.document.getText(lens.range);
+                const code = this.document.getText(range);
                 const success = await this.addCode(code, this.getFileName(), lens.range.start.line);
                 if (!success) {
                     await this.addErrorMessage(leftCount);

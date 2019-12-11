@@ -88,6 +88,29 @@ class SimpleMessageProducer implements IMessageProducer {
         };
     }
 
+    protected generateClearMessage(wait: boolean): KernelMessage.IClearOutputMsg {
+        return {
+            channel: 'iopub',
+            header: {
+                username: 'foo',
+                version: '1.1',
+                session: '1111111111',
+                msg_id: '1.1',
+                msg_type: 'clear_output',
+                date: ''
+            },
+            parent_header: {
+
+            },
+            metadata: {
+
+            },
+            content: {
+                wait
+            }
+        };
+    }
+
 }
 
 class OutputMessageProducer extends SimpleMessageProducer {
@@ -129,6 +152,12 @@ class OutputMessageProducer extends SimpleMessageProducer {
                     haveMore: this.waitingForInput !== undefined
                 };
             }
+        } else if (this.output.output_type === 'clear_true') {
+            // Generate a clear message
+            return {
+                message: this.generateClearMessage(true),
+                haveMore: false
+            };
         }
 
         return super.produceNextMessage();

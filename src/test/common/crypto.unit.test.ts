@@ -4,23 +4,20 @@
 'use strict';
 
 import { assert, expect } from 'chai';
-import * as fsextra from 'fs-extra';
 import * as path from 'path';
 import { CryptoUtils } from '../../client/common/crypto';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PlatformService } from '../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Crypto Utils', async () => {
     let crypto: CryptoUtils;
+    const fs = new FileSystem(new PlatformService());
+    const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
     setup(() => {
         crypto = new CryptoUtils();
     });
-    async function getWordList(): Promise<string[]> {
-        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
-        const words = await fsextra.readFile(file, 'utf8');
-        return words.split('\n');
-    }
-
     test('If hashFormat equals `number`, method createHash() returns a number', async () => {
         const hash = crypto.createHash('blabla', 'number');
         assert.typeOf(hash, 'number', 'Type should be a number');
@@ -56,7 +53,8 @@ suite('Crypto Utils', async () => {
         assert.notEqual(hash1, hash2, 'Hashes should be different strings');
     });
     test('If hashFormat equals `number`, ensure numbers are uniformly distributed on scale from 0 to 100', async () => {
-        const wordList = await getWordList();
+        const words = await fs.readFile(file);
+        const wordList = words.split('\n');
         const buckets: number[] = Array(100).fill(0);
         const hashes = Array(10).fill(0);
         for (const w of wordList) {
@@ -75,7 +73,8 @@ suite('Crypto Utils', async () => {
         }
     });
     test('If hashFormat equals `number`, on a scale of 0 to 100, small difference in the input on average produce large differences (about 33) in the output ', async () => {
-        const wordList = await getWordList();
+        const words = await fs.readFile(file);
+        const wordList = words.split('\n');
         const buckets: number[] = Array(100).fill(0);
         let hashes: number[] = [];
         let totalDifference = 0;

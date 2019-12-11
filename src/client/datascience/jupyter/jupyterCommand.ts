@@ -3,7 +3,8 @@
 'use strict';
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
-
+import * as path from 'path';
+import { traceError } from '../../common/logger';
 import {
     ExecutionResult,
     IProcessService,
@@ -12,6 +13,7 @@ import {
     IPythonExecutionService,
     ObservableExecutionResult
 } from '../../common/process/types';
+import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { JupyterCommands, PythonDaemonModule } from '../constants';
@@ -71,14 +73,27 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     constructor(protected readonly moduleName: string, protected args: string[], protected readonly pythonExecutionFactory: IPythonExecutionFactory,
         private readonly _interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
         this.interpreterPromise = Promise.resolve(this._interpreter);
-        this.pythonLauncher = this.interpreterPromise.then(interpreter => {
+        this.pythonLauncher = this.interpreterPromise.then(async interpreter => {
             // Create a daemon only if the interpreter is the same as the current interpreter.
-            // We don't want too many daemons (one for each of the users interpreter on their machine).
+            // We don't want too many daemons (we don't want one for each of the users interpreter on their machine).
             if (isActiveInterpreter) {
-                return pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path });
-            } else {
-                return pythonExecutionFactory.createActivatedEnvironment({interpreter: this._interpreter});
+                const svc = await pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path });
+
+                // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
+                if ((moduleName.toLowerCase() === 'jupyter' && args.join(' ').toLowerCase().startsWith('-m jupyter notebook')) ||
+                    (moduleName.toLowerCase() === 'notebook' && args.join(' ').toLowerCase().startsWith('-m notebook'))) {
+
+                    try {
+                        const output = await svc.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'jupyter_nbInstalled.py')], {});
+                        if (output.stdout.toLowerCase().includes('available')){
+                            return svc;
+                        }
+                    } catch (ex){
+                        traceError('Checking whether notebook is importable failed', ex);
+                    }
+                }
             }
+            return pythonExecutionFactory.createActivatedEnvironment({interpreter: this._interpreter});
         });
     }
     public interpreter() : Promise<PythonInterpreter | undefined> {

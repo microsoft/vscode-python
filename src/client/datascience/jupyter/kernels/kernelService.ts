@@ -16,6 +16,7 @@ import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } fr
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../common/types';
+import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
@@ -250,9 +251,18 @@ export class KernelService {
             return;
         }
 
-        const kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
-        if (Cancellation.isCanceled(cancelToken)) {
-            return;
+        let kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
+        for (let counter = 0; counter < 5; counter += 1){
+            if (Cancellation.isCanceled(cancelToken)) {
+                return;
+            }
+            if (kernel){
+                break;
+            }
+            traceWarning('Waiting for 500ms for registered kernel to get detected');
+            // Wait for jupyter server to get updated with the new kernel information.
+            await sleep(500);
+            kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
         }
         if (!kernel) {
             const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
@@ -296,7 +306,7 @@ export class KernelService {
         specModel.metadata.interpreter = interpreter as any;
 
         // Update the kernel.json with our new stuff.
-        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2));
+        await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2), { flag: 'w', encoding: 'utf8' });
         kernel.metadata = specModel.metadata;
 
         traceInfo(`Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`);

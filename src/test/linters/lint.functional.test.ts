@@ -16,6 +16,7 @@ import {
 } from 'vscode';
 import { Product } from '../../client/common/installer/productInstaller';
 import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PlatformService } from '../../client/common/platform/platformService';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
@@ -196,9 +197,11 @@ class TestFixture extends BaseTestFixture {
         processLogger.setup(p => p.logProcess(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => { return; });
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny())).returns(() => processLogger.object);
 
-        const filesystem = new FileSystem();
+        const platformService = new PlatformService();
+        const filesystem = new FileSystem(platformService);
 
         super(
+            platformService,
             filesystem,
             TestFixture.newPythonToolExecService(
                 serviceContainer.object

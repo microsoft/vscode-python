@@ -1,10 +1,10 @@
 import { Diff, diff_match_patch } from 'diff-match-patch';
+import * as fs from 'fs-extra';
 import { injectable } from 'inversify';
 import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
-import { IFileSystem } from './platform/types';
 import { IEditorUtils } from './types';
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
@@ -80,11 +80,7 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 
     return textEdits;
 }
-export function getWorkspaceEditsFromPatch(
-    filePatches: string[],
-    fs: IFileSystem,
-    workspaceRoot?: string
-): WorkspaceEdit {
+export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?: string): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach(patch => {
         const indexOfAtAt = patch.indexOf('@@');
@@ -111,7 +107,7 @@ export function getWorkspaceEditsFromPatch(
 
         let fileName = fileNameLines[0].substring(fileNameLines[0].indexOf(' a') + 3).trim();
         fileName = workspaceRoot && !path.isAbsolute(fileName) ? path.resolve(workspaceRoot, fileName) : fileName;
-        if (!fs.fileExistsSync(fileName)) {
+        if (!fs.existsSync(fileName)) {
             return;
         }
 
@@ -127,7 +123,7 @@ export function getWorkspaceEditsFromPatch(
             throw new Error('Unable to parse Patch string');
         }
 
-        const fileSource = fs.readFileSync(fileName);
+        const fileSource = fs.readFileSync(fileName).toString('utf8');
         const fileUri = Uri.file(fileName);
 
         // Add line feeds and build the text edits
@@ -230,25 +226,24 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     return edits;
 }
 
-export async function getTempFileWithDocumentContents(
-    document: TextDocument,
-    fs: IFileSystem
-): Promise<string> {
-    // Don't create file in temp folder since external utilities
-    // look into configuration files in the workspace and are not able
-    // to find custom rules if file is saved in a random disk location.
-    // This means temp file has to be created in the same folder
-    // as the original one and then removed.
+export function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
+    return new Promise<string>((resolve, reject) => {
+        const ext = path.extname(document.uri.fsPath);
+        // Don't create file in temp folder since external utilities
+        // look into configuration files in the workspace and are not able
+        // to find custom rules if file is saved in a random disk location.
+        // This means temp file has to be created in the same folder
+        // as the original one and then removed.
 
-    const ext = path.extname(document.uri.fsPath);
-    const filename = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
-    await (
-        fs.writeFile(filename, document.getText())
-            .catch(err => {
-                throw Error(`Failed to create a temporary file, ${err.message}`);
-            })
-    );
-    return filename;
+        // tslint:disable-next-line:no-require-imports
+        const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+        fs.writeFile(fileName, document.getText(), ex => {
+            if (ex) {
+                reject(`Failed to create a temporary file, ${ex.message}`);
+            }
+            resolve(fileName);
+        });
+    });
 }
 
 /**

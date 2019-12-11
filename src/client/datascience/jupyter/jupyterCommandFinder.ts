@@ -1,17 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
+
 import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
+import {
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    SpawnOptions
+} from '../../common/process/types';
+import {
+    IConfigurationService,
+    IDisposableRegistry,
+    ILogger,
+    IPersistentState,
+    IPersistentStateFactory
+} from '../../common/types';
+import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
@@ -465,7 +476,7 @@ type CacheInfo = {
 export class JupyterCommandFinder extends JupyterCommandFinderImpl {
     private readonly workspaceJupyterInterpreter: CacheInfo;
     private readonly globalJupyterInterpreter: CacheInfo;
-    private findNotebookCommandPromise?: Promise<IFindCommandResult>;
+    private findNotebookCommandPromise?: Deferred<IFindCommandResult>;
     constructor(
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) executionFactory: IPythonExecutionFactory,
@@ -503,13 +514,21 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
     private get cacheStore(): CacheInfo {
         return this.workspace.hasWorkspaceFolders ? this.workspaceJupyterInterpreter : this.globalJupyterInterpreter;
     }
-    public async findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
-        if (command === JupyterCommands.NotebookCommand && this.findNotebookCommandPromise) {
-            // Use previously seached item, also possible the promise has not yet resolve.
+    public findBestCommand(command: JupyterCommands, token?: CancellationToken): Promise<IFindCommandResult> {
+        if (command === JupyterCommands.NotebookCommand && this.findNotebookCommandPromise && !this.findNotebookCommandPromise.rejected) {
+            // Use previously seached item, also possible the promise has not yet resolved.
             // I.e. use same search.
-            return this.findNotebookCommandPromise;
+            return this.findNotebookCommandPromise.promise;
         } else if (command === JupyterCommands.NotebookCommand) {
-            return (this.findNotebookCommandPromise = this.findBestNotebookCommand(token));
+            // Otherwise wrap the result so we can check for a failure.
+            this.findNotebookCommandPromise = createDeferred<IFindCommandResult>();
+            return this.findBestNotebookCommand(token).then(r => {
+                this.findNotebookCommandPromise?.resolve(r);
+                return r;
+            }).catch(e => {
+                this.findNotebookCommandPromise?.reject(e);
+                throw e;
+            });
         } else {
             return super.findBestCommand(command, token);
         }

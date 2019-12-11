@@ -49,7 +49,6 @@ suite('Resolving Environment Variables when Debugging', () => {
     function initializeDI() {
         ioc = new UnitTestIocContainer();
         ioc.registerProcessTypes();
-        ioc.registerFileSystemTypes();
         ioc.registerVariableTypes();
         ioc.registerMockProcess();
     }

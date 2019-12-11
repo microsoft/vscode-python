@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
+import * as fs from 'fs';
 import { injectable } from 'inversify';
 import * as path from 'path';
 import { OutputChannel, window } from 'vscode';
@@ -9,10 +10,9 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { STANDARD_OUTPUT_CHANNEL } from '../constants';
-import { IFileSystem } from '../platform/types';
 import { ITerminalServiceFactory } from '../terminal/types';
 import { ExecutionInfo, IConfigurationService, IOutputChannel } from '../types';
-import { isResource } from '../utils/misc';
+import { isResource, noop } from '../utils/misc';
 import { InterpreterUri } from './types';
 
 @injectable()
@@ -38,10 +38,7 @@ export abstract class ModuleInstaller {
             if (!interpreter || interpreter.type !== InterpreterType.Unknown) {
                 await terminalService.sendCommand(pythonPath, args);
             } else if (settings.globalModuleInstallation) {
-                const dirname = path.dirname(pythonPath);
-                const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-                const isWritable = ! await fs.isDirReadonly(dirname);
-                if (isWritable) {
+                if (await this.isPathWritableAsync(path.dirname(pythonPath))) {
                     await terminalService.sendCommand(pythonPath, args);
                 } else {
                     this.elevatedInstall(pythonPath, args);
@@ -70,6 +67,19 @@ export abstract class ModuleInstaller {
             return newArgs;
         }
         return args;
+    }
+    private async isPathWritableAsync(directoryPath: string): Promise<boolean> {
+        const filePath = `${directoryPath}${path.sep}___vscpTest___`;
+        return new Promise<boolean>(resolve => {
+            fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
+                if (!error) {
+                    fs.close(fd, () => {
+                        fs.unlink(filePath, noop);
+                    });
+                }
+                return resolve(!error);
+            });
+        });
     }
 
     private elevatedInstall(execPath: string, args: string[]) {

@@ -4,7 +4,6 @@
 import '../../common/extensions';
 
 import { ChildProcess } from 'child_process';
-import * as path from 'path';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { CancellationError } from '../../common/cancellation';
 import { traceWarning } from '../../common/logger';
@@ -40,7 +39,6 @@ class JupyterConnectionWaiter {
     private configService: IConfigurationService;
     private logger: ILogger;
     private fileSystem: IFileSystem;
-    private notebook_dir: string;
     private getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>;
     private createConnection: (b: string, t: string, h: string, p: Disposable) => IConnection;
     private launchResult: ObservableExecutionResult<string>;
@@ -50,7 +48,7 @@ class JupyterConnectionWaiter {
 
     constructor(
         launchResult: ObservableExecutionResult<string>,
-        notebookFile: string,
+        private readonly notebookDir: string,
         getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         createConnection: (b: string, t: string, h: string, p: Disposable) => IConnection,
         serviceContainer: IServiceContainer,
@@ -69,9 +67,6 @@ class JupyterConnectionWaiter {
             cancelToken.onCancellationRequested(() => this.startPromise.reject(new CancellationError()));
         }
 
-        // Compute our notebook dir
-        this.notebook_dir = path.dirname(notebookFile);
-
         // Setup our start promise
         this.startPromise = createDeferred<IConnection>();
 
@@ -88,13 +83,14 @@ class JupyterConnectionWaiter {
         if (launchResult.proc) {
             launchResult.proc.on('exit', c => (exitCode = c ? c.toString() : '0'));
         }
-
+        let stderr = '';
         // Listen on stderr for its connection information
         launchResult.out.subscribe(
             (output: Output<string>) => {
                 if (output.source === 'stderr') {
+                    stderr += output.out;
                     this.stderr.push(output.out);
-                    this.extractConnectionInformation(output.out);
+                    this.extractConnectionInformation(stderr);
                 } else {
                     this.output(output.out);
                 }
@@ -119,8 +115,8 @@ class JupyterConnectionWaiter {
     // From a list of jupyter server infos try to find the matching jupyter that we launched
     // tslint:disable-next-line:no-any
     private getJupyterURL(serverInfos: JupyterServerInfo[] | undefined, data: any) {
-        if (serverInfos && !this.startPromise.completed) {
-            const matchInfo = serverInfos.find(info => this.fileSystem.arePathsSame(this.notebook_dir, info.notebook_dir));
+        if (serverInfos && serverInfos.length > 0 && !this.startPromise.completed) {
+            const matchInfo = serverInfos.find(info => this.fileSystem.arePathsSame(this.notebookDir, info.notebook_dir));
             if (matchInfo) {
                 const url = matchInfo.url;
                 const token = matchInfo.token;
@@ -169,7 +165,7 @@ class JupyterConnectionWaiter {
 
         const httpMatch = RegExpValues.HttpPattern.exec(data);
 
-        if (httpMatch && this.notebook_dir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
+        if (httpMatch && this.notebookDir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
             // .then so that we can keep from pushing aync up to the subscribed observable function
             this.getServerInfo(this.cancelToken)
                 .then(serverInfos => this.getJupyterURL(serverInfos, data))
@@ -243,7 +239,7 @@ export class JupyterConnection implements IConnection {
     }
 
     public static waitForConnection(
-        notebookFile: string,
+        notebookDir: string,
         getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         notebookExecution: ObservableExecutionResult<string>,
         serviceContainer: IServiceContainer,
@@ -252,7 +248,7 @@ export class JupyterConnection implements IConnection {
         // Create our waiter. It will sit here and wait for the connection information from the jupyter process starting up.
         const waiter = new JupyterConnectionWaiter(
             notebookExecution,
-            notebookFile,
+            notebookDir,
             getServerInfo,
             (baseUrl: string, token: string, hostName: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, hostName, processDisposable, notebookExecution.proc),
             serviceContainer,

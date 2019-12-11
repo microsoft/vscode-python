@@ -3,11 +3,12 @@
 
 'use strict';
 
+import { WriteStream } from 'fs';
 import { inject, injectable } from 'inversify';
 import * as requestTypes from 'request';
 import { Progress, ProgressLocation } from 'vscode';
 import { IApplicationShell } from '../application/types';
-import { IFileSystem, WriteStream } from '../platform/types';
+import { IFileSystem } from '../platform/types';
 import { DownloadOptions, IFileDownloader, IHttpClient } from '../types';
 import { Http } from '../utils/localize';
 import { noop } from '../utils/misc';
