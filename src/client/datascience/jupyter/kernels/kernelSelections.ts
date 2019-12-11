@@ -25,7 +25,6 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types'
 function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelSpecQuickPickItem {
     return {
         label: kernelSpec.display_name,
-        description: localize.DataScience.kernelDescriptionForKernelPicker(),
         selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
     };
 }
@@ -101,6 +100,9 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
         return items.map(item => {
             return {
                 ...item,
+                // We don't want details & descriptions.
+                detail: '',
+                description: '',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
@@ -154,9 +156,8 @@ export class KernelSelectionProvider {
             }
             return true;
         }).map(item => {
-            // to indicate we're registering/adding these as kernels.
-            item.label = `$(plus) ${item.label}`;
-            return item;
+            // We don't want details & descriptions.
+            return {...item, detail: '', description: ''};
         });
         // Sorty by name.
         // Do not sort interpreter list, as that's pre-sorted (there's an algorithm for that).

@@ -40,19 +40,22 @@ suite('Data Science - KernelSelections', () => {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p1', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello1' },
             path: 'p1',
-            detail: 'p1'
+            detail: '',
+            description: ''
         },
         {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p2', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello2' },
             path: 'p1',
-            detail: 'p1'
+            detail: '',
+            description: ''
         },
         {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p3', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello3' },
             path: 'p1',
-            detail: 'p1'
+            detail: '',
+            description: ''
         }
     ];
 
@@ -109,14 +112,15 @@ suite('Data Science - KernelSelections', () => {
         const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(item => {
             return {
                 label: item.display_name,
-                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item },
-                description: localize.DataScience.kernelDescriptionForKernelPicker()
+                selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
             };
         });
         const expectedInterpreterItems: IKernelSpecQuickPickItem[] = allInterpreters.map(item => {
             return {
                 ...item,
-                label: `$(plus) ${item.label}`,
+                label: item.label,
+                detail: '',
+                description: '',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
