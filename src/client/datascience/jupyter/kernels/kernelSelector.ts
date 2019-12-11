@@ -7,6 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
+import '../../../common/extensions';
 import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IInstaller, Product } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
@@ -50,27 +51,7 @@ export class KernelSelector {
      */
     public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
         const suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
-        const state: {selection?: IKernelSpecQuickPickItem} = {};
-        const multiStep = this.multiStepFactory.create<typeof state>();
-        await multiStep.run(async (input, stepState) => {
-            stepState.selection = await input.showQuickPick<IKernelSpecQuickPickItem, IQuickPickParameters<IKernelSpecQuickPickItem>>({
-                placeholder: '',
-                items: suggestions,
-                title: localize.DataScience.selectKernel()
-            });
-
-        }, state);
-        const selection = state.selection?.selection;
-        if (!selection) {
-            return {};
-        }
-
-        if (selection.kernelSpec) {
-            const interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken);
-            return { kernelSpec: selection.kernelSpec, interpreter };
-        }
-        // This is not possible (remote kernels selector can only display remote kernels).
-        throw new Error('Invalid Selection in kernel spec (somehow a local kernel/interpreter has been selected for a remote session!');
+        return this.selectKernel(suggestions, session, cancelToken);
     }
     /**
      * Select a kernel from a local session.
@@ -82,27 +63,7 @@ export class KernelSelector {
      */
     public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
         const suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
-        const state: {selection?: IKernelSpecQuickPickItem} = {};
-        const multiStep = this.multiStepFactory.create<typeof state>();
-        await multiStep.run(async (input, stepState) => {
-            stepState.selection = await input.showQuickPick<IKernelSpecQuickPickItem, IQuickPickParameters<IKernelSpecQuickPickItem>>({
-                placeholder: '',
-                items: suggestions,
-                title: localize.DataScience.selectKernel()
-            });
-
-        }, state);
-        const selection = state.selection?.selection;
-        if (!selection) {
-            return {};
-        }
-        // Check if ipykernel is installed in this kernel.
-        if (selection.interpreter) {
-            return this.useInterpreterAsKernel(selection.interpreter, undefined, session, cancelToken);
-        } else {
-            const interpreter = selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken) : undefined;
-            return { kernelSpec: selection.kernelSpec, interpreter };
-        }
+        return this.selectKernel(suggestions, session, cancelToken);
     }
     /**
      * Gets a kernel that needs to be used with a local session.
@@ -146,6 +107,29 @@ export class KernelSelector {
             traceError('Jupyter Kernel Spec not found for a local connection');
         }
         return selection;
+    }
+    private async selectKernel(suggestions: IKernelSpecQuickPickItem[], session?: IJupyterSessionManager, cancelToken?: CancellationToken){
+        const state: {selection?: IKernelSpecQuickPickItem} = {};
+        const multiStep = this.multiStepFactory.create<typeof state>();
+        await multiStep.run(async (input, stepState) => {
+            stepState.selection = await input.showQuickPick<IKernelSpecQuickPickItem, IQuickPickParameters<IKernelSpecQuickPickItem>>({
+                placeholder: '',
+                items: suggestions,
+                title: localize.DataScience.selectKernel()
+            });
+
+        }, state);
+        const selection = state.selection?.selection;
+        if (!selection) {
+            return {};
+        }
+        // Check if ipykernel is installed in this kernel.
+        if (selection.interpreter) {
+            return this.useInterpreterAsKernel(selection.interpreter, undefined, session, cancelToken);
+        } else {
+            const interpreter = selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken) : undefined;
+            return { kernelSpec: selection.kernelSpec, interpreter };
+        }
     }
     /**
      * Use the provided interpreter as a kernel.
