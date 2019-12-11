@@ -13,6 +13,7 @@ import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
 import { createDeferred, Deferred } from '../utils/async';
 import { noop } from '../utils/misc';
+import { TerminalService } from './service';
 import { ITerminalService } from './types';
 
 const shellExecFile = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'shell_exec.py');
@@ -96,9 +97,10 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
-        private readonly terminalService: ITerminalService
+        public readonly terminalService: TerminalService
     ) {}
     public dispose() {
+        this.terminalService.dispose();
         while (this.disposables.length) {
             const disposable = this.disposables.shift();
             if (disposable) {

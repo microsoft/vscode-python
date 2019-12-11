@@ -13,13 +13,13 @@ import { ITerminalService, ITerminalServiceFactory } from './types';
 
 @injectable()
 export class TerminalServiceFactory implements ITerminalServiceFactory {
-    private terminalServices: Map<string, ITerminalService>;
+    private terminalServices: Map<string, TerminalService>;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fs: IFileSystem,
         @inject(IInterpreterService) private interpreterService: IInterpreterService) {
 
-        this.terminalServices = new Map<string, ITerminalService>();
+        this.terminalServices = new Map<string, TerminalService>();
     }
     public getTerminalService(resource?: Uri, title?: string): ITerminalService {
 
