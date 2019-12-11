@@ -7,50 +7,83 @@ import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../../client/common/platform/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { OSType } from '../../../client/common/utils/platform';
 
 suite('FileSystem', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
     let fileSystem: FileSystem;
     setup(() => {
-        platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = new FileSystem(platformService.object);
     });
+    function verifyAll() {
+        platformService.verifyAll();
+    }
 
     suite('path-related', () => {
+        const caseInsensitive = [OSType.Windows];
+
         suite('arePathsSame', () => {
-            function caseSensitivityFileCheck(isWindows: boolean, isOsx: boolean, isLinux: boolean) {
-                platformService.setup(p => p.isWindows).returns(() => isWindows);
-                platformService.setup(p => p.isMac).returns(() => isOsx);
-                platformService.setup(p => p.isLinux).returns(() => isLinux);
-                const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
-                const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
-                const path3 = 'c:\\USERS\\Peter Smith\\my documents\\test.exe';
+            getNamesAndValues<OSType>(OSType).forEach(item => {
+                const osType = item.value;
 
-                const res11 = fileSystem.arePathsSame(path1, path1);
-                const res12 = fileSystem.arePathsSame(path1, path2);
-                const res13 = fileSystem.arePathsSame(path1, path3);
-                const res22 = fileSystem.arePathsSame(path2, path2);
-
-                if (isWindows) {
-                    expect(res12).to.be.equal(true, 'file paths do not match (windows)');
-                } else {
-                    expect(res12).to.be.equal(false, 'file match (non windows)');
+                function setPlatform(numCalls = 1) {
+                    platformService.setup(p => p.isWindows)
+                        .returns(() => osType === OSType.Windows)
+                        .verifiable(TypeMoq.Times.exactly(numCalls));
                 }
-                expect(res11).to.be.equal(true, '1. file paths do not match');
-                expect(res22).to.be.equal(true, '2. file paths do not match');
-                expect(res13).to.be.equal(false, '2. file paths do not match');
-            }
 
-            test('Case sensitivity is ignored when comparing file names on windows', async () => {
-                caseSensitivityFileCheck(true, false, false);
-            });
+                test(`True if paths are identical (type: ${item.name})`, () => {
+                    setPlatform(2);
+                    const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                    const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
 
-            test('Case sensitivity is not ignored when comparing file names on osx', async () => {
-                caseSensitivityFileCheck(false, true, false);
-            });
+                    const areSame11 = fileSystem.arePathsSame(path1, path1);
+                    const areSame22 = fileSystem.arePathsSame(path2, path2);
 
-            test('Case sensitivity is not ignored when comparing file names on linux', async () => {
-                caseSensitivityFileCheck(false, false, true);
+                    expect(areSame11).to.be.equal(true, '1. file paths do not match');
+                    expect(areSame22).to.be.equal(true, '2. file paths do not match');
+                    verifyAll();
+                });
+
+                test(`False if paths are completely different (type: ${item.name})`, () => {
+                    setPlatform();
+                    const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                    const path2 = 'c:\\users\\Peter Smith\\my documents\\test.exe';
+
+                    const areSame = fileSystem.arePathsSame(path1, path2);
+
+                    expect(areSame).to.be.equal(false, 'file paths do not match');
+                    verifyAll();
+                });
+
+                if (caseInsensitive.includes(osType)) {
+                    test(`True if paths only differ by case (type: ${item.name})`, () => {
+                        setPlatform();
+                        const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                        const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
+
+                        const areSame = fileSystem.arePathsSame(path1, path2);
+
+                        expect(areSame).to.be.equal(true, 'file paths match');
+                        verifyAll();
+                    });
+                } else {
+                    test(`False if paths only differ by case (type: ${item.name})`, () => {
+                        setPlatform();
+                        const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                        const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
+
+                        const areSame = fileSystem.arePathsSame(path1, path2);
+
+                        expect(areSame).to.be.equal(false, 'file paths do not match');
+                        verifyAll();
+                    });
+                }
+
+                // Missing tests:
+                // * exercize normalization
             });
         });
     });
