@@ -212,21 +212,23 @@ for _ in range(50):
             assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
         }, () => { return ioc; });
 
-        runMountedTest('Select Jupyter Server', async (wrapper) => {
-            let selectorCalled = false;
+        runMountedTest('Select Jupyter Server', async (_wrapper) => {
+            // tslint:disable-next-line: no-console
+            console.log('Test skipped until user can change jupyter server selection again');
+            // let selectorCalled = false;
 
-            ioc.datascience.setup(ds => ds.selectJupyterURI()).returns(() => {
-                selectorCalled = true;
-                return Promise.resolve();
-            });
+            // ioc.datascience.setup(ds => ds.selectJupyterURI()).returns(() => {
+            //     selectorCalled = true;
+            //     return Promise.resolve();
+            // });
 
-            await createNewEditor(ioc);
-            const editor = wrapper.find(NativeEditor);
-            const kernelSelectionUI = editor.find(KernelSelection);
-            const buttons = kernelSelectionUI.find('div');
-            buttons!.at(1).simulate('click');
+            // await createNewEditor(ioc);
+            // const editor = wrapper.find(NativeEditor);
+            // const kernelSelectionUI = editor.find(KernelSelection);
+            // const buttons = kernelSelectionUI.find('div');
+            // buttons!.at(1).simulate('click');
 
-            assert.equal(selectorCalled, true, 'Server Selector should have been called');
+            // assert.equal(selectorCalled, true, 'Server Selector should have been called');
         }, () => { return ioc; });
 
         runMountedTest('Select Jupyter Kernel', async (wrapper) => {
