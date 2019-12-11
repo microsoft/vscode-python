@@ -69,7 +69,7 @@ export namespace Helpers {
 
             // Prevent updates to the source, as its possible we have recieved a response for a cell execution
             // and the user has updated the cell text since then.
-            newVMs[index] = {
+            const newVM = {
                 ...newVMs[index],
                 cell: {
                     ...newVMs[index].cell,
@@ -80,6 +80,9 @@ export namespace Helpers {
                     }
                 }
             };
+
+            // tslint:disable-next-line: no-any
+            newVMs[index] = (newVM as any) as ICellViewModel;
 
             return {
                 ...arg.prevState,
