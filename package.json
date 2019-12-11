@@ -1532,7 +1532,7 @@
                 },
                 "python.dataScience.notebookFileRoot": {
                     "type": "string",
-                    "default": "${workspaceFolder}",
+                    "default": "${fileDirname}",
                     "description": "Set the root directory for loading files for the Python Interactive window.",
                     "scope": "resource"
                 },
@@ -1544,7 +1544,7 @@
                 },
                 "python.dataScience.changeDirOnImportExport": {
                     "type": "boolean",
-                    "default": true,
+                    "default": false,
                     "description": "When importing or exporting a Jupyter Notebook add a directory change command to allow relative path loading to work.",
                     "scope": "resource"
                 },

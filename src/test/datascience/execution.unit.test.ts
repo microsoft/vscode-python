@@ -652,7 +652,8 @@ suite('Jupyter Execution', async () => {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
-            notebookFileRoot: 'WORKSPACE',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,

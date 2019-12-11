@@ -139,6 +139,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(`__file__ = '${Uri.file('bar.py').fsPath.replace(/\\/g, '\\\\')}'`);
         this.addCell(`__file__ = '${Uri.file('foo').fsPath.replace(/\\/g, '\\\\')}'`);
         this.addCell(`__file__ = '${Uri.file('test.py').fsPath.replace(/\\/g, '\\\\')}'`);
+        this.addCell('import os\nos.getcwd()', path.join(EXTENSION_ROOT_DIR));
     }
 
     public getConnInfo(): IConnection {
@@ -324,6 +325,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
         const pythonPath = configService.getSettings().pythonPath;
         if (this.activeInterpreter === undefined || pythonPath !== this.activeInterpreter.path) {
             this.activeInterpreter = this.installedInterpreters.filter(f => f.path === pythonPath)[0];
+            if (!this.activeInterpreter) {
+                this.activeInterpreter = this.installedInterpreters[0];
+            }
             this.changedInterpreterEvent.fire();
         }
     }

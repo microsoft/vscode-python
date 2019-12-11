@@ -555,8 +555,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
-            notebookFileRoot: 'WORKSPACE',
-            changeDirOnImportExport: true,
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
+            changeDirOnImportExport: false,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,

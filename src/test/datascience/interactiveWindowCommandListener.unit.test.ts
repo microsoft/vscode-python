@@ -125,8 +125,9 @@ suite('Interactive window command listener', async () => {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: '',
-            changeDirOnImportExport: true,
-            notebookFileRoot: 'WORKSPACE',
+            changeDirOnImportExport: false,
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
