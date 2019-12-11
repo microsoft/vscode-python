@@ -130,7 +130,7 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
-    public chmod(filePath: string, mode: string): Promise<void> {
+    public chmod(filePath: string, mode: string | number): Promise<void> {
         return new Promise<void>((resolve, reject) => {
             fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
                 if (err) {

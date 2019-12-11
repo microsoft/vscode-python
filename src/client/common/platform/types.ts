@@ -55,7 +55,7 @@ export interface IFileSystem {
     appendFile(filename: string, data: {}): Promise<void>;
     copyFile(src: string, dest: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
-    chmod(path: string, mode: string): Promise<void>;
+    chmod(path: string, mode: string | number): Promise<void>;
     move(src: string, tgt: string): Promise<void>;
     // sync
     readFileSync(filename: string): string;
