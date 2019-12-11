@@ -40,7 +40,8 @@ export namespace Helpers {
     }
 
     // This function is because the unit test typescript compiler can't handle ICell.metadata
-    export function asCellViewModel(cvm: Partial<ICellViewModel>): ICellViewModel {
+    // tslint:disable-next-line: no-any
+    export function asCellViewModel(cvm: any): ICellViewModel {
         return cvm as ICellViewModel;
     }
 
