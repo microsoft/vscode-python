@@ -223,6 +223,7 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
+
     public async search(globPattern: string, cwd?: string): Promise<string[]> {
         let found: string[];
         if (cwd) {
@@ -235,6 +236,7 @@ export class FileSystem implements IFileSystem {
         }
         return Array.isArray(found) ? found : [];
     }
+
     public createTemporaryFile(extension: string): Promise<TemporaryFile> {
         return new Promise<TemporaryFile>((resolve, reject) => {
             tmp.file({ postfix: extension }, (err, tmpFile, _, cleanupCallback) => {
