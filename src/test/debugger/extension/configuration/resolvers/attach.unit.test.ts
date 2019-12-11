@@ -10,9 +10,10 @@ import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { DebugAdapterNewPtvsd } from '../../../../../client/common/experimentGroups';
+import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../../../../client/common/experimentGroups';
 import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../../../../client/common/types';
+import { Diagnostics } from '../../../../../client/common/utils/localize';
 import { OSType } from '../../../../../client/common/utils/platform';
 import { AttachConfigurationResolver } from '../../../../../client/debugger/extension/configuration/resolvers/attach';
 import { AttachRequestArguments, DebugOptions } from '../../../../../client/debugger/types';
@@ -413,6 +414,42 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { debugOptions, request: 'attach', justMyCode: testParams.justMyCode, debugStdLib: testParams.debugStdLib } as any as DebugConfiguration);
                 expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
             });
+        });
+
+        test('If in PtvsdWheels experiment and debugConfiguration does not contain \'processId\' field, do not throw error', async () => {
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+            experimentsManager.reset();
+            experimentsManager
+                .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
+                .returns(() => true);
+            experimentsManager
+                .setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment))
+                .returns(() => true);
+
+            const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, { request: 'attach' } as any as DebugConfiguration);
+            await expect(promise).to.not.be.rejectedWith(Error);
+        });
+
+        test('If in PtvsdWheels experiment and debugConfiguration contains \'processId\' field, throw error', async () => {
+            const activeFile = 'xyz.py';
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            setupActiveEditor(activeFile, PYTHON_LANGUAGE);
+            const defaultWorkspace = path.join('usr', 'desktop');
+            setupWorkspaces([defaultWorkspace]);
+            experimentsManager.reset();
+            experimentsManager
+                .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
+                .returns(() => true);
+            experimentsManager
+                .setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment))
+                .returns(() => true);
+
+            const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, { request: 'attach', processId: 1234 } as any as DebugConfiguration);
+            await expect(promise).to.be.rejectedWith(Diagnostics.processId());
         });
     });
 });
