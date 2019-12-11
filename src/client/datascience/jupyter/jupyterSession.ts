@@ -23,7 +23,7 @@ export class JupyterSession implements IJupyterSession {
     private restartSessionPromise: Promise<Session.ISession | undefined> | undefined;
     private notebookFiles: Contents.IModel[] = [];
     private onStatusChangedEvent: EventEmitter<ServerStatus> = new EventEmitter<ServerStatus>();
-    private statusHandler: Slot<Session.ISession, Kernel.Status> | undefined;
+    private statusHandler: Slot<Session.ISession, Kernel.Status>;
     private connected: boolean = false;
 
     constructor(
@@ -33,6 +33,7 @@ export class JupyterSession implements IJupyterSession {
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager
     ) {
+        this.statusHandler = this.onStatusChanged.bind(this);
     }
 
     public dispose(): Promise<void> {
@@ -103,7 +104,6 @@ export class JupyterSession implements IJupyterSession {
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.
-            this.statusHandler = this.onStatusChanged.bind(this);
             this.session.statusChanged.connect(this.statusHandler);
 
             // After switching, start another in case we restart again.
@@ -120,6 +120,9 @@ export class JupyterSession implements IJupyterSession {
 
     public async interrupt(timeout: number): Promise<void> {
         if (this.session && this.session.kernel) {
+            // Listen for session status changes
+            this.session.statusChanged.connect(this.statusHandler);
+
             await this.waitForKernelPromise(this.session.kernel.interrupt(), timeout, localize.DataScience.interruptingKernelFailed());
         }
     }
@@ -154,7 +157,6 @@ export class JupyterSession implements IJupyterSession {
         this.session = await this.createSession(this.serverSettings, this.contentsManager, cancelToken);
 
         // Listen for session status changes
-        this.statusHandler = this.onStatusChanged.bind(this);
         this.session.statusChanged.connect(this.statusHandler);
 
         // Made it this far, we're connected now
