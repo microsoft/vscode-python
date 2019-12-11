@@ -32,13 +32,13 @@ export namespace Execution {
             if (code && matcher.stripFirstMarker(code).length > 0) {
                 if (orig.cell.data.cell_type === 'code') {
                     // Update our input cell to be in progress again and clear outputs
-                    newVMs[pos] = { ...orig, inputBlockText: code, cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code, outputs: [] } } };
+                    newVMs[pos] = Helpers.asCellViewModel({ ...orig, inputBlockText: code, cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code, outputs: [] } } });
 
                     // Send a message if a code cell
                     queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
                 } else {
                     // Update our input to be our new code
-                    newVMs[pos] = { ...orig, inputBlockText: code, cell: { ...orig.cell, data: { ...orig.cell.data, source: code } } };
+                    newVMs[pos] = Helpers.asCellViewModel({ ...orig, inputBlockText: code, cell: { ...orig.cell, data: { ...orig.cell.data, source: code } } });
                 }
             }
 
@@ -127,7 +127,7 @@ export namespace Execution {
 
     export function clearAllOutputs(arg: NativeEditorReducerArg): IMainState {
         const newList = arg.prevState.cellVMs.map(cellVM => {
-            return { ...cellVM, cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } } };
+            return Helpers.asCellViewModel({ ...cellVM, cell: { ...cellVM.cell, data: { ...cellVM.cell.data, outputs: [], execution_count: null } } });
         });
 
         arg.queueAction(createPostableAction(InteractiveWindowMessages.ClearAllOutputs));

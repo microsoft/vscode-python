@@ -60,7 +60,7 @@ export namespace Effects {
             };
 
             // tslint:disable-next-line: no-any
-            newVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here
+            newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
 
             return {
                 ...arg.prevState,
