@@ -16,6 +16,27 @@ import { FileStat, FileType, IFileSystem, IPlatformService, TemporaryFile } from
 
 const globAsync = promisify(glob);
 
+async function getFileType(filename: string): Promise<FileType> {
+    let stat: fs.Stats;
+    try {
+        // Note that we use stat() instead of lstat().  This is solely
+        // to preserve the pre-existing behavior.  It may make more
+        // sense to switch to lstat() in the future.
+        stat = await fs.stat(filename);
+    } catch {
+        return FileType.Unknown;
+    }
+    if (stat.isFile()) {
+        return FileType.File;
+    } else if (stat.isDirectory()) {
+        return FileType.Directory;
+    } else if (stat.isSymbolicLink()) {
+        return FileType.SymbolicLink;
+    } else {
+        return FileType.Unknown;
+    }
+}
+
 @injectable()
 export class FileSystem implements IFileSystem {
     constructor(
@@ -175,37 +196,45 @@ export class FileSystem implements IFileSystem {
         return this.objectExists(filePath, stats => stats.isDirectory());
     }
 
-    public getSubDirectories(rootDir: string): Promise<string[]> {
-        return new Promise<string[]>(resolve => {
-            fs.readdir(rootDir, async (error, files) => {
-                if (error) {
-                    return resolve([]);
-                }
-                const subDirs = (await Promise.all(
-                    files.map(async name => {
-                        const fullPath = path.join(rootDir, name);
-                        try {
-                            if ((await fs.stat(fullPath)).isDirectory()) {
-                                return fullPath;
-                            }
-                            // tslint:disable-next-line:no-empty
-                        } catch (ex) {}
-                    })
-                )).filter(dir => dir !== undefined) as string[];
-                resolve(subDirs);
-            });
-        });
-    }
-
-    public async getFiles(rootDir: string): Promise<string[]> {
-        const files = await fs.readdir(rootDir);
-        return files.filter(async f => {
-            const fullPath = path.join(rootDir, f);
-            if ((await fs.stat(fullPath)).isFile()) {
-                return true;
+    public async listDir(dirname: string): Promise<[string, FileType][]> {
+        let files: string[];
+        try {
+            files = await fs.readdir(dirname);
+        } catch (err) {
+            if (!await fs.pathExists(dirname)) {
+                return [];
             }
-            return false;
-        });
+            throw err; // re-throw
+        }
+        const promises = files
+            .map(async basename => {
+                const filename = path.join(dirname, basename);
+                const fileType = await getFileType(filename);
+                return [filename, fileType] as [string, FileType];
+            });
+        return Promise.all(promises);
+    }
+    public async getSubDirectories(dirname: string): Promise<string[]> {
+        let files: [string, FileType][];
+        try {
+            files = await this.listDir(dirname);
+        } catch {
+            // We're only preserving pre-existng behavior here...
+            return [];
+        }
+        return files
+            .filter(([_file, fileType]) => {
+                return fileType === FileType.Directory;
+            })
+            .map(([filename, _ft]) => filename);
+    }
+    public async getFiles(dirname: string): Promise<string[]> {
+        const files = await this.listDir(dirname);
+        return files
+            .filter(([_file, fileType]) => {
+                return fileType !== FileType.Directory;
+            })
+            .map(([filename, _ft]) => filename);
     }
 
     public getFileHash(filePath: string): Promise<string> {
