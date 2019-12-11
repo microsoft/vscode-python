@@ -13,10 +13,11 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
-import { IConfigurationService } from '../../client/common/types';
+import { IConfigurationService, IExperimentsManager } from '../../client/common/types';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
@@ -99,9 +100,13 @@ suite('Debugging - Attach Debugger', () => {
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+        const experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
+        experiments
+            .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
+            .returns(() => false);
 
         const launchResolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
-        const attachResolver = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object);
+        const attachResolver = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object, experiments.object);
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
         const fs = mock(FileSystem);
         const multistepFactory = mock(MultiStepInputFactory);

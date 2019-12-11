@@ -22,6 +22,7 @@ export namespace Diagnostics {
     export const yesUpdateLaunch = localize('diagnostics.yesUpdateLaunch', 'Yes, update launch.json');
     export const invalidTestSettings = localize('diagnostics.invalidTestSettings', 'Your settings needs to be updated to change the setting "python.unitTest." to "python.testing.", otherwise testing Python code using the extension may not work. Would you like to automatically update your settings now?');
     export const updateSettings = localize('diagnostics.updateSettings', 'Yes, update settings');
+    export const processId = localize('diagnostics.processId', 'Attaching the debugger to a local process is an experimental feature. It will be available to all users soon.');
 }
 
 export namespace Common {

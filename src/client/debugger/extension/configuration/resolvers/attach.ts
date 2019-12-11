@@ -6,8 +6,10 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../common/application/types';
+import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../../../common/experimentGroups';
 import { IPlatformService } from '../../../../common/platform/types';
-import { IConfigurationService } from '../../../../common/types';
+import { IConfigurationService, IExperimentsManager } from '../../../../common/types';
+import { Diagnostics } from '../../../../common/utils/localize';
 import { AttachRequestArguments, DebugOptions, PathMapping } from '../../../types';
 import { BaseConfigurationResolver } from './base';
 
@@ -17,11 +19,15 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IDocumentManager) documentManager: IDocumentManager,
         @inject(IPlatformService) platformService: IPlatformService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IExperimentsManager) private readonly experiments: IExperimentsManager
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, _token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
+        if (this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment) && debugConfiguration.processId !== undefined) {
+            throw Error(Diagnostics.processId());
+        }
         const workspaceFolder = this.getWorkspaceFolder(folder);
 
         await this.provideAttachDefaults(workspaceFolder, debugConfiguration as AttachRequestArguments);
@@ -116,7 +122,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
             );
         }
         return pathMappings.length > 0
-                ? pathMappings
-                : undefined;
+            ? pathMappings
+            : undefined;
     }
 }
