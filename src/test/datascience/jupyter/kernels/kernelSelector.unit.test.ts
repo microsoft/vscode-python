@@ -15,6 +15,7 @@ import { ProductInstaller } from '../../../../client/common/installer/productIns
 import { IInstaller, Product } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
+import { IMultiStepInput, IMultiStepInputFactory, MultiStepInput, MultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
@@ -22,7 +23,6 @@ import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/k
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
 import { IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
-import { IMultiStepInput, IMultiStepInputFactory, MultiStepInputFactory, MultiStepInput } from '../../../../client/common/utils/multiStepInput';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
 // tslint:disable-next-line: max-func-body-length
