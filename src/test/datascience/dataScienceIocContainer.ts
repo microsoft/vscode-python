@@ -141,6 +141,7 @@ import {
 } from '../../client/common/types';
 import { Deferred, sleep } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
+import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Architecture } from '../../client/common/utils/platform';
 import { EnvironmentVariablesService } from '../../client/common/variables/environment';
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
@@ -507,6 +508,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
         this.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
         this.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
+        this.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
 
         // Don't check for dot net compatibility
         const dotNetCompability = mock(DotNetCompatibilityService);
