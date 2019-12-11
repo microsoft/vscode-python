@@ -1317,18 +1317,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (kernel && kernel.kernelSpec && this.notebook) {
-            let name = kernel.kernelSpec?.display_name;
-            if (!name) {
-                name = kernel.interpreter?.displayName ? kernel.interpreter.displayName : '';
-            }
-            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
-                jupyterServerStatus: ServerStatus.Starting,
-                localizedUri: settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch ?
-                    localize.DataScience.localJupyterServer() : settings.datascience.jupyterServerURI,
-                displayName: name
-            }).ignoreErrors();
-
-            // Also actually tell the kernel.
+            // Tell the kernel. A status update should fire that changes our display
             await this.notebook.setKernelSpec(kernel.kernelSpec);
 
             // Add in a new sys info
