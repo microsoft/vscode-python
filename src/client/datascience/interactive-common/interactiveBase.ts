@@ -50,6 +50,7 @@ import {
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
+import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { CssMessages } from '../messages';
 import {
     CellState,
@@ -1303,14 +1304,35 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async selectKernel() {
         const settings = this.configuration.getSettings();
 
+        let kernel: KernelSpecInterpreter | undefined;
+
         if (settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            return this.dataScience.selectLocalJupyterKernel();
+            kernel = await this.dataScience.selectLocalJupyterKernel();
         } else if (this.notebook) {
             const connInfo = this.notebook.server.getConnectionInfo();
 
             if (connInfo) {
-                await this.dataScience.selectRemoteJupyterKernel(connInfo);
+                kernel = await this.dataScience.selectRemoteJupyterKernel(connInfo);
             }
+        }
+
+        if (kernel && kernel.kernelSpec && this.notebook) {
+            let name = kernel.kernelSpec?.display_name;
+            if (!name) {
+                name = kernel.interpreter?.displayName ? kernel.interpreter.displayName : '';
+            }
+            this.postMessage(InteractiveWindowMessages.UpdateKernel, {
+                jupyterServerStatus: ServerStatus.Starting,
+                localizedUri: settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch ?
+                    localize.DataScience.localJupyterServer() : settings.datascience.jupyterServerURI,
+                displayName: name
+            }).ignoreErrors();
+
+            // Also actually tell the kernel.
+            await this.notebook.setKernelSpec(kernel.kernelSpec);
+
+            // Add in a new sys info
+            await this.addSysInfo(SysInfoReason.New);
         }
     }
 }

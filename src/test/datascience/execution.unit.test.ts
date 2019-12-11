@@ -139,6 +139,11 @@ class MockJupyterNotebook implements INotebook {
     public getKernelSpec(): IJupyterKernelSpec | undefined {
         return;
     }
+
+    public setKernelSpec(_spec: IJupyterKernelSpec): Promise<void> {
+        return Promise.resolve();
+    }
+
     public get onSessionStatusChanged(): Event<ServerStatus> {
         if (!this.onStatusChangedEvent) {
             this.onStatusChangedEvent = new EventEmitter<ServerStatus>();

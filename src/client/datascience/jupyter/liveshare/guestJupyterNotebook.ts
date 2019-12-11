@@ -193,6 +193,10 @@ export class GuestJupyterNotebook
         return;
     }
 
+    public setKernelSpec(_spec: IJupyterKernelSpec): Promise<void> {
+        return Promise.resolve();
+    }
+
     private onServerResponse = (args: Object) => {
         const er = args as IExecuteObservableResponse;
         traceInfo(`Guest serverResponse ${er.pos} ${er.id}`);

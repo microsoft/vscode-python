@@ -27,14 +27,14 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
 
         return (
             <div className='kernel-status' style={dynamicFont}>
-                <div className='kernel-status-section' onClick={this.props.selectServer} role='button'>
+                <div className='kernel-status-section' role='button'>
                     <div className='kernel-status-text'>
                         {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
                     </div>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image kernel-status-icon' image={this.getIcon()} />
                 </div>
                 <div className='kernel-status-divider'/>
-                <div className='kernel-status-section' onClick={this.props.selectKernel} role='button'>
+                <div className='kernel-status-section kernel-status-section-hoverable' onClick={this.props.selectKernel} role='button'>
                     {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
             </div>

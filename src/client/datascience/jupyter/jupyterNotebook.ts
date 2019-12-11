@@ -485,6 +485,23 @@ export class JupyterNotebookBase implements INotebook {
         return this.launchInfo.kernelSpec;
     }
 
+    public async setKernelSpec(spec: IJupyterKernelSpec): Promise<void> {
+        // Change our own kernel spec
+        this.launchInfo.kernelSpec = spec;
+
+        // We need to start a new session with the new kernel spec
+        if (this.session) {
+            // Turn off setup
+            this.ranInitialSetup = false;
+
+            // Change the kernel on the session
+            await this.session.changeKernel(spec);
+
+            // Rerun our initial setup
+            await this.initialize();
+        }
+    }
+
     private finishUncompletedCells() {
         const copyPending = [...this.pendingCellSubscriptions];
         copyPending.forEach(c => c.cancel());

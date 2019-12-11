@@ -102,6 +102,7 @@ export interface INotebook extends IAsyncDisposable {
     addLogger(logger: INotebookExecutionLogger): void;
     getMatchingInterpreter(): PythonInterpreter | undefined;
     getKernelSpec(): IJupyterKernelSpec | undefined;
+    setKernelSpec(spec: IJupyterKernelSpec): Promise<void>;
 }
 
 export interface INotebookServerOptions {
@@ -171,6 +172,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
     sendInputReply(content: string): void;
+    changeKernel(kernel: IJupyterKernelSpec): Promise<void>;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');

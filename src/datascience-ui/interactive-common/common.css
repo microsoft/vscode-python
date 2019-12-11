@@ -453,8 +453,9 @@ body, html {
     padding: 2px 5px 2px 5px;
 }
 
-.kernel-status-section:hover {
+.kernel-status-section-hoverable:hover {
     background-color: var(--override-widget-background, var(--vscode-notifications-background));
+    cursor:pointer;
 }
 
 .kernel-status-divider {
@@ -473,8 +474,4 @@ body, html {
     float: right;
     width: 16px;
     height: 0px;
-}
-
-.kernel-status:hover {
-    cursor: pointer;
 }

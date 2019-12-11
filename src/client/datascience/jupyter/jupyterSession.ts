@@ -167,6 +167,26 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
+    public async changeKernel(kernel: IJupyterKernelSpec): Promise<void> {
+        // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
+        if (this.session?.kernel) {
+            this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
+            this.restartSessionPromise?.then(r => this.shutdownSession(r, undefined)).ignoreErrors();
+        }
+
+        // Update our kernel spec
+        this.kernelSpec = kernel;
+
+        // Start a new session
+        this.session = await this.createSession(this.serverSettings, this.contentsManager);
+
+        // Listen for session status changes
+        this.session.statusChanged.connect(this.statusHandler);
+
+        // Start the restart session promise too.
+        this.restartSessionPromise = this.createRestartSession(this.serverSettings, this.contentsManager);
+    }
+
     private getServerStatus(): ServerStatus {
         if (this.session) {
             switch (this.session.kernel.status) {
