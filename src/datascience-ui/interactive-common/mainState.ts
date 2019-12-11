@@ -72,7 +72,7 @@ export type IMainState = {
     activateCount: number;
     monacoReady: boolean;
     loaded: boolean;
-    kernel: IKernelState;
+    kernel: IServerState;
 };
 
 export interface IFont {
@@ -80,9 +80,9 @@ export interface IFont {
     family: string;
 }
 
-export interface IKernelState {
+export interface IServerState {
     jupyterServerStatus: ServerStatus;
-    uri: string;
+    localizedUri: string;
     displayName: string;
 }
 
@@ -153,7 +153,7 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         loaded: false,
         testMode: true,
         kernel: {
-            uri: 'No Kernel',
+            localizedUri: 'No Kernel',
             displayName: 'Python',
             jupyterServerStatus: ServerStatus.NotStarted
         }

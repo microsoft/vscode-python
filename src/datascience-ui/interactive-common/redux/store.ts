@@ -48,7 +48,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             loaded: false,
             kernel: {
                 displayName: 'Python',
-                uri: getLocString('DataScience.noKernel', 'No Kernel'),
+                localizedUri: getLocString('DataScience.noKernel', 'No Kernel'),
                 jupyterServerStatus: ServerStatus.NotStarted
             },
             settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.

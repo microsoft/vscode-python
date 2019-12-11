@@ -1,6 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import '../../common/extensions';
+
 import * as fs from 'fs-extra';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
@@ -9,11 +11,17 @@ import * as uuid from 'uuid/v4';
 import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
+
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import { IApplicationShell, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
+import {
+    IApplicationShell,
+    IDocumentManager,
+    ILiveShareApi,
+    IWebPanelProvider,
+    IWorkspaceService
+} from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
-import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
@@ -24,15 +32,49 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Identifiers, Telemetry } from '../constants';
+import { Identifiers, Settings, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { DataScience } from '../datascience';
-import { IAddedSysInfo, ICopyCode, IGotoCode, IInteractiveWindowMapping, InteractiveWindowMessages, IRemoteAddCode, IRemoteReexecuteCode, IShowDataViewer, ISubmitNewCell, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
+import {
+    IAddedSysInfo,
+    ICopyCode,
+    IGotoCode,
+    IInteractiveWindowMapping,
+    InteractiveWindowMessages,
+    IRemoteAddCode,
+    IRemoteReexecuteCode,
+    IShowDataViewer,
+    ISubmitNewCell,
+    SysInfoReason
+} from '../interactive-common/interactiveWindowTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { CssMessages } from '../messages';
-import { CellState, ICell, ICodeCssGenerator, IConnection, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveBase, IInteractiveWindowInfo, IInteractiveWindowListener, IJupyterDebugger, IJupyterExecution, IJupyterVariable, IJupyterVariables, IJupyterVariablesResponse, IMessageCell, INotebook, INotebookEditorProvider, INotebookExporter, INotebookServerOptions, InterruptResult, IStatusProvider, IThemeFinder } from '../types';
+import {
+    CellState,
+    ICell,
+    ICodeCssGenerator,
+    IConnection,
+    IDataScienceErrorHandler,
+    IDataViewerProvider,
+    IInteractiveBase,
+    IInteractiveWindowInfo,
+    IInteractiveWindowListener,
+    IJupyterDebugger,
+    IJupyterExecution,
+    IJupyterVariable,
+    IJupyterVariables,
+    IJupyterVariablesResponse,
+    IMessageCell,
+    INotebook,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookServerOptions,
+    InterruptResult,
+    IStatusProvider,
+    IThemeFinder
+} from '../types';
 import { WebViewHost } from '../webViewHost';
 import { InteractiveWindowMessageListener } from './interactiveWindowMessageListener';
 
@@ -1048,7 +1090,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                         await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                             jupyterServerStatus: status,
-                            uri: settings.datascience.jupyterServerURI,
+                            localizedUri: settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch ?
+                                localize.DataScience.localJupyterServer() : settings.datascience.jupyterServerURI,
                             displayName: name
                         });
                     }
@@ -1260,7 +1303,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async selectKernel() {
         const settings = this.configuration.getSettings();
 
-        if (settings.datascience.jupyterServerURI === localize.DataScience.localJupyterServer()) {
+        if (settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
             return this.dataScience.selectLocalJupyterKernel();
         } else if (this.notebook) {
             const connInfo = this.notebook.server.getConnectionInfo();

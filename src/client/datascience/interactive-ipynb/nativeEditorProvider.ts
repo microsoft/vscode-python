@@ -127,7 +127,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI === Settings.JupyterServerLocalLaunch) {
+        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
             serverURI = undefined;
         }
 

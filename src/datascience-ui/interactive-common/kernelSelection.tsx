@@ -4,12 +4,12 @@
 import * as React from 'react';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
-import { IFont, IKernelState } from './mainState';
+import { IFont, IServerState } from './mainState';
 
 export interface IKernelSelectionProps {
     baseTheme: string;
     font: IFont;
-    kernel: IKernelState;
+    kernel: IServerState;
     selectServer(): void;
     selectKernel(): void;
 }
@@ -29,7 +29,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             <div className='kernel-status' style={dynamicFont}>
                 <div className='kernel-status-section' onClick={this.props.selectServer} role='button'>
                     <div className='kernel-status-text'>
-                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.uri}
+                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
                     </div>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image kernel-status-icon' image={this.getIcon()} />
                 </div>
@@ -42,6 +42,6 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
     }
 
     private getIcon(): ImageName {
-        return this.props.kernel.uri === getLocString('DataScience.noKernel', 'No Kernel') ? ImageName.JupyterServerDisconnected : ImageName.JupyterServerConnected;
+        return this.props.kernel.localizedUri === getLocString('DataScience.noKernel', 'No Kernel') ? ImageName.JupyterServerDisconnected : ImageName.JupyterServerConnected;
     }
 }
