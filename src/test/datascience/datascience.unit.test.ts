@@ -349,7 +349,7 @@ class Pizza(object):
     });
 
     function cloneVM(cvm: ICellViewModel, newCode: string, debugging?: boolean): ICellViewModel {
-        return {
+        const result = {
             ...cvm,
             cell: {
                 ...cvm.cell,
@@ -361,6 +361,10 @@ class Pizza(object):
             inputBlockText: newCode,
             runDuringDebug: debugging
         };
+
+        // Typecast so that the build works. ICell.MetaData doesn't like reassigning
+        // tslint:disable-next-line: no-any
+        return (result as any) as ICellViewModel;
     }
 
     test('ExtractInputText', () => {
