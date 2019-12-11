@@ -135,6 +135,7 @@ export class JupyterNotebookBase implements INotebook {
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+    private sessionStatusChanged: Disposable | undefined;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -156,7 +157,7 @@ export class JupyterNotebookBase implements INotebook {
                 this.onStatusChangedEvent.fire(status);
             }
         };
-        this.session.onSessionStatusChanged(statusChangeHandler);
+        this.sessionStatusChanged = this.session.onSessionStatusChanged(statusChangeHandler);
         this._resource = resource;
         this._loggers = [...loggers];
         // Save our interpreter and don't change it. Later on when kernel changes
@@ -171,6 +172,10 @@ export class JupyterNotebookBase implements INotebook {
         if (this.onStatusChangedEvent) {
             this.onStatusChangedEvent.dispose();
         }
+        if (this.sessionStatusChanged) {
+            this.sessionStatusChanged.dispose();
+        }
+
         traceInfo(`Shutting down session ${this.resource.toString()}`);
         if (!this._disposed) {
             this._disposed = true;
@@ -385,7 +390,6 @@ export class JupyterNotebookBase implements INotebook {
                     this.finishUncompletedCells();
                 }
             };
-            // const restartHandlerToken = this.session.onRestarted(restartHandler);
             const restartHandlerToken = this.session.onSessionStatusChanged(restartHandler);
 
             // Start our interrupt. If it fails, indicate a restart
