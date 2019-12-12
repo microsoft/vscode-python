@@ -110,13 +110,21 @@ gulp.task('checkNativeDependencies', done => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
-gulp.task('compile-webviews', async () =>
-    spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production'])
-);
+gulp.task('compile-webviews', async () => {
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '0'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '1'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '2'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '3'});
+});
 
 gulp.task('webpack', async () => {
     // Build node_modules and DS stuff.
-    await buildWebPack('production', []);
+    // Unwrap the array used to build each webpack.
+    await buildWebPack('production', [], {'BUNDLE_INDEX': '0'});
+    await buildWebPack('production', [], {'BUNDLE_INDEX': '1'});
+    await buildWebPack('production', [], {'BUNDLE_INDEX': '2'});
+    await buildWebPack('production', [], {'BUNDLE_INDEX': '3'});
+    await buildWebPack('production', [], {'BUNDLE_INDEX': '4'});
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
@@ -162,10 +170,10 @@ async function updateBuildNumber(args) {
     }
 }
 
-async function buildWebPack(webpackConfigName, args) {
+async function buildWebPack(webpackConfigName, args, env) {
     // Remember to perform a case insensitive search.
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
-    const stdOut = await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', ...args, ...['--mode', 'production']], allowedWarnings);
+    const stdOut = await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', ...args, ...['--mode', 'production']], env);
     const stdOutLines = stdOut
         .split(os.EOL)
         .map(item => item.trim())
@@ -325,10 +333,12 @@ function uploadExtension(uploadBlobName) {
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
 gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
-function spawnAsync(command, args) {
+function spawnAsync(command, args, env) {
+    env = env || {};
+    env = {...process.env, ...env};
     return new Promise((resolve, reject) => {
         let stdOut = '';
-        const proc = spawn(command, args, { cwd: __dirname });
+        const proc = spawn(command, args, { cwd: __dirname, env });
         proc.stdout.on('data', data => {
             // Log output on CI (else travis times out when there's not output).
             stdOut += data.toString();
