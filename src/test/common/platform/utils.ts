@@ -40,6 +40,14 @@ export async function assertExists(filename: string) {
     ).to.not.eventually.be.rejected;
 }
 
+export function fixPath(filename: string): string {
+    if (WINDOWS) {
+        return filename.replace(/\//g, '\\');
+    } else {
+        return filename;
+    }
+}
+
 export class CleanupFixture {
     private cleanups: (() => void | Promise<void>)[];
     constructor() {

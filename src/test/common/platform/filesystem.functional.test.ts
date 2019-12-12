@@ -11,7 +11,7 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
 import {
-    assertDoesNotExist, assertExists, DOES_NOT_EXIST, FSFixture,
+    assertDoesNotExist, assertExists, DOES_NOT_EXIST, fixPath, FSFixture,
     SUPPORTS_SYMLINKS, WINDOWS
 } from './utils';
 
@@ -85,8 +85,128 @@ suite('FileSystem', () => {
         });
 
         suite('getRealPath', () => {
-            test('', async () => {
-                // XXX
+            const prevCwd = process.cwd();
+            let cwd: string;
+            setup(async () => {
+                cwd = await fix.createDirectory('x/y/z');
+                process.chdir(cwd);
+            });
+            teardown(() => {
+                process.chdir(prevCwd);
+            });
+
+            test('basename-only', async () => {
+                const expected = await fix.createFile('x/y/z/spam.py');
+
+                const resolved = await fileSystem.getRealPath('spam.py');
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('absolute', async () => {
+                const filename = await fix.createFile('spam.py');
+                const expected = filename;
+
+                const resolved = await fileSystem.getRealPath(filename);
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('relative', async () => {
+                const expected = await fix.createFile('x/y/z/w/spam.py');
+                const relpath = fixPath('./w/spam.py');
+
+                const resolved = await fileSystem.getRealPath(relpath);
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('parent', async () => {
+                const expected = await fix.resolve('x/y');
+
+                const resolved = await fileSystem.getRealPath('..');
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('cousin', async () => {
+                const expected = await fix.createFile('x/w/spam.py');
+                const relpath = fixPath('../../w/spam.py');
+
+                const resolved = await fileSystem.getRealPath(relpath);
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('does not exist', async () => {
+                const resolved = await fileSystem.getRealPath('spam.py');
+
+                // The original path was returned unchanged.
+                expect(resolved).to.equal('spam.py'); // instead of <TMP>/x/y/z/spam.py
+            });
+
+            test('directory does not exist', async () => {
+                const relpath = fixPath('../../w/spam.py');
+
+                const resolved = await fileSystem.getRealPath(relpath);
+
+                // The original path was returned unchanged.
+                expect(resolved).to.equal(relpath); // instead of <TMP>/x/w/spam.py
+            });
+
+            test('symlink', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const expected = await fix.createFile('spam.py');
+                await fix.createSymlink('x/y/z/eggs.py', expected);
+
+                const resolved = await fileSystem.getRealPath('eggs.py');
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('symlink chain', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const expected = await fix.createFile('w/spam.py');
+                const symlink1 = await fix.createSymlink('x/y/spam.py', expected);
+                await fix.createSymlink('x/y/z/eggs.py', symlink1);
+
+                const resolved = await fileSystem.getRealPath('eggs.py');
+
+                expect(resolved).to.equal(expected);
+            });
+
+            test('symlink (target does not exist)', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const filename = await fix.resolve('spam.py');
+                await fix.createSymlink('x/y/z/eggs.py', filename);
+
+                const resolved = await fileSystem.getRealPath('eggs.py');
+
+                // The original path was returned unchanged.
+                expect(resolved).to.equal('eggs.py'); // instead of <TMP>/spam.py
+            });
+
+            test('mixed', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const expected = await fix.createFile('x/y/w/eggs.py');
+                await fix.createSymlink('x/w/spam.py', expected);
+                const relpath = fixPath('../../w/spam.py');
+
+                const resolved = await fileSystem.getRealPath(relpath);
+
+                expect(resolved).to.equal(expected);
             });
         });
     });
