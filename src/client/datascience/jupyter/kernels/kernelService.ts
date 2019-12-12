@@ -234,7 +234,7 @@ export class KernelService {
             // If we wish to wait for installation to complete, we must provide a cancel token.
             const token = new CancellationTokenSource();
             const response = await this.installer.promptToInstall(Product.ipykernel, interpreter, wrapCancellationTokens(cancelToken, token.token));
-            if (response === InstallerResponse.Installed) {
+            if (response !== InstallerResponse.Installed) {
                 traceWarning(`Prompted to install ipykernel, however ipykernel not installed in the interpreter ${interpreter.path}. Response ${response}`);
                 return;
             }
