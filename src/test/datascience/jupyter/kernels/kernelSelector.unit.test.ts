@@ -15,7 +15,6 @@ import { ProductInstaller } from '../../../../client/common/installer/productIns
 import { IInstaller, Product } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
-import { IMultiStepInput, IMultiStepInputFactory, MultiStepInput, MultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
@@ -33,9 +32,6 @@ suite('Data Science - KernelSelector', () => {
     let kernelSelector: KernelSelector;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
-    let multistepFactory: IMultiStepInputFactory;
-    // tslint:disable-next-line: no-any
-    let multiStep: IMultiStepInput<any>;
     let installer: IInstaller;
     const kernelSpec = {
         argv: [],
@@ -59,17 +55,13 @@ suite('Data Science - KernelSelector', () => {
         kernelService = mock(KernelService);
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
-        multistepFactory = mock(MultiStepInputFactory);
-        multiStep = mock(MultiStepInput);
         installer = mock(ProductInstaller);
         interpreterService = mock(InterpreterService);
-        when(multistepFactory.create()).thenReturn(instance(multiStep));
         kernelSelector = new KernelSelector(
             instance(kernelSelectionProvider),
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
-            instance(multistepFactory),
             instance(installer)
         );
     });
@@ -77,35 +69,35 @@ suite('Data Science - KernelSelector', () => {
     suite('Select Remote Kernel', () => {
         test('Should display quick pick and return nothing when nothing is selected (remote sessions)', async () => {
             when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve([]);
-            when(multiStep.run(anything(), anything())).thenResolve();
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve();
 
             const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
 
             assert.isEmpty(kernel);
             verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
         });
         test('Should display quick pick and return nothing when nothing is selected (local sessions)', async () => {
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve([]);
-            when(multiStep.run(anything(), anything())).thenResolve();
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve();
 
             const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
 
             assert.isEmpty(kernel);
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
         });
         test('Should return the selected remote kernelspec along with a matching interpreter', async () => {
             when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
-            when(multiStep.run(anything(), anything())).thenCall((_, state) => state.selection = {selection: { kernelSpec }});
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve({ selection: { kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
             verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
         });
     });
@@ -113,14 +105,14 @@ suite('Data Science - KernelSelector', () => {
         test('Should return the selected local kernelspec along with a matching interpreter', async () => {
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
-            when(multiStep.run(anything(), anything())).thenCall((_, state) => state.selection = {selection: { kernelSpec }});
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve({ selection: { kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             assert.isOk(kernel.interpreter === interpreter);
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
         });
         test('If seleted interpreter has ipykernel installed, then return matching kernelspec and interpreter', async () => {
@@ -128,7 +120,8 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).thenResolve(kernelSpec);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve([]);
             when(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).thenResolve();
-            when(multiStep.run(anything(), anything())).thenCall((_, state) => state.selection = {selection: { interpreter, kernelSpec } });
+            // tslint:disable-next-line: no-any
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve({ selection: { interpreter, kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
 
@@ -136,7 +129,7 @@ suite('Data Science - KernelSelector', () => {
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(kernelService.registerKernel(anything(), anything())).never();
             verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).never();
             verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).never();
@@ -147,7 +140,8 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.registerKernel(interpreter, anything())).thenResolve(kernelSpec);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve([]);
             when(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).thenResolve();
-            when(multiStep.run(anything(), anything())).thenCall((_, state) => state.selection = {selection: { interpreter, kernelSpec } });
+            // tslint:disable-next-line: no-any
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve({ selection: { interpreter, kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
 
@@ -156,7 +150,7 @@ suite('Data Science - KernelSelector', () => {
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).never();
             verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).never();
         });
@@ -165,14 +159,15 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.registerKernel(interpreter, anything())).thenResolve(kernelSpec);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve([]);
             when(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).thenResolve();
-            when(multiStep.run(anything(), anything())).thenCall((_, state) => state.selection = {selection: { interpreter, kernelSpec } });
+            // tslint:disable-next-line: no-any
+            when(appShell.showQuickPick(anything(), undefined, anything())).thenResolve({ selection: { interpreter, kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
-            verify(multiStep.run(anything(), anything())).once();
+            verify(appShell.showQuickPick(anything(), undefined, anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).never();
             verify(kernelService.registerKernel(interpreter, anything())).once();
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();

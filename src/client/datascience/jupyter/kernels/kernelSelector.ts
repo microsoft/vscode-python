@@ -12,7 +12,6 @@ import { traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IInstaller, Product } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
-import { IMultiStepInputFactory, IQuickPickParameters } from '../../../common/utils/multiStepInput';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
@@ -38,7 +37,6 @@ export class KernelSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
         @inject(IInstaller) private readonly installer: IInstaller
     ) {}
     /**
@@ -109,26 +107,16 @@ export class KernelSelector {
         return selection;
     }
     private async selectKernel(suggestions: IKernelSpecQuickPickItem[], session?: IJupyterSessionManager, cancelToken?: CancellationToken){
-        const state: {selection?: IKernelSpecQuickPickItem} = {};
-        const multiStep = this.multiStepFactory.create<typeof state>();
-        await multiStep.run(async (input, stepState) => {
-            stepState.selection = await input.showQuickPick<IKernelSpecQuickPickItem, IQuickPickParameters<IKernelSpecQuickPickItem>>({
-                placeholder: '',
-                items: suggestions,
-                title: localize.DataScience.selectKernel()
-            });
-
-        }, state);
-        const selection = state.selection?.selection;
-        if (!selection) {
+        const selection = await this.applicationShell.showQuickPick(suggestions, undefined, cancelToken);
+        if (!selection?.selection) {
             return {};
         }
         // Check if ipykernel is installed in this kernel.
-        if (selection.interpreter) {
-            return this.useInterpreterAsKernel(selection.interpreter, undefined, session, cancelToken);
+        if (selection.selection.interpreter) {
+            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
         } else {
-            const interpreter = selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken) : undefined;
-            return { kernelSpec: selection.kernelSpec, interpreter };
+            const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
+            return { kernelSpec: selection.selection.kernelSpec, interpreter };
         }
     }
     /**
