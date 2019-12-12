@@ -508,8 +508,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('showReturnValue', true);
             expect(debugConfig).to.have.property('debugOptions');
             const expectedOptions = [
-                DebugOptions.ShowReturnValue,
-                DebugOptions.RedirectOutput
+                DebugOptions.ShowReturnValue
             ];
             if (osType === OSType.Windows) {
                 expectedOptions.push(
@@ -533,9 +532,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             expect(debugConfig).to.have.property('stopOnEntry', false);
             expect(debugConfig).to.have.property('showReturnValue', true);
             expect(debugConfig).to.have.property('debugOptions');
-            expect((debugConfig as any).debugOptions).to.be.deep.equal([
-                DebugOptions.RedirectOutput
-            ]);
+            expect((debugConfig as any).debugOptions).to.be.deep.equal([]);
         });
         test('Test overriding defaults of debugger', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
@@ -544,16 +541,18 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupIoc(pythonPath);
             setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
 
-            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: false, justMyCode: false } as LaunchRequestArguments);
+            const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { redirectOutput: true, justMyCode: false } as LaunchRequestArguments);
 
             expect(debugConfig).to.have.property('console', 'integratedTerminal');
             expect(debugConfig).to.have.property('stopOnEntry', false);
             expect(debugConfig).to.have.property('showReturnValue', true);
+            expect(debugConfig).to.have.property('redirectOutput', true);
             expect(debugConfig).to.have.property('justMyCode', false);
             expect(debugConfig).to.have.property('debugOptions');
             const expectedOptions = [
                 DebugOptions.DebugStdLib,
-                DebugOptions.ShowReturnValue
+                DebugOptions.ShowReturnValue,
+                DebugOptions.RedirectOutput
             ];
             if (osType === OSType.Windows) {
                 expectedOptions.push(
@@ -621,6 +620,69 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                 expect(debugConfig).to.have.property('justMyCode', testParams.expectedResult);
             });
         });
+        const testsForRedirectOutput =
+            [
+                {
+                    console: 'internalConsole',
+                    redirectOutput: undefined,
+                    expectedRedirectOutput: true
+                },
+                {
+                    console: 'integratedTerminal',
+                    redirectOutput: undefined,
+                    expectedRedirectOutput: undefined
+                },
+                {
+                    console: 'externalTerminal',
+                    redirectOutput: undefined,
+                    expectedRedirectOutput: undefined
+                },
+                {
+                    console: 'internalConsole',
+                    redirectOutput: false,
+                    expectedRedirectOutput: false
+                },
+                {
+                    console: 'integratedTerminal',
+                    redirectOutput: false,
+                    expectedRedirectOutput: false
+                },
+                {
+                    console: 'externalTerminal',
+                    redirectOutput: false,
+                    expectedRedirectOutput: false
+                },
+                {
+                    console: 'internalConsole',
+                    redirectOutput: true,
+                    expectedRedirectOutput: true
+                },
+                {
+                    console: 'integratedTerminal',
+                    redirectOutput: true,
+                    expectedRedirectOutput: true
+                },
+                {
+                    console: 'externalTerminal',
+                    redirectOutput: true,
+                    expectedRedirectOutput: true
+                }
+            ];
+        test('Ensure redirectOutput property is correctly derived from console type', async () => {
+            const pythonPath = `PythonPath_${new Date().toString()}`;
+            const workspaceFolder = createMoqWorkspaceFolder(__dirname);
+            const pythonFile = 'xyz.py';
+            setupIoc(pythonPath);
+            setupActiveEditor(pythonFile, PYTHON_LANGUAGE);
+            testsForRedirectOutput.forEach(async testParams => {
+                const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { console: testParams.console, redirectOutput: testParams.redirectOutput } as LaunchRequestArguments);
+                expect(debugConfig).to.have.property('redirectOutput', testParams.expectedRedirectOutput);
+                if (testParams.expectedRedirectOutput) {
+                    expect(debugConfig).to.have.property('debugOptions');
+                    expect((debugConfig as any).debugOptions).to.contain(DebugOptions.RedirectOutput);
+                }
+            });
+        });
         test('Test fixFilePathCase', async () => {
             const pythonPath = `PythonPath_${new Date().toString()}`;
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
@@ -660,7 +722,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             const debugConfig = await debugProvider.resolveDebugConfiguration!(workspaceFolder, { module: 'flask' } as any as DebugConfiguration);
 
             expect(debugConfig).to.have.property('debugOptions');
-            expect((debugConfig as any).debugOptions).contains(DebugOptions.RedirectOutput);
             expect((debugConfig as any).debugOptions).contains(DebugOptions.Jinja);
         });
         test('Test validation of Python Path when launching debugger (with invalid python path)', async () => {
