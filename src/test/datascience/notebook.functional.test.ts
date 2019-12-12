@@ -639,7 +639,7 @@ suite('DataScience notebook tests', () => {
     }
 
     async function testCancelableMethod<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, short?: boolean): Promise<boolean> {
-        const timeouts = short ? [10, 20, 30, 100] : [100, 200, 300, 1000];
+        const timeouts = short ? [10, 20, 30, 100] : [300, 400, 500, 1000];
         // tslint:disable-next-line:prefer-for-of
         for (let i = 0; i < timeouts.length; i += 1) {
             await testCancelableCall(method, messageFormat, timeouts[i]);
