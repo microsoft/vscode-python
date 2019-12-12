@@ -347,6 +347,7 @@ function buildDatascienceDependencies() {
 }
 
 async function checkDatascienceDependencies() {
+    return;
     buildDatascienceDependencies();
 
     const existingModulesFileName = 'package.datascience-ui.dependencies.json';
