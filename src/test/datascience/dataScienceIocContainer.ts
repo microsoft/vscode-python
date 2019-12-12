@@ -680,6 +680,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
+        this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
@@ -703,10 +704,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             this.serviceManager.addSingleton<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory, JupyterSessionManagerFactory);
             this.serviceManager.addSingleton<IJupyterPasswordConnect>(IJupyterPasswordConnect, JupyterPasswordConnect);
             this.serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
-        }
-
-        if (this.serviceManager.get<IPlatformService>(IPlatformService).isWindows) {
-            this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
         }
 
         const dummyDisposable = {
