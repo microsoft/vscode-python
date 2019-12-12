@@ -6,6 +6,7 @@ import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
+import * as tmp from 'tmp';
 import { Observable } from 'rxjs/Observable';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
@@ -80,6 +81,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
     private kernelSpecs: { name: string; dir: string }[] = [];
     private currentSession: MockJupyterSession | undefined;
     private connInfo: IConnection | undefined;
+    private cleanTemp: (() => void) | undefined;
 
     constructor(serviceManager: IServiceManager) {
         // Make our process service factory always return this item
@@ -123,6 +125,11 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Code is as follows `await this.notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
         // Found in src\client\datascience\interactive-common\interactiveBase.ts.
         this.addCell(`%cd "${Uri.file(path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience')).fsPath}`);
+        // New root dir should be in the temp folder.
+        tmp.file((_e, p, _fd, cleanup) => {
+            this.addCell(`%cd "${path.dirname(p).toLowerCase()}"`);
+            this.cleanTemp = cleanup;
+        });
         this.addCell('import sys\r\nsys.version', '1.1.1.1');
         this.addCell('import sys\r\nsys.executable', 'python');
         this.addCell('import notebook\r\nnotebook.version_info', '1.1.1.1');
@@ -287,7 +294,9 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public async dispose(): Promise<void> {
-        noop();
+        if (this.cleanTemp) {
+            this.cleanTemp();
+        }
     }
 
     public async initialize(connInfo: IConnection): Promise<void> {
