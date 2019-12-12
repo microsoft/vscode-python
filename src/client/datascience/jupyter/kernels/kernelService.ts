@@ -20,7 +20,7 @@ import { sleep } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
-import { captureTelemetry } from '../../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterCommands, Telemetry } from '../../constants';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterCommandFinder } from '../jupyterCommandFinder';
@@ -199,6 +199,7 @@ export class KernelService {
         // If a kernelspec already exists for this, then use that.
         const found = await this.findMatchingKernelSpec(interpreter, undefined, cancelToken);
         if (found) {
+            sendTelemetryEvent(Telemetry.UseExistingKernel);
             return found;
         }
         return this.registerKernel(interpreter, cancelToken);
@@ -311,6 +312,7 @@ export class KernelService {
         await this.fileSystem.writeFile(kernel.specFile, JSON.stringify(specModel, undefined, 2), { flag: 'w', encoding: 'utf8' });
         kernel.metadata = specModel.metadata;
 
+        sendTelemetryEvent(Telemetry.RegisterAndUseInterpreterAsKernel);
         traceInfo(`Kernel successfully registered for ${interpreter.path} with the name=${name} and spec can be found here ${kernel.specFile}`);
         return kernel;
     }

@@ -13,6 +13,8 @@ import { IInstaller, Product } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { Telemetry } from '../../constants';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
@@ -83,6 +85,7 @@ export class KernelSelector {
             selection.kernelSpec = await this.kernelService.findMatchingKernelSpec(notebookMetadata?.kernelspec, sessionManager, cancelToken);
             if (selection.kernelSpec) {
                 selection.interpreter = await this.kernelService.findMatchingInterpreter(selection.kernelSpec, cancelToken);
+                sendTelemetryEvent(Telemetry.UseExistingKernel);
             } else {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
@@ -113,8 +116,10 @@ export class KernelSelector {
         }
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
+            sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
             return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
         } else {
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
             const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
             return { kernelSpec: selection.selection.kernelSpec, interpreter };
         }
@@ -152,6 +157,8 @@ export class KernelSelector {
                 if (displayNameOfKernelNotFound) {
                     this.applicationShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound)).then(noop, noop);
                 }
+
+                sendTelemetryEvent(Telemetry.UseInterpreterAsKernel);
                 return { kernelSpec, interpreter };
             }
             traceInfo(`ipykernel installed in ${interpreter.path}, no matching kernel found. Will register kernel.`);

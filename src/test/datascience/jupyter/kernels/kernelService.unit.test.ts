@@ -17,7 +17,7 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
-import { IInstaller, Product, ReadWrite } from '../../../../client/common/types';
+import { IInstaller, Product, ReadWrite, InstallerResponse } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/jupyterCommand';
@@ -275,6 +275,34 @@ suite('Data Science - KernelService', () => {
             const kernelName = installArgs[3];
             assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
             await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
+        }).timeout(5_000);
+        test('If ipykernel is not installed, then prompt to install ipykernel', async () => {
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(installer.promptToInstall(anything(), anything())).thenResolve(InstallerResponse.Installed);
+            findMatchingKernelSpecStub.resolves(undefined);
+
+            const promise = kernelService.registerKernel(interpreter);
+
+            await assert.isRejected(promise);
+            verify(execService.execModule('ipykernel', anything(), anything())).once();
+            const installArgs = capture(execService.execModule).first()[1] as string[];
+            const kernelName = installArgs[3];
+            assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
+            await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
+            verify(installer.promptToInstall(anything(), anything())).once();
+        }).timeout(5_000);
+        test('If ipykernel is not installed, and ipykerne installation is canclled, then do not reigster kernel', async () => {
+            when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(installer.promptToInstall(anything(), anything())).thenResolve(InstallerResponse.Ignore);
+            findMatchingKernelSpecStub.resolves(undefined);
+
+            const kernel = await kernelService.registerKernel(interpreter);
+
+            assert.isUndefined(kernel);
+            verify(execService.execModule('ipykernel', anything(), anything())).never();
+            verify(installer.promptToInstall(anything(), anything())).once();
         }).timeout(5_000);
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });

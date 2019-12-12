@@ -1405,6 +1405,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseExistingKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: never | undefined;
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
     [Telemetry.ConvertToPythonFile]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
