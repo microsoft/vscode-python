@@ -221,6 +221,7 @@ export namespace DataScience {
     export const noRowsInDataViewer = localize('DataScience.noRowsInDataViewer', 'No rows match current filter');
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
+    export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
     export const localJupyterServer = localize('DataScience.localJupyterServer', 'local');
     export const pandasTooOldForViewingFormat = localize('DataScience.pandasTooOldForViewingFormat', 'Python package \'pandas\' is version {0}. Version 0.20 or greater is required for viewing data.');
     export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');

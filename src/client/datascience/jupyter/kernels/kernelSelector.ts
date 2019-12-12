@@ -107,7 +107,7 @@ export class KernelSelector {
         return selection;
     }
     private async selectKernel(suggestions: IKernelSpecQuickPickItem[], session?: IJupyterSessionManager, cancelToken?: CancellationToken){
-        const selection = await this.applicationShell.showQuickPick(suggestions, undefined, cancelToken);
+        const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder: localize.DataScience.selectKernel() }, cancelToken);
         if (!selection?.selection) {
             return {};
         }
