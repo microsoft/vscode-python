@@ -550,10 +550,6 @@ suite('FileSystem', () => {
 
                 expect(entries).to.deep.equal([]);
             });
-
-            test('', async () => {
-                // XXX
-            });
         });
 
         suite('getFiles', () => {
@@ -604,10 +600,6 @@ suite('FileSystem', () => {
                 const entries = await fileSystem.getFiles(DOES_NOT_EXIST);
 
                 expect(entries).to.deep.equal([]);
-            });
-
-            test('', async () => {
-                // XXX
             });
         });
 
@@ -755,10 +747,6 @@ suite('FileSystem', () => {
                 await expect(
                     fs.chmod(tempfile.filePath, '7777')
                 ).to.not.eventually.be.rejected;
-            });
-
-            test('', async () => {
-                // XXX
             });
         });
 
