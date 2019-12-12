@@ -279,7 +279,7 @@ suite('Data Science - KernelService', () => {
         test('If ipykernel is not installed, then prompt to install ipykernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-            when(installer.promptToInstall(anything(), anything())).thenResolve(InstallerResponse.Installed);
+            when(installer.promptToInstall(anything(), anything(), anything())).thenResolve(InstallerResponse.Installed);
             findMatchingKernelSpecStub.resolves(undefined);
 
             const promise = kernelService.registerKernel(interpreter);
@@ -290,19 +290,19 @@ suite('Data Science - KernelService', () => {
             const kernelName = installArgs[3];
             assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
             await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
-            verify(installer.promptToInstall(anything(), anything())).once();
+            verify(installer.promptToInstall(anything(), anything(), anything())).once();
         }).timeout(5_000);
         test('If ipykernel is not installed, and ipykerne installation is canclled, then do not reigster kernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
-            when(installer.promptToInstall(anything(), anything())).thenResolve(InstallerResponse.Ignore);
+            when(installer.promptToInstall(anything(), anything(), anything())).thenResolve(InstallerResponse.Ignore);
             findMatchingKernelSpecStub.resolves(undefined);
 
             const kernel = await kernelService.registerKernel(interpreter);
 
             assert.isUndefined(kernel);
             verify(execService.execModule('ipykernel', anything(), anything())).never();
-            verify(installer.promptToInstall(anything(), anything())).once();
+            verify(installer.promptToInstall(anything(), anything(), anything())).once();
         }).timeout(5_000);
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
