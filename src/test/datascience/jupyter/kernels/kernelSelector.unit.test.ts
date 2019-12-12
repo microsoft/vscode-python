@@ -90,6 +90,7 @@ suite('Data Science - KernelSelector', () => {
         test('Should return the selected remote kernelspec along with a matching interpreter', async () => {
             when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            // tslint:disable-next-line: no-any
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({ selection: { kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
@@ -105,6 +106,7 @@ suite('Data Science - KernelSelector', () => {
         test('Should return the selected local kernelspec along with a matching interpreter', async () => {
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve([]);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            // tslint:disable-next-line: no-any
             when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve({ selection: { kernelSpec } } as any);
 
             const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
