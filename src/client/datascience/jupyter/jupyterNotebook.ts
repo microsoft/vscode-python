@@ -691,7 +691,7 @@ export class JupyterNotebookBase implements INotebook {
         if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && !this._workingDirectory) {
             // See what our working dir is supposed to be
             const suggested = this.launchInfo.workingDir;
-            if (suggested && (await this.fs.fileExists(suggested))) {
+            if (suggested && (await this.fs.directoryExists(suggested))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
