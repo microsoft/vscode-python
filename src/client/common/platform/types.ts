@@ -50,7 +50,7 @@ export interface IFileSystem {
     stat(filePath: string): Promise<FileStat>;
     createDirectory(path: string): Promise<void>;
     deleteDirectory(path: string): Promise<void>;
-    listdir(dirname: string): Promise<string[]>;
+    listdir(dirname: string): Promise<[string, FileType][]>;
     readFile(filePath: string): Promise<string>;
     readData(filePath: string): Promise<Buffer>;
     writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;

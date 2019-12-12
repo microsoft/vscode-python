@@ -8,7 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
-import { IFileSystem, TemporaryFile } from '../../../client/common/platform/types';
+import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
 import {
     assertDoesNotExist, assertExists, DOES_NOT_EXIST, FSFixture,
@@ -21,7 +21,7 @@ use(require('chai-as-promised'));
 use(assertArrays);
 
 suite('FileSystem', () => {
-    let fileSystem: IFileSystem;
+    let fileSystem: FileSystem;
     let fix: FSFixture;
     setup(async () => {
         fileSystem = new FileSystem(
@@ -136,6 +136,108 @@ suite('FileSystem', () => {
 
             test('fails if the directory does not exist', async () => {
                 const promise = fileSystem.deleteDirectory(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
+            });
+        });
+
+        suite('listdir', () => {
+            if (SUPPORTS_SYMLINKS) {
+                test('mixed', async () => {
+                    // Create the target directory and its contents.
+                    const dirname = await fix.createDirectory('x/y/z');
+                    const file1 = await fix.createFile('x/y/z/__init__.py', '');
+                    const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+                    const file2 = await fix.createFile('x/y/z/spam.py', '...');
+                    const symlink1 = await fix.createSymlink(
+                        'x/y/z/info.py',
+                        // Link to an ignored file.
+                        await fix.createFile('x/_info.py', '<info here>') // source
+                    );
+                    const sock = await fix.createSocket('x/y/z/ipc.sock');
+                    const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+                    const symlink2 = await fix.createSymlink(
+                        'x/y/z/broken',
+                        DOES_NOT_EXIST // source
+                    );
+                    const symlink3 = await fix.createSymlink(
+                        'x/y/z/ipc.sck',
+                        sock // source
+                    );
+                    const subdir = await fix.createDirectory('x/y/z/w');
+                    const symlink4 = await fix.createSymlink(
+                        'x/y/z/static_files',
+                        await fix.resolve('x/y/z/w/data') // source
+                    );
+                    // Create other files and directories (should be ignored).
+                    await fix.createSymlink(
+                        'my-script.py',
+                        // Link to a listed file.
+                        script // source (__main__.py)
+                    );
+                    const ignored1 = await fix.createFile('x/__init__.py', '');
+                    await fix.createFile('x/y/__init__.py', '');
+                    await fix.createSymlink(
+                        'x/y/z/w/__init__.py',
+                        ignored1 // source (x/__init__.py)
+                    );
+                    await fix.createDirectory('x/y/z/w/data');
+                    await fix.createFile('x/y/z/w/data/v1.json');
+
+                    const entries = await fileSystem.listdir(dirname);
+
+                    expect(entries.sort()).to.deep.equal([
+                        [file1, FileType.File],
+                        [script, FileType.File],
+                        [symlink2, FileType.SymbolicLink],
+                        [file3, FileType.File],
+                        [symlink1, FileType.SymbolicLink | FileType.File],
+                        [symlink3, FileType.SymbolicLink],
+                        [sock, FileType.Unknown],
+                        [file2, FileType.File],
+                        [symlink4, FileType.SymbolicLink | FileType.Directory],
+                        [subdir, FileType.Directory]
+                    ]);
+                });
+            } else {
+                test('mixed', async () => {
+                    // Create the target directory and its contents.
+                    const dirname = await fix.createDirectory('x/y/z');
+                    const file1 = await fix.createFile('x/y/z/__init__.py', '');
+                    const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+                    const file2 = await fix.createFile('x/y/z/spam.py', '...');
+                    const sock = await fix.createSocket('x/y/z/ipc.sock');
+                    const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+                    const subdir = await fix.createDirectory('x/y/z/w');
+                    // Create other files and directories (should be ignored).
+                    await fix.createFile('x/__init__.py', '');
+                    await fix.createFile('x/y/__init__.py', '');
+                    await fix.createDirectory('x/y/z/w/data');
+                    await fix.createFile('x/y/z/w/data/v1.json');
+
+                    const entries = await fileSystem.listdir(dirname);
+
+                    expect(entries.sort()).to.deep.equal([
+                        [file1, FileType.File],
+                        [script, FileType.File],
+                        [file3, FileType.File],
+                        [sock, FileType.Unknown],
+                        [file2, FileType.File],
+                        [subdir, FileType.Directory]
+                    ]);
+                });
+            }
+
+            test('empty', async () => {
+                const dirname = await fix.createDirectory('x/y/z/eggs');
+
+                const entries = await fileSystem.listdir(dirname);
+
+                expect(entries).to.deep.equal([]);
+            });
+
+            test('fails if the directory does not exist', async () => {
+                const promise = fileSystem.listdir(DOES_NOT_EXIST);
 
                 await expect(promise).to.eventually.be.rejected;
             });

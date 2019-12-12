@@ -104,7 +104,9 @@ export class FSFixture extends CleanupFixture {
             throw Error('this platform does not support symlinks');
         }
         const symlink = await this.resolve(relname);
-        await fsextra.ensureSymlink(source, symlink);
+        // We cannot use fsextra.ensureSymlink() because it requires
+        // that "source" exist.
+        await fsextra.symlink(source, symlink);
         return symlink;
     }
 
