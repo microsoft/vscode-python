@@ -171,6 +171,8 @@ export class FileSystem implements IFileSystem {
 
     public objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
         return new Promise<boolean>(resolve => {
+            // Note that we are using stat() rather than lstat().  This
+            // means that any symlinks are getting resolved.
             fs.stat(filePath, (error, stats) => {
                 if (error) {
                     return resolve(false);

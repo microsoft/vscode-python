@@ -487,8 +487,34 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('', async () => {
-                // XXX
+            test('want file, not file', async () => {
+                const filename = await fix.createDirectory('x/y/z/spam.py');
+
+                const exists = await fileSystem.fileExists(filename);
+
+                expect(exists).to.equal(false);
+            });
+
+            test('symlink', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+
+                const exists = await fileSystem.fileExists(symlink);
+
+                // This is because we currently use stat() and not lstat().
+                expect(exists).to.equal(true);
+            });
+
+            test('unknown', async () => {
+                const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+
+                const exists = await fileSystem.fileExists(sockFile);
+
+                expect(exists).to.equal(false);
             });
         });
 
@@ -501,8 +527,30 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('', async () => {
-                // XXX
+            test('want directory, not directory', async () => {
+                const dirname = await fix.createFile('x/y/z/spam');
+
+                const exists = await fileSystem.directoryExists(dirname);
+
+                expect(exists).to.equal(false);
+            });
+
+            test('symlink', async () => {
+                const dirname = await fix.createDirectory('x/y/z/spam');
+                const symlink = await fix.createSymlink('x/y/z/eggs', dirname);
+
+                const exists = await fileSystem.directoryExists(symlink);
+
+                // This is because we currently use stat() and not lstat().
+                expect(exists).to.equal(true);
+            });
+
+            test('unknown', async () => {
+                const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+
+                const exists = await fileSystem.directoryExists(sockFile);
+
+                expect(exists).to.equal(false);
             });
         });
 
@@ -791,14 +839,53 @@ suite('FileSystem', () => {
         // sync methods
 
         suite('fileExistsSync', () => {
-            test('Check existence of files synchronously', async () => {
-                const exists = fileSystem.fileExistsSync(__filename);
+            test('want file, got file', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py');
 
-                expect(exists).to.be.equal(true, 'file not found');
+                const exists = fileSystem.fileExistsSync(filename);
+
+                expect(exists).to.equal(true);
             });
 
-            test('', async () => {
-                // XXX
+            test('want file, not file', async () => {
+                const filename = await fix.createDirectory('x/y/z/spam.py');
+
+                const exists = fileSystem.fileExistsSync(filename);
+
+                // Note that currently the "file" can be *anything*.  It
+                // doesn't have to be just a regular file.  This is the
+                // way it already worked, so we're keeping it that way
+                // for now.
+                expect(exists).to.equal(true);
+            });
+
+            test('symlink', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+
+                const exists = fileSystem.fileExistsSync(symlink);
+
+                // Note that currently the "file" can be *anything*.  It
+                // doesn't have to be just a regular file.  This is the
+                // way it already worked, so we're keeping it that way
+                // for now.
+                expect(exists).to.equal(true);
+            });
+
+            test('unknown', async () => {
+                const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+
+                const exists = fileSystem.fileExistsSync(sockFile);
+
+                // Note that currently the "file" can be *anything*.  It
+                // doesn't have to be just a regular file.  This is the
+                // way it already worked, so we're keeping it that way
+                // for now.
+                expect(exists).to.equal(true);
             });
         });
     });
