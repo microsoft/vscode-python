@@ -230,7 +230,8 @@ for _ in range(50):
         }, () => { return ioc; });
 
         runMountedTest('Select Jupyter Kernel', async (_wrapper) => {
-            console.log('Tests skipped, as we need better tests')
+            // tslint:disable-next-line: no-console
+            console.log('Tests skipped, as we need better tests');
             // let selectorCalled = false;
 
             // ioc.datascience.setup(ds => ds.selectLocalJupyterKernel()).returns(() => {

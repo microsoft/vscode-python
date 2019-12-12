@@ -32,8 +32,6 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
         };
 
         const kernelSelectionClass = this.isKernelSelectionAllowed ? 'kernel-status-section kernel-status-section-hoverable' : 'kernel-status-section';
-        // tslint:disable-next-line: no-console
-        console.error(`Kernel Selection is aloowed ${this.isKernelSelectionAllowed}`);
         return (
             <div className='kernel-status' style={dynamicFont}>
                 <div className='kernel-status-section' role='button'>
