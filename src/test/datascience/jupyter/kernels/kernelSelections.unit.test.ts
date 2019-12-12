@@ -94,6 +94,8 @@ suite('Data Science - KernelSelections', () => {
                 )
             }
         ];
+        expectedItems.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
 
         verify(sessionManager.getRunningKernels()).once();
@@ -124,11 +126,12 @@ suite('Data Science - KernelSelections', () => {
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
-        expectedKernelItems.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
+        expectedList.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
 
         const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager));
 
         verify(kernelService.getKernelSpecs(anything(), anything())).once();
-        assert.deepEqual(items, [...expectedKernelItems, ...expectedInterpreterItems]);
+        assert.deepEqual(items, expectedList);
     });
 });
