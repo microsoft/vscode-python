@@ -4,7 +4,7 @@
 import * as React from 'react';
 import { Image, ImageName } from '../react-common/image';
 import { getLocString } from '../react-common/locReactSide';
-import { IFont, IServerState } from './mainState';
+import { IFont, IServerState, ServerStatus } from './mainState';
 
 export interface IKernelSelectionProps {
     baseTheme: string;
@@ -15,8 +15,14 @@ export interface IKernelSelectionProps {
 }
 
 export class KernelSelection extends React.Component<IKernelSelectionProps> {
+    private get isKernelSelectionAllowed() {
+        return (this.props.kernel.jupyterServerStatus !== ServerStatus.NotStarted &&
+            this.props.kernel.jupyterServerStatus !== ServerStatus.Restarting &&
+            this.props.kernel.jupyterServerStatus !== ServerStatus.Starting);
+    }
     constructor(prop: IKernelSelectionProps) {
         super(prop);
+        this.selectKernel = this.selectKernel.bind(this);
     }
 
     public render() {
@@ -25,22 +31,29 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             fontFamily: this.props.font.family
         };
 
+        const kernelSelectionClass = this.isKernelSelectionAllowed ? 'kernel-status-section' : 'kernel-status-section kernel-status-section-hoverable';
+        // tslint:disable-next-line: no-console
+        console.error(`Kernel Selection is aloowed ${this.isKernelSelectionAllowed}`);
         return (
             <div className='kernel-status' style={dynamicFont}>
                 <div className='kernel-status-section' role='button'>
                     <div className='kernel-status-text'>
-                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
+                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.selectKernel}
                     </div>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image kernel-status-icon' image={this.getIcon()} />
                 </div>
                 <div className='kernel-status-divider'/>
-                <div className='kernel-status-section kernel-status-section-hoverable' onClick={this.props.selectKernel} role='button'>
+                <div className={kernelSelectionClass} onClick={this.props.selectKernel} role='button'>
                     {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
             </div>
         );
     }
-
+    private selectKernel() {
+        if (this.isKernelSelectionAllowed){
+            this.props.selectKernel();
+        }
+    }
     private getIcon(): ImageName {
         return this.props.kernel.localizedUri === getLocString('DataScience.noKernel', 'No Kernel') ? ImageName.JupyterServerDisconnected : ImageName.JupyterServerConnected;
     }
