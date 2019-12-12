@@ -8,7 +8,8 @@
    ([#3473](https://github.com/Microsoft/vscode-python/issues/3473))
 1. Activate conda environment using path when name is not available.
    ([#3834](https://github.com/Microsoft/vscode-python/issues/3834))
-1. Add QuickPick dropdown option _Run All/Debug All_ when clicking on a Code Lens for a parametrized test to be able to run/debug all belonging test variants at once. Thanks to [Philipp Loose](https://github.com/phloose)
+1. Add QuickPick dropdown option _Run All/Debug All_ when clicking on a Code Lens for a parametrized test to be able to run/debug all belonging test variants at once.
+   (thanks to [Philipp Loose](https://github.com/phloose))
    ([#5608](https://github.com/Microsoft/vscode-python/issues/5608))
 1. Use Octicons in Code Lenses. (thanks [Aidan Dang](https://github.com/AidanGG))
    ([#7192](https://github.com/Microsoft/vscode-python/issues/7192))
@@ -111,7 +112,7 @@
    ([#8001](https://github.com/Microsoft/vscode-python/issues/8001))
 1. Adjust some notebook and interactive window telemetry.
    ([#8254](https://github.com/Microsoft/vscode-python/issues/8254))
-1. Added a new telemetry event called 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL' that fires every time the user opens a jupyter notebook by any means.
+1. Added a new telemetry event called `DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL` that fires every time the user opens a jupyter notebook by any means.
    ([#8262](https://github.com/Microsoft/vscode-python/issues/8262))
 1. Create python daemon for execution of python code.
    ([#8451](https://github.com/Microsoft/vscode-python/issues/8451))
@@ -132,6 +133,56 @@
 1. Fix failing Data Viewer functional tests.
    ([#8992](https://github.com/Microsoft/vscode-python/issues/8992))
 
+### Thanks
+
+Thanks to the following projects which we fully rely on to provide some of
+our features:
+- [isort](https://pypi.org/project/isort/)
+- [jedi](https://pypi.org/project/jedi/)
+  and [parso](https://pypi.org/project/parso/)
+- [Microsoft Python Language Server](https://github.com/microsoft/python-language-server)
+- [ptvsd](https://pypi.org/project/ptvsd/)
+- [exuberant ctags](http://ctags.sourceforge.net/) (user-installed)
+- [rope](https://pypi.org/project/rope/) (user-installed)
+
+Also thanks to the various projects we provide integrations with which help
+make this extension useful:
+- Debugging support:
+  [Django](https://pypi.org/project/Django/),
+  [Flask](https://pypi.org/project/Flask/),
+  [gevent](https://pypi.org/project/gevent/),
+  [Jinja](https://pypi.org/project/Jinja/),
+  [Pyramid](https://pypi.org/project/pyramid/),
+  [PySpark](https://pypi.org/project/pyspark/),
+  [Scrapy](https://pypi.org/project/Scrapy/),
+  [Watson](https://pypi.org/project/Watson/)
+- Formatting:
+  [autopep8](https://pypi.org/project/autopep8/),
+  [black](https://pypi.org/project/black/),
+  [yapf](https://pypi.org/project/yapf/)
+- Interpreter support:
+  [conda](https://conda.io/),
+  [direnv](https://direnv.net/),
+  [pipenv](https://pypi.org/project/pipenv/),
+  [pyenv](https://github.com/pyenv/pyenv),
+  [venv](https://docs.python.org/3/library/venv.html#module-venv),
+  [virtualenv](https://pypi.org/project/virtualenv/)
+- Linting:
+  [bandit](https://pypi.org/project/bandit/),
+  [flake8](https://pypi.org/project/flake8/),
+  [mypy](https://pypi.org/project/mypy/),
+  [prospector](https://pypi.org/project/prospector/),
+  [pylint](https://pypi.org/project/pylint/),
+  [pydocstyle](https://pypi.org/project/pydocstyle/),
+  [pylama](https://pypi.org/project/pylama/)
+- Testing:
+  [nose](https://pypi.org/project/nose/),
+  [pytest](https://pypi.org/project/pytest/),
+  [unittest](https://docs.python.org/3/library/unittest.html#module-unittest)
+
+And finally thanks to the [Python](https://www.python.org/) development team and
+community for creating a fantastic programming language and community to be a
+part of!
 
 ## 2019.11.1 (22 November 2019)
 
