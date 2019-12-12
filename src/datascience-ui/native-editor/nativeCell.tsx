@@ -242,15 +242,17 @@ export class NativeCell extends React.Component<INativeCellProps> {
                 }
                 break;
             case 'y':
-                if (!this.isFocused() && this.isSelected()) {
+                if (!this.isFocused() && this.isSelected() && this.isMarkdownCell()) {
                     e.stopPropagation();
+                    e.preventDefault();
                     this.props.changeCellType(cellId, this.getCurrentCode());
                     this.props.sendCommand(NativeCommandType.ChangeToCode, 'keyboard');
                 }
                 break;
             case 'm':
-                if (!this.isFocused() && this.isSelected()) {
+                if (!this.isFocused() && this.isSelected() && this.isCodeCell()) {
                     e.stopPropagation();
+                    e.preventDefault();
                     this.props.changeCellType(cellId, this.getCurrentCode());
                     this.props.sendCommand(NativeCommandType.ChangeToMarkdown, 'keyboard');
                 }
