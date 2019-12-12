@@ -41,11 +41,7 @@ export async function assertExists(filename: string) {
 }
 
 export function fixPath(filename: string): string {
-    if (WINDOWS) {
-        return filename.replace(/\//g, '\\');
-    } else {
-        return filename;
-    }
+    return path.normalize(filename);
 }
 
 export class CleanupFixture {

@@ -645,8 +645,153 @@ suite('FileSystem', () => {
         });
 
         suite('move', () => {
-            test('', async () => {
-                // XXX
+            test('rename file', async () => {
+                const source = await fix.createFile('spam.py', '<text>');
+                const target = await fix.resolve('eggs-txt');
+                await assertDoesNotExist(target);
+
+                await fileSystem.move(source, target);
+
+                await assertExists(target);
+                const text = await fs.readFile(target, 'utf8');
+                expect(text).to.equal('<text>');
+                await assertDoesNotExist(source);
+            });
+
+            test('rename directory', async () => {
+                const source = await fix.createDirectory('spam');
+                await fix.createFile('spam/data.json', '<text>');
+                const target = await fix.resolve('eggs');
+                const filename = await fix.resolve('eggs/data.json', false);
+                await assertDoesNotExist(target);
+
+                await fileSystem.move(source, target);
+
+                await assertExists(filename);
+                const text = await fs.readFile(filename, 'utf8');
+                expect(text).to.equal('<text>');
+                await assertDoesNotExist(source);
+            });
+
+            test('rename symlink', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const filename = await fix.createFile('spam.py');
+                const symlink = await fix.createSymlink('spam.lnk', filename);
+                const target = await fix.resolve('eggs');
+                await assertDoesNotExist(target);
+
+                await fileSystem.move(symlink, target);
+
+                await assertExists(target);
+                const linked = await fs.readlink(target);
+                expect(linked).to.equal(filename);
+                await assertDoesNotExist(symlink);
+            });
+
+            test('move file', async () => {
+                const source = await fix.createFile('spam.py', '<text>');
+                await fix.createDirectory('eggs');
+                const target = await fix.resolve('eggs/spam.py');
+                await assertDoesNotExist(target);
+
+                await fileSystem.move(source, target);
+
+                await assertExists(target);
+                const text = await fs.readFile(target, 'utf8');
+                expect(text).to.equal('<text>');
+                await assertDoesNotExist(source);
+            });
+
+            test('move directory', async () => {
+                const source = await fix.createDirectory('spam/spam/spam/eggs/spam');
+                await fix.createFile('spam/spam/spam/eggs/spam/data.json', '<text>');
+                await fix.createDirectory('spam/spam/spam/hash');
+                const target = await fix.resolve('spam/spam/spam/hash/spam');
+                const filename = await fix.resolve('spam/spam/spam/hash/spam/data.json', false);
+                await assertDoesNotExist(target);
+
+                await fileSystem.move(source, target);
+
+                await assertExists(filename);
+                const text = await fs.readFile(filename, 'utf8');
+                expect(text).to.equal('<text>');
+                await assertDoesNotExist(source);
+            });
+
+            test('move symlink', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const filename = await fix.createFile('spam.py');
+                const symlink = await fix.createSymlink('w/spam.lnk', filename);
+                const target = await fix.resolve('x/spam.lnk');
+                await assertDoesNotExist(target);
+
+                await fileSystem.move(symlink, target);
+
+                await assertExists(target);
+                const linked = await fs.readlink(target);
+                expect(linked).to.equal(filename);
+                await assertDoesNotExist(symlink);
+            });
+
+            test('file target already exists', async () => {
+                const source = await fix.createFile('spam.py', '<text>');
+                const target = await fix.createFile('eggs-txt', '<other>');
+
+                await fileSystem.move(source, target);
+
+                await assertDoesNotExist(source);
+                await assertExists(target);
+                const text2 = await fs.readFile(target, 'utf8');
+                expect(text2).to.equal('<text>');
+            });
+
+            test('directory target already exists', async () => {
+                const source = await fix.createDirectory('spam');
+                const file3 = await fix.createFile('spam/data.json', '<text>');
+                const target = await fix.createDirectory('eggs');
+                const file1 = await fix.createFile('eggs/spam.py', '<code>');
+                const file2 = await fix.createFile('eggs/data.json', '<other>');
+
+                const promise = fileSystem.move(source, target);
+
+                await expect(promise).to.eventually.be.rejected;
+                // Make sure nothing changed.
+                const text1 = await fs.readFile(file1, 'utf8');
+                expect(text1).to.equal('<code>');
+                const text2 = await fs.readFile(file2, 'utf8');
+                expect(text2).to.equal('<other>');
+                const text3 = await fs.readFile(file3, 'utf8');
+                expect(text3).to.equal('<text>');
+            });
+
+            test('fails if the file does not exist', async () => {
+                const source = await fix.resolve(DOES_NOT_EXIST);
+                const target = await fix.resolve('spam.py');
+
+                const promise = fileSystem.move(source, target);
+
+                await expect(promise).to.eventually.be.rejected;
+                // Make sure nothing changed.
+                await assertDoesNotExist(target);
+            });
+
+            test('fails if the target directory does not exist', async () => {
+                const source = await fix.createFile('x/spam.py', '<text>');
+                const target = await fix.resolve('w/spam.py', false);
+                await assertDoesNotExist(path.dirname(target));
+
+                const promise = fileSystem.move(source, target);
+
+                await expect(promise).to.eventually.be.rejected;
+                // Make sure nothing changed.
+                await assertExists(source);
+                await assertDoesNotExist(target);
             });
         });
 
