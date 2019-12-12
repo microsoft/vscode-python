@@ -43,7 +43,7 @@ export class WorkspaceSymbolProvider implements IWorspaceSymbolProvider {
             .filter(generator => generator !== undefined && generator.enabled)
             .map(async generator => {
                 // load tags
-                const items = await parseTags(generator!.workspaceFolder.fsPath, generator!.tagFilePath, query, token);
+                const items = await parseTags(generator!.workspaceFolder.fsPath, generator!.tagFilePath, query, token, this.fs);
                 if (!Array.isArray(items)) {
                     return [];
                 }

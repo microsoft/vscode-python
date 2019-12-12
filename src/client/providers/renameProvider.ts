@@ -6,6 +6,7 @@ import {
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
+import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IInstaller, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { RefactorProxy } from '../refactor/proxy';
@@ -57,7 +58,8 @@ export class PythonRenameProvider implements RenameProvider {
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
         return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {
             const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
-            return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot);
+            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+            return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot, fs);
         }).catch(reason => {
             if (reason === 'Not installed') {
                 const installer = this.serviceContainer.get<IInstaller>(IInstaller);

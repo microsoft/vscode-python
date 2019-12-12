@@ -4,8 +4,7 @@ import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
-import { FileSystem } from './platform/fileSystem';
-import { PlatformService } from './platform/platformService';
+import { IFileSystem } from '../common/platform/types';
 import { IEditorUtils } from './types';
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
@@ -81,7 +80,7 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 
     return textEdits;
 }
-export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?: string): WorkspaceEdit {
+export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot: string | undefined, fs: IFileSystem): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach(patch => {
         const indexOfAtAt = patch.indexOf('@@');
@@ -106,9 +105,6 @@ export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot?
             return;
         }
 
-        const fs = new FileSystem(
-            new PlatformService()
-        );
         let fileName = fileNameLines[0].substring(fileNameLines[0].indexOf(' a') + 3).trim();
         fileName = workspaceRoot && !path.isAbsolute(fileName) ? path.resolve(workspaceRoot, fileName) : fileName;
         if (!fs.fileExistsSync(fileName)) {
@@ -230,7 +226,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     return edits;
 }
 
-export async function getTempFileWithDocumentContents(document: TextDocument): Promise<string> {
+export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
     const ext = path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
     // look into configuration files in the workspace and are not
@@ -240,9 +236,6 @@ export async function getTempFileWithDocumentContents(document: TextDocument): P
 
     // tslint:disable-next-line:no-require-imports
     const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
-    const fs = new FileSystem(
-        new PlatformService()
-    );
     try {
         await fs.writeFile(fileName, document.getText());
     } catch (ex) {

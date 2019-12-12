@@ -102,8 +102,9 @@ export abstract class BaseFormatter {
     }
 
     private async createTempFile(document: vscode.TextDocument): Promise<string> {
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
         return document.isDirty
-            ? getTempFileWithDocumentContents(document)
+            ? getTempFileWithDocumentContents(document, fs)
             : document.fileName;
     }
 
