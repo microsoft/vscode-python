@@ -50,6 +50,7 @@ export interface IFileSystem {
     getSubDirectories(rootDir: string): Promise<string[]>;
     getFiles(rootDir: string): Promise<string[]>;
     arePathsSame(path1: string, path2: string): boolean;
+    readData(filePath: string): Promise<Buffer>;
     readFile(filePath: string): Promise<string>;
     writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
     readFileSync(filename: string): string;

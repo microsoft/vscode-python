@@ -1264,14 +1264,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         traceInfo(`Request for onigasm file at ${filePath}`);
         if (this.fileSystem) {
             if (await this.fileSystem.fileExists(filePath)) {
-                const contents = Buffer.from(await this.fileSystem.readFile(filePath), 'utf8');
+                const contents = await this.fileSystem.readData(filePath);
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
                 // During development it's actually in the node_modules folder
                 filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
                 traceInfo(`Backup request for onigasm file at ${filePath}`);
                 if (await this.fileSystem.fileExists(filePath)) {
-                    const contents = Buffer.from(await this.fileSystem.readFile(filePath), 'utf8');
+                    const contents = await this.fileSystem.readData(filePath);
                     this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {
                     traceWarning('Onigasm file not found. Colorization will not be available.');

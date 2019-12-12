@@ -58,6 +58,9 @@ export class FileSystem implements IFileSystem {
     public readFile(filePath: string): Promise<string> {
         return fs.readFile(filePath).then(buffer => buffer.toString());
     }
+    public readData(filePath: string): Promise<Buffer> {
+        return fs.readFile(filePath);
+    }
 
     public async writeFile(filePath: string, data: {}, options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
         await fs.writeFile(filePath, data, options);
