@@ -103,6 +103,7 @@ export interface INotebook extends IAsyncDisposable {
     getMatchingInterpreter(): PythonInterpreter | undefined;
     getKernelSpec(): IJupyterKernelSpec | undefined;
     setKernelSpec(spec: IJupyterKernelSpec): Promise<void>;
+    setInterpreter(interpeter: PythonInterpreter): void;
 }
 
 export interface INotebookServerOptions {

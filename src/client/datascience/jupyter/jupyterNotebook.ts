@@ -481,6 +481,10 @@ export class JupyterNotebookBase implements INotebook {
         return this.launchInfo.interpreter;
     }
 
+    public setInterpreter(interpreter: PythonInterpreter) {
+        this.launchInfo.interpreter = interpreter;
+    }
+
     public getKernelSpec(): IJupyterKernelSpec | undefined {
         return this.launchInfo.kernelSpec;
     }

@@ -1300,7 +1300,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (kernel && kernel.kernelSpec && this.notebook) {
-            // Tell the kernel. A status update should fire that changes our display
+            if (kernel.interpreter) {
+                this.notebook.setInterpreter(kernel.interpreter);
+            }
+
+            // Change the kernel. A status update should fire that changes our display
             await this.notebook.setKernelSpec(kernel.kernelSpec);
 
             // Add in a new sys info

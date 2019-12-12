@@ -136,6 +136,10 @@ class MockJupyterNotebook implements INotebook {
         return;
     }
 
+    public setInterpreter(_inter: PythonInterpreter) {
+        noop();
+    }
+
     public getKernelSpec(): IJupyterKernelSpec | undefined {
         return;
     }
