@@ -264,7 +264,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Going through codewatcher', async () => {
+    test('IANHU Going through codewatcher', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 

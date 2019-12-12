@@ -72,15 +72,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
     }
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
-        let result: INotebookServer | undefined = await this.serverCache.get(options);
 
-        // See if we already have this server or not.
-        if (result) {
-            return result;
-        }
-
-        // Create the server on the remote machine. It should return an IConnection we can use to build a remote uri
+    public async guestConnectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         const service = await this.waitForService();
         if (service) {
             const purpose = options ? options.purpose : uuid();
@@ -92,7 +85,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
                 const newUri = `${connection.baseUrl}?token=${connection.token}`;
-                result = await super.connectToNotebookServer(
+                return super.connectToNotebookServer(
                     {
                         uri: newUri,
                         useDefaultConfig: options && options.useDefaultConfig,
@@ -100,12 +93,12 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
                         purpose
                     },
                     cancelToken);
-                // Save in our cache
-                if (result) {
-                    await this.serverCache.set(result, noop, options);
-                }
             }
         }
+    }
+
+    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
+        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer(options, cancelToken), noop, options);
 
         if (!result) {
             throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
@@ -113,6 +106,49 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
 
         return result;
     }
+
+
+    // public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
+    //     let result: INotebookServer | undefined = await this.serverCache.get(options);
+
+    //     // See if we already have this server or not.
+    //     if (result) {
+    //         return result;
+    //     }
+
+    //     // Create the server on the remote machine. It should return an IConnection we can use to build a remote uri
+    //     const service = await this.waitForService();
+    //     if (service) {
+    //         const purpose = options ? options.purpose : uuid();
+    //         const connection: IConnection = await service.request(
+    //             LiveShareCommands.connectToNotebookServer,
+    //             [options],
+    //             cancelToken);
+
+    //         // If that works, then treat this as a remote server and connect to it
+    //         if (connection && connection.baseUrl) {
+    //             const newUri = `${connection.baseUrl}?token=${connection.token}`;
+    //             result = await super.connectToNotebookServer(
+    //                 {
+    //                     uri: newUri,
+    //                     useDefaultConfig: options && options.useDefaultConfig,
+    //                     workingDir: options ? options.workingDir : undefined,
+    //                     purpose
+    //                 },
+    //                 cancelToken);
+    //             // Save in our cache
+    //             if (result) {
+    //                 await this.serverCache.set(result, noop, options);
+    //             }
+    //         }
+    //     }
+
+    //     if (!result) {
+    //         throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
+    //     }
+
+    //     return result;
+    // }
     public spawnNotebook(_file: string): Promise<void> {
         // Not supported in liveshare
         throw new Error(localize.DataScience.liveShareCannotSpawnNotebooks());
