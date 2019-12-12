@@ -128,16 +128,16 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
-        // Start the restart session as soon as a request is created
-        this.startRestartSession();
-
-        return this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
+        const result = this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
+        // It has been observed that starting the restart session slows down first time to execute a cell.
+        // Solution is to start the restart session after the first execution of user code.
+        if (!content.silent && result){
+            result.done.finally(() => this.startRestartSession()).ignoreErrors();
+        }
+        return result;
     }
 
     public requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined> {
-        // Start the restart session as soon as a request is created
-        this.startRestartSession();
-
         return this.session && this.session.kernel ? this.session.kernel.requestComplete(content) : Promise.resolve(undefined);
     }
 
