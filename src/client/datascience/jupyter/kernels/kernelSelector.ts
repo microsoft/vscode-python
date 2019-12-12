@@ -172,6 +172,10 @@ export class KernelSelector {
                 .then(noop, noop);
         }
 
+        // When this method is called, we know a new kernel may have been registered.
+        // Lets pre-warm the list of local kernels (with the new list).
+        this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken).ignoreErrors();
+
         return { kernelSpec, interpreter };
     }
 }

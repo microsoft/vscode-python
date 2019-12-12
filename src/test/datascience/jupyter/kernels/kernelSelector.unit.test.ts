@@ -151,7 +151,7 @@ suite('Data Science - KernelSelector', () => {
             assert.isOk(kernel.interpreter === interpreter);
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).once();
-            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
+            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).twice(); // Once for caching.
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(appShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel())).never();
             verify(appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel())).never();
@@ -168,7 +168,7 @@ suite('Data Science - KernelSelector', () => {
 
             assert.isOk(kernel.kernelSpec === kernelSpec);
             verify(installer.isInstalled(Product.ipykernel, interpreter)).once();
-            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
+            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).twice(); // once for caching.
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingKernelSpec(interpreter, instance(sessionManager), anything())).never();
             verify(kernelService.registerKernel(interpreter, anything())).once();
@@ -203,6 +203,7 @@ suite('Data Science - KernelSelector', () => {
         test('If metadata contains kernel information, then return a matching kernel and a matching interpreter', async () => {
             when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve(interpreter);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(instance(sessionManager), nbMetadata);
 
@@ -217,6 +218,7 @@ suite('Data Science - KernelSelector', () => {
         test('If metadata contains kernel information, then return a matching kernel (even if there is no matching interpreter)', async () => {
             when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(kernelSpec);
             when(kernelService.findMatchingInterpreter(kernelSpec, anything())).thenResolve();
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(instance(sessionManager), nbMetadata);
 
@@ -237,6 +239,7 @@ suite('Data Science - KernelSelector', () => {
             when(
                 appShell.showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(nbMetadata.kernelspec?.display_name!))
             ).thenResolve();
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(instance(sessionManager), nbMetadata);
 
@@ -255,6 +258,7 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
             when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
             const kernel = await kernelSelector.getKernelForLocalConnection(instance(sessionManager), undefined);
 
