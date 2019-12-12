@@ -2483,7 +2483,7 @@
                 "python.workspaceSymbols.enabled": {
                     "type": "boolean",
                     "default": false,
-                    "description": "Set to 'true' to enable Workspace Symbol provider using ctags.",
+                    "description": "Set to 'true' to enable ctags to provide Workspace Symbols.",
                     "scope": "resource"
                 },
                 "python.workspaceSymbols.exclusionPatterns": {
