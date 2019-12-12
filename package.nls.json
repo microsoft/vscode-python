@@ -392,5 +392,6 @@
     "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown.",
     "DataScience.fallbackToUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Using the current interpreter.",
     "DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Registering a new kernel using the current interpreter.",
-    "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": "Couldn't find kernel '{0}' that the notebook was created with."
+    "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": "Couldn't find kernel '{0}' that the notebook was created with.",
+    "DataScience.selectKernel": "Select a Kernel"
 }
