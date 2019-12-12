@@ -2482,8 +2482,8 @@
                 },
                 "python.workspaceSymbols.enabled": {
                     "type": "boolean",
-                    "default": true,
-                    "description": "Set to 'false' to disable Workspace Symbol provider using ctags.",
+                    "default": false,
+                    "description": "Set to 'true' to enable Workspace Symbol provider using ctags.",
                     "scope": "resource"
                 },
                 "python.workspaceSymbols.exclusionPatterns": {
