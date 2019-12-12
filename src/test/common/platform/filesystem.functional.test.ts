@@ -33,6 +33,7 @@ suite('FileSystem', () => {
     });
     teardown(async () => {
         await fix.cleanUp();
+        await fix.ensureDeleted(DOES_NOT_EXIST);
     });
 
     suite('path-related', () => {
@@ -216,8 +217,42 @@ suite('FileSystem', () => {
         });
 
         suite('appendFile', () => {
-            test('', async () => {
-                // XXX
+            test('existing file', async () => {
+                const orig = 'spamspamspam\n\n';
+                const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
+                const filename = await fix.createFile('spam.txt', orig);
+                const expected = `${orig}${dataToAppend}`;
+
+                await fileSystem.appendFile(filename, dataToAppend);
+
+                const actual = await fs.readFile(filename, 'utf8');
+                expect(actual).to.be.equal(expected);
+            });
+
+            test('existing empty file', async () => {
+                const filename = await fix.createFile('spam.txt');
+                const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
+                const expected = dataToAppend;
+
+                await fileSystem.appendFile(filename, dataToAppend);
+
+                const actual = await fs.readFile(filename, 'utf8');
+                expect(actual).to.be.equal(expected);
+            });
+
+            test('creates the file if it does not already exist', async () => {
+                await fileSystem.appendFile(DOES_NOT_EXIST, 'spam');
+
+                const actual = await fs.readFile(DOES_NOT_EXIST, 'utf8');
+                expect(actual).to.be.equal('spam');
+            });
+
+            test('fails if not a file', async () => {
+                const dirname = await fix.createDirectory('spam');
+
+                const promise = fileSystem.appendFile(dirname, 'spam');
+
+                await expect(promise).to.eventually.be.rejected;
             });
         });
 
