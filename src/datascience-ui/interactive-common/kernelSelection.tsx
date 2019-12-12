@@ -31,7 +31,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             fontFamily: this.props.font.family
         };
 
-        const kernelSelectionClass = this.isKernelSelectionAllowed ? 'kernel-status-section' : 'kernel-status-section kernel-status-section-hoverable';
+        const kernelSelectionClass = this.isKernelSelectionAllowed ? 'kernel-status-section kernel-status-section-hoverable' : 'kernel-status-section';
         // tslint:disable-next-line: no-console
         console.error(`Kernel Selection is aloowed ${this.isKernelSelectionAllowed}`);
         return (
@@ -43,8 +43,8 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
                     <Image baseTheme={this.props.baseTheme} class='image-button-image kernel-status-icon' image={this.getIcon()} />
                 </div>
                 <div className='kernel-status-divider'/>
-                <div className={kernelSelectionClass} onClick={this.props.selectKernel} role='button'>
-                    {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
+                <div className={kernelSelectionClass} onClick={this.selectKernel} role='button'>
+                {this.props.kernel.displayName}: {this.props.kernel.jupyterServerStatus}
                 </div>
             </div>
         );
