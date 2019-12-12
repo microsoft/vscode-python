@@ -410,7 +410,7 @@ suite('FileSystem', () => {
                 expect(text).to.equal(expected);
             });
 
-            test('throws an exception if file does not exist', async () => {
+            test('throws an exception if file does not exist', () => {
                 expect(
                     () => fileSystem.readFileSync(DOES_NOT_EXIST)
                 ).to.throw(Error);
@@ -418,9 +418,21 @@ suite('FileSystem', () => {
         });
 
         suite('createReadStream', () => {
-            test('', async () => {
-                // XXX
+            test('returns the correct ReadStream', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                const expected = fs.createReadStream(filename);
+                expected.destroy();
+
+                const stream = fileSystem.createReadStream(filename);
+                stream.destroy();
+
+                expect(stream.path).to.deep.equal(expected.path);
             });
+
+            // Missing tests:
+            // * creation fails if the file does not exist
+            // * .read() works as expected
+            // * .pipe() works as expected
         });
 
         suite('createWriteStream', () => {
