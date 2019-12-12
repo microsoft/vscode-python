@@ -64,7 +64,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
             experimentsManager
                 .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
-                .returns(() => false);
+                .returns(() => true);
+            experimentsManager
+                .setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment))
+                .returns(() => true);
             debugProvider = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object, experimentsManager.object);
         });
         function createMoqWorkspaceFolder(folderPath: string) {
@@ -416,7 +419,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             });
         });
 
-        test('If in PtvsdWheels experiment and debugConfiguration does not contain \'processId\' field, do not throw error', async () => {
+        test('If not in PtvsdWheels experiment and debugConfiguration does not contain \'processId\' field, do not throw error', async () => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
@@ -425,7 +428,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             experimentsManager.reset();
             experimentsManager
                 .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
-                .returns(() => true);
+                .returns(() => false);
             experimentsManager
                 .setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment))
                 .returns(() => true);
@@ -434,7 +437,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             await expect(promise).to.not.be.rejectedWith(Error);
         });
 
-        test('If in PtvsdWheels experiment and debugConfiguration contains \'processId\' field, throw error', async () => {
+        test('If not in PtvsdWheels experiment and debugConfiguration contains \'processId\' field, throw error', async () => {
             const activeFile = 'xyz.py';
             const workspaceFolder = createMoqWorkspaceFolder(__dirname);
             setupActiveEditor(activeFile, PYTHON_LANGUAGE);
@@ -443,10 +446,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             experimentsManager.reset();
             experimentsManager
                 .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
-                .returns(() => true);
+                .returns(() => false);
             experimentsManager
                 .setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment))
-                .returns(() => true);
+                .returns(() => false);
 
             const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, { request: 'attach', processId: 1234 } as any as DebugConfiguration);
             await expect(promise).to.be.rejectedWith(Diagnostics.processId());

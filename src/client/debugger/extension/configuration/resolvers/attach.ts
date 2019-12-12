@@ -25,7 +25,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         super(workspaceService, documentManager, platformService, configurationService);
     }
     public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, _token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
-        if (this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment) && debugConfiguration.processId !== undefined) {
+        if (!(this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment)) && debugConfiguration.processId !== undefined) {
             throw Error(Diagnostics.processId());
         }
         const workspaceFolder = this.getWorkspaceFolder(folder);
