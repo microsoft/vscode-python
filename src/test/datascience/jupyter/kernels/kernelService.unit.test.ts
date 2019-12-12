@@ -17,7 +17,7 @@ import { IFileSystem } from '../../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../../client/common/process/pythonProcess';
 import { IPythonExecutionFactory, IPythonExecutionService } from '../../../../client/common/process/types';
-import { IInstaller, Product, ReadWrite, InstallerResponse } from '../../../../client/common/types';
+import { IInstaller, InstallerResponse, Product, ReadWrite } from '../../../../client/common/types';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterCommands } from '../../../../client/datascience/constants';
 import { InterpreterJupyterNotebookCommand } from '../../../../client/datascience/jupyter/jupyterCommand';
