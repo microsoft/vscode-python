@@ -8,6 +8,7 @@ import * as vsls from 'vsls/vscode';
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import '../../../common/extensions';
 import { traceError } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import { createDeferred } from '../../../common/utils/async';
 import { Identifiers, LiveShare, LiveShareCommands } from '../../constants';
@@ -43,9 +44,10 @@ export class HostJupyterNotebook
         resource: vscode.Uri,
         getDisposedError: () => Error,
         workspace: IWorkspaceService,
-        appService: IApplicationShell
+        appService: IApplicationShell,
+        fs: IFileSystem
     ) {
-        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService);
+        super(liveShare, session, configService, disposableRegistry, owner, launchInfo, loggers, resource, getDisposedError, workspace, appService, fs);
     }
 
     public dispose = async (): Promise<void> => {

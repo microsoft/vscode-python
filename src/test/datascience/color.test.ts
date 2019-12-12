@@ -34,7 +34,10 @@ suite('Theme colors', () => {
         extensions = new Extensions();
         currentProcess = new CurrentProcess();
         logger = new Logger();
-        themeFinder = new ThemeFinder(extensions, currentProcess, logger);
+        const fs = new FileSystem(
+            new PlatformService()
+        );
+        themeFinder = new ThemeFinder(extensions, currentProcess, logger, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
         workspaceConfig.setup(ws => ws.has(TypeMoq.It.isAnyString()))
@@ -81,9 +84,6 @@ suite('Theme colors', () => {
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
 
-        const fs = new FileSystem(
-            new PlatformService()
-        );
         cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, logger, fs);
     });
 

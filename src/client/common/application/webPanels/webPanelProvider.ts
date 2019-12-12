@@ -39,7 +39,7 @@ export class WebPanelProvider implements IWebPanelProvider {
             const webPanelServerModule = require('./webPanelServer') as typeof import('./webPanelServer');
 
             // Start the server listening.
-            const webPanelServer = new webPanelServerModule.WebPanelServer(this.port, this.token);
+            const webPanelServer = new webPanelServerModule.WebPanelServer(this.port, this.token, this.fs);
             webPanelServer.start();
             this.disposableRegistry.push(webPanelServer);
         }

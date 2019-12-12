@@ -12,8 +12,7 @@ import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../commo
 import { Cancellation, CancellationError } from '../../common/cancellation';
 import '../../common/extensions';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { FileSystem } from '../../common/platform/fileSystem';
-import { PlatformService } from '../../common/platform/platformService';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
@@ -161,7 +160,8 @@ export class JupyterNotebookBase implements INotebook {
         resource: Uri,
         private getDisposedError: () => Error,
         private workspace: IWorkspaceService,
-        private applicationService: IApplicationShell
+        private applicationService: IApplicationShell,
+        private fs: IFileSystem
     ) {
         this.sessionStartTime = Date.now();
 
@@ -689,16 +689,13 @@ export class JupyterNotebookBase implements INotebook {
 
     private async updateWorkingDirectory(launchingFile?: string): Promise<void> {
         if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && !this._workingDirectory) {
-            const fs = new FileSystem(
-                new PlatformService()
-            );
             // See what our working dir is supposed to be
             const suggested = this.launchInfo.workingDir;
-            if (suggested && (await fs.fileExists(suggested))) {
+            if (suggested && (await this.fs.fileExists(suggested))) {
                 // We should use the launch info directory. It trumps the possible dir
                 this._workingDirectory = suggested;
                 return this.changeDirectoryIfPossible(this._workingDirectory);
-            } else if (launchingFile && (await fs.fileExists(launchingFile))) {
+            } else if (launchingFile && (await this.fs.fileExists(launchingFile))) {
                 // Combine the working directory with this file if possible.
                 this._workingDirectory = expandWorkingDir(this.launchInfo.workingDir, launchingFile, this.workspace);
                 if (this._workingDirectory) {
@@ -709,10 +706,7 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     private changeDirectoryIfPossible = async (directory: string): Promise<void> => {
-        const fs = new FileSystem(
-            new PlatformService()
-        );
-        if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && (await fs.directoryExists(directory))) {
+        if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && (await this.fs.directoryExists(directory))) {
             await this.executeSilently(`%cd "${directory}"`);
         }
     }

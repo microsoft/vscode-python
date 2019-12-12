@@ -10,6 +10,7 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
@@ -46,7 +47,8 @@ export class HostJupyterServer
         sessionManager: IJupyterSessionManagerFactory,
         private workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
-        private appService: IApplicationShell
+        private appService: IApplicationShell,
+        private fs: IFileSystem
     ) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
@@ -176,7 +178,9 @@ export class HostJupyterServer
                 resource,
                 this.getDisposedError.bind(this),
                 this.workspaceService,
-                this.appService);
+                this.appService,
+                this.fs
+            );
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle (session) ${this.id}`);
