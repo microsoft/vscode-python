@@ -136,6 +136,10 @@ class MockJupyterNotebook implements INotebook {
         return;
     }
 
+    public setInterpreter(_inter: PythonInterpreter) {
+        noop();
+    }
+
     public getKernelSpec(): IJupyterKernelSpec | undefined {
         return;
     }
@@ -652,7 +656,8 @@ suite('Jupyter Execution', async () => {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
-            notebookFileRoot: 'WORKSPACE',
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,

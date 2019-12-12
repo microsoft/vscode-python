@@ -260,7 +260,7 @@ suite('Module Installer', () => {
 
             let argsSent: string[] = [];
             mockTerminalService
-                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((_cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
             // tslint:disable-next-line:no-any
             interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve({ type: InterpreterType.Unknown } as any));
@@ -287,7 +287,7 @@ suite('Module Installer', () => {
 
             let argsSent: string[] = [];
             mockTerminalService
-                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((_cmd: string, args: string[]) => { argsSent = args; return Promise.resolve(void 0); });
 
             await pipInstaller.installModule(moduleName, resource);
@@ -310,7 +310,7 @@ suite('Module Installer', () => {
             let argsSent: string[] = [];
             let command: string | undefined;
             mockTerminalService
-                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                .setup(t => t.sendCommand(TypeMoq.It.isAnyString(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                 .returns((cmd: string, args: string[]) => {
                     argsSent = args;
                     command = cmd;

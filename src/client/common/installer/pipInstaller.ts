@@ -8,10 +8,10 @@ import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { InterpreterUri } from './types';
 
 @injectable()
-export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
+export class PipInstaller extends ModuleInstaller {
     public get name(): string {
         return 'Pip';
     }

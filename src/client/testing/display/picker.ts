@@ -3,6 +3,7 @@ import * as path from 'path';
 import { QuickPickItem, Uri } from 'vscode';
 import { IApplicationShell, ICommandManager } from '../../common/application/types';
 import * as constants from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { IServiceContainer } from '../../ioc/types';
 import { CommandSource } from '../common/constants';
 import { FlattenedTestFunction, ITestCollectionStorageService, TestFile, TestFunction, Tests, TestStatus, TestsToRun } from '../common/types';
@@ -12,7 +13,7 @@ import { ITestDisplay } from '../types';
 export class TestDisplay implements ITestDisplay {
     private readonly testCollectionStorage: ITestCollectionStorageService;
     private readonly appShell: IApplicationShell;
-    constructor(@inject(IServiceContainer) serviceRegistry: IServiceContainer,
+    constructor(@inject(IServiceContainer) private readonly serviceRegistry: IServiceContainer,
         @inject(ICommandManager) private readonly commandManager: ICommandManager) {
         this.testCollectionStorage = serviceRegistry.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.appShell = serviceRegistry.get<IApplicationShell>(IApplicationShell);
@@ -57,7 +58,8 @@ export class TestDisplay implements ITestDisplay {
             return;
         }
         const fileName = file.fsPath;
-        const testFile = tests.testFiles.find(item => item.name === fileName || item.fullPath === fileName);
+        const fs = this.serviceRegistry.get<IFileSystem>(IFileSystem);
+        const testFile = tests.testFiles.find(item => item.name === fileName || fs.arePathsSame(item.fullPath, fileName));
         if (!testFile) {
             return;
         }

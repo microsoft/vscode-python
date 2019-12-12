@@ -35,7 +35,7 @@ export class JupyterExporter implements INotebookExporter {
 
     public async translateToNotebook(cells: ICell[], changeDirectory?: string): Promise<nbformat.INotebookContent | undefined> {
         // If requested, add in a change directory cell to fix relative paths
-        if (changeDirectory) {
+        if (changeDirectory && this.configService.getSettings().datascience.changeDirOnImportExport) {
             cells = await this.addDirectoryChangeCell(cells, changeDirectory);
         }
 

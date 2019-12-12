@@ -10,6 +10,8 @@ import { IAsyncDisposable, IAsyncDisposableRegistry } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
+import { sendTelemetryEvent } from '../../telemetry';
+import { Telemetry } from '../constants';
 import { IDataViewer, IDataViewerProvider, IJupyterVariables, INotebook } from '../types';
 
 @injectable()
@@ -29,17 +31,32 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
     }
 
     public async create(variable: string, notebook: INotebook): Promise<IDataViewer> {
-        // Make sure this is a valid variable
-        const variables = await this.variables.getVariables(notebook);
-        const index = variables.findIndex(v => v && v.name === variable);
-        if (index >= 0) {
-            const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
-            this.activeExplorers.push(dataExplorer);
-            await dataExplorer.showVariable(variables[index], notebook);
-            return dataExplorer;
-        }
+        let result: IDataViewer | undefined;
 
-        throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
+        // Create the data explorer (this should show the window)
+        const dataExplorer = this.serviceContainer.get<IDataViewer>(IDataViewer);
+        try {
+            // Verify this is allowed.
+            await this.checkPandas(notebook);
+
+            // Make sure this is a valid variable
+            const variables = await this.variables.getVariables(notebook);
+            const index = variables.findIndex(v => v && v.name === variable);
+            if (index >= 0) {
+                // Then load the data.
+                this.activeExplorers.push(dataExplorer);
+                await dataExplorer.showVariable(variables[index], notebook);
+                result = dataExplorer;
+            } else {
+                throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
+            }
+        } finally {
+            if (!result) {
+                // If throw any errors, close the window we opened.
+                dataExplorer.dispose();
+            }
+        }
+        return result;
     }
 
     public async getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined> {
@@ -59,6 +76,20 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
             } catch {
                 noop();
             }
+        }
+    }
+
+    private async checkPandas(notebook: INotebook): Promise<void> {
+        const pandasVersion = await this.getPandasVersion(notebook);
+        if (!pandasVersion) {
+            sendTelemetryEvent(Telemetry.PandasNotInstalled);
+            // Warn user that there is no pandas.
+            throw new Error(localize.DataScience.pandasRequiredForViewing());
+        } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
+            sendTelemetryEvent(Telemetry.PandasTooOld);
+            // Warn user that we cannot start because pandas is too old.
+            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
+            throw new Error(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
         }
     }
 }

@@ -251,7 +251,7 @@ suite('Python Settings', async () => {
             enabled: true,
             jupyterServerURI: 'local',
             // tslint:disable-next-line: no-invalid-template-strings
-            notebookFileRoot: '${FileDirname}',
+            notebookFileRoot: '${fileDirname}',
             changeDirOnImportExport: true,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,

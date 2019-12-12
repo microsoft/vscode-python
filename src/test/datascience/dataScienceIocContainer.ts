@@ -265,6 +265,7 @@ import { PythonInterpreterLocatorService } from '../../client/interpreter/locato
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import {
     CurrentPathService,
     PythonInPathCommandProvider
@@ -542,7 +543,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ICommandManager>(ICommandManager, this.commandManager);
 
         // Also setup a mock execution service and interpreter service
-        const condaService = TypeMoq.Mock.ofType<ICondaService>();
         const appShell = this.applicationShell = TypeMoq.Mock.ofType<IApplicationShell>();
         // const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         const workspaceService = mock(WorkspaceService);
@@ -557,8 +557,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
-            notebookFileRoot: 'WORKSPACE',
-            changeDirOnImportExport: true,
+            // tslint:disable-next-line: no-invalid-template-strings
+            notebookFileRoot: '${fileDirname}',
+            changeDirOnImportExport: false,
             useDefaultConfigForJupyter: true,
             jupyterInterruptTimeout: 10000,
             searchForJupyter: true,
@@ -637,16 +638,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             activateEnvInCurrentTerminal: false
         };
 
-        condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
-        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
-        condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
-
         this.serviceManager.addSingleton<IEnvironmentVariablesProvider>(IEnvironmentVariablesProvider, EnvironmentVariablesProvider);
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global');
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, WorkspaceVirtualEnvironmentsSearchPathProvider, 'workspace');
         this.serviceManager.addSingleton<IVirtualEnvironmentManager>(IVirtualEnvironmentManager, VirtualEnvironmentManager);
 
-        this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
         this.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, appShell.object);
         this.serviceManager.addSingletonInstance<IDocumentManager>(IDocumentManager, this.documentManager);
         this.serviceManager.addSingletonInstance<IWorkspaceService>(IWorkspaceService, instance(workspaceService));
@@ -687,12 +683,19 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
+            const condaService = TypeMoq.Mock.ofType<ICondaService>();
+            this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
+            condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
+            condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
+            condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
+
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
             const kernelService = mock(KernelService);
             when(kernelService.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(kernelService));
         } else {
+            this.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);

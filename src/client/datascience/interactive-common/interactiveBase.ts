@@ -790,23 +790,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async checkPandas(): Promise<boolean> {
-        const pandasVersion = this.notebook ? await this.dataExplorerProvider.getPandasVersion(this.notebook) : undefined;
-        if (!pandasVersion) {
-            sendTelemetryEvent(Telemetry.PandasNotInstalled);
-            // Warn user that there is no pandas.
-            this.applicationShell.showErrorMessage(localize.DataScience.pandasRequiredForViewing());
-            return false;
-        } else if (pandasVersion.major < 1 && pandasVersion.minor < 20) {
-            sendTelemetryEvent(Telemetry.PandasTooOld);
-            // Warn user that we cannot start because pandas is too old.
-            const versionStr = `${pandasVersion.major}.${pandasVersion.minor}.${pandasVersion.build}`;
-            this.applicationShell.showErrorMessage(localize.DataScience.pandasTooOldForViewingFormat().format(versionStr));
-            return false;
-        }
-        return true;
-    }
-
     private shouldAskForLargeData(): boolean {
         const settings = this.configuration.getSettings();
         return settings && settings.datascience && settings.datascience.askForLargeDataFrames === true;
@@ -838,7 +821,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
-            if (await this.checkPandas() && await this.checkColumnSize(request.columnSize)) {
+            if (await this.checkColumnSize(request.columnSize)) {
                 await this.dataExplorerProvider.create(request.variableName, this.notebook!);
             }
         } catch (e) {
@@ -1317,7 +1300,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (kernel && kernel.kernelSpec && this.notebook) {
-            // Tell the kernel. A status update should fire that changes our display
+            if (kernel.interpreter) {
+                this.notebook.setInterpreter(kernel.interpreter);
+            }
+
+            // Change the kernel. A status update should fire that changes our display
             await this.notebook.setKernelSpec(kernel.kernelSpec);
 
             // Add in a new sys info

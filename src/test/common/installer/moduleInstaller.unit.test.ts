@@ -112,7 +112,7 @@ suite('Module Installer', () => {
                         getModuleNamesForTesting().forEach(product => {
                             const moduleName = product.moduleName;
                             async function installModuleAndVerifyCommand(command: string, expectedArgs: string[]) {
-                                terminalService.setup(t => t.sendCommand(TypeMoq.It.isValue(command), TypeMoq.It.isValue(expectedArgs)))
+                                terminalService.setup(t => t.sendCommand(TypeMoq.It.isValue(command), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue(undefined)))
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
 

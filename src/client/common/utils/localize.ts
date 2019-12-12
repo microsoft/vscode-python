@@ -111,6 +111,10 @@ export namespace ExtensionSurveyBanner {
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');
 }
 
+export namespace Products {
+    export const installingModule = localize('products.installingModule', 'Installing {0}');
+}
+
 export namespace DataScience {
     export const historyTitle = localize('DataScience.historyTitle', 'Python Interactive');
     export const dataExplorerTitle = localize('DataScience.dataExplorerTitle', 'Data Viewer');

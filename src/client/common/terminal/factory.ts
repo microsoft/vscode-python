@@ -3,18 +3,23 @@
 
 import { inject, injectable } from 'inversify';
 import { Uri } from 'vscode';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { IWorkspaceService } from '../application/types';
+import { IFileSystem } from '../platform/types';
 import { TerminalService } from './service';
+import { SynchronousTerminalService } from './syncTerminalService';
 import { ITerminalService, ITerminalServiceFactory } from './types';
 
 @injectable()
 export class TerminalServiceFactory implements ITerminalServiceFactory {
-    private terminalServices: Map<string, ITerminalService>;
+    private terminalServices: Map<string, TerminalService>;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+        @inject(IFileSystem) private fs: IFileSystem,
+        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
 
-        this.terminalServices = new Map<string, ITerminalService>();
+        this.terminalServices = new Map<string, TerminalService>();
     }
     public getTerminalService(resource?: Uri, title?: string): ITerminalService {
 
@@ -25,7 +30,8 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
             this.terminalServices.set(id, terminalService);
         }
 
-        return this.terminalServices.get(id)!;
+        // Decorate terminal service with the synchronous service.
+        return new SynchronousTerminalService(this.fs, this.interpreterService, this.terminalServices.get(id)!);
     }
     public createTerminalService(resource?: Uri, title?: string): ITerminalService {
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';

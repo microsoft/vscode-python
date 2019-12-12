@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -39,7 +39,7 @@ export class TerminalService implements ITerminalService, Disposable {
             this.terminal.dispose();
         }
     }
-    public async sendCommand(command: string, args: string[]): Promise<void> {
+    public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
         await this.ensureTerminal();
         const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
         this.terminal!.show(true);
