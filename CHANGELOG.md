@@ -1,5 +1,138 @@
 # Changelog
 
+## 2019.12.0-rc (12 December 2019)
+
+### Enhancements
+
+1. Enable reload feature for debugging web apps.
+   ([#3473](https://github.com/Microsoft/vscode-python/issues/3473))
+1. Activate conda environment using path when name is not available.
+   ([#3834](https://github.com/Microsoft/vscode-python/issues/3834))
+1. Add QuickPick dropdown option _Run All/Debug All_ when clicking on a Code Lens for a parametrized test to be able to run/debug all belonging test variants at once. Thanks to [Philipp Loose](https://github.com/phloose)
+   ([#5608](https://github.com/Microsoft/vscode-python/issues/5608))
+1. Use Octicons in Code Lenses. (thanks [Aidan Dang](https://github.com/AidanGG))
+   ([#7192](https://github.com/Microsoft/vscode-python/issues/7192))
+1. Improve startup performance of Jupyter by using a Python daemon.
+   ([#7242](https://github.com/Microsoft/vscode-python/issues/7242))
+1. Automatically indent following `async for` and `async with` statements.
+   ([#7344](https://github.com/Microsoft/vscode-python/issues/7344))
+1. Added extension option `activateEnvInCurrentTerminal` to detect if environment should be activated in the current open terminal.
+   ([#7665](https://github.com/Microsoft/vscode-python/issues/7665))
+1. Add telemetry for usage of activateEnvInCurrentTerminal setting.
+   ([#8004](https://github.com/Microsoft/vscode-python/issues/8004))
+1. Support multiprocess debugging using the new python debug adapter.
+   ([#8105](https://github.com/Microsoft/vscode-python/issues/8105))
+1. Support a per interpreter language server so that notebooks that aren't using the currently selected python can still have intellisense.
+   ([#8206](https://github.com/Microsoft/vscode-python/issues/8206))
+1. Add "processId" key in launch.json to enable attach-to-local-pid scenarios when using the new debug adapter.
+   ([#8384](https://github.com/Microsoft/vscode-python/issues/8384))
+1. Populate survey links with variables
+   ([#8484](https://github.com/Microsoft/vscode-python/issues/8484))
+1. Support the ability to take input from users inside of a notebook or the Interactive Window.
+   ([#8601](https://github.com/Microsoft/vscode-python/issues/8601))
+1. Create an MRU list for Jupyter notebook servers.
+   ([#8613](https://github.com/Microsoft/vscode-python/issues/8613))
+1. Add icons to the quick pick list for specifying the Jupyter server URI.
+   ([#8753](https://github.com/Microsoft/vscode-python/issues/8753))
+1. Added kernel status and selection toolbar to the notebook editor.
+   ([#8866](https://github.com/Microsoft/vscode-python/issues/8866))
+1. Updated `ptvsd` debugger to version v5.0.0a9.
+   ([#8930](https://github.com/Microsoft/vscode-python/issues/8930))
+
+### Fixes
+
+1. Add implementations for `python.workspaceSymbols.rebuildOnStart` and `python.workspaceSymbols.rebuildOnFileSave`.
+   ([#793](https://github.com/Microsoft/vscode-python/issues/793))
+1. Use relative paths when invoking mypy.
+   (thanks to [yxliang01](https://github.com/yxliang01))
+   ([#5326](https://github.com/Microsoft/vscode-python/issues/5326))
+1. Make the dataviewer open a window much faster. Total load time is the same, but initial response is much faster.
+   ([#6729](https://github.com/Microsoft/vscode-python/issues/6729))
+1. Make sure the data viewer for notebooks comes up as soon as the user clicks.
+   ([#6840](https://github.com/Microsoft/vscode-python/issues/6840))
+1. Support saving plotly graphs in the Interactive Window or inside of a notebook.
+   ([#7221](https://github.com/Microsoft/vscode-python/issues/7221))
+1. Change 0th line in output to 1th in flake8.
+   (thanks to [Ma007ks](https://github.com/Ma007ks/))
+   ([#7349](https://github.com/Microsoft/vscode-python/issues/7349))
+1. Support local images in markdown and output for notebooks.
+   ([#7704](https://github.com/Microsoft/vscode-python/issues/7704))
+1. Default notebookFileRoot to match the file that a notebook was opened with (or the first file run for the interactive window).
+   ([#7780](https://github.com/Microsoft/vscode-python/issues/7780))
+1. Execution count and output are cleared from the .ipynb file when the user clicks the 'Clear All Output'.
+   ([#7853](https://github.com/Microsoft/vscode-python/issues/7853))
+1. Fix clear_output(True) to work in notebook cells.
+   ([#7970](https://github.com/Microsoft/vscode-python/issues/7970))
+1. Prevented '$0' from appearing inside brackets when using intellisense autocomplete.
+   ([#8101](https://github.com/Microsoft/vscode-python/issues/8101))
+1. Intellisense can sometimes not appear in notebooks or the interactive window, especially when something is a large list.
+   ([#8140](https://github.com/Microsoft/vscode-python/issues/8140))
+1. Correctly update interpreter and kernel info in the metadata.
+   ([#8223](https://github.com/Microsoft/vscode-python/issues/8223))
+1. Dataframe viewer should use the same interpreter as the active notebook is using.
+   ([#8227](https://github.com/Microsoft/vscode-python/issues/8227))
+1. 'breakpoint' line shows up in the interactive window when debugging a cell.
+   ([#8260](https://github.com/Microsoft/vscode-python/issues/8260))
+1. Run above should include all code, and not just cells above.
+   ([#8403](https://github.com/Microsoft/vscode-python/issues/8403))
+1. Fix issue with test discovery when using `unittest` with `--pattern` flag.
+   ([#8465](https://github.com/Microsoft/vscode-python/issues/8465))
+1. Set focus to the corresponding `Native Notebook Editor` when opening an `ipynb` file again.
+   ([#8506](https://github.com/Microsoft/vscode-python/issues/8506))
+1. Fix using all environment variables when running in integrated terminal.
+   ([#8584](https://github.com/Microsoft/vscode-python/issues/8584))
+1. Fix display of SVG images from previously executed ipynb files.
+   ([#8600](https://github.com/Microsoft/vscode-python/issues/8600))
+1. Fixes that the test selection drop-down did not open when a code lens for a parameterized test was clicked on windows.
+   ([#8627](https://github.com/Microsoft/vscode-python/issues/8627))
+1. Changes to how `node-fetch` is bundled in the extension.
+   ([#8665](https://github.com/Microsoft/vscode-python/issues/8665))
+1. Re-enable support for source-maps.
+   ([#8686](https://github.com/Microsoft/vscode-python/issues/8686))
+1. Fix order for print/display outputs in a notebook cell.
+   ([#8739](https://github.com/Microsoft/vscode-python/issues/8739))
+1. Fix scrolling inside of intellisense hover windows for notebooks.
+   ([#8843](https://github.com/Microsoft/vscode-python/issues/8843))
+1. Fix scrolling in large cells.
+   ([#8895](https://github.com/Microsoft/vscode-python/issues/8895))
+1. Set `python.workspaceSymbols.enabled` to false by default.
+   ([#9046](https://github.com/Microsoft/vscode-python/issues/9046))
+
+### Code Health
+
+1. Re-enable our mac 3.7 debugger tests as a blocking ptvsd issue has been resolved.
+   ([#6646](https://github.com/Microsoft/vscode-python/issues/6646))
+1. Use "conda run" (instead of using the "python.pythonPath" setting directly) when executing
+   Python and an Anaconda environment is selected.
+   ([#7696](https://github.com/Microsoft/vscode-python/issues/7696))
+1. Change state management for react code to use redux.
+   ([#7949](https://github.com/Microsoft/vscode-python/issues/7949))
+1. Pass resource when accessing VS Code settings.
+   ([#8001](https://github.com/Microsoft/vscode-python/issues/8001))
+1. Adjust some notebook and interactive window telemetry.
+   ([#8254](https://github.com/Microsoft/vscode-python/issues/8254))
+1. Added a new telemetry event called 'DATASCIENCE.NATIVE.OPEN_NOTEBOOK_ALL' that fires every time the user opens a jupyter notebook by any means.
+   ([#8262](https://github.com/Microsoft/vscode-python/issues/8262))
+1. Create python daemon for execution of python code.
+   ([#8451](https://github.com/Microsoft/vscode-python/issues/8451))
+1. Update npm package `https-proxy-agent` by updating the packages that pull it in.
+   ([#8537](https://github.com/Microsoft/vscode-python/issues/8537))
+1. Improve startup times of unit tests by optionally ignoring some bootstrapping required for `monaco` and `react` tests.
+   ([#8564](https://github.com/Microsoft/vscode-python/issues/8564))
+1. Skip checking dependencies on CI in PRs.
+   ([#8840](https://github.com/Microsoft/vscode-python/issues/8840))
+1. Fix installation of sqlite on CI linux machines.
+   ([#8883](https://github.com/Microsoft/vscode-python/issues/8883))
+1. Fix the "convert to python" functional test failure.
+   ([#8899](https://github.com/Microsoft/vscode-python/issues/8899))
+1. Remove unused auto-save-enabled telemetry.
+   ([#8906](https://github.com/Microsoft/vscode-python/issues/8906))
+1. Added ability to wait for completion of the installation of modules.
+   ([#8952](https://github.com/Microsoft/vscode-python/issues/8952))
+1. Fix failing Data Viewer functional tests.
+   ([#8992](https://github.com/Microsoft/vscode-python/issues/8992))
+
+
 ## 2019.11.1 (22 November 2019)
 
 ### Fixes
