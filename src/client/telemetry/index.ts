@@ -1437,9 +1437,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.InterruptJupyterTime]: never | undefined;
-    [Telemetry.NotebookRunCount]: number;
-    [Telemetry.NotebookWorkspaceCount]: number;
-    [Telemetry.NotebookOpenCount]: number;
+    [Telemetry.NotebookRunCount]: { count: number };
+    [Telemetry.NotebookWorkspaceCount]: { count: number };
+    [Telemetry.NotebookOpenCount]: { count: number };
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
@@ -1448,6 +1448,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
+    [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;

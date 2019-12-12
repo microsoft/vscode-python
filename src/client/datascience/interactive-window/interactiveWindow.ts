@@ -12,7 +12,7 @@ import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } f
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { DataScience } from '../datascience';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
@@ -80,6 +80,10 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
             ViewColumn.Two);
+
+        // Send a telemetry event to indicate window is opening
+        sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
+
         // Start the server as soon as we open
         this.startServer().ignoreErrors();
     }
