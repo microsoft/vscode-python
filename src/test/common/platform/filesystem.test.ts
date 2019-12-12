@@ -7,11 +7,11 @@
 import { expect } from 'chai';
 import * as fsextra from 'fs-extra';
 import {
-    FileSystem
+    convertStat, FileSystem
 } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import {
-    FileStat, FileType, IFileSystem
+    FileType, IFileSystem
 } from '../../../client/common/platform/types';
 import {
     assertDoesNotExist, DOES_NOT_EXIST, FSFixture, SUPPORTS_SYMLINKS
@@ -36,21 +36,6 @@ suite('FileSystem', () => {
     });
 
     suite('stat', () => {
-        function convertStat(old: fsextra.Stats, filetype: FileType): FileStat {
-            return {
-                type: filetype,
-                size: old.size,
-                // TODO (https://github.com/microsoft/vscode/issues/84177)
-                //   FileStat.ctime and FileStat.mtime only have 1-second resolution.
-                //   So for now we round to the nearest integer.
-                // TODO (https://github.com/microsoft/vscode/issues/84177)
-                //   FileStat.ctime is consistently 0 instead of the actual ctime.
-                ctime: 0,
-                //ctime: Math.round(old.ctimeMs),
-                mtime: Math.round(old.mtimeMs)
-            };
-        }
-
         test('gets the info for an existing file', async () => {
             const filename = await fix.createFile('x/y/z/spam.py', '...');
             const old = await fsextra.stat(filename);

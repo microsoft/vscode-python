@@ -16,6 +16,20 @@ import { FileStat, FileType, IFileSystem, IPlatformService, TemporaryFile } from
 
 const globAsync = promisify(glob);
 
+function convertFileType(stat: fs.Stats): FileType {
+    if (stat.isFile()) {
+        return FileType.File;
+    } else if (stat.isDirectory()) {
+        return FileType.Directory;
+    } else if (stat.isSymbolicLink()) {
+        // The caller is responsible for combining this ("logical or")
+        // with File or Directory as necessary.
+        return FileType.SymbolicLink;
+    } else {
+        return FileType.Unknown;
+    }
+}
+
 async function getFileType(filename: string): Promise<FileType> {
     let stat: fs.Stats;
     try {
@@ -26,28 +40,41 @@ async function getFileType(filename: string): Promise<FileType> {
     } catch {
         return FileType.Unknown;
     }
-    if (stat.isFile()) {
-        return FileType.File;
-    } else if (stat.isDirectory()) {
-        return FileType.Directory;
-    } else if (stat.isSymbolicLink()) {
-        // We emulate the behavior of vscode.workspace.fs.listdir().
-        // See: https://code.visualstudio.com/api/references/vscode-api#FileType
-        try {
-            stat = await fs.stat(filename);
-        } catch {
-            return FileType.SymbolicLink;
-        }
-        if (stat.isFile()) {
-            return FileType.SymbolicLink | FileType.File;
-        } else if (stat.isDirectory()) {
-            return FileType.SymbolicLink | FileType.Directory;
-        } else {
-            return FileType.SymbolicLink;
-        }
-    } else {
-        return FileType.Unknown;
+    if (!stat.isSymbolicLink()) {
+        return convertFileType(stat);
     }
+
+    // For symlinks we emulate the behavior of the vscode.workspace.fs API.
+    // See: https://code.visualstudio.com/api/references/vscode-api#FileType
+    try {
+        stat = await fs.stat(filename);
+    } catch {
+        return FileType.SymbolicLink;
+    }
+    if (stat.isFile()) {
+        return FileType.SymbolicLink | FileType.File;
+    } else if (stat.isDirectory()) {
+        return FileType.SymbolicLink | FileType.Directory;
+    } else {
+        return FileType.SymbolicLink;
+    }
+}
+
+export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
+    return {
+        type: filetype,
+        size: old.size,
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (https://github.com/microsoft/vscode/issues/84177)
+        //   FileStat.ctime and FileStat.mtime only have 1-second resolution.
+        //   So for now we round to the nearest integer.
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (https://github.com/microsoft/vscode/issues/84177)
+        //   FileStat.ctime is consistently 0 instead of the actual ctime.
+        ctime: 0,
+        //ctime: Math.round(old.ctimeMs),
+        mtime: Math.round(old.mtimeMs)
+    };
 }
 
 @injectable()
@@ -90,6 +117,13 @@ export class FileSystem implements IFileSystem {
         // tslint:disable-next-line: no-require-imports
         const vscode = require('vscode');
         return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
+    }
+    public async lstat(filename: string): Promise<FileStat> {
+        const stat = await fs.lstat(filename);
+        // Npte that, unlike stat(), lstat() does not include the type
+        // of the symlink's target.
+        const fileType = convertFileType(stat);
+        return convertStat(stat, fileType);
     }
 
     // Return the UTF8-decoded text of the file.

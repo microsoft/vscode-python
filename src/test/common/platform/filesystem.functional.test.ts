@@ -6,7 +6,7 @@
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { convertStat, FileSystem } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
@@ -92,6 +92,46 @@ suite('FileSystem', () => {
     });
 
     suite('raw', () => {
+        suite('lstat', () => {
+            test('for symlinks, gives the link info', async function() {
+                if (!SUPPORTS_SYMLINKS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+                const expected = convertStat(
+                    await fs.lstat(symlink),
+                    FileType.SymbolicLink
+                );
+
+                const stat = await fileSystem.lstat(symlink);
+
+                expect(stat).to.deep.equal(expected);
+            });
+
+            test('for normal files, gives the file info', async () => {
+                const filename = await fix.createFile('x/y/z/spam.py', '...');
+                // Ideally we would compare to the result of
+                // fileSystem.stat().  However, we do not have access
+                // to the VS Code API here.
+                const expected = convertStat(
+                    await fs.lstat(filename),
+                    FileType.File
+                );
+
+                const stat = await fileSystem.lstat(filename);
+
+                expect(stat).to.deep.equal(expected);
+            });
+
+            test('fails if the file does not exist', async () => {
+                const promise = fileSystem.lstat(DOES_NOT_EXIST);
+
+                await expect(promise).to.eventually.be.rejected;
+            });
+        });
+
         suite('createDirectory', () => {
             test('creates the directory and all missing parents', async () => {
                 await fix.createDirectory('x');
