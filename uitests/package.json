@@ -43,7 +43,7 @@
         "jsonc-parser": "^2.1.0",
         "multiple-cucumber-html-reporter": "^1.12.0",
         "named-js-regexp": "^1.3.5",
-        "npm": "^6.10.3",
+        "npm": "^6.13.4",
         "prettier": "^1.18.2",
         "progress": "^2.0.3",
         "puppeteer-core": "^1.19.0",
