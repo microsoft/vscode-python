@@ -12,6 +12,7 @@ import { Activation } from '../../client/datascience/activation';
 import { PythonDaemonModule } from '../../client/datascience/constants';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { IInterpreterService, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
@@ -23,6 +24,7 @@ suite('Data Science - Activation', () => {
     let activator: IExtensionSingleActivationService;
     let notebookProvider: INotebookEditorProvider;
     let interpreterService: IInterpreterService;
+    let cmdFinder: JupyterCommandFinder;
     let executionFactory: IPythonExecutionFactory;
     let openedEventEmitter: EventEmitter<INotebookEditor>;
     let interpreterEventEmitter: EventEmitter<void>;
@@ -34,11 +36,12 @@ suite('Data Science - Activation', () => {
         notebookProvider = mock(NativeEditorProvider);
         interpreterService = mock(InterpreterService);
         executionFactory = mock(PythonExecutionFactory);
+        cmdFinder = mock(JupyterCommandFinder);
         when(notebookProvider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
         when(interpreterService.onDidChangeInterpreter).thenReturn(interpreterEventEmitter.event);
         when(executionFactory.createDaemon(anything())).thenResolve();
 
-        activator = new Activation(instance(notebookProvider), instance(interpreterService), instance(executionFactory), []);
+        activator = new Activation(instance(notebookProvider), instance(interpreterService), instance(executionFactory), instance(cmdFinder), []);
         await activator.activate();
     });
 

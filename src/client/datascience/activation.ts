@@ -11,8 +11,9 @@ import { IDisposableRegistry } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendTelemetryEvent } from '../telemetry';
-import { PythonDaemonModule, Telemetry } from './constants';
+import { PythonDaemonModule, Telemetry, JupyterCommands } from './constants';
 import { INotebookEditor, INotebookEditorProvider } from './types';
+import { JupyterCommandFinder } from './jupyter/jupyterCommandFinder';
 
 @injectable()
 export class Activation implements IExtensionSingleActivationService {
@@ -21,6 +22,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
+        @inject(JupyterCommandFinder) private readonly finder: JupyterCommandFinder,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
     ) { }
     public async activate(): Promise<void> {
@@ -31,6 +33,9 @@ export class Activation implements IExtensionSingleActivationService {
     private onDidOpenNotebookEditor(_: INotebookEditor) {
         this.notebookOpened = true;
         this.PreWarmDaemonPool().ignoreErrors();
+        this.finder.findBestCommand(JupyterCommands.NotebookCommand).ignoreErrors();
+        this.finder.findBestCommand(JupyterCommands.KernelSpecCommand).ignoreErrors();
+        this.finder.findBestCommand(JupyterCommands.KernelSpecCommand).ignoreErrors();
         sendTelemetryEvent(Telemetry.OpenNotebookAll);
     }
 
