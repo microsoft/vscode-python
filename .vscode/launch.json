@@ -219,7 +219,6 @@
                 "--recursive",
                 "--colors",
                 //"--grep", "<suite name>",
-                "--grep", "LiveShare",
                 "--timeout=300000"
             ],
             "outFiles": [

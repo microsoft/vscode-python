@@ -9,7 +9,6 @@ import * as vsls from 'vsls/vscode';
 import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
-import { createDeferred, Deferred } from '../../../common/utils/async';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -34,7 +33,6 @@ export class HostJupyterExecution
     extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
     implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
-    private connectingPromise: Deferred<any> | undefined;
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
@@ -79,35 +77,6 @@ export class HostJupyterExecution
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         return this.serverCache.getOrCreate(this.hostConnectToNotebookServer(options, cancelToken), noop, options);
     }
-    // public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
-    //     // Don't start checking the cache and connecting until all connection operations are clear
-    //     if (this.connectingPromise) {
-    //         await this.connectingPromise.promise;
-    //     }
-
-    //     try {
-    //         // Set our connecting promise
-    //         this.connectingPromise = createDeferred();
-
-    //         // See if we have this server in our cache already or not
-    //         let result = await this.serverCache.get(options);
-    //         if (result) {
-    //             return result;
-    //         } else {
-    //             // Create the server
-    //             result = await super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
-
-    //             // Save in our cache
-    //             if (result) {
-    //                 await this.serverCache.set(result, noop, options);
-    //             }
-    //             return result;
-    //         }
-    //     } finally {
-    //         this.connectingPromise?.resolve();
-    //         this.connectingPromise = undefined;
-    //     }
-    // }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
         await super.onAttach(api);

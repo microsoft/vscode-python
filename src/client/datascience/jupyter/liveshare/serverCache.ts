@@ -5,7 +5,6 @@ import '../../../common/extensions';
 
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
@@ -13,8 +12,6 @@ import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 
 export class ServerCache implements IAsyncDisposable {
-    //private cache: Map<string, INotebookServer> = new Map<string, INotebookServer>();
-    // IANHU: rename and remove old
     private cache: Map<string, Promise<INotebookServer | undefined>> = new Map<string, Promise<INotebookServer | undefined>>();
     private emptyKey = uuid();
 
@@ -38,25 +35,26 @@ export class ServerCache implements IAsyncDisposable {
             createPromise = newCreatePromise;
         }
 
-        // Await our result
-        const notebook = await createPromise;
+        return createPromise.then((server: INotebookServer | undefined) => {
+            if (!server) {
+                this.cache.delete(key);
+                return undefined;
+            }
 
-        // If we didn't get a notebook, remove from the cache to not cache a failed promise
-        if (!notebook) {
+            // Change the dispose on it so we
+            // can detach from the server when it goes away.
+            const oldDispose = server.dispose.bind(server);
+            server.dispose = () => {
+                this.cache.delete(key);
+                disposeCallback();
+                return oldDispose();
+            };
+
+            return server;
+        }).catch(e => {
             this.cache.delete(key);
-            return undefined;
-        }
-
-        // Change the dispose on it so we
-        // can detach from the server when it goes away.
-        const oldDispose = notebook.dispose.bind(notebook);
-        notebook.dispose = () => {
-            this.cache.delete(key);
-            disposeCallback();
-            return oldDispose();
-        };
-
-        return notebook;
+            throw e;
+        });
     }
 
     public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
@@ -67,34 +65,11 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    // public async set(result: INotebookServer, disposeCallback: () => void, options?: INotebookServerOptions): Promise<void> {
-    //     const fixedOptions = await this.generateDefaultOptions(options);
-    //     const key = this.generateKey(fixedOptions);
-
-    //     // Eliminate any already with this key
-    //     const item = this.cache.get(key);
-    //     if (item) {
-    //         await item.dispose();
-    //     }
-
-    //     // Save in our cache.
-    //     this.cache.set(key, result);
-
-    //     // Save this result, but modify its dispose such that we
-    //     // can detach from the server when it goes away.
-    //     const oldDispose = result.dispose.bind(result);
-    //     result.dispose = () => {
-    //         this.cache.delete(key);
-    //         disposeCallback();
-    //         return oldDispose();
-    //     };
-    // }
-
     public async dispose(): Promise<void> {
-        for (const [, s] of this.cache) {
-            const server = await s;
+        await Promise.all([...this.cache.values()].map(async serverPromise => {
+            const server = await serverPromise;
             await server?.dispose();
-        }
+        }));
         this.cache.clear();
     }
 
