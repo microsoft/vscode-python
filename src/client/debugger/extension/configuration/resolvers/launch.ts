@@ -114,7 +114,10 @@ export class LaunchConfigurationResolver extends BaseConfigurationResolver<Launc
         if (debugConfiguration.jinja) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
-        if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
+        if (debugConfiguration.redirectOutput === undefined && debugConfiguration.console === 'internalConsole') {
+            debugConfiguration.redirectOutput = true;
+        }
+        if (debugConfiguration.redirectOutput) {
             this.debugOption(debugOptions, DebugOptions.RedirectOutput);
         }
         if (debugConfiguration.sudo) {
