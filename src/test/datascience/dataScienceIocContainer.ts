@@ -133,6 +133,7 @@ import {
     IExtensions,
     IInstaller,
     ILogger,
+    IOutputChannel,
     IPathUtils,
     IPersistentStateFactory,
     IPythonExtensionBanner,
@@ -147,6 +148,7 @@ import { EnvironmentVariablesService } from '../../client/common/variables/envir
 import { EnvironmentVariablesProvider } from '../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
+import { JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
@@ -300,6 +302,7 @@ import { LanguageServerSurveyBanner } from '../../client/languageServices/langua
 import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper';
 import { ICodeExecutionHelper } from '../../client/terminals/types';
 import { IVsCodeApi } from '../../datascience-ui/react-common/postOffice';
+import { MockOutputChannel } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 import { MockCommandManager } from './mockCommandManager';
@@ -455,6 +458,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<INotebookEditorProvider>(INotebookEditorProvider, TestNativeEditorProvider);
         this.serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
         this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
+        this.serviceManager.addSingletonInstance<IOutputChannel>(IOutputChannel, mock(MockOutputChannel), JUPYTER_OUTPUT_CHANNEL);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
