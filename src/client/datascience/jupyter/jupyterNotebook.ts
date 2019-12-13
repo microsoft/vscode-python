@@ -136,6 +136,7 @@ export class JupyterNotebookBase implements INotebook {
     private _loggers: INotebookExecutionLogger[] = [];
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     private sessionStatusChanged: Disposable | undefined;
+    private initializedMatplotlib = false;
 
     constructor(
         _liveShare: ILiveShareApi, // This is so the liveshare mixin works
@@ -213,15 +214,18 @@ export class JupyterNotebookBase implements INotebook {
             await this.updateWorkingDirectory();
 
             const settings = this.configService.getSettings().datascience;
-            const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
-
-            traceInfo(`Initialize matplotlib for ${this.resource.toString()}`);
-            // Force matplotlib to inline and save the default style. We'll use this later if we
-            // get a request to update style
-            await this.executeSilently(
-                matplobInit,
-                cancelToken
-            );
+            if (settings && settings.themeMatplotlibPlots) {
+                // We're theming matplotlibs, so we have to setup our default state.
+                await this.initializeMatplotlib(cancelToken);
+            } else {
+                this.initializedMatplotlib = false;
+                const configInit = !settings || settings.enablePlotViewer ? CodeSnippits.ConfigSvg : CodeSnippits.ConfigPng;
+                traceInfo(`Initialize config for plots for ${this.resource.toString()}`);
+                await this.executeSilently(
+                    configInit,
+                    cancelToken
+                );
+            }
 
             // Run any startup commands that we specified. Support the old form too
             const setting = settings.runStartupCommands || settings.runMagicCommands;
@@ -438,6 +442,11 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async setMatplotLibStyle(useDark: boolean): Promise<void> {
+        // Make sure matplotlib is initialized
+        if (!this.initializedMatplotlib) {
+            await this.initializeMatplotlib();
+        }
+
         const settings = this.configService.getSettings().datascience;
         if (settings.themeMatplotlibPlots && !settings.ignoreVscodeTheme) {
             // Reset the matplotlib style based on if dark or not.
@@ -503,6 +512,24 @@ export class JupyterNotebookBase implements INotebook {
 
             // Rerun our initial setup
             await this.initialize();
+        }
+    }
+
+    private async initializeMatplotlib(cancelToken?: CancellationToken): Promise<void> {
+        const settings = this.configService.getSettings().datascience;
+        if (settings && settings.themeMatplotlibPlots) {
+            const matplobInit = !settings || settings.enablePlotViewer ? CodeSnippits.MatplotLibInitSvg : CodeSnippits.MatplotLibInitPng;
+
+            traceInfo(`Initialize matplotlib for ${this.resource.toString()}`);
+            // Force matplotlib to inline and save the default style. We'll use this later if we
+            // get a request to update style
+            await this.executeSilently(
+                matplobInit,
+                cancelToken
+            );
+
+            // Use this flag to detemine if we need to rerun this or not.
+            this.initializedMatplotlib = true;
         }
     }
 
