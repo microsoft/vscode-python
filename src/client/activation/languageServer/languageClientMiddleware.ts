@@ -58,6 +58,7 @@ export class LanguageClientMiddleware implements Middleware {
     private connected = false; // Default to not forwarding to VS code.
 
     public constructor(private readonly surveyBanner: IPythonExtensionBanner) {
+        this.handleDiagnostics = this.handleDiagnostics.bind(this); // VS Code calls function without context.
     }
 
     public connect() {
