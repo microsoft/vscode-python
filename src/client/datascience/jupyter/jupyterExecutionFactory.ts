@@ -1,7 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
@@ -16,6 +16,7 @@ import {
 } from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
+import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
 import {
     IJupyterExecution,
     INotebookServer,
@@ -66,7 +67,7 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(KernelSelector) kernelSelector: KernelSelector,
         @inject(NotebookStarter) notebookStarter: NotebookStarter,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IOutputChannel) jupyterOutputChannel: IOutputChannel,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
         @inject(IServiceContainer) serviceContainer: IServiceContainer) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
