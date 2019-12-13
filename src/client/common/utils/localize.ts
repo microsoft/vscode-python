@@ -36,6 +36,14 @@ export namespace Common {
     export const moreInfo = localize('Common.moreInfo', 'More Info');
 }
 
+export namespace AttachProcess {
+    export const unsupportedOS = localize('AttachProcess.unsupportedOS', 'Operating system "{0}" not supported.');
+    export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
+    export const selectProcessPlaceholder = localize('AttachProcess.selectProcessPlaceholder', 'Select the process to attach to');
+    export const noProcessSelected = localize('AttachProcess.noProcessSelected', 'No process selected');
+    export const refreshList = localize('AttachProcess.refreshList', 'Refresh process list');
+}
+
 export namespace LanguageService {
     export const bannerMessage = localize('LanguageService.bannerMessage', 'Can you please take 2 minutes to tell us how the Python Language Server is working for you?');
     export const bannerLabelYes = localize('LanguageService.bannerLabelYes', 'Yes, take survey now');

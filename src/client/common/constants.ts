@@ -62,6 +62,7 @@ export namespace Commands {
     export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
     export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
+    export const PickLocalProcess = 'python.pickLocalProcess';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

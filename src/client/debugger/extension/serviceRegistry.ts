@@ -9,6 +9,8 @@ import { AttachRequestArguments, LaunchRequestArguments } from '../types';
 import { DebugAdapterActivator } from './adapter/activator';
 import { DebugAdapterDescriptorFactory } from './adapter/factory';
 import { DebugSessionLoggingFactory } from './adapter/logging';
+import { AttachProcessProviderFactory } from './attachQuickPick/factory';
+import { IAttachProcessProviderFactory } from './attachQuickPick/types';
 import { DebuggerBanner } from './banner';
 import { PythonDebugConfigurationService } from './configuration/debugConfigurationService';
 import { LaunchJsonCompletionProvider } from './configuration/launch.json/completionProvider';
@@ -58,4 +60,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
     serviceManager.addSingleton<IDebugSessionLoggingFactory>(IDebugSessionLoggingFactory, DebugSessionLoggingFactory);
     serviceManager.addSingleton<ILaunchDebugConfigurationResolverExperiment>(ILaunchDebugConfigurationResolverExperiment, LaunchDebugConfigurationExperiment);
+    serviceManager.addSingleton<IAttachProcessProviderFactory>(IAttachProcessProviderFactory, AttachProcessProviderFactory);
 }

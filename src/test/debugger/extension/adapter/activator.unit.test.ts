@@ -23,6 +23,9 @@ import { IDisposableRegistry, IPythonSettings } from '../../../../client/common/
 import { DebugAdapterActivator } from '../../../../client/debugger/extension/adapter/activator';
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
 import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
+import { AttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/factory';
+import { PsAttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/psProvider';
+import { IAttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/types';
 import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../../../../client/debugger/extension/types';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
 import { EventName } from '../../../../client/telemetry/constants';
@@ -38,6 +41,7 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
     let descriptorFactory: IDebugAdapterDescriptorFactory;
     let loggingFactory: IDebugSessionLoggingFactory;
     let disposableRegistry: IDisposableRegistry;
+    let attachFactory: IAttachProcessProviderFactory;
     let experimentsManager: ExperimentsManager;
     let spiedInstance: ExperimentsManager;
 
@@ -81,11 +85,15 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         );
         spiedInstance = spy(experimentsManager);
 
+        attachFactory = mock(AttachProcessProviderFactory);
+        const attachProvider = mock(PsAttachProcessProvider);
+        when(attachFactory.getProvider()).thenReturn(instance(attachProvider));
+
         debugService = mock(DebugService);
         descriptorFactory = mock(DebugAdapterDescriptorFactory);
         loggingFactory = mock(DebugSessionLoggingFactory);
         disposableRegistry = [];
-        activator = new DebugAdapterActivator(instance(debugService), instance(descriptorFactory), instance(loggingFactory), disposableRegistry, experimentsManager);
+        activator = new DebugAdapterActivator(instance(debugService), instance(descriptorFactory), instance(loggingFactory), disposableRegistry, experimentsManager, instance(attachFactory));
     });
 
     teardown(() => {
