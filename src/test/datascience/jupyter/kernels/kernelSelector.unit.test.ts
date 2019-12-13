@@ -20,7 +20,7 @@ import { JupyterSessionManager } from '../../../../client/datascience/jupyter/ju
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
@@ -184,7 +184,7 @@ suite('Data Science - KernelSelector', () => {
         // tslint:disable-next-line: no-any
         let nbMetadata: nbformat.INotebookMetadata = {} as any;
         // tslint:disable-next-line: no-any
-        let selectLocalKernelStub: sinon.SinonStub<[(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?], Promise<any>>;
+        let selectLocalKernelStub: sinon.SinonStub<[(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>)?], Promise<any>>;
         setup(() => {
             nbMetadataKernelSpec = {
                 display_name: interpreter.displayName!,

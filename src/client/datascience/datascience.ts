@@ -22,7 +22,7 @@ import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { createRemoteConnectionInfo } from './jupyter/jupyterUtils';
 import { KernelSelector, KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
-import { ICodeWatcher, IConnection, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterSessionManagerFactory, INotebookEditorProvider } from './types';
+import { ICodeWatcher, IConnection, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebookEditorProvider } from './types';
 
 interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
     newChoice: boolean;
@@ -227,14 +227,14 @@ export class DataScience implements IDataScience {
     }
 
     @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
-    public async selectLocalJupyterKernel(): Promise<KernelSpecInterpreter> {
-        return this.kernelSelector.selectLocalKernel();
+    public async selectLocalJupyterKernel(currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
+        return this.kernelSelector.selectLocalKernel(undefined, undefined, currentKernel);
     }
 
     @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
-    public async selectRemoteJupyterKernel(connInfo: IConnection): Promise<KernelSpecInterpreter> {
+    public async selectRemoteJupyterKernel(connInfo: IConnection, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
         const session = await this.jupyterSessionManagerFactory.create(connInfo);
-        return this.kernelSelector.selectRemoteKernel(session);
+        return this.kernelSelector.selectRemoteKernel(session, undefined, currentKernel);
     }
 
     public async debugCell(file: string, startLine: number, startChar: number, endLine: number, endChar: number): Promise<void> {

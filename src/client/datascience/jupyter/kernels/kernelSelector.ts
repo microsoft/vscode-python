@@ -56,9 +56,9 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+    public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
         const suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
-        return this.selectKernel(suggestions, session, cancelToken);
+        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
     }
     /**
      * Select a kernel from a local session.
@@ -68,9 +68,9 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
+    public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
         const suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
-        return this.selectKernel(suggestions, session, cancelToken);
+        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
     }
     /**
      * Gets a kernel that needs to be used with a local session.
@@ -120,8 +120,9 @@ export class KernelSelector {
         }
         return selection;
     }
-    private async selectKernel(suggestions: IKernelSpecQuickPickItem[], session?: IJupyterSessionManager, cancelToken?: CancellationToken){
-        const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder: localize.DataScience.selectKernel() }, cancelToken);
+    private async selectKernel(suggestions: IKernelSpecQuickPickItem[], session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>){
+        const placeHolder = localize.DataScience.selectKernel() + (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
+        const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {
             return {};
         }
