@@ -75,7 +75,7 @@ export class HostJupyterExecution
     }
 
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
-        return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), noop, options, cancelToken);
+        return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
     }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {

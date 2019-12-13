@@ -9,7 +9,6 @@ import { ILiveShareApi, IWorkspaceService } from '../../../common/application/ty
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
@@ -98,7 +97,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     }
 
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
-        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer.bind(this), noop, options, cancelToken);
+        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer.bind(this), options, cancelToken);
 
         if (!result) {
             throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());

@@ -23,7 +23,7 @@ export class ServerCache implements IAsyncDisposable {
     ) { }
 
     public async getOrCreate(createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
-        disposeCallback: () => void, options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+        options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let createPromise: Promise<INotebookServer | undefined> | undefined;
@@ -49,7 +49,6 @@ export class ServerCache implements IAsyncDisposable {
             const oldDispose = server.dispose.bind(server);
             server.dispose = () => {
                 this.cache.delete(key);
-                disposeCallback();
                 return oldDispose();
             };
 
