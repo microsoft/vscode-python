@@ -82,6 +82,7 @@ export namespace OutputChannelNames {
     export const languageServer = localize('OutputChannelNames.languageServer', 'Python Language Server');
     export const python = localize('OutputChannelNames.python', 'Python');
     export const pythonTest = localize('OutputChannelNames.pythonTest', 'Python Test Log');
+    export const jupyter = localize('OutputChannelNames.jupyter', 'Jupyter');
 }
 
 export namespace Logging {
@@ -313,6 +314,7 @@ export namespace DataScience {
     export const fallbackToUseActiveInterpeterAsKernel = localize('DataScience.fallbackToUseActiveInterpeterAsKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with. Using the current interpreter.');
     export const fallBackToRegisterAndUseActiveInterpeterAsKernel = localize('DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with. Registering a new kernel using the current interpreter.');
     export const fallBackToPromptToUseActiveInterpreterOrSelectAKernel = localize('DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with.');
+    export const jupyterStartTimedout = localize('DataScience.jupyterStartTimeout', 'Starting Jupyter has timedout. Please check the \'Jupyter\' output panel for further details.');
 }
 
 export namespace DebugConfigStrings {

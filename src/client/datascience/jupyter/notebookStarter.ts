@@ -4,7 +4,7 @@
 'use strict';
 
 import * as cp from 'child_process';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
@@ -13,14 +13,14 @@ import { CancellationError } from '../../common/cancellation';
 import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IPythonExecutionFactory, SpawnOptions } from '../../common/process/types';
-import { IDisposable } from '../../common/types';
+import { IDisposable, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
+import { JUPYTER_OUTPUT_CHANNEL, JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
 import { IConnection } from '../types';
 import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
@@ -41,7 +41,8 @@ export class NotebookStarter implements Disposable {
         @inject(JupyterCommandFinder) private readonly commandFinder: JupyterCommandFinder,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
     ) {
     }
     public dispose() {
@@ -88,6 +89,8 @@ export class NotebookStarter implements Disposable {
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
+                launchResult.proc.stdout.on('data', data => this.jupyterOutputChannel.append(typeof data === 'string' ? data : data.toString('utf8')));
+                launchResult.proc.stderr.on('data', data => this.jupyterOutputChannel.append(typeof data === 'string' ? data : data.toString('utf8')));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.

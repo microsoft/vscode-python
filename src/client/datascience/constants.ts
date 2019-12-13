@@ -6,6 +6,8 @@ import { IS_WINDOWS } from '../common/platform/constants';
 import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
+// Identifier for the output panel that will display the output from the Jupyter Server.
+export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
 export const PythonDaemonModule = 'datascience.jupyter_daemon';

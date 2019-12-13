@@ -6,9 +6,9 @@ import '../../../common/extensions';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -44,6 +44,8 @@ export class HostJupyterExecution
         configService: IConfigurationService,
         kernelSelector: KernelSelector,
         notebookStarter: NotebookStarter,
+        appShell: IApplicationShell,
+        jupyterOutputChannel: IOutputChannel,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
@@ -54,6 +56,8 @@ export class HostJupyterExecution
             configService,
             kernelSelector,
             notebookStarter,
+            appShell,
+            jupyterOutputChannel,
             serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys);
         asyncRegistry.push(this);

@@ -4,11 +4,12 @@
 import * as uuid from 'uuid/v4';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
+import { noop } from '../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -44,6 +45,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly configuration: IConfigurationService,
         private readonly kernelSelector: KernelSelector,
         private readonly notebookStarter: NotebookStarter,
+        private readonly appShell: IApplicationShell,
+        private readonly jupyterOutputChannel: IOutputChannel,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
@@ -157,6 +160,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
                         sendTelemetryEvent(Telemetry.SessionIdleTimeout);
+
+                        // Close existing connection.
+                        connection?.dispose();
                         tryCount += 1;
                     } else if (connection) {
                         // Something else went wrong
@@ -179,6 +185,15 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     }
                 }
             }
+
+            // If we're here, then starting jupyter timeout.
+            // Kill any existing connections.
+            connection?.dispose();
+            this.appShell.showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel()).then(selection => {
+                if (selection === localize.Common.openOutputPanel()){
+                    this.jupyterOutputChannel.show();
+                }
+            }, noop);
         }, cancelToken);
     }
 

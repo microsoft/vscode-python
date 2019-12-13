@@ -63,6 +63,7 @@ import {
 import { createDeferred } from './common/utils/async';
 import { Common, OutputChannelNames } from './common/utils/localize';
 import { registerTypes as variableRegisterTypes } from './common/variables/serviceRegistry';
+import { JUPYTER_OUTPUT_CHANNEL } from './datascience/constants';
 import { registerTypes as dataScienceRegisterTypes } from './datascience/serviceRegistry';
 import { IDataScience } from './datascience/types';
 import { DebuggerTypeName } from './debugger/constants';
@@ -241,8 +242,10 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
 
     const standardOutputChannel = window.createOutputChannel(OutputChannelNames.python());
     const unitTestOutChannel = window.createOutputChannel(OutputChannelNames.pythonTest());
+    const jupyterOutputChannel = window.createOutputChannel(OutputChannelNames.jupyter());
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, standardOutputChannel, STANDARD_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
+    serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
     activationRegisterTypes(serviceManager);
     commonRegisterTypes(serviceManager);

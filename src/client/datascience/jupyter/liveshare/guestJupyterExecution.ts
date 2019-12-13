@@ -5,9 +5,9 @@ import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
@@ -41,6 +41,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         configuration: IConfigurationService,
         kernelSelector: KernelSelector,
         notebookStarter: NotebookStarter,
+        appShell: IApplicationShell,
+        jupyterOutputChannel: IOutputChannel,
         serviceContainer: IServiceContainer) {
         super(
             liveShare,
@@ -51,6 +53,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             configuration,
             kernelSelector,
             notebookStarter,
+            appShell,
+            jupyterOutputChannel,
             serviceContainer);
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);
