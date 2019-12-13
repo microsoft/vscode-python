@@ -82,6 +82,7 @@ export class PostOffice implements IDisposable {
             const vscodeApi = this.vscodeApi;
             // Replace console.log with sending a message
             const customConsole = {
+                ...originalConsole,
                 // tslint:disable-next-line: no-any no-function-expression
                 log: function (message?: any, ..._optionalParams: any[]) {
                     originalConsole.log.apply(arguments);
