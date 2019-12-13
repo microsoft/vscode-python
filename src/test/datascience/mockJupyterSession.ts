@@ -6,7 +6,7 @@ import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
-import { ICell, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
+import { ICell, IJupyterKernel, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -26,18 +26,9 @@ export class MockJupyterSession implements IJupyterSession {
     private completionTimeout: number = 1;
     private lastRequest: MockJupyterRequest | undefined;
 
-    private kernel: IJupyterKernelSpec;
-
     constructor(cellDictionary: Record<string, ICell>, timedelay: number) {
         this.dict = cellDictionary;
         this.timedelay = timedelay;
-        this.kernel = {
-            name: 'First',
-            language: 'Python',
-            path: 'foo/bar/python',
-            display_name: 'First',
-            argv: []
-        };
     }
 
     public get onRestarted(): Event<void> {
@@ -143,13 +134,8 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(kernel: IJupyterKernelSpec): Promise<void> {
-        this.kernel = kernel;
+    public changeKernel(_kernel: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
         return Promise.resolve();
-    }
-
-    public getKernel(): IJupyterKernelSpec {
-        return this.kernel;
     }
 
     private findCell = (code: string): ICell => {

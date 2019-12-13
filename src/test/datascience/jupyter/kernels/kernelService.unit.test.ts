@@ -349,7 +349,8 @@ suite('Data Science - KernelService', () => {
 
             const installedKernel = await kernelService.registerKernel(interpreter);
 
-            assert.deepEqual(kernel, installedKernel);
+            // tslint:disable-next-line: no-any
+            assert.deepEqual(kernel, installedKernel as any);
             verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
             // Verify the contents of JSON written to the file match as expected.
             assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);
@@ -373,7 +374,8 @@ suite('Data Science - KernelService', () => {
 
             const installedKernel = await kernelService.registerKernel(interpreter);
 
-            assert.deepEqual(kernel, installedKernel);
+            // tslint:disable-next-line: no-any
+            assert.deepEqual(kernel, installedKernel as any);
             verify(fs.writeFile(kernelJsonFile, anything(), anything())).once();
             // Verify the contents of JSON written to the file match as expected.
             assert.deepEqual(JSON.parse(capture(fs.writeFile).first()[1] as string), expectedKernelJsonContent);

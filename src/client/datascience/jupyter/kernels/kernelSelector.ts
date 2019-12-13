@@ -15,7 +15,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSpecQuickPickItem } from './types';
@@ -30,6 +30,13 @@ export type KernelSpecInterpreter = {
      * @type {PythonInterpreter}
      */
     interpreter?: PythonInterpreter;
+    /**
+     * Active kernel from an active session.
+     * If this is available, then user needs to connect to an existing kernel (instead of starting a new session).
+     *
+     * @type {(IJupyterKernel & Partial<IJupyterKernelSpec>)}
+     */
+    kernelModel?: IJupyterKernel & Partial<IJupyterKernelSpec>;
 };
 
 @injectable()
@@ -122,10 +129,17 @@ export class KernelSelector {
         if (selection.selection.interpreter) {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
             return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
-        } else {
+        } else if (selection.selection.kernelModel) {
+            sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
+            // tslint:disable-next-line: no-any
+            const interpreter = selection.selection.kernelModel ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel as any, cancelToken) : undefined;
+            return { kernelSpec: selection.selection.kernelSpec, interpreter, kernelModel: selection.selection.kernelModel };
+        } else if (selection.selection.kernelSpec) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
             const interpreter = selection.selection.kernelSpec ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelSpec, cancelToken) : undefined;
             return { kernelSpec: selection.selection.kernelSpec, interpreter };
+        } else {
+            return {};
         }
     }
     /**

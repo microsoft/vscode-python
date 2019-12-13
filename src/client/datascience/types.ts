@@ -58,7 +58,7 @@ export interface INotebookServerLaunchInfo {
      */
     interpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelSpec: IJupyterKernelSpec | undefined;
+    kernelSpec: IJupyterKernelSpec | undefined | IJupyterKernel & Partial<IJupyterKernelSpec>;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
     enableDebugging: boolean | undefined; // If we should enable debugging for this server
@@ -101,8 +101,8 @@ export interface INotebook extends IAsyncDisposable {
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
     getMatchingInterpreter(): PythonInterpreter | undefined;
-    getKernelSpec(): IJupyterKernelSpec | undefined;
-    setKernelSpec(spec: IJupyterKernelSpec): Promise<void>;
+    getKernelSpec(): IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined;
+    setKernelSpec(spec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void>;
     setInterpreter(interpeter: PythonInterpreter): void;
 }
 
@@ -173,7 +173,7 @@ export interface IJupyterSession extends IAsyncDisposable {
     requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(kernel: IJupyterKernelSpec): Promise<void>;
+    changeKernel(kernel: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void>;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -182,19 +182,33 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
+    startNew(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
 }
 
 export interface IJupyterKernel {
-    name: string | undefined;
+    /**
+     * Id of an existing (active) Kernel from an active session.
+     *
+     * @type {string}
+     * @memberof IJupyterKernel
+     */
+    id?: string;
+    name: string;
     lastActivityTime: Date;
     numberOfConnections: number;
 }
 
 export interface IJupyterKernelSpec {
+    /**
+     * Id of an existing (active) Kernel from an active session.
+     *
+     * @type {string}
+     * @memberof IJupyterKernel
+     */
+    id?: string;
     name: string;
     language: string;
     path: string;

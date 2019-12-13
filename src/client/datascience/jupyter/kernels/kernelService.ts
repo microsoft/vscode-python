@@ -329,7 +329,7 @@ export class KernelService {
         if (Cancellation.isCanceled(cancelToken)) {
             return [];
         }
-        const specs = await enumerator;
+        const specs: IJupyterKernelSpec[] = await enumerator;
         return specs.filter(item => !!item);
     }
     /**

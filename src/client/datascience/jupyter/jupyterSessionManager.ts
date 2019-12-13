@@ -61,16 +61,26 @@ export class JupyterSessionManager implements IJupyterSessionManager {
 
     public async getRunningKernels(): Promise<IJupyterKernel[]> {
         const models = await Kernel.listRunning(this.serverSettings);
+        // Remove duplicates.
+        const dup = new Set<string>();
         return models.map(m => {
-            return {
-                name: m.name,
-                lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
-                numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
-            };
-        });
+                return {
+                    id: m.id,
+                    name: m.name,
+                    lastActivityTime: m.last_activity ? new Date(Date.parse(m.last_activity.toString())) : new Date(),
+                    numberOfConnections: m.connections ? parseInt(m.connections.toString(), 10) : 0
+                };
+            })
+            .filter(item => {
+                if (dup.has(item.id)){
+                    return false;
+                }
+                dup.add(item.id);
+                return true;
+            });
     }
 
-    public async startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public async startNew(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
             throw new Error(localize.DataScience.sessionDisposed());
         }

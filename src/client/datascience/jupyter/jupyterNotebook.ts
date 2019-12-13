@@ -24,7 +24,7 @@ import { generateCells } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { concatMultilineStringInput, concatMultilineStringOutput, formatStreamText } from '../common';
 import { CodeSnippits, Identifiers, Telemetry } from '../constants';
-import { CellState, ICell, IJupyterKernelSpec, IJupyterSession, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../types';
+import { CellState, ICell, IJupyterKernel, IJupyterKernelSpec, IJupyterSession, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo, InterruptResult } from '../types';
 import { expandWorkingDir } from './jupyterUtils';
 
 // tslint:disable-next-line: no-require-imports
@@ -485,11 +485,11 @@ export class JupyterNotebookBase implements INotebook {
         this.launchInfo.interpreter = interpreter;
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | undefined {
+    public getKernelSpec(): IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined {
         return this.launchInfo.kernelSpec;
     }
 
-    public async setKernelSpec(spec: IJupyterKernelSpec): Promise<void> {
+    public async setKernelSpec(spec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
         // Change our own kernel spec
         this.launchInfo.kernelSpec = spec;
 
