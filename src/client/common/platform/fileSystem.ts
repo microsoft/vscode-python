@@ -56,7 +56,7 @@ export class FileSystem implements IFileSystem {
      * @memberof FileSystem
      */
     public readFile(filePath: string): Promise<string> {
-        return fs.readFile(filePath).then(buffer => buffer.toString());
+        return fs.readFile(filePath, 'utf8');
     }
     public readData(filePath: string): Promise<Buffer> {
         return fs.readFile(filePath);
