@@ -10,6 +10,7 @@ import { traceInfo } from '../../common/logger';
 import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
@@ -28,7 +29,6 @@ import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
-import { StopWatch } from '../../common/utils/stopWatch';
 
 export class JupyterExecutionBase implements IJupyterExecution {
 
