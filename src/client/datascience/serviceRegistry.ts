@@ -34,6 +34,7 @@ import { JupyterDebugger } from './jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from './jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from './jupyter/jupyterExporter';
 import { JupyterImporter } from './jupyter/jupyterImporter';
+import { JupyterOutputListener } from './jupyter/jupyterOutputListener';
 import { JupyterPasswordConnect } from './jupyter/jupyterPasswordConnect';
 import { JupyterServerFactory } from './jupyter/jupyterServerFactory';
 import { JupyterSessionManagerFactory } from './jupyter/jupyterSessionManagerFactory';
@@ -66,6 +67,7 @@ import {
     IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterOutputListener,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     IJupyterVariables,
@@ -129,4 +131,5 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<NotebookStarter>(NotebookStarter, NotebookStarter);
     serviceManager.addSingleton<KernelSelector>(KernelSelector, KernelSelector);
     serviceManager.addSingleton<KernelSelectionProvider>(KernelSelectionProvider, KernelSelectionProvider);
+    serviceManager.addSingleton<IJupyterOutputListener>(IJupyterOutputListener, JupyterOutputListener);
 }

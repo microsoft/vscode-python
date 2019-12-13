@@ -5,16 +5,17 @@ import '../../common/extensions';
 
 import { ChildProcess } from 'child_process';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
+
 import { CancellationError } from '../../common/cancellation';
 import { traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
-import { IConfigurationService, ILogger } from '../../common/types';
+import { IConfigurationService } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
 import { RegExpValues } from '../constants';
-import { IConnection } from '../types';
+import { IConnection, IJupyterOutputListener } from '../types';
 import { JupyterConnectError } from './jupyterConnectError';
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
@@ -37,7 +38,6 @@ class JupyterConnectionWaiter {
     private startPromise: Deferred<IConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
-    private logger: ILogger;
     private fileSystem: IFileSystem;
     private getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>;
     private createConnection: (b: string, t: string, h: string, p: Disposable) => IConnection;
@@ -52,10 +52,10 @@ class JupyterConnectionWaiter {
         getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         createConnection: (b: string, t: string, h: string, p: Disposable) => IConnection,
         serviceContainer: IServiceContainer,
+        private outputCallback: IJupyterOutputListener,
         cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.logger = serviceContainer.get<ILogger>(ILogger);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
         this.getServerInfo = getServerInfo;
         this.createConnection = createConnection;
@@ -91,9 +91,8 @@ class JupyterConnectionWaiter {
                     stderr += output.out;
                     this.stderr.push(output.out);
                     this.extractConnectionInformation(stderr);
-                } else {
-                    this.output(output.out);
                 }
+                this.output(output.out);
             },
             e => this.rejectStartPromise(e.message),
             // If the process dies, we can't extract connection information.
@@ -107,8 +106,8 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private output = (data: any) => {
-        if (this.logger && !this.connectionDisposed) {
-            this.logger.logInformation(data.toString('utf8'));
+        if (this.outputCallback && !this.connectionDisposed) {
+            this.outputCallback.onOutput(data.toString('utf8'));
         }
     }
 
@@ -161,8 +160,6 @@ class JupyterConnectionWaiter {
 
     // tslint:disable-next-line:no-any
     private extractConnectionInformation = (data: any) => {
-        this.output(data);
-
         const httpMatch = RegExpValues.HttpPattern.exec(data);
 
         if (httpMatch && this.notebookDir && this.startPromise && !this.startPromise.completed && this.getServerInfo) {
@@ -243,6 +240,7 @@ export class JupyterConnection implements IConnection {
         getServerInfo: (cancelToken?: CancellationToken) => Promise<JupyterServerInfo[] | undefined>,
         notebookExecution: ObservableExecutionResult<string>,
         serviceContainer: IServiceContainer,
+        outputCallback: IJupyterOutputListener,
         cancelToken?: CancellationToken
     ) {
         // Create our waiter. It will sit here and wait for the connection information from the jupyter process starting up.
@@ -252,6 +250,7 @@ export class JupyterConnection implements IConnection {
             getServerInfo,
             (baseUrl: string, token: string, hostName: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, hostName, processDisposable, notebookExecution.proc),
             serviceContainer,
+            outputCallback,
             cancelToken
         );
 

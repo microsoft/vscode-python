@@ -134,6 +134,7 @@
     "OutputChannelNames.languageServer": "Python Language Server",
     "OutputChannelNames.python": "Python",
     "OutputChannelNames.pythonTest": "Python Test Log",
+    "OutputChannelNames.jupyterServer" : "Jupyter Server",
     "ExtensionSurveyBanner.bannerMessage": "Can you please take 2 minutes to tell us how the Python extension is working for you?",
     "ExtensionSurveyBanner.maybeLater": "Maybe later",
     "ExtensionChannels.installingInsidersMessage": "Installing Insiders... ",

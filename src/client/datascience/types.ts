@@ -145,6 +145,11 @@ export interface IJupyterExecution extends IAsyncDisposable {
     refreshCommands(): Promise<void>;
 }
 
+export const IJupyterOutputListener = Symbol('IJupyterOutputListener');
+export interface IJupyterOutputListener {
+    onOutput(data: string): void;
+}
+
 export const IJupyterDebugger = Symbol('IJupyterDebugger');
 export interface IJupyterDebugger {
     startDebugging(notebook: INotebook): Promise<void>;

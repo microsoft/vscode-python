@@ -21,7 +21,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
-import { IConnection } from '../types';
+import { IConnection, IJupyterOutputListener } from '../types';
 import { JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 
@@ -41,7 +41,8 @@ export class NotebookStarter implements Disposable {
         @inject(JupyterCommandFinder) private readonly commandFinder: JupyterCommandFinder,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
+        @inject(IJupyterOutputListener) private readonly jupyterListener: IJupyterOutputListener
     ) {
     }
     public dispose() {
@@ -99,7 +100,13 @@ export class NotebookStarter implements Disposable {
 
             // Wait for the connection information on this result
             traceInfo('Waiting for Jupyter Notebook');
-            const connection = await JupyterConnection.waitForConnection(tempDir.path, this.getJupyterServerInfo, launchResult, this.serviceContainer, cancelToken);
+            const connection = await JupyterConnection.waitForConnection(
+                tempDir.path,
+                this.getJupyterServerInfo,
+                launchResult,
+                this.serviceContainer,
+                this.jupyterListener,
+                cancelToken);
 
             // Fire off telemetry for the process being talkable
             sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
@@ -231,11 +238,11 @@ export class NotebookStarter implements Disposable {
     }
     private getJupyterServerInfo = async (cancelToken?: CancellationToken): Promise<JupyterServerInfo[] | undefined> => {
         const notebookCommand = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
-        if (!notebookCommand.command){
+        if (!notebookCommand.command) {
             return;
         }
         const [interpreter, activeInterpreter] = await Promise.all([notebookCommand.command.interpreter(), this.interpreterService.getActiveInterpreter()]);
-        if (!interpreter){
+        if (!interpreter) {
             return;
         }
         // Create a daemon only when using the current interpreter.
@@ -243,7 +250,7 @@ export class NotebookStarter implements Disposable {
         const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
         const daemon = await (isActiveInterpreter ?
             this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }) :
-            this.executionFactory.createActivatedEnvironment({allowEnvironmentFetchExceptions: true, interpreter})
+            this.executionFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, interpreter })
         );
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };

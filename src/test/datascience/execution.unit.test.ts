@@ -13,7 +13,16 @@ import { anyString, anything, deepEqual, instance, match, mock, reset, verify, w
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    ConfigurationChangeEvent,
+    Disposable,
+    Event,
+    EventEmitter,
+    Uri
+} from 'vscode';
+
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -45,6 +54,7 @@ import { Identifiers, PythonDaemonModule } from '../../client/datascience/consta
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { JupyterOutputListener } from '../../client/datascience/jupyter/jupyterOutputListener';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import {
@@ -735,7 +745,8 @@ suite('Jupyter Execution', async () => {
             path: ''
         };
         when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
-        notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService));
+        const listener = mock(JupyterOutputListener);
+        notebookStarter = new NotebookStarter(instance(executionFactory), commandFinder, instance(fileSystem), instance(serviceContainer), instance(interpreterService), instance(listener));
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         return {
