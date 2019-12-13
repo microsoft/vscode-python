@@ -28,6 +28,7 @@ import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
+import { StopWatch } from '../../common/utils/stopWatch';
 
 export class JupyterExecutionBase implements IJupyterExecution {
 
@@ -125,6 +126,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
             const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
+            const stopWatch = new StopWatch();
             while (tryCount < maxTries) {
                 try {
                     // Start or connect to the process
@@ -189,6 +191,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // If we're here, then starting jupyter timeout.
             // Kill any existing connections.
             connection?.dispose();
+            sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, {timeout: stopWatch.elapsedTime});
             this.appShell.showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel()).then(selection => {
                 if (selection === localize.Common.openOutputPanel()){
                     this.jupyterOutputChannel.show();

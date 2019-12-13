@@ -1490,6 +1490,14 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;
+    [Telemetry.JupyterStartTimeout]: {
+        /**
+         * Total time spent in attempting to start and connect to jupyter before giving up.
+         *
+         * @type {number}
+         */
+        timeout: number;
+    };
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
     [Telemetry.VariableExplorerFetchTime]: never | undefined;

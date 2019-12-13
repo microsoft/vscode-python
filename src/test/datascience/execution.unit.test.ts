@@ -67,8 +67,8 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { getOSType, OSType } from '../common';
 import { noop, sleep } from '../core';
-import { MockAutoSelectionService } from '../mocks/autoSelector';
 import { MockOutputChannel } from '../mockClasses';
+import { MockAutoSelectionService } from '../mocks/autoSelector';
 
 class MockJupyterNotebook implements INotebook {
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
