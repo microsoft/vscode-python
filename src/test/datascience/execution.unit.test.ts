@@ -237,7 +237,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
 
 suite('Jupyter Execution', async () => {
     const interpreterService = mock(InterpreterService);
-    const jupyterOutputChannel = mock(MockOutputChannel);
+    const jupyterOutputChannel = new MockOutputChannel('');
     const executionFactory = mock(PythonExecutionFactory);
     const liveShare = mock(LiveShareApi);
     const configService = mock(ConfigurationService);
