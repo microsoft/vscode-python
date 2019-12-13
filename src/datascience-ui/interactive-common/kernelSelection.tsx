@@ -36,7 +36,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             <div className='kernel-status' style={dynamicFont}>
                 <div className='kernel-status-section' role='button'>
                     <div className='kernel-status-text'>
-                        {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.selectKernel}
+                    {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
                     </div>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image kernel-status-icon' image={this.getIcon()} />
                 </div>
