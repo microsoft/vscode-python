@@ -43,21 +43,21 @@ suite('Data Science - KernelSelections', () => {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p1', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello1' },
             path: 'p1',
-            detail: '',
+            detail: '<user friendly path>',
             description: ''
         },
         {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p2', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello2' },
             path: 'p1',
-            detail: '',
+            detail: '<user friendly path>',
             description: ''
         },
         {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p3', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello3' },
             path: 'p1',
-            detail: '',
+            detail: '<user friendly path>',
             description: ''
         }
     ];
@@ -68,6 +68,8 @@ suite('Data Science - KernelSelections', () => {
         kernelService = mock(KernelService);
         fs = mock(FileSystem);
         pathUtils = mock(PathUtils);
+        when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
+        when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
         kernelSelectionProvider = new KernelSelectionProvider(instance(kernelService), instance(interpreterSelector), instance(fs), instance(pathUtils));
     });
 
@@ -92,6 +94,7 @@ suite('Data Science - KernelSelections', () => {
             {
                 label: python1KernelSpecModel.display_name,
                 selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel }, kernelSpec: undefined },
+                detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),
                     activePython1KernelModel.numberOfConnections.toString()
@@ -118,6 +121,7 @@ suite('Data Science - KernelSelections', () => {
         const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(item => {
             return {
                 label: item.display_name,
+                detail: '<user friendly path>',
                 selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
             };
         });
@@ -125,7 +129,7 @@ suite('Data Science - KernelSelections', () => {
             return {
                 ...item,
                 label: item.label,
-                detail: '',
+                detail: '<user friendly path>',
                 description: '',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
