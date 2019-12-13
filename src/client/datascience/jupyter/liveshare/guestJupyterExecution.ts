@@ -98,7 +98,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     }
 
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
-        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer(options, cancelToken), noop, options);
+        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer.bind(this), noop, options, cancelToken);
 
         if (!result) {
             throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());

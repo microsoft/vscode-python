@@ -5,6 +5,7 @@ import '../../../common/extensions';
 
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
+import { CancellationToken } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
@@ -21,7 +22,8 @@ export class ServerCache implements IAsyncDisposable {
         private fileSystem: IFileSystem
     ) { }
 
-    public async getOrCreate(newCreatePromise: Promise<INotebookServer | undefined>, disposeCallback: () => void, options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
+    public async getOrCreate(createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
+        disposeCallback: () => void, options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let createPromise: Promise<INotebookServer | undefined> | undefined;
@@ -30,7 +32,8 @@ export class ServerCache implements IAsyncDisposable {
         createPromise = this.cache.get(key);
 
         if (!createPromise) {
-            // Didn't find one, so set ours
+            // Didn't find one, so start up our promise and cache it
+            const newCreatePromise = createFunction(options, cancelToken);
             this.cache.set(key, newCreatePromise);
             createPromise = newCreatePromise;
         }
