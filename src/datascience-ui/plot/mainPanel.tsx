@@ -101,6 +101,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     {this.renderPlot(baseTheme)}
                 </div>
             );
+        } else {
+            return null;
         }
     }
 
