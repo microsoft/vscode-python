@@ -134,6 +134,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                     // Create a server that we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
+                    // In a remote situation, figure out a kernel spec too.
+                    if (!kernelSpecInterpreter.kernelSpec && connection) {
+                        kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(connection, options?.metadata, cancelToken);
+                    }
+
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
@@ -154,7 +159,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 } catch (err) {
                     // Cleanup after ourselves. server may be running partially.
                     if (result) {
-                        traceInfo('Killing server because of error');
+                        traceInfo(`Killing server because of error ${err}`);
                         await result.dispose();
                     }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
@@ -191,9 +196,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // If we're here, then starting jupyter timeout.
             // Kill any existing connections.
             connection?.dispose();
-            sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, {timeout: stopWatch.elapsedTime});
+            sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, { timeout: stopWatch.elapsedTime });
             this.appShell.showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel()).then(selection => {
-                if (selection === localize.Common.openOutputPanel()){
+                if (selection === localize.Common.openOutputPanel()) {
                     this.jupyterOutputChannel.show();
                 }
             }, noop);

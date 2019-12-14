@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
@@ -17,10 +16,11 @@ import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
+import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
@@ -29,10 +29,22 @@ suite('Data Science - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let sessionManager: IJupyterSessionManager;
+    let sessionManagerFactory: IJupyterSessionManagerFactory;
     let kernelSelector: KernelSelector;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
+    const dummyEvent = new EventEmitter<number>();
+    const connection: IConnection = {
+        // tslint:disable-next-line: no-http-string
+        baseUrl: 'http://foobar',
+        token: '1234',
+        hostName: 'foobar',
+        localLaunch: false,
+        localProcExitCode: undefined,
+        disconnected: dummyEvent.event,
+        dispose: noop
+    };
     const kernelSpec = {
         argv: [],
         display_name: 'Something',
@@ -52,6 +64,8 @@ suite('Data Science - KernelSelector', () => {
 
     setup(() => {
         sessionManager = mock(JupyterSessionManager);
+        sessionManagerFactory = mock(JupyterSessionManagerFactory);
+        when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
         kernelService = mock(KernelService);
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
@@ -62,7 +76,8 @@ suite('Data Science - KernelSelector', () => {
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
-            instance(installer)
+            instance(installer),
+            instance(sessionManagerFactory)
         );
     });
     teardown(() => sinon.restore());
@@ -267,6 +282,128 @@ suite('Data Science - KernelSelector', () => {
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything())).once();
+            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
+            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).never();
+            verify(kernelService.registerKernel(anything(), anything())).never();
+        });
+        test('Remote search works', async () => {
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
+            when(kernelService.getKernelSpecs(anything(), anything())).thenResolve([
+                {
+                    name: 'bar',
+                    display_name: 'foo',
+                    language: 'CSharp',
+                    path: '/foo/dotnet',
+                    argv: []
+                },
+                {
+                    name: 'foo',
+                    display_name: 'foo',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                }
+            ]);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForRemoteConnection(connection, undefined);
+
+            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the python kernel spec');
+            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(selectLocalKernelStub.notCalled);
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+            verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
+            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
+            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).never();
+            verify(kernelService.registerKernel(anything(), anything())).never();
+        });
+        test('Remote search prefers same name as long as it is python', async () => {
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
+            when(kernelService.getKernelSpecs(anything(), anything())).thenResolve([
+                {
+                    name: 'bar',
+                    display_name: 'foo',
+                    language: 'CSharp',
+                    path: '/foo/dotnet',
+                    argv: []
+                },
+                {
+                    name: 'foo',
+                    display_name: 'zip',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                },
+                {
+                    name: 'foo',
+                    display_name: 'foo',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                }
+            ]);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForRemoteConnection(connection, { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
+
+            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
+            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(selectLocalKernelStub.notCalled);
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+            verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
+            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
+            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).never();
+            verify(kernelService.registerKernel(anything(), anything())).never();
+        });
+        test('Remote search prefers same version', async () => {
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
+            when(kernelService.getKernelSpecs(anything(), anything())).thenResolve([
+                {
+                    name: 'bar',
+                    display_name: 'fod',
+                    language: 'CSharp',
+                    path: '/foo/dotnet',
+                    argv: []
+                },
+                {
+                    name: 'python2',
+                    display_name: 'zip',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                },
+                {
+                    name: 'python3',
+                    display_name: 'foo',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                }
+            ]);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForRemoteConnection(connection, { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
+
+            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
+            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(selectLocalKernelStub.notCalled);
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+            verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
             verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
             verify(appShell.showQuickPick(anything(), anything(), anything())).never();

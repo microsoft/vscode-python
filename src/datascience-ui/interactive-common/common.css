@@ -446,6 +446,10 @@ body, html {
     right: 3px;
     margin-top: 2px;
     color: var(--vscode-editor-foreground);
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: 1fr;
+    max-width: 60%;
 }
 
 .kernel-status-section {
@@ -463,11 +467,28 @@ body, html {
     height: 17px;
     margin: 0 5px 0 5px;
     float: left;
+    grid-column-start: 2;
+    grid-column-end: 2;
 }
 
 .kernel-status-text {
     float: left;
     padding-right: 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.kernel-status-server {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
+
+.kernel-status-status {
+    grid-column-start: 3;
+    grid-column-end: 3;
 }
 
 .kernel-status-icon {

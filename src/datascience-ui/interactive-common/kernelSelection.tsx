@@ -30,12 +30,11 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
             fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
             fontFamily: this.props.font.family
         };
-
-        const kernelSelectionClass = this.isKernelSelectionAllowed ? 'kernel-status-section kernel-status-section-hoverable' : 'kernel-status-section';
+        const kernelSelectionClass = this.isKernelSelectionAllowed ? 'kernel-status-section kernel-status-section-hoverable kernel-status-status' : 'kernel-status-section kernel-status-status';
         return (
             <div className='kernel-status' style={dynamicFont}>
-                <div className='kernel-status-section' role='button'>
-                    <div className='kernel-status-text'>
+                <div className='kernel-status-section kernel-status-server' role='button'>
+                    <div className='kernel-status-text' title={this.props.kernel.localizedUri}>
                     {getLocString('DataScience.jupyterServer', 'Jupyter Server')}: {this.props.kernel.localizedUri}
                     </div>
                     <Image baseTheme={this.props.baseTheme} class='image-button-image kernel-status-icon' image={this.getIcon()} />
