@@ -1,11 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-
 import { WebPanelMessage } from '../../client/common/application/types';
 import { IDisposable } from '../../client/common/types';
-import { logMessage } from './logger';
 import { noop } from '../../client/common/utils/misc';
+import { logMessage } from './logger';
 
 export interface IVsCodeApi {
     // tslint:disable-next-line:no-any
