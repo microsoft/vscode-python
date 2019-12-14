@@ -22,7 +22,7 @@ import { IEnvironmentActivationService } from '../../../interpreter/activation/t
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterCommands, Telemetry } from '../../constants';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterCommandFinder } from '../jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 
@@ -116,8 +116,8 @@ export class KernelService {
      * @returns {(Promise<PythonInterpreter | undefined>)}
      * @memberof KernelService
      */
-    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        if (kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE) {
+    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+        if (kernelSpec.language && kernelSpec.language?.toLowerCase() !== PYTHON_LANGUAGE) {
             return;
         }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);

@@ -133,7 +133,7 @@ export class KernelSelector {
         } else if (selection.selection.kernelModel) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
             // tslint:disable-next-line: no-any
-            const interpreter = selection.selection.kernelModel ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel as any, cancelToken) : undefined;
+            const interpreter = selection.selection.kernelModel ? await this.kernelService.findMatchingInterpreter(selection.selection.kernelModel, cancelToken) : undefined;
             return { kernelSpec: selection.selection.kernelSpec, interpreter, kernelModel: selection.selection.kernelModel };
         } else if (selection.selection.kernelSpec) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
