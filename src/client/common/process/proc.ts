@@ -119,6 +119,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
             });
         });
 
+        if (options.input) {
+            proc.stdin.write(options.input, encoding);
+            proc.stdin.end();
+        }
+
         this.emit('exec', file, args, options);
 
         return {
@@ -162,6 +167,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
                 stderrBuffers.push(data);
             }
         });
+
+        if (options.input) {
+            proc.stdin.write(options.input, encoding);
+            proc.stdin.end();
+        }
 
         proc.once('close', () => {
             if (deferred.completed) {

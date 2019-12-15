@@ -28,6 +28,7 @@ export type ObservableExecutionResult<T extends string | Buffer> = {
 
 // tslint:disable-next-line:interface-name
 export type SpawnOptions = ChildProcessSpawnOptions & {
+    input?: string;
     encoding?: string;
     token?: CancellationToken;
     mergeStdOutErr?: boolean;
