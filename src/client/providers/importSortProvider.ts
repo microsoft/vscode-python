@@ -4,7 +4,6 @@ import * as path from 'path';
 import { CancellationToken, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../common/application/types';
 import { Commands, EXTENSION_ROOT_DIR, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
-import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, ILogger, IOutputChannel } from '../common/types';
 import { noop } from '../common/utils/misc';
@@ -38,41 +37,38 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         if (document.lineCount <= 1) {
             return;
         }
-        // isort does have the ability to read from the process input stream and return the formatted code out of the output stream.
-        // However they don't support returning the diff of the formatted text when reading data from the input stream.
-        // Yes getting text formatted that way avoids having to create a temporary file, however the diffing will have
-        // to be done here in node (extension), i.e. extension cpu, i.e. less responsive solution.
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
-        const fsService = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        const tmpFile = document.isDirty ? await fsService.createTemporaryFile(path.extname(document.uri.fsPath)) : undefined;
-        if (tmpFile) {
-            await fsService.writeFile(tmpFile.filePath, document.getText());
-        }
         const settings = this.configurationService.getSettings(uri);
         const isort = settings.sortImports.path;
-        const filePath = tmpFile ? tmpFile.filePath : document.uri.fsPath;
-        const args = [filePath, '--diff'].concat(settings.sortImports.args);
         let diffPatch: string;
+
+        // We pass the content of the file to be sorted via stdin. This avoids
+        // saving the file (as well as a potential temporary file), but does
+        // mean that we need another way to tell `isort` where to look for
+        // configuration. We do that by setting the working direcotry to the
+        // directory which contains the file.
+        const args = ['-', '--diff'].concat(settings.sortImports.args);
+        const spawnOptions = {
+            token,
+            throwOnStdErr: true,
+            input: document.getText(),
+            cwd: path.dirname(uri.fsPath)
+        };
 
         if (token && token.isCancellationRequested) {
             return;
         }
-        try {
-            if (typeof isort === 'string' && isort.length > 0) {
-                // Lets just treat this as a standard tool.
-                const processService = await this.processServiceFactory.create(document.uri);
-                diffPatch = (await processService.exec(isort, args, { throwOnStdErr: true, token })).stdout;
-            } else {
-                const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
-                diffPatch = (await processExeService.exec([importScript].concat(args), { throwOnStdErr: true, token })).stdout;
-            }
 
-            return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
-        } finally {
-            if (tmpFile) {
-                tmpFile.dispose();
-            }
+        if (typeof isort === 'string' && isort.length > 0) {
+            // Lets just treat this as a standard tool.
+            const processService = await this.processServiceFactory.create(document.uri);
+            diffPatch = (await processService.exec(isort, args, spawnOptions)).stdout;
+        } else {
+            const processExeService = await this.pythonExecutionFactory.create({ resource: document.uri });
+            diffPatch = (await processExeService.exec([importScript].concat(args), spawnOptions)).stdout;
         }
+
+        return this.editorUtils.getWorkspaceEditsFromPatch(document.getText(), diffPatch, document.uri);
     }
 
     public registerCommands() {

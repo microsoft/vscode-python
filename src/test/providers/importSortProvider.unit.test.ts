@@ -12,7 +12,6 @@ import * as TypeMoq from 'typemoq';
 import { Range, TextDocument, TextEditor, TextLine, Uri, WorkspaceEdit } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager } from '../../client/common/application/types';
 import { Commands, EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessService } from '../../client/common/process/proc';
 import { IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../client/common/process/types';
 import { IConfigurationService, IDisposableRegistry, IEditorUtils, IPythonSettings, ISortImportSettings } from '../../client/common/types';
@@ -32,11 +31,9 @@ suite('Import Sort Provider', () => {
     let commandManager: TypeMoq.IMock<ICommandManager>;
     let pythonSettings: TypeMoq.IMock<IPythonSettings>;
     let sortProvider: ISortImportsEditingProvider;
-    let fs: TypeMoq.IMock<IFileSystem>;
     setup(() => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>();
-        fs = TypeMoq.Mock.ofType<IFileSystem>();
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         shell = TypeMoq.Mock.ofType<IApplicationShell>();
         configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
@@ -44,7 +41,6 @@ suite('Import Sort Provider', () => {
         processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
         pythonSettings = TypeMoq.Mock.ofType<IPythonSettings>();
         editorUtils = TypeMoq.Mock.ofType<IEditorUtils>();
-        fs = TypeMoq.Mock.ofType<IFileSystem>();
         serviceContainer.setup(c => c.get(ICommandManager)).returns(() => commandManager.object);
         serviceContainer.setup(c => c.get(IDocumentManager)).returns(() => documentManager.object);
         serviceContainer.setup(c => c.get(IApplicationShell)).returns(() => shell.object);
@@ -53,7 +49,6 @@ suite('Import Sort Provider', () => {
         serviceContainer.setup(c => c.get(IProcessServiceFactory)).returns(() => processServiceFactory.object);
         serviceContainer.setup(c => c.get(IEditorUtils)).returns(() => editorUtils.object);
         serviceContainer.setup(c => c.get(IDisposableRegistry)).returns(() => []);
-        serviceContainer.setup(c => c.get(IFileSystem)).returns(() => fs.object);
         configurationService.setup(c => c.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         sortProvider = new SortImportsEditingProvider(serviceContainer.object);
@@ -252,11 +247,9 @@ suite('Import Sort Provider', () => {
         shell.verifyAll();
         documentManager.verifyAll();
     });
-    test('Ensure temporary file is created for sorting when document is dirty', async () => {
+    test('Ensure stdin is used for sorting', async () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        let tmpFileDisposed = false;
-        const tmpFile: TemporaryFile = { filePath: 'TmpFile', dispose: () => tmpFileDisposed = true };
         const processService = TypeMoq.Mock.ofType<ProcessService>();
         processService.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
@@ -268,7 +261,7 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc.setup(d => d.isDirty)
             .returns(() => true)
-            .verifiable(TypeMoq.Times.atLeastOnce());
+            .verifiable(TypeMoq.Times.never());
         mockDoc.setup(d => d.uri)
             .returns(() => uri)
             .verifiable(TypeMoq.Times.atLeastOnce());
@@ -276,12 +269,6 @@ suite('Import Sort Provider', () => {
             .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
-        fs.setup(f => f.createTemporaryFile(TypeMoq.It.isValue('.py')))
-            .returns(() => Promise.resolve(tmpFile))
-            .verifiable(TypeMoq.Times.once());
-        fs.setup(f => f.writeFile(TypeMoq.It.isValue(tmpFile.filePath), TypeMoq.It.isValue('Hello')))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
         pythonSettings.setup(s => s.sortImports)
             .returns(() => { return { path: 'CUSTOM_ISORT', args: ['1', '2'] } as any as ISortImportSettings; })
             .verifiable(TypeMoq.Times.once());
@@ -289,9 +276,9 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(processService.object))
             .verifiable(TypeMoq.Times.once());
 
-        const expectedArgs = [tmpFile.filePath, '--diff', '1', '2'];
+        const expectedArgs = ['-', '--diff', '1', '2'];
         processService
-            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
+            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: '/' })))
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
@@ -303,15 +290,13 @@ suite('Import Sort Provider', () => {
         const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
 
         expect(edit).to.be.equal(expectedEdit);
-        expect(tmpFileDisposed).to.be.equal(true, 'Temporary file not disposed');
         shell.verifyAll();
+        mockDoc.verifyAll();
         documentManager.verifyAll();
     });
-    test('Ensure temporary file is created for sorting when document is dirty (with custom isort path)', async () => {
+    test('Ensure stdin is used for sorting (with custom isort path)', async () => {
         const uri = Uri.file('something.py');
         const mockDoc = TypeMoq.Mock.ofType<TextDocument>();
-        let tmpFileDisposed = false;
-        const tmpFile: TemporaryFile = { filePath: 'TmpFile', dispose: () => tmpFileDisposed = true };
         const processService = TypeMoq.Mock.ofType<ProcessService>();
         processService.setup((d: any) => d.then).returns(() => undefined);
         mockDoc.setup((d: any) => d.then).returns(() => undefined);
@@ -323,7 +308,7 @@ suite('Import Sort Provider', () => {
             .verifiable(TypeMoq.Times.atLeastOnce());
         mockDoc.setup(d => d.isDirty)
             .returns(() => true)
-            .verifiable(TypeMoq.Times.atLeastOnce());
+            .verifiable(TypeMoq.Times.never());
         mockDoc.setup(d => d.uri)
             .returns(() => uri)
             .verifiable(TypeMoq.Times.atLeastOnce());
@@ -331,12 +316,6 @@ suite('Import Sort Provider', () => {
             .setup(d => d.openTextDocument(TypeMoq.It.isValue(uri)))
             .returns(() => Promise.resolve(mockDoc.object))
             .verifiable(TypeMoq.Times.atLeastOnce());
-        fs.setup(f => f.createTemporaryFile(TypeMoq.It.isValue('.py')))
-            .returns(() => Promise.resolve(tmpFile))
-            .verifiable(TypeMoq.Times.once());
-        fs.setup(f => f.writeFile(TypeMoq.It.isValue(tmpFile.filePath), TypeMoq.It.isValue('Hello')))
-            .returns(() => Promise.resolve(undefined))
-            .verifiable(TypeMoq.Times.once());
         pythonSettings.setup(s => s.sortImports)
             .returns(() => { return { args: ['1', '2'] } as any as ISortImportSettings; })
             .verifiable(TypeMoq.Times.once());
@@ -347,9 +326,9 @@ suite('Import Sort Provider', () => {
             .returns(() => Promise.resolve(processExeService.object))
             .verifiable(TypeMoq.Times.once());
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
-        const expectedArgs = [importScript, tmpFile.filePath, '--diff', '1', '2'];
+        const expectedArgs = [importScript, '-', '--diff', '1', '2'];
         processExeService
-            .setup(p => p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined })))
+            .setup(p => p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: '/' })))
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
@@ -361,8 +340,8 @@ suite('Import Sort Provider', () => {
         const edit = await sortProvider.provideDocumentSortImportsEdits(uri);
 
         expect(edit).to.be.equal(expectedEdit);
-        expect(tmpFileDisposed).to.be.equal(true, 'Temporary file not disposed');
         shell.verifyAll();
+        mockDoc.verifyAll();
         documentManager.verifyAll();
     });
 });
