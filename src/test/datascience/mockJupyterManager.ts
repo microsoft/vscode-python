@@ -13,6 +13,7 @@ import * as uuid from 'uuid/v4';
 import { EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { Session } from '@jupyterlab/services';
 import { Cancellation } from '../../client/common/cancellation';
 import { ExecutionResult, IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../client/common/process/types';
 import { IConfigurationService } from '../../client/common/types';
@@ -162,6 +163,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
     }
 
     public getRunningKernels(): Promise<IJupyterKernel[]> {
+        return Promise.resolve([]);
+    }
+
+    public getRunningSessions(): Promise<Session.IModel[]> {
         return Promise.resolve([]);
     }
 

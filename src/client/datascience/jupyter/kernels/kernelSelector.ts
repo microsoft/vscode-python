@@ -15,10 +15,10 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
-import { IKernelSpecQuickPickItem } from './types';
+import { IKernelSpecQuickPickItem, LiveKernelModel } from './types';
 
 export type KernelSpecInterpreter = {
     kernelSpec?: IJupyterKernelSpec;
@@ -34,9 +34,9 @@ export type KernelSpecInterpreter = {
      * Active kernel from an active session.
      * If this is available, then user needs to connect to an existing kernel (instead of starting a new session).
      *
-     * @type {(IJupyterKernel & Partial<IJupyterKernelSpec>)}
+     * @type {(LiveKernelModel)}
      */
-    kernelModel?: IJupyterKernel & Partial<IJupyterKernelSpec>;
+    kernelModel?: LiveKernelModel;
 };
 
 @injectable()
@@ -86,7 +86,7 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
+    public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(suggestions, session, cancelToken, currentKernel);
@@ -99,7 +99,7 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
+    public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(suggestions, session, cancelToken, currentKernel);
@@ -217,7 +217,12 @@ export class KernelSelector {
             interpreter: interpreter
         };
     }
-    private async selectKernel(suggestions: IKernelSpecQuickPickItem[], session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>) {
+    private async selectKernel(
+        suggestions: IKernelSpecQuickPickItem[],
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken,
+        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+    ) {
         const placeHolder = localize.DataScience.selectKernel() + (currentKernel ? ` (current: ${currentKernel.display_name || currentKernel.name})` : '');
         const selection = await this.applicationShell.showQuickPick(suggestions, { placeHolder }, cancelToken);
         if (!selection?.selection) {

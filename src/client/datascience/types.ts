@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { Session } from '@jupyterlab/services';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
@@ -14,6 +15,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
 import { KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
+import { LiveKernelModel } from './jupyter/kernels/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -58,7 +60,7 @@ export interface INotebookServerLaunchInfo {
      */
     interpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelSpec: IJupyterKernelSpec | undefined | IJupyterKernel & Partial<IJupyterKernelSpec>;
+    kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
     enableDebugging: boolean | undefined; // If we should enable debugging for this server
@@ -101,8 +103,8 @@ export interface INotebook extends IAsyncDisposable {
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
     getMatchingInterpreter(): PythonInterpreter | undefined;
-    getKernelSpec(): IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined;
-    setKernelSpec(spec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void>;
+    getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
+    setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel): Promise<void>;
     setInterpreter(interpeter: PythonInterpreter): void;
 }
 
@@ -170,10 +172,14 @@ export interface IJupyterSession extends IAsyncDisposable {
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
-    requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestExecute(
+        content: KernelMessage.IExecuteRequestMsg['content'],
+        disposeOnDone?: boolean,
+        metadata?: JSONObject
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
     sendInputReply(content: string): void;
-    changeKernel(kernel: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void>;
+    changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel): Promise<void>;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -182,10 +188,11 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    startNew(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
+    startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
+    getRunningSessions(): Promise<Session.IModel[]>;
 }
 
 export interface IJupyterKernel {
@@ -558,7 +565,7 @@ export interface ICellHash {
     runtimeLine: number; // Line in the jupyter source to start at
     hash: string;
     executionCount: number;
-    id: string;         // Cell id as sent to jupyter
+    id: string; // Cell id as sent to jupyter
 }
 
 export interface IFileHashes {
@@ -587,5 +594,4 @@ export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker {
     updated: Event<void>;
     getLocation(debugSession: DebugSession): IDebugLocation | undefined;
-
 }

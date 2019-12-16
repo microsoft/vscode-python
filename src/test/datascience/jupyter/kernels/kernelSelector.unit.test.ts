@@ -243,7 +243,10 @@ suite('Data Science - KernelSelector', () => {
         // tslint:disable-next-line: no-any
         let nbMetadata: nbformat.INotebookMetadata = {} as any;
         // tslint:disable-next-line: no-any
-        let selectLocalKernelStub: sinon.SinonStub<[(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>)?], Promise<any>>;
+        let selectLocalKernelStub: sinon.SinonStub<
+            [(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | LiveKernelModel)?],
+            Promise<any>
+        >;
         setup(() => {
             nbMetadataKernelSpec = {
                 display_name: interpreter.displayName!,

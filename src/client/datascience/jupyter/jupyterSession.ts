@@ -14,10 +14,11 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 import { KernelSelector } from './kernels/kernelSelector';
+import { LiveKernelModel } from './kernels/types';
 
 export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;
@@ -30,7 +31,7 @@ export class JupyterSession implements IJupyterSession {
     constructor(
         private connInfo: IConnection,
         private serverSettings: ServerConnection.ISettings,
-        private kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined,
+        private kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager,
         private readonly kernelSelector: KernelSelector
@@ -64,7 +65,6 @@ export class JupyterSession implements IJupyterSession {
                     traceInfo('Shutdown session - shutdown restart session');
                     await this.shutdownSession(restartSession, undefined);
                 }
-
             } catch {
                 noop();
             }
@@ -130,11 +130,15 @@ export class JupyterSession implements IJupyterSession {
         }
     }
 
-    public requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
+    public requestExecute(
+        content: KernelMessage.IExecuteRequestMsg['content'],
+        disposeOnDone?: boolean,
+        metadata?: JSONObject
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined {
         const result = this.session && this.session.kernel ? this.session.kernel.requestExecute(content, disposeOnDone, metadata) : undefined;
         // It has been observed that starting the restart session slows down first time to execute a cell.
         // Solution is to start the restart session after the first execution of user code.
-        if (!content.silent && result){
+        if (!content.silent && result) {
             result.done.finally(() => this.startRestartSession()).ignoreErrors();
         }
         return result;
@@ -170,8 +174,8 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    public async changeKernel(kernel: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
-        if (kernel.id && this.session){
+    public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel): Promise<void> {
+        if (kernel.id && this.session) {
             this.kernelSpec = kernel;
             // tslint:disable-next-line: no-any
             await this.session.changeKernel(kernel as any);
@@ -230,16 +234,13 @@ export class JupyterSession implements IJupyterSession {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => e.newValue && e.newValue.status === 'idle' ? resolve() : undefined));
+            const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => (e.newValue && e.newValue.status === 'idle' ? resolve() : undefined)));
             const checkStatusPromise = new Promise(async resolve => {
                 // This function seems to cause CI builds to timeout randomly on
                 // different tests. Waiting for status to go idle doesn't seem to work and
                 // in the past, waiting on the ready promise doesn't work either. Check status with a maximum of 5 seconds
                 const startTime = Date.now();
-                while (session &&
-                    session.kernel &&
-                    session.kernel.status !== 'idle' &&
-                    (Date.now() - startTime < timeout)) {
+                while (session && session.kernel && session.kernel.status !== 'idle' && Date.now() - startTime < timeout) {
                     await sleep(100);
                 }
                 resolve();
@@ -281,7 +282,6 @@ export class JupyterSession implements IJupyterSession {
     }
 
     private async createSession(serverSettings: ServerConnection.ISettings, contentsManager: ContentsManager, cancelToken?: CancellationToken): Promise<Session.ISession> {
-
         // Create a temporary notebook for this session.
         this.notebookFiles.push(await contentsManager.newUntitled({ type: 'notebook' }));
 
