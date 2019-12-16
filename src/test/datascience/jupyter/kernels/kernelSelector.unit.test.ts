@@ -3,7 +3,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, instance, mock, verify, when, capture } from 'ts-mockito';
 import { EventEmitter } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
@@ -23,6 +23,7 @@ import { KernelService } from '../../../../client/datascience/jupyter/kernels/ke
 import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelSelector', () => {
@@ -115,6 +116,66 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
+        });
+    });
+    suite('Hide kernels from Remote & Local Kernel', () => {
+        test('Should hide kernel from remote sessions', async () => {
+            const kernelModels: (IJupyterKernel & Partial<IJupyterKernelSpec>)[] = [
+                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1'},
+                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2'},
+                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3'},
+                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4'}
+            ];
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+                return {
+                    label: '',
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                };
+            });
+
+            when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve(quickPickItems);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
+
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
+            const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
+
+            assert.isEmpty(kernel);
+            verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
+            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
+            assert.deepEqual(suggestions, quickPickItems.filter(item => ['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
+        });
+        test('Should hide kernel from local sessions', async () => {
+            const kernelModels: (IJupyterKernel & Partial<IJupyterKernelSpec>)[] = [
+                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1'},
+                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2'},
+                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3'},
+                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4'}
+            ];
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+                return {
+                    label: '',
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                };
+            });
+
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve(quickPickItems);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
+
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
+            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+
+            assert.isEmpty(kernel);
+            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
+            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
+            assert.deepEqual(suggestions, quickPickItems.filter(item => ['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
         });
     });
     suite('Select Local Kernel', () => {
