@@ -25,7 +25,7 @@ export namespace PsProcessParser {
     };
 
     export function parseProcessesFromPs(processes: string): IAttachItem[] {
-        const lines: string[] = processes.split(os.EOL);
+        const lines: string[] = processes.split('\n');
         return parseProcessesFromPsArray(lines);
     }
 
