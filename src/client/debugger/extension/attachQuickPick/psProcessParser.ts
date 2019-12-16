@@ -3,7 +3,6 @@
 
 'use strict';
 
-import * as os from 'os';
 import { IAttachItem, ProcessListCommand } from './types';
 
 export namespace PsProcessParser {
