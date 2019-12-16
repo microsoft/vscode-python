@@ -20,6 +20,7 @@ import {
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
+import { KernelSelector } from './kernels/kernelSelector';
 
 export class JupyterSessionManager implements IJupyterSessionManager {
 
@@ -31,7 +32,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         private config: IConfigurationService,
-        private failOnPassword: boolean | undefined
+        private failOnPassword: boolean | undefined,
+        private kernelSelector: KernelSelector
     ) {
     }
 
@@ -85,7 +87,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager);
+        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager, this.kernelSelector);
         try {
             await session.connect(cancelToken);
         } finally {
