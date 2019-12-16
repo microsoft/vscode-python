@@ -86,8 +86,8 @@ suite('Data Science - KernelSelections', () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
         const sessions = activeKernels.map(item => {
             return {
-                id: `sessionId${item.id}`,
-                name: `someSession${item.id}`,
+                id: 'sessionId',
+                name: 'someSessio',
                 // tslint:disable-next-line: no-any
                 kernel: item as any,
                 type: '',
@@ -107,7 +107,23 @@ suite('Data Science - KernelSelections', () => {
             {
                 label: python1KernelSpecModel.display_name,
                 // tslint:disable-next-line: no-any
-                selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel, session: {} as any }, kernelSpec: undefined },
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: {
+                        ...activePython1KernelModel,
+                        ...python1KernelSpecModel,
+                        session: {
+                            id: 'sessionId',
+                            name: 'someSession',
+                            // tslint:disable-next-line: no-any
+                            kernel: activeKernels[0] as any,
+                            type: '',
+                            path: ''
+                        // tslint:disable-next-line: no-any
+                        } as any
+                    },
+                    kernelSpec: undefined
+                },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),
