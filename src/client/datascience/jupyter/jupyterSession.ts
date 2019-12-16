@@ -264,8 +264,8 @@ export class JupyterSession implements IJupyterSession {
         while (tryCount < 3) {
             try {
                 result = await this.createSession(serverSettings, contentsManager, cancelToken);
-                this.kernelSelector.addKernelToIgnoreList(result.kernel);
                 await this.waitForIdleOnSession(result, 30000);
+                this.kernelSelector.addKernelToIgnoreList(result.kernel);
                 return result;
             } catch (exc) {
                 traceInfo(`Error waiting for restart session: ${exc}`);
