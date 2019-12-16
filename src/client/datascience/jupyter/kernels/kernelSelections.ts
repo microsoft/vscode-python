@@ -138,13 +138,18 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForRemoteSession(sessionManager: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const liveItems = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager, this.pathUtils).getKernelSelections(cancelToken).then(items => {
-            // Sorty by name.
-            items.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
-            this.remoteSuggestionsCache = items;
-            return items;
-        });
+        const getSelections = async () => {
+            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, this.pathUtils, sessionManager).getKernelSelections(cancelToken);
+            const liveKernelsPromise = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager, this.pathUtils).getKernelSelections(cancelToken);
+            const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
 
+            // Sorty by name.
+            installedKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            liveKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            return [...liveKernels!, ...installedKernels!];
+        };
+
+        const liveItems = getSelections().then(items => this.localSuggestionsCache = items);
         // If we have someting in cache, return that, while fetching in the background.
         const cachedItems = this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
         return Promise.race([cachedItems, liveItems]);
