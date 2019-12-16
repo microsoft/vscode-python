@@ -3,7 +3,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when, capture } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
