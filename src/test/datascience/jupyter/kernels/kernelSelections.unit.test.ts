@@ -95,7 +95,8 @@ suite('Data Science - KernelSelections', () => {
         const expectedItems: IKernelSpecQuickPickItem[] = [
             {
                 label: python1KernelSpecModel.display_name,
-                selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel }, kernelSpec: undefined },
+                // tslint:disable-next-line: no-any
+                selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel, session: {} as any }, kernelSpec: undefined },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),

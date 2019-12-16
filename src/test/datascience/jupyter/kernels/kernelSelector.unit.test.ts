@@ -18,8 +18,8 @@ import { JupyterSessionManager } from '../../../../client/datascience/jupyter/ju
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
@@ -103,11 +103,15 @@ suite('Data Science - KernelSelector', () => {
     });
     suite('Hide kernels from Remote & Local Kernel', () => {
         test('Should hide kernel from remote sessions', async () => {
-            const kernelModels: (IJupyterKernel & Partial<IJupyterKernelSpec>)[] = [
-                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1'},
-                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2'},
-                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3'},
-                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4'}
+            const kernelModels: (LiveKernelModel)[] = [
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4', session: {} as any}
             ];
             const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
                 return {
@@ -132,11 +136,15 @@ suite('Data Science - KernelSelector', () => {
             assert.deepEqual(suggestions, quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
         });
         test('Should hide kernel from local sessions', async () => {
-            const kernelModels: (IJupyterKernel & Partial<IJupyterKernelSpec>)[] = [
-                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1'},
-                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2'},
-                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3'},
-                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4'}
+            const kernelModels: (LiveKernelModel)[] = [
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4', session: {} as any}
             ];
             const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
                 return {
