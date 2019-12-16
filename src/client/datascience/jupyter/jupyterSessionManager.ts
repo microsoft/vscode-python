@@ -57,8 +57,11 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         if (!this.sessionManager) {
             return [];
         }
-        const iterator = this.sessionManager.running();
+        // Not refreshing will result in `running` returning an empty iterator.
+        await this.sessionManager.refreshRunning();
+
         const sessions: Session.IModel[] = [];
+        const iterator = this.sessionManager.running();
         let session = iterator.next();
 
         while (session) {

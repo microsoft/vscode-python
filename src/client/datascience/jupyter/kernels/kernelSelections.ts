@@ -59,18 +59,21 @@ function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPa
 export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(_cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
-        const [activeSessions, kernelSpecs] = await Promise.all([this.sessionManager.getRunningSessions(), this.sessionManager.getKernelSpecs()]);
+        const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getRunningSessions(), this.sessionManager.getKernelSpecs()]);
         const items = activeSessions.map(item => {
             const matchingSpec: Partial<IJupyterKernelSpec> = kernelSpecs.find(spec => spec.name === item.kernel.name) || {};
+            const activeKernel = activeKernels.find(active => active.id === item.kernel.id) || {};
             // tslint:disable-next-line: no-object-literal-type-assertion
             return {
                 ...item.kernel,
                 ...matchingSpec,
+                ...activeKernel,
                 session: item
             } as LiveKernelModel;
         });
         return items
             .filter(item => item.display_name || item.name)
+            .filter(item => 'lastActivityTime' in item && 'numberOfConnections' in item)
             .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .map(item => getQuickPickItemForActiveKernel(item, this.pathUtils));
     }
@@ -87,7 +90,9 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     constructor(private readonly kernelService: KernelService, private readonly pathUtils: IPathUtils, private readonly sessionManager?: IJupyterSessionManager) {}
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
-        return items.filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase()).map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        return items
+        .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+            .map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
     }
 }
 
