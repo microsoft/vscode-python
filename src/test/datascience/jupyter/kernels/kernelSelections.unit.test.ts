@@ -87,7 +87,7 @@ suite('Data Science - KernelSelections', () => {
         const sessions = activeKernels.map(item => {
             return {
                 id: 'sessionId',
-                name: 'someSessio',
+                name: 'someSession',
                 // tslint:disable-next-line: no-any
                 kernel: item as any,
                 type: '',
