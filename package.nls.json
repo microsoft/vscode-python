@@ -397,5 +397,6 @@
     "DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Registering a new kernel using the current interpreter.",
     "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": "Couldn't find kernel '{0}' that the notebook was created with.",
     "DataScience.selectKernel": "Select a Kernel",
-    "products.installingModule": "Installing {0}"
+    "products.installingModule": "Installing {0}",
+    "DataScience.switchingKernelProgress": "Switching Kenel to '{0}'"
 }
