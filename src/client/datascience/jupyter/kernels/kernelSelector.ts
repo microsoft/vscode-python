@@ -88,7 +88,7 @@ export class KernelSelector {
      */
     public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
-        suggestions = suggestions.filter(item => item.selection.kernelModel?.id ? this.kernelIdsToHide.has(item.selection.kernelModel?.id) : true);
+        suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(suggestions, session, cancelToken, currentKernel);
     }
     /**
@@ -101,7 +101,7 @@ export class KernelSelector {
      */
     public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
-        suggestions = suggestions.filter(item => item.selection.kernelModel?.id ? this.kernelIdsToHide.has(item.selection.kernelModel?.id) : true);
+        suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(suggestions, session, cancelToken, currentKernel);
     }
     /**

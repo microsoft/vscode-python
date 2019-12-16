@@ -129,7 +129,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
-            assert.deepEqual(suggestions, quickPickItems.filter(item => ['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
+            assert.deepEqual(suggestions, quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
         });
         test('Should hide kernel from local sessions', async () => {
             const kernelModels: (IJupyterKernel & Partial<IJupyterKernelSpec>)[] = [
@@ -158,7 +158,7 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
-            assert.deepEqual(suggestions, quickPickItems.filter(item => ['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
+            assert.deepEqual(suggestions, quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
         });
     });
     suite('Select Local Kernel', () => {
