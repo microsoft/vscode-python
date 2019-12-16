@@ -1300,7 +1300,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (kernel && (kernel.kernelSpec || kernel.kernelModel) && this.notebook) {
-            const swtichKernel = async (newKernel: KernelSpecInterpreter) => {
+            const switchKernel = async (newKernel: KernelSpecInterpreter) => {
                 if (newKernel.interpreter) {
                     this.notebook!.setInterpreter(newKernel.interpreter);
                 }
@@ -1321,7 +1321,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 cancellable: false,
                 title: localize.DataScience.switchingKernelProgress().format(displayName)
             };
-            await this.applicationShell.withProgress(options, async (_, __) => swtichKernel(kernel!));
+            await this.applicationShell.withProgress(options, async (_, __) => switchKernel(kernel!));
         }
     }
 }
