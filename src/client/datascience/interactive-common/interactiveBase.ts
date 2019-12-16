@@ -1290,12 +1290,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         let kernel: KernelSpecInterpreter | undefined;
 
         if (settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            kernel = await this.dataScience.selectLocalJupyterKernel();
+            kernel = await this.dataScience.selectLocalJupyterKernel(this.notebook?.getKernelSpec());
         } else if (this.notebook) {
             const connInfo = this.notebook.server.getConnectionInfo();
-
+            const currentKernel = this.notebook.getKernelSpec();
             if (connInfo) {
-                kernel = await this.dataScience.selectRemoteJupyterKernel(connInfo);
+                kernel = await this.dataScience.selectRemoteJupyterKernel(connInfo, currentKernel);
             }
         }
 

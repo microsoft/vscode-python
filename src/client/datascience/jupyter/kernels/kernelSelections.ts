@@ -7,6 +7,7 @@ import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../../common/constants';
 import { IFileSystem } from '../../../common/platform/types';
+import { IPathUtils } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
 import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
@@ -22,9 +23,11 @@ import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types'
  * @param {IJupyterKernelSpec} kernelSpec
  * @returns {IKernelSpecQuickPickItem}
  */
-function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelSpecQuickPickItem {
+function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
     return {
         label: kernelSpec.display_name,
+        // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
+        detail: pathUtils.getDisplayName(kernelSpec.metadata?.interpreter?.path || kernelSpec.path),
         selection: { kernelModel: undefined, kernelSpec: kernelSpec, interpreter: undefined }
     };
 }
@@ -35,9 +38,12 @@ function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec): IKernelS
  * @param {(IJupyterKernel & Partial<IJupyterKernelSpec>)} kernel
  * @returns {IKernelSpecQuickPickItem}
  */
-function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyterKernelSpec>): IKernelSpecQuickPickItem {
+function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyterKernelSpec>, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
+    const path = kernel.metadata?.interpreter?.path || kernel.path;
     return {
         label: kernel.display_name || kernel.name || '',
+        // If we have a matching interpreter, then display that path in the dropdown else path of the kernelspec.
+        detail: path ? pathUtils.getDisplayName(path) : '',
         description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(kernel.lastActivityTime.toLocaleString(), kernel.numberOfConnections.toString()),
         selection: { kernelModel: kernel, kernelSpec: undefined, interpreter: undefined }
     };
@@ -51,7 +57,7 @@ function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyt
  * @implements {IKernelSelectionListProvider}
  */
 export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
-    constructor(private readonly sessionManager: IJupyterSessionManager) {}
+    constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(_cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const [activeKernels, kernelSpecs] = await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getKernelSpecs()]);
         const items = activeKernels.map(item => {
@@ -64,7 +70,7 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
         return items
             .filter(item => item.display_name || item.name)
             .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
-            .map(getQuickPickItemForActiveKernel);
+            .map(item => getQuickPickItemForActiveKernel(item, this.pathUtils));
     }
 }
 
@@ -76,13 +82,13 @@ export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelS
  * @implements {IKernelSelectionListProvider}
  */
 export class InstalledJupyterKernelSelectionListProvider implements IKernelSelectionListProvider {
-    constructor(private readonly kernelService: KernelService, private readonly sessionManager?: IJupyterSessionManager) {}
+    constructor(private readonly kernelService: KernelService, private readonly pathUtils: IPathUtils, private readonly sessionManager?: IJupyterSessionManager) {}
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
         return items
             .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
-            .map(getQuickPickItemForKernelSpec);
-    }
+            .map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        }
 }
 
 /**
@@ -100,8 +106,7 @@ export class InterpreterKernelSelectionListProvider implements IKernelSelectionL
         return items.map(item => {
             return {
                 ...item,
-                // We don't want details & descriptions.
-                detail: '',
+                // We don't want descriptions.
                 description: '',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
@@ -122,7 +127,8 @@ export class KernelSelectionProvider {
     constructor(
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
-        @inject(IFileSystem) private readonly fileSystem: IFileSystem) {}
+        @inject(IFileSystem) private readonly fileSystem: IFileSystem,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils) {}
     /**
      * Gets a selection of kernel specs from a remote session.
      *
@@ -132,7 +138,7 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForRemoteSession(sessionManager: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const liveItems = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager).getKernelSelections(cancelToken).then(items => {
+        const liveItems = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager, this.pathUtils).getKernelSelections(cancelToken).then(items => {
             // Sorty by name.
             items.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
             this.remoteSuggestionsCache = items;
@@ -153,7 +159,7 @@ export class KernelSelectionProvider {
      */
     public async getKernelSelectionsForLocalSession(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
         const getSelections = async () => {
-            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, sessionManager).getKernelSelections(cancelToken);
+            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, this.pathUtils, sessionManager).getKernelSelections(cancelToken);
             const interpretersPromise = new InterpreterKernelSelectionListProvider(this.interpreterSelector).getKernelSelections(cancelToken);
 
             // tslint:disable-next-line: prefer-const
@@ -168,8 +174,8 @@ export class KernelSelectionProvider {
                 }
                 return true;
             }).map(item => {
-                // We don't want details & descriptions.
-                return {...item, detail: '', description: ''};
+                // We don't want descriptions.
+                return {...item, description: ''};
             });
 
             const unifiedList = [...installedKernels!, ...interpreters];
