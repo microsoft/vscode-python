@@ -20,10 +20,10 @@ import { JupyterSessionManagerFactory } from '../../../../client/datascience/jup
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
+import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
 import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
-import { IKernelSpecQuickPickItem } from '../../../../client/datascience/jupyter/kernels/types';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelSelector', () => {
