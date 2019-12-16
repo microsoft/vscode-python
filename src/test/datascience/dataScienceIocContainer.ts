@@ -79,12 +79,20 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { PythonSettings } from '../../client/common/configSettings';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { CryptoUtils } from '../../client/common/crypto';
 import { DotNetCompatibilityService } from '../../client/common/dotnet/compatibilityService';
 import { IDotNetCompatibilityService } from '../../client/common/dotnet/types';
 import { ExperimentsManager } from '../../client/common/experiments';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import {
+    CTagsProductPathService,
+    DataScienceProductPathService,
+    FormatterProductPathService,
+    LinterProductPathService,
+    RefactoringLibraryProductPathService,
+    TestFrameworkProductPathService
+} from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
@@ -127,9 +135,11 @@ import {
     BANNER_NAME_LS_SURVEY,
     IAsyncDisposableRegistry,
     IConfigurationService,
+    ICryptoUtils,
     ICurrentProcess,
     IDataScienceSettings,
     IExperimentsManager,
+    IExtensionContext,
     IExtensions,
     IInstaller,
     ILogger,
@@ -424,6 +434,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
     //tslint:disable:max-func-body-length
     public registerDataScienceTypes() {
+        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
+
         this.registerFileSystemTypes();
         this.serviceManager.addSingleton<IJupyterExecution>(IJupyterExecution, JupyterExecutionFactory);
         this.serviceManager.addSingleton<IInteractiveWindowProvider>(IInteractiveWindowProvider, TestInteractiveWindowProvider);
@@ -459,6 +471,10 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
         this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
         this.serviceManager.addSingletonInstance<IOutputChannel>(IOutputChannel, mock(MockOutputChannel), JUPYTER_OUTPUT_CHANNEL);
+        this.serviceManager.addSingletonInstance<ICryptoUtils>(ICryptoUtils, mock(CryptoUtils));
+        const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
+        mockExtensionContext.setup(m => m.globalStoragePath).returns(() => testWorkspaceFolder);
+        this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
         this.serviceManager.addSingleton<ITerminalActivationCommandProvider>(
@@ -623,7 +639,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         }
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
-        const testWorkspaceFolder = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);
         when(workspaceService.rootPath).thenReturn('~');

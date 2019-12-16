@@ -116,6 +116,8 @@ export class MockJupyterManager implements IJupyterSessionManager {
         // Setup our default cells that happen for everything
         this.addCell(CodeSnippits.MatplotLibInitSvg);
         this.addCell(CodeSnippits.MatplotLibInitPng);
+        this.addCell(CodeSnippits.ConfigSvg);
+        this.addCell(CodeSnippits.ConfigPng);
         this.addCell(`import sys\r\nsys.path.append('undefined')\r\nsys.path`);
         this.addCell(`import ptvsd\r\nptvsd.enable_attach(('localhost', 0))`);
         this.addCell('matplotlib.style.use(\'dark_background\')');

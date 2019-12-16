@@ -2,9 +2,11 @@
 // Licensed under the MIT License.
 'use strict';
 import { expect } from 'chai';
+import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
+import * as typemoq from 'typemoq';
 import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
 
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
@@ -24,10 +26,12 @@ import { WebPanelProvider } from '../../../client/common/application/webPanels/w
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
+import { CryptoUtils } from '../../../client/common/crypto';
 import { LiveShareApi } from '../../../client/common/liveshare/liveshare';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
-import { IConfigurationService } from '../../../client/common/types';
+import { IConfigurationService, ICryptoUtils, IExtensionContext } from '../../../client/common/types';
+import { createDeferred } from '../../../client/common/utils/async';
+import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewerProvider } from '../../../client/datascience/data-viewing/dataViewerProvider';
 import { DataScience } from '../../../client/datascience/datascience';
@@ -41,7 +45,18 @@ import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExpo
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
-import { ICodeCssGenerator, IDataScienceErrorHandler, IDataViewerProvider, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditorProvider, INotebookExporter, INotebookImporter, IThemeFinder } from '../../../client/datascience/types';
+import {
+    ICodeCssGenerator,
+    IDataScienceErrorHandler,
+    IDataViewerProvider,
+    IJupyterDebugger,
+    IJupyterExecution,
+    IJupyterVariables,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookImporter,
+    IThemeFinder
+} from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { createEmptyCell } from '../../../datascience-ui/interactive-common/mainState';
@@ -55,7 +70,7 @@ import { MockStatusProvider } from '../mockStatusProvider';
 suite('Data Science - Native Editor', () => {
     let workspace: IWorkspaceService;
     let configService: IConfigurationService;
-    let fileSystem: IFileSystem;
+    let fileSystem: typemoq.IMock<IFileSystem>;
     let docManager: IDocumentManager;
     let dsErrorHandler: IDataScienceErrorHandler;
     let ds: DataScience;
@@ -77,7 +92,9 @@ suite('Data Science - Native Editor', () => {
     let importer: INotebookImporter;
     let storage: MockMemento;
     let localStorage: MockMemento;
-    let storageUpdateSpy: sinon.SinonSpy<[string, any], Thenable<void>>;
+    let context: typemoq.IMock<IExtensionContext>;
+    let crypto: ICryptoUtils;
+    let lastWriteFileValue: any;
     const baseFile = `{
  "cells": [
   {
@@ -176,11 +193,12 @@ suite('Data Science - Native Editor', () => {
 }`;
 
     setup(() => {
+        context = typemoq.Mock.ofType<IExtensionContext>();
+        crypto = mock(CryptoUtils);
         storage = new MockMemento();
         localStorage = new MockMemento();
-        storageUpdateSpy = sinon.spy(storage, 'update');
         configService = mock(ConfigurationService);
-        fileSystem = mock(FileSystem);
+        fileSystem = typemoq.Mock.ofType<IFileSystem>();
         docManager = mock(DocumentManager);
         dsErrorHandler = mock(DataScienceErrorHandler);
         ds = mock(DataScience);
@@ -202,6 +220,9 @@ suite('Data Science - Native Editor', () => {
         importer = mock(JupyterImporter);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
+
+        context.setup(c => c.globalStoragePath).returns(() => path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir'));
+
         when(settings.onDidChange).thenReturn(settingsChangedEvent.event);
         when(configService.getSettings()).thenReturn(instance(settings));
 
@@ -231,6 +252,14 @@ suite('Data Science - Native Editor', () => {
             return new WebPanelCreateMatcher();
         };
         when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
+        lastWriteFileValue = undefined;
+        fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((_a1, a2) => {
+            lastWriteFileValue = a2;
+            return Promise.resolve();
+        });
+        fileSystem.setup(f => f.readFile(typemoq.It.isAny())).returns((_a1) => {
+            return Promise.resolve(lastWriteFileValue);
+        });
     });
 
     teardown(() => {
@@ -251,7 +280,7 @@ suite('Data Science - Native Editor', () => {
             instance(themeFinder),
             statusProvider,
             instance(executionProvider),
-            instance(fileSystem),
+            fileSystem.object, // Use typemoq so can save values in returns
             instance(configService),
             instance(cmdManager),
             instance(exportProvider),
@@ -264,7 +293,9 @@ suite('Data Science - Native Editor', () => {
             instance(ds),
             instance(dsErrorHandler),
             storage,
-            localStorage
+            localStorage,
+            instance(crypto),
+            context.object
         );
     }
 
@@ -322,17 +353,18 @@ suite('Data Science - Native Editor', () => {
         const editor = createEditor();
         await editor.load(baseFile, file);
         expect(await editor.getContents()).to.be.equal(baseFile);
-        storageUpdateSpy.resetHistory();
+        const savedPromise = createDeferred<string | undefined>();
+        const disposable = editor.savedToStorage((c: string) => savedPromise.resolve(c));
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
 
         // Wait for contents to be stored in memento.
         // Editor will save uncommitted changes into storage, wait for it to be saved.
-        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
-        storageUpdateSpy.resetHistory();
+        await waitForCondition(async () => { await savedPromise.promise; return true; }, 500, 'Storage not updated');
+        disposable.dispose();
 
         // Confirm contents were saved.
-        expect(storage.get(`notebook-storage-${file.toString()}`)).not.to.be.undefined;
+        expect(await savedPromise.promise).not.to.be.undefined;
         expect(await editor.getContents()).not.to.be.equal(baseFile);
 
         return editor;
@@ -348,18 +380,11 @@ suite('Data Science - Native Editor', () => {
 
     test('Opening a notebook will restore uncommitted changes', async () => {
         const file = Uri.parse('file:///foo.ipynb');
-        when(fileSystem.stat(anything())).thenResolve({ mtime: 1 } as any);
-
-        // Initially nothing in memento
-        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
-
+        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
-        storageUpdateSpy.resetHistory();
         // Close the editor.
         await editor.dispose();
-        // Editor will save uncommitted changes into storage, wait for it to be saved.
-        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
 
         // Open a new one.
         const newEditor = createEditor();
@@ -375,21 +400,16 @@ suite('Data Science - Native Editor', () => {
 
     test('Opening a notebook will restore uncommitted changes (ignoring contents of file)', async () => {
         const file = Uri.parse('file:///foo.ipynb');
-        when(fileSystem.stat(anything())).thenResolve({ mtime: 1 } as any);
-
-        // Initially nothing in memento
-        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
 
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
 
-        storageUpdateSpy.resetHistory();
         // Close the editor.
         await editor.dispose();
-        // Editor will save uncommitted changes into storage, wait for it to be saved.
-        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
 
         // Open a new one with the same file.
         const newEditor = createEditor();
+
         // However, pass in some bosu content, to confirm it is NOT loaded from file.
         await newEditor.load('crap', file);
 
@@ -403,21 +423,12 @@ suite('Data Science - Native Editor', () => {
 
     test('Opening a notebook will NOT restore uncommitted changes if file has been modified since', async () => {
         const file = Uri.parse('file:///foo.ipynb');
-        when(fileSystem.stat(anything())).thenResolve({ mtime: 1 } as any);
-
-        // Initially nothing in memento
-        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
-
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
-
-        storageUpdateSpy.resetHistory();
         // Close the editor.
         await editor.dispose();
-        // Editor will save uncommitted changes into storage, wait for it to be saved.
-        await waitForCondition(() => Promise.resolve(storageUpdateSpy.calledOnce), 500, 'Storage not updated');
 
-        // Mimic changes to file (by returning a new modified time).
-        when(fileSystem.stat(anything())).thenResolve({ mtime: Date.now() } as any);
+        // Make file appear modified.
+        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: Date.now() } as any));
 
         // Open a new one.
         const newEditor = createEditor();
@@ -447,6 +458,25 @@ suite('Data Science - Native Editor', () => {
         expect(editor.cells).to.be.lengthOf(3);
     });
 
+    test('Opening file with global storage but no global file will still open with old contents', async () => {
+        // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
+        const file = Uri.parse('file:///foo.ipynb');
+        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
+
+        // Initially nothing in memento
+        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+        expect(localStorage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+
+        // Put the regular file into the global storage
+        storage.update(`notebook-storage-${file.toString()}`, { contents: baseFile, lastModifiedTimeMs: Date.now() });
+        const editor = createEditor();
+        await editor.load('', file);
+
+        // It should load with that value
+        expect(await editor.getContents()).to.be.equal(baseFile);
+        expect(editor.cells).to.be.lengthOf(3);
+    });
+
     test('Export to Python script file from notebook.', async () => {
         // Temp file location needed for export
         const tempFile = {
@@ -455,7 +485,7 @@ suite('Data Science - Native Editor', () => {
             },
             filePath: '/foo/bar.ipynb'
         };
-        when(fileSystem.createTemporaryFile('.ipynb')).thenResolve(tempFile);
+        fileSystem.setup(f => f.createTemporaryFile('.ipynb')).returns(() => Promise.resolve(tempFile));
 
         // Set up our importer to return file contents, check that we have the correct temp file location and
         // original file location

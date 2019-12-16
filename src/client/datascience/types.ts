@@ -292,11 +292,12 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
-    closed: Event<INotebookEditor>;
-    executed: Event<INotebookEditor>;
-    modified: Event<INotebookEditor>;
-    saved: Event<INotebookEditor>;
-    metadataUpdated: Event<INotebookEditor>;
+    readonly closed: Event<INotebookEditor>;
+    readonly executed: Event<INotebookEditor>;
+    readonly modified: Event<INotebookEditor>;
+    readonly saved: Event<INotebookEditor>;
+    readonly metadataUpdated: Event<INotebookEditor>;
+    readonly savedToStorage: Event<string>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
