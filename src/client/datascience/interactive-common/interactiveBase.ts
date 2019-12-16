@@ -1319,7 +1319,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const options: ProgressOptions = {
                 location: ProgressLocation.Notification,
                 cancellable: false,
-                title: `Switching Kernel to ${displayName}`
+                title: localize.DataScience.switchingKernelProgress().format(displayName)
             };
             await this.applicationShell.withProgress(options, async (_, __) => swtichKernel(kernel!));
         }
