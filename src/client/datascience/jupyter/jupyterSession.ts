@@ -17,6 +17,7 @@ import { noop } from '../../common/utils/misc';
 import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
+import { KernelSelector } from './kernels/kernelSelector';
 
 export class JupyterSession implements IJupyterSession {
     private session: Session.ISession | undefined;
@@ -31,7 +32,8 @@ export class JupyterSession implements IJupyterSession {
         private serverSettings: ServerConnection.ISettings,
         private kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined,
         private sessionManager: SessionManager,
-        private contentsManager: ContentsManager
+        private contentsManager: ContentsManager,
+        private readonly kernelSelector: KernelSelector
     ) {
         this.statusHandler = this.onStatusChanged.bind(this);
     }
@@ -101,6 +103,7 @@ export class JupyterSession implements IJupyterSession {
             if (!this.session) {
                 throw new Error(localize.DataScience.sessionDisposed());
             }
+            this.kernelSelector.removeKernelFromIgnoreList(this.session.kernel);
             traceInfo(`Got new session ${this.session.kernel.id}`);
 
             // Rewire our status changed event.
@@ -261,6 +264,7 @@ export class JupyterSession implements IJupyterSession {
         while (tryCount < 3) {
             try {
                 result = await this.createSession(serverSettings, contentsManager, cancelToken);
+                this.kernelSelector.addKernelToIgnoreList(result.kernel);
                 await this.waitForIdleOnSession(result, 30000);
                 return result;
             } catch (exc) {

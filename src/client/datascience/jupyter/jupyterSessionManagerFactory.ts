@@ -6,13 +6,15 @@ import { inject, injectable } from 'inversify';
 import { IConfigurationService } from '../../common/types';
 import { IConnection, IJupyterPasswordConnect, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../types';
 import { JupyterSessionManager } from './jupyterSessionManager';
+import { KernelSelector } from './kernels/kernelSelector';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
 
     constructor(
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
-        @inject(IConfigurationService) private config: IConfigurationService
+        @inject(IConfigurationService) private config: IConfigurationService,
+        @inject(KernelSelector) private kernelSelector: KernelSelector
     ) {
     }
 
@@ -22,7 +24,7 @@ export class JupyterSessionManagerFactory implements IJupyterSessionManagerFacto
      * @param failOnPassword - whether or not to fail the creation if a password is required.
      */
     public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
-        const result = new JupyterSessionManager(this.jupyterPasswordConnect, this.config, failOnPassword);
+        const result = new JupyterSessionManager(this.jupyterPasswordConnect, this.config, failOnPassword, this.kernelSelector);
         await result.initialize(connInfo);
         return result;
     }

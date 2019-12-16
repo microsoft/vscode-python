@@ -4,6 +4,7 @@
 'use strict';
 
 import { nbformat } from '@jupyterlab/coreutils';
+import { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode-jsonrpc';
 import { IApplicationShell } from '../../../common/application/types';
@@ -41,6 +42,14 @@ export type KernelSpecInterpreter = {
 
 @injectable()
 export class KernelSelector {
+    /**
+     * List of ids of kernels that should be hiddenn from the kernel picker.
+     *
+     * @private
+     * @type {new Set<string>}
+     * @memberof KernelSelector
+     */
+    private readonly kernelIdsToHide = new Set<string>();
     constructor(
         @inject(KernelSelectionProvider) private readonly selectionProvider: KernelSelectionProvider,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
@@ -48,6 +57,28 @@ export class KernelSelector {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInstaller) private readonly installer: IInstaller
     ) {}
+
+    /**
+     * Ensure kernels such as those associated with the restart session are not displayed in the kernel picker.
+     *
+     * @param {Kernel.IKernelConnection} kernel
+     * @memberof KernelSelector
+     */
+    public addKernelToIgnoreList(kernel: Kernel.IKernelConnection): void {
+        this.kernelIdsToHide.add(kernel.id);
+        this.kernelIdsToHide.add(kernel.clientId);
+    }
+    /**
+     * Opposite of the add counterpart.
+     *
+     * @param {Kernel.IKernelConnection} kernel
+     * @memberof KernelSelector
+     */
+    public removeKernelFromIgnoreList(kernel: Kernel.IKernelConnection): void {
+        this.kernelIdsToHide.delete(kernel.id);
+        this.kernelIdsToHide.delete(kernel.clientId);
+    }
+
     /**
      * Selects a kernel from a remote session.
      *
@@ -57,7 +88,8 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
-        const suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
+        let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
+        suggestions = suggestions.filter(item => item.selection.kernelModel?.id ? this.kernelIdsToHide.has(item.selection.kernelModel?.id) : true);
         return this.selectKernel(suggestions, session, cancelToken);
     }
     /**
@@ -69,7 +101,8 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<KernelSpecInterpreter> {
-        const suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
+        let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
+        suggestions = suggestions.filter(item => item.selection.kernelModel?.id ? this.kernelIdsToHide.has(item.selection.kernelModel?.id) : true);
         return this.selectKernel(suggestions, session, cancelToken);
     }
     /**
