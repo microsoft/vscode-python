@@ -15,7 +15,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
-import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../types';
+import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
 import { IKernelSpecQuickPickItem } from './types';
@@ -54,8 +54,7 @@ export class KernelSelector {
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IInstaller) private readonly installer: IInstaller,
-        @inject(IJupyterSessionManagerFactory) private readonly jupyterSessionManagerFactory: IJupyterSessionManagerFactory
+        @inject(IInstaller) private readonly installer: IInstaller
     ) {}
 
     /**
@@ -166,11 +165,10 @@ export class KernelSelector {
      */
     // tslint:disable-next-line: cyclomatic-complexity
     public async getKernelForRemoteConnection(
-        connInfo: IConnection,
+        sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
-        const sessionManager = await this.jupyterSessionManagerFactory.create(connInfo);
         const [interpreter, specs] = await Promise.all([this.interpreterService.getActiveInterpreter(undefined), this.kernelService.getKernelSpecs(sessionManager, cancelToken)]);
         let bestMatch: IJupyterKernelSpec | undefined;
         let bestScore = 0;
