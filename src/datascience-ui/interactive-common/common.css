@@ -458,7 +458,7 @@ body, html {
 }
 
 .kernel-status-section-hoverable:hover {
-    background-color: var(--override-widget-background, var(--vscode-notifications-background));
+    background-color: var(--override-badge-background, var(--vscode-badge-background));
     cursor:pointer;
 }
 
