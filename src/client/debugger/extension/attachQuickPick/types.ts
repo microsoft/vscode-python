@@ -11,14 +11,6 @@ export interface IAttachItem extends QuickPickItem {
     id: string;
 }
 
-export interface IAttachProcess {
-    name: string;
-    pid: string;
-    commandLine: string;
-
-    toAttachItem(): IAttachItem;
-}
-
 export interface IAttachProcessProvider {
     registerCommands(): void;
     getAttachItems(): Promise<IAttachItem[]>;

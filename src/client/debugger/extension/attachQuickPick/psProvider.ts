@@ -12,9 +12,8 @@ import { IDisposableRegistry } from '../../../common/types';
 import { AttachProcess as AttachProcessLocalization } from '../../../common/utils/localize';
 import { BaseAttachProcessProvider } from './baseProvider';
 import { AttachPicker } from './picker';
-import { AttachProcess } from './process';
 import { PsProcessParser } from './psProcessParser';
-import { ProcessListCommand } from './types';
+import { IAttachItem, ProcessListCommand } from './types';
 
 @injectable()
 export class PsAttachProcessProvider extends BaseAttachProcessProvider {
@@ -58,7 +57,7 @@ export class PsAttachProcessProvider extends BaseAttachProcessProvider {
     // characters. 50 was chosen because that's the maximum length of a "label" in the
     // QuickPick UI in VS Code.
 
-    protected async getInternalProcessEntries(): Promise<AttachProcess[]> {
+    protected async getInternalProcessEntries(): Promise<IAttachItem[]> {
         let processCmd: ProcessListCommand;
         if (this.platformService.isMac) {
             processCmd = PsProcessParser.psDarwinCommand;

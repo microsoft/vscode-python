@@ -4,8 +4,7 @@
 'use strict';
 
 import * as os from 'os';
-import { AttachProcess } from './process';
-import { IAttachProcess, ProcessListCommand } from './types';
+import { IAttachItem, ProcessListCommand } from './types';
 
 export namespace PsProcessParser {
     const secondColumnCharacters = 50;
@@ -25,13 +24,13 @@ export namespace PsProcessParser {
         args: ['axww', '-o', `pid=,comm=${commColumnTitle},args=`, '-c']
     };
 
-    export function parseProcessesFromPs(processes: string): IAttachProcess[] {
+    export function parseProcessesFromPs(processes: string): IAttachItem[] {
         const lines: string[] = processes.split(os.EOL);
         return parseProcessesFromPsArray(lines);
     }
 
-    function parseProcessesFromPsArray(processArray: string[]): IAttachProcess[] {
-        const processEntries: IAttachProcess[] = [];
+    function parseProcessesFromPsArray(processArray: string[]): IAttachItem[] {
+        const processEntries: IAttachItem[] = [];
 
         // lines[0] is the header of the table
         for (let i = 1; i < processArray.length; i += 1) {
@@ -49,7 +48,7 @@ export namespace PsProcessParser {
         return processEntries;
     }
 
-    function parseLineFromPs(line: string): IAttachProcess | undefined {
+    function parseLineFromPs(line: string): IAttachItem | undefined {
         // Explanation of the regex:
         //   - any leading whitespace
         //   - PID
@@ -66,7 +65,12 @@ export namespace PsProcessParser {
             const executable = matches[2].trim();
             const cmdline = matches[3].trim();
 
-            return new AttachProcess(executable, pid, cmdline);
+            return {
+                label: executable,
+                description: pid,
+                detail: cmdline,
+                id: pid
+            };
         }
     }
 }
