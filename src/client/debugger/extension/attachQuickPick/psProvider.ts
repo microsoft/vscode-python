@@ -20,9 +20,9 @@ export class PsAttachProcessProvider extends BaseAttachProcessProvider {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) {
         super();
     }
@@ -57,7 +57,7 @@ export class PsAttachProcessProvider extends BaseAttachProcessProvider {
     // characters. 50 was chosen because that's the maximum length of a "label" in the
     // QuickPick UI in VS Code.
 
-    protected async getInternalProcessEntries(): Promise<IAttachItem[]> {
+    public async _getInternalProcessEntries(): Promise<IAttachItem[]> {
         let processCmd: ProcessListCommand;
         if (this.platformService.isMac) {
             processCmd = PsProcessParser.psDarwinCommand;

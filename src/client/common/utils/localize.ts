@@ -37,7 +37,7 @@ export namespace Common {
 }
 
 export namespace AttachProcess {
-    export const unsupportedOS = localize('AttachProcess.unsupportedOS', 'Operating system "{0}" not supported.');
+    export const unsupportedOS = localize('AttachProcess.unsupportedOS', 'Operating system \'{0}\' not supported.');
     export const attachTitle = localize('AttachProcess.attachTitle', 'Attach to process');
     export const selectProcessPlaceholder = localize('AttachProcess.selectProcessPlaceholder', 'Select the process to attach to');
     export const noProcessSelected = localize('AttachProcess.noProcessSelected', 'No process selected');
