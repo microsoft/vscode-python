@@ -74,6 +74,7 @@ suite('Data Science - KernelSelections', () => {
     });
 
     test('Should return an empty list for remote kernels if there are none', async () => {
+        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
@@ -83,6 +84,7 @@ suite('Data Science - KernelSelections', () => {
     test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
 
+        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve(activeKernels);
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
 
