@@ -471,11 +471,14 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
             if (kernelSpec && this.notebookJson.metadata && !this.notebookJson.metadata.kernelspec) {
                 // Add a new spec in this case
-                this.notebookJson.metadata.kernelspec = { name: kernelSpec.name, display_name: kernelSpec.display_name };
+                this.notebookJson.metadata.kernelspec = {
+                    name: kernelSpec.name || kernelSpec.display_name || '',
+                    display_name: kernelSpec.display_name || kernelSpec.name || ''
+                };
             } else if (kernelSpec && this.notebookJson.metadata && this.notebookJson.metadata.kernelspec) {
                 // Spec exists, just update name and display_name
-                this.notebookJson.metadata.kernelspec.name = kernelSpec.name;
-                this.notebookJson.metadata.kernelspec.display_name = kernelSpec.display_name;
+                this.notebookJson.metadata.kernelspec.name = kernelSpec.name || kernelSpec.display_name || '';
+                this.notebookJson.metadata.kernelspec.display_name = kernelSpec.display_name || kernelSpec.name || '';
             }
         }
     }

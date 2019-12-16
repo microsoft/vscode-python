@@ -15,7 +15,7 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import { ICell, IJupyterKernel, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
@@ -193,11 +193,11 @@ export class GuestJupyterNotebook
         noop();
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | undefined {
+    public getKernelSpec(): IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec): Promise<void> {
+    public setKernelSpec(_spec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
         return Promise.resolve();
     }
 

@@ -42,6 +42,7 @@ import { defaultDataScienceSettings } from './testHelpers';
 suite('Data Science Tests', () => {
     const workspaceService = mock(WorkspaceService);
     const kernelSelector = mock(KernelSelector);
+    let quickPick: MockQuickPick | undefined;
 
     test('formatting stream text', async () => {
         assert.equal(formatStreamText('\rExecute\rExecute 1'), 'Execute 1');
@@ -299,9 +300,9 @@ class Pizza(object):
         const commandManager = new MockCommandManager();
         const storage = new MockMemento();
         const context: typemoq.IMock<IExtensionContext> = typemoq.Mock.ofType<IExtensionContext>();
-        const quickPick = new MockQuickPick(quickPickSelection);
+        quickPick = new MockQuickPick(quickPickSelection);
         const input = new MockInputBox(inputSelection);
-        applicationShell.setup(a => a.createQuickPick()).returns(() => quickPick);
+        applicationShell.setup(a => a.createQuickPick()).returns(() => quickPick!);
         applicationShell.setup(a => a.createInputBox()).returns(() => input);
         const multiStepFactory = new MultiStepInputFactory(applicationShell.object);
         when(configService.updateSetting('dataScience.jupyterServerURI', anything(), anything(), anything())).thenCall((_a1, a2, _a3, _a4) => {
@@ -333,6 +334,13 @@ class Pizza(object):
         const ds = createDataScienceObject('$(zap) Default', '', (v) => value = v);
         await ds.selectJupyterURI();
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
+
+        // Try a second time.
+        await ds.selectJupyterURI();
+        assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
+
+        // Verify active items
+        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
     });
 
     test('Remote server uri', async () => {

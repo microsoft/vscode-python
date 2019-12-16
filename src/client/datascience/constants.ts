@@ -325,6 +325,8 @@ export namespace CodeSnippits {
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
+    export const ConfigSvg = `%config InlineBackend.figure_formats = 'svg', 'png'`;
+    export const ConfigPng = `%config InlineBackend.figure_formats = 'png'`;
 }
 
 export enum JupyterCommands {

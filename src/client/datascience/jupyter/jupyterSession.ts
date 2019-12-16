@@ -14,7 +14,7 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
+import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
 
@@ -29,7 +29,7 @@ export class JupyterSession implements IJupyterSession {
     constructor(
         private connInfo: IConnection,
         private serverSettings: ServerConnection.ISettings,
-        private kernelSpec: IJupyterKernelSpec | undefined,
+        private kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined,
         private sessionManager: SessionManager,
         private contentsManager: ContentsManager
     ) {
@@ -167,7 +167,13 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    public async changeKernel(kernel: IJupyterKernelSpec): Promise<void> {
+    public async changeKernel(kernel: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
+        if (kernel.id && this.session){
+            this.kernelSpec = kernel;
+            // tslint:disable-next-line: no-any
+            await this.session.changeKernel(kernel as any);
+            return;
+        }
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
         if (this.session?.kernel) {
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();

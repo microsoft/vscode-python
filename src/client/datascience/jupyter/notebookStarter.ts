@@ -89,8 +89,7 @@ export class NotebookStarter implements Disposable {
             // Watch for premature exits
             if (launchResult.proc) {
                 launchResult.proc.on('exit', (c: number | null) => (exitCode = c));
-                launchResult.proc.stdout.on('data', data => this.jupyterOutputChannel.append(typeof data === 'string' ? data : data.toString('utf8')));
-                launchResult.proc.stderr.on('data', data => this.jupyterOutputChannel.append(typeof data === 'string' ? data : data.toString('utf8')));
+                launchResult.out.subscribe(out => this.jupyterOutputChannel.append(out.out));
             }
 
             // Make sure this process gets cleaned up. We might be canceled before the connection finishes.

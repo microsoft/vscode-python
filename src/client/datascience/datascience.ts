@@ -381,10 +381,10 @@ export class DataScience implements IDataScience {
         items.push({ label: this.localLabel, detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
         items.push({ label: this.newLabel, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
 
-        // Then our already picked list. Filter out those that aren't actually running.
+        // Then our already picked list. Filter out 'local' from this list as it's the default.
         const alreadyPicked = this.getSavedUriList();
         if (alreadyPicked && alreadyPicked.length) {
-            const possiblyRunning = await Promise.all(alreadyPicked.map(p => this.getRunningServerDetails(p)));
+            const possiblyRunning = await Promise.all(alreadyPicked.filter(p => p !== this.localLabel).map(p => this.getRunningServerDetails(p)));
             const alreadyRunning = possiblyRunning.filter(p => p);
             if (alreadyRunning && alreadyRunning.length) {
                 // First stick in a separator (this doesn't work. Although it looks like it should based on VS code's usage of it)

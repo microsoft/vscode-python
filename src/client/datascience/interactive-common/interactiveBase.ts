@@ -1070,7 +1070,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     const kernelSpec = this.notebook.getKernelSpec();
 
                     if (kernelSpec) {
-                        const name = kernelSpec.display_name;
+                        const name = kernelSpec.display_name || kernelSpec.name;
 
                         await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                             jupyterServerStatus: status,
@@ -1299,13 +1299,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             }
         }
 
-        if (kernel && kernel.kernelSpec && this.notebook) {
+        if (kernel && (kernel.kernelSpec || kernel.kernelModel) && this.notebook) {
             if (kernel.interpreter) {
                 this.notebook.setInterpreter(kernel.interpreter);
             }
 
             // Change the kernel. A status update should fire that changes our display
-            await this.notebook.setKernelSpec(kernel.kernelSpec);
+            await this.notebook.setKernelSpec(kernel.kernelSpec || kernel.kernelModel!);
 
             // Add in a new sys info
             await this.addSysInfo(SysInfoReason.New);

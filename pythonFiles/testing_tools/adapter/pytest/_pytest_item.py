@@ -274,14 +274,16 @@ def _get_location(item, testroot, relfile, #*,
                     # function to be in relfile.  So here we ignore any
                     # other file and just say "somewhere in relfile".
                     lineno = None
-            if lineno is None:
-                lineno = -1  # i.e. "unknown"
         elif _matches_relfile(srcfile, testroot, relfile):
             srcfile = relfile
         # Otherwise we just return the info from item.location as-is.
 
         if not srcfile.startswith('.' + _pathsep):
             srcfile = '.' + _pathsep + srcfile
+
+    if lineno is None:
+        lineno = -1  # i.e. "unknown"
+
     # from pytest, line numbers are 0-based
     location = '{}:{}'.format(srcfile, int(lineno) + 1)
     return location, fullname
