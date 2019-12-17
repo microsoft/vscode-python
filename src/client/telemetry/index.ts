@@ -1095,6 +1095,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     /**
+     * Telemetry event sent when user specified None to the language server and jediEnabled is false.
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
+    /**
      * Telemetry sent from Language Server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;

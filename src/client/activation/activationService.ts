@@ -32,7 +32,7 @@ import {
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerCache,
-    LanguageServerActivator
+    LanguageServerType
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
@@ -97,7 +97,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
 
         // Save our active server.
-        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerActivator.Jedi };
+        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerType.Jedi };
 
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
@@ -156,24 +156,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
     }
 
-    /**
-     * Checks if user is using Jedi as intellisense
-     * @returns `true` if user is using jedi, `false` if user is using language server
-     */
-    public useJedi(): boolean {
-        if (this.isJediUsingDefaultConfiguration(this.resource)) {
-            if (this.abExperiments.inExperiment(LSEnabled)) {
-                return false;
-            }
-            // Send telemetry if user is in control group
-            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
-        }
-        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const enabled = configurationService.getSettings(this.resource).jediEnabled;
-        this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
-        return enabled;
-    }
-
     protected async onWorkspaceFoldersChanged() {
         //If an activated workspace folder was removed, dispose its activator
         const workspaceKeys = await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri)));
@@ -187,39 +169,70 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
     }
 
+    /**
+     * Checks if user is using Jedi as intellisense
+     * @returns `true` if user is using jedi, `false` if user is using language server
+     */
+    private useJedi(): boolean {
+        if (this.isJediUsingDefaultConfiguration(this.resource)) {
+            if (this.abExperiments.inExperiment(LSEnabled)) {
+                return false;
+            }
+            // Send telemetry if user is in control group
+            this.abExperiments.sendTelemetryIfInExperiment(LSControl);
+        }
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        let enabled = configurationService.getSettings(this.resource).jediEnabled;
+        const languageServerType = configurationService.getSettings(this.resource).languageServerType;
+        enabled = enabled || (languageServerType === LanguageServerType.Jedi);
+        this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
+        return enabled;
+    }
+
     private async onDidChangeInterpreter() {
         // Reactivate the resource. It should destroy the old one if it's different.
         return this.activate(this.resource);
     }
 
     private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
+        let serverType = LanguageServerType.Jedi;
         let jedi = this.useJedi();
         if (!jedi) {
-            const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
-            this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
-                jedi = true;
+            // Check if user deactivate LS via 'None' since they want to use some other extension for the editor suport.
+            const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const languageServerType = configurationService.getSettings(this.resource).languageServerType;
+            if (languageServerType === LanguageServerType.None) {
+                serverType = LanguageServerType.None;
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
+            } else {
+                // Microsoft Language Server
+                serverType = LanguageServerType.Microsoft;
+                const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
+                this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+                if (diagnostic.length) {
+                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
+                    jedi = true;
+                    serverType = LanguageServerType.Jedi;
+                }
             }
         }
 
-        await this.logStartup(jedi);
-        let serverName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
-        let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
+        await this.logStartup(serverType);
+        let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
             await server.start(resource, interpreter);
         } catch (ex) {
             if (jedi) {
                 throw ex;
             }
-            await this.logStartup(jedi);
-            serverName = LanguageServerActivator.Jedi;
-            server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
+            await this.logStartup(serverType);
+            serverType = LanguageServerType.Jedi;
+            server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
             await server.start(resource, interpreter);
         }
 
         // Wrap the returned server in something that ref counts it.
-        return new RefCountedLanguageServer(server, serverName, () => {
+        return new RefCountedLanguageServer(server, serverType, () => {
             // When we finally remove the last ref count, remove from the cache
             this.cache.delete(key);
 
@@ -228,10 +241,21 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         });
     }
 
-    private async logStartup(isJedi: boolean): Promise<void> {
-        const outputLine = isJedi
-            ? 'Starting Jedi Python language engine.'
-            : 'Starting Microsoft Python language server.';
+    private async logStartup(serverType: LanguageServerType): Promise<void> {
+        let outputLine;
+        switch (serverType) {
+            case LanguageServerType.Jedi:
+                outputLine = 'Starting Jedi Python language engine.';
+                break;
+            case LanguageServerType.Microsoft:
+                outputLine = 'Starting Microsoft Python language server.';
+                break;
+            case LanguageServerType.None:
+                outputLine = 'Starting Jedi Python language engine.';
+                break;
+            default:
+                throw new Error('Unknown langauge server type in activator.');
+        }
         this.output.appendLine(outputLine);
     }
 

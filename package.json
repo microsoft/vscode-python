@@ -1853,6 +1853,17 @@
                     "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
                     "scope": "resource"
                 },
+                "python.languageServer": {
+                    "type": "string",
+                    "enum": [
+                        "Jedi",
+                        "Microsoft",
+                        "None"
+                    ],
+                    "default": "Jedi",
+                    "description": "Defines type of the language server.",
+                    "scope": "resource"
+                },
                 "python.analysis.openFilesOnly": {
                     "type": "boolean",
                     "default": true,

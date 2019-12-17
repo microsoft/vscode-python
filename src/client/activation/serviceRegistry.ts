@@ -43,6 +43,7 @@ import { LanguageServerProxy } from './languageServer/languageServerProxy';
 import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
+import { NoLanguageServerExtensionActivator } from './none/activator';
 import {
     IDownloadChannelRule,
     IExtensionActivationManager,
@@ -62,7 +63,7 @@ import {
     ILanguageServerProxy,
     IPlatformData,
     LanguageClientFactory,
-    LanguageServerActivator
+    LanguageServerType
 } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
@@ -70,8 +71,9 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerActivator.Jedi);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerActivator.DotNet);
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi);
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerType.Microsoft);
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NoLanguageServerExtensionActivator, LanguageServerType.None);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);

@@ -5,6 +5,7 @@
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
 import { CancellationToken, ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import { LanguageServerActivator } from '../activation/types';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
 import { InterpreterUri } from './installer/types';
@@ -179,6 +180,7 @@ export interface IPythonSettings {
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
+    readonly languageServerType: LanguageServerActivator;
 }
 export interface ISortImportSettings {
     readonly path: string;

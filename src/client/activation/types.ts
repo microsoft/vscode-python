@@ -63,9 +63,10 @@ export interface IExtensionActivationService {
     activate(resource: Resource): Promise<void>;
 }
 
-export enum LanguageServerActivator {
+export enum LanguageServerType {
     Jedi = 'Jedi',
-    DotNet = 'DotNet'
+    Microsoft = 'Microsoft',
+    None = 'None'
 }
 
 // tslint:disable-next-line: interface-name
