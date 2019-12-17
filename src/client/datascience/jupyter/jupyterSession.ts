@@ -252,6 +252,7 @@ export class JupyterSession implements IJupyterSession {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
+            const kernelStatusChangedPromise = new Promise(resolve => session.statusChanged.connect((_, e) => e === 'idle' ? resolve() : undefined));
             const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => (e.newValue && e.newValue.status === 'idle' ? resolve() : undefined)));
             const checkStatusPromise = new Promise(async resolve => {
                 // This function seems to cause CI builds to timeout randomly on
@@ -263,7 +264,7 @@ export class JupyterSession implements IJupyterSession {
                 }
                 resolve();
             });
-            await Promise.race([statusChangedPromise, checkStatusPromise]);
+            await Promise.race([kernelStatusChangedPromise, statusChangedPromise, checkStatusPromise]);
             traceInfo(`Finished waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
             // If we didn't make it out in ten seconds, indicate an error
