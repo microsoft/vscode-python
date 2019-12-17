@@ -1066,16 +1066,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             const statusChangeHandler = async (status: ServerStatus) => {
                 if (this.notebook) {
-                    const settings = this.configuration.getSettings();
                     const kernelSpec = this.notebook.getKernelSpec();
 
                     if (kernelSpec) {
+                        const connectionInfo = this.notebook.server.getConnectionInfo();
+                        let localizedUri = '';
+
+                        // Determine the connection URI of the connected server to display
+                        if (connectionInfo) {
+                            connectionInfo.localLaunch ? localizedUri = localize.DataScience.localJupyterServer() : localizedUri = connectionInfo.baseUrl;
+                        }
+
                         const name = kernelSpec.display_name || kernelSpec.name;
 
                         await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                             jupyterServerStatus: status,
-                            localizedUri: settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch ?
-                                localize.DataScience.localJupyterServer() : settings.datascience.jupyterServerURI,
+                            localizedUri,
                             displayName: name
                         });
                     }
