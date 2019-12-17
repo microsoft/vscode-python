@@ -156,24 +156,11 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
     }
 
-    protected async onWorkspaceFoldersChanged() {
-        //If an activated workspace folder was removed, dispose its activator
-        const workspaceKeys = await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri)));
-        const activatedWkspcKeys = Array.from(this.cache.keys());
-        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
-        if (activatedWkspcFoldersRemoved.length > 0) {
-            for (const folder of activatedWkspcFoldersRemoved) {
-                const server = await this.cache.get(folder);
-                server?.dispose(); // This should remove it from the cache if this is the last instance.
-            }
-        }
-    }
-
     /**
      * Checks if user is using Jedi as intellisense
      * @returns `true` if user is using jedi, `false` if user is using language server
      */
-    private useJedi(): boolean {
+    public useJedi(): boolean {
         if (this.isJediUsingDefaultConfiguration(this.resource)) {
             if (this.abExperiments.inExperiment(LSEnabled)) {
                 return false;
@@ -189,6 +176,19 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         return enabled;
     }
 
+    protected async onWorkspaceFoldersChanged() {
+        //If an activated workspace folder was removed, dispose its activator
+        const workspaceKeys = await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.getKey(workspaceFolder.uri)));
+        const activatedWkspcKeys = Array.from(this.cache.keys());
+        const activatedWkspcFoldersRemoved = activatedWkspcKeys.filter(item => workspaceKeys.indexOf(item) < 0);
+        if (activatedWkspcFoldersRemoved.length > 0) {
+            for (const folder of activatedWkspcFoldersRemoved) {
+                const server = await this.cache.get(folder);
+                server?.dispose(); // This should remove it from the cache if this is the last instance.
+            }
+        }
+    }
+
     private async onDidChangeInterpreter() {
         // Reactivate the resource. It should destroy the old one if it's different.
         return this.activate(this.resource);
@@ -196,24 +196,26 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
         let serverType = LanguageServerType.Jedi;
-        let jedi = this.useJedi();
-        if (!jedi) {
+        if (!this.useJedi()) {
             // Check if user deactivate LS via 'None' since they want to use some other extension for the editor suport.
             const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            const languageServerType = configurationService.getSettings(this.resource).languageServerType;
-            if (languageServerType === LanguageServerType.None) {
-                serverType = LanguageServerType.None;
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
-            } else {
-                // Microsoft Language Server
-                serverType = LanguageServerType.Microsoft;
-                const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
-                this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-                if (diagnostic.length) {
-                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
-                    jedi = true;
+            serverType = configurationService.getSettings(this.resource).languageServerType;
+            switch (serverType) {
+                case LanguageServerType.None:
+                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
+                    break;
+                case LanguageServerType.Microsoft:
+                    serverType = LanguageServerType.Microsoft;
+                    const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
+                    this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+                    if (diagnostic.length) {
+                        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
+                        serverType = LanguageServerType.Jedi;
+                    }
+                    break;
+                default:
                     serverType = LanguageServerType.Jedi;
-                }
+                    break;
             }
         }
 
@@ -222,7 +224,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         try {
             await server.start(resource, interpreter);
         } catch (ex) {
-            if (jedi) {
+            if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
             await this.logStartup(serverType);
@@ -251,7 +253,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
                 outputLine = 'Starting Microsoft Python language server.';
                 break;
             case LanguageServerType.None:
-                outputLine = 'Starting Jedi Python language engine.';
+                outputLine = 'Editor support is inactive since language server is set to None.';
                 break;
             default:
                 throw new Error('Unknown langauge server type in activator.');

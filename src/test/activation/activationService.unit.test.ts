@@ -11,7 +11,7 @@ import {
     IExtensionActivationService,
     ILanguageServerActivator,
     ILanguageServerFolderService,
-    LanguageServerActivator
+    LanguageServerType
 } from '../../client/activation/types';
 import { LSNotSupportedDiagnosticServiceId } from '../../client/application/diagnostics/checks/lsNotSupported';
 import { IDiagnostic, IDiagnosticsService } from '../../client/application/diagnostics/types';
@@ -138,9 +138,9 @@ suite('Language Server Activation - ActivationService', () => {
                 activator
                     .setup(a => a.activate())
                     .verifiable(TypeMoq.Times.once());
-                let activatorName = LanguageServerActivator.Jedi;
+                let activatorName = LanguageServerType.Jedi;
                 if (lsSupported && !jediIsEnabled) {
-                    activatorName = LanguageServerActivator.DotNet;
+                    activatorName = LanguageServerType.Microsoft;
                 }
                 let diagnostics: IDiagnostic[];
                 if (!lsSupported && !jediIsEnabled) {
@@ -504,7 +504,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .setup(c =>
                             c.get(
                                 TypeMoq.It.isValue(ILanguageServerActivator),
-                                TypeMoq.It.isValue(LanguageServerActivator.DotNet)
+                                TypeMoq.It.isValue(LanguageServerType.Microsoft)
                             )
                         )
                         .returns(() => activatorDotNet.object)
@@ -517,7 +517,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .setup(c =>
                             c.get(
                                 TypeMoq.It.isValue(ILanguageServerActivator),
-                                TypeMoq.It.isValue(LanguageServerActivator.Jedi)
+                                TypeMoq.It.isValue(LanguageServerType.Jedi)
                             )
                         )
                         .returns(() => activatorJedi.object)
@@ -556,7 +556,7 @@ suite('Language Server Activation - ActivationService', () => {
                         .setup(l => l.handle(TypeMoq.It.isValue([])))
                         .returns(() => Promise.resolve());
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerActivator.DotNet)))
+                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerType.Microsoft)))
                         .returns(() => activator.object)
                         .verifiable(TypeMoq.Times.atLeastOnce());
                     workspaceService
@@ -629,7 +629,7 @@ suite('Language Server Activation - ActivationService', () => {
                     const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
                     const folder2 = { name: 'two', uri: Uri.parse('two'), index: 2 };
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerActivator.Jedi)))
+                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerType.Jedi)))
                         .returns(() => activator1.object)
                         .verifiable(TypeMoq.Times.once());
                     activator1
@@ -648,7 +648,7 @@ suite('Language Server Activation - ActivationService', () => {
 
                     const activator2 = TypeMoq.Mock.ofType<ILanguageServerActivator>();
                     serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerActivator.Jedi)))
+                        .setup(c => c.get(TypeMoq.It.isValue(ILanguageServerActivator), TypeMoq.It.isValue(LanguageServerType.Jedi)))
                         .returns(() => activator2.object)
                         .verifiable(TypeMoq.Times.once());
                     activator2

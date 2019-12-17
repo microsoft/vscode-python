@@ -24,11 +24,11 @@ import {
 import { Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
 import { PythonInterpreter } from '../interpreter/contracts';
-import { ILanguageServerActivator, LanguageServerActivator } from './types';
+import { ILanguageServerActivator, LanguageServerType } from './types';
 
 export class RefCountedLanguageServer implements ILanguageServerActivator {
     private refCount = 1;
-    constructor(private impl: ILanguageServerActivator, private _type: LanguageServerActivator, private disposeCallback: () => void) {
+    constructor(private impl: ILanguageServerActivator, private _type: LanguageServerType, private disposeCallback: () => void) {
     }
 
     public increment = () => {

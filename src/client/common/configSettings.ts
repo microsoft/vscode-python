@@ -3,6 +3,7 @@
 import * as child_process from 'child_process';
 import * as path from 'path';
 import { ConfigurationChangeEvent, ConfigurationTarget, DiagnosticSeverity, Disposable, Event, EventEmitter, Uri, WorkspaceConfiguration } from 'vscode';
+import { LanguageServerType } from '../activation/types';
 import '../common/extensions';
 import { IInterpreterAutoSeletionProxyService } from '../interpreter/autoSelection/types';
 import { sendTelemetryEvent } from '../telemetry';
@@ -60,6 +61,7 @@ export class PythonSettings implements IPythonSettings {
     public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
+    public languageServerType: LanguageServerType = LanguageServerType.Microsoft;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -167,6 +169,7 @@ export class PythonSettings implements IPythonSettings {
             }
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
         }
+        this.languageServerType = systemVariables.resolveAny(pythonSettings.get<LanguageServerType>('languageServer', LanguageServerType.Jedi))!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;

@@ -35,6 +35,7 @@ import { LanguageServerProxy } from '../../client/activation/languageServer/lang
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
+import { NoLanguageServerExtensionActivator } from '../../client/activation/none/activator';
 import { registerTypes } from '../../client/activation/serviceRegistry';
 import {
     IDownloadChannelRule,
@@ -54,7 +55,7 @@ import {
     ILanguageServerProxy,
     IPlatformData,
     LanguageClientFactory,
-    LanguageServerActivator
+    LanguageServerType
 } from '../../client/activation/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService } from '../../client/common/application/types';
@@ -86,8 +87,9 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService)).once();
         verify(serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension)).once();
         verify(serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager)).once();
-        verify(serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerActivator.Jedi)).once();
-        verify(serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerActivator.DotNet)).once();
+        verify(serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi)).once();
+        verify(serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerType.Microsoft)).once();
+        verify(serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NoLanguageServerExtensionActivator, LanguageServerType.None)).once();
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY)).once();
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS)).once();
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY)).once();

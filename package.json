@@ -1860,7 +1860,7 @@
                         "Microsoft",
                         "None"
                     ],
-                    "default": "Jedi",
+                    "default": "Microsoft",
                     "description": "Defines type of the language server.",
                     "scope": "resource"
                 },
