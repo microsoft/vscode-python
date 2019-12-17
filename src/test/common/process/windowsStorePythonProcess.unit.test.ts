@@ -25,7 +25,7 @@ suite('Windows store execution service', () => {
     let windowsStoreInterpreter: IWindowsStoreInterpreter;
     let interpreterService: IInterpreterService;
 
-    let execService: WindowsStorePythonProcess;
+    let executionService: WindowsStorePythonProcess;
 
     setup(() => {
         fileSystem = mock(FileSystem);
@@ -41,13 +41,13 @@ suite('Windows store execution service', () => {
         when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
         when(serviceContainer.get<IFileSystem>(IFileSystem)).thenReturn(instance(fileSystem));
 
-        execService = new WindowsStorePythonProcess(instance(serviceContainer), instance(processService), pythonPath, instance(windowsStoreInterpreter));
+        executionService = new WindowsStorePythonProcess(instance(serviceContainer), instance(processService), pythonPath, instance(windowsStoreInterpreter));
     });
 
     test('Should return pythonPath if it is the path to the windows store interpreter', async () => {
         when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(true);
 
-        const executablePath = await execService.getExecutablePath();
+        const executablePath = await executionService.getExecutablePath();
 
         assert.deepEqual(executablePath, pythonPath);
         verify(fileSystem.fileExists(anything())).never();
@@ -56,7 +56,7 @@ suite('Windows store execution service', () => {
     test('Should call super.getExecutablePath() if it is not the path to the windows store interpreter', async () => {
         when(windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)).thenReturn(false);
 
-        const executablePath = await execService.getExecutablePath();
+        const executablePath = await executionService.getExecutablePath();
 
         assert.deepEqual(executablePath, pythonPath);
         verify(fileSystem.fileExists(anything())).once();
