@@ -4,6 +4,7 @@
 import * as child_process from 'child_process';
 import { ReactWrapper } from 'enzyme';
 import { interfaces } from 'inversify';
+import * as os from 'os';
 import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, instance, mock, when } from 'ts-mockito';
@@ -471,9 +472,9 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.add<INotebookEditor>(INotebookEditor, NativeEditor);
         this.serviceManager.addSingleton<IDataScienceCommandListener>(IDataScienceCommandListener, NativeEditorCommandListener);
         this.serviceManager.addSingletonInstance<IOutputChannel>(IOutputChannel, mock(MockOutputChannel), JUPYTER_OUTPUT_CHANNEL);
-        this.serviceManager.addSingletonInstance<ICryptoUtils>(ICryptoUtils, mock(CryptoUtils));
+        this.serviceManager.addSingleton<ICryptoUtils>(ICryptoUtils, CryptoUtils);
         const mockExtensionContext = TypeMoq.Mock.ofType<IExtensionContext>();
-        mockExtensionContext.setup(m => m.globalStoragePath).returns(() => testWorkspaceFolder);
+        mockExtensionContext.setup(m => m.globalStoragePath).returns(() => os.tmpdir());
         this.serviceManager.addSingletonInstance<IExtensionContext>(IExtensionContext, mockExtensionContext.object);
 
         this.serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);

@@ -96,7 +96,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private modifiedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private savedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
     private metadataUpdatedEvent: EventEmitter<INotebookEditor> = new EventEmitter<INotebookEditor>();
-    private savedToStorageEmitter: EventEmitter<string> = new EventEmitter<string>();
     private loadedPromise: Deferred<void> = createDeferred<void>();
     private _file: Uri = Uri.file('');
     private _dirty: boolean = false;
@@ -164,10 +163,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active
         );
-    }
-
-    public get savedToStorage(): Event<string> {
-        return this.savedToStorageEmitter.event;
     }
 
     public get visible(): boolean {
@@ -670,12 +665,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async getStoredContentsFromFile(key: string): Promise<string | undefined> {
-        // Hash the key. We'll use this as the file name
-        const hashed = `${this.crypto.createHash(key, 'string')}.ipynb`;
+        const filePath = this.getHashedFileName(key);
 
         try {
             // Use this to read from the extension global location
-            const contents = await this.fileSystem.readFile(path.join(this.context.globalStoragePath, hashed));
+            const contents = await this.fileSystem.readFile(filePath);
             const data = JSON.parse(contents);
             // Check whether the file has been modified since the last time the contents were saved.
             if (data && data.lastModifiedTimeMs && !this.isUntitled && this.file.scheme === 'file') {
@@ -741,8 +735,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      */
     private async storeContents(contents?: string): Promise<void> {
         const key = this.getStorageKey();
-        const file = `${this.crypto.createHash(key, 'string')}.ipynb`;
-        const filePath = path.join(this.context.globalStoragePath, file);
+        const filePath = this.getHashedFileName(key);
 
         // Keep track of the time when this data was saved.
         // This way when we retrieve the data we can compare it against last modified date of the file.
@@ -755,12 +748,15 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async writeToStorage(filePath: string, contents?: string): Promise<void> {
         if (contents) {
             await this.fileSystem.createDirectory(path.dirname(filePath));
-            return this.fileSystem.writeFile(filePath, contents).then(() => this.savedToStorageEmitter.fire(contents));
+            return this.fileSystem.writeFile(filePath, contents);
         } else {
-            if (this.fileSystem.directoryExists(path.dirname(filePath))) {
-                return this.fileSystem.deleteFile(filePath).then(() => this.savedToStorageEmitter.fire(undefined));
-            }
+            return this.fileSystem.deleteFile(filePath);
         }
+    }
+
+    private getHashedFileName(key: string): string {
+        const file = `${this.crypto.createHash(key, 'string')}.ipynb`;
+        return path.join(this.context.globalStoragePath, file);
     }
 
     private async close(): Promise<void> {
