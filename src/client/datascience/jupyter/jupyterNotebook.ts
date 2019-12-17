@@ -627,15 +627,15 @@ export class JupyterNotebookBase implements INotebook {
             const cellMatcher = new CellMatcher(this.configService.getSettings().datascience);
             return this.session
                 ? this.session.requestExecute(
-                      {
-                          // Remove the cell marker if we have one.
-                          code: cellMatcher.stripFirstMarker(code),
-                          stop_on_error: false,
-                          allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
-                          store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
-                      },
-                      true
-                  )
+                    {
+                        // Remove the cell marker if we have one.
+                        code: cellMatcher.stripFirstMarker(code),
+                        stop_on_error: false,
+                        allow_stdin: true, // Allow when silent too in case runStartupCommands asks for a password
+                        store_history: !silent // Silent actually means don't output anything. Store_history is what affects execution_count
+                    },
+                    true
+                )
                 : undefined;
         } catch (exc) {
             // Any errors generating a request should just be logged. User can't do anything about it.
@@ -886,17 +886,24 @@ export class JupyterNotebookBase implements INotebook {
         // If a clear is pending, replace the output with the new one
         if (clearState.get(output.output_type)) {
             clearState.delete(output.output_type);
-            // Clear all with the same type up till we have a different one
-            for (let i = data.outputs.length - 1; i >= 0 && data.outputs[i]?.output_type === output.output_type; i -= 1) {
-                data.outputs.splice(i, 1);
+            // Find the one with the same type and replace all of them
+            const index = data.outputs.findIndex(o => o.output_type === output.output_type);
+            if (index >= 0) {
+                data.outputs = data.outputs.filter(o => o.output_type !== output.output_type);
+                data.outputs.splice(index, 0, output);
+            } else {
+                data.outputs = [...data.outputs, output];
             }
+        } else {
+            // Then append this data onto the end.
+            data.outputs = [...data.outputs, output];
         }
 
-        // Then append this data onto the end.
-        data.outputs = [...data.outputs, output];
         cell.data = data;
     }
 
+    // See this for docs on the messages:
+    // https://jupyter-client.readthedocs.io/en/latest/messaging.html#messaging-in-jupyter
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Check our length on text output
         if (msg.content.data && msg.content.data.hasOwnProperty('text/plain')) {
