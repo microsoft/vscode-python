@@ -99,6 +99,10 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public async restart(_timeout: number): Promise<void> {
+        if (this.session?.isRemoteSession){
+            await this.session.kernel.restart();
+            return;
+        }
         // Just kill the current session and switch to the other
         if (this.restartSessionPromise && this.session && this.sessionManager && this.contentsManager) {
             traceInfo(`Restarting ${this.session.kernel.id}`);
