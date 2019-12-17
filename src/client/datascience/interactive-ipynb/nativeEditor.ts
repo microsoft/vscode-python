@@ -666,7 +666,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
     private async getStoredContentsFromFile(key: string): Promise<string | undefined> {
         const filePath = this.getHashedFileName(key);
-
         try {
             // Use this to read from the extension global location
             const contents = await this.fileSystem.readFile(filePath);
@@ -723,6 +722,18 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    // This is what we could have done to transferFromGlobalStorage all of the old keys
+    // VS code recommended we use the hidden '_values' to iterate over all of the entries in
+    // the global storage map.
+    // private async transferFromGlobalStorage(): Promise<void> {
+    //     if ((this.globalStorage as any)._values) {
+    //         const map = (this.globalStorage as any)._values as Map<string, any>;
+    //         [...map.keys()].forEach(k => {
+    //             if (k.startsWith('notebook-'))
+    //         })
+    //     }
+    // }
+
     /**
      * Stores the uncommitted notebook changes into a temporary location.
      * Also keep track of the current time. This way we can check whether changes were
@@ -734,15 +745,20 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
      * @memberof NativeEditor
      */
     private async storeContents(contents?: string): Promise<void> {
-        const key = this.getStorageKey();
-        const filePath = this.getHashedFileName(key);
+        // Skip doing this if auto save is enabled.
+        const filesConfig = this.workspaceService.getConfiguration('files', this.file);
+        const autoSave = filesConfig.get('autoSave', 'off');
+        if (autoSave === 'off') {
+            const key = this.getStorageKey();
+            const filePath = this.getHashedFileName(key);
 
-        // Keep track of the time when this data was saved.
-        // This way when we retrieve the data we can compare it against last modified date of the file.
-        const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
+            // Keep track of the time when this data was saved.
+            // This way when we retrieve the data we can compare it against last modified date of the file.
+            const specialContents = contents ? JSON.stringify({ contents, lastModifiedTimeMs: Date.now() }) : undefined;
 
-        // Write but debounced (wait at least 250 ms)
-        return this.debouncedWriteToStorage(filePath, specialContents);
+            // Write but debounced (wait at least 250 ms)
+            return this.debouncedWriteToStorage(filePath, specialContents);
+        }
     }
 
     private async writeToStorage(filePath: string, contents?: string): Promise<void> {

@@ -1,13 +1,22 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { fail } from 'assert';
 import { expect } from 'chai';
 import * as path from 'path';
 import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
-import { ConfigurationChangeEvent, Disposable, EventEmitter, TextEditor, Uri } from 'vscode';
+import {
+    ConfigurationChangeEvent,
+    ConfigurationTarget,
+    Disposable,
+    EventEmitter,
+    TextEditor,
+    Uri,
+    WorkspaceConfiguration
+} from 'vscode';
 
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
@@ -65,6 +74,33 @@ import { MockMemento } from '../../mocks/mementos';
 import { MockStatusProvider } from '../mockStatusProvider';
 
 // tslint:disable: no-any chai-vague-errors no-unused-expression
+class MockWorkspaceConfiguration implements WorkspaceConfiguration {
+    private map: Map<string, any> = new Map<string, any>();
+
+    // tslint:disable: no-any
+    public get(key: string): any;
+    public get<T>(section: string): T | undefined;
+    public get<T>(section: string, defaultValue: T): T;
+    public get(section: any, defaultValue?: any): any;
+    public get(section: string, defaultValue?: any): any {
+        if (this.map.has(section)) {
+            return this.map.get(section);
+        }
+        return arguments.length > 1 ? defaultValue : (undefined as any);
+    }
+    public has(_section: string): boolean {
+        return false;
+    }
+    public inspect<T>(
+        _section: string
+    ): { key: string; defaultValue?: T | undefined; globalValue?: T | undefined; workspaceValue?: T | undefined; workspaceFolderValue?: T | undefined } | undefined {
+        return;
+    }
+    public update(section: string, value: any, _configurationTarget?: boolean | ConfigurationTarget | undefined): Promise<void> {
+        this.map.set(section, value);
+        return Promise.resolve();
+    }
+}
 
 // tslint:disable: max-func-body-length
 suite('Data Science - Native Editor', () => {
@@ -96,6 +132,8 @@ suite('Data Science - Native Editor', () => {
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
     let wroteToFileEvent: EventEmitter<string> = new EventEmitter<string>();
+    let filesConfig: MockWorkspaceConfiguration | undefined;
+    let testIndex = 0;
     const baseFile = `{
  "cells": [
   {
@@ -229,6 +267,8 @@ suite('Data Science - Native Editor', () => {
 
         const configChangeEvent = new EventEmitter<ConfigurationChangeEvent>();
         when(workspace.onDidChangeConfiguration).thenReturn(configChangeEvent.event);
+        filesConfig = new MockWorkspaceConfiguration();
+        when(workspace.getConfiguration('files', anything())).thenReturn(filesConfig);
 
         const interprerterChangeEvent = new EventEmitter<void>();
         when(interpreterService.onDidChangeInterpreter).thenReturn(interprerterChangeEvent.event);
@@ -238,6 +278,9 @@ suite('Data Science - Native Editor', () => {
 
         const sessionChangedEvent = new EventEmitter<void>();
         when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
+
+        testIndex += 1;
+        when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
 
         let listener: IWebPanelMessageListener;
         const webPanel = mock(WebPanel);
@@ -255,9 +298,11 @@ suite('Data Science - Native Editor', () => {
         when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
         lastWriteFileValue = undefined;
         wroteToFileEvent = new EventEmitter<string>();
-        fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((_a1, a2) => {
-            lastWriteFileValue = a2;
-            setTimeout(() => wroteToFileEvent.fire(a2));
+        fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((a1, a2) => {
+            if (a1.includes(`${testIndex}.ipynb`)) {
+                lastWriteFileValue = a2;
+                wroteToFileEvent.fire(a2);
+            }
             return Promise.resolve();
         });
         fileSystem.setup(f => f.readFile(typemoq.It.isAny())).returns((_a1) => {
@@ -268,6 +313,7 @@ suite('Data Science - Native Editor', () => {
     teardown(() => {
         storage.clear();
         sinon.reset();
+
     });
 
     function createEditor() {
@@ -372,8 +418,11 @@ suite('Data Science - Native Editor', () => {
 
         // Wait for contents to be stored in memento.
         // Editor will save uncommitted changes into storage, wait for it to be saved.
-        await waitForCondition(() => savedPromise.promise, 500, 'Storage not updated');
-        disposable.dispose();
+        try {
+            await waitForCondition(() => savedPromise.promise, 500, 'Storage not updated');
+        } finally {
+            disposable.dispose();
+        }
 
         // Confirm contents were saved.
         expect(await editor.getContents()).not.to.be.equal(baseFile);
@@ -381,15 +430,33 @@ suite('Data Science - Native Editor', () => {
         return editor;
     }
     test('Editing a notebook will save uncommitted changes into memento', async () => {
+        await filesConfig?.update('autoSave', 'off');
         const file = Uri.parse('file:///foo.ipynb');
 
         // Initially nothing in memento
         expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
 
-        await loadEditorAddCellAndWaitForMementoUpdate(file);
+        const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
+        await editor.dispose();
+    });
+
+    test('Editing a notebook will not save uncommitted changes into storage when autoSave is on', async () => {
+        await filesConfig?.update('autoSave', 'on');
+        const file = Uri.parse('file:///foo.ipynb');
+
+        // Initially nothing in memento
+        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+
+        try {
+            await loadEditorAddCellAndWaitForMementoUpdate(file);
+            fail('Should have timed out');
+        } catch (e) {
+            expect(e.toString()).to.include('not updated');
+        }
     });
 
     test('Opening a notebook will restore uncommitted changes', async () => {
+        await filesConfig?.update('autoSave', 'off');
         const file = Uri.parse('file:///foo.ipynb');
         fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
@@ -411,6 +478,7 @@ suite('Data Science - Native Editor', () => {
     });
 
     test('Opening a notebook will restore uncommitted changes (ignoring contents of file)', async () => {
+        await filesConfig?.update('autoSave', 'off');
         const file = Uri.parse('file:///foo.ipynb');
         fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
 
@@ -434,6 +502,7 @@ suite('Data Science - Native Editor', () => {
     });
 
     test('Opening a notebook will NOT restore uncommitted changes if file has been modified since', async () => {
+        await filesConfig?.update('autoSave', 'off');
         const file = Uri.parse('file:///foo.ipynb');
         const editor = await loadEditorAddCellAndWaitForMementoUpdate(file);
         // Close the editor.
@@ -453,6 +522,7 @@ suite('Data Science - Native Editor', () => {
     });
 
     test('Opening file with local storage but no global will still open with old contents', async () => {
+        await filesConfig?.update('autoSave', 'off');
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
         const file = Uri.parse('file:///foo.ipynb');
 
@@ -471,6 +541,7 @@ suite('Data Science - Native Editor', () => {
     });
 
     test('Opening file with global storage but no global file will still open with old contents', async () => {
+        await filesConfig?.update('autoSave', 'off');
         // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
         const file = Uri.parse('file:///foo.ipynb');
         fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
