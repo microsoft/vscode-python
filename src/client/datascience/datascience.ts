@@ -510,7 +510,7 @@ export class DataScience implements IDataScience {
         const ownsSelection = settings.datascience.sendSelectionToInteractiveWindow;
         editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
         editorContext.set(ownsSelection && enabled).catch();
-    };
+    }
 
     private getCodeWatcher(file: string): ICodeWatcher | undefined {
         const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);

@@ -386,5 +386,5 @@ export class KernelService {
             // This is failing for some folks. In that case return nothing
             return [];
         }
-    };
+    }
 }

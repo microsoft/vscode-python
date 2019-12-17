@@ -643,7 +643,7 @@ export class JupyterNotebookBase implements INotebook {
         }
 
         return undefined;
-    };
+    }
 
     private combineObservables = (...args: Observable<ICell>[]): Observable<ICell[]> => {
         return new Observable<ICell[]>(subscriber => {
@@ -676,7 +676,7 @@ export class JupyterNotebookBase implements INotebook {
                 );
             });
         });
-    };
+    }
 
     private executeMarkdownObservable = (cell: ICell): Observable<ICell> => {
         // Markdown doesn't need any execution
@@ -684,7 +684,7 @@ export class JupyterNotebookBase implements INotebook {
             subscriber.next(cell);
             subscriber.complete();
         });
-    };
+    }
 
     private async updateWorkingDirectory(launchingFile?: string): Promise<void> {
         if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && !this._workingDirectory) {
@@ -708,7 +708,7 @@ export class JupyterNotebookBase implements INotebook {
         if (this.launchInfo && this.launchInfo.connectionInfo.localLaunch && (await fs.pathExists(directory))) {
             await this.executeSilently(`%cd "${directory}"`);
         }
-    };
+    }
 
     private handleIOPub(subscriber: CellSubscriber, silent: boolean | undefined, clearState: Map<string, boolean>, msg: KernelMessage.IIOPubMessage) {
         // tslint:disable-next-line:no-require-imports
@@ -838,7 +838,7 @@ export class JupyterNotebookBase implements INotebook {
             subscriber.cell.state = CellState.error;
             subscriber.complete(this.sessionStartTime);
         }
-    };
+    }
 
     private executeCodeObservable(cell: ICell, silent?: boolean): Observable<ICell> {
         return new Observable<ICell>(subscriber => {
@@ -895,7 +895,7 @@ export class JupyterNotebookBase implements INotebook {
         // Then append this data onto the end.
         data.outputs = [...data.outputs, output];
         cell.data = data;
-    };
+    }
 
     private handleExecuteResult(msg: KernelMessage.IExecuteResultMsg, clearState: Map<string, boolean>, cell: ICell, trimFunc: (str: string) => string) {
         // Check our length on text output
