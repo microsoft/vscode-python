@@ -10,7 +10,16 @@ import { PYTHON_ALLFILES, PYTHON_LANGUAGE } from '../common/constants';
 import { ContextKey } from '../common/contextKey';
 import '../common/extensions';
 import { traceError } from '../common/logger';
-import { BANNER_NAME_DS_SURVEY, GLOBAL_MEMENTO, IConfigurationService, IDisposable, IDisposableRegistry, IExtensionContext, IMemento, IPythonExtensionBanner } from '../common/types';
+import {
+    BANNER_NAME_DS_SURVEY,
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IDisposable,
+    IDisposableRegistry,
+    IExtensionContext,
+    IMemento,
+    IPythonExtensionBanner
+} from '../common/types';
 import { waitForPromise } from '../common/utils/async';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import * as localize from '../common/utils/localize';
@@ -22,7 +31,17 @@ import { hasCells } from './cellFactory';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { createRemoteConnectionInfo } from './jupyter/jupyterUtils';
 import { KernelSelector, KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
-import { ICodeWatcher, IConnection, IDataScience, IDataScienceCodeLensProvider, IDataScienceCommandListener, IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManagerFactory, INotebookEditorProvider } from './types';
+import { LiveKernelModel } from './jupyter/kernels/types';
+import {
+    ICodeWatcher,
+    IConnection,
+    IDataScience,
+    IDataScienceCodeLensProvider,
+    IDataScienceCommandListener,
+    IJupyterKernelSpec,
+    IJupyterSessionManagerFactory,
+    INotebookEditorProvider
+} from './types';
 
 interface ISelectUriQuickPickItem extends vscode.QuickPickItem {
     newChoice: boolean;
@@ -36,7 +55,8 @@ export class DataScience implements IDataScience {
     private startTime: number = Date.now();
     private localLabel = `$(zap) ${localize.DataScience.jupyterSelectURILocalLabel()}`;
     private newLabel = `$(server) ${localize.DataScience.jupyterSelectURINewLabel()}`;
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(ICommandManager) private commandManager: ICommandManager,
         @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
         @inject(IExtensionContext) private extensionContext: IExtensionContext,
@@ -62,11 +82,7 @@ export class DataScience implements IDataScience {
     public async activate(): Promise<void> {
         this.registerCommands();
 
-        this.extensionContext.subscriptions.push(
-            vscode.languages.registerCodeLensProvider(
-                PYTHON_ALLFILES, this.dataScienceCodeLensProvider
-            )
-        );
+        this.extensionContext.subscriptions.push(vscode.languages.registerCodeLensProvider(PYTHON_ALLFILES, this.dataScienceCodeLensProvider));
 
         // Set our initial settings and sign up for changes
         this.onSettingsChanged();
@@ -227,12 +243,12 @@ export class DataScience implements IDataScience {
     }
 
     @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
-    public async selectLocalJupyterKernel(currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
+    public async selectLocalJupyterKernel(currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
         return this.kernelSelector.selectLocalKernel(undefined, undefined, currentKernel);
     }
 
     @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
-    public async selectRemoteJupyterKernel(connInfo: IConnection, currentKernel?: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<KernelSpecInterpreter> {
+    public async selectRemoteJupyterKernel(connInfo: IConnection, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
         const session = await this.jupyterSessionManagerFactory.create(connInfo);
         return this.kernelSelector.selectRemoteKernel(session, undefined, currentKernel);
     }
@@ -292,10 +308,7 @@ export class DataScience implements IDataScience {
         }
     }
 
-    private async startSelectingURI(
-        input: IMultiStepInput<{}>,
-        _state: {}): Promise<InputStep<{}> | void> {
-
+    private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
         // newChoice element will be set if the user picked 'enter a new server'
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
@@ -312,9 +325,7 @@ export class DataScience implements IDataScience {
         }
     }
 
-    private async selectRemoteURI(
-        input: IMultiStepInput<{}>,
-        _state: {}): Promise<InputStep<{}> | void> {
+    private async selectRemoteURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         // Ask the user to enter a URI to connect to.
         const uri = await input.showInputBox({
             title: localize.DataScience.jupyterSelectURIPrompt(),
@@ -354,12 +365,14 @@ export class DataScience implements IDataScience {
             const sessionManager = await waitForPromise(this.jupyterSessionManagerFactory.create(connection, true), 2000);
             if (sessionManager) {
                 const kernels = await sessionManager.getRunningKernels();
-                const lastActiveTime = kernels.map(k => k.lastActivityTime).reduce((p, c) => {
-                    if (!p || c > p) {
-                        return c;
-                    }
-                    return p;
-                });
+                const lastActiveTime = kernels
+                    .map(k => k.lastActivityTime)
+                    .reduce((p, c) => {
+                        if (!p || c > p) {
+                            return c;
+                        }
+                        return p;
+                    });
                 const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
                 return {
                     label: uri,
@@ -439,8 +452,7 @@ export class DataScience implements IDataScience {
         if (activeEditor && activeCodeWatcher) {
             // Find the cell that matches
             return activeCodeWatcher.getCodeLenses().find((c: vscode.CodeLens) => {
-                if (c.range.end.line >= activeEditor.selection.anchor.line &&
-                    c.range.start.line <= activeEditor.selection.anchor.line) {
+                if (c.range.end.line >= activeEditor.selection.anchor.line && c.range.start.line <= activeEditor.selection.anchor.line) {
                     return true;
                 }
                 return false;

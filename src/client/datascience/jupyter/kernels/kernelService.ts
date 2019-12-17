@@ -22,9 +22,10 @@ import { IEnvironmentActivationService } from '../../../interpreter/activation/t
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterCommands, Telemetry } from '../../constants';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterCommandFinder } from '../jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp');
@@ -116,7 +117,7 @@ export class KernelService {
      * @returns {(Promise<PythonInterpreter | undefined>)}
      * @memberof KernelService
      */
-    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec | LiveKernelModel, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
         if (kernelSpec.language && kernelSpec.language?.toLowerCase() !== PYTHON_LANGUAGE) {
             return;
         }
@@ -255,11 +256,11 @@ export class KernelService {
         }
 
         let kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
-        for (let counter = 0; counter < 5; counter += 1){
+        for (let counter = 0; counter < 5; counter += 1) {
             if (Cancellation.isCanceled(cancelToken)) {
                 return;
             }
-            if (kernel){
+            if (kernel) {
                 break;
             }
             traceWarning('Waiting for 500ms for registered kernel to get detected');

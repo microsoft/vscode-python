@@ -10,9 +10,9 @@ import { IFileSystem } from '../../../common/platform/types';
 import { IPathUtils } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterSelector } from '../../../interpreter/configuration/types';
-import { IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelService } from './kernelService';
-import { IKernelSelectionListProvider, IKernelSpecQuickPickItem } from './types';
+import { IKernelSelectionListProvider, IKernelSpecQuickPickItem, LiveKernelModel } from './types';
 
 // Small classes, hence all put into one file.
 // tslint:disable: max-classes-per-file
@@ -35,10 +35,10 @@ function getQuickPickItemForKernelSpec(kernelSpec: IJupyterKernelSpec, pathUtils
 /**
  * Given an active kernel, this will return a quick pick item with appropriate display names and the like.
  *
- * @param {(IJupyterKernel & Partial<IJupyterKernelSpec>)} kernel
+ * @param {(LiveKernelModel)} kernel
  * @returns {IKernelSpecQuickPickItem}
  */
-function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyterKernelSpec>, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
+function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPathUtils): IKernelSpecQuickPickItem {
     const path = kernel.metadata?.interpreter?.path || kernel.path;
     return {
         label: kernel.display_name || kernel.name || '',
@@ -59,16 +59,21 @@ function getQuickPickItemForActiveKernel(kernel: IJupyterKernel & Partial<IJupyt
 export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(_cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
-        const [activeKernels, kernelSpecs] = await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getKernelSpecs()]);
-        const items = activeKernels.map(item => {
-            const matchingSpec: Partial<IJupyterKernelSpec> = kernelSpecs.find(spec => spec.name === item.name) || {};
+        const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getRunningSessions(), this.sessionManager.getKernelSpecs()]);
+        const items = activeSessions.map(item => {
+            const matchingSpec: Partial<IJupyterKernelSpec> = kernelSpecs.find(spec => spec.name === item.kernel.name) || {};
+            const activeKernel = activeKernels.find(active => active.id === item.kernel.id) || {};
+            // tslint:disable-next-line: no-object-literal-type-assertion
             return {
-                ...item,
-                ...matchingSpec
-            };
+                ...item.kernel,
+                ...matchingSpec,
+                ...activeKernel,
+                session: item
+            } as LiveKernelModel;
         });
         return items
             .filter(item => item.display_name || item.name)
+            .filter(item => 'lastActivityTime' in item && 'numberOfConnections' in item)
             .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .map(item => getQuickPickItemForActiveKernel(item, this.pathUtils));
     }
@@ -86,9 +91,9 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
         return items
-            .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
+        .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
             .map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
-        }
+    }
 }
 
 /**
@@ -128,7 +133,8 @@ export class KernelSelectionProvider {
         @inject(KernelService) private readonly kernelService: KernelService,
         @inject(IInterpreterSelector) private readonly interpreterSelector: IInterpreterSelector,
         @inject(IFileSystem) private readonly fileSystem: IFileSystem,
-        @inject(IPathUtils) private readonly pathUtils: IPathUtils) {}
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
+    ) {}
     /**
      * Gets a selection of kernel specs from a remote session.
      *
@@ -138,13 +144,18 @@ export class KernelSelectionProvider {
      * @memberof KernelSelectionProvider
      */
     public async getKernelSelectionsForRemoteSession(sessionManager: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IKernelSpecQuickPickItem[]> {
-        const liveItems = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager, this.pathUtils).getKernelSelections(cancelToken).then(items => {
-            // Sorty by name.
-            items.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
-            this.remoteSuggestionsCache = items;
-            return items;
-        });
+        const getSelections = async () => {
+            const installedKernelsPromise = new InstalledJupyterKernelSelectionListProvider(this.kernelService, this.pathUtils, sessionManager).getKernelSelections(cancelToken);
+            const liveKernelsPromise = new ActiveJupyterSessionKernelSelectionListProvider(sessionManager, this.pathUtils).getKernelSelections(cancelToken);
+            const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
 
+            // Sorty by name.
+            installedKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            liveKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            return [...liveKernels!, ...installedKernels!];
+        };
+
+        const liveItems = getSelections().then(items => this.localSuggestionsCache = items);
         // If we have someting in cache, return that, while fetching in the background.
         const cachedItems = this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
         return Promise.race([cachedItems, liveItems]);
@@ -165,27 +176,34 @@ export class KernelSelectionProvider {
             // tslint:disable-next-line: prefer-const
             let [installedKernels, interpreters] = await Promise.all([installedKernelsPromise, interpretersPromise]);
 
-            interpreters = interpreters.filter(item => {
-                // If the interpreter is registered as a kernel then don't inlcude it.
-                if (installedKernels.find(installedKernel => installedKernel.selection.kernelSpec?.display_name === item.selection.interpreter?.displayName && (
-                    this.fileSystem.arePathsSame((installedKernel.selection.kernelSpec?.argv || [])[0], item.selection.interpreter?.path || '') ||
-                    this.fileSystem.arePathsSame(installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '', item.selection.interpreter?.path || '')))) {
-                    return false;
-                }
-                return true;
-            }).map(item => {
-                // We don't want descriptions.
-                return {...item, description: ''};
-            });
+            interpreters = interpreters
+                .filter(item => {
+                    // If the interpreter is registered as a kernel then don't inlcude it.
+                    if (
+                        installedKernels.find(
+                            installedKernel =>
+                                installedKernel.selection.kernelSpec?.display_name === item.selection.interpreter?.displayName &&
+                                (this.fileSystem.arePathsSame((installedKernel.selection.kernelSpec?.argv || [])[0], item.selection.interpreter?.path || '') ||
+                                    this.fileSystem.arePathsSame(installedKernel.selection.kernelSpec?.metadata?.interpreter?.path || '', item.selection.interpreter?.path || ''))
+                        )
+                    ) {
+                        return false;
+                    }
+                    return true;
+                })
+                .map(item => {
+                    // We don't want descriptions.
+                    return { ...item, description: '' };
+                });
 
             const unifiedList = [...installedKernels!, ...interpreters];
             // Sorty by name.
-            unifiedList.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            unifiedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
             return unifiedList;
         };
 
-        const liveItems = getSelections().then(items => this.localSuggestionsCache = items);
+        const liveItems = getSelections().then(items => (this.localSuggestionsCache = items));
         // If we have someting in cache, return that, while fetching in the background.
         const cachedItems = this.localSuggestionsCache.length > 0 ? Promise.resolve(this.localSuggestionsCache) : liveItems;
         return Promise.race([cachedItems, liveItems]);

@@ -316,6 +316,7 @@ export namespace DataScience {
     export const fallBackToRegisterAndUseActiveInterpeterAsKernel = localize('DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with. Registering a new kernel using the current interpreter.');
     export const fallBackToPromptToUseActiveInterpreterOrSelectAKernel = localize('DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel', 'Couldn\'t find kernel \'{0}\' that the notebook was created with.');
     export const jupyterStartTimedout = localize('DataScience.jupyterStartTimedout', 'Starting Jupyter has timedout. Please check the \'Jupyter\' output panel for further details.');
+    export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', 'Switching Kenel to \'{0}\'');
 }
 
 export namespace DebugConfigStrings {

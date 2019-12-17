@@ -74,7 +74,9 @@ suite('Data Science - KernelSelections', () => {
     });
 
     test('Should return an empty list for remote kernels if there are none', async () => {
+        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
+        when(sessionManager.getRunningSessions()).thenResolve([]);
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
 
@@ -82,8 +84,19 @@ suite('Data Science - KernelSelections', () => {
     });
     test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
-
+        const sessions = activeKernels.map(item => {
+            return {
+                id: 'sessionId',
+                name: 'someSession',
+                // tslint:disable-next-line: no-any
+                kernel: item as any,
+                type: '',
+                path: ''
+            };
+        });
+        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve(activeKernels);
+        when(sessionManager.getRunningSessions()).thenResolve(sessions);
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
 
         // Quick pick must contain
@@ -93,7 +106,24 @@ suite('Data Science - KernelSelections', () => {
         const expectedItems: IKernelSpecQuickPickItem[] = [
             {
                 label: python1KernelSpecModel.display_name,
-                selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel }, kernelSpec: undefined },
+                // tslint:disable-next-line: no-any
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: {
+                        ...activePython1KernelModel,
+                        ...python1KernelSpecModel,
+                        session: {
+                            id: 'sessionId',
+                            name: 'someSession',
+                            // tslint:disable-next-line: no-any
+                            kernel: activeKernels[0] as any,
+                            type: '',
+                            path: ''
+                        // tslint:disable-next-line: no-any
+                        } as any
+                    },
+                    kernelSpec: undefined
+                },
                 detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),

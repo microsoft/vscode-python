@@ -1,28 +1,21 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { ContentsManager, Kernel, ServerConnection, SessionManager } from '@jupyterlab/services';
+import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { Agent as HttpsAgent } from 'https';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { traceInfo } from '../../common/logger';
 import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import {
-    IConnection,
-    IJupyterKernel,
-    IJupyterKernelSpec,
-    IJupyterPasswordConnect,
-    IJupyterPasswordConnectInfo,
-    IJupyterSession,
-    IJupyterSessionManager
-} from '../types';
+import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterPasswordConnect, IJupyterPasswordConnectInfo, IJupyterSession, IJupyterSessionManager } from '../types';
 import { JupyterSession } from './jupyterSession';
 import { createJupyterWebSocket } from './jupyterWebSocket';
 import { JupyterKernelSpec } from './kernels/jupyterKernelSpec';
+import { KernelSelector } from './kernels/kernelSelector';
+import { LiveKernelModel } from './kernels/types';
 
 export class JupyterSessionManager implements IJupyterSessionManager {
-
     private sessionManager: SessionManager | undefined;
     private contentsManager: ContentsManager | undefined;
     private connInfo: IConnection | undefined;
@@ -31,7 +24,8 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     constructor(
         private jupyterPasswordConnect: IJupyterPasswordConnect,
         private config: IConfigurationService,
-        private failOnPassword: boolean | undefined
+        private failOnPassword: boolean | undefined,
+        private kernelSelector: KernelSelector
     ) {
     }
 
@@ -59,11 +53,31 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         this.contentsManager = new ContentsManager({ serverSettings: this.serverSettings });
     }
 
+    public async getRunningSessions(): Promise<Session.IModel[]> {
+        if (!this.sessionManager) {
+            return [];
+        }
+        // Not refreshing will result in `running` returning an empty iterator.
+        await this.sessionManager.refreshRunning();
+
+        const sessions: Session.IModel[] = [];
+        const iterator = this.sessionManager.running();
+        let session = iterator.next();
+
+        while (session) {
+            sessions.push(session);
+            session = iterator.next();
+        }
+
+        return sessions;
+    }
+
     public async getRunningKernels(): Promise<IJupyterKernel[]> {
         const models = await Kernel.listRunning(this.serverSettings);
         // Remove duplicates.
         const dup = new Set<string>();
-        return models.map(m => {
+        return models
+            .map(m => {
                 return {
                     id: m.id,
                     name: m.name,
@@ -72,7 +86,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
                 };
             })
             .filter(item => {
-                if (dup.has(item.id)){
+                if (dup.has(item.id)) {
                     return false;
                 }
                 dup.add(item.id);
@@ -80,12 +94,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
             });
     }
 
-    public async startNew(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public async startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         if (!this.connInfo || !this.sessionManager || !this.contentsManager || !this.serverSettings) {
             throw new Error(localize.DataScience.sessionDisposed());
         }
         // Create a new session and attempt to connect to it
-        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager);
+        const session = new JupyterSession(this.connInfo, this.serverSettings, kernelSpec, this.sessionManager, this.contentsManager, this.kernelSelector);
         try {
             await session.connect(cancelToken);
         } finally {
@@ -122,8 +136,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
     }
 
     private async getServerConnectSettings(connInfo: IConnection): Promise<ServerConnection.ISettings> {
-        let serverSettings: Partial<ServerConnection.ISettings> =
-        {
+        let serverSettings: Partial<ServerConnection.ISettings> = {
             baseUrl: connInfo.baseUrl,
             appUrl: '',
             // A web socket is required to allow token authentication
@@ -168,8 +181,12 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // This replaces the WebSocket constructor in jupyter lab services with our own implementation
         // See _createSocket here:
         // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
-        // tslint:disable-next-line:no-any
-        serverSettings = { ...serverSettings, init: requestInit, WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any };
+        serverSettings = {
+            ...serverSettings,
+            init: requestInit,
+            // tslint:disable-next-line:no-any
+            WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any
+        };
 
         return ServerConnection.makeSettings(serverSettings);
     }

@@ -3,8 +3,10 @@
 'use strict';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { Session } from '@jupyterlab/services';
 import { noop } from '../../../common/utils/misc';
 import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSession, IJupyterSessionManager } from '../../types';
+import { LiveKernelModel } from '../kernels/types';
 
 export class GuestJupyterSessionManager implements IJupyterSessionManager {
     private connInfo: IConnection | undefined;
@@ -13,7 +15,7 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
         noop();
     }
 
-    public startNew(kernelSpec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
+    public startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession> {
         return this.realSessionManager.startNew(kernelSpec, cancelToken);
     }
 
@@ -23,6 +25,10 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
     }
 
     public getRunningKernels(): Promise<IJupyterKernel[]> {
+        return Promise.resolve([]);
+    }
+
+    public getRunningSessions(): Promise<Session.IModel[]> {
         return Promise.resolve([]);
     }
 
@@ -37,5 +43,4 @@ export class GuestJupyterSessionManager implements IJupyterSessionManager {
     public getConnInfo(): IConnection {
         return this.connInfo!;
     }
-
 }

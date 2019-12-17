@@ -18,6 +18,7 @@ import { JupyterCommands, Telemetry } from '../constants';
 import {
     IConnection,
     IJupyterExecution,
+    IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerLaunchInfo,
     INotebookServerOptions
@@ -136,7 +137,9 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
                     // In a remote situation, figure out a kernel spec too.
                     if (!kernelSpecInterpreter.kernelSpec && connection) {
-                        kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(connection, options?.metadata, cancelToken);
+                        const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
+                        const sessionManager = await sessionManagerFactory.create(connection);
+                        kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(sessionManager, options?.metadata, cancelToken);
                     }
 
                     // Populate the launch info that we are starting our server with

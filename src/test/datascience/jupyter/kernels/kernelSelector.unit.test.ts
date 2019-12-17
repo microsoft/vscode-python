@@ -3,8 +3,7 @@
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
-import { EventEmitter } from 'vscode';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode-jsonrpc';
 
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
@@ -16,11 +15,11 @@ import * as localize from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
-import { JupyterSessionManagerFactory } from '../../../../client/datascience/jupyter/jupyterSessionManagerFactory';
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IConnection, IJupyterKernel, IJupyterKernelSpec, IJupyterSessionManager, IJupyterSessionManagerFactory } from '../../../../client/datascience/types';
+import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
@@ -29,22 +28,10 @@ suite('Data Science - KernelSelector', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let sessionManager: IJupyterSessionManager;
-    let sessionManagerFactory: IJupyterSessionManagerFactory;
     let kernelSelector: KernelSelector;
     let interpreterService: IInterpreterService;
     let appShell: IApplicationShell;
     let installer: IInstaller;
-    const dummyEvent = new EventEmitter<number>();
-    const connection: IConnection = {
-        // tslint:disable-next-line: no-http-string
-        baseUrl: 'http://foobar',
-        token: '1234',
-        hostName: 'foobar',
-        localLaunch: false,
-        localProcExitCode: undefined,
-        disconnected: dummyEvent.event,
-        dispose: noop
-    };
     const kernelSpec = {
         argv: [],
         display_name: 'Something',
@@ -64,8 +51,6 @@ suite('Data Science - KernelSelector', () => {
 
     setup(() => {
         sessionManager = mock(JupyterSessionManager);
-        sessionManagerFactory = mock(JupyterSessionManagerFactory);
-        when(sessionManagerFactory.create(anything())).thenResolve(instance(sessionManager));
         kernelService = mock(KernelService);
         kernelSelectionProvider = mock(KernelSelectionProvider);
         appShell = mock(ApplicationShell);
@@ -76,8 +61,7 @@ suite('Data Science - KernelSelector', () => {
             instance(appShell),
             instance(kernelService),
             instance(interpreterService),
-            instance(installer),
-            instance(sessionManagerFactory)
+            instance(installer)
         );
     });
     teardown(() => sinon.restore());
@@ -115,6 +99,74 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
+        });
+    });
+    suite('Hide kernels from Remote & Local Kernel', () => {
+        test('Should hide kernel from remote sessions', async () => {
+            const kernelModels: (LiveKernelModel)[] = [
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4', session: {} as any}
+            ];
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+                return {
+                    label: '',
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                };
+            });
+
+            when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve(quickPickItems);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
+
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
+            const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
+
+            assert.isEmpty(kernel);
+            verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
+            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
+            assert.deepEqual(suggestions, quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
+        });
+        test('Should hide kernel from local sessions', async () => {
+            const kernelModels: (LiveKernelModel)[] = [
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3', session: {} as any},
+                // tslint:disable-next-line: no-any
+                {lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4', session: {} as any}
+            ];
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+                return {
+                    label: '',
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                };
+            });
+
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve(quickPickItems);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
+
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
+            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+
+            assert.isEmpty(kernel);
+            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
+            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
+            assert.deepEqual(suggestions, quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || '')));
         });
     });
     suite('Select Local Kernel', () => {
@@ -198,8 +250,11 @@ suite('Data Science - KernelSelector', () => {
         let nbMetadataKernelSpec: nbformat.IKernelspecMetadata = {} as any;
         // tslint:disable-next-line: no-any
         let nbMetadata: nbformat.INotebookMetadata = {} as any;
+        let selectLocalKernelStub: sinon.SinonStub<
+        [(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | LiveKernelModel)?],
         // tslint:disable-next-line: no-any
-        let selectLocalKernelStub: sinon.SinonStub<[(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>)?], Promise<any>>;
+            Promise<any>
+        >;
         setup(() => {
             nbMetadataKernelSpec = {
                 display_name: interpreter.displayName!,
@@ -310,7 +365,7 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForRemoteConnection(connection, undefined);
+            const kernel = await kernelSelector.getKernelForRemoteConnection(instance(sessionManager), undefined);
 
             assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
             assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the python kernel spec');
@@ -353,7 +408,7 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForRemoteConnection(connection, { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
+            const kernel = await kernelSelector.getKernelForRemoteConnection(instance(sessionManager), { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
 
             assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
             assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
@@ -396,7 +451,7 @@ suite('Data Science - KernelSelector', () => {
             when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
             when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
 
-            const kernel = await kernelSelector.getKernelForRemoteConnection(connection, { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
+            const kernel = await kernelSelector.getKernelForRemoteConnection(instance(sessionManager), { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
 
             assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
             assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');

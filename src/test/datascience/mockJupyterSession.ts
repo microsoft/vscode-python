@@ -6,7 +6,8 @@ import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
-import { ICell, IJupyterKernel, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
+import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
+import { ICell, IJupyterKernelSpec, IJupyterSession } from '../../client/datascience/types';
 import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { sleep } from '../core';
 import { MockJupyterRequest } from './mockJupyterRequest';
@@ -115,10 +116,8 @@ export class MockJupyterSession implements IJupyterSession {
                 msg_id: '1',
                 msg_type: 'complete'
             },
-            parent_header: {
-            },
-            metadata: {
-            }
+            parent_header: {},
+            metadata: {}
         } as any;
     }
 
@@ -134,7 +133,7 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(_kernel: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
+    public changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel): Promise<void> {
         return Promise.resolve();
     }
 
