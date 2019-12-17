@@ -18,12 +18,13 @@ import {
 } from '../../../client/interpreter/contracts';
 import { WorkspaceVirtualEnvWatcherService } from '../../../client/interpreter/locators/services/workspaceVirtualEnvWatcherService';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { IS_CI_SERVER } from '../../ciConstants';
 import { deleteFiles, getOSType, isPythonVersionInProcess, OSType, PYTHON_PATH, rootWorkspaceUri, waitForCondition } from '../../common';
 import { IS_MULTI_ROOT_TEST } from '../../constants';
 import { sleep } from '../../core';
 import { initialize, multirootPath } from '../../initialize';
 
-const timeoutMs = 60_000;
+const timeoutMs = IS_CI_SERVER ? 60_000 : 15_000;
 suite('Interpreters - Workspace VirtualEnv Service', function() {
     this.timeout(timeoutMs);
     this.retries(0);
