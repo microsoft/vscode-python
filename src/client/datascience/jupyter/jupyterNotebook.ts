@@ -457,7 +457,7 @@ export class JupyterNotebookBase implements INotebook {
         const settings = this.configService.getSettings().datascience;
         if (settings.themeMatplotlibPlots && !settings.ignoreVscodeTheme) {
             // Reset the matplotlib style based on if dark or not.
-            await this.executeSilently(useDark ? "matplotlib.style.use('dark_background')" : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
+            await this.executeSilently(useDark ? 'matplotlib.style.use(\'dark_background\')' : `matplotlib.rcParams.update(${Identifiers.MatplotLibDefaultParams})`);
         }
     }
 

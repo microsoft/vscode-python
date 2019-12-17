@@ -250,9 +250,9 @@ suite('Data Science - KernelSelector', () => {
         let nbMetadataKernelSpec: nbformat.IKernelspecMetadata = {} as any;
         // tslint:disable-next-line: no-any
         let nbMetadata: nbformat.INotebookMetadata = {} as any;
-        // tslint:disable-next-line: no-any
         let selectLocalKernelStub: sinon.SinonStub<
-            [(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | LiveKernelModel)?],
+        [(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | LiveKernelModel)?],
+        // tslint:disable-next-line: no-any
             Promise<any>
         >;
         setup(() => {

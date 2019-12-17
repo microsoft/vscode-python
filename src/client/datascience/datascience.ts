@@ -306,7 +306,7 @@ export class DataScience implements IDataScience {
         } catch {
             return localize.DataScience.jupyterSelectURIInvalidURI();
         }
-    };
+    }
 
     private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.

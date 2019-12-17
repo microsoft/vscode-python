@@ -181,10 +181,10 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         // This replaces the WebSocket constructor in jupyter lab services with our own implementation
         // See _createSocket here:
         // https://github.com/jupyterlab/jupyterlab/blob/cfc8ebda95e882b4ed2eefd54863bb8cdb0ab763/packages/services/src/kernel/default.ts
-        // tslint:disable-next-line:no-any
         serverSettings = {
             ...serverSettings,
             init: requestInit,
+            // tslint:disable-next-line:no-any
             WebSocket: createJupyterWebSocket(this.config.getSettings().datascience.verboseLogging, cookieString, allowUnauthorized) as any
         };
 
