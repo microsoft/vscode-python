@@ -797,6 +797,7 @@ for _ in range(50):
 
             test('Pressing \'Alt+Enter\' on a selected cell adds a new cell below it', async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 const update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
@@ -811,6 +812,7 @@ for _ in range(50):
             });
 
             test('Auto brackets work', async () => {
+                wrapper.update();
                 // Initially 3 cells.
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
@@ -851,6 +853,7 @@ for _ in range(50):
 
             test('Pressing \'a\' on a selected cell adds a cell at the current position', async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 // const secondCell = wrapper.find('NativeCell').at(1);
@@ -871,6 +874,7 @@ for _ in range(50):
 
             test('Pressing \'b\' on a selected cell adds a cell after the current position', async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 clickCell(1);
