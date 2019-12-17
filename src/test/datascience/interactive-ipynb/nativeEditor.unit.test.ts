@@ -30,7 +30,7 @@ import { CryptoUtils } from '../../../client/common/crypto';
 import { LiveShareApi } from '../../../client/common/liveshare/liveshare';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IExtensionContext } from '../../../client/common/types';
-import { createDeferred, Deferred } from '../../../client/common/utils/async';
+import { createDeferred } from '../../../client/common/utils/async';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { CodeCssGenerator } from '../../../client/datascience/codeCssGenerator';
 import { DataViewerProvider } from '../../../client/datascience/data-viewing/dataViewerProvider';
@@ -95,7 +95,7 @@ suite('Data Science - Native Editor', () => {
     let context: typemoq.IMock<IExtensionContext>;
     let crypto: ICryptoUtils;
     let lastWriteFileValue: any;
-    let wroteToFilePromise: Deferred<boolean>;
+    let wroteToFileEvent: EventEmitter<string> = new EventEmitter<string>();
     const baseFile = `{
  "cells": [
   {
@@ -254,10 +254,10 @@ suite('Data Science - Native Editor', () => {
         };
         when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
         lastWriteFileValue = undefined;
-        wroteToFilePromise = createDeferred<boolean>();
+        wroteToFileEvent = new EventEmitter<string>();
         fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((a1, a2) => {
             lastWriteFileValue = a2;
-            setTimeout(() => wroteToFilePromise.resolve(true));
+            setTimeout(() => wroteToFileEvent.fire(a2));
             return Promise.resolve();
         });
         fileSystem.setup(f => f.readFile(typemoq.It.isAny())).returns((_a1) => {
@@ -356,12 +356,25 @@ suite('Data Science - Native Editor', () => {
         const editor = createEditor();
         await editor.load(baseFile, file);
         expect(await editor.getContents()).to.be.equal(baseFile);
+        const savedPromise = createDeferred<boolean>();
+        const disposable = wroteToFileEvent.event((c: string) => {
+            // Double check our contents are there
+            const fileContents = JSON.parse(c);
+            if (fileContents.contents) {
+                const contents = JSON.parse(fileContents.contents);
+                if (contents.cells && contents.cells.length === 4) {
+                    savedPromise.resolve(true);
+                }
+            }
+        });
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
 
+
         // Wait for contents to be stored in memento.
         // Editor will save uncommitted changes into storage, wait for it to be saved.
-        await waitForCondition(() => wroteToFilePromise.promise, 500, 'Storage not updated');
+        await waitForCondition(() => savedPromise.promise, 500, 'Storage not updated');
+        disposable.dispose();
 
         // Confirm contents were saved.
         expect(await editor.getContents()).not.to.be.equal(baseFile);
