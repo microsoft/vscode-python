@@ -19,7 +19,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, fs: IF
     } catch (err) {
         traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
         return [] as string[];
-    };
+    }
 }
 
 @injectable()
