@@ -255,7 +255,7 @@ suite('Data Science - Native Editor', () => {
         when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
         lastWriteFileValue = undefined;
         wroteToFileEvent = new EventEmitter<string>();
-        fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((a1, a2) => {
+        fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((_a1, a2) => {
             lastWriteFileValue = a2;
             setTimeout(() => wroteToFileEvent.fire(a2));
             return Promise.resolve();
@@ -369,7 +369,6 @@ suite('Data Science - Native Editor', () => {
         });
         editor.onMessage(InteractiveWindowMessages.InsertCell, { index: 0, cell: createEmptyCell('1', 1) });
         expect(editor.cells).to.be.lengthOf(4);
-
 
         // Wait for contents to be stored in memento.
         // Editor will save uncommitted changes into storage, wait for it to be saved.
