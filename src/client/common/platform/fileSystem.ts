@@ -80,6 +80,18 @@ export class FileSystem implements IFileSystem {
         return deferred.promise;
     }
 
+    public async listdir(root: string): Promise<string[]> {
+        return new Promise<string[]>(resolve => {
+            // Now look for Interpreters in this directory
+            fs.readdir(root, (err, names) => {
+                if (err) {
+                    return resolve([]);
+                }
+                resolve(names.map(name => path.join(root, name)));
+            });
+        });
+    }
+
     public getSubDirectories(rootDir: string): Promise<string[]> {
         return new Promise<string[]>(resolve => {
             fs.readdir(rootDir, async (error, files) => {

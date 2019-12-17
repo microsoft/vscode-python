@@ -9,10 +9,12 @@ import { IPipEnvServiceHelper } from './types';
 const CheckPythonInterpreterRegEx = IS_WINDOWS ? /^python(\d+(.\d+)?)?\.exe$/ : /^python(\d+(.\d+)?)?$/;
 
 export function lookForInterpretersInDirectory(pathToCheck: string, fs: IFileSystem): Promise<string[]> {
-    return fs.getFiles(pathToCheck)
+    // Technically, we should be able to use fs.getFiles().  However,
+    // that breaks some tests.  So we stick with the broader behavior.
+    return fs.listdir(pathToCheck)
         .then(subDirs => subDirs.filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName))))
         .catch(err => {
-            traceError('Python Extension (lookForInterpretersInDirectory.fs.getFiles):', err);
+            traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
             return [] as string[];
         });
 }
