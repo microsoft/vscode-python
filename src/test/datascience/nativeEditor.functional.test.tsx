@@ -1193,6 +1193,7 @@ for _ in range(50):
             }
 
             test('Auto save notebook every 1s', async function () {
+                // https://github.com/microsoft/vscode-python/issues/9176
                 // tslint:disable-next-line: no-invalid-this
                 return this.skip();
                 // Configure notebook to save automatically ever 1s.
