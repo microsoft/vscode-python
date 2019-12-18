@@ -11,6 +11,7 @@ import * as TypeMoq from 'typemoq';
 // tslint:disable-next-line:no-require-imports
 import untildify = require('untildify');
 import { WorkspaceConfiguration } from 'vscode';
+import { LanguageServerType } from '../../../client/activation/types';
 import {
     PythonSettings
 } from '../../../client/common/configSettings';
@@ -75,6 +76,10 @@ suite('Python Settings', async () => {
                 // tslint:disable-next-line:no-any
                 .returns(() => (sourceSettings as any)[name]);
         }
+
+        // Language server type settings
+        config.setup(c => c.get<LanguageServerType>('languageServer'))
+            .returns(() => sourceSettings.languageServerType);
 
         // number settings
         if (sourceSettings.jediEnabled) {
