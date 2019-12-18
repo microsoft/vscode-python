@@ -169,7 +169,12 @@ export class PythonSettings implements IPythonSettings {
             }
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
         }
-        this.languageServerType = systemVariables.resolveAny(pythonSettings.get<LanguageServerType>('languageServer', LanguageServerType.Jedi))!;
+
+        let lsType = pythonSettings.get<LanguageServerType>('languageServer');
+        if (!lsType) {
+            lsType = LanguageServerType.Jedi;
+        }
+        this.languageServerType = systemVariables.resolveAny(lsType)!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;
