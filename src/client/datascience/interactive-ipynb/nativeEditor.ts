@@ -90,6 +90,7 @@ enum AskForSaveResult {
 }
 
 const KeyPrefix = 'notebook-storage-';
+const NotebookTransferKey = 'notebook-transfered';
 
 @injectable()
 export class NativeEditor extends InteractiveBase implements INotebookEditor {
@@ -212,6 +213,12 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
 
         // Show ourselves
         await this.show();
+
+        // Clear out old global storage the first time somebody opens
+        // a notebook
+        if (!this.globalStorage.get(NotebookTransferKey)) {
+            await this.transferStorage();
+        }
 
         // See if this file was stored in storage prior to shutdown
         const dirtyContents = await this.getStoredContents();
@@ -691,9 +698,8 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         try {
             const data = this.globalStorage.get<{ contents?: string; lastModifiedTimeMs?: number }>(key);
 
-            // Make sure we don't use this method ever again and transfer all of this
-            // to the global files instead.
-            if (data !== undefined) {
+            // If we have data here, make sure we eliminate any remnants of storage
+            if (data) {
                 await this.transferStorage();
             }
 
@@ -731,6 +737,9 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     private async transferStorage(): Promise<void[]> {
         const promises: Thenable<void>[] = [];
 
+        // Indicate we ran this function
+        this.globalStorage.update(NotebookTransferKey, true);
+
         try {
             // tslint:disable-next-line: no-any
             if ((this.globalStorage as any)._value) {
@@ -753,7 +762,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
                 });
             }
         } catch (e) {
-            traceError(`Exception eliminating global storage parts: ${e}`);
+            traceError('Exception eliminating global storage parts:', e);
         }
 
         return Promise.all(promises);
