@@ -219,6 +219,7 @@ suite('Data Science - JupyterSession', () => {
                     const signal = mock(Signal);
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
+                    // tslint:disable-next-line: no-any
                     when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(newActiveRemoteKernel.session as any);
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
