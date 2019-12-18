@@ -738,7 +738,7 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         const promises: Thenable<void>[] = [];
 
         // Indicate we ran this function
-        this.globalStorage.update(NotebookTransferKey, true);
+        await this.globalStorage.update(NotebookTransferKey, true);
 
         try {
             // tslint:disable-next-line: no-any
