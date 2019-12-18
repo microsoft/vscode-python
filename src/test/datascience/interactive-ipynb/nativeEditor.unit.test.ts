@@ -560,6 +560,36 @@ suite('Data Science - Native Editor', () => {
         expect(editor.cells).to.be.lengthOf(3);
     });
 
+    test('Opening file with global storage will clear all global storage', async () => {
+        await filesConfig?.update('autoSave', 'off');
+
+        // This test is really for making sure when a user upgrades to a new extension, we still have their old storage
+        const file = Uri.parse('file:///foo.ipynb');
+        fileSystem.setup(f => f.stat(typemoq.It.isAny())).returns(() => Promise.resolve({ mtime: 1 } as any));
+
+        // Initially nothing in memento
+        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+        expect(localStorage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+
+        // Put the regular file into the global storage
+        storage.update(`notebook-storage-${file.toString()}`, { contents: baseFile, lastModifiedTimeMs: Date.now() });
+
+        // Put another file into the global storage
+        storage.update(`notebook-storage-file::///bar.ipynb`, { contents: baseFile, lastModifiedTimeMs: Date.now() });
+
+        const editor = createEditor();
+        await editor.load('', file);
+
+        // It should load with that value
+        expect(await editor.getContents()).to.be.equal(baseFile);
+        expect(editor.cells).to.be.lengthOf(3);
+
+        // And global storage should be empty
+        expect(storage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+        expect(storage.get(`notebook-storage-file::///bar.ipynb`)).to.be.undefined;
+        expect(localStorage.get(`notebook-storage-${file.toString()}`)).to.be.undefined;
+    });
+
     test('Export to Python script file from notebook.', async () => {
         // Temp file location needed for export
         const tempFile = {

@@ -197,7 +197,7 @@ export class WebViewHost<IMapping> implements IDisposable {
     }
 
     protected isDark(): Promise<boolean> {
-        return this.themeIsDarkPromise!.promise;
+        return this.themeIsDarkPromise ? this.themeIsDarkPromise.promise : Promise.resolve(false);
     }
 
     protected async loadWebPanel(cwd: string) {
