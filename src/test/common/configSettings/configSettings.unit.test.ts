@@ -85,7 +85,7 @@ suite('Python Settings', async () => {
 
         // Language server type settings
         config.setup(c => c.get<LanguageServerType>('languageServer'))
-            .returns(() => sourceSettings.languageServerType);
+            .returns(() => sourceSettings.languageServer);
 
         // "any" settings
         // tslint:disable-next-line:no-any

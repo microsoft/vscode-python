@@ -36,6 +36,7 @@ import {
 } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
 
 interface IActivatedServer {
@@ -170,7 +171,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         let enabled = configurationService.getSettings(this.resource).jediEnabled;
-        const languageServerType = configurationService.getSettings(this.resource).languageServerType;
+        const languageServerType = configurationService.getSettings(this.resource).languageServer;
         enabled = enabled || (languageServerType === LanguageServerType.Jedi);
         this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
         return enabled;
@@ -196,7 +197,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        let serverType = configurationService.getSettings(this.resource).languageServerType;
+        let serverType = configurationService.getSettings(this.resource).languageServer;
         if (!serverType) {
             serverType = LanguageServerType.Jedi;
         }
@@ -268,13 +269,22 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
             : [undefined];
-        if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
+        if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
+            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1) {
             return;
         }
         const jedi = this.useJedi();
-        if (this.activatedServer && this.activatedServer.jedi === jedi) {
-            return;
+        if (this.activatedServer) {
+            if (this.activatedServer.jedi === jedi) {
+                return;
+            }
+            const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const lsType = configurationService.getSettings(this.resource).languageServer;
+            if (this.activatedServer.key === lsType) {
+                return;
+            }
         }
+
         const item = await this.appShell.showInformationMessage(
             'Please reload the window switching between language engines.',
             'Reload'

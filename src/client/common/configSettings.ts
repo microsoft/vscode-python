@@ -61,7 +61,7 @@ export class PythonSettings implements IPythonSettings {
     public datascience!: IDataScienceSettings;
     public insidersChannel!: ExtensionChannels;
     public experiments!: IExperiments;
-    public languageServerType: LanguageServerType = LanguageServerType.Microsoft;
+    public languageServer: LanguageServerType = LanguageServerType.Microsoft;
 
     protected readonly changed = new EventEmitter<void>();
     private workspaceRoot: Uri;
@@ -170,11 +170,11 @@ export class PythonSettings implements IPythonSettings {
             this.jediMemoryLimit = pythonSettings.get<number>('jediMemoryLimit')!;
         }
 
-        let lsType = pythonSettings.get<LanguageServerType>('languageServer');
-        if (!lsType) {
-            lsType = LanguageServerType.Jedi;
+        let ls = pythonSettings.get<LanguageServerType>('languageServer');
+        if (!ls) {
+            ls = LanguageServerType.Jedi;
         }
-        this.languageServerType = systemVariables.resolveAny(lsType)!;
+        this.languageServer = systemVariables.resolveAny(ls)!;
 
         // tslint:disable-next-line:no-backbone-get-set-outside-model no-non-null-assertion
         this.envFile = systemVariables.resolveAny(pythonSettings.get<string>('envFile'))!;

@@ -180,7 +180,7 @@ export interface IPythonSettings {
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
     readonly experiments: IExperiments;
-    readonly languageServerType: LanguageServerType;
+    readonly languageServer: LanguageServerType;
 }
 export interface ISortImportSettings {
     readonly path: string;
