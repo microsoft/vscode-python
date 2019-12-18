@@ -1319,7 +1319,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 }
 
                 // Change the kernel. A status update should fire that changes our display
-                await this.notebook!.setKernelSpec(newKernel.kernelSpec || newKernel.kernelModel!);
+                await this.notebook!.setKernelSpec(newKernel.kernelSpec || newKernel.kernelModel!, this.configService.getSettings().datascience.jupyterLaunchTimeout);
 
                 // Add in a new sys info
                 await this.addSysInfo(SysInfoReason.New);

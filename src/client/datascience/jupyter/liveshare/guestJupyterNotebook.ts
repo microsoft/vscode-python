@@ -199,7 +199,7 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel): Promise<void> {
+    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
 

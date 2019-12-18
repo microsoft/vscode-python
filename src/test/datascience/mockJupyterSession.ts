@@ -133,7 +133,7 @@ export class MockJupyterSession implements IJupyterSession {
         this.completionTimeout = timeout;
     }
 
-    public changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel): Promise<void> {
+    public changeKernel(_kernel: IJupyterKernelSpec | LiveKernelModel, _timeoutMS: number): Promise<void> {
         return Promise.resolve();
     }
 

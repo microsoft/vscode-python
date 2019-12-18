@@ -209,7 +209,7 @@ suite('Data Science - JupyterSession', () => {
                     when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(instance(remoteSession));
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
-                    await jupyterSession.changeKernel(newActiveRemoteKernel);
+                    await jupyterSession.changeKernel(newActiveRemoteKernel, 10000);
                 });
                 test('Will shutdown to old session', async () => {
                     verify(session.shutdown()).once();
@@ -284,7 +284,7 @@ suite('Data Science - JupyterSession', () => {
                     path: 'path'
                 };
 
-                await jupyterSession.changeKernel(newKernel);
+                await jupyterSession.changeKernel(newKernel, 10000);
 
                 // Wait untill a new session has been started.
                 await newSessionCreated.promise;

@@ -101,7 +101,7 @@ export class JupyterSession implements IJupyterSession {
     }
 
     public async restart(_timeout: number): Promise<void> {
-        if (this.session?.isRemoteSession){
+        if (this.session?.isRemoteSession) {
             await this.session.kernel.restart();
             return;
         }
@@ -189,7 +189,7 @@ export class JupyterSession implements IJupyterSession {
         return this.connected;
     }
 
-    public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel): Promise<void> {
+    public async changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
         if (kernel.id && this.session && 'session' in kernel) {
             // Shutdown the current session
             this.shutdownSession(this.session, this.statusHandler).ignoreErrors();
@@ -198,7 +198,7 @@ export class JupyterSession implements IJupyterSession {
             this.session = this.sessionManager.connectTo(kernel.session);
             this.session.isRemoteSession = true;
             this.session.statusChanged.connect(this.statusHandler);
-            return;
+            return this.waitForIdleOnSession(this.session, timeoutMS);
         }
 
         // This is just like doing a restart, kill the old session (and the old restart session), and start new ones
@@ -212,6 +212,9 @@ export class JupyterSession implements IJupyterSession {
 
         // Start a new session
         this.session = await this.createSession(this.serverSettings, this.contentsManager);
+
+        // Make sure it is idle before we return
+        await this.waitForIdleOnSession(this.session, timeoutMS);
 
         // Listen for session status changes
         this.session.statusChanged.connect(this.statusHandler);
@@ -346,7 +349,7 @@ export class JupyterSession implements IJupyterSession {
                     session.statusChanged.disconnect(statusHandler);
                 }
                 // Do not shutdown remote sessions.
-                if (session.isRemoteSession){
+                if (session.isRemoteSession) {
                     session.dispose();
                     return;
                 }
