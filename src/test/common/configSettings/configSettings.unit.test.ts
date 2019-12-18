@@ -77,15 +77,15 @@ suite('Python Settings', async () => {
                 .returns(() => (sourceSettings as any)[name]);
         }
 
-        // Language server type settings
-        config.setup(c => c.get<LanguageServerType>('languageServer'))
-            .returns(() => sourceSettings.languageServerType);
-
         // number settings
         if (sourceSettings.jediEnabled) {
             config.setup(c => c.get<number>('jediMemoryLimit'))
                 .returns(() => sourceSettings.jediMemoryLimit);
         }
+
+        // Language server type settings
+        config.setup(c => c.get<LanguageServerType>('languageServer'))
+            .returns(() => sourceSettings.languageServerType);
 
         // "any" settings
         // tslint:disable-next-line:no-any
