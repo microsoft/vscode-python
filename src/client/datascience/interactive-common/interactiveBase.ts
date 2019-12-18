@@ -1074,7 +1074,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
                         // Determine the connection URI of the connected server to display
                         if (connectionInfo) {
-                            connectionInfo.localLaunch ? localizedUri = localize.DataScience.localJupyterServer() : localizedUri = connectionInfo.baseUrl;
+                            if (connectionInfo.localLaunch) {
+                                localizedUri = localize.DataScience.localJupyterServer();
+                            } else {
+                                if (connectionInfo.token) {
+                                    localizedUri = `${connectionInfo.baseUrl}?token=${connectionInfo.token}`;
+                                } else {
+                                    localizedUri = connectionInfo.baseUrl;
+                                }
+                            }
                         }
 
                         const name = kernelSpec.display_name || kernelSpec.name;
