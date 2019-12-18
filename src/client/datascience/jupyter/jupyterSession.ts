@@ -347,6 +347,7 @@ export class JupyterSession implements IJupyterSession {
                 }
                 // Do not shutdown remote sessions.
                 if (session.isRemoteSession){
+                    session.dispose();
                     return;
                 }
                 try {

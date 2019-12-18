@@ -141,7 +141,8 @@ suite('Data Science - JupyterSession', () => {
                 verify(contentsManager.delete(anything())).never();
                 // With remote sessions, do not shutdown the remote session.
                 verify(session.shutdown()).never();
-                verify(session.dispose()).never();
+                // With remote sessions, we should not shut the session, but dispose it.
+                verify(session.dispose()).once();
             });
             test('Local', async () => {
                 verify(statusChangedSignal.connect(anything())).once();
