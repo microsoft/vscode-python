@@ -149,7 +149,7 @@ export class MockJupyterManager implements IJupyterSessionManager {
         this.addCell(`__file__ = '${Uri.file('bar.py').fsPath.replace(/\\/g, '\\\\')}'`);
         this.addCell(`__file__ = '${Uri.file('foo').fsPath.replace(/\\/g, '\\\\')}'`);
         this.addCell(`__file__ = '${Uri.file('test.py').fsPath.replace(/\\/g, '\\\\')}'`);
-        this.addCell('import os\nos.getcwd()', path.join(EXTENSION_ROOT_DIR));
+        this.addCell('import os\nos.getcwd()', `'${path.join(EXTENSION_ROOT_DIR)}'`);
     }
 
     public getConnInfo(): IConnection {
@@ -324,6 +324,10 @@ export class MockJupyterManager implements IJupyterSessionManager {
 
     public getKernelSpecs(): Promise<IJupyterKernelSpec[]> {
         return Promise.resolve([]);
+    }
+
+    public changeWorkingDirectory(workingDir: string) {
+        this.addCell('import os\nos.getcwd()', path.join(workingDir));
     }
 
     private addCellOutput(cell: ICell, result?: undefined | string | number | nbformat.IUnrecognizedOutput | nbformat.IExecuteResult | nbformat.IDisplayData | nbformat.IStream | nbformat.IError, mimeType?: string) {

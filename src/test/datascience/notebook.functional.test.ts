@@ -128,11 +128,18 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    async function verifySimple(notebook: INotebook | undefined, code: string, expectedValue: any): Promise<void> {
+    async function verifySimple(notebook: INotebook | undefined, code: string, expectedValue: any, pathVerify = false): Promise<void> {
         const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         const data = extractDataOutput(cells[0]);
-        assert.equal(data, expectedValue, 'Cell value does not match');
+        if (pathVerify) {
+            // For a path comparison normalize output and add single quotes on expected value
+            const normalizedOutput = path.normalize(data).toUpperCase();
+            const normalizedTarget = `'${path.normalize(expectedValue).toUpperCase()}'`;
+            assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
+        } else {
+            assert.equal(data, expectedValue, 'Cell value does not match');
+        }
     }
 
     async function verifyError(notebook: INotebook | undefined, code: string, errorString: string): Promise<void> {
@@ -224,14 +231,21 @@ suite('DataScience notebook tests', () => {
         });
     }
 
-    async function createNotebook(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebook | undefined> {
+    async function createNotebook(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string, workingDir?: string, launchingFile?: string): Promise<INotebook | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
-            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: ioc.getSettings().datascience.notebookFileRoot, purpose: purpose ? purpose : '1' });
+            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: workingDir ? workingDir : ioc.getSettings().datascience.notebookFileRoot, purpose: purpose ? purpose : '1' });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
-            return server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            if (server) {
+                const notebook = await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity));
+                // If specified set our launch file
+                if (launchingFile) {
+                    await notebook.setLaunchingFile(launchingFile);
+                }
+                return notebook;
+            }
         } catch (exc) {
             if (!expectFailure) {
                 assert.ok(false, `Expected server to be created, but got ${exc}`);
@@ -246,6 +260,12 @@ suite('DataScience notebook tests', () => {
             } else {
                 ioc.mockJupyter.addCell(code, result, mimeType);
             }
+        }
+    }
+
+    function changeMockWorkingDirectory(workingDir: string) {
+        if (ioc.mockJupyter) {
+            ioc.mockJupyter.changeWorkingDirectory(workingDir);
         }
     }
 
@@ -531,9 +551,18 @@ suite('DataScience notebook tests', () => {
         }
     });
 
-    runTest('Verify path', async () => {
-        const notebook = await createNotebook(true);
-        await verifySimple(notebook, 'import os\nos.getcwd()', EXTENSION_ROOT_DIR);
+    runTest('Verify manual working directory', async () => {
+        // Instead of default, manually set a working directory
+        const notebook = await createNotebook(true, undefined, undefined, undefined, EXTENSION_ROOT_DIR);
+        await verifySimple(notebook, 'import os\nos.getcwd()', EXTENSION_ROOT_DIR, true);
+    });
+
+    // tslint:disable-next-line:no-invalid-template-strings
+    runTest('Verify ${fileDirname} working directory', async () => {
+        // Verify that the default ${fileDirname} setting sets the working directory to the file path
+        changeMockWorkingDirectory(`'${srcDirectory()}'`);
+        const notebook = await createNotebook(true, undefined, undefined, undefined, undefined, path.join(srcDirectory(), 'foo.py'));
+        await verifySimple(notebook, 'import os\nos.getcwd()', srcDirectory(), true);
     });
 
     runTest('Change Interpreter', async () => {
