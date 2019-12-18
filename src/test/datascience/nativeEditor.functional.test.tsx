@@ -8,8 +8,6 @@ import { ReactWrapper } from 'enzyme';
 import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Provider } from 'react-redux';
-import * as Redux from 'redux';
 import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -25,7 +23,6 @@ import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } 
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
-import { IStore } from '../../datascience-ui/interactive-common/redux/store';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
@@ -1152,7 +1149,6 @@ for _ in range(50):
 
         suite('Auto Save', () => {
             let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
-            let store: Redux.Store<IStore, Redux.AnyAction>;
             setup(async function() {
                 initIoc();
 
@@ -1163,32 +1159,8 @@ for _ in range(50):
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
 
-                store = wrapper.find(Provider).props().store;
-
             });
             teardown(() => sinon.restore());
-
-            /**
-             * Wait for notebook to be marked as dirty (within a timeout of 5s).
-             *
-             * @param {boolean} [dirty=true]
-             * @returns {Promise<void>}
-             */
-            async function waitForNotebookToBeDirty(): Promise<void> {
-                // Wait for the state to get updated.
-                await waitForCondition(async () => store.getState().main.dirty === true, 5_000, `Timeout waiting for dirty state to get updated to true`);
-            }
-
-            /**
-             * Wait for notebook to be marked as clean (within a timeout of 5s).
-             *
-             * @param {boolean} [dirty=true]
-             * @returns {Promise<void>}
-             */
-            async function waitForNotebookToBeClean(): Promise<void> {
-                // Wait for the state to get updated.
-                await waitForCondition(async () => store.getState().main.dirty === false, 5_000, `Timeout waiting for dirty state to get updated to false`);
-            }
 
             /**
              * Make some kind of a change to the notebook.
@@ -1213,14 +1185,16 @@ for _ in range(50):
                  */
                 async function makeChangesAndConfirmFileIsUpdated() {
                     const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                    const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                    const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                     await modifyNotebook();
-                    await waitForNotebookToBeDirty();
+                    await dirtyPromise;
 
                     // At this point a message should be sent to extension asking it to save.
                     // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                    await cleanPromise;
 
-                    await waitForNotebookToBeClean();
                     // Confirm file has been updated as well.
                     const newFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                     assert.notEqual(newFileContents, notebookFileContents);
@@ -1238,14 +1212,16 @@ for _ in range(50):
                 when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(2_000);
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                await cleanPromise;
 
-                await waitForNotebookToBeClean();
                 // Confirm file is not the same. There should be a single cell that's been added
                 const newFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                 assert.notEqual(newFileContents, notebookFileContents);
@@ -1263,8 +1239,11 @@ for _ in range(50):
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath, { ...defaultDataScienceSettings(), showCellInputCode: false });
                 await promise;
 
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, { timeoutMs: 5_000 });
+
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Now that the notebook is dirty, change the active editor.
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -1274,16 +1253,18 @@ for _ in range(50):
                 windowStateChangeHandlers.forEach(item => item({ focused: true }));
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
+                await expect(cleanPromise).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-            });
+            }).timeout(10_000);
 
             async function testAutoSavingWhenEditorFocusChanges(newEditor: TextEditor | undefined) {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when active editor changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onFocusChange');
@@ -1295,8 +1276,8 @@ for _ in range(50):
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                await cleanPromise;
 
-                await waitForNotebookToBeClean();
                 // Confirm file has been updated as well.
                 assert.notEqual(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
             }
@@ -1308,9 +1289,11 @@ for _ in range(50):
 
             test('Should not auto save notebook when active editor changes', async () => {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, { timeoutMs: 5_000 });
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when window state changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onWindowChange');
@@ -1322,16 +1305,18 @@ for _ in range(50):
                 docManager.didChangeActiveTextEditorEmitter.fire();
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
+                await expect(cleanPromise).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-            });
+            }).timeout(10_000);
 
             async function testAutoSavingWithChangesToWindowState(focused: boolean) {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when active editor changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onWindowChange');
@@ -1342,8 +1327,8 @@ for _ in range(50):
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                await cleanPromise;
 
-                await waitForNotebookToBeClean();
                 // Confirm file has been updated as well.
                 assert.notEqual(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
             }
@@ -1353,9 +1338,11 @@ for _ in range(50):
 
             test('Should not auto save notebook when window state changes', async () => {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, { timeoutMs: 5_000 });
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when active editor changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onFocusChange');
@@ -1367,10 +1354,10 @@ for _ in range(50):
                 windowStateChangeHandlers.forEach(item => item({ focused: true }));
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
+                await expect(cleanPromise).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-            });
+            }).timeout(10_000);
         });
 
         suite('Update Metadata', () => {
