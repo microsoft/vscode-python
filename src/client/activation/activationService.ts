@@ -195,28 +195,31 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
-        let serverType = LanguageServerType.Jedi;
-        if (!this.useJedi()) {
-            // Check if user deactivate LS via 'None' since they want to use some other extension for the editor suport.
-            const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-            serverType = configurationService.getSettings(this.resource).languageServerType;
-            switch (serverType) {
-                case LanguageServerType.None:
-                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
-                    break;
-                case LanguageServerType.Microsoft:
-                    serverType = LanguageServerType.Microsoft;
-                    const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
-                    this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-                    if (diagnostic.length) {
-                        sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
-                        serverType = LanguageServerType.Jedi;
-                    }
-                    break;
-                default:
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        let serverType = configurationService.getSettings(this.resource).languageServerType;
+        if (!serverType) {
+            serverType = LanguageServerType.Jedi;
+        }
+
+        switch (serverType) {
+            case LanguageServerType.None:
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
+                break;
+            case LanguageServerType.Microsoft:
+                if (this.useJedi()) {
                     serverType = LanguageServerType.Jedi;
                     break;
-            }
+                }
+                const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
+                this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+                if (diagnostic.length) {
+                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
+                    serverType = LanguageServerType.Jedi;
+                }
+                break;
+            default:
+                serverType = LanguageServerType.Jedi;
+                break;
         }
 
         await this.logStartup(serverType);
