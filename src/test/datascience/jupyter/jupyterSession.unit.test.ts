@@ -1,8 +1,5 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { ContentsManager, Kernel, ServerConnection, Session, SessionManager } from '@jupyterlab/services';
 import { DefaultKernel } from '@jupyterlab/services/lib/kernel/default';
 import { KernelFutureHandler } from '@jupyterlab/services/lib/kernel/future';
@@ -12,8 +9,10 @@ import { assert } from 'chai';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
+
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { DataScience } from '../../../client/common/utils/localize';
+import { noop } from '../../../client/common/utils/misc';
 import { JupyterSession } from '../../../client/datascience/jupyter/jupyterSession';
 import { KernelSelector } from '../../../client/datascience/jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../../../client/datascience/jupyter/kernels/types';
@@ -179,6 +178,7 @@ suite('Data Science - JupyterSession', () => {
             });
         });
         suite('Remote Sessions', async () => {
+            let restartCount = 0;
             const newActiveRemoteKernel: LiveKernelModel = {
                 argv: [],
                 display_name: 'new kernel',
@@ -187,8 +187,21 @@ suite('Data Science - JupyterSession', () => {
                 path: 'path',
                 lastActivityTime: new Date(),
                 numberOfConnections: 1,
-                // tslint:disable-next-line: no-any
-                session: {} as any,
+                session: {
+                    statusChanged: {
+                        connect: noop
+                    },
+                    kernelChanged: {
+                        connect: noop
+                    },
+                    kernel: {
+                        status: 'idle',
+                        restart: () => restartCount = restartCount + 1
+                    },
+                    shutdown: () => Promise.resolve(),
+                    isRemoteSession: false
+                    // tslint:disable-next-line: no-any
+                } as any,
                 id: 'liveKernel'
             };
             let remoteSession: ISession;
@@ -206,7 +219,7 @@ suite('Data Science - JupyterSession', () => {
                     const signal = mock(Signal);
                     when(remoteSession.statusChanged).thenReturn(instance(signal));
                     verify(sessionManager.startNew(anything())).once();
-                    when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(instance(remoteSession));
+                    when(sessionManager.connectTo(newActiveRemoteKernel.session)).thenReturn(newActiveRemoteKernel.session as any);
 
                     assert.isFalse(remoteSessionInstance.isRemoteSession);
                     await jupyterSession.changeKernel(newActiveRemoteKernel, 10000);
@@ -220,7 +233,7 @@ suite('Data Science - JupyterSession', () => {
                 });
                 test('Will flag new session as being remote', async () => {
                     // Confirm the new session is flagged as remote
-                    assert.isTrue(remoteSessionInstance.isRemoteSession);
+                    assert.isTrue(newActiveRemoteKernel.session.isRemoteSession);
                 });
                 test('Will note create a new session', async () => {
                     verify(sessionManager.startNew(anything())).once();
@@ -231,7 +244,7 @@ suite('Data Science - JupyterSession', () => {
                     await jupyterSession.restart(0);
 
                     // We should restart the kernel, not the session.
-                    verify(remoteKernel.restart()).once();
+                    assert.equal(restartCount, 1, 'Did not restart the kernel');
                     verify(remoteSession.shutdown()).never();
                     verify(remoteSession.dispose()).never();
                 });
