@@ -10,7 +10,7 @@ import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import { ILinter, ILinterManager } from '../../client/linters/types';
 import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
-import { closeActiveWindows, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from '../initialize';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
 
 // tslint:disable:max-func-body-length no-invalid-this
@@ -26,9 +26,7 @@ suite('Multiroot Linting', () => {
         if (!IS_MULTI_ROOT_TEST) {
             this.skip();
         }
-        // https://github.com/microsoft/vscode-python/issues/9059
-        return this.skip();
-        // return initialize();
+        return initialize();
     });
     setup(async () => {
         initializeDI();
@@ -47,7 +45,7 @@ suite('Multiroot Linting', () => {
         ioc.registerProcessTypes();
         ioc.registerLinterTypes();
         ioc.registerVariableTypes();
-        ioc.registerPlatformTypes();
+        ioc.registerFileSystemTypes();
         ioc.registerMockInterpreterTypes();
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
@@ -59,10 +57,9 @@ suite('Multiroot Linting', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
     }
 
-    async function createLinter(product: Product, resource?: Uri): Promise<ILinter> {
+    async function createLinter(product: Product): Promise<ILinter> {
         const mockOutputChannel = ioc.serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         const lm = ioc.serviceContainer.get<ILinterManager>(ILinterManager);
-        await lm.setActiveLintersAsync([product], resource);
         return lm.createLinter(product, mockOutputChannel, ioc.serviceContainer);
     }
     async function testLinterInWorkspaceFolder(product: Product, workspaceFolderRelativePath: string, mustHaveErrors: boolean): Promise<void> {
@@ -75,10 +72,6 @@ suite('Multiroot Linting', () => {
 
         const errorMessage = mustHaveErrors ? 'No errors returned by linter' : 'Errors returned by linter';
         assert.equal(messages.length > 0, mustHaveErrors, errorMessage);
-    }
-    async function enableDisableSetting(workspaceFolder: string, configTarget: ConfigurationTarget, setting: string, value: boolean): Promise<void> {
-        const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        await config.updateSetting(setting, value, Uri.file(workspaceFolder), configTarget);
     }
 
     test('Enabling Pylint in root and also in Workspace, should return errors', async () => {
@@ -102,9 +95,15 @@ suite('Multiroot Linting', () => {
     });
 
     async function runTest(product: Product, global: boolean, wks: boolean, setting: string): Promise<void> {
-        const expected = wks ? wks : global;
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Global, setting, global);
-        await enableDisableSetting(multirootPath, ConfigurationTarget.Workspace, setting, wks);
-        await testLinterInWorkspaceFolder(product, 'workspace1', expected);
+        const config = ioc.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        await Promise.all([
+            config.updateSetting(setting, global, Uri.file(multirootPath), ConfigurationTarget.Global),
+            config.updateSetting(setting, wks, Uri.file(multirootPath), ConfigurationTarget.Workspace)
+        ]);
+        await testLinterInWorkspaceFolder(product, 'workspace1', wks);
+        await Promise.all(
+            [ConfigurationTarget.Global, ConfigurationTarget.Workspace]
+                .map(configTarget => config.updateSetting(setting, undefined, Uri.file(multirootPath), configTarget))
+        );
     }
 });
