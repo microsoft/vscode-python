@@ -26,9 +26,9 @@ export class AttachProcessProviderFactory implements IAttachProcessProviderFacto
         return new PsAttachProcessProvider(
             this.applicationShell,
             this.commandManager,
+            this.disposableRegistry,
             this.platformService,
-            this.processServiceFactory,
-            this.disposableRegistry
+            this.processServiceFactory
         );
     }
 }
