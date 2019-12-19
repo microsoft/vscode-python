@@ -64,15 +64,11 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
     return {
         type: filetype,
         size: old.size,
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   FileStat.ctime and FileStat.mtime only have 1-second resolution.
-        //   So for now we round to the nearest integer.
-        // tslint:disable-next-line:no-suspicious-comment
-        // TODO (https://github.com/microsoft/vscode/issues/84177)
-        //   FileStat.ctime is consistently 0 instead of the actual ctime.
-        ctime: 0,
-        //ctime: Math.round(old.ctimeMs),
+        // FileStat.ctime and FileStat.mtime only have 1-millisecond
+        // resolution, while node provides nanosecond resolution.  So
+        // for now we round to the nearest integer.
+        // See: https://github.com/microsoft/vscode/issues/84526
+        ctime: Math.round(old.ctimeMs),
         mtime: Math.round(old.mtimeMs)
     };
 }
@@ -116,6 +112,9 @@ export class FileSystem implements IFileSystem {
         // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
         // tslint:disable-next-line: no-require-imports
         const vscode = require('vscode');
+        // Note that, prior to the November release of VS Code,
+        // stat.ctime was always 0.
+        // See: https://github.com/microsoft/vscode/issues/84525
         return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
     }
     public async lstat(filename: string): Promise<FileStat> {
