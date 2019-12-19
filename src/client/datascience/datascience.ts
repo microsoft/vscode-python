@@ -343,7 +343,6 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async setJupyterURIToRemote(userURI: string): Promise<void> {
-        //this.addToUriList(userURI);
         await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
