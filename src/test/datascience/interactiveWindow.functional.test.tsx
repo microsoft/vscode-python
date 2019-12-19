@@ -457,7 +457,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
+        await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -473,7 +473,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
+        await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         const ImageButtons = getLastOutputCell(wrapper, 'InteractiveCell').find(ImageButton);
         assert.equal(ImageButtons.length, 4, 'Cell buttons not found');
@@ -492,7 +492,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
+        await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Then delete the node
@@ -509,12 +509,12 @@ for _ in range(50):
         assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
 
         // Should be able to enter again
-        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
+        await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
 
         // Try a 3rd time with some new input
         addMockData(ioc, 'print("hello")', 'hello');
-        await enterInput(wrapper, InteractivePanel, 'print("hello', 'InteractiveCell');
+        await enterInput(wrapper, ioc, 'print("hello', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', 'hello', CellPosition.Last);
     }, () => { return ioc; });
 
@@ -611,7 +611,7 @@ for _ in range(50):
         await interactiveWindow.show();
 
         // Then enter some code.
-        await enterInput(wrapper, InteractivePanel, 'a=1\na', 'InteractiveCell');
+        await enterInput(wrapper, ioc, 'a=1\na', 'InteractiveCell');
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
         const ImageButtons = getLastOutputCell(wrapper, 'InteractiveCell').find(ImageButton);
         assert.equal(ImageButtons.length, 4, 'Cell buttons not found');

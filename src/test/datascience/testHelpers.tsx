@@ -24,6 +24,7 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -458,10 +459,10 @@ export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown
     }
 }
 
-async function submitInput(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, mainClass: React.ComponentClass<any>, textArea: HTMLTextAreaElement): Promise<void> {
+async function submitInput(ioc: DataScienceIocContainer, textArea: HTMLTextAreaElement): Promise<void> {
     // Get a render promise with the expected number of renders (how many updates a the shift + enter will cause)
     // Should be 6 - 1 for the shift+enter and 5 for the new cell.
-    const renderPromise = waitForUpdate(wrapper, mainClass, 6);
+    const renderPromise = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
     // Submit a keypress into the textarea
     simulateKey(textArea, 'Enter', true);
@@ -545,7 +546,7 @@ export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Co
 
 export async function enterInput(
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    mainClass: React.ComponentClass<any>,
+    ioc: DataScienceIocContainer,
     code: string,
     resultClass: string
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
@@ -555,7 +556,7 @@ export async function enterInput(
     const textArea = typeCode(editor, code);
 
     // Now simulate a shift enter. This should cause a new cell to be added
-    await submitInput(wrapper, mainClass, textArea!);
+    await submitInput(ioc, textArea!);
 
     // Return the result
     return wrapper.find(resultClass);
