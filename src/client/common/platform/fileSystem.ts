@@ -258,6 +258,7 @@ export class FileSystem implements IFileSystem {
         try {
             files = await this.listdir(dirname);
         } catch (err) {
+            // This matches what getSubDirectories() does.
             if (!await fs.pathExists(dirname)) {
                 return [];
             }
@@ -267,7 +268,7 @@ export class FileSystem implements IFileSystem {
             .filter(([_file, fileType]) => {
                 // We preserve the pre-existing behavior of following
                 // symlinks.
-                return (fileType & FileType.Directory) === 0;
+                return (fileType & FileType.File) > 0;
             })
             .map(([filename, _ft]) => filename);
     }

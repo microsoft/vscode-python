@@ -976,19 +976,22 @@ suite('FileSystem', () => {
         suite('getSubDirectories', () => {
             if (SUPPORTS_SYMLINKS) {
                 test('mixed types', async () => {
-                    const symlinkSource = await fix.createFile('x/info.py');
+                    const symlinkFileSource = await fix.createFile('x/info.py');
+                    const symlinkDirSource = await fix.createDirectory('x/data');
                     const dirname = await fix.createDirectory('x/y/z/scripts');
                     const subdir1 = await fix.createDirectory('x/y/z/scripts/w');
                     await fix.createFile('x/y/z/scripts/spam.py');
                     const subdir2 = await fix.createDirectory('x/y/z/scripts/v');
                     await fix.createFile('x/y/z/scripts/eggs.py');
                     await fix.createSocket('x/y/z/scripts/spam.sock');
-                    await fix.createSymlink('x/y/z/scripts/other', symlinkSource);
+                    await fix.createSymlink('x/y/z/scripts/other', symlinkFileSource);
+                    const symlink = await fix.createSymlink('x/y/z/scripts/datadir', symlinkDirSource);
                     await fix.createFile('x/y/z/scripts/data.json');
 
                     const results = await fileSystem.getSubDirectories(dirname);
 
                     expect(results.sort()).to.deep.equal([
+                        symlink,
                         subdir2,
                         subdir1
                     ]);
@@ -1022,14 +1025,16 @@ suite('FileSystem', () => {
         suite('getFiles', () => {
             if (SUPPORTS_SYMLINKS) {
                 test('mixed types', async () => {
-                    const symlinkSource = await fix.createFile('x/info.py');
+                    const symlinkFileSource = await fix.createFile('x/info.py');
+                    const symlinkDirSource = await fix.createDirectory('x/data');
                     const dirname = await fix.createDirectory('x/y/z/scripts');
                     await fix.createDirectory('x/y/z/scripts/w');
                     const file1 = await fix.createFile('x/y/z/scripts/spam.py');
                     await fix.createDirectory('x/y/z/scripts/v');
                     const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
-                    const sock = await fix.createSocket('x/y/z/scripts/spam.sock');
-                    const symlink = await fix.createSymlink('x/y/z/scripts/other', symlinkSource);
+                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                    const symlink = await fix.createSymlink('x/y/z/scripts/other', symlinkFileSource);
+                    await fix.createSymlink('x/y/z/scripts/datadir', symlinkDirSource);
                     const file3 = await fix.createFile('x/y/z/scripts/data.json');
 
                     const results = await fileSystem.getFiles(dirname);
@@ -1038,8 +1043,7 @@ suite('FileSystem', () => {
                         file3,
                         file2,
                         symlink,
-                        file1,
-                        sock
+                        file1
                     ]);
                 });
             } else {
@@ -1049,7 +1053,7 @@ suite('FileSystem', () => {
                     const file1 = await fix.createFile('x/y/z/scripts/spam.py');
                     await fix.createDirectory('x/y/z/scripts/v');
                     const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
-                    const sock = await fix.createSocket('x/y/z/scripts/spam.sock');
+                    await fix.createSocket('x/y/z/scripts/spam.sock');
                     const file3 = await fix.createFile('x/y/z/scripts/data.json');
 
                     const results = await fileSystem.getFiles(dirname);
@@ -1057,8 +1061,7 @@ suite('FileSystem', () => {
                     expect(results.sort()).to.deep.equal([
                         file3,
                         file2,
-                        file1,
-                        sock
+                        file1
                     ]);
                 });
             }
