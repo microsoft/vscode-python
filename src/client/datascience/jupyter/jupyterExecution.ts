@@ -21,7 +21,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerLaunchInfo,
-    INotebookServerOptions,
+    INotebookServerOptions
 } from '../types';
 import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
