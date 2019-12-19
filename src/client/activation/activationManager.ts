@@ -63,7 +63,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await Promise.all(this.activationServices.map(item => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
-    protected async initialize() {
+    public async initialize() {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
     }

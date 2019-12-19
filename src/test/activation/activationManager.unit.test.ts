@@ -3,13 +3,14 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { IExtensionActivationService } from '../../client/activation/types';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -246,5 +247,80 @@ suite('Language Server Activation - ActivationManager', () => {
 
         verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).twice();
+    });
+});
+
+suite('Language Server Activation - activate()', () => {
+    let workspaceService: IWorkspaceService;
+    let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
+    let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
+    let interpreterService: IInterpreterService;
+    let activeResourceService: IActiveResourceService;
+    let documentManager: typemoq.IMock<IDocumentManager>;
+    let activationService1: IExtensionActivationService;
+    let activationService2: IExtensionActivationService;
+    let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
+    let initialize: sinon.SinonStub<any>;
+    let activateWorkspace: sinon.SinonStub<any>;
+    let managerTest: ExtensionActivationManager;
+    const resource = Uri.parse('a');
+    setup(() => {
+        workspaceService = mock(WorkspaceService);
+        activeResourceService = mock(ActiveResourceService);
+        appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
+        autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
+        interpreterService = mock(InterpreterService);
+        documentManager = typemoq.Mock.ofType<IDocumentManager>();
+        activationService1 = mock(LanguageServerExtensionActivationService);
+        activationService2 = mock(LanguageServerExtensionActivationService);
+        singleActivationService = typemoq.Mock.ofType<IExtensionSingleActivationService>();
+        initialize = sinon.stub(ExtensionActivationManager.prototype, 'initialize');
+        initialize.resolves();
+        activateWorkspace = sinon.stub(ExtensionActivationManager.prototype, 'activateWorkspace');
+        activateWorkspace.resolves();
+        managerTest = new ExtensionActivationManager(
+            [instance(activationService1), instance(activationService2)], [singleActivationService.object],
+            documentManager.object,
+            instance(interpreterService),
+            autoSelection.object,
+            appDiagnostics.object,
+            instance(workspaceService),
+            instance(activeResourceService)
+        );
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
+    test('Execution goes as expected if there are no errors', async () => {
+        singleActivationService
+            .setup(s => s.activate())
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        autoSelection
+            .setup(a => a.autoSelectInterpreter(undefined))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        when(activeResourceService.getActiveResource()).thenReturn(resource);
+        await managerTest.activate();
+        assert.ok(initialize.calledOnce);
+        assert.ok(activateWorkspace.calledOnce);
+        singleActivationService.verifyAll();
+        autoSelection.verifyAll();
+    });
+
+    test('Throws error if execution fails', async () => {
+        singleActivationService
+            .setup(s => s.activate())
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        autoSelection
+            .setup(a => a.autoSelectInterpreter(undefined))
+            .returns(() => Promise.reject(new Error('Kaboom')))
+            .verifiable(typemoq.Times.once());
+        when(activeResourceService.getActiveResource()).thenReturn(resource);
+        const promise = managerTest.activate();
+        await expect(promise).to.eventually.be.rejectedWith('Kaboom');
     });
 });
