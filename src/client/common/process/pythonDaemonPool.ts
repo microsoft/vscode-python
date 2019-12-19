@@ -41,7 +41,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         private readonly activatedEnvVariables?: NodeJS.ProcessEnv,
         private readonly timeoutWaitingForDaemon: number = 1_000
     ) {
-        if (!options.pythonPath){
+        if (!options.pythonPath) {
             throw new Error('options.pythonPath is empty when it shoud not be');
         }
         this.pythonPath = options.pythonPath;
@@ -49,7 +49,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         // The daemon must have access to the Python Module that'll run the daemon
         // & also access to a Python package used for the JSON rpc comms.
         const envPythonPath = `${path.join(EXTENSION_ROOT_DIR, 'pythonFiles')}${path.delimiter}${path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python')}`;
-        this.envVariables = this.activatedEnvVariables ? { ...this.activatedEnvVariables } : {};
+        this.envVariables = this.activatedEnvVariables ? { ...this.activatedEnvVariables } : { ...process.env };
         this.envVariables.PYTHONPATH = this.envVariables.PYTHONPATH ? `${this.envVariables.PYTHONPATH}${path.delimiter}${envPythonPath}` : envPythonPath;
         this.envVariables.PYTHONUNBUFFERED = '1';
     }
@@ -65,34 +65,34 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         noop();
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
-        const msg = {args: ['GetPythonVersion']};
+        const msg = { args: ['GetPythonVersion'] };
         return this.wrapCall(daemon => daemon.getInterpreterInformation(), msg);
     }
     public async getExecutablePath(): Promise<string> {
-        const msg = {args: ['getExecutablePath']};
+        const msg = { args: ['getExecutablePath'] };
         return this.wrapCall(daemon => daemon.getExecutablePath(), msg);
     }
     public getExecutionInfo(args: string[]): PythonExecutionInfo {
         return this.pythonExecutionService.getExecutionInfo(args);
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
-        const msg = {args: ['-m', moduleName]};
+        const msg = { args: ['-m', moduleName] };
         return this.wrapCall(daemon => daemon.isModuleInstalled(moduleName), msg);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const msg = {args, options};
+        const msg = { args, options };
         return this.wrapCall(daemon => daemon.exec(args, options), msg);
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const msg = {args: ['-m', moduleName].concat(args), options};
+        const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapCall(daemon => daemon.execModule(moduleName, args, options), msg);
     }
     public execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        const msg = {args, options};
+        const msg = { args, options };
         return this.wrapObservableCall(daemon => daemon.execObservable(args, options), msg);
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
-        const msg = {args: ['-m', moduleName].concat(args), options};
+        const msg = { args: ['-m', moduleName].concat(args), options };
         return this.wrapObservableCall(daemon => daemon.execModuleObservable(moduleName, args, options), msg);
     }
     /**
@@ -103,7 +103,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns
      * @memberof PythonDaemonExecutionServicePool
      */
-    protected createConnection(proc: ChildProcess){
+    protected createConnection(proc: ChildProcess) {
         return createMessageConnection(new StreamMessageReader(proc.stdout), new StreamMessageWriter(proc.stdin));
     }
     @traceDecorators.error('Failed to create daemon')
@@ -131,7 +131,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
 
             const cls = this.options.daemonClass ?? PythonDaemonExecutionService;
             const instance = new cls(this.pythonExecutionService, this.pythonPath, daemonProc.proc, connection);
-            if (instance instanceof PythonDaemonExecutionService){
+            if (instance instanceof PythonDaemonExecutionService) {
                 this.disposables.push(instance);
                 return instance;
             }
@@ -153,7 +153,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns {Promise<T>}
      * @memberof PythonDaemonExecutionServicePool
      */
-    private async wrapCall<T>(cb: (daemon: IPythonExecutionService) => Promise<T>, daemonLogMessage: {args: string[]; options?: SpawnOptions}): Promise<T> {
+    private async wrapCall<T>(cb: (daemon: IPythonExecutionService) => Promise<T>, daemonLogMessage: { args: string[]; options?: SpawnOptions }): Promise<T> {
         const daemon = await this.popDaemonFromPool();
         try {
             // When using the daemon, log the message ourselves.
@@ -175,7 +175,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns {ObservableExecutionResult<string>}
      * @memberof PythonDaemonExecutionServicePool
      */
-    private wrapObservableCall(cb: (daemon: IPythonExecutionService) => ObservableExecutionResult<string>, daemonLogMessage: {args: string[]; options?: SpawnOptions}): ObservableExecutionResult<string> {
+    private wrapObservableCall(cb: (daemon: IPythonExecutionService) => ObservableExecutionResult<string>, daemonLogMessage: { args: string[]; options?: SpawnOptions }): ObservableExecutionResult<string> {
         const execService = this.popDaemonFromObservablePool();
         // Possible the daemon returned is a standard python execution service.
         const daemonProc = execService instanceof PythonDaemonExecutionService ? execService.proc : undefined;
@@ -187,11 +187,11 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const result = cb(execService);
         let completed = false;
         const completeHandler = () => {
-            if (completed){
+            if (completed) {
                 return;
             }
             completed = true;
-            if (!daemonProc || (!daemonProc.killed && ProcessService.isAlive(daemonProc.pid))){
+            if (!daemonProc || (!daemonProc.killed && ProcessService.isAlive(daemonProc.pid))) {
                 this.pushDaemonIntoPool('ObservableDaemon', execService);
             } else {
                 // Possible daemon is dead (explicitly killed or died due to some error).
@@ -199,7 +199,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
             }
         };
 
-        if (daemonProc){
+        if (daemonProc) {
             daemonProc.on('exit', completeHandler);
             daemonProc.on('close', completeHandler);
         }
@@ -270,13 +270,13 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const testAndPushIntoPool = async () => {
             const daemonService = (daemon as PythonDaemonExecutionService);
             let procIsDead = false;
-            if (!daemonService.isAlive || daemonService.proc.killed || !ProcessService.isAlive(daemonService.proc.pid)){
+            if (!daemonService.isAlive || daemonService.proc.killed || !ProcessService.isAlive(daemonService.proc.pid)) {
                 procIsDead = true;
             } else {
                 // Test sending a ping.
                 procIsDead = await this.testDaemon(daemonService.connection).then(() => false).catch(() => true);
             }
-            if (procIsDead){
+            if (procIsDead) {
                 // The process is dead, create a new daemon.
                 await this.addDaemonService(type);
                 try {
@@ -301,10 +301,10 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @memberof PythonDaemonExecutionServicePool
      */
     @traceDecorators.error('Pinging Daemon Failed')
-    private async testDaemon(connection: MessageConnection){
+    private async testDaemon(connection: MessageConnection) {
         // If we don't get a reply to the ping in 5 seconds assume it will never work. Bomb out.
         // At this point there should be some information logged in stderr of the daemon process.
-        const fail = createDeferred<{pong: string}>();
+        const fail = createDeferred<{ pong: string }>();
         const timer = setTimeout(() => fail.reject(new Error('Timeout waiting for daemon to start')), 5_000);
         const request = new RequestType<{ data: string }, { pong: string }, void, void>('ping');
         // Check whether the daemon has started correctly, by sending a ping.

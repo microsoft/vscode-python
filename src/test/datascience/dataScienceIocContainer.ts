@@ -278,7 +278,6 @@ import { PythonInterpreterLocatorService } from '../../client/interpreter/locato
 import { InterpreterLocatorHelper } from '../../client/interpreter/locators/helpers';
 import { CondaEnvFileService } from '../../client/interpreter/locators/services/condaEnvFileService';
 import { CondaEnvService } from '../../client/interpreter/locators/services/condaEnvService';
-import { CondaService } from '../../client/interpreter/locators/services/condaService';
 import {
     CurrentPathService,
     PythonInPathCommandProvider
@@ -702,13 +701,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
 
+        // Don't use conda at all during functional tests.
+        const condaService = TypeMoq.Mock.ofType<ICondaService>();
+        this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
+        condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
+        condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
+        condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
+
         // Create our jupyter mock if necessary
         if (this.shouldMockJupyter) {
-            const condaService = TypeMoq.Mock.ofType<ICondaService>();
-            this.serviceManager.addSingletonInstance<ICondaService>(ICondaService, condaService.object);
-            condaService.setup(c => c.isCondaAvailable()).returns(() => Promise.resolve(false));
-            condaService.setup(c => c.isCondaEnvironment(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(false));
-            condaService.setup(c => c.condaEnvironmentsFile).returns(() => undefined);
 
             this.jupyterMock = new MockJupyterManagerFactory(this.serviceManager);
             // When using mocked Jupyter, default to using default kernel.
@@ -716,7 +717,6 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             when(kernelService.searchAndRegisterKernel(anything(), anything())).thenResolve(undefined);
             this.serviceManager.addSingletonInstance<KernelService>(KernelService, instance(kernelService));
         } else {
-            this.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
             this.serviceManager.addSingleton<KernelService>(KernelService, KernelService);
             this.serviceManager.addSingleton<IProcessServiceFactory>(IProcessServiceFactory, ProcessServiceFactory);
             this.serviceManager.addSingleton<IPythonExecutionFactory>(IPythonExecutionFactory, PythonExecutionFactory);

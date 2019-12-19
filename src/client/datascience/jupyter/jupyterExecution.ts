@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
@@ -21,7 +21,7 @@ import {
     IJupyterSessionManagerFactory,
     INotebookServer,
     INotebookServerLaunchInfo,
-    INotebookServerOptions
+    INotebookServerOptions,
 } from '../types';
 import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
@@ -110,18 +110,25 @@ export class JupyterExecutionBase implements IJupyterExecution {
     //tslint:disable:cyclomatic-complexity
     public connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
+        // tslint:disable-next-line: max-func-body-length
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
             let connection: IConnection | undefined;
             let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
+            const kernelSpecCancelSource = new CancellationTokenSource();
+            if (cancelToken) {
+                cancelToken.onCancellationRequested(() => {
+                    kernelSpecCancelSource.cancel();
+                });
+            }
 
             if (!options || !options.uri) {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(undefined, options?.metadata, cancelToken);
+                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(undefined, options?.metadata, kernelSpecCancelSource.token);
             }
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
@@ -175,6 +182,8 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         connection?.dispose();
                         tryCount += 1;
                     } else if (connection) {
+                        kernelSpecCancelSource.cancel();
+
                         // Something else went wrong
                         if (options && options.uri) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
@@ -191,6 +200,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err));
                         }
                     } else {
+                        kernelSpecCancelSource.cancel();
                         throw err;
                     }
                 }
