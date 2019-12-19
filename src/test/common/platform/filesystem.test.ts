@@ -71,6 +71,16 @@ suite('FileSystem', () => {
             expect(stat).to.deep.equal(expected);
         });
 
+        test('gets the info for a socket', async () => {
+            const sock = await fix.createSocket('x/spam.sock');
+            const old = await fsextra.stat(sock);
+            const expected = convertStat(old, FileType.Unknown);
+
+            const stat = await filesystem.stat(sock);
+
+            expect(stat).to.deep.equal(expected);
+        });
+
         test('fails if the file does not exist', async () => {
             const promise = filesystem.stat(DOES_NOT_EXIST);
 
