@@ -133,8 +133,9 @@ export interface IInstaller {
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8542): Drop IPathUtils in favor of IFileSystemPathUtils.
 export const IPathUtils = Symbol('IPathUtils');
-
 export interface IPathUtils {
     readonly delimiter: string;
     readonly home: string;
