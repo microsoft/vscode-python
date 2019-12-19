@@ -208,7 +208,7 @@ for _ in range(50):
         verifyHtmlOnCell(wrapper, 'InteractiveCell', `<td>`, CellPosition.Last);
 
         await addCode(ioc, wrapper, matPlotLib);
-        verifyHtmlOnCell(wrapper, 'InteractiveCell', matPlotLibResults, CellPosition.Last);
+        verifyHtmlOnCell(wrapper, 'InteractiveCell', /img|Figure/, CellPosition.Last);
 
         await addCode(ioc, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? (cursors.length * 3) : 0));
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>', CellPosition.Last);
