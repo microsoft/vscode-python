@@ -13,6 +13,7 @@ import { CancellationToken } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
+import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
 import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
@@ -24,7 +25,6 @@ import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
-import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
