@@ -1,14 +1,14 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
@@ -52,7 +52,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataScience) dataScience: DataScience,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento
     ) {
         super(
             listeners,
@@ -76,6 +77,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             editorProvider,
             dataScience,
             errorHandler,
+            globalStorage,
             historyReactDir,
             [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),

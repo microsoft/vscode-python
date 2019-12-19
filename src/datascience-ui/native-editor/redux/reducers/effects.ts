@@ -169,7 +169,7 @@ export namespace Effects {
         return {
             ...arg.prevState,
             settings: newSettings,
-            editorOptions: newEditorOptions,
+            editorOptions: { ...newEditorOptions, lineDecorationsWidth: 5},
             font: {
                 size: newFontSize,
                 family: newFontFamily

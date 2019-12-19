@@ -1,21 +1,23 @@
-    // Copyright (c) Microsoft Corporation. All rights reserved.
+// Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
 import { assert } from 'chai';
 import { IDisposable } from 'monaco-editor';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
-import { Uri } from 'vscode';
+import { QuickPickItem, Uri } from 'vscode';
 import { DebugService } from '../../client/common/application/debugService';
 import { IApplicationShell } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
 import { IDataScienceSettings, IExtensionContext } from '../../client/common/types';
+import * as localize from '../../client/common/utils/localize';
+import { noop } from '../../client/common/utils/misc';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { generateCells } from '../../client/datascience/cellFactory';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { formatStreamText, stripComments } from '../../client/datascience/common';
+import { addToUriList, formatStreamText, stripComments } from '../../client/datascience/common';
 import { Settings } from '../../client/datascience/constants';
 import { DataScience } from '../../client/datascience/datascience';
 import { DataScienceCodeLensProvider } from '../../client/datascience/editor-integration/codelensprovider';
@@ -287,7 +289,7 @@ class Pizza(object):
         assert.equal(nonComments.splitLines().length, 6, 'Splitting quote in func wrong number of lines');
     });
 
-    function createDataScienceObject(quickPickSelection: string, inputSelection: string, updateCallback: (val: string) => void): DataScience {
+    function createDataScienceObject(quickPickSelection: string, inputSelection: string, updateCallback: (val: string) => void, mockStorage?: MockMemento): DataScience {
         const configService = mock(ConfigurationService);
         const serviceContainer = mock(ServiceContainer);
         const codeLensProvider = mock(DataScienceCodeLensProvider);
@@ -298,7 +300,7 @@ class Pizza(object):
         const applicationShell = typemoq.Mock.ofType<IApplicationShell>();
         const documentManager = new MockDocumentManager();
         const commandManager = new MockCommandManager();
-        const storage = new MockMemento();
+        const storage = mockStorage ? mockStorage : new MockMemento();
         const context: typemoq.IMock<IExtensionContext> = typemoq.Mock.ofType<IExtensionContext>();
         quickPick = new MockQuickPick(quickPickSelection);
         const input = new MockInputBox(inputSelection);
@@ -342,6 +344,56 @@ class Pizza(object):
         // Verify active items
         assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
     });
+
+    test('Quick pick MRU tests', async () => {
+        const mockStorage = new MockMemento();
+        const ds = createDataScienceObject('$(zap) Default', '', () => { noop(); }, mockStorage);
+
+        await ds.selectJupyterURI();
+        // Verify initial default items
+        assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
+
+        // Add in a new server
+        const serverA1 = { uri: 'ServerA', time: 1, date: new Date(1) };
+        addToUriList(mockStorage, serverA1.uri, serverA1.time);
+
+        await ds.selectJupyterURI();
+        assert.equal(quickPick?.items.length, 3, 'Wrong number of items in the quick pick');
+        quickPickCheck(quickPick?.items[2], serverA1);
+
+        // Add in a second server, the newer server should be higher in the list due to newer time
+        const serverB1 = { uri: 'ServerB', time: 2, date: new Date(2) };
+        addToUriList(mockStorage, serverB1.uri, serverB1.time);
+        await ds.selectJupyterURI();
+        assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
+        quickPickCheck(quickPick?.items[2], serverB1);
+        quickPickCheck(quickPick?.items[3], serverA1);
+
+        // Reconnect to server A with a new time, it should now be higher in the list
+        const serverA3 = { uri: 'ServerA', time: 3, date: new Date(3) };
+        addToUriList(mockStorage, serverA3.uri, serverA3.time);
+        await ds.selectJupyterURI();
+        assert.equal(quickPick?.items.length, 4, 'Wrong number of items in the quick pick');
+        quickPickCheck(quickPick?.items[3], serverB1);
+        quickPickCheck(quickPick?.items[2], serverA1);
+
+        // Verify that we stick to our settings limit
+        for (let i = 0; i < (Settings.JupyterServerUriListMax + 10); i = i + 1) {
+            addToUriList(mockStorage, i.toString(), i);
+        }
+
+        await ds.selectJupyterURI();
+        // Need a plus 2 here for the two default items
+        assert.equal(quickPick?.items.length, (Settings.JupyterServerUriListMax + 2), 'Wrong number of items in the quick pick');
+    });
+
+    function quickPickCheck(item: QuickPickItem | undefined, expected: { uri: string; time: Number; date: Date }) {
+        assert.isOk(item, 'Quick pick item not defined');
+        if (item) {
+            assert.equal(item.label, expected.uri, 'Wrong URI value in quick pick');
+            assert.equal(item.detail, localize.DataScience.jupyterSelectURIMRUDetail().format(expected.date.toLocaleString()), 'Wrong detail value in quick pick');
+        }
+    }
 
     test('Remote server uri', async () => {
         let value = '';

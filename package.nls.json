@@ -391,6 +391,7 @@
     "DataScience.jupyterSelectURILocalDetail": "VS Code will automatically start a server for you on the localhost",
     "DataScience.jupyterSelectURINewLabel": "Existing",
     "DataScience.jupyterSelectURINewDetail": "Specify the URI of an existing server",
+    "DataScience.jupyterSelectURIMRUDetail": "Last Connection: {0}",
     "DataScience.jupyterSelectURIRunningDetailFormat": "Last activity {0}. {1} existing connections.",
     "DataScience.jupyterSelectURINotRunningDetail": "Cannot connect at this time. Status unknown.",
     "DataScience.fallbackToUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Using the current interpreter.",
