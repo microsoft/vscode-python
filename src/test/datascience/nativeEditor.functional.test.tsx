@@ -119,16 +119,16 @@ for _ in range(50):
     time.sleep(0.1)
     sys.stdout.write('\\r')`;
             const alternating = `from IPython.display import display\r\nprint('foo')\r\ndisplay('foo')\r\nprint('bar')\r\ndisplay('bar')`;
-            const alternatingResults = ['foo', 'foo' , 'bar', 'bar'];
+            const alternatingResults = ['foo\n', 'foo' , 'bar\n', 'bar'];
 
             const clearalternating = `from IPython.display import display, clear_output\r\nprint('foo')\r\ndisplay('foo')\r\nclear_output(True)\r\nprint('bar')\r\ndisplay('bar')`;
-            const clearalternatingResults = ['foo', 'foo' , '',  'bar', 'bar'];
+            const clearalternatingResults = ['foo\n', 'foo' , '',  'bar\n', 'bar'];
 
             addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
             addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
             addMockData(ioc, matPlotLib, matPlotLibResults, 'text/html');
-            addMockData(ioc, clearalternating, alternatingResults, ['text/plain', 'stream', 'text/plain', 'stream']);
-            addMockData(ioc, alternating, clearalternatingResults, ['text/plain', 'stream', 'clear_true', 'text/plain', 'stream']);
+            addMockData(ioc, alternating, alternatingResults, ['text/plain', 'stream', 'text/plain', 'stream']);
+            addMockData(ioc, clearalternating, clearalternatingResults, ['text/plain', 'stream', 'clear_true', 'text/plain', 'stream']);
             const cursors = ['|', '/', '-', '\\'];
             let cursorPos = 0;
             let loops = 3;
@@ -155,9 +155,9 @@ for _ in range(50):
             verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
 
             await addCell(wrapper, ioc, alternating, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', /.*foo.*foo.*bar.*bar/m, CellPosition.Last);
+            verifyHtmlOnCell(wrapper, 'NativeCell', /.*foo\n.*foo.*bar\n.*bar/m, CellPosition.Last);
             await addCell(wrapper, ioc, clearalternating, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', /.*bar.*bar/m, CellPosition.Last);
+            verifyHtmlOnCell(wrapper, 'NativeCell', /.*bar\n.*bar/m, CellPosition.Last);
         }, () => { return ioc; });
 
         runMountedTest('Click buttons', async (wrapper) => {
