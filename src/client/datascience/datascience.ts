@@ -28,6 +28,7 @@ import { IMultiStepInput, IMultiStepInputFactory, InputStep, IQuickPickParameter
 import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
+import { getSavedUriList } from './common';
 import { Commands, EditorContexts, Settings, Telemetry } from './constants';
 import { createRemoteConnectionInfo } from './jupyter/jupyterUtils';
 import { KernelSelector, KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
@@ -346,7 +347,7 @@ export class DataScience implements IDataScience {
 
     @captureTelemetry(Telemetry.SetJupyterURIToUserSpecified)
     private async setJupyterURIToRemote(userURI: string): Promise<void> {
-        this.addToUriList(userURI);
+        //this.addToUriList(userURI);
         await this.configuration.updateSetting('dataScience.jupyterServerURI', userURI, undefined, vscode.ConfigurationTarget.Workspace);
     }
 
@@ -359,81 +360,96 @@ export class DataScience implements IDataScience {
         }
     }
 
-    private async getRunningServerDetails(uri: string): Promise<{ label: string; detail: string } | undefined> {
-        try {
-            const connection = createRemoteConnectionInfo(uri, this.configuration.getSettings().datascience);
-            const sessionManager = await waitForPromise(this.jupyterSessionManagerFactory.create(connection, true), 2000);
-            if (sessionManager) {
-                const kernels = await sessionManager.getRunningKernels();
-                const lastActiveTime = kernels
-                    .map(k => k.lastActivityTime)
-                    .reduce((p, c) => {
-                        if (!p || c > p) {
-                            return c;
-                        }
-                        return p;
-                    });
-                const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
-                return {
-                    label: uri,
-                    detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(lastActiveTime.toLocaleString(), activeConnectCount.toString())
-                };
-            }
-        } catch (e) {
-            traceError('Error getting running server details', e);
-        }
-        return {
-            label: uri,
-            detail: localize.DataScience.jupyterSelectURINotRunningDetail() // Cannot compute right now.
-        };
-    }
+    //private async getRunningServerDetails(uri: string): Promise<{ label: string; detail: string } | undefined> {
+    //try {
+    //const connection = createRemoteConnectionInfo(uri, this.configuration.getSettings().datascience);
+    //const sessionManager = await waitForPromise(this.jupyterSessionManagerFactory.create(connection, true), 2000);
+    //if (sessionManager) {
+    //const kernels = await sessionManager.getRunningKernels();
+    //const lastActiveTime = kernels
+    //.map(k => k.lastActivityTime)
+    //.reduce((p, c) => {
+    //if (!p || c > p) {
+    //return c;
+    //}
+    //return p;
+    //});
+    //const activeConnectCount = kernels.map(k => k.numberOfConnections).reduce((p, c) => p + c);
+    //return {
+    //label: uri,
+    //detail: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(lastActiveTime.toLocaleString(), activeConnectCount.toString())
+    //};
+    //}
+    //} catch (e) {
+    //traceError('Error getting running server details', e);
+    //}
+    //return {
+    //label: uri,
+    //detail: localize.DataScience.jupyterSelectURINotRunningDetail() // Cannot compute right now.
+    //};
+    //}
 
+    //private async getUriPickList(): Promise<ISelectUriQuickPickItem[]> {
+    //// Always have 'local' and 'add new'
+    //const items: ISelectUriQuickPickItem[] = [];
+    //items.push({ label: this.localLabel, detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
+    //items.push({ label: this.newLabel, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
+
+    //// Then our already picked list. Filter out 'local' from this list as it's the default.
+    //const alreadyPicked = this.getSavedUriList();
+    //if (alreadyPicked && alreadyPicked.length) {
+    //const possiblyRunning = await Promise.all(alreadyPicked.filter(p => p !== this.localLabel).map(p => this.getRunningServerDetails(p)));
+    //const alreadyRunning = possiblyRunning.filter(p => p);
+    //if (alreadyRunning && alreadyRunning.length) {
+    //// First stick in a separator (this doesn't work. Although it looks like it should based on VS code's usage of it)
+    ////items.push({ label: '-', type: 'separator' });
+
+    //// Then one per item
+    //alreadyRunning.forEach(a => {
+    //if (a) {
+    //items.push({ label: a.label, detail: a.detail, newChoice: false });
+    //}
+    //});
+    //}
+    //}
+
+    //// Then an option for pick new
+    //return items;
+    //}
     private async getUriPickList(): Promise<ISelectUriQuickPickItem[]> {
         // Always have 'local' and 'add new'
         const items: ISelectUriQuickPickItem[] = [];
         items.push({ label: this.localLabel, detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
         items.push({ label: this.newLabel, detail: localize.DataScience.jupyterSelectURINewDetail(), newChoice: true });
 
-        // Then our already picked list. Filter out 'local' from this list as it's the default.
-        const alreadyPicked = this.getSavedUriList();
-        if (alreadyPicked && alreadyPicked.length) {
-            const possiblyRunning = await Promise.all(alreadyPicked.filter(p => p !== this.localLabel).map(p => this.getRunningServerDetails(p)));
-            const alreadyRunning = possiblyRunning.filter(p => p);
-            if (alreadyRunning && alreadyRunning.length) {
-                // First stick in a separator (this doesn't work. Although it looks like it should based on VS code's usage of it)
-                //items.push({ label: '-', type: 'separator' });
+        // Get our list of recent server connections and display that as well
+        //const savedURIList = this.getSavedUriList();
+        const savedURIList = getSavedUriList(this.globalState);
+        savedURIList.forEach(uriItem => {
+            const uriDate = new Date(uriItem.time);
+            items.push({ label: uriItem.uri, detail: localize.DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()), newChoice: false });
+        });
 
-                // Then one per item
-                alreadyRunning.forEach(a => {
-                    if (a) {
-                        items.push({ label: a.label, detail: a.detail, newChoice: false });
-                    }
-                });
-            }
-        }
-
-        // Then an option for pick new
         return items;
     }
 
-    private getSavedUriList(): string[] {
-        const results = this.globalState.get<string[]>(Settings.JupyterServerUriList);
-        if (results && results.length) {
-            return results;
-        }
-        return [];
-    }
+    //private getSavedUriList(): { uri: string; time: number }[] {
+    //const uriList = this.globalState.get<{ uri: string; time: number }[]>(Settings.JupyterServerUriList);
+    //return uriList ? uriList.sort((a, b) => {
+    //return a.time - b.time;
+    //}) : [];
+    //}
 
-    private addToUriList(uri: string) {
-        const list = this.getSavedUriList();
+    //private addToUriList(uri: string, time: number) {
+    //const uriList = this.getSavedUriList();
 
-        // Filter to without this item and max size 10
-        const without = list.filter((f, i) => f !== uri && i < Settings.JupyterServerUriListMax - 1);
-        without.splice(0, 0, uri);
+    //const editList = uriList.filter((f, i) => {
+    //return f.uri !== uri && i < Settings.JupyterServerUriListMax - 1;
+    //});
+    //editList.splice(0, 0, { uri, time });
 
-        // Save to global storage.
-        this.globalState.update(Settings.JupyterServerUriList, without).then(noop, noop);
-    }
+    //this.globalState.update(Settings.JupyterServerUriList, editList).then(noop, noop);
+    //}
 
     private async runCurrentCellAndAddBelow(): Promise<void> {
         this.dataScienceSurveyBanner.showBanner().ignoreErrors();

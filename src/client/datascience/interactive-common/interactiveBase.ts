@@ -7,7 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { ConfigurationTarget, Event, EventEmitter, Position, ProgressLocation, ProgressOptions, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, Position, ProgressLocation, ProgressOptions, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
@@ -23,7 +23,7 @@ import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -31,6 +31,7 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
+import { addToUriList } from '../common';
 import { Identifiers, Settings, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { DataScience } from '../datascience';
@@ -114,6 +115,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() protected ipynbProvider: INotebookEditorProvider,
         @unmanaged() private dataScience: DataScience,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
+        @unmanaged() protected globalStorage: Memento,
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
         @unmanaged() title: string,
@@ -1081,6 +1083,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                                 } else {
                                     localizedUri = connectionInfo.baseUrl;
                                 }
+
+                                // Log this remote URI into our MRU list
+                                addToUriList(this.globalStorage, localizedUri, Date.now());
                             }
                         }
 

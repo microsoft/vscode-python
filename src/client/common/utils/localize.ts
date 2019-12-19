@@ -188,6 +188,7 @@ export namespace DataScience {
     export const jupyterSelectURIQuickPickPlaceholder = localize('DataScience.jupyterSelectURIQuickPickPlaceholder', 'Choose an option');
     export const jupyterSelectURILocalLabel = localize('DataScience.jupyterSelectURILocalLabel', 'Default');
     export const jupyterSelectURILocalDetail = localize('DataScience.jupyterSelectURILocalDetail', 'VS Code will automatically start a server for you on the localhost');
+    export const jupyterSelectURIMRUDetail = localize('DataScience.jupyterSelectURIMRUDetail', 'Last Connection: {0}');
     export const jupyterSelectURINewLabel = localize('DataScience.jupyterSelectURINewLabel', 'Existing');
     export const jupyterSelectURINewDetail = localize('DataScience.jupyterSelectURINewDetail', 'Specify the URI of an existing server');
     export const jupyterSelectURIInvalidURI = localize('DataScience.jupyterSelectURIInvalidURI', 'Invalid URI specified');
