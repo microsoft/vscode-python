@@ -204,7 +204,69 @@ suite('Language Server Activation - ActivationManager', () => {
         verify(activationService1.activate(resource)).once();
         verify(activationService2.activate(resource)).once();
     });
-    test('Handler docOpenedHandler is disposed in case no. of workspace folders decreases to one', async () => {
+
+    test('The same workspace isn\'t activated more than once', async () => {
+        const resource = Uri.parse('two');
+        when(activationService1.activate(resource)).thenResolve();
+        when(activationService2.activate(resource)).thenResolve();
+        when(interpreterService.getInterpreters(anything())).thenResolve();
+        autoSelection
+            .setup(a => a.autoSelectInterpreter(resource))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        appDiagnostics
+            .setup(a => a.performPreStartupHealthCheck(resource))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+
+        await managerTest.activateWorkspace(resource);
+        await managerTest.activateWorkspace(resource);
+
+        verify(activationService1.activate(resource)).once();
+        verify(activationService2.activate(resource)).once();
+        autoSelection.verifyAll();
+        appDiagnostics.verifyAll();
+    });
+
+    test('If doc opened is not python, return', async () => {
+        const doc = {
+            uri: Uri.parse('doc'),
+            languageId: 'NOT PYTHON'
+        };
+
+        managerTest.onDocOpened(doc as any);
+        verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).never();
+    });
+
+    test('If we have opened a doc that does not belong to workspace, then do nothing', async () => {
+        const doc = {
+            uri: Uri.parse('doc'),
+            languageId: PYTHON_LANGUAGE
+        };
+        when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+
+        managerTest.onDocOpened(doc as any);
+
+        verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
+        verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
+    });
+
+    test('If we have opened a doc that does not belong to workspace, then do nothing', async () => {
+        const doc = {
+            uri: Uri.parse('doc'),
+            languageId: PYTHON_LANGUAGE
+        };
+        when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('key');
+        managerTest.activatedWorkspaces.add('key');
+
+        managerTest.onDocOpened(doc as any);
+
+        verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
+        verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
+    });
+
+    test('List of activated workspaces is updated & Handler docOpenedHandler is disposed in case no. of workspace folders decreases to one', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
         const disposable2 = typemoq.Mock.ofType<IDisposable>();
         let docOpenedHandler!: (e: TextDocument) => Promise<void>;
@@ -224,6 +286,13 @@ suite('Language Server Activation - ActivationManager', () => {
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
         const folder2 = { name: 'two', uri: resource, index: 2 };
         when(workspaceService.workspaceFolders).thenReturn([folder1, folder2]);
+
+        when(workspaceService.getWorkspaceFolderIdentifier(folder1.uri, anything())).thenReturn('one');
+        when(workspaceService.getWorkspaceFolderIdentifier(folder2.uri, anything())).thenReturn('two');
+        // Assume the two workspaces are already activated, so their keys will be present in `activatedWorkspaces` set
+        managerTest.activatedWorkspaces.add('one');
+        managerTest.activatedWorkspaces.add('two');
+
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         // Add workspaceFoldersChangedHandler
         managerTest.addHandlers();
@@ -247,6 +316,9 @@ suite('Language Server Activation - ActivationManager', () => {
 
         verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).twice();
+        disposable2.verifyAll();
+
+        assert.deepEqual(Array.from(managerTest.activatedWorkspaces.keys()), ['one']);
     });
 });
 
