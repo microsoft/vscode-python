@@ -345,7 +345,7 @@ class Pizza(object):
         assert.equal(quickPick?.items.length, 2, 'Wrong number of items in the quick pick');
     });
 
-    test('IANHU Quick pick MRU tests', async () => {
+    test('Quick pick MRU tests', async () => {
         const mockStorage = new MockMemento();
         const ds = createDataScienceObject('$(zap) Default', '', () => { noop(); }, mockStorage);
 
