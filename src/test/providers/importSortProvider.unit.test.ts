@@ -278,7 +278,7 @@ suite('Import Sort Provider', () => {
 
         const expectedArgs = ['-', '--diff', '1', '2'];
         processService
-            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: '/' })))
+            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: path.sep })))
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
@@ -328,7 +328,7 @@ suite('Import Sort Provider', () => {
         const importScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'sortImports.py');
         const expectedArgs = [importScript, '-', '--diff', '1', '2'];
         processExeService
-            .setup(p => p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: '/' })))
+            .setup(p => p.exec(TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: path.sep })))
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
