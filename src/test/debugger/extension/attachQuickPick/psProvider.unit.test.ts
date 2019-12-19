@@ -58,7 +58,7 @@ suite('Attach to process - ps process provider', () => {
 
         disposableRegistry = [];
 
-        provider = new PsAttachProcessProvider(instance(applicationShell), instance(commandManager), instance(platformService), instance(processServiceFactory), disposableRegistry);
+        provider = new PsAttachProcessProvider(instance(applicationShell), instance(commandManager), disposableRegistry, instance(platformService), instance(processServiceFactory));
     });
 
     teardown(() => {
@@ -153,75 +153,4 @@ suite('Attach to process - ps process provider', () => {
 
         await expect(promise).to.eventually.be.rejectedWith(`Operating system '${OSType.Unknown}' not supported.`);
     });
-
-    test('Getting attach items on Linux should return a sorted list', async () => {
-        when(platformService.isMac).thenReturn(false);
-        when(platformService.isLinux).thenReturn(true);
-        const expectedOutput: IAttachItem[] = [
-            {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
-            },
-            {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
-            }
-        ];
-
-        const items = await provider.getAttachItems();
-
-        assert.deepEqual(items, expectedOutput);
-    });
-
-    test('Getting attach items on macOS should return a sorted list', async () => {
-        when(platformService.isMac).thenReturn(true);
-
-        const expectedOutput: IAttachItem[] = [
-            {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
-            },
-            {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
-            }
-        ];
-
-        const items = await provider.getAttachItems();
-
-        assert.deepEqual(items, expectedOutput);
-    });
-
 });

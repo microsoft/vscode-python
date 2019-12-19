@@ -5,32 +5,24 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
-import { Commands } from '../../../common/constants';
 import { IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
 import { AttachProcess as AttachProcessLocalization } from '../../../common/utils/localize';
 import { BaseAttachProcessProvider } from './baseProvider';
-import { AttachPicker } from './picker';
 import { PsProcessParser } from './psProcessParser';
 import { IAttachItem, ProcessListCommand } from './types';
 
 @injectable()
 export class PsAttachProcessProvider extends BaseAttachProcessProvider {
     constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager,
+        @inject(IApplicationShell) applicationShell: IApplicationShell,
+        @inject(ICommandManager) commandManager: ICommandManager,
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
-        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+        @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory
     ) {
-        super();
-    }
-
-    public registerCommands() {
-        const picker = new AttachPicker(this.applicationShell, this);
-        const disposable = this.commandManager.registerCommand(Commands.PickLocalProcess, () => picker.showQuickPick(), this);
-        this.disposableRegistry.push(disposable);
+        super(applicationShell, commandManager, disposableRegistry);
     }
 
     // Perf numbers:
