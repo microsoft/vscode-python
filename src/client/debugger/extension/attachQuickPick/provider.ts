@@ -14,7 +14,7 @@ import { PsProcessParser } from './psProcessParser';
 import { IAttachItem, ProcessListCommand } from './types';
 
 @injectable()
-export class PsAttachProcessProvider extends BaseAttachProcessProvider {
+export class AttachProcessProvider extends BaseAttachProcessProvider {
     constructor(
         @inject(IApplicationShell) applicationShell: IApplicationShell,
         @inject(ICommandManager) commandManager: ICommandManager,
@@ -62,6 +62,6 @@ export class PsAttachProcessProvider extends BaseAttachProcessProvider {
         const processService = await this.processServiceFactory.create();
         const output = await processService.exec(processCmd.command, processCmd.args, { throwOnStdErr: true });
 
-        return PsProcessParser.parseProcessesFromPs(output.stdout);
+        return PsProcessParser.parseProcesses(output.stdout);
     }
 }

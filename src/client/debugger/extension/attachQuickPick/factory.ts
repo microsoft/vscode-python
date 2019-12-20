@@ -8,7 +8,7 @@ import { IApplicationShell, ICommandManager } from '../../../common/application/
 import { IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
-import { PsAttachProcessProvider } from './psProvider';
+import { AttachProcessProvider } from './provider';
 import { IAttachProcessProviderFactory } from './types';
 
 @injectable()
@@ -23,7 +23,7 @@ export class AttachProcessProviderFactory implements IAttachProcessProviderFacto
 
     public getProvider() {
         // Will add Windows provider in a separate PR
-        return new PsAttachProcessProvider(
+        return new AttachProcessProvider(
             this.applicationShell,
             this.commandManager,
             this.disposableRegistry,

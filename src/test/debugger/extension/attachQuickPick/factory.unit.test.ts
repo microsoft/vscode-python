@@ -14,7 +14,7 @@ import { ProcessServiceFactory } from '../../../../client/common/process/process
 import { IProcessServiceFactory } from '../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
 import { AttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/factory';
-import { PsAttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/psProvider';
+import { AttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/provider';
 
 suite('Attach to process - attach process provider factory', () => {
     let applicationShell: IApplicationShell;
@@ -35,9 +35,9 @@ suite('Attach to process - attach process provider factory', () => {
         factory = new AttachProcessProviderFactory(instance(applicationShell), instance(commandManager), instance(platformService), instance(processServiceFactory), disposableRegistry);
     });
 
-    test('getProvider should return a PsAttachProcessProvider instance (until the PR that adds Windows support lands)', () => {
+    test('getProvider should return am AttachProcessProvider instance', () => {
         const provider = factory.getProvider();
 
-        expect(provider).to.be.instanceOf(PsAttachProcessProvider);
+        expect(provider).to.be.instanceOf(AttachProcessProvider);
     });
 });

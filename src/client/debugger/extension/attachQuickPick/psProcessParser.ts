@@ -23,7 +23,7 @@ export namespace PsProcessParser {
         args: ['axww', '-o', `pid=,comm=${commColumnTitle},args=`, '-c']
     };
 
-    export function parseProcessesFromPs(processes: string): IAttachItem[] {
+    export function parseProcesses(processes: string): IAttachItem[] {
         const lines: string[] = processes.split('\n');
         return parseProcessesFromPsArray(lines);
     }

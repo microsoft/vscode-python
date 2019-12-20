@@ -58,7 +58,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
             }
         ];
 
-        const output = PsProcessParser.parseProcessesFromPs(input);
+        const output = PsProcessParser.parseProcesses(input);
 
         assert.deepEqual(output, expectedOutput);
     });
@@ -106,7 +106,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
             }
         ];
 
-        const output = PsProcessParser.parseProcessesFromPs(input);
+        const output = PsProcessParser.parseProcesses(input);
 
         assert.deepEqual(output, expectedOutput);
     });
@@ -154,7 +154,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
             }
         ];
 
-        const output = PsProcessParser.parseProcessesFromPs(input);
+        const output = PsProcessParser.parseProcesses(input);
 
         assert.deepEqual(output, expectedOutput);
     });

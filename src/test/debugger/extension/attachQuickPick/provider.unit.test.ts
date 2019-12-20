@@ -18,12 +18,12 @@ import { ProcessServiceFactory } from '../../../../client/common/process/process
 import { IProcessService, IProcessServiceFactory } from '../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
 import { OSType } from '../../../../client/common/utils/platform';
+import { AttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/provider';
 import { PsProcessParser } from '../../../../client/debugger/extension/attachQuickPick/psProcessParser';
-import { PsAttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/psProvider';
 import { IAttachItem } from '../../../../client/debugger/extension/attachQuickPick/types';
 
 // tslint:disable-next-line: max-func-body-length
-suite('Attach to process - ps process provider', () => {
+suite('Attach to process - process provider', () => {
     let applicationShell: IApplicationShell;
     let commandManager: ICommandManager;
     let platformService: IPlatformService;
@@ -32,7 +32,7 @@ suite('Attach to process - ps process provider', () => {
     let disposableRegistry: IDisposableRegistry;
     let disposable: Disposable;
 
-    let provider: PsAttachProcessProvider;
+    let provider: AttachProcessProvider;
 
     const psOutput = `
     aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
@@ -58,7 +58,7 @@ suite('Attach to process - ps process provider', () => {
 
         disposableRegistry = [];
 
-        provider = new PsAttachProcessProvider(instance(applicationShell), instance(commandManager), disposableRegistry, instance(platformService), instance(processServiceFactory));
+        provider = new AttachProcessProvider(instance(applicationShell), instance(commandManager), disposableRegistry, instance(platformService), instance(processServiceFactory));
     });
 
     teardown(() => {
