@@ -12,6 +12,7 @@ import { AttachProcess as AttachProcessLocalization } from '../../../common/util
 import { BaseAttachProcessProvider } from './baseProvider';
 import { PsProcessParser } from './psProcessParser';
 import { IAttachItem, ProcessListCommand } from './types';
+import { WmicProcessParser } from './wmicProcessParser';
 
 @injectable()
 export class AttachProcessProvider extends BaseAttachProcessProvider {
@@ -55,6 +56,8 @@ export class AttachProcessProvider extends BaseAttachProcessProvider {
             processCmd = PsProcessParser.psDarwinCommand;
         } else if (this.platformService.isLinux) {
             processCmd = PsProcessParser.psLinuxCommand;
+        } else if (this.platformService.isWindows) {
+            processCmd = WmicProcessParser.wmicCommand;
         } else {
             throw new Error(AttachProcessLocalization.unsupportedOS().format(this.platformService.osType));
         }
@@ -62,6 +65,7 @@ export class AttachProcessProvider extends BaseAttachProcessProvider {
         const processService = await this.processServiceFactory.create();
         const output = await processService.exec(processCmd.command, processCmd.args, { throwOnStdErr: true });
 
-        return PsProcessParser.parseProcesses(output.stdout);
+        return this.platformService.isWindows ?
+            WmicProcessParser.parseProcesses(output.stdout) : PsProcessParser.parseProcesses(output.stdout);
     }
 }
