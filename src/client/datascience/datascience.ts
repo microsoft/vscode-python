@@ -312,7 +312,7 @@ export class DataScience implements IDataScience {
         // newChoice element will be set if the user picked 'enter a new server'
         const item = await input.showQuickPick<ISelectUriQuickPickItem, IQuickPickParameters<ISelectUriQuickPickItem>>({
             placeholder: localize.DataScience.jupyterSelectURIQuickPickPlaceholder(),
-            items: await this.getUriPickList(),
+            items: this.getUriPickList(),
             title: localize.DataScience.jupyterSelectURIQuickPickTitle()
         });
         if (item.label === this.localLabel) {
@@ -357,7 +357,7 @@ export class DataScience implements IDataScience {
         }
     }
 
-    private async getUriPickList(): Promise<ISelectUriQuickPickItem[]> {
+    private getUriPickList(): ISelectUriQuickPickItem[] {
         // Always have 'local' and 'add new'
         const items: ISelectUriQuickPickItem[] = [];
         items.push({ label: this.localLabel, detail: localize.DataScience.jupyterSelectURILocalDetail(), newChoice: false });
@@ -366,8 +366,10 @@ export class DataScience implements IDataScience {
         // Get our list of recent server connections and display that as well
         const savedURIList = getSavedUriList(this.globalState);
         savedURIList.forEach(uriItem => {
-            const uriDate = new Date(uriItem.time);
-            items.push({ label: uriItem.uri, detail: localize.DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()), newChoice: false });
+            if (uriItem.uri) {
+                const uriDate = new Date(uriItem.time);
+                items.push({ label: uriItem.uri, detail: localize.DataScience.jupyterSelectURIMRUDetail().format(uriDate.toLocaleString()), newChoice: false });
+            }
         });
 
         return items;
