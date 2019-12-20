@@ -53,6 +53,7 @@ export type TemporaryDirectory = { path: string } & vscode.Disposable;
 export interface IFileSystemPaths {
     readonly sep: string;
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     basename(filename: string, suffix?: string): string;
     normalize(filename: string): string;
 }

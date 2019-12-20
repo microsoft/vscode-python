@@ -14,6 +14,7 @@ const untildify = require('untildify');
 interface INodePath {
     sep: string;
     join(...filenames: string[]): string;
+    dirname(filename: string): string;
     basename(filename: string, ext?: string): string;
     normalize(filename: string): string;
 }
@@ -40,6 +41,10 @@ export class FileSystemPaths {
 
     public join(...filenames: string[]): string {
         return this.raw.join(...filenames);
+    }
+
+    public dirname(filename: string): string {
+        return this.raw.dirname(filename);
     }
 
     public basename(filename: string, suffix?: string): string {

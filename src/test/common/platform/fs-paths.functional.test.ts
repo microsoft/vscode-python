@@ -28,6 +28,26 @@ suite('FileSystem - Paths', () => {
         });
     });
 
+    suite('dirname', () => {
+        test('with dirname', () => {
+            const filename = path.join('spam', 'eggs', 'spam.py');
+            const expected = path.join('spam', 'eggs');
+
+            const basename = paths.dirname(filename);
+
+            expect(basename).to.equal(expected);
+        });
+
+        test('without dirname', () => {
+            const filename = 'spam.py';
+            const expected = '.';
+
+            const basename = paths.dirname(filename);
+
+            expect(basename).to.equal(expected);
+        });
+    });
+
     suite('basename', () => {
         test('with dirname', () => {
             const filename = path.join('spam', 'eggs', 'spam.py');
