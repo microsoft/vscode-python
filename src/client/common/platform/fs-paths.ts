@@ -14,6 +14,7 @@ const untildify = require('untildify');
 interface INodePath {
     sep: string;
     basename(filename: string, ext?: string): string;
+    normalize(filename: string): string;
 }
 
 // The file path operations used by the extension.
@@ -36,6 +37,10 @@ export class FileSystemPaths {
 
     public basename(filename: string, suffix?: string): string {
         return this.raw.basename(filename, suffix);
+    }
+
+    public normalize(filename: string): string {
+        return this.raw.normalize(filename);
     }
 }
 

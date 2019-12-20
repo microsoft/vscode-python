@@ -47,6 +47,44 @@ suite('FileSystem - Paths', () => {
             expect(basename).to.equal(expected);
         });
     });
+
+    suite('normalize', () => {
+        test('noop', () => {
+            const filename = path.join('spam', 'eggs', 'spam.py');
+            const expected = filename;
+
+            const norm = paths.normalize(filename);
+
+            expect(norm).to.equal(expected);
+        });
+
+        test('pathological', () => {
+            const filename = path.join(path.sep, 'spam', '..', 'eggs', '.', 'spam.py');
+            const expected = path.join(path.sep, 'eggs', 'spam.py');
+
+            const norm = paths.normalize(filename);
+
+            expect(norm).to.equal(expected);
+        });
+
+        test('relative to CWD', () => {
+            const filename = path.join('..', 'spam', 'eggs', 'spam.py');
+            const expected = filename;
+
+            const norm = paths.normalize(filename);
+
+            expect(norm).to.equal(expected);
+        });
+
+        test('parent of root fails', () => {
+            const filename = path.join(path.sep, '..');
+            const expected = filename;
+
+            const norm = paths.normalize(filename);
+
+            expect(norm).to.equal(expected);
+        });
+    });
 });
 
 suite('FileSystem - Executables', () => {
