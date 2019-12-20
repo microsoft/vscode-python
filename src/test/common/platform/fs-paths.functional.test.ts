@@ -99,6 +99,44 @@ suite('FileSystem - Paths', () => {
             expect(result).to.equal(expected);
         });
     });
+
+    suite('normCase', () => {
+        test('forward-slash', () => {
+            const filename = 'X/Y/Z/SPAM.PY';
+            const expected = IS_WINDOWS ? 'X\\Y\\Z\\SPAM.PY' : filename;
+
+            const result = paths.normCase(filename);
+
+            expect(result).to.equal(expected);
+        });
+
+        test('backslash is not changed', () => {
+            const filename = 'X\\Y\\Z\\SPAM.PY';
+            const expected = filename;
+
+            const result = paths.normCase(filename);
+
+            expect(result).to.equal(expected);
+        });
+
+        test('lower-case', () => {
+            const filename = 'x\\y\\z\\spam.py';
+            const expected = IS_WINDOWS ? 'X\\Y\\Z\\SPAM.PY' : filename;
+
+            const result = paths.normCase(filename);
+
+            expect(result).to.equal(expected);
+        });
+
+        test('upper-case stays upper-case', () => {
+            const filename = 'X\\Y\\Z\\SPAM.PY';
+            const expected = 'X\\Y\\Z\\SPAM.PY';
+
+            const result = paths.normCase(filename);
+
+            expect(result).to.equal(expected);
+        });
+    });
 });
 
 suite('FileSystem - Executables', () => {

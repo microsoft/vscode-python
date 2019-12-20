@@ -21,13 +21,15 @@ interface INodePath {
 // The file path operations used by the extension.
 export class FileSystemPaths {
     constructor(
-        private raw: INodePath
+        private readonly isCaseInsensitive: boolean,
+        private readonly raw: INodePath
     ) { }
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
     public static withDefaults(): FileSystemPaths {
         return new FileSystemPaths(
+            (getOSType() === OSType.Windows),
             nodepath
         );
     }
@@ -46,6 +48,13 @@ export class FileSystemPaths {
 
     public normalize(filename: string): string {
         return this.raw.normalize(filename);
+    }
+
+    public normCase(filename: string): string {
+        filename = this.raw.normalize(filename);
+        return this.isCaseInsensitive
+            ? filename.toUpperCase()
+            : filename;
     }
 }
 
