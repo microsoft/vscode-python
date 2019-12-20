@@ -24,8 +24,7 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
     ) { }
     public async activate(): Promise<void> {
         if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
-            const attachProcessProvider = this.attachProcessProviderFactory.getProvider();
-            attachProcessProvider.registerCommands();
+            this.attachProcessProviderFactory.registerCommands();
 
             this.disposables.push(this.debugService.registerDebugAdapterTrackerFactory(DebuggerTypeName, this.debugSessionLoggingFactory));
             this.disposables.push(this.debugService.registerDebugAdapterDescriptorFactory(DebuggerTypeName, this.descriptorFactory));

@@ -12,13 +12,12 @@ export interface IAttachItem extends QuickPickItem {
 }
 
 export interface IAttachProcessProvider {
-    registerCommands(): void;
     getAttachItems(): Promise<IAttachItem[]>;
 }
 
 export const IAttachProcessProviderFactory = Symbol('IAttachProcessProviderFactory');
 export interface IAttachProcessProviderFactory {
-    getProvider(): IAttachProcessProvider;
+    registerCommands(): void;
 }
 
 export interface IAttachPicker {

@@ -24,7 +24,6 @@ import { DebugAdapterActivator } from '../../../../client/debugger/extension/ada
 import { DebugAdapterDescriptorFactory } from '../../../../client/debugger/extension/adapter/factory';
 import { DebugSessionLoggingFactory } from '../../../../client/debugger/extension/adapter/logging';
 import { AttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/factory';
-import { AttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/provider';
 import { IAttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/types';
 import { IDebugAdapterDescriptorFactory, IDebugSessionLoggingFactory } from '../../../../client/debugger/extension/types';
 import { clearTelemetryReporter } from '../../../../client/telemetry';
@@ -86,8 +85,6 @@ suite('Debugging - Adapter Factory and logger Registration', () => {
         spiedInstance = spy(experimentsManager);
 
         attachFactory = mock(AttachProcessProviderFactory);
-        const attachProvider = mock(AttachProcessProvider);
-        when(attachFactory.getProvider()).thenReturn(instance(attachProvider));
 
         debugService = mock(DebugService);
         descriptorFactory = mock(DebugAdapterDescriptorFactory);

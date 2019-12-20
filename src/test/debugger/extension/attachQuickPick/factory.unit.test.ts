@@ -3,18 +3,19 @@
 
 'use strict';
 
-import { expect } from 'chai';
-import { instance, mock } from 'ts-mockito';
+import * as assert from 'assert';
+import { anything, instance, mock, verify } from 'ts-mockito';
+import { Disposable } from 'vscode';
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../../client/common/application/types';
+import { Commands } from '../../../../client/common/constants';
 import { PlatformService } from '../../../../client/common/platform/platformService';
 import { IPlatformService } from '../../../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../../../client/common/process/processFactory';
 import { IProcessServiceFactory } from '../../../../client/common/process/types';
 import { IDisposableRegistry } from '../../../../client/common/types';
 import { AttachProcessProviderFactory } from '../../../../client/debugger/extension/attachQuickPick/factory';
-import { AttachProcessProvider } from '../../../../client/debugger/extension/attachQuickPick/provider';
 
 suite('Attach to process - attach process provider factory', () => {
     let applicationShell: IApplicationShell;
@@ -35,9 +36,10 @@ suite('Attach to process - attach process provider factory', () => {
         factory = new AttachProcessProviderFactory(instance(applicationShell), instance(commandManager), instance(platformService), instance(processServiceFactory), disposableRegistry);
     });
 
-    test('getProvider should return an AttachProcessProvider instance', () => {
-        const provider = factory.getProvider();
+    test('Register commands should not fail', () => {
+        factory.registerCommands();
 
-        expect(provider).to.be.instanceOf(AttachProcessProvider);
+        verify(commandManager.registerCommand(Commands.PickLocalProcess, anything(), anything())).once();
+        assert.equal((disposableRegistry as Disposable[]).length, 1);
     });
 });

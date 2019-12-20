@@ -4,26 +4,37 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IApplicationShell, ICommandManager } from '../../../common/application/types';
 import { IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
-import { IDisposableRegistry } from '../../../common/types';
 import { AttachProcess as AttachProcessLocalization } from '../../../common/utils/localize';
-import { BaseAttachProcessProvider } from './baseProvider';
 import { PsProcessParser } from './psProcessParser';
-import { IAttachItem, ProcessListCommand } from './types';
+import { IAttachItem, IAttachProcessProvider, ProcessListCommand } from './types';
 import { WmicProcessParser } from './wmicProcessParser';
 
 @injectable()
-export class AttachProcessProvider extends BaseAttachProcessProvider {
+export class AttachProcessProvider implements IAttachProcessProvider {
     constructor(
-        @inject(IApplicationShell) applicationShell: IApplicationShell,
-        @inject(ICommandManager) commandManager: ICommandManager,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory
-    ) {
-        super(applicationShell, commandManager, disposableRegistry);
+    ) { }
+
+    public getAttachItems(): Promise<IAttachItem[]> {
+        return this._getInternalProcessEntries().then(processEntries => {
+            // localeCompare is significantly slower than < and > (2000 ms vs 80 ms for 10,000 elements)
+            // We can change to localeCompare if this becomes an issue
+            processEntries.sort((a, b) => {
+                const aLower = a.label.toLowerCase();
+                const bLower = b.label.toLowerCase();
+
+                if (aLower === bLower) {
+                    return 0;
+                }
+
+                return aLower < bLower ? -1 : 1;
+            });
+
+            return processEntries;
+        });
     }
 
     // Perf numbers:

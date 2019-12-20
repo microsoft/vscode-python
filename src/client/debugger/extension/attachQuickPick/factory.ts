@@ -5,9 +5,11 @@
 
 import { inject, injectable } from 'inversify';
 import { IApplicationShell, ICommandManager } from '../../../common/application/types';
+import { Commands } from '../../../common/constants';
 import { IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IDisposableRegistry } from '../../../common/types';
+import { AttachPicker } from './picker';
 import { AttachProcessProvider } from './provider';
 import { IAttachProcessProviderFactory } from './types';
 
@@ -21,14 +23,13 @@ export class AttachProcessProviderFactory implements IAttachProcessProviderFacto
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
     ) { }
 
-    public getProvider() {
-        // Will add Windows provider in a separate PR
-        return new AttachProcessProvider(
-            this.applicationShell,
-            this.commandManager,
-            this.disposableRegistry,
+    public registerCommands() {
+        const provider = new AttachProcessProvider(
             this.platformService,
             this.processServiceFactory
         );
+        const picker = new AttachPicker(this.applicationShell, provider);
+        const disposable = this.commandManager.registerCommand(Commands.PickLocalProcess, () => picker.showQuickPick(), this);
+        this.disposableRegistry.push(disposable);
     }
 }
