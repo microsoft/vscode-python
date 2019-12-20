@@ -35,7 +35,7 @@ suite('Attach to process - attach process provider factory', () => {
         factory = new AttachProcessProviderFactory(instance(applicationShell), instance(commandManager), instance(platformService), instance(processServiceFactory), disposableRegistry);
     });
 
-    test('getProvider should return am AttachProcessProvider instance', () => {
+    test('getProvider should return an AttachProcessProvider instance', () => {
         const provider = factory.getProvider();
 
         expect(provider).to.be.instanceOf(AttachProcessProvider);
