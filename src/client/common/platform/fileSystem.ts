@@ -7,11 +7,11 @@ import * as fileSystem from 'fs';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
-import * as path from 'path';
 import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
+import { FileSystemPaths } from './fs-paths';
 import { FileStat, FileType, IFileSystem, IPlatformService, TemporaryFile } from './types';
 
 const globAsync = promisify(glob);
@@ -78,18 +78,23 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor(@inject(IPlatformService) private platformService: IPlatformService) {}
+    private readonly paths: FileSystemPaths;
+    constructor(
+        @inject(IPlatformService) private platformService: IPlatformService
+    ) {
+        this.paths = FileSystemPaths.withDefaults();
+    }
 
     //=================================
     // path-related
 
     public get directorySeparatorChar(): string {
-        return path.sep;
+        return this.paths.sep;
     }
 
     public arePathsSame(path1: string, path2: string): boolean {
-        path1 = path.normalize(path1);
-        path2 = path.normalize(path2);
+        path1 = this.paths.normalize(path1);
+        path2 = this.paths.normalize(path2);
         if (this.platformService.isWindows) {
             return path1.toUpperCase() === path2.toUpperCase();
         } else {
@@ -154,7 +159,7 @@ export class FileSystem implements IFileSystem {
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const files = await fs.readdir(dirname);
         const promises = files.map(async basename => {
-            const filename = path.join(dirname, basename);
+            const filename = this.paths.join(dirname, basename);
             const fileType = await getFileType(filename);
             return [filename, fileType] as [string, FileType];
         });
@@ -312,7 +317,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
-        const filePath = `${dirname}${path.sep}___vscpTest___`;
+        const filePath = `${dirname}${this.paths.sep}___vscpTest___`;
         return new Promise<boolean>(resolve => {
             fs.open(filePath, fs.constants.O_CREAT | fs.constants.O_RDWR, (error, fd) => {
                 if (!error) {
