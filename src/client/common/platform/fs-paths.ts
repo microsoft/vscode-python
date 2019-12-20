@@ -28,9 +28,14 @@ export class FileSystemPaths {
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
-    public static withDefaults(): FileSystemPaths {
+    public static withDefaults(
+        isCaseInsensitive?: boolean
+    ): FileSystemPaths {
+        if (isCaseInsensitive === undefined) {
+            isCaseInsensitive = (getOSType() === OSType.Windows);
+        }
         return new FileSystemPaths(
-            (getOSType() === OSType.Windows),
+            isCaseInsensitive,
             nodepath
         );
     }
@@ -99,13 +104,24 @@ export class FileSystemPathUtils {
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
-    public static withDefaults(): FileSystemPathUtils {
+    public static withDefaults(
+        paths?: IFileSystemPaths
+    ): FileSystemPathUtils {
+        if (paths === undefined) {
+            paths = FileSystemPaths.withDefaults();
+        }
         return new FileSystemPathUtils(
             untildify('~'),
-            FileSystemPaths.withDefaults(),
+            paths,
             Executables.withDefaults(),
             nodepath
         );
+    }
+
+    public arePathsSame(path1: string, path2: string): boolean {
+        path1 = this.paths.normCase(path1);
+        path2 = this.paths.normCase(path2);
+        return path1 === path2;
     }
 
     public getDisplayName(pathValue: string, cwd?: string): string {

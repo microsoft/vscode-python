@@ -40,44 +40,7 @@ suite('FileSystem', () => {
             });
         });
 
-        suite('arePathsSame', () => {
-            test('identical', () => {
-                const filename = 'x/y/z/spam.py';
-
-                const result = fileSystem.arePathsSame(filename, filename);
-
-                expect(result).to.equal(true);
-            });
-
-            test('not the same', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'a/b/c/spam.py';
-
-                const result = fileSystem.arePathsSame(file1, file2);
-
-                expect(result).to.equal(false);
-            });
-
-            test('with different separators', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x\\y\\z\\spam.py';
-                const expected = WINDOWS;
-
-                const result = fileSystem.arePathsSame(file1, file2);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('with different case', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x/Y/z/Spam.py';
-                const expected = WINDOWS;
-
-                const result = fileSystem.arePathsSame(file1, file2);
-
-                expect(result).to.equal(expected);
-            });
-        });
+        // arePathsSame() is tested in the FileSystemPathUtils tests.
 
         suite('getRealPath', () => {
             const prevCwd = process.cwd();

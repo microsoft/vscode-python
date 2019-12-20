@@ -56,6 +56,7 @@ export interface IFileSystemPaths {
     dirname(filename: string): string;
     basename(filename: string, suffix?: string): string;
     normalize(filename: string): string;
+    normCase(filename: string): string;
 }
 
 export interface IExecutables {
@@ -66,6 +67,7 @@ export interface IExecutables {
 export interface IFileSystemPathUtils {
     readonly paths: IFileSystemPaths;
     readonly executables: IExecutables;
+    arePathsSame(path1: string, path2: string): boolean;
     getDisplayName(pathValue: string, cwd?: string): string;
 }
 

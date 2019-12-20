@@ -11,8 +11,12 @@ import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
-import { FileSystemPaths } from './fs-paths';
-import { FileStat, FileType, IFileSystem, IPlatformService, TemporaryFile } from './types';
+import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
+import {
+    FileStat, FileType,
+    IFileSystem, IFileSystemPaths, IPlatformService,
+    TemporaryFile
+} from './types';
 
 const globAsync = promisify(glob);
 
@@ -78,11 +82,15 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    private readonly paths: FileSystemPaths;
+    private readonly paths: IFileSystemPaths;
+    private readonly pathUtils: FileSystemPathUtils;
     constructor(
-        @inject(IPlatformService) private platformService: IPlatformService
+        @inject(IPlatformService) platformService: IPlatformService
     ) {
-        this.paths = FileSystemPaths.withDefaults();
+        this.paths = FileSystemPaths.withDefaults(
+            platformService.isWindows
+        );
+        this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
     }
 
     //=================================
@@ -93,13 +101,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public arePathsSame(path1: string, path2: string): boolean {
-        path1 = this.paths.normalize(path1);
-        path2 = this.paths.normalize(path2);
-        if (this.platformService.isWindows) {
-            return path1.toUpperCase() === path2.toUpperCase();
-        } else {
-            return path1 === path2;
-        }
+        return this.pathUtils.arePathsSame(path1, path2);
     }
 
     public getRealPath(filePath: string): Promise<string> {

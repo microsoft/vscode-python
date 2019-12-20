@@ -3,7 +3,7 @@
 
 'use strict';
 
-// tslint:disable:max-func-body-length
+// tslint:disable:max-func-body-length chai-vague-errors
 
 import { expect } from 'chai';
 import * as os from 'os';
@@ -184,6 +184,45 @@ suite('FileSystem - Path Utils', () => {
     let utils: FileSystemPathUtils;
     setup(() => {
         utils = FileSystemPathUtils.withDefaults();
+    });
+
+    suite('arePathsSame', () => {
+        test('identical', () => {
+            const filename = 'x/y/z/spam.py';
+
+            const result = utils.arePathsSame(filename, filename);
+
+            expect(result).to.equal(true);
+        });
+
+        test('not the same', () => {
+            const file1 = 'x/y/z/spam.py';
+            const file2 = 'a/b/c/spam.py';
+
+            const result = utils.arePathsSame(file1, file2);
+
+            expect(result).to.equal(false);
+        });
+
+        test('with different separators', () => {
+            const file1 = 'x/y/z/spam.py';
+            const file2 = 'x\\y\\z\\spam.py';
+            const expected = IS_WINDOWS;
+
+            const result = utils.arePathsSame(file1, file2);
+
+            expect(result).to.equal(expected);
+        });
+
+        test('with different case', () => {
+            const file1 = 'x/y/z/spam.py';
+            const file2 = 'x/Y/z/Spam.py';
+            const expected = IS_WINDOWS;
+
+            const result = utils.arePathsSame(file1, file2);
+
+            expect(result).to.equal(expected);
+        });
     });
 
     suite('getDisplayName', () => {
