@@ -85,6 +85,20 @@ suite('FileSystem - Paths', () => {
             expect(norm).to.equal(expected);
         });
     });
+
+    suite('join', () => {
+        test('parts get joined by path.sep', () => {
+            const expected = path.join('x', 'y', 'z', 'spam.py');
+
+            const result = paths.join(
+                'x',
+                path.sep === '\\' ? 'y\\z' : 'y/z',
+                'spam.py'
+            );
+
+            expect(result).to.equal(expected);
+        });
+    });
 });
 
 suite('FileSystem - Executables', () => {

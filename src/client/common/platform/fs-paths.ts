@@ -13,6 +13,7 @@ const untildify = require('untildify');
 // The parts of node's 'path' module used by FileSystemPaths.
 interface INodePath {
     sep: string;
+    join(...filenames: string[]): string;
     basename(filename: string, ext?: string): string;
     normalize(filename: string): string;
 }
@@ -33,6 +34,10 @@ export class FileSystemPaths {
 
     public get sep(): string {
         return this.raw.sep;
+    }
+
+    public join(...filenames: string[]): string {
+        return this.raw.join(...filenames);
     }
 
     public basename(filename: string, suffix?: string): string {
