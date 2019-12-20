@@ -197,6 +197,10 @@ export class WebPanel implements IWebPanel {
                             if (ev.data.data.type && ev.data.data.type === '${InteractiveWindowMessages.Started}') {
                                 copyStylesToHostFrame();
                             }
+                        } else if (ev.data && ev.data.command === 'did-keydown') {
+                            window.console.log('keydown-passthrough');
+                            const keyboardEvent = new KeyboardEvent('keydown', {...ev.data.data, bubbles: true, cancelable: true, view: window});
+                            document.dispatchEvent(keyboardEvent);
                         } else if (!isFromFrame) {
                             window.console.log('posting to frame');
                             window.console.log(ev.data.type);

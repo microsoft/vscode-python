@@ -170,6 +170,22 @@ export class WebPanelServer {
                 let state = ${state ? `JSON.parse("${JSON.stringify(state)}")` : undefined};
                 window.console.log('acquired vscode api');
 
+                // Special case, because we don't have a way to get the vscode api more than once,
+                // hook up some global handlers here.
+                document.addEventListener('keydown', (e) => {
+                    // Forward this message to the inner most frame that VS code owns.
+                    originalPostMessage({ command: 'did-keydown', data: {
+                        key: e.key,
+                        keyCode: e.keyCode,
+                        code: e.code,
+                        shiftKey: e.shiftKey,
+                        altKey: e.altKey,
+                        ctrlKey: e.ctrlKey,
+                        metaKey: e.metaKey,
+                        repeat: e.repeat
+                    }}, '*');
+                })
+
                 return () => {
                     if (acquired) {
                         throw new Error('An instance of the VS Code API has already been acquired');
