@@ -14,7 +14,7 @@ import { traceInfo, traceWarning } from '../../common/logger';
 import { sleep, waitForPromise } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
@@ -30,6 +30,21 @@ type ISession = (Session.ISession & {
      */
     isRemoteSession?: boolean;
 });
+
+/**
+ * Exception raised when starting a Jupyter Session fails.
+ *
+ * @export
+ * @class JupyterSessionStartError
+ * @extends {Error}
+ */
+export class JupyterSessionStartError extends Error {
+    constructor(originalException: Error){
+        super(originalException.message);
+        this.stack = originalException.stack;
+        sendTelemetryEvent(Telemetry.StartSessionFailedJupyter);
+    }
+}
 
 export class JupyterSession implements IJupyterSession {
     private session: ISession | undefined;
@@ -318,7 +333,7 @@ export class JupyterSession implements IJupyterSession {
             serverSettings: serverSettings
         };
 
-        return Cancellation.race(() => this.sessionManager!.startNew(options), cancelToken);
+        return Cancellation.race(() => this.sessionManager!.startNew(options).catch(ex => Promise.reject(new JupyterSessionStartError(ex))), cancelToken);
     }
 
     private async waitForKernelPromise(kernelPromise: Promise<void>, timeout: number, errorMessage: string): Promise<void | null> {

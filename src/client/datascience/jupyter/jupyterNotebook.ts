@@ -509,9 +509,6 @@ export class JupyterNotebookBase implements INotebook {
     }
 
     public async setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void> {
-        // Change our own kernel spec
-        this.launchInfo.kernelSpec = spec;
-
         // We need to start a new session with the new kernel spec
         if (this.session) {
             // Turn off setup
@@ -520,8 +517,15 @@ export class JupyterNotebookBase implements INotebook {
             // Change the kernel on the session
             await this.session.changeKernel(spec, timeoutMS);
 
+            // Change our own kernel spec
+            // Only after session was successfully created.
+            this.launchInfo.kernelSpec = spec;
+
             // Rerun our initial setup
             await this.initialize();
+        } else {
+            // Change our own kernel spec
+            this.launchInfo.kernelSpec = spec;
         }
     }
 

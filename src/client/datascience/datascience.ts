@@ -17,6 +17,7 @@ import {
     IDisposableRegistry,
     IExtensionContext,
     IMemento,
+    IOutputChannel,
     IPythonExtensionBanner
 } from '../common/types';
 import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
@@ -26,7 +27,7 @@ import { IServiceContainer } from '../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { hasCells } from './cellFactory';
 import { getSavedUriList } from './common';
-import { Commands, EditorContexts, Settings, Telemetry } from './constants';
+import { Commands, EditorContexts, JUPYTER_OUTPUT_CHANNEL, Settings, Telemetry } from './constants';
 import { KernelSelector, KernelSpecInterpreter } from './jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from './jupyter/kernels/types';
 import {
@@ -67,7 +68,8 @@ export class DataScience implements IDataScience {
         @inject(IMemento) @named(GLOBAL_MEMENTO) private globalState: vscode.Memento,
         @inject(IJupyterSessionManagerFactory) private jupyterSessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(KernelSelector) private kernelSelector: KernelSelector
+        @inject(KernelSelector) private kernelSelector: KernelSelector,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private jupyterOutput: IOutputChannel
     ) {
         this.dataScienceSurveyBanner = this.serviceContainer.get<IPythonExtensionBanner>(IPythonExtensionBanner, BANNER_NAME_DS_SURVEY);
     }
@@ -514,6 +516,7 @@ export class DataScience implements IDataScience {
         disposable = this.commandManager.registerCommand(Commands.DebugCurrentCellPalette, this.debugCurrentCellFromCursor, this);
         this.disposableRegistry.push(disposable);
         disposable = this.commandManager.registerCommand(Commands.CreateNewNotebook, this.createNewNotebook, this);
+        disposable = this.commandManager.registerCommand(Commands.ViewJupyterOutput, this.viewJupyterOutput, this);
         this.disposableRegistry.push(disposable);
         if (this.commandListeners) {
             this.commandListeners.forEach((listener: IDataScienceCommandListener) => {
@@ -567,5 +570,8 @@ export class DataScience implements IDataScience {
 
     private async createNewNotebook(): Promise<void> {
         await this.notebookProvider.createNew();
+    }
+    private viewJupyterOutput() {
+        this.jupyterOutput.show(true);
     }
 }

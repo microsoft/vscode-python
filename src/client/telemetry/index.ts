@@ -1645,4 +1645,11 @@ export interface IEventNamePropertyMapping {
          */
         promptedToSelect?: boolean;
     };
+    /**
+     * Telemetry event sent when starting a session for a local connection failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.StartSessionFailedJupyter]: undefined | never;
 }

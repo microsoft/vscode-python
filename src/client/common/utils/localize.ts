@@ -28,6 +28,7 @@ export namespace Diagnostics {
 
 export namespace Common {
     export const canceled = localize('Common.canceled', 'Canceled');
+    export const cancel = localize('Common.cancel', 'Cancel');
     export const gotIt = localize('Common.gotIt', 'Got it!');
     export const loadingExtension = localize('Common.loadingPythonExtension', 'Python extension loading...');
     export const openOutputPanel = localize('Common.openOutputPanel', 'Show output');
@@ -166,7 +167,7 @@ export namespace DataScience {
     export const restartingKernelStatus = localize('DataScience.restartingKernelStatus', 'Restarting IPython Kernel');
     export const restartingKernelFailed = localize('DataScience.restartingKernelFailed', 'Kernel restart failed. Jupyter server is hung. Please reload VS code.');
     export const interruptingKernelFailed = localize('DataScience.interruptingKernelFailed', 'Kernel interrupt failed. Jupyter server is hung. Please reload VS code.');
-
+    export const sessionStartFailedWithKernel = localize('DataScience.sessionStartFailedWithKernel', 'Failed to start a session for the Kernel \'{0}\'. \nView Jupyter [log](command:{1}) for further details.');
     export const executingCode = localize('DataScience.executingCode', 'Executing Cell');
     export const collapseAll = localize('DataScience.collapseAll', 'Collapse all cell inputs');
     export const expandAll = localize('DataScience.expandAll', 'Expand all cell inputs');
@@ -230,6 +231,7 @@ export namespace DataScience {
     export const jupyterServer = localize('DataScience.jupyterServer', 'Jupyter Server');
     export const noKernel = localize('DataScience.noKernel', 'No Kernel');
     export const selectKernel = localize('DataScience.selectKernel', 'Select a Kernel');
+    export const selectDifferentKernel = localize('DataScience.selectDifferentKernel', 'Select a different Kernel');
     export const localJupyterServer = localize('DataScience.localJupyterServer', 'local');
     export const pandasTooOldForViewingFormat = localize('DataScience.pandasTooOldForViewingFormat', 'Python package \'pandas\' is version {0}. Version 0.20 or greater is required for viewing data.');
     export const pandasRequiredForViewing = localize('DataScience.pandasRequiredForViewing', 'Python package \'pandas\' is required for viewing data.');

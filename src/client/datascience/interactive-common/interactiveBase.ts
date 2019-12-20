@@ -32,7 +32,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
 import { addToUriList } from '../common';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { Commands, Identifiers, Settings, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
 import { DataScience } from '../datascience';
 import {
@@ -49,6 +49,7 @@ import {
 } from '../interactive-common/interactiveWindowTypes';
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
+import { JupyterSessionStartError } from '../jupyter/jupyterSession';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
 import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
 import { CssMessages } from '../messages';
@@ -1306,8 +1307,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const settings = this.configuration.getSettings();
 
         let kernel: KernelSpecInterpreter | undefined;
-
-        if (settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
+        const isLocalConnection = this.notebook?.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        if (isLocalConnection) {
             kernel = await this.dataScience.selectLocalJupyterKernel(this.notebook?.getKernelSpec());
         } else if (this.notebook) {
             const connInfo = this.notebook.server.getConnectionInfo();
@@ -1318,28 +1319,66 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
 
         if (kernel && (kernel.kernelSpec || kernel.kernelModel) && this.notebook) {
-            const switchKernel = async (newKernel: KernelSpecInterpreter) => {
-                if (newKernel.interpreter) {
-                    this.notebook!.setInterpreter(newKernel.interpreter);
-                }
-
-                // Change the kernel. A status update should fire that changes our display
-                await this.notebook!.setKernelSpec(newKernel.kernelSpec || newKernel.kernelModel!, this.configService.getSettings().datascience.jupyterLaunchTimeout);
-
-                // Add in a new sys info
-                await this.addSysInfo(SysInfoReason.New);
-            };
-
-            const kernelDisplayName = kernel.kernelSpec?.display_name || kernel.kernelModel?.display_name;
-            const kernelName = kernel.kernelSpec?.name || kernel.kernelModel?.name;
-            // One of them is bound to be non-empty.
-            const displayName = kernelDisplayName || kernelName || '';
-            const options: ProgressOptions = {
-                location: ProgressLocation.Notification,
-                cancellable: false,
-                title: localize.DataScience.switchingKernelProgress().format(displayName)
-            };
-            await this.applicationShell.withProgress(options, async (_, __) => switchKernel(kernel!));
+            await this.switchKernelWithRetry(kernel);
         }
+    }
+    private async switchKernelWithRetry(kernel: KernelSpecInterpreter){
+        const settings = this.configuration.getSettings();
+        const isLocalConnection = this.notebook?.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        if (!isLocalConnection){
+            return this.switchKernel(kernel);
+        }
+
+        // Keep retrying, until it works or user cancels.
+        // Sometimes if a bad kernel is selected, starting a session can fail.
+        // In such cases we need to let the user know about this and prompt them to select another kernel.
+        // tslint:disable-next-line: no-constant-condition
+        while (true) {
+            try {
+                await this.switchKernel(kernel);
+            } catch (ex) {
+                if (ex instanceof JupyterSessionStartError && isLocalConnection) {
+                    // Looks like we were unable to start a session for the local connection.
+                    // Possibly something wrong with the kernel.
+                    // At this point we have a valid jupyter server.
+                    const displayName = kernel.kernelSpec?.display_name || kernel.kernelModel?.display_name || kernel.kernelSpec?.name || kernel.kernelModel?.name || '';
+                    const message = localize.DataScience.sessionStartFailedWithKernel().format(displayName, Commands.ViewJupyterOutput);
+                    const selectKernel = localize.DataScience.selectDifferentKernel();
+                    const cancel = localize.Common.cancel();
+                    const selection = await this.applicationShell.showErrorMessage(message, selectKernel, cancel);
+                    if (selection === selectKernel) {
+                        kernel = await this.dataScience.selectLocalJupyterKernel(kernel.kernelSpec || kernel.kernelModel);
+                        if (Object.keys(kernel).length > 0){
+                            continue;
+                        }
+                    }
+                }
+                throw ex;
+            }
+        }
+    }
+    private async switchKernel(kernel: KernelSpecInterpreter): Promise<void> {
+        const switchKernel = async (newKernel: KernelSpecInterpreter) => {
+            // Change the kernel. A status update should fire that changes our display
+            await this.notebook!.setKernelSpec(newKernel.kernelSpec || newKernel.kernelModel!, this.configService.getSettings().datascience.jupyterLaunchTimeout);
+
+            if (newKernel.interpreter) {
+                this.notebook!.setInterpreter(newKernel.interpreter);
+            }
+
+            // Add in a new sys info
+            await this.addSysInfo(SysInfoReason.New);
+        };
+
+        const kernelDisplayName = kernel.kernelSpec?.display_name || kernel.kernelModel?.display_name;
+        const kernelName = kernel.kernelSpec?.name || kernel.kernelModel?.name;
+        // One of them is bound to be non-empty.
+        const displayName = kernelDisplayName || kernelName || '';
+        const options: ProgressOptions = {
+            location: ProgressLocation.Notification,
+            cancellable: false,
+            title: localize.DataScience.switchingKernelProgress().format(displayName)
+        };
+        await this.applicationShell.withProgress(options, async (_, __) => switchKernel(kernel!));
     }
 }

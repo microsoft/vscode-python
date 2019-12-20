@@ -14,6 +14,7 @@
     "python.command.python.refactorExtractMethod.title": "Extract Method",
     "python.command.python.viewOutput.title": "Show Output",
     "python.command.python.viewTestOutput.title": "Show Test Output",
+    "python.command.python.datascience.viewJupyterOutput.title": "Show Jupyter Output",
     "python.command.python.viewLanguageServerOutput.title": "Show Language Server Output",
     "python.command.python.selectAndRunTestMethod.title": "Run Test Method ...",
     "python.command.python.selectAndDebugTestMethod.title": "Debug Test Method ...",
@@ -222,6 +223,7 @@
     "DataScience.exportingFormat": "Exporting {0}",
     "DataScience.exportCancel": "Cancel",
     "Common.canceled": "Canceled",
+    "Common.cancel": "Cancel",
     "DataScience.importChangeDirectoryComment": "{0} Change working directory from the workspace root to the ipynb file location. Turn this addition off with the DataScience.changeDirOnImportExport setting",
     "DataScience.exportChangeDirectoryComment": "# Change directory to VSCode workspace root so that relative path loads work correctly. Turn this addition off with the DataScience.changeDirOnImportExport setting",
     "DataScience.interruptKernelStatus": "Interrupting IPython Kernel",
@@ -398,6 +400,8 @@
     "DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel": "Couldn't find kernel '{0}' that the notebook was created with. Registering a new kernel using the current interpreter.",
     "DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel": "Couldn't find kernel '{0}' that the notebook was created with.",
     "DataScience.selectKernel": "Select a Kernel",
+    "DataScience.selectDifferentKernel": "Select a different Kernel",
     "products.installingModule": "Installing {0}",
-    "DataScience.switchingKernelProgress": "Switching kernel to '{0}'"
+    "DataScience.switchingKernelProgress": "Switching kernel to '{0}'",
+    "DataScience.sessionStartFailedWithKernel": "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
 }

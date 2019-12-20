@@ -33,6 +33,7 @@ import {
     extractInputText,
     ICellViewModel
 } from '../../datascience-ui/interactive-common/mainState';
+import { MockOutputChannel } from '../mockClasses';
 import { MockMemento } from '../mocks/mementos';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
@@ -327,7 +328,8 @@ class Pizza(object):
             storage,
             instance(jupyterSessionManagerFactory),
             multiStepFactory,
-            kernelSelector
+            kernelSelector,
+            new MockOutputChannel('Jupyter')
         );
     }
 

@@ -58,6 +58,7 @@ export namespace Commands {
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
+    export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
 }
 
 export namespace CodeLensCommands {
@@ -107,7 +108,6 @@ export namespace RegExpValues {
     export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
     export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
     export const StyleTagRegex = /\<style[\s\S]*\<\/style\>/m;
-
 }
 
 export enum Telemetry {
@@ -154,6 +154,7 @@ export enum Telemetry {
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
+    StartSessionFailedJupyter = 'DATASCIENCE.START_SESSION_FAILED_JUPYTER',
     ConnectRemoteSelfCertFailedJupyter = 'DATASCIENCE.CONNECTREMOTESELFCERTFAILEDJUPYTER',
     RegisterAndUseInterpreterAsKernel = 'DATASCIENCE.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
     UseInterpreterAsKernel = 'DATASCIENCE.USE_INTERPRETER_AS_KERNEL',

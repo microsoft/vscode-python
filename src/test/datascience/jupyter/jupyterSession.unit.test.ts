@@ -281,7 +281,7 @@ suite('Data Science - JupyterSession', () => {
                 when(restartSession.kernel).thenReturn(instance(restartKernel));
                 when(sessionManager.startNew(anything())).thenCall(() => {
                     newSessionCreated.resolve();
-                    return instance(restartSession);
+                    return Promise.resolve(instance(restartSession));
                 });
             });
             teardown(() => {
