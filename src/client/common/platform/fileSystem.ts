@@ -105,11 +105,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public getRealPath(filePath: string): Promise<string> {
-        return new Promise<string>(resolve => {
-            fs.realpath(filePath, (err, realPath) => {
-                resolve(err ? filePath : realPath);
-            });
-        });
+        return this.pathUtils.getRealPath(filePath);
     }
 
     //=================================

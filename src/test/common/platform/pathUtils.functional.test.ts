@@ -9,8 +9,7 @@ import { expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-
-const IS_WINDOWS = /^win/.test(process.platform);
+import { WINDOWS as IS_WINDOWS } from './utils';
 
 suite('FileSystem - PathUtils', () => {
     let utils: PathUtils;
