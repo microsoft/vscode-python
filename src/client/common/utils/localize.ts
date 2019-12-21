@@ -118,6 +118,12 @@ export namespace DataScienceSurveyBanner {
     export const bannerLabelNo = localize('DataScienceSurveyBanner.bannerLabelNo', 'No, thanks');
 }
 
+export namespace Installer {
+    export const noCondaOrPipInstaller = localize('Installer.noCondaOrPipInstaller', 'There is no Conda or Pip installer available in the selected environment.');
+    export const noPipInstaller = localize('Installer.noPipInstaller', 'There is no Pip installer available in the selected environment.');
+    export const searchForHelp = localize('Installer.searchForHelp', 'Search for help');
+}
+
 export namespace ExtensionSurveyBanner {
     export const bannerMessage = localize('ExtensionSurveyBanner.bannerMessage', 'Can you please take 2 minutes to tell us how the Python extension is working for you?');
     export const maybeLater = localize('ExtensionSurveyBanner.maybeLater', 'Maybe later');

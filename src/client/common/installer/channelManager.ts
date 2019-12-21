@@ -8,6 +8,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { Product } from '../types';
+import { Installer } from '../utils/localize';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from './types';
@@ -76,9 +77,9 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const search = 'Search for help';
         let result: string | undefined;
         if (interpreter.type === InterpreterType.Conda) {
-            result = await appShell.showErrorMessage('There is no Conda or Pip installer available in the selected environment.', search);
+            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
         } else {
-            result = await appShell.showErrorMessage('There is no Pip installer available in the selected environment.', search);
+            result = await appShell.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp());
         }
         if (result === search) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
