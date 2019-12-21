@@ -11,7 +11,7 @@ import { IModuleInstaller } from '../../../client/common/installer/types';
 import { Product } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
-suite('xInstallationChannelManager - installation channels', () => {
+suite('InstallationChannelManager - getInstallationChannel()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
     // tslint:disable-next-line:no-any
@@ -102,5 +102,68 @@ suite('xInstallationChannelManager - installation channels', () => {
         appShell.verifyAll();
         expect(channel).to.not.equal(undefined, 'Channel should be set');
         expect(channel!.displayName).to.equal('moduleInstaller2');
+    });
+});
+
+suite('InstallationChannelManager - getInstallationChannels()', () => {
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
+    const resource = Uri.parse('a');
+    let installChannelManager: InstallationChannelManager;
+
+    setup(() => {
+        serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+    });
+
+    test('If no installers are returned by serviceContainer, return an empty list', async () => {
+        serviceContainer
+            .setup(s => s.getAll<IModuleInstaller>(IModuleInstaller))
+            .returns(() => []);
+        installChannelManager = new InstallationChannelManager(serviceContainer.object);
+        const channel = await installChannelManager.getInstallationChannels(resource);
+        assert.deepEqual(channel, []);
+    });
+
+    test('Return highest priority supported installers', async () => {
+        const moduleInstallers: IModuleInstaller[] = [];
+        // Setup 2 installers with priority 1, where one is supported and other is not
+        for (let i = 0; i < 2; i = i + 1) {
+            const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
+            moduleInstaller
+                // tslint:disable-next-line:no-any
+                .setup(m => (m as any).then)
+                .returns(() => undefined);
+            moduleInstaller
+                .setup(m => m.priority)
+                .returns(() => 1);
+            moduleInstaller
+                .setup(m => m.isSupported(resource))
+                .returns(() => Promise.resolve(i % 2 === 0));
+            moduleInstallers.push(moduleInstaller.object);
+        }
+        // Setup 3 installers with priority 2, where two are supported and other is not
+        for (let i = 2; i < 5; i = i + 1) {
+            const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
+            moduleInstaller
+                // tslint:disable-next-line:no-any
+                .setup(m => (m as any).then)
+                .returns(() => undefined);
+            moduleInstaller
+                .setup(m => m.priority)
+                .returns(() => 2);
+            moduleInstaller
+                .setup(m => m.isSupported(resource))
+                .returns(() => Promise.resolve(i % 2 === 0));
+            moduleInstallers.push(moduleInstaller.object);
+        }
+        serviceContainer
+            .setup(s => s.getAll<IModuleInstaller>(IModuleInstaller))
+            .returns(() => moduleInstallers);
+        installChannelManager = new InstallationChannelManager(serviceContainer.object);
+        const channels = await installChannelManager.getInstallationChannels(resource);
+        // Verify that highest supported priority is 2, so number of installers supported with that priority is 2
+        expect(channels.length).to.equal(2);
+        for (let i = 0; i < 2; i = i + 1) {
+            expect(channels[i].priority).to.equal(2);
+        }
     });
 });
