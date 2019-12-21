@@ -252,7 +252,7 @@ suite('Language Server Activation - ActivationManager', () => {
         verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
     });
 
-    test('If we have opened a doc that does not belong to workspace, then do nothing', async () => {
+    test('If workspace corresponding to the doc has already been activated, then do nothing', async () => {
         const doc = {
             uri: Uri.parse('doc'),
             languageId: PYTHON_LANGUAGE
