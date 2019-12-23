@@ -158,6 +158,21 @@ suite('InstallationChannelManager - getInstallationChannels()', () => {
                 .returns(() => Promise.resolve(i % 2 === 0));
             moduleInstallers.push(moduleInstaller.object);
         }
+        // Setup 2 installers with priority 3, but none are supported
+        for (let i = 5; i < 7; i = i + 1) {
+            const moduleInstaller = TypeMoq.Mock.ofType<IModuleInstaller>();
+            moduleInstaller
+                // tslint:disable-next-line:no-any
+                .setup(m => (m as any).then)
+                .returns(() => undefined);
+            moduleInstaller
+                .setup(m => m.priority)
+                .returns(() => 3);
+            moduleInstaller
+                .setup(m => m.isSupported(resource))
+                .returns(() => Promise.resolve(false));
+            moduleInstallers.push(moduleInstaller.object);
+        }
         serviceContainer
             .setup(s => s.getAll<IModuleInstaller>(IModuleInstaller))
             .returns(() => moduleInstallers);
