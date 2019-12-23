@@ -22,8 +22,10 @@ import { IModuleInstaller, InterpreterUri } from './types';
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
     public abstract get name(): string;
-    public abstract get displayName(): string
+    public abstract get displayName(): string;
+
     constructor(protected serviceContainer: IServiceContainer) { }
+
     public async installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
@@ -44,7 +46,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                     if (await fs.isDirReadonly(path.dirname(pythonPath))) {
-                        this.elevatedInstall(pythonPath, args);
+                        this._elevatedInstall(pythonPath, args);
                     } else {
                         await terminalService.sendCommand(pythonPath, args, token);
                     }
@@ -66,31 +68,14 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 cancellable: true,
                 title: Products.installingModule().format(name)
             };
-            await shell.withProgress(options, async (_, token: CancellationToken) =>  install(wrapCancellationTokens(token, cancel)));
+            await shell.withProgress(options, async (_, token: CancellationToken) => install(wrapCancellationTokens(token, cancel)));
         } else {
             await install(cancel);
         }
     }
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
-    protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
-    private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
-        const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
-        if (indexOfPylint === -1) {
-            return args;
-        }
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
-        // If installing pylint on python 2.x, then use pylint~=1.9.0
-        if (interpreter && interpreter.version && interpreter.version.major === 2) {
-            const newArgs = [...args];
-            // This command could be sent to the terminal, hence '<' needs to be escaped for UNIX.
-            newArgs[indexOfPylint] = '"pylint<2.0.0"';
-            return newArgs;
-        }
-        return args;
-    }
 
-    private elevatedInstall(execPath: string, args: string[]) {
+    public _elevatedInstall(execPath: string, args: string[]) {
         const options = {
             name: 'VS Code Python'
         };
@@ -117,5 +102,22 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 }
             }
         });
+    }
+    protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
+    private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
+        const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
+        if (indexOfPylint === -1) {
+            return args;
+        }
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
+        const interpreter = isResource(resource) ? await interpreterService.getActiveInterpreter(resource) : resource;
+        // If installing pylint on python 2.x, then use pylint~=1.9.0
+        if (interpreter && interpreter.version && interpreter.version.major === 2) {
+            const newArgs = [...args];
+            // This command could be sent to the terminal, hence '<' needs to be escaped for UNIX.
+            newArgs[indexOfPylint] = '"pylint<2.0.0"';
+            return newArgs;
+        }
+        return args;
     }
 }
