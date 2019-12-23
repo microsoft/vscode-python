@@ -7,11 +7,14 @@
 
 import { assert } from 'chai';
 import * as path from 'path';
+// tslint:disable-next-line: match-default-export-name
+import rewiremock from 'rewiremock';
 import { SemVer } from 'semver';
 import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { CancellationTokenSource, Disposable, OutputChannel, ProgressLocation, Uri, WorkspaceConfiguration } from 'vscode';
 import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
+import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { ModuleInstaller } from '../../../client/common/installer/moduleInstaller';
 import { PipEnvInstaller, pipenvName } from '../../../client/common/installer/pipEnvInstaller';
@@ -20,7 +23,7 @@ import { ProductInstaller } from '../../../client/common/installer/productInstal
 import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from '../../../client/common/installer/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
-import { ExecutionInfo, IConfigurationService, IDisposableRegistry, IPythonSettings, ModuleNamePurpose, Product } from '../../../client/common/types';
+import { ExecutionInfo, IConfigurationService, IDisposableRegistry, IOutputChannel, IPythonSettings, ModuleNamePurpose, Product } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Products } from '../../../client/common/utils/localize';
 import { noop } from '../../../client/common/utils/misc';
@@ -57,8 +60,98 @@ suite('Module Installer', () => {
         public getExecutionInfo(_moduleName: string, _resource?: InterpreterUri): Promise<ExecutionInfo> {
             return Promise.resolve({ moduleName: 'executionInfo', args: [] });
         }
+        // tslint:disable-next-line: no-unnecessary-override
+        public elevatedInstall(execPath: string, args: string[]) {
+            return super._elevatedInstall(execPath, args);
+        }
     }
+    let outputChannel: TypeMoq.IMock<IOutputChannel>;
+    let appShell: TypeMoq.IMock<IApplicationShell>;
+    let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     const pythonPath = path.join(__dirname, 'python');
+
+    suite('Method _elevatedInstall()', async () => {
+        let installer: TestModuleInstaller;
+        const execPath = 'execPath';
+        const args = ['1', '2'];
+        const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
+        setup(() => {
+            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IOutputChannel), TypeMoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => outputChannel.object);
+            appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IApplicationShell))).returns(() => appShell.object);
+            installer = new TestModuleInstaller(serviceContainer.object);
+        });
+        teardown(() => {
+            rewiremock.disable();
+        });
+
+        test('Show error message if sudo exec fails with error', async () => {
+            const error = 'Error message';
+            const sudoPromptMock = { exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(error, 'stdout', 'stderr') };
+            rewiremock.enable();
+            rewiremock('sudo-prompt').with(sudoPromptMock);
+            appShell
+                .setup(a => a.showErrorMessage(error))
+                .returns(() => Promise.resolve(undefined))
+                .verifiable(TypeMoq.Times.once());
+            outputChannel
+                // tslint:disable-next-line: messages-must-be-localized
+                .setup(o => o.appendLine(`[Elevated] ${command}`))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            installer.elevatedInstall(execPath, args);
+            appShell.verifyAll();
+            outputChannel.verifyAll();
+        });
+
+        test('Show stdout if sudo exec succeeds', async () => {
+            const stdout = 'stdout';
+            const sudoPromptMock = { exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, stdout, undefined) };
+            rewiremock.enable();
+            rewiremock('sudo-prompt').with(sudoPromptMock);
+            outputChannel
+                .setup(o => o.show())
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            outputChannel
+                // tslint:disable-next-line: messages-must-be-localized
+                .setup(o => o.appendLine(`[Elevated] ${command}`))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            outputChannel
+                .setup(o => o.append((stdout)))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            installer.elevatedInstall(execPath, args);
+            outputChannel.verifyAll();
+        });
+
+        test('Show stderr if sudo exec gives a warning with stderr', async () => {
+            const stderr = 'stderr';
+            const sudoPromptMock = { exec: (_command: any, _options: any, callBackFn: Function) => callBackFn(undefined, undefined, stderr) };
+            rewiremock.enable();
+            rewiremock('sudo-prompt').with(sudoPromptMock);
+            outputChannel
+                // tslint:disable-next-line: messages-must-be-localized
+                .setup(o => o.appendLine(`[Elevated] ${command}`))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            outputChannel
+                .setup(o => o.show())
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            outputChannel
+                // tslint:disable-next-line: messages-must-be-localized
+                .setup(o => o.append(`Warning: ${stderr}`))
+                .returns(() => undefined)
+                .verifiable(TypeMoq.Times.once());
+            installer.elevatedInstall(execPath, args);
+            outputChannel.verifyAll();
+        });
+    });
+
     [CondaInstaller, PipInstaller, PipEnvInstaller, TestModuleInstaller].forEach(installerClass => {
         // Proxy info is relevant only for PipInstaller.
         const proxyServers = installerClass === PipInstaller ? ['', 'proxy:1234'] : [''];
@@ -75,15 +168,13 @@ suite('Module Installer', () => {
                     const testSuite = [testProxySuffix, testCondaEnv].filter(item => item.length > 0).join(', ');
                     suite(`${installerClass.name} (${testSuite})`, () => {
                         let disposables: Disposable[] = [];
-                        let installer: IModuleInstaller;
                         let installationChannel: TypeMoq.IMock<IInstallationChannelManager>;
-                        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
                         let terminalService: TypeMoq.IMock<ITerminalService>;
                         let configService: TypeMoq.IMock<IConfigurationService>;
                         let fs: TypeMoq.IMock<IFileSystem>;
-                        let appShell: TypeMoq.IMock<IApplicationShell>;
                         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
                         let interpreterService: TypeMoq.IMock<IInterpreterService>;
+                        let installer: IModuleInstaller;
                         const condaExecutable = 'my.exe';
                         setup(() => {
                             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();

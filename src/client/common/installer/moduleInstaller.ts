@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions, window } from 'vscode';
+import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -87,9 +87,10 @@ export abstract class ModuleInstaller implements IModuleInstaller {
         // tslint:disable-next-line:no-require-imports no-var-requires
         const sudo = require('sudo-prompt');
 
-        sudo.exec(command, options, (error: string, stdout: string, stderr: string) => {
+        sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {
             if (error) {
-                window.showErrorMessage(error);
+                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                await shell.showErrorMessage(error);
             } else {
                 outputChannel.show();
                 if (stdout) {

@@ -14,6 +14,7 @@ import { Installer } from '../../../client/common/utils/localize';
 import { IInterpreterService, InterpreterType } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
+// tslint:disable-next-line: max-func-body-length
 suite('InstallationChannelManager - getInstallationChannel()', () => {
     let serviceContainer: TypeMoq.IMock<IServiceContainer>;
     let appShell: TypeMoq.IMock<IApplicationShell>;
@@ -66,6 +67,39 @@ suite('InstallationChannelManager - getInstallationChannel()', () => {
         const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
         expect(channel).to.equal(undefined, 'should be undefined');
         assert.ok(showNoInstallersMessage.calledOnceWith(resource));
+    });
+
+    test('If no channel is selected in the quickpick, return undefined', async () => {
+        const moduleInstaller1 = TypeMoq.Mock.ofType<IModuleInstaller>();
+        moduleInstaller1
+            .setup(m => m.displayName)
+            .returns(() => 'moduleInstaller1');
+        moduleInstaller1
+            // tslint:disable-next-line:no-any
+            .setup(m => (m as any).then)
+            .returns(() => undefined);
+        const moduleInstaller2 = TypeMoq.Mock.ofType<IModuleInstaller>();
+        moduleInstaller2
+            .setup(m => m.displayName)
+            .returns(() => 'moduleInstaller2');
+        moduleInstaller2
+            // tslint:disable-next-line:no-any
+            .setup(m => (m as any).then)
+            .returns(() => undefined);
+        appShell
+            .setup(a => a.showQuickPick(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(undefined))
+            .verifiable(TypeMoq.Times.once());
+        getInstallationChannels = sinon.stub(InstallationChannelManager.prototype, 'getInstallationChannels');
+        getInstallationChannels.resolves([moduleInstaller1.object, moduleInstaller2.object]);
+        showNoInstallersMessage = sinon.stub(InstallationChannelManager.prototype, 'showNoInstallersMessage');
+        showNoInstallersMessage.resolves();
+        installChannelManager = new InstallationChannelManager(serviceContainer.object);
+        // tslint:disable-next-line:no-any
+        const channel = await installChannelManager.getInstallationChannel(Product.autopep8, resource);
+        assert.ok(showNoInstallersMessage.notCalled);
+        appShell.verifyAll();
+        expect(channel).to.equal(undefined, 'Channel should not be set');
     });
 
     test('If multiple channels are returned by the resource, show quick pick of the channel names and return the selected channel installer', async () => {
