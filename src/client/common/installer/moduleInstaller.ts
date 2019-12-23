@@ -46,7 +46,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 } else if (settings.globalModuleInstallation) {
                     const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
                     if (await fs.isDirReadonly(path.dirname(pythonPath))) {
-                        this._elevatedInstall(pythonPath, args);
+                        this.elevatedInstall(pythonPath, args);
                     } else {
                         await terminalService.sendCommand(pythonPath, args, token);
                     }
@@ -75,7 +75,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     }
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
 
-    public _elevatedInstall(execPath: string, args: string[]) {
+    protected elevatedInstall(execPath: string, args: string[]) {
         const options = {
             name: 'VS Code Python'
         };

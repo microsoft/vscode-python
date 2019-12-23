@@ -62,7 +62,7 @@ suite('Module Installer', () => {
         }
         // tslint:disable-next-line: no-unnecessary-override
         public elevatedInstall(execPath: string, args: string[]) {
-            return super._elevatedInstall(execPath, args);
+            return super.elevatedInstall(execPath, args);
         }
     }
     let outputChannel: TypeMoq.IMock<IOutputChannel>;
@@ -325,8 +325,8 @@ suite('Module Installer', () => {
                                         info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
-                                        const _elevatedInstall = sinon.stub(TestModuleInstaller.prototype, '_elevatedInstall');
-                                        _elevatedInstall.returns();
+                                        const elevatedInstall = sinon.stub(TestModuleInstaller.prototype, 'elevatedInstall');
+                                        elevatedInstall.returns();
                                         fs
                                             .setup(f => f.isDirReadonly(path.dirname(pythonPath)))
                                             .returns(() => Promise.resolve(true));
@@ -335,7 +335,7 @@ suite('Module Installer', () => {
                                         } catch (ex) {
                                             noop();
                                         }
-                                        assert.ok(_elevatedInstall.calledOnceWith(pythonPath, ['-m', 'executionInfo']));
+                                        assert.ok(elevatedInstall.calledOnceWith(pythonPath, ['-m', 'executionInfo']));
                                         interpreterService.verifyAll();
                                     });
                                     test(`If 'python.globalModuleInstallation' is set to true and pythonPath directory is not read only, send command to terminal`, async () => {
