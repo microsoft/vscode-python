@@ -4,6 +4,7 @@
 'use strict';
 
 import * as assert from 'assert';
+import { expect } from 'chai';
 import { anything, instance, mock, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -43,6 +44,19 @@ suite('Module Installer - Poetry', () => {
             instance(configurationService), instance(fileSystem),
             instance(processServiceFactory));
     });
+
+    test('Installer name is poetry', () => {
+        expect(poetryInstaller.name).to.equal('poetry');
+    });
+
+    test('Installer priority is 10', () => {
+        expect(poetryInstaller.priority).to.equal(10);
+    });
+
+    test('Installer display name is poetry', () => {
+        expect(poetryInstaller.displayName).to.equal('poetry');
+    });
+
     test('Is not supported when there is no resource', async () => {
         const supported = await poetryInstaller.isSupported();
         assert.equal(supported, false);
