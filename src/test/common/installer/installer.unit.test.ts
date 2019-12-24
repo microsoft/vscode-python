@@ -23,6 +23,7 @@ import {
     IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService
 } from '../../../client/common/installer/types';
 import { IPlatformService } from '../../../client/common/platform/types';
+import { ExecutionResult, IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
     IConfigurationService, IDisposableRegistry, ILogger, InstallerResponse,
@@ -37,6 +38,7 @@ use(chaiAsPromised);
 
 suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
+        // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product).forEach(product => {
             let disposables: Disposable[] = [];
             let installer: ProductInstaller;
@@ -48,6 +50,7 @@ suite('Module Installer only', () => {
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let persistentStore: TypeMoq.IMock<IPersistentStateFactory>;
             let outputChannel: TypeMoq.IMock<OutputChannel>;
+            let productPathService: TypeMoq.IMock<IProductPathService>;
             const productService = new ProductService();
 
             setup(() => {
@@ -73,7 +76,7 @@ suite('Module Installer only', () => {
                 installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
                 installationChannel.setup(i => i.getInstallationChannel(TypeMoq.It.isAny())).returns(() => Promise.resolve(moduleInstaller.object));
 
-                const productPathService = TypeMoq.Mock.ofType<IProductPathService>();
+                productPathService = TypeMoq.Mock.ofType<IProductPathService>();
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
                 productPathService.setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => 'xyz');
                 productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => true);
@@ -356,6 +359,26 @@ suite('Module Installer only', () => {
                             moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
                         }
                     });
+                    test(`Return InstallerResponse.Ignore for the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'}) if installation channel is not defined`, async () => {
+                        const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                        const logger = TypeMoq.Mock.ofType<ILogger>();
+                        logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+
+                        moduleInstaller
+                            .setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)))
+                            .returns(() => Promise.reject(new Error('UnitTesting')));
+                        installationChannel.reset();
+                        installationChannel
+                            .setup(i => i.getInstallationChannel(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve(undefined));
+                        try {
+                            const response = await installer.install(product.value, resource);
+                            expect(response).to.equal(InstallerResponse.Ignore);
+                        } catch (ex) {
+                            assert(false, `Should not throw errors, ${ex}`);
+                        }
+                    });
                     test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                         const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
                         const logger = TypeMoq.Mock.ofType<ILogger>();
@@ -370,6 +393,119 @@ suite('Module Installer only', () => {
                             moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
                         }
                     });
+                // Test isInstalled()
+            }
+            // Test isInstalled()
+            if (product.value === Product.unittest || product.value === Product.jupyter) {
+                test(`Method isInstalled() returns true for module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const result = await installer.isInstalled(product.value, resource);
+                    expect(result).to.equal(true, 'Should be true');
+                });
+            } else {
+                test(`Method isInstalled() returns true if module is installed for the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
+                    const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+                        .returns(() => pythonExecutionFactory.object);
+                    pythonExecutionFactory
+                        .setup(p => p.create(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(pythonExecutionService.object));
+                    pythonExecutionService
+                        // tslint:disable-next-line: no-any
+                        .setup(p => (p as any).then)
+                        .returns(() => undefined);
+                    pythonExecutionService
+                        .setup(p => p.isModuleInstalled(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(true))
+                        .verifiable(TypeMoq.Times.once());
+
+                    const response = await installer.isInstalled(product.value, resource);
+                    expect(response).to.equal(true, 'Should be true');
+                    pythonExecutionService.verifyAll();
+                });
+                test(`Method isInstalled() returns false if module is not installed for the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
+                    const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
+                    serviceContainer
+                        .setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory)))
+                        .returns(() => pythonExecutionFactory.object);
+                    pythonExecutionFactory
+                        .setup(p => p.create(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(pythonExecutionService.object));
+                    pythonExecutionService
+                        // tslint:disable-next-line: no-any
+                        .setup(p => (p as any).then)
+                        .returns(() => undefined);
+                    pythonExecutionService
+                        .setup(p => p.isModuleInstalled(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(false))
+                        .verifiable(TypeMoq.Times.once());
+
+                    const response = await installer.isInstalled(product.value, resource);
+                    expect(response).to.equal(false, 'Should be false');
+
+                    pythonExecutionService.verifyAll();
+                });
+                test(`Method isInstalled() returns true if running 'path/to/module_executable --version' succeeds for the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+                    const processService = TypeMoq.Mock.ofType<IProcessService>();
+                    serviceContainer
+                        .setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory))
+                        .returns(() => processServiceFactory.object);
+                    processServiceFactory
+                        .setup(p => p.create(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(processService.object));
+                    processService
+                        // tslint:disable-next-line: no-any
+                        .setup(p => (p as any).then)
+                        .returns(() => undefined);
+                    const executionResult: ExecutionResult<string> = {
+                        stdout: 'output'
+                    };
+                    processService
+                        .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(executionResult))
+                        .verifiable(TypeMoq.Times.once());
+
+                    productPathService.reset();
+                    productPathService
+                        .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                        .returns(() => false);
+
+                    const response = await installer.isInstalled(product.value, resource);
+                    expect(response).to.equal(true, 'Should be true');
+
+                    processService.verifyAll();
+                });
+                test(`Method isInstalled() returns false if running 'path/to/module_executable --version' fails for the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                    const processServiceFactory = TypeMoq.Mock.ofType<IProcessServiceFactory>();
+                    const processService = TypeMoq.Mock.ofType<IProcessService>();
+                    serviceContainer
+                        .setup(c => c.get<IProcessServiceFactory>(IProcessServiceFactory))
+                        .returns(() => processServiceFactory.object);
+                    processServiceFactory
+                        .setup(p => p.create(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(processService.object));
+                    processService
+                        // tslint:disable-next-line: no-any
+                        .setup(p => (p as any).then)
+                        .returns(() => undefined);
+                    processService
+                        .setup(p => p.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                        .returns(() => Promise.reject('Kaboom'))
+                        .verifiable(TypeMoq.Times.once());
+
+                    productPathService.reset();
+                    productPathService
+                        .setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource)))
+                        .returns(() => false);
+
+                    const response = await installer.isInstalled(product.value, resource);
+                    expect(response).to.equal(false, 'Should be false');
+
+                    processService.verifyAll();
+                });
             }
         });
 
