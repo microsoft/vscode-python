@@ -30,7 +30,16 @@ suite('Common - Conda Installer', () => {
     });
     test('Name and priority', async () => {
         assert.equal(installer.displayName, 'Conda');
+        assert.equal(installer.name, 'Conda');
         assert.equal(installer.priority, 0);
+    });
+    test('Installer is not supported when conda is available variable is set to false', async () => {
+        const uri = Uri.file(__filename);
+        installer._isCondaAvailable = false;
+
+        const supported = await installer.isSupported(uri);
+
+        assert.equal(supported, false);
     });
     test('Installer is not supported when conda is not available', async () => {
         const uri = Uri.file(__filename);

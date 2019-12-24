@@ -12,7 +12,7 @@ import * as TypeMoq from 'typemoq';
 import { OutputChannel, Uri } from 'vscode';
 import '../../../client/common/extensions';
 import { ProductInstaller } from '../../../client/common/installer/productInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
+import { BaseProductPathsService, CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { IProductService } from '../../../client/common/installer/types';
 import { IConfigurationService, IFormattingSettings, IInstaller, IPythonSettings, ITestingSettings, IWorkspaceSymbolSettings, ModuleNamePurpose, Product, ProductType } from '../../../client/common/types';
@@ -27,6 +27,11 @@ use(chaiAsPromised);
 suite('Product Path', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         getNamesAndValues<Product>(Product).forEach(product => {
+            class TestBaseProductPathsService extends BaseProductPathsService {
+                public getExecutableNameFromSettings(_: Product, _resource?: Uri): string {
+                    return '';
+                }
+            }
             let serviceContainer: TypeMoq.IMock<IServiceContainer>;
             let formattingSettings: TypeMoq.IMock<IFormattingSettings>;
             let unitTestSettings: TypeMoq.IMock<ITestingSettings>;
@@ -58,6 +63,34 @@ suite('Product Path', () => {
             if (product.value === Product.isort) {
                 return;
             }
+            suite('Method isExecutableAModule()', () => {
+                if (product.value === Product.ipykernel) {
+                    test('Returns true if product is ipykernel', () => {
+                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
+                    });
+                } else {
+                    test('Returns true if User has customized the executable name', () => {
+                        productInstaller.translateProductToModuleName = () => 'moduleName';
+                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                        productPathService.getExecutableNameFromSettings = () => 'executableName';
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
+                    });
+                    test('Returns false if User has customized the full path to executable', () => {
+                        productInstaller.translateProductToModuleName = () => 'moduleName';
+                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                        productPathService.getExecutableNameFromSettings = () => 'path/to/executable';
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                    });
+                    test('Returns false if translating product to module name fails with error', () => {
+                        // tslint:disable-next-line: no-any
+                        productInstaller.translateProductToModuleName = () => { return new Error('Kaboom') as any; };
+                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                        productPathService.getExecutableNameFromSettings = () => 'executableName';
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                    });
+                }
+            });
             const productType = new ProductService().getProductType(product.value);
             switch (productType) {
                 case ProductType.Formatter: {
