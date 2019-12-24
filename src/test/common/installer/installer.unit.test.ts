@@ -3,8 +3,9 @@
 
 // tslint:disable:max-func-body-length no-invalid-this messages-must-be-localized
 
-import { expect, use } from 'chai';
+import { assert, expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
+import * as sinon from 'sinon';
 import { instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, OutputChannel, Uri, WorkspaceFolder } from 'vscode';
@@ -15,12 +16,14 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { LinterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';
+import { CTagsInsllationScript, CTagsInstaller, LinterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { ProductService } from '../../../client/common/installer/productService';
 import {
     IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService
 } from '../../../client/common/installer/types';
+import { IPlatformService } from '../../../client/common/platform/types';
+import { ITerminalService, ITerminalServiceFactory } from '../../../client/common/terminal/types';
 import {
     IConfigurationService, IDisposableRegistry, ILogger, InstallerResponse,
     IOutputChannel, IPersistentState, IPersistentStateFactory, ModuleNamePurpose, Product, ProductType
@@ -44,12 +47,13 @@ suite('Module Installer only', () => {
             let promptDeferred: Deferred<string>;
             let workspaceService: TypeMoq.IMock<IWorkspaceService>;
             let persistentStore: TypeMoq.IMock<IPersistentStateFactory>;
+            let outputChannel: TypeMoq.IMock<OutputChannel>;
             const productService = new ProductService();
 
             setup(() => {
                 promptDeferred = createDeferred<string>();
                 serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-                const outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
+                outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                 disposables = [];
                 serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IDisposableRegistry), TypeMoq.It.isAny())).returns(() => disposables);
@@ -84,11 +88,99 @@ suite('Module Installer only', () => {
                         disposable.dispose();
                     }
                 });
+                sinon.restore();
             });
 
             switch (product.value) {
-                case Product.isort:
+                case Product.isort: {
+                    return;
+                }
                 case Product.ctags: {
+                    test(`If platform is Windows, for module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'}), print the instructions to install Ctags into the output channel`, async () => {
+                        const platformService = TypeMoq.Mock.ofType<IPlatformService>();
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                        platformService
+                            .setup(p => p.isWindows)
+                            .returns(() => true);
+                        outputChannel
+                            .setup(o => o.appendLine(TypeMoq.It.isAny()))
+                            .returns(() => undefined);
+                        outputChannel
+                            .setup(o => o.appendLine('Install Universal Ctags Win32 to enable support for Workspace Symbols'))
+                            .returns(() => undefined)
+                            .verifiable(TypeMoq.Times.once());
+                        outputChannel
+                            .setup(o => o.show())
+                            .returns(() => undefined)
+                            .verifiable(TypeMoq.Times.once());
+                        const response = await installer.install(product.value, resource);
+                        expect(response).to.be.equal(InstallerResponse.Ignore);
+                        outputChannel.verifyAll();
+                    });
+                    test(`If platform is not Windows, for module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'}), install Ctags using the corresponding script`, async () => {
+                        const platformService = TypeMoq.Mock.ofType<IPlatformService>();
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                        platformService
+                            .setup(p => p.isWindows)
+                            .returns(() => false);
+                        const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
+                        const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
+                        terminalServiceFactory
+                            .setup(p => p.getTerminalService(resource))
+                            .returns(() => termianlService.object);
+                        termianlService
+                            .setup(t => t.sendCommand(CTagsInsllationScript, []))
+                            .returns(() => Promise.resolve())
+                            .verifiable(TypeMoq.Times.once());
+                        const response = await installer.install(product.value, resource);
+                        expect(response).to.be.equal(InstallerResponse.Ignore);
+                        termianlService.verifyAll();
+                    });
+                    test(`If platform is not Windows, for module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'}), but installing Ctags fails with Error, log error and return`, async () => {
+                        const platformService = TypeMoq.Mock.ofType<IPlatformService>();
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPlatformService))).returns(() => platformService.object);
+                        platformService
+                            .setup(p => p.isWindows)
+                            .returns(() => false);
+                        const termianlService = TypeMoq.Mock.ofType<ITerminalService>();
+                        const terminalServiceFactory = TypeMoq.Mock.ofType<ITerminalServiceFactory>();
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ITerminalServiceFactory))).returns(() => terminalServiceFactory.object);
+                        terminalServiceFactory
+                            .setup(p => p.getTerminalService(resource))
+                            .returns(() => termianlService.object);
+                        termianlService
+                            .setup(t => t.sendCommand(CTagsInsllationScript, []))
+                            .returns(() => Promise.reject('Kaboom'))
+                            .verifiable(TypeMoq.Times.once());
+                        const response = await installer.install(product.value, resource);
+                        expect(response).to.be.equal(InstallerResponse.Ignore);
+                        termianlService.verifyAll();
+                    });
+                    test(`If 'Yes' is selected on the install prompt for the the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'}), install module and return response`, async () => {
+                        app
+                            .setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve('Yes'))
+                            .verifiable(TypeMoq.Times.once());
+                        const install = sinon.stub(CTagsInstaller.prototype, 'install');
+                        install.resolves(InstallerResponse.Installed);
+                        const response = await installer.promptToInstall(product.value, resource);
+                        expect(response).to.be.equal(InstallerResponse.Installed);
+                        app.verifyAll();
+                        assert.ok(install.calledOnceWith(product.value, resource));
+                    });
+                    test(`If 'No' is selected on the install prompt for the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'}), return ignore response`, async () => {
+                        app
+                            .setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .returns(() => Promise.resolve('No'))
+                            .verifiable(TypeMoq.Times.once());
+                        const install = sinon.stub(CTagsInstaller.prototype, 'install');
+                        install.resolves(InstallerResponse.Installed);
+                        const response = await installer.promptToInstall(product.value, resource);
+                        expect(response).to.be.equal(InstallerResponse.Ignore);
+                        app.verifyAll();
+                        assert.ok(install.notCalled);
+                    });
                     return;
                 }
                 case Product.unittest: {
@@ -250,34 +342,34 @@ suite('Module Installer only', () => {
                     }
                 }
 
-                test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                    const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                    const logger = TypeMoq.Mock.ofType<ILogger>();
-                    logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+                    test(`Ensure resource info is passed into the module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                        const logger = TypeMoq.Mock.ofType<ILogger>();
+                        logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
 
-                    moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined))).returns(() => Promise.reject(new Error('UnitTesting')));
+                        moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined))).returns(() => Promise.reject(new Error('UnitTesting')));
 
-                    try {
-                        await installer.install(product.value, resource);
-                    } catch (ex) {
-                        moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
-                    }
-                });
-                test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
-                    const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
-                    const logger = TypeMoq.Mock.ofType<ILogger>();
-                    logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
-                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
+                        try {
+                            await installer.install(product.value, resource);
+                        } catch (ex) {
+                            moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
+                        }
+                    });
+                    test(`Ensure resource info is passed into the module installer (created using ProductInstaller) ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        const moduleName = installer.translateProductToModuleName(product.value, ModuleNamePurpose.install);
+                        const logger = TypeMoq.Mock.ofType<ILogger>();
+                        logger.setup(l => l.logError(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => new Error('UnitTesting'));
+                        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ILogger), TypeMoq.It.isAny())).returns(() => logger.object);
 
-                    moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined))).returns(() => Promise.reject(new Error('UnitTesting')));
+                        moduleInstaller.setup(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined))).returns(() => Promise.reject(new Error('UnitTesting')));
 
-                    try {
-                        await installer.install(product.value, resource);
-                    } catch (ex) {
-                        moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
-                    }
-                });
+                        try {
+                            await installer.install(product.value, resource);
+                        } catch (ex) {
+                            moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
+                        }
+                    });
             }
         });
 
