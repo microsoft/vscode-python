@@ -16,7 +16,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { CTagsInsllationScript, CTagsInstaller, LinterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';
+import { CTagsInsllationScript, CTagsInstaller, LinterInstaller, ProductInstaller, FormatterInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { ProductService } from '../../../client/common/installer/productService';
 import {
@@ -580,6 +580,21 @@ suite('Module Installer only', () => {
                 verify(appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])).once();
                 verify(cmdManager.executeCommand(Commands.Set_Linter)).once();
                 expect(response).to.be.equal(InstallerResponse.Ignore);
+            });
+            test('If install button is selected, install linter and return response', async () => {
+                const product = Product.pylint;
+                const options = ['Select Linter', 'Do not show again'];
+                const productName = ProductNames.get(product)!;
+                // tslint:disable-next-line:no-any
+                when(appShell.showErrorMessage(`Linter ${productName} is not installed.`, 'Install', options[0], options[1])).thenResolve('Install' as any);
+                when(cmdManager.executeCommand(Commands.Set_Linter)).thenResolve(undefined);
+                const install = sinon.stub(LinterInstaller.prototype, 'install');
+                install.resolves(InstallerResponse.Installed);
+
+                const response = await installer.promptToInstallImplementation(product, resource);
+
+                expect(response).to.be.equal(InstallerResponse.Installed);
+                assert.ok(install.calledOnceWith(product, resource, undefined));
             });
         });
     });
