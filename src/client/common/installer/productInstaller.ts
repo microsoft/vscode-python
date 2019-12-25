@@ -128,7 +128,7 @@ export class CTagsInstaller extends BaseInstaller {
         } else {
             const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
             terminalService.sendCommand(CTagsInsllationScript, [])
-                .catch(() => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}'.`));
+                .catch(ex => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
         }
         return InstallerResponse.Ignore;
     }

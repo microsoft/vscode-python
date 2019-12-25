@@ -16,7 +16,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { Commands } from '../../../client/common/constants';
 import '../../../client/common/extensions';
-import { CTagsInsllationScript, CTagsInstaller, LinterInstaller, ProductInstaller, FormatterInstaller } from '../../../client/common/installer/productInstaller';
+import { CTagsInsllationScript, CTagsInstaller, FormatterInstaller, LinterInstaller, ProductInstaller } from '../../../client/common/installer/productInstaller';
 import { ProductNames } from '../../../client/common/installer/productNames';
 import { ProductService } from '../../../client/common/installer/productService';
 import {
@@ -560,6 +560,10 @@ suite('Module Installer only', () => {
                 installer = new LinterInstallerTest(instance(serviceContainer), outputChannel.object);
             });
 
+            teardown(() => {
+                sinon.restore();
+            });
+
             test('Ensure 3 options for pylint', async () => {
                 const product = Product.pylint;
                 const options = ['Select Linter', 'Do not show again'];
@@ -595,6 +599,107 @@ suite('Module Installer only', () => {
 
                 expect(response).to.be.equal(InstallerResponse.Installed);
                 assert.ok(install.calledOnceWith(product, resource, undefined));
+            });
+        });
+
+        suite('Test FormatterInstaller.promptToInstallImplementation', () => {
+            class FormatterInstallerTest extends FormatterInstaller {
+                // tslint:disable-next-line:no-unnecessary-override
+                public async promptToInstallImplementation(product: Product, uri?: Uri): Promise<InstallerResponse> {
+                    return super.promptToInstallImplementation(product, uri);
+                }
+                protected getStoredResponse(_key: string) {
+                    return false;
+                }
+                protected isExecutableAModule(_product: Product, _resource?: Uri) {
+                    return true;
+                }
+            }
+            let installer: FormatterInstallerTest;
+            let appShell: IApplicationShell;
+            let configService: IConfigurationService;
+            let workspaceService: IWorkspaceService;
+            let productService: IProductService;
+            let cmdManager: ICommandManager;
+            setup(() => {
+                const serviceContainer = mock(ServiceContainer);
+                appShell = mock(ApplicationShell);
+                configService = mock(ConfigurationService);
+                workspaceService = mock(WorkspaceService);
+                productService = mock(ProductService);
+                cmdManager = mock(CommandManager);
+                const outputChannel = TypeMoq.Mock.ofType<IOutputChannel>();
+
+                when(serviceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(appShell));
+                when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
+                when(serviceContainer.get<IWorkspaceService>(IWorkspaceService)).thenReturn(instance(workspaceService));
+                when(serviceContainer.get<IProductService>(IProductService)).thenReturn(instance(productService));
+                when(serviceContainer.get<ICommandManager>(ICommandManager)).thenReturn(instance(cmdManager));
+
+                installer = new FormatterInstallerTest(instance(serviceContainer), outputChannel.object);
+            });
+
+            teardown(() => {
+                sinon.restore();
+            });
+
+            test('If nothing is selected, return Ignore as response', async () => {
+                const product = Product.autopep8;
+                // tslint:disable-next-line: no-any
+                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn(undefined as any);
+
+                const response = await installer.promptToInstallImplementation(product, resource);
+
+                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                expect(response).to.equal(InstallerResponse.Ignore);
+            });
+
+            test('If `Yes` is selected, install product', async () => {
+                const product = Product.autopep8;
+                const install = sinon.stub(FormatterInstaller.prototype, 'install');
+                install.resolves(InstallerResponse.Installed);
+
+                // tslint:disable-next-line: no-any
+                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn('Yes' as any);
+                const response = await installer.promptToInstallImplementation(product, resource);
+
+                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                expect(response).to.equal(InstallerResponse.Installed);
+                assert.ok(install.calledOnceWith(product, resource, undefined));
+            });
+
+            test('If `Use black` is selected, install black formatter', async () => {
+                const product = Product.autopep8;
+                const install = sinon.stub(FormatterInstaller.prototype, 'install');
+                install.resolves(InstallerResponse.Installed);
+
+                // tslint:disable-next-line: no-any
+                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn('Use black' as any);
+                when(configService.updateSetting('formatting.provider', 'black', resource)).thenResolve();
+
+                const response = await installer.promptToInstallImplementation(product, resource);
+
+                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                expect(response).to.equal(InstallerResponse.Installed);
+                verify(configService.updateSetting('formatting.provider', 'black', resource)).once();
+                assert.ok(install.calledOnceWith(Product.black, resource, undefined));
+            });
+
+            test('If `Use yapf` is selected, install black formatter', async () => {
+                const product = Product.autopep8;
+                const install = sinon.stub(FormatterInstaller.prototype, 'install');
+                install.resolves(InstallerResponse.Installed);
+
+                // tslint:disable-next-line: no-any
+                when(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).thenReturn('Use yapf' as any);
+                when(configService.updateSetting('formatting.provider', 'yapf', resource)).thenResolve();
+
+                const response = await installer.promptToInstallImplementation(product, resource);
+
+                verify(appShell.showErrorMessage(`Formatter autopep8 is not installed. Install?`, 'Yes', 'Use black', 'Use yapf')).once();
+                expect(response).to.equal(InstallerResponse.Installed);
+                verify(configService.updateSetting('formatting.provider', 'yapf', resource)).once();
+                assert.ok(install.calledOnceWith(Product.yapf, resource, undefined));
             });
         });
     });
