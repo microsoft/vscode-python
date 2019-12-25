@@ -39,7 +39,7 @@ use(chaiAsPromised);
 suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         // tslint:disable-next-line: cyclomatic-complexity
-        getNamesAndValues<Product>(Product).forEach(product => {
+        getNamesAndValues<Product>(Product).concat([{ name: 'Unkown product', value: 404 }]).forEach(product => {
             let disposables: Disposable[] = [];
             let installer: ProductInstaller;
             let installationChannel: TypeMoq.IMock<IInstallationChannelManager>;
@@ -95,6 +95,21 @@ suite('Module Installer only', () => {
             });
 
             switch (product.value) {
+                case 404: {
+                    test(`If product type is not recognized, throw error (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        app
+                            .setup(a => a.showErrorMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                            .verifiable(TypeMoq.Times.never());
+                        const getProductType = sinon.stub(ProductService.prototype, 'getProductType');
+                        // tslint:disable-next-line: no-any
+                        getProductType.returns('random' as any);
+                        const promise = installer.promptToInstall(product.value, resource);
+                        await expect(promise).to.eventually.be.rejectedWith(`Unknown product ${product.value}`);
+                        app.verifyAll();
+                        assert.ok(getProductType.calledOnce);
+                    });
+                    return;
+                }
                 case Product.isort: {
                     return;
                 }
@@ -393,7 +408,6 @@ suite('Module Installer only', () => {
                             moduleInstaller.verify(m => m.installModule(TypeMoq.It.isValue(moduleName), TypeMoq.It.isValue(resource), TypeMoq.It.isValue(undefined)), TypeMoq.Times.once());
                         }
                     });
-                // Test isInstalled()
             }
             // Test isInstalled()
             if (product.value === Product.unittest || product.value === Product.jupyter) {
