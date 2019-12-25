@@ -20,7 +20,6 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { PythonSettings } from '../../client/common/configSettings';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../client/common/constants';
-import { LiveShareApi } from '../../client/common/liveshare/liveshare';
 import { Logger } from '../../client/common/logger';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
@@ -48,6 +47,7 @@ import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyte
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
+import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
 import {
     ICell,
     IConnection,

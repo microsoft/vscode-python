@@ -36,7 +36,6 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CryptoUtils } from '../../../client/common/crypto';
-import { LiveShareApi } from '../../../client/common/liveshare/liveshare';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IConfigurationService, ICryptoUtils, IExtensionContext } from '../../../client/common/types';
 import { createDeferred } from '../../../client/common/utils/async';
@@ -53,6 +52,7 @@ import { JupyterExecutionFactory } from '../../../client/datascience/jupyter/jup
 import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExporter';
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
+import { LiveShareApi } from '../../../client/datascience/liveshare/liveshare';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import {
     ICodeCssGenerator,

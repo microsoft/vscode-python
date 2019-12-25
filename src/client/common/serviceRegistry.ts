@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IFileDownloader, IHttpClient } from '../common/types';
+import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -47,7 +48,6 @@ import {
     IInsiderExtensionPrompt
 } from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
-import { LiveShareApi } from './liveshare/liveshare';
 import { Logger } from './logger';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';

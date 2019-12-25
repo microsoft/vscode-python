@@ -4,8 +4,8 @@
 import { inject, injectable } from 'inversify';
 import * as vsls from 'vsls/vscode';
 
-import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../application/types';
-import { IConfigurationService, IDisposableRegistry } from '../types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { LiveShareProxy } from './liveshareProxy';
 
 // tslint:disable:no-any unified-signatures
