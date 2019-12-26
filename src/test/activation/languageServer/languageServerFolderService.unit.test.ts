@@ -130,7 +130,7 @@ suite('Language Server Folder Service', () => {
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
         });
 
-        test(('If current folder is provided and setting `python.downloadLanguageServer` is set to false, return false'), async () => {
+        test(('Returns false if current folder is provided and setting `python.downloadLanguageServer` is set to false'), async () => {
             const settings = {
                 downloadLanguageServer: false,
                 autoUpdateLanguageServer: true
@@ -143,7 +143,7 @@ suite('Language Server Folder Service', () => {
             expect(result).to.equal(false, 'Should be false');
         });
 
-        test(('If current folder is provided and setting `python.autoUpdateLanguageServer` is set to false, return false'), async () => {
+        test(('Returns false if current folder is provided and setting `python.autoUpdateLanguageServer` is set to false'), async () => {
             const settings = {
                 downloadLanguageServer: true,
                 autoUpdateLanguageServer: false
@@ -156,7 +156,7 @@ suite('Language Server Folder Service', () => {
             expect(result).to.equal(false, 'Should be false');
         });
 
-        test(('Otherwise, use rule to infer if we should look for LS'), async () => {
+        test(('Returns whatever the rule to infer LS returns otherwise'), async () => {
             const settings = {
                 downloadLanguageServer: true,
                 autoUpdateLanguageServer: false
@@ -191,7 +191,7 @@ suite('Language Server Folder Service', () => {
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
         });
 
-        test(('If setting `python.downloadLanguageServer` is set to false, return the expected LS directory'), async () => {
+        test(('Returns the expected LS directory if setting `python.downloadLanguageServer` is set to false'), async () => {
             const settings = {
                 downloadLanguageServer: false
             };
@@ -207,7 +207,7 @@ suite('Language Server Folder Service', () => {
             assert.deepEqual(result, expectedLSDirectory);
         });
 
-        test(('Return `undefined` if no LS directory exists'), async () => {
+        test(('Returns `undefined` if no LS directory exists'), async () => {
             const settings = {
                 downloadLanguageServer: true
             };
@@ -223,7 +223,7 @@ suite('Language Server Folder Service', () => {
             assert.deepEqual(result, undefined);
         });
 
-        test(('Return the LS directory with highest version if multiple LS directories exists'), async () => {
+        test(('Returns the LS directory with highest version if multiple LS directories exists'), async () => {
             const settings = {
                 downloadLanguageServer: true
             };
