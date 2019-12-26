@@ -9,7 +9,8 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { ILanguageServerPackageService } from '../../../client/activation/types';
+import { IDownloadChannelRule, ILanguageServerPackageService } from '../../../client/activation/types';
+import { IConfigurationService } from '../../../client/common/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
@@ -97,6 +98,79 @@ suite('xLanguage Server Folder Service', () => {
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
             const lsFolderName = await languageServerFolderService.getLanguageServerFolderName(resource);
             expect(lsFolderName).to.equal('languageServer.1.3.2');
+        });
+    });
+
+    suite('Method shouldLookForNewLanguageServer()', async () => {
+        let configurationService: TypeMoq.IMock<IConfigurationService>;
+        let lsPackageService: TypeMoq.IMock<ILanguageServerPackageService>;
+        let downloadChannelRule: TypeMoq.IMock<IDownloadChannelRule>;
+        const currentLSDirectory = {
+            path: 'path/to/currentLSDirectoryName',
+            version: new SemVer('1.2.3')
+        };
+        setup(() => {
+            configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
+            lsPackageService = TypeMoq.Mock.ofType<ILanguageServerPackageService>();
+            downloadChannelRule = TypeMoq.Mock.ofType<IDownloadChannelRule>();
+            serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            serviceContainer
+                .setup(s => s.get<IConfigurationService>(IConfigurationService))
+                .returns(() => configurationService.object);
+            serviceContainer
+                .setup(s => s.get<IDownloadChannelRule>(IDownloadChannelRule, 'beta'))
+                .returns(() => downloadChannelRule.object);
+            serviceContainer
+                .setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
+                .returns(() => lsPackageService.object);
+            lsPackageService
+                .setup(l => l.getLanguageServerDownloadChannel())
+                .returns(() => 'beta');
+            languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
+        });
+
+        test(('If current folder is provided and setting `python.downloadLanguageServer` is set to false, return false'), async () => {
+            const settings = {
+                downloadLanguageServer: false,
+                autoUpdateLanguageServer: true
+            };
+            configurationService
+                .setup(c => c.getSettings())
+                // tslint:disable-next-line: no-any
+                .returns(() => settings as any);
+            const result = await languageServerFolderService.shouldLookForNewLanguageServer(currentLSDirectory);
+            expect(result).to.equal(false, 'Should be false');
+        });
+
+        test(('If current folder is provided and setting `python.autoUpdateLanguageServer` is set to false, return false'), async () => {
+            const settings = {
+                downloadLanguageServer: true,
+                autoUpdateLanguageServer: false
+            };
+            configurationService
+                .setup(c => c.getSettings())
+                // tslint:disable-next-line: no-any
+                .returns(() => settings as any);
+            const result = await languageServerFolderService.shouldLookForNewLanguageServer(currentLSDirectory);
+            expect(result).to.equal(false, 'Should be false');
+        });
+
+        test(('Otherwise, use rule to infer if we should look for LS'), async () => {
+            const settings = {
+                downloadLanguageServer: true,
+                autoUpdateLanguageServer: false
+            };
+            configurationService
+                .setup(c => c.getSettings())
+                // tslint:disable-next-line: no-any
+                .returns(() => settings as any);
+            downloadChannelRule
+                .setup(d => d.shouldLookForNewLanguageServer(undefined))
+                .returns(() => Promise.resolve(true))
+                .verifiable(TypeMoq.Times.once());
+            const result = await languageServerFolderService.shouldLookForNewLanguageServer();
+            expect(result).to.equal(true, 'Should be true');
+            downloadChannelRule.verifyAll();
         });
     });
 });
