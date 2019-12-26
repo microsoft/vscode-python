@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
 import { Tokenizer } from '../../client/language/tokenizer';
-import { TokenType, TokenizerMode } from '../../client/language/types';
+import { TokenizerMode, TokenType } from '../../client/language/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Language.Tokenizer', () => {
@@ -428,7 +428,7 @@ suite('Language.Tokenizer', () => {
         ['-0b1', TokenType.Number],
         ['-0B1', TokenType.Number],
         ['-0o1', TokenType.Number],
-        ['-0O1', TokenType.Number],
+        ['-0O1', TokenType.Number]
     ].forEach(pair => {
         const text: string = pair[0] as string;
         const expected = pair[1];
@@ -444,7 +444,7 @@ suite('Language.Tokenizer', () => {
         [',-1', TokenType.Number],
         [':+1', TokenType.Number],
         [';+1', TokenType.Number],
-        ['=+1', TokenType.Number],
+        ['=+1', TokenType.Number]
     ].forEach(pair => {
         const text: string = pair[0] as string;
         const expected = pair[1];
