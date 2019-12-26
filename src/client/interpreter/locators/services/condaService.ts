@@ -115,7 +115,6 @@ export class CondaService implements ICondaService {
      * or environment variables.
      * Doing that could change this value.
      */
-    @cache(120_000)
     public async getCondaVersion(): Promise<SemVer | undefined> {
         const processService = await this.processServiceFactory.create();
         const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
