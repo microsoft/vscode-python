@@ -9,6 +9,7 @@ import * as sinon from 'sinon';
 import * as TypeMoq from 'typemoq';
 import { Uri } from 'vscode';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { ILanguageServerPackageService } from '../../../client/activation/types';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 // tslint:disable-next-line:max-func-body-length
@@ -26,8 +27,13 @@ suite('xLanguage Server Folder Service', () => {
             path: 'path/to/currentLSDirectoryName',
             version: new SemVer('1.2.3')
         };
+        let languageServerPackageService: TypeMoq.IMock<ILanguageServerPackageService>;
         setup(() => {
+            languageServerPackageService = TypeMoq.Mock.ofType<ILanguageServerPackageService>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
+            serviceContainer
+                .setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
+                .returns(() => languageServerPackageService.object);
         });
         teardown(() => {
             sinon.restore();
@@ -46,8 +52,10 @@ suite('xLanguage Server Folder Service', () => {
         test('Returns current Language server directory name if fetching latest LS version returns undefined', async () => {
             shouldLookForNewLS = sinon.stub(LanguageServerFolderService.prototype, 'shouldLookForNewLanguageServer');
             shouldLookForNewLS.resolves(true);
-            const serverVersion = sinon.stub(LanguageServerFolderService.prototype, 'getLatestLanguageServerVersion');
-            serverVersion.resolves(undefined);
+            languageServerPackageService
+                .setup(l => l.getLatestNugetPackageVersion(resource))
+                // tslint:disable-next-line: no-any
+                .returns(() => Promise.resolve(undefined) as any);
             getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
@@ -63,8 +71,9 @@ suite('xLanguage Server Folder Service', () => {
                 version: new SemVer('1.1.3'),
                 uri: 'nugetUri'
             };
-            const serverVersion = sinon.stub(LanguageServerFolderService.prototype, 'getLatestLanguageServerVersion');
-            serverVersion.resolves(nugetPackage);
+            languageServerPackageService
+                .setup(l => l.getLatestNugetPackageVersion(resource))
+                .returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
@@ -80,8 +89,9 @@ suite('xLanguage Server Folder Service', () => {
                 version: new SemVer('1.3.2'),
                 uri: 'nugetUri'
             };
-            const serverVersion = sinon.stub(LanguageServerFolderService.prototype, 'getLatestLanguageServerVersion');
-            serverVersion.resolves(nugetPackage);
+            languageServerPackageService
+                .setup(l => l.getLatestNugetPackageVersion(resource))
+                .returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
