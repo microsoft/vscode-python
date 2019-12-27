@@ -31,7 +31,7 @@ export function initializeIoc(): IServiceContainer {
     return serviceContainer;
 }
 
-function registerTypes(serviceManager: IServiceManager) {
+export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ICurrentProcess>(ICurrentProcess, CurrentProcess);
     serviceManager.addSingletonInstance<IDisposableRegistry>(IDisposableRegistry, []);
     serviceManager.addSingleton<IDebugStreamProvider>(IDebugStreamProvider, DebugStreamProvider);
