@@ -227,7 +227,7 @@ suite('Language Server Folder Service', () => {
             const settings = {
                 downloadLanguageServer: true
             };
-            const directories = ['path/to/languageServer.0.9.3', 'path/to/languageServer.1.0.7', 'path/to/languageServer.1.2.3', 'path/to/languageServer.1.2.3.5'];
+            const directories = ['path/to/languageServer', 'path/to/languageServer.0.9.3', 'path/to/languageServer.1.0.7', 'path/to/languageServer.1.2.3', 'path/to/languageServer.1.2.3.5'];
             const expectedLSDirectory = {
                 path: 'path/to/languageServer.1.2.3',
                 version: semver.parse('1.2.3', true)!
