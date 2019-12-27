@@ -42,6 +42,8 @@ const condaGlobPathsForWindows = [
     '/[Aa]naconda*/Scripts/conda.exe',
     'C:/[Mm]iniconda*/Scripts/conda.exe',
     'C:/[Aa]naconda*/Scripts/conda.exe',
+    '/[Mm]iniconda*/conda.exe',
+    'C:/[Mm]iniconda*/conda.exe',
     untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
     untildify('~/[Aa]naconda*/Scripts/conda.exe'),
     untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
@@ -406,6 +408,9 @@ export class CondaService implements ICondaService {
                 traceWarning(`File condaService.ts return value conda warning, ${failReason}`);
                 return [];
             });
+        if (await this.fileSystem.fileExists('C:/Miniconda/conda.exe') === true || await this.fileSystem.fileExists('C:/Miniconda/Scripts/conda.exe') === true) {
+            traceInfo(`File condaService.ts yes`);
+        }
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
         traceInfo(`File condaService.ts - ${condaFiles} - ${validCondaFiles.length} - ${validCondaFiles[0]}`);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
