@@ -58,14 +58,18 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const hasInterpreters = await interpreterService.hasInterpreters;
         if (hasInterpreters) {
             const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+            traceError(`1CONDA execution service is ${condaExecutionService}`);
             if (condaExecutionService) {
                 return condaExecutionService;
             }
+            traceError(`2CONDA execution service is ${condaExecutionService}`);
         }
 
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
+            traceError(`WindowsStorePythonProcess yo yo`);
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
         }
+        traceError(`PythonExecutionService yo yo`);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
@@ -124,10 +128,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
 
         const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+        traceError(`ssconda execution service is ${condaExecutionService}`);
         if (condaExecutionService) {
             return condaExecutionService;
         }
 
+        traceError(`ssPythonExecutionService xecution service is`);
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {

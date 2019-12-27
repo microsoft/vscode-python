@@ -4,7 +4,7 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { Logger, traceDecorators, traceError, traceInfo, traceVerbose } from '../../../common/logger';
+import { Logger, traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
@@ -38,6 +38,8 @@ export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
 const condaGlobPathsForWindows = [
     '/ProgramData/[Mm]iniconda*/Scripts/conda.exe',
     '/ProgramData/[Aa]naconda*/Scripts/conda.exe',
+    untildify('C:/[Mm]iniconda*/Scripts/conda.exe'),
+    untildify('C:/[Aa]naconda*/Scripts/conda.exe'),
     untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
     untildify('~/[Aa]naconda*/Scripts/conda.exe'),
     untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
@@ -152,10 +154,14 @@ export class CondaService implements ICondaService {
      * Can the shell find conda (to run it)?
      */
     public async isCondaInCurrentPath() {
+        traceInfo(`File condaService.ts is conda in path`);
         const processService = await this.processServiceFactory.create();
         return processService.exec('conda', ['--version'])
             .then(output => output.stdout.length > 0)
-            .catch(() => false);
+            .catch((ex) => {
+                traceError(`File condaService.ts is conda in path failed with ${ex}`);
+                return false;
+            });
     }
 
     /**
@@ -364,6 +370,7 @@ export class CondaService implements ICondaService {
 
         const isAvailable = await this.isCondaInCurrentPath();
         if (isAvailable) {
+            traceInfo(`File condaService.ts return value conda 367`);
             return 'conda';
         }
         if (this.platform.isWindows && this.registryLookupForConda) {
@@ -373,10 +380,12 @@ export class CondaService implements ICondaService {
             if (condaInterpreter) {
                 const interpreterPath = await this.getCondaFileFromInterpreter(condaInterpreter.path, condaInterpreter.envName);
                 if (interpreterPath) {
+                    traceInfo(`File condaService.ts return value conda 377`);
                     return interpreterPath;
                 }
             }
         }
+        traceInfo(`File condaService.ts getCondaFileFromKnownLocations 382`);
         return this.getCondaFileFromKnownLocations();
     }
 
@@ -392,9 +401,11 @@ export class CondaService implements ICondaService {
                     'Default conda location search failed.',
                     `Searching for default install locations for conda results in error: ${failReason}`
                 );
+                traceWarning(`File condaService.ts return value conda warning, ${failReason}`);
                 return [];
             });
         const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
+        traceInfo(`File condaService.ts - ${condaFiles} - ${validCondaFiles.length} - ${validCondaFiles[0]}`);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
 }
