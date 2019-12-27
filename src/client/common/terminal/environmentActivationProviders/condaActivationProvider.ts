@@ -11,6 +11,7 @@ import { ICondaService } from '../../../interpreter/contracts';
 import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
+import { traceInfo } from '../../logger';
 
 // Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
 const CondaRequiredMajor = 4;
@@ -26,7 +27,7 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IPlatformService) private platform: IPlatformService,
         @inject(IConfigurationService) private configService: IConfigurationService
-    ) {}
+    ) { }
 
     /**
      * Is the given shell supported for activating a conda env?
@@ -59,7 +60,9 @@ export class CondaActivationCommandProvider implements ITerminalActivationComman
         // Old version, just call activate directly.
         // New version, call activate from the same path as our python path, then call it again to activate our environment.
         // -- note that the 'default' conda location won't allow activate to work for the environment sometimes.
+        traceInfo('Running conda --version from condaActivationProvide.ts');
         const versionInfo = await this.condaService.getCondaVersion();
+        traceInfo(`Finished conda --version from condaActivationProvide.ts, ${versionInfo}`);
         if (versionInfo && versionInfo.major >= CondaRequiredMajor) {
             // Conda added support for powershell in 4.6.
             if (versionInfo.minor >= CondaRequiredMinorForPowerShell && (targetShell === TerminalShellType.powershell || targetShell === TerminalShellType.powershellCore)) {

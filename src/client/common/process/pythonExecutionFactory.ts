@@ -11,7 +11,7 @@ import { IWindowsStoreInterpreter } from '../../interpreter/locators/types';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { traceError } from '../logger';
+import { traceError, traceInfo } from '../logger';
 import { IConfigurationService, IDisposableRegistry } from '../types';
 import { CondaExecutionService } from './condaExecutionService';
 import { ProcessService } from './proc';
@@ -45,7 +45,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         @inject(ICondaService) private readonly condaService: ICondaService,
         @inject(IBufferDecoder) private readonly decoder: IBufferDecoder,
         @inject(WindowsStoreInterpreter) private readonly windowsStoreInterpreter: IWindowsStoreInterpreter
-    ) {}
+    ) { }
     public async create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService> {
         const pythonPath = options.pythonPath ? options.pythonPath : this.configService.getSettings(options.resource).pythonPath;
         const processService: IProcessService = await this.processServiceFactory.create(options.resource);
@@ -78,7 +78,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         // No daemon support in Python 2.7.
         const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
-        if (interpreter?.version && interpreter.version.major < 3){
+        if (interpreter?.version && interpreter.version.major < 3) {
             return activatedProcPromise!;
         }
 
@@ -90,7 +90,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, {...options, pythonPath}, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, { ...options, pythonPath }, activatedProc!, activatedEnvVars);
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;
@@ -132,12 +132,14 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
     }
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
         const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
+        traceInfo('Running conda --version from pythonExecutionFactory.ts');
         const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
             this.condaService.getCondaVersion(),
             this.condaService.getCondaEnvironment(pythonPath),
             this.condaService.getCondaFile(),
             processServicePromise
         ]);
+        traceInfo(`Finished conda --version from pythonExecutionFactory.ts, ${condaVersion}`);
 
         if (condaVersion && gte(condaVersion, CONDA_RUN_VERSION) && condaEnvironment && condaFile && procService) {
             // Add logging to the newly created process service

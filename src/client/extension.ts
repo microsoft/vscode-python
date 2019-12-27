@@ -42,7 +42,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from './common/
 import { Commands, isTestExecution, PYTHON, PYTHON_LANGUAGE, STANDARD_OUTPUT_CHANNEL } from './common/constants';
 import { registerTypes as registerDotNetTypes } from './common/dotnet/serviceRegistry';
 import { registerTypes as installerRegisterTypes } from './common/installer/serviceRegistry';
-import { traceError } from './common/logger';
+import { traceError, traceInfo } from './common/logger';
 import { registerTypes as platformRegisterTypes } from './common/platform/serviceRegistry';
 import { registerTypes as processRegisterTypes } from './common/process/serviceRegistry';
 import { registerTypes as commonRegisterTypes } from './common/serviceRegistry';
@@ -348,11 +348,13 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
     const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
     const settings = configurationService.getSettings(mainWorkspaceUri);
+    traceInfo('Running conda --version from extension.ts');
     const [condaVersion, interpreter, interpreters] = await Promise.all([
         condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
         interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
     ]);
+    traceInfo(`Finished conda --version from extension.ts, ${condaVersion}`);
     const workspaceFolderCount = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders!.length : 0;
     const pythonVersion = interpreter && interpreter.version ? interpreter.version.raw : undefined;
     const interpreterType = interpreter ? interpreter.type : undefined;

@@ -4,7 +4,7 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { Logger, traceDecorators, traceVerbose } from '../../../common/logger';
+import { Logger, traceDecorators, traceVerbose, traceInfo, traceError } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
@@ -103,6 +103,7 @@ export class CondaService implements ICondaService {
         if (typeof this.isAvailable === 'boolean') {
             return this.isAvailable;
         }
+        traceInfo('Running conda --version from condaService.ts');
         return this.getCondaVersion()
             .then(version => this.isAvailable = version !== undefined)
             .catch(() => this.isAvailable = false);
@@ -119,20 +120,26 @@ export class CondaService implements ICondaService {
         const processService = await this.processServiceFactory.create();
         const info = await this.getCondaInfo().catch<CondaInfo | undefined>(() => undefined);
         let versionString: string | undefined;
+        traceInfo(`About to run conda --version command`);
         if (info && info.conda_version) {
             versionString = info.conda_version;
         } else {
             const stdOut = await this.getCondaFile()
                 .then(condaFile => processService.exec(condaFile, ['--version'], {}))
                 .then(result => result.stdout.trim())
-                .catch<string | undefined>(() => undefined);
-
+                .catch<string | undefined>((ex) => {
+                    traceError(`Trace error from conda --version, ${ex}`);
+                    return undefined;
+                });
+            traceInfo(`Stdout from conda --version, ${stdOut}`);
             versionString = (stdOut && stdOut.startsWith('conda ')) ? stdOut.substring('conda '.length).trim() : stdOut;
         }
+        traceInfo(`Version string, ${versionString}`);
         if (!versionString) {
             return;
         }
         const version = parse(versionString, true);
+        traceInfo(`Version, ${version}`);
         if (version) {
             return version;
         }
