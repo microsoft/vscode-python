@@ -8,10 +8,10 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 
 import { ICondaService } from '../../../interpreter/contracts';
+import { traceInfo } from '../../logger';
 import { IPlatformService } from '../../platform/types';
 import { IConfigurationService } from '../../types';
 import { ITerminalActivationCommandProvider, TerminalShellType } from '../types';
-import { traceInfo } from '../../logger';
 
 // Version number of conda that requires we call activate with 'conda activate' instead of just 'activate'
 const CondaRequiredMajor = 4;

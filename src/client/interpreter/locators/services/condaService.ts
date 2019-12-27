@@ -4,7 +4,7 @@ import { compare, parse, SemVer } from 'semver';
 import { ConfigurationChangeEvent, Uri } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
-import { Logger, traceDecorators, traceVerbose, traceInfo, traceError } from '../../../common/logger';
+import { Logger, traceDecorators, traceError, traceInfo, traceVerbose } from '../../../common/logger';
 import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { IProcessServiceFactory } from '../../../common/process/types';
 import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentStateFactory } from '../../../common/types';
