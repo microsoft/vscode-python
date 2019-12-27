@@ -408,11 +408,14 @@ export class CondaService implements ICondaService {
                 traceWarning(`File condaService.ts return value conda warning, ${failReason}`);
                 return [];
             });
-        if (await this.fileSystem.fileExists('C:/Miniconda/conda.exe') === true || await this.fileSystem.fileExists('C:/Miniconda/Scripts/conda.exe') === true) {
-            traceInfo(`File condaService.ts yes`);
+        if (await this.fileSystem.fileExists('C:/Miniconda/conda.exe') === true) {
+            traceInfo(`File condaService.ts yes first`);
         }
-        const validCondaFiles = condaFiles.filter(condaPath => condaPath.length > 0);
-        traceInfo(`File condaService.ts - ${condaFiles} - ${validCondaFiles.length} - ${validCondaFiles[0]}`);
+        if (await this.fileSystem.fileExists('C:/Miniconda/Scripts/conda.exe') === true) {
+            traceInfo(`File condaService.ts yes second`);
+        }
+        const validCondaFiles = [...condaFiles, 'C:/Miniconda/Scripts/conda.exe'].filter(condaPath => condaPath.length > 0);
+        traceInfo(`File condaService.ts - ${globPattern} - ${condaFiles.length} - ${validCondaFiles[0]}`);
         return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
     }
 }
