@@ -38,8 +38,10 @@ export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
 const condaGlobPathsForWindows = [
     '/ProgramData/[Mm]iniconda*/Scripts/conda.exe',
     '/ProgramData/[Aa]naconda*/Scripts/conda.exe',
-    untildify('C:/[Mm]iniconda*/Scripts/conda.exe'),
-    untildify('C:/[Aa]naconda*/Scripts/conda.exe'),
+    '/[Mm]iniconda*/Scripts/conda.exe',
+    '/[Aa]naconda*/Scripts/conda.exe',
+    'C:/[Mm]iniconda*/Scripts/conda.exe',
+    'C:/[Aa]naconda*/Scripts/conda.exe',
     untildify('~/[Mm]iniconda*/Scripts/conda.exe'),
     untildify('~/[Aa]naconda*/Scripts/conda.exe'),
     untildify('~/AppData/Local/Continuum/[Mm]iniconda*/Scripts/conda.exe'),
