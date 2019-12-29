@@ -83,6 +83,7 @@ async function startSocketServer() {
             });
             socket.on('error', ex => {
                 // Just log it, no need to do anything else.
+                console.log(`error1 ${ex}`);
                 console.error(ex);
             });
         });
@@ -96,6 +97,7 @@ async function startSocketServer() {
         });
         server.on('error', ex => {
             // Just log it, no need to do anything else.
+            console.log(`error2 ${ex}`);
             console.error(ex);
         });
     });
@@ -108,4 +110,7 @@ async function start() {
     proc.once('close', end);
 }
 
-start().catch(ex => console.error(ex));
+start().catch(ex => {
+    console.log(`start ${ex}`);
+    console.error(ex);
+});
