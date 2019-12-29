@@ -414,8 +414,26 @@ export class CondaService implements ICondaService {
         if (await this.fileSystem.fileExists('C:/Miniconda/Scripts/conda.exe') === true) {
             traceInfo(`File condaService.ts yes second`);
         }
-        const validCondaFiles = [...condaFiles, 'C:/Miniconda/Scripts/conda.exe'].filter(condaPath => condaPath.length > 0);
+        const validCondaFiles = [...condaFiles].filter(condaPath => condaPath.length > 0);
         traceInfo(`File condaService.ts - ${globPattern} - ${condaFiles.length} - ${validCondaFiles[0]}`);
-        return validCondaFiles.length === 0 ? 'conda' : validCondaFiles[0];
+        if (validCondaFiles.length !== 0) {
+            return validCondaFiles[0];
+        } else if (process.env.CONDA) {
+            traceError(`Conda environment variable is set, ${process.env.CONDA}`);
+            const condaExe = this.platform.isWindows ? 'conda.exe' : 'conda';
+            const scriptsDir = this.platform.isWindows ? 'Scripts' : 'bin';
+            let condaPath = path.join(process.env.CONDA, condaExe);
+
+            if (await this.fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
+
+            // Also look in the scripts directory here too.
+            condaPath = path.join(process.env.CONDA, scriptsDir, condaExe);
+            if (await this.fileSystem.fileExists(condaPath)) {
+                return condaPath;
+            }
+        }
+        return 'conda';
     }
 }
