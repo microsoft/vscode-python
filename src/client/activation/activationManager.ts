@@ -16,9 +16,9 @@ import { IExtensionActivationManager, IExtensionActivationService, IExtensionSin
 
 @injectable()
 export class ExtensionActivationManager implements IExtensionActivationManager {
+    public readonly activatedWorkspaces = new Set<string>();
     private readonly disposables: IDisposable[] = [];
     private docOpenedHandler?: IDisposable;
-    private readonly activatedWorkspaces = new Set<string>();
     constructor(
         @multiInject(IExtensionActivationService) private readonly activationServices: IExtensionActivationService[],
         @multiInject(IExtensionSingleActivationService) private readonly singleActivationServices: IExtensionSingleActivationService[],
@@ -63,9 +63,24 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         await Promise.all(this.activationServices.map(item => item.activate(resource)));
         await this.appDiagnostics.performPreStartupHealthCheck(resource);
     }
-    protected async initialize() {
+    public async initialize() {
         this.addHandlers();
         this.addRemoveDocOpenedHandlers();
+    }
+    public onDocOpened(doc: TextDocument) {
+        if (doc.languageId !== PYTHON_LANGUAGE) {
+            return;
+        }
+        const key = this.getWorkspaceKey(doc.uri);
+        // If we have opened a doc that does not belong to workspace, then do nothing.
+        if (key === '' && this.workspaceService.hasWorkspaceFolders) {
+            return;
+        }
+        if (this.activatedWorkspaces.has(key)) {
+            return;
+        }
+        const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
+        this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
     }
     protected addHandlers() {
         this.disposables.push(this.workspaceService.onDidChangeWorkspaceFolders(this.onWorkspaceFoldersChanged, this));
@@ -96,21 +111,6 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     }
     protected hasMultipleWorkspaces() {
         return this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 1;
-    }
-    protected onDocOpened(doc: TextDocument) {
-        if (doc.languageId !== PYTHON_LANGUAGE) {
-            return;
-        }
-        const key = this.getWorkspaceKey(doc.uri);
-        // If we have opened a doc that does not belong to workspace, then do nothing.
-        if (key === '' && this.workspaceService.hasWorkspaceFolders) {
-            return;
-        }
-        if (this.activatedWorkspaces.has(key)) {
-            return;
-        }
-        const folder = this.workspaceService.getWorkspaceFolder(doc.uri);
-        this.activateWorkspace(folder ? folder.uri : undefined).ignoreErrors();
     }
     protected getWorkspaceKey(resource: Resource) {
         return this.workspaceService.getWorkspaceFolderIdentifier(resource, '');

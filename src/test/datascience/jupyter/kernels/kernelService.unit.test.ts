@@ -30,6 +30,7 @@ import { EnvironmentActivationService } from '../../../../client/interpreter/act
 import { IEnvironmentActivationService } from '../../../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
+import { FakeClock } from '../../../common';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Data Science - KernelService', () => {
@@ -222,6 +223,7 @@ suite('Data Science - KernelService', () => {
     // tslint:disable-next-line: max-func-body-length
     suite('Registering Interpreters as Kernels', () => {
         let findMatchingKernelSpecStub: sinon.SinonStub<[PythonInterpreter, IJupyterSessionManager?, (CancellationToken | undefined)?], Promise<IJupyterKernelSpec | undefined>>;
+        let fakeTimer: FakeClock;
         const interpreter: PythonInterpreter = {
             architecture: Architecture.Unknown,
             path: path.join('interpreter', 'python'),
@@ -246,8 +248,11 @@ suite('Data Science - KernelService', () => {
 
         setup(() => {
             findMatchingKernelSpecStub = sinon.stub(KernelService.prototype, 'findMatchingKernelSpec');
+            fakeTimer = new FakeClock();
             initialize();
         });
+
+        teardown(() => fakeTimer.uninstall());
 
         test('Fail if interpreter does not have a display name', async () => {
             const invalidInterpreter: PythonInterpreter = {
@@ -266,24 +271,28 @@ suite('Data Science - KernelService', () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);
             findMatchingKernelSpecStub.resolves(undefined);
+            fakeTimer.install();
 
             const promise = kernelService.registerKernel(interpreter);
 
+            await fakeTimer.wait();
             await assert.isRejected(promise);
             verify(execService.execModule('ipykernel', anything(), anything())).once();
             const installArgs = capture(execService.execModule).first()[1] as string[];
             const kernelName = installArgs[3];
             assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
             await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
-        }).timeout(10_000);
+        });
         test('If ipykernel is not installed, then prompt to install ipykernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
             when(installer.promptToInstall(anything(), anything(), anything())).thenResolve(InstallerResponse.Installed);
             findMatchingKernelSpecStub.resolves(undefined);
+            fakeTimer.install();
 
             const promise = kernelService.registerKernel(interpreter);
 
+            await fakeTimer.wait();
             await assert.isRejected(promise);
             verify(execService.execModule('ipykernel', anything(), anything())).once();
             const installArgs = capture(execService.execModule).first()[1] as string[];
@@ -291,7 +300,7 @@ suite('Data Science - KernelService', () => {
             assert.deepEqual(installArgs, ['install', '--user', '--name', kernelName, '--display-name', interpreter.displayName]);
             await assert.isRejected(promise, `Kernel not created with the name ${kernelName}, display_name ${interpreter.displayName}. Output is `);
             verify(installer.promptToInstall(anything(), anything(), anything())).once();
-        }).timeout(10_000);
+        });
         test('If ipykernel is not installed, and ipykerne installation is canclled, then do not reigster kernel', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
@@ -303,7 +312,7 @@ suite('Data Science - KernelService', () => {
             assert.isUndefined(kernel);
             verify(execService.execModule('ipykernel', anything(), anything())).never();
             verify(installer.promptToInstall(anything(), anything(), anything())).once();
-        }).timeout(10_000);
+        });
         test('Fail if installed kernel is not an instance of JupyterKernelSpec', async () => {
             when(execService.execModule('ipykernel', anything(), anything())).thenResolve({ stdout: '' });
             when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(true);

@@ -95,7 +95,7 @@ suite('Process - PythonExecutionFactory', () => {
                 processService.setup(p => p.on('exec', () => { return; })).returns(() => processService.object);
                 processService.setup((p: any) => p.then).returns(() => undefined);
                 interpreterService = mock(InterpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: {major: 3}} as any);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: { major: 3 } } as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
@@ -365,7 +365,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
                 reset(interpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({version: parse('2.7.14')} as any);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: parse('2.7.14') } as any);
                 factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
@@ -391,7 +391,11 @@ suite('Process - PythonExecutionFactory', () => {
 
                 expect(daemon1).to.equal(daemon2);
             });
-            test('Create Daemon Service should return two different daemons (if python path is different)', async () => {
+            // https://github.com/microsoft/vscode-python/issues/9297
+            // tslint:disable-next-line: no-function-expression
+            test('Create Daemon Service should return two different daemons (if python path is different)', async function () {
+                // tslint:disable-next-line: no-invalid-this
+                return this.skip();
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');

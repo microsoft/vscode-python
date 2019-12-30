@@ -150,9 +150,11 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     serviceManager.get<ICodeExecutionManager>(ICodeExecutionManager).registerCommands();
 
-    // tslint:disable-next-line:no-suspicious-comment
-    // TODO: Move this down to right before durations.endActivateTime is set.
-    sendStartupTelemetry(Promise.all([activationDeferred.promise, activationPromise]), serviceContainer).ignoreErrors();
+    if (!isTestExecution()) {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO: Move this down to right before durations.endActivateTime is set.
+        sendStartupTelemetry(Promise.all([activationDeferred.promise, activationPromise]), serviceContainer).ignoreErrors();
+    }
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);

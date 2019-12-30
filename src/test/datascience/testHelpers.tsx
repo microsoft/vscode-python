@@ -11,7 +11,6 @@ import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { IDataScienceSettings } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
@@ -574,35 +573,6 @@ export function findButton(
             return buttons.at(index);
         }
     }
-}
-
-// The default base set of data science settings to use
-export function defaultDataScienceSettings(): IDataScienceSettings {
-    return {
-        allowImportFromNotebook: true,
-        jupyterLaunchTimeout: 10,
-        jupyterLaunchRetries: 3,
-        enabled: true,
-        jupyterServerURI: 'local',
-        // tslint:disable-next-line: no-invalid-template-strings
-        notebookFileRoot: '${fileDirname}',
-        changeDirOnImportExport: false,
-        useDefaultConfigForJupyter: true,
-        jupyterInterruptTimeout: 10000,
-        searchForJupyter: true,
-        showCellInputCode: true,
-        collapseCellInputCodeByDefault: true,
-        allowInput: true,
-        maxOutputSize: 400,
-        errorBackgroundColor: '#FFFFFF',
-        sendSelectionToInteractiveWindow: false,
-        variableExplorerExclude: 'module;function;builtin_function_or_method',
-        codeRegularExpression: '^(#\\s*%%|#\\s*\\<codecell\\>|#\\s*In\\[\\d*?\\]|#\\s*In\\[ \\])',
-        markdownRegularExpression: '^(#\\s*%%\\s*\\[markdown\\]|#\\s*\\<markdowncell\\>)',
-        enablePlotViewer: true,
-        runStartupCommands: '',
-        debugJustMyCode: true
-    };
 }
 
 export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainClass: React.ComponentClass<any>): P | undefined {

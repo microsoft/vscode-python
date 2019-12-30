@@ -5,7 +5,7 @@
 import * as assert from 'assert';
 import { TextRangeCollection } from '../../client/language/textRangeCollection';
 import { Tokenizer } from '../../client/language/tokenizer';
-import { TokenType } from '../../client/language/types';
+import { TokenizerMode, TokenType } from '../../client/language/types';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Language.Tokenizer', () => {
@@ -379,5 +379,79 @@ suite('Language.Tokenizer', () => {
             assert.equal(t.type, TokenType.Operator, `${t.type} at ${i} is not an operator`);
             assert.equal(t.length, lengths[i], `Length ${t.length} at ${i} (text ${text.substr(t.start, t.length)}), expected ${lengths[i]}`);
         }
+    });
+
+    [-1, 10].forEach(start => {
+        test(`Exceptions: out-of-range start = ${start}`, () => {
+            assert.throws(() => {
+                new Tokenizer().tokenize('', start, 0, TokenizerMode.Full);
+            }, new Error('Invalid range start'));
+        });
+    });
+    [-1, 10].forEach(length => {
+        test(`Exceptions: out-of-range length = ${length}`, () => {
+            assert.throws(() => {
+                new Tokenizer().tokenize('abc', 1, length, TokenizerMode.Full);
+            }, new Error('Invalid range length'));
+        });
+    });
+    [
+        ['(', TokenType.OpenBrace],
+        [')', TokenType.CloseBrace],
+        ['[', TokenType.OpenBracket],
+        [']', TokenType.CloseBracket],
+        ['{', TokenType.OpenCurly],
+        ['}', TokenType.CloseCurly],
+        [',', TokenType.Comma],
+        [':', TokenType.Colon],
+        [';', TokenType.Semicolon],
+        ['.', TokenType.Operator]
+    ].forEach(pair => {
+        const text: string = pair[0] as string;
+        const expected = pair[1];
+        test(`Character tokens: ${text}`, () => {
+            const tokens = new Tokenizer().tokenize(text);
+            assert.equal(tokens.getItemAt(0).type, expected);
+        });
+    });
+    [
+        ['1', TokenType.Number],
+        ['-1', TokenType.Number],
+        ['+1', TokenType.Number],
+        ['.1', TokenType.Number],
+        ['-.1', TokenType.Number],
+        ['+.1', TokenType.Number],
+        ['1_1', TokenType.Number],
+        ['_1', TokenType.Identifier],
+        ['-0x1', TokenType.Number],
+        ['-0X1', TokenType.Number],
+        ['-0b1', TokenType.Number],
+        ['-0B1', TokenType.Number],
+        ['-0o1', TokenType.Number],
+        ['-0O1', TokenType.Number]
+    ].forEach(pair => {
+        const text: string = pair[0] as string;
+        const expected = pair[1];
+        test(`Possible numbers: ${text}`, () => {
+            const tokens = new Tokenizer().tokenize(text);
+            const token = tokens.getItemAt(0);
+            assert.equal(token.type, expected);
+        });
+    });
+    [
+        ['(-1', TokenType.Number],
+        ['[+1', TokenType.Number],
+        [',-1', TokenType.Number],
+        [':+1', TokenType.Number],
+        [';+1', TokenType.Number],
+        ['=+1', TokenType.Number]
+    ].forEach(pair => {
+        const text: string = pair[0] as string;
+        const expected = pair[1];
+        test(`Numbers after braces or operators: ${text}`, () => {
+            const tokens = new Tokenizer().tokenize(text);
+            const token = tokens.getItemAt(1);
+            assert.equal(token.type, expected);
+        });
     });
 });

@@ -35,11 +35,11 @@ import {
 } from '../../datascience-ui/interactive-common/mainState';
 import { MockOutputChannel } from '../mockClasses';
 import { MockMemento } from '../mocks/mementos';
+import { defaultDataScienceSettings } from './helpers';
 import { MockCommandManager } from './mockCommandManager';
 import { MockDocumentManager } from './mockDocumentManager';
 import { MockInputBox } from './mockInputBox';
 import { MockQuickPick } from './mockQuickPick';
-import { defaultDataScienceSettings } from './testHelpers';
 
 // tslint:disable: max-func-body-length
 suite('Data Science Tests', () => {

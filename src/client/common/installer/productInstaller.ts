@@ -11,6 +11,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IApplicationShell, ICommandManager, IWorkspaceService } from '../application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../constants';
+import { traceError } from '../logger';
 import { IPlatformService } from '../platform/types';
 import { IProcessServiceFactory, IPythonExecutionFactory } from '../process/types';
 import { ITerminalServiceFactory } from '../terminal/types';
@@ -24,7 +25,7 @@ import { IInstallationChannelManager, InterpreterUri, IProductPathService, IProd
 
 export { Product } from '../types';
 
-const CTagsInsllationScript = os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
+export const CTagsInsllationScript = os.platform() === 'darwin' ? 'brew install ctags' : 'sudo apt-get install exuberant-ctags';
 
 export abstract class BaseInstaller {
     private static readonly PromptPromises = new Map<string, Promise<InstallerResponse>>();
@@ -126,9 +127,8 @@ export class CTagsInstaller extends BaseInstaller {
             this.outputChannel.show();
         } else {
             const terminalService = this.serviceContainer.get<ITerminalServiceFactory>(ITerminalServiceFactory).getTerminalService(resource);
-            const logger = this.serviceContainer.get<ILogger>(ILogger);
             terminalService.sendCommand(CTagsInsllationScript, [])
-                .catch(logger.logError.bind(logger, `Failed to install ctags. Script sent '${CTagsInsllationScript}'.`));
+                .catch(ex => traceError(`Failed to install ctags. Script sent '${CTagsInsllationScript}', ${ex}`));
         }
         return InstallerResponse.Ignore;
     }

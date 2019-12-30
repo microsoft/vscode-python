@@ -31,10 +31,11 @@ import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-com
 import { waitForCondition } from '../common';
 import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { defaultDataScienceSettings } from './helpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { addCell, closeNotebook, createNewEditor, getNativeCellResults, mountNativeWebView, openEditor, runMountedTest, setupWebview } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
-import { addContinuousMockData, addMockData, CellPosition, createKeyboardEventForCell, defaultDataScienceSettings, escapePath, findButton, getLastOutputCell, getNativeFocusedEditor, getOutputCell, injectCode, isCellFocused, isCellMarkdown, isCellSelected, srcDirectory, typeCode, verifyCellIndex, verifyHtmlOnCell, waitForMessage, waitForMessageResponse } from './testHelpers';
+import { addContinuousMockData, addMockData, CellPosition, createKeyboardEventForCell, escapePath, findButton, getLastOutputCell, getNativeFocusedEditor, getOutputCell, injectCode, isCellFocused, isCellMarkdown, isCellSelected, srcDirectory, typeCode, verifyCellIndex, verifyHtmlOnCell, waitForMessage, waitForMessageResponse } from './testHelpers';
 
 use(chaiAsPromised);
 

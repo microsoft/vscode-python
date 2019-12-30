@@ -16,7 +16,7 @@ import { IConfigurationService, IInstaller, ModuleNamePurpose, Product } from '.
 import { IProductPathService } from './types';
 
 @injectable()
-abstract class BaseProductPathsService implements IProductPathService {
+export abstract class BaseProductPathsService implements IProductPathService {
     protected readonly configService: IConfigurationService;
     protected readonly productInstaller: IInstaller;
     constructor(@inject(IServiceContainer) protected serviceContainer: IServiceContainer) {
@@ -25,7 +25,7 @@ abstract class BaseProductPathsService implements IProductPathService {
     }
     public abstract getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     public isExecutableAModule(product: Product, resource?: Uri): Boolean {
-        if (product === Product.ipykernel){
+        if (product === Product.ipykernel) {
             return true;
         }
         let moduleName: string | undefined;

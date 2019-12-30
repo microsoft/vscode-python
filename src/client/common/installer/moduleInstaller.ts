@@ -3,7 +3,7 @@
 
 import { injectable } from 'inversify';
 import * as path from 'path';
-import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions, window } from 'vscode';
+import { CancellationToken, OutputChannel, ProgressLocation, ProgressOptions } from 'vscode';
 import { IInterpreterService, InterpreterType } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -22,8 +22,10 @@ import { IModuleInstaller, InterpreterUri } from './types';
 export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get priority(): number;
     public abstract get name(): string;
-    public abstract get displayName(): string
+    public abstract get displayName(): string;
+
     constructor(protected serviceContainer: IServiceContainer) { }
+
     public async installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });
         const uri = isResource(resource) ? resource : undefined;
@@ -66,12 +68,42 @@ export abstract class ModuleInstaller implements IModuleInstaller {
                 cancellable: true,
                 title: Products.installingModule().format(name)
             };
-            await shell.withProgress(options, async (_, token: CancellationToken) =>  install(wrapCancellationTokens(token, cancel)));
+            await shell.withProgress(options, async (_, token: CancellationToken) => install(wrapCancellationTokens(token, cancel)));
         } else {
             await install(cancel);
         }
     }
     public abstract isSupported(resource?: InterpreterUri): Promise<boolean>;
+
+    protected elevatedInstall(execPath: string, args: string[]) {
+        const options = {
+            name: 'VS Code Python'
+        };
+        const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
+        const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
+
+        outputChannel.appendLine('');
+        outputChannel.appendLine(`[Elevated] ${command}`);
+        // tslint:disable-next-line:no-require-imports no-var-requires
+        const sudo = require('sudo-prompt');
+
+        sudo.exec(command, options, async (error: string, stdout: string, stderr: string) => {
+            if (error) {
+                const shell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
+                await shell.showErrorMessage(error);
+            } else {
+                outputChannel.show();
+                if (stdout) {
+                    outputChannel.appendLine('');
+                    outputChannel.append(stdout);
+                }
+                if (stderr) {
+                    outputChannel.appendLine('');
+                    outputChannel.append(`Warning: ${stderr}`);
+                }
+            }
+        });
+    }
     protected abstract getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo>;
     private async processInstallArgs(args: string[], resource?: InterpreterUri): Promise<string[]> {
         const indexOfPylint = args.findIndex(arg => arg.toUpperCase() === 'PYLINT');
@@ -88,34 +120,5 @@ export abstract class ModuleInstaller implements IModuleInstaller {
             return newArgs;
         }
         return args;
-    }
-
-    private elevatedInstall(execPath: string, args: string[]) {
-        const options = {
-            name: 'VS Code Python'
-        };
-        const outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
-        const command = `"${execPath.replace(/\\/g, '/')}" ${args.join(' ')}`;
-
-        outputChannel.appendLine('');
-        outputChannel.appendLine(`[Elevated] ${command}`);
-        // tslint:disable-next-line:no-require-imports no-var-requires
-        const sudo = require('sudo-prompt');
-
-        sudo.exec(command, options, (error: string, stdout: string, stderr: string) => {
-            if (error) {
-                window.showErrorMessage(error);
-            } else {
-                outputChannel.show();
-                if (stdout) {
-                    outputChannel.appendLine('');
-                    outputChannel.append(stdout);
-                }
-                if (stderr) {
-                    outputChannel.appendLine('');
-                    outputChannel.append(`Warning: ${stderr}`);
-                }
-            }
-        });
     }
 }

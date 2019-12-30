@@ -283,7 +283,7 @@ gulp.task('installNewPtvsd', async () => {
     }
 
     // Install source only version of new PTVSD for use with all other python versions.
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a9']
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a10']
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)
         .catch(ex => {

@@ -1261,12 +1261,12 @@
                             },
                             "console": {
                                 "enum": [
-                                    "none",
+                                    "internalConsole",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
                                 "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-                                "default": "none"
+                                "default": "internalConsole"
                             },
                             "cwd": {
                                 "type": "string",
@@ -2841,7 +2841,7 @@
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
-        "@types/sinon": "^7.0.13",
+        "@types/sinon": "^7.5.1",
         "@types/stack-trace": "0.0.29",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
@@ -2906,6 +2906,7 @@
         "less": "^3.9.0",
         "less-loader": "^5.0.0",
         "loader-utils": "^1.1.0",
+        "lolex": "^5.1.2",
         "mocha": "^6.1.4",
         "mocha-junit-reporter": "^1.17.0",
         "mocha-multi-reporters": "^1.1.7",
@@ -2930,7 +2931,7 @@
         "sass-loader": "^7.1.0",
         "serialize-javascript": "^2.1.2",
         "shortid": "^2.2.8",
-        "sinon": "^7.3.2",
+        "sinon": "^8.0.1",
         "source-map-support": "^0.5.12",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",

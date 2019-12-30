@@ -22,6 +22,7 @@ import { InteractivePanel } from '../../datascience-ui/history-react/interactive
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
+import { defaultDataScienceSettings } from './helpers';
 import {
     addCode,
     getInteractiveCellResults,
@@ -37,7 +38,6 @@ import {
     addMockData,
     CellInputState,
     CellPosition,
-    defaultDataScienceSettings,
     enterInput,
     escapePath,
     findButton,
