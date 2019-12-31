@@ -10,87 +10,61 @@ import { WmicProcessParser } from '../../../../client/debugger/extension/attachQ
 // tslint:disable-next-line: max-func-body-length
 suite('Attach to process - wmic process parser (Windows)', () => {
     test('Processes should be parsed correctly if it is valid input', () => {
-        const input = `\
-      TODO \
+        const input = `
+CommandLine=\r\n\
+Name=System\r\n\
+ProcessId=4\r\n\
+\r\n\
+\r\n\
+CommandLine=\r\n\
+Name=svchost.exe\r\n\
+ProcessId=5372\r\n\
+\r\n\
+\r\n\
+CommandLine=sihost.exe\r\n\
+Name=sihost.exe\r\n\
+ProcessId=5728\r\n\
+\r\n\
+\r\n\
+CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r\n\
+Name=svchost.exe\r\n\
+ProcessId=5912\r\n\
+\r\n\
+\r\n\
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r\n\
+Name=python.exe\r\n\
+ProcessId=6028\r\n\
 `;
         const expectedOutput: IAttachItem[] = [
             {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
+                label: 'System',
+                description: '4',
+                detail: '',
+                id: '4'
             },
             {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
+                label: 'svchost.exe',
+                description: '5372',
+                detail: '',
+                id: '5372'
             },
             {
-                label: 'UserEventAgent',
-                description: '42',
-                detail: 'UserEventAgent (System)',
-                id: '42'
+                label: 'sihost.exe',
+                description: '5728',
+                detail: 'sihost.exe',
+                id: '5728'
             },
             {
-                label: 'uninstalld',
-                description: '45',
-                detail: 'uninstalld',
-                id: '45'
+                label: 'svchost.exe',
+                description: '5912',
+                detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
+                id: '5912'
             },
             {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
-            }
-        ];
-
-        const output = WmicProcessParser.parseProcesses(input);
-
-        assert.deepEqual(output, expectedOutput);
-    });
-
-    test('Empty lines should be skipped when parsing process list input', () => {
-        const input = `\
-        TODO \
-`;
-        const expectedOutput: IAttachItem[] = [
-            {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
-            },
-            {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
-            },
-            {
-                label: 'UserEventAgent',
-                description: '42',
-                detail: 'UserEventAgent (System)',
-                id: '42'
-            },
-            {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
+                label: 'python.exe',
+                description: '6028',
+                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                id: '6028'
             }
         ];
 
@@ -100,39 +74,63 @@ suite('Attach to process - wmic process parser (Windows)', () => {
     });
 
     test('Incorrectly formatted lines should be skipped when parsing process list input', () => {
-        const input = `\
-        TODO\
+        const input = `
+CommandLine=\r\n\
+Name=System\r\n\
+ProcessId=4\r\n\
+\r\n\
+\r\n\
+CommandLine=\r\n\
+Name=svchost.exe\r\n\
+ProcessId=5372\r\n\
+\r\n\
+\r\n\
+CommandLine=sihost.exe\r\n\
+Name=sihost.exe\r\n\
+ProcessId=5728\r\n\
+\r\n\
+\r\n\
+CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r\n\
+Name=svchost.exe\r\n\
+IncorrectKey=shouldnt.be.here\r\n\
+ProcessId=5912\r\n\
+\r\n\
+\r\n\
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r\n\
+Name=python.exe\r\n\
+ProcessId=6028\r\n\
 `;
+
         const expectedOutput: IAttachItem[] = [
             {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
+                label: 'System',
+                description: '4',
+                detail: '',
+                id: '4'
             },
             {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
+                label: 'svchost.exe',
+                description: '5372',
+                detail: '',
+                id: '5372'
             },
             {
-                label: 'UserEventAgent',
-                description: '42',
-                detail: 'UserEventAgent (System)',
-                id: '42'
+                label: 'sihost.exe',
+                description: '5728',
+                detail: 'sihost.exe',
+                id: '5728'
             },
             {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
+                label: 'svchost.exe',
+                description: '5912',
+                detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
+                id: '5912'
             },
             {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
+                label: 'python.exe',
+                description: '6028',
+                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                id: '6028'
             }
         ];
 
