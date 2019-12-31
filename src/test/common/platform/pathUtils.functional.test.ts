@@ -6,41 +6,46 @@
 // tslint:disable:max-func-body-length
 
 import { expect } from 'chai';
-import * as os from 'os';
-import * as path from 'path';
+import { FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
 import { WINDOWS as IS_WINDOWS } from './utils';
 
 suite('FileSystem - PathUtils', () => {
     let utils: PathUtils;
+    let wrapped: FileSystemPathUtils;
     setup(() => {
         utils = new PathUtils(IS_WINDOWS);
+        wrapped = FileSystemPathUtils.withDefaults();
     });
 
     suite('home', () => {
-        const expected = os.homedir();
+        test('matches wrapped object', () => {
+            const expected = wrapped.home;
 
-        test('matches node', () => {
             expect(utils.home).to.equal(expected);
         });
     });
 
     suite('delimiter', () => {
-        test('matches node', () => {
-            expect(utils.delimiter).to.be.equal(path.delimiter);
+        test('matches wrapped object', () => {
+            const expected = wrapped.executables.delimiter;
+
+            expect(utils.delimiter).to.be.equal(expected);
         });
     });
 
     suite('separator', () => {
-        test('matches node', () => {
-            expect(utils.separator).to.be.equal(path.sep);
+        test('matches wrapped object', () => {
+            const expected = wrapped.paths.sep;
+
+            expect(utils.separator).to.be.equal(expected);
         });
     });
 
     suite('getPathVariableName', () => {
-        const expected = IS_WINDOWS ? 'Path' : 'PATH';
+        test('matches wrapped object', () => {
+            const expected = wrapped.executables.envVar;
 
-        test('matches platform', () => {
             const envVar = utils.getPathVariableName();
 
             expect(envVar).to.equal(expected);
@@ -48,48 +53,9 @@ suite('FileSystem - PathUtils', () => {
     });
 
     suite('getDisplayName', () => {
-        const relname = path.join('spam', 'eggs', 'spam.py');
-        const cwd = path.resolve(path.sep, 'x', 'y', 'z');
-
-        test('filename matches CWD', () => {
-            const filename = path.join(cwd, relname);
-            const expected = `.${path.sep}${relname}`;
-
-            const display = utils.getDisplayName(filename, cwd);
-
-            expect(display).to.equal(expected);
-        });
-
-        test('filename does not match CWD', () => {
-            const filename = path.resolve(cwd, '..', relname);
-            const expected = filename;
-
-            const display = utils.getDisplayName(filename, cwd);
-
-            expect(display).to.equal(expected);
-        });
-
-        test('filename matches home dir, not cwd', () => {
-            const filename = path.join(os.homedir(), relname);
-            const expected = path.join('~', relname);
-
-            const display = utils.getDisplayName(filename, cwd);
-
-            expect(display).to.equal(expected);
-        });
-
-        test('filename matches home dir', () => {
-            const filename = path.join(os.homedir(), relname);
-            const expected = path.join('~', relname);
-
-            const display = utils.getDisplayName(filename);
-
-            expect(display).to.equal(expected);
-        });
-
-        test('filename does not match home dir', () => {
-            const filename = relname;
-            const expected = filename;
+        test('matches wrapped object', () => {
+            const filename = 'spam.py';
+            const expected = wrapped.getDisplayName(filename);
 
             const display = utils.getDisplayName(filename);
 
@@ -98,18 +64,9 @@ suite('FileSystem - PathUtils', () => {
     });
 
     suite('basename', () => {
-        test('with dirname', () => {
-            const filename = path.join('spam', 'eggs', 'spam.py');
-            const expected = 'spam.py';
-
-            const basename = utils.basename(filename);
-
-            expect(basename).to.equal(expected);
-        });
-
-        test('without dirname', () => {
+        test('matches wrapped object', () => {
             const filename = 'spam.py';
-            const expected = filename;
+            const expected = wrapped.paths.basename(filename);
 
             const basename = utils.basename(filename);
 

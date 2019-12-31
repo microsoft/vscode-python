@@ -19,6 +19,8 @@ export class PathUtils implements IPathUtils {
     constructor(
         @inject(IsWindows) isWindows: boolean
     ) {
+        // We cannot just use FileSystemPathUtils.withDefaults() because
+        // of the isWindows arg.
         this.utils = new FileSystemPathUtils(
             untildify('~'),
             FileSystemPaths.withDefaults(),
