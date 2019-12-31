@@ -122,7 +122,7 @@ export class FileSystem implements IFileSystem {
     }
     public async lstat(filename: string): Promise<FileStat> {
         const stat = await fs.lstat(filename);
-        // Npte that, unlike stat(), lstat() does not include the type
+        // Note that, unlike stat(), lstat() does not include the type
         // of the symlink's target.
         const fileType = convertFileType(stat);
         return convertStat(stat, fileType);
