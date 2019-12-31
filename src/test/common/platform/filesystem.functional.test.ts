@@ -7,10 +7,15 @@ import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { convertStat, FileSystem } from '../../../client/common/platform/fileSystem';
+import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
-import { assertDoesNotExist, assertExists, DOES_NOT_EXIST, fixPath, FSFixture, OSX, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS } from './utils';
+import {
+    assertDoesNotExist, assertExists, DOES_NOT_EXIST,
+    fixPath, FSFixture,
+    OSX, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
+} from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
@@ -32,17 +37,47 @@ suite('FileSystem', () => {
     });
 
     suite('path-related', () => {
+        const paths = FileSystemPaths.withDefaults();
+        const pathUtils = FileSystemPathUtils.withDefaults(paths);
+
         suite('directorySeparatorChar', () => {
-            test('value', () => {
+            // tested fully in the FileSystemPaths tests.
+
+            test('matches wrapped object', () => {
+                const expected = paths.sep;
+
                 const sep = fileSystem.directorySeparatorChar;
 
-                expect(sep).to.equal(path.sep);
+                expect(sep).to.equal(expected);
             });
         });
 
-        // arePathsSame() is tested in the FileSystemPathUtils tests.
+        suite('arePathsSame', () => {
+            // tested fully in the FileSystemPathUtils tests.
 
-        // getRealPath() is tested in the FileSystemPathUtils tests.
+            test('matches wrapped object', () => {
+                const file1 = fixPath('a/b/c/spam.py');
+                const file2 = fixPath('a/b/c/Spam.py');
+                const expected = pathUtils.arePathsSame(file1, file2);
+
+                const areSame = fileSystem.arePathsSame(file1, file2);
+
+                expect(areSame).to.equal(expected);
+            });
+        });
+
+        suite('getRealPath', () => {
+            // tested fully in the FileSystemPathUtils tests.
+
+            test('matches wrapped object', async () => {
+                const filename = fixPath('a/b/c/spam.py');
+                const expected = await pathUtils.getRealPath(filename);
+
+                const resolved = await fileSystem.getRealPath(filename);
+
+                expect(resolved).to.equal(expected);
+            });
+        });
     });
 
     suite('raw', () => {
