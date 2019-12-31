@@ -147,9 +147,10 @@ export async function run(): Promise<void> {
     testFiles.forEach(file => mocha.addFile(path.join(testsRoot, file)));
 
     // tslint:disable: no-console
-    console.log('Try activating python extension');
+    console.time('Time taken to activate the extension');
     try {
         await activatePythonExtensionScript();
+        console.timeEnd('Time taken to activate the extension');
     } catch (ex) {
         console.log('Failed activating python extension within timeout');
         console.log(ex);
