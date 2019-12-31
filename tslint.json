@@ -9,9 +9,12 @@
     },
     "extends": [
         "tslint-eslint-rules",
-        "tslint-microsoft-contrib"
+        "tslint-microsoft-contrib",
+        "tslint-plugin-prettier",
+        "tslint-config-prettier"
     ],
     "rules": {
+        "prettier": true,
         "messages-must-be-localized": true,
         "no-unused-expression": true,
         "no-duplicate-variable": true,

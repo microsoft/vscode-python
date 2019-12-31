@@ -1094,7 +1094,7 @@
                 "runtime": "node",
                 "variables": {
                     "pickProcess": "python.pickLocalProcess"
-                  },
+                },
                 "configurationSnippets": [],
                 "configurationAttributes": {
                     "launch": {
@@ -2881,6 +2881,8 @@
         "electron-download": "^4.1.1",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
+        "eslint-config-prettier": "^6.9.0",
+        "eslint-plugin-prettier": "^3.1.2",
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
         "extract-zip": "^1.6.7",
@@ -2916,6 +2918,7 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^14.1.1",
+        "prettier": "^1.19.1",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
@@ -2943,8 +2946,10 @@
         "ts-mockito": "^2.3.1",
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
+        "tslint-config-prettier": "^1.18.0",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
+        "tslint-plugin-prettier": "^2.1.0",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
         "typescript": "^3.7.2",
