@@ -28,7 +28,8 @@ export enum DebugConfigurationType {
     launchDjango = 'launchDjango',
     launchFlask = 'launchFlask',
     launchModule = 'launchModule',
-    launchPyramid = 'launchPyramid'
+    launchPyramid = 'launchPyramid',
+    pidAttach = 'pidAttach'
 }
 
 export enum PythonPathSource {

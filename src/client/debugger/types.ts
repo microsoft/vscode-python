@@ -53,7 +53,8 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     // Internal files used to attach to subprocess using python debug adapter
     subProcessId?: number;
 
-    processId?: number;
+    // tslint:disable-next-line: no-invalid-template-strings
+    processId?: number | '${command:pickProcess}';
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {

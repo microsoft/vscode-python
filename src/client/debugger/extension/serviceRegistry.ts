@@ -19,6 +19,7 @@ import { DjangoLaunchDebugConfigurationProvider } from './configuration/provider
 import { FileLaunchDebugConfigurationProvider } from './configuration/providers/fileLaunch';
 import { FlaskLaunchDebugConfigurationProvider } from './configuration/providers/flaskLaunch';
 import { ModuleLaunchDebugConfigurationProvider } from './configuration/providers/moduleLaunch';
+import { PidAttachDebugConfigurationProvider } from './configuration/providers/pidAttach';
 import { DebugConfigurationProviderFactory } from './configuration/providers/providerFactory';
 import { PyramidLaunchDebugConfigurationProvider } from './configuration/providers/pyramidLaunch';
 import { RemoteAttachDebugConfigurationProvider } from './configuration/providers/remoteAttach';
@@ -55,6 +56,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, RemoteAttachDebugConfigurationProvider, DebugConfigurationType.remoteAttach);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, ModuleLaunchDebugConfigurationProvider, DebugConfigurationType.launchModule);
     serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PyramidLaunchDebugConfigurationProvider, DebugConfigurationType.launchPyramid);
+    serviceManager.addSingleton<IDebugConfigurationProvider>(IDebugConfigurationProvider, PidAttachDebugConfigurationProvider, DebugConfigurationType.pidAttach);
     serviceManager.addSingleton<IDebugEnvironmentVariablesService>(IDebugEnvironmentVariablesService, DebugEnvironmentVariablesHelper);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, DebugAdapterActivator);
     serviceManager.addSingleton<IDebugAdapterDescriptorFactory>(IDebugAdapterDescriptorFactory, DebugAdapterDescriptorFactory);
