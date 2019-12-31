@@ -8,6 +8,7 @@ import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
 import { promisify } from 'util';
+import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
@@ -16,8 +17,10 @@ import { TemporaryFileSystem } from './fs-temp';
 import {
     FileStat, FileType,
     IFileSystem, IFileSystemPaths, IPlatformService,
-    TemporaryFile
+    ReadStream, TemporaryFile, WriteStream
 } from './types';
+
+const ENCODING: string = 'utf8';
 
 const globAsync = promisify(glob);
 
@@ -81,11 +84,176 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
     };
 }
 
+//==========================================
+// "raw" filesystem
+
+// This is the parts of the vscode.workspace.fs API that we use here.
+// See: https://code.visualstudio.com/api/references/vscode-api#FileSystem
+// Note that we have used all the API functions *except* "rename()".
+interface IVSCodeFileSystemAPI {
+    stat(uri: vscode.Uri): Thenable<FileStat>;
+}
+
+// This is the parts of the 'fs-extra' module that we use in RawFileSystem.
+interface IRawFSExtra {
+    lstat(filename: string): Promise<fs.Stats>;
+    readdir(dirname: string): Promise<string[]>;
+    readFile(filename: string): Promise<Buffer>;
+    readFile(filename: string, encoding: string): Promise<string>;
+    mkdirp(dirname: string): Promise<void>;
+    chmod(filePath: string, mode: string | number): Promise<void>;
+    rename(src: string, tgt: string): Promise<void>;
+    writeFile(filename: string, data: {}, options: {}): Promise<void>;
+    appendFile(filename: string, data: {}): Promise<void>;
+    unlink(filename: string): Promise<void>;
+    rmdir(dirname: string): Promise<void>;
+
+    // non-async
+    statSync(filename: string): fs.Stats;
+    readFileSync(path: string, encoding: string): string;
+    createReadStream(filename: string): ReadStream;
+    createWriteStream(filename: string): WriteStream;
+}
+
+interface IRawPath {
+    join(...paths: string[]): string;
+}
+
+// Later we will drop "FileSystem", switching usage to
+// "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
+
+// The low-level filesystem operations used by the extension.
+export class RawFileSystem {
+    // prettier-ignore
+    constructor(
+        protected readonly paths: IRawPath,
+        protected readonly vscfs: IVSCodeFileSystemAPI,
+        protected readonly fsExtra: IRawFSExtra
+    ) { }
+
+    // Create a new object using common-case default values.
+    // prettier-ignore
+    public static withDefaults(
+        paths?: IRawPath,
+        vscfs?: IVSCodeFileSystemAPI,
+        fsExtra?: IRawFSExtra
+    ): RawFileSystem{
+        // prettier-ignore
+        return new RawFileSystem(
+            paths || FileSystemPaths.withDefaults(),
+            vscfs || vscode.workspace.fs,
+            fsExtra || fs
+        );
+    }
+
+    public readData(filename: string): Promise<Buffer> {
+        return this.fsExtra.readFile(filename);
+    }
+
+    // Return the UTF8-decoded text of the file.
+    public async readText(filename: string): Promise<string> {
+        return this.fsExtra.readFile(filename, ENCODING);
+    }
+
+    // Write the UTF8-encoded text to the file.
+    public async writeText(filename: string, text: string): Promise<void> {
+        await this.fsExtra.writeFile(filename, text, { encoding: ENCODING });
+    }
+
+    public async appendText(filename: string, text: string): Promise<void> {
+        return this.fsExtra.appendFile(filename, text);
+    }
+
+    public async rmtree(dirname: string): Promise<void> {
+        return this.fsExtra.rmdir(dirname);
+    }
+
+    public async rmfile(filename: string): Promise<void> {
+        return this.fsExtra.unlink(filename);
+    }
+
+    public async stat(filename: string): Promise<FileStat> {
+        // Note that, prior to the November release of VS Code,
+        // stat.ctime was always 0.
+        // See: https://github.com/microsoft/vscode/issues/84525
+        const uri = vscode.Uri.file(filename);
+        return this.vscfs.stat(uri);
+    }
+
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        const files = await this.fsExtra.readdir(dirname);
+        const promises = files.map(async basename => {
+            const filename = this.paths.join(dirname, basename);
+            const fileType = await getFileType(filename);
+            return [filename, fileType] as [string, FileType];
+        });
+        return Promise.all(promises);
+    }
+
+    public async mkdirp(dirname: string): Promise<void> {
+        return this.fsExtra.mkdirp(dirname);
+    }
+
+    public async copyFile(src: string, dest: string): Promise<void> {
+        const deferred = createDeferred<void>();
+        // prettier-ignore
+        const rs = this.fsExtra.createReadStream(src)
+            .on('error', err => {
+                deferred.reject(err);
+            });
+        // prettier-ignore
+        const ws = this.fsExtra.createWriteStream(dest)
+            .on('error', err => {
+                deferred.reject(err);
+            })
+            .on('close', () => {
+                deferred.resolve();
+            });
+        rs.pipe(ws);
+        return deferred.promise;
+    }
+
+    public async move(src: string, tgt: string) {
+        await this.fsExtra.rename(src, tgt);
+    }
+
+    public async chmod(filename: string, mode: string | number): Promise<void> {
+        return this.fsExtra.chmod(filename, mode);
+    }
+
+    public async lstat(filename: string): Promise<FileStat> {
+        const stat = await this.fsExtra.lstat(filename);
+        // Note that, unlike stat(), lstat() does not include the type
+        // of the symlink's target.
+        const fileType = convertFileType(stat);
+        return convertStat(stat, fileType);
+    }
+
+    //****************************
+    // non-async
+
+    public readTextSync(filename: string): string {
+        return this.fsExtra.readFileSync(filename, ENCODING);
+    }
+
+    public createReadStream(filename: string): ReadStream {
+        return this.fsExtra.createReadStream(filename);
+    }
+
+    public createWriteStream(filename: string): WriteStream {
+        return this.fsExtra.createWriteStream(filename);
+    }
+}
+
+//==========================================
+// filesystem "utils" (& legacy aliases)
+
 @injectable()
 export class FileSystem implements IFileSystem {
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
     private readonly tmp: TemporaryFileSystem;
+    private readonly raw: RawFileSystem;
     // prettier-ignore
     constructor(
         @inject(IPlatformService) platformService: IPlatformService
@@ -96,6 +264,7 @@ export class FileSystem implements IFileSystem {
         );
         this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
         this.tmp = TemporaryFileSystem.withDefaults();
+        this.raw = RawFileSystem.withDefaults(this.paths);
     }
 
     //=================================
@@ -112,107 +281,70 @@ export class FileSystem implements IFileSystem {
     //=================================
     // "raw" operations
 
-    public async stat(filePath: string): Promise<FileStat> {
-        // Do not import vscode directly, as this isn't available in the Debugger Context.
-        // If stat is used in debugger context, it will fail, however theres a separate PR that will resolve this.
-        // tslint:disable-next-line: no-require-imports
-        const vscode = require('vscode');
-        // Note that, prior to the November release of VS Code,
-        // stat.ctime was always 0.
-        // See: https://github.com/microsoft/vscode/issues/84525
-        return vscode.workspace.fs.stat(vscode.Uri.file(filePath));
-    }
-    public async lstat(filename: string): Promise<FileStat> {
-        const stat = await fs.lstat(filename);
-        // Note that, unlike stat(), lstat() does not include the type
-        // of the symlink's target.
-        const fileType = convertFileType(stat);
-        return convertStat(stat, fileType);
+    public async stat(filename: string): Promise<FileStat> {
+        return this.raw.stat(filename);
     }
 
-    // Return the UTF8-decoded text of the file.
-    public readFile(filePath: string): Promise<string> {
-        return fs.readFile(filePath, 'utf8');
+    public async lstat(filename: string): Promise<FileStat> {
+        return this.raw.lstat(filename);
+    }
+
+    public async readFile(filePath: string): Promise<string> {
+        return this.raw.readText(filePath);
     }
     public readFileSync(filePath: string): string {
-        return fs.readFileSync(filePath, 'utf8');
+        return this.raw.readTextSync(filePath);
     }
-    public readData(filePath: string): Promise<Buffer> {
-        return fs.readFile(filePath);
-    }
-
-    public async writeFile(filePath: string, data: {}, options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
-        await fs.writeFile(filePath, data, options);
+    public async readData(filePath: string): Promise<Buffer> {
+        return this.raw.readData(filePath);
     }
 
-    public createDirectory(directoryPath: string): Promise<void> {
-        return fs.mkdirp(directoryPath);
+    public async writeFile(filePath: string, text: string, _options: string | fs.WriteFileOptions = { encoding: 'utf8' }): Promise<void> {
+        // tslint:disable-next-line:no-suspicious-comment
+        // TODO (GH-8542) For now we ignore the options, since all call
+        // sites already match the defaults.  Later we will fix the call
+        // sites.
+        return this.raw.writeText(filePath, text);
     }
 
-    public deleteDirectory(directoryPath: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        fs.rmdir(directoryPath, err => (err ? deferred.reject(err) : deferred.resolve()));
-        return deferred.promise;
+    public async createDirectory(directoryPath: string): Promise<void> {
+        return this.raw.mkdirp(directoryPath);
+    }
+
+    public async deleteDirectory(directoryPath: string): Promise<void> {
+        return this.raw.rmtree(directoryPath);
     }
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
-        const files = await fs.readdir(dirname);
-        const promises = files.map(async basename => {
-            const filename = this.paths.join(dirname, basename);
-            const fileType = await getFileType(filename);
-            return [filename, fileType] as [string, FileType];
-        });
-        return Promise.all(promises);
+        return this.raw.listdir(dirname);
     }
 
-    public appendFile(filename: string, data: {}): Promise<void> {
-        return fs.appendFile(filename, data);
+    public async appendFile(filename: string, text: string): Promise<void> {
+        return this.raw.appendText(filename, text);
     }
 
-    public copyFile(src: string, dest: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        const rs = fs.createReadStream(src).on('error', err => {
-            deferred.reject(err);
-        });
-        const ws = fs
-            .createWriteStream(dest)
-            .on('error', err => {
-                deferred.reject(err);
-            })
-            .on('close', () => {
-                deferred.resolve();
-            });
-        rs.pipe(ws);
-        return deferred.promise;
+    public async copyFile(src: string, dest: string): Promise<void> {
+        return this.raw.copyFile(src, dest);
     }
 
-    public deleteFile(filename: string): Promise<void> {
-        const deferred = createDeferred<void>();
-        fs.unlink(filename, err => (err ? deferred.reject(err) : deferred.resolve()));
-        return deferred.promise;
+    public async deleteFile(filename: string): Promise<void> {
+        return this.raw.rmfile(filename);
     }
 
-    public chmod(filePath: string, mode: string | number): Promise<void> {
-        return new Promise<void>((resolve, reject) => {
-            fileSystem.chmod(filePath, mode, (err: NodeJS.ErrnoException | null) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve();
-            });
-        });
+    public async chmod(filePath: string, mode: string | number): Promise<void> {
+        return this.raw.chmod(filePath, mode);
     }
 
     public async move(src: string, tgt: string) {
-        await fs.rename(src, tgt);
+        await this.raw.move(src, tgt);
     }
 
     public createReadStream(filePath: string): fileSystem.ReadStream {
-        return fileSystem.createReadStream(filePath);
+        return this.raw.createReadStream(filePath);
     }
 
     public createWriteStream(filePath: string): fileSystem.WriteStream {
-        return fileSystem.createWriteStream(filePath);
+        return this.raw.createWriteStream(filePath);
     }
 
     //=================================

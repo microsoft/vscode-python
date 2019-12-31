@@ -6,7 +6,7 @@
 import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { convertStat, FileSystem } from '../../../client/common/platform/fileSystem';
+import { convertStat, FileSystem, RawFileSystem } from '../../../client/common/platform/fileSystem';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType } from '../../../client/common/platform/types';
@@ -22,6 +22,774 @@ import {
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
 use(assertArrays);
+
+suite('FileSystem - raw', () => {
+    let fileSystem: RawFileSystem;
+    let fix: FSFixture;
+    setup(async () => {
+        fileSystem = RawFileSystem.withDefaults();
+        fix = new FSFixture();
+
+        await assertDoesNotExist(DOES_NOT_EXIST);
+    });
+    teardown(async () => {
+        await fix.cleanUp();
+        await fix.ensureDeleted(DOES_NOT_EXIST);
+    });
+
+    suite('readText', () => {
+        test('returns contents of a file', async () => {
+            const expected = '<some text>';
+            const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+            const content = await fileSystem.readText(filename);
+
+            expect(content).to.be.equal(expected);
+        });
+
+        test('always UTF-8', async () => {
+            const expected = '... 😁 ...';
+            const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+            const text = await fileSystem.readText(filename);
+
+            expect(text).to.equal(expected);
+        });
+
+        test('returns garbage if encoding is UCS-2', async () => {
+            const filename = await fix.resolve('spam.py');
+            // There are probably cases where this would fail too.
+            // However, the extension never has to deal with non-UTF8
+            // cases, so it doesn't matter too much.
+            const original = '... 😁 ...';
+            await fs.writeFile(filename, original, { encoding: 'ucs2' });
+
+            const text = await fileSystem.readText(filename);
+
+            expect(text).to.equal('.\u0000.\u0000.\u0000 \u0000=�\u0001� \u0000.\u0000.\u0000.\u0000');
+        });
+
+        test('throws an exception if file does not exist', async () => {
+            const promise = fileSystem.readText(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('readData', () => {
+        test('returns contents of a file', async () => {
+            const text = '<some text>';
+            const expected = Buffer.from(text, 'utf8');
+            const filename = await fix.createFile('x/y/z/spam.py', text);
+
+            const content = await fileSystem.readData(filename);
+
+            expect(content).to.deep.equal(expected);
+        });
+
+        test('throws an exception if file does not exist', async () => {
+            const promise = fileSystem.readData(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('writeText', () => {
+        test('creates the file if missing', async () => {
+            const filename = await fix.resolve('x/y/z/spam.py');
+            await assertDoesNotExist(filename);
+            const data = 'line1\nline2\n';
+
+            await fileSystem.writeText(filename, data);
+
+            // prettier-ignore
+            const actual = await fs.readFile(filename)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+        });
+
+        test('always UTF-8', async () => {
+            const filename = await fix.resolve('x/y/z/spam.py');
+            const data = '... 😁 ...';
+
+            await fileSystem.writeText(filename, data);
+
+            // prettier-ignore
+            const actual = await fs.readFile(filename)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+        });
+
+        test('overwrites existing file', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const data = 'line1\nline2\n';
+
+            await fileSystem.writeText(filename, data);
+
+            // prettier-ignore
+            const actual = await fs.readFile(filename)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+        });
+    });
+
+    suite('appendText', () => {
+        test('existing file', async () => {
+            const orig = 'spamspamspam\n\n';
+            const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
+            const filename = await fix.createFile('spam.txt', orig);
+            const expected = `${orig}${dataToAppend}`;
+
+            await fileSystem.appendText(filename, dataToAppend);
+
+            const actual = await fs.readFile(filename, 'utf8');
+            expect(actual).to.be.equal(expected);
+        });
+
+        test('existing empty file', async () => {
+            const filename = await fix.createFile('spam.txt');
+            const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
+            const expected = dataToAppend;
+
+            await fileSystem.appendText(filename, dataToAppend);
+
+            const actual = await fs.readFile(filename, 'utf8');
+            expect(actual).to.be.equal(expected);
+        });
+
+        test('creates the file if it does not already exist', async () => {
+            await fileSystem.appendText(DOES_NOT_EXIST, 'spam');
+
+            const actual = await fs.readFile(DOES_NOT_EXIST, 'utf8');
+            expect(actual).to.be.equal('spam');
+        });
+
+        test('fails if not a file', async () => {
+            const dirname = await fix.createDirectory('spam');
+
+            const promise = fileSystem.appendText(dirname, 'spam');
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('rmtree', () => {
+        test('deletes the directory if empty', async () => {
+            const dirname = await fix.createDirectory('x');
+            await assertExists(dirname);
+
+            await fileSystem.rmtree(dirname);
+
+            await assertDoesNotExist(dirname);
+        });
+
+        test('fails if the directory is not empty', async () => {
+            const dirname = await fix.createDirectory('x');
+            const filename = await fix.createFile('x/y/z/spam.py');
+            await assertExists(filename);
+
+            const promise = fileSystem.rmtree(dirname);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+
+        test('fails if the directory does not exist', async () => {
+            const promise = fileSystem.rmtree(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('rmfile', () => {
+        test('deletes the file', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            await assertExists(filename);
+
+            await fileSystem.rmfile(filename);
+
+            await assertDoesNotExist(filename);
+        });
+
+        test('fails if the file does not exist', async () => {
+            const promise = fileSystem.rmfile(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('listdir', () => {
+        setup(function() {
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO(GH-8995) These tests are failing on Windows,
+                // so we are // temporarily disabling it.
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+        });
+        if (SUPPORTS_SYMLINKS) {
+            test('mixed', async () => {
+                // Create the target directory and its contents.
+                const dirname = await fix.createDirectory('x/y/z');
+                const file1 = await fix.createFile('x/y/z/__init__.py', '');
+                const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+                const file2 = await fix.createFile('x/y/z/spam.py', '...');
+                const symlink1 = await fix.createSymlink(
+                    'x/y/z/info.py',
+                    // Link to an ignored file.
+                    await fix.createFile('x/_info.py', '<info here>') // source
+                );
+                const sock = await fix.createSocket('x/y/z/ipc.sock');
+                const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+                const symlink2 = await fix.createSymlink(
+                    'x/y/z/broken',
+                    DOES_NOT_EXIST // source
+                );
+                const symlink3 = await fix.createSymlink(
+                    'x/y/z/ipc.sck',
+                    sock // source
+                );
+                const subdir = await fix.createDirectory('x/y/z/w');
+                const symlink4 = await fix.createSymlink(
+                    'x/y/z/static_files',
+                    await fix.resolve('x/y/z/w/data') // source
+                );
+                // Create other files and directories (should be ignored).
+                await fix.createSymlink(
+                    'my-script.py',
+                    // Link to a listed file.
+                    script // source (__main__.py)
+                );
+                const ignored1 = await fix.createFile('x/__init__.py', '');
+                await fix.createFile('x/y/__init__.py', '');
+                await fix.createSymlink(
+                    'x/y/z/w/__init__.py',
+                    ignored1 // source (x/__init__.py)
+                );
+                await fix.createDirectory('x/y/z/w/data');
+                await fix.createFile('x/y/z/w/data/v1.json');
+
+                const entries = await fileSystem.listdir(dirname);
+
+                expect(entries.sort()).to.deep.equal([
+                    [file1, FileType.File],
+                    [script, FileType.File],
+                    [symlink2, FileType.SymbolicLink],
+                    [file3, FileType.File],
+                    [symlink1, FileType.SymbolicLink | FileType.File],
+                    [symlink3, FileType.SymbolicLink],
+                    [sock, FileType.Unknown],
+                    [file2, FileType.File],
+                    [symlink4, FileType.SymbolicLink | FileType.Directory],
+                    [subdir, FileType.Directory]
+                ]);
+            });
+        } else if (SUPPORTS_SOCKETS) {
+            test('mixed', async () => {
+                // Create the target directory and its contents.
+                const dirname = await fix.createDirectory('x/y/z');
+                const file1 = await fix.createFile('x/y/z/__init__.py', '');
+                const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+                const file2 = await fix.createFile('x/y/z/spam.py', '...');
+                const sock = await fix.createSocket('x/y/z/ipc.sock');
+                const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+                const subdir = await fix.createDirectory('x/y/z/w');
+                // Create other files and directories (should be ignored).
+                await fix.createFile('x/__init__.py', '');
+                await fix.createFile('x/y/__init__.py', '');
+                await fix.createDirectory('x/y/z/w/data');
+                await fix.createFile('x/y/z/w/data/v1.json');
+
+                const entries = await fileSystem.listdir(dirname);
+
+                expect(entries.sort()).to.deep.equal([
+                    [file1, FileType.File],
+                    [script, FileType.File],
+                    [file3, FileType.File],
+                    [sock, FileType.Unknown],
+                    [file2, FileType.File],
+                    [subdir, FileType.Directory]
+                ]);
+            });
+        } else {
+            test('mixed', async () => {
+                // Create the target directory and its contents.
+                const dirname = await fix.createDirectory('x/y/z');
+                const file1 = await fix.createFile('x/y/z/__init__.py', '');
+                const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+                const file2 = await fix.createFile('x/y/z/spam.py', '...');
+                const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+                const subdir = await fix.createDirectory('x/y/z/w');
+                // Create other files and directories (should be ignored).
+                await fix.createFile('x/__init__.py', '');
+                await fix.createFile('x/y/__init__.py', '');
+                await fix.createDirectory('x/y/z/w/data');
+                await fix.createFile('x/y/z/w/data/v1.json');
+
+                const entries = await fileSystem.listdir(dirname);
+
+                expect(entries.sort()).to.deep.equal([
+                    [file1, FileType.File],
+                    [script, FileType.File],
+                    [file3, FileType.File],
+                    [file2, FileType.File],
+                    [subdir, FileType.Directory]
+                ]);
+            });
+        }
+
+        test('empty', async () => {
+            const dirname = await fix.createDirectory('x/y/z/eggs');
+
+            const entries = await fileSystem.listdir(dirname);
+
+            expect(entries).to.deep.equal([]);
+        });
+
+        test('fails if the directory does not exist', async () => {
+            const promise = fileSystem.listdir(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('mkdirp', () => {
+        test('creates the directory and all missing parents', async () => {
+            await fix.createDirectory('x');
+            // x/y, x/y/z, and x/y/z/spam are all missing.
+            const dirname = await fix.resolve('x/y/z/spam', false);
+            await assertDoesNotExist(dirname);
+
+            await fileSystem.mkdirp(dirname);
+
+            await assertExists(dirname);
+        });
+
+        test('works if the directory already exists', async () => {
+            const dirname = await fix.createDirectory('spam');
+            await assertExists(dirname);
+
+            await fileSystem.mkdirp(dirname);
+
+            await assertExists(dirname);
+        });
+    });
+
+    suite('copyFile', () => {
+        test('the source file gets copied (same directory)', async () => {
+            const data = '<content>';
+            const src = await fix.createFile('x/y/z/spam.py', data);
+            const dest = await fix.resolve('x/y/z/spam.py.bak');
+            await assertDoesNotExist(dest);
+
+            await fileSystem.copyFile(src, dest);
+
+            // prettier-ignore
+            const actual = await fs.readFile(dest)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+            // prettier-ignore
+            const original = await fs.readFile(src)
+                .then(buffer => buffer.toString());
+            expect(original).to.equal(data);
+        });
+
+        test('the source file gets copied (different directory)', async () => {
+            const data = '<content>';
+            const src = await fix.createFile('x/y/z/spam.py', data);
+            const dest = await fix.resolve('x/y/eggs.py');
+            await assertDoesNotExist(dest);
+
+            await fileSystem.copyFile(src, dest);
+
+            // prettier-ignore
+            const actual = await fs.readFile(dest)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+            // prettier-ignore
+            const original = await fs.readFile(src)
+                .then(buffer => buffer.toString());
+            expect(original).to.equal(data);
+        });
+
+        test('fails if the source does not exist', async () => {
+            const dest = await fix.resolve('x/spam.py');
+
+            const promise = fileSystem.copyFile(DOES_NOT_EXIST, dest);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+
+        test('fails if the target parent directory does not exist', async () => {
+            const src = await fix.createFile('x/spam.py', '...');
+            const dest = await fix.resolve('y/eggs.py', false);
+            await assertDoesNotExist(path.dirname(dest));
+
+            const promise = fileSystem.copyFile(src, dest);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('move', () => {
+        test('rename file', async () => {
+            const source = await fix.createFile('spam.py', '<text>');
+            const target = await fix.resolve('eggs-txt');
+            await assertDoesNotExist(target);
+
+            await fileSystem.move(source, target);
+
+            await assertExists(target);
+            const text = await fs.readFile(target, 'utf8');
+            expect(text).to.equal('<text>');
+            await assertDoesNotExist(source);
+        });
+
+        test('rename directory', async () => {
+            const source = await fix.createDirectory('spam');
+            await fix.createFile('spam/data.json', '<text>');
+            const target = await fix.resolve('eggs');
+            const filename = await fix.resolve('eggs/data.json', false);
+            await assertDoesNotExist(target);
+
+            await fileSystem.move(source, target);
+
+            await assertExists(filename);
+            const text = await fs.readFile(filename, 'utf8');
+            expect(text).to.equal('<text>');
+            await assertDoesNotExist(source);
+        });
+
+        test('rename symlink', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const filename = await fix.createFile('spam.py');
+            const symlink = await fix.createSymlink('spam.lnk', filename);
+            const target = await fix.resolve('eggs');
+            await assertDoesNotExist(target);
+
+            await fileSystem.move(symlink, target);
+
+            await assertExists(target);
+            const linked = await fs.readlink(target);
+            expect(linked).to.equal(filename);
+            await assertDoesNotExist(symlink);
+        });
+
+        test('move file', async () => {
+            const source = await fix.createFile('spam.py', '<text>');
+            await fix.createDirectory('eggs');
+            const target = await fix.resolve('eggs/spam.py');
+            await assertDoesNotExist(target);
+
+            await fileSystem.move(source, target);
+
+            await assertExists(target);
+            const text = await fs.readFile(target, 'utf8');
+            expect(text).to.equal('<text>');
+            await assertDoesNotExist(source);
+        });
+
+        test('move directory', async () => {
+            const source = await fix.createDirectory('spam/spam/spam/eggs/spam');
+            await fix.createFile('spam/spam/spam/eggs/spam/data.json', '<text>');
+            await fix.createDirectory('spam/spam/spam/hash');
+            const target = await fix.resolve('spam/spam/spam/hash/spam');
+            const filename = await fix.resolve('spam/spam/spam/hash/spam/data.json', false);
+            await assertDoesNotExist(target);
+
+            await fileSystem.move(source, target);
+
+            await assertExists(filename);
+            const text = await fs.readFile(filename, 'utf8');
+            expect(text).to.equal('<text>');
+            await assertDoesNotExist(source);
+        });
+
+        test('move symlink', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const filename = await fix.createFile('spam.py');
+            const symlink = await fix.createSymlink('w/spam.lnk', filename);
+            const target = await fix.resolve('x/spam.lnk');
+            await assertDoesNotExist(target);
+
+            await fileSystem.move(symlink, target);
+
+            await assertExists(target);
+            const linked = await fs.readlink(target);
+            expect(linked).to.equal(filename);
+            await assertDoesNotExist(symlink);
+        });
+
+        test('file target already exists', async () => {
+            const source = await fix.createFile('spam.py', '<text>');
+            const target = await fix.createFile('eggs-txt', '<other>');
+
+            await fileSystem.move(source, target);
+
+            await assertDoesNotExist(source);
+            await assertExists(target);
+            const text2 = await fs.readFile(target, 'utf8');
+            expect(text2).to.equal('<text>');
+        });
+
+        test('directory target already exists', async () => {
+            const source = await fix.createDirectory('spam');
+            const file3 = await fix.createFile('spam/data.json', '<text>');
+            const target = await fix.createDirectory('eggs');
+            const file1 = await fix.createFile('eggs/spam.py', '<code>');
+            const file2 = await fix.createFile('eggs/data.json', '<other>');
+
+            const promise = fileSystem.move(source, target);
+
+            await expect(promise).to.eventually.be.rejected;
+            // Make sure nothing changed.
+            const text1 = await fs.readFile(file1, 'utf8');
+            expect(text1).to.equal('<code>');
+            const text2 = await fs.readFile(file2, 'utf8');
+            expect(text2).to.equal('<other>');
+            const text3 = await fs.readFile(file3, 'utf8');
+            expect(text3).to.equal('<text>');
+        });
+
+        test('fails if the file does not exist', async () => {
+            const source = await fix.resolve(DOES_NOT_EXIST);
+            const target = await fix.resolve('spam.py');
+
+            const promise = fileSystem.move(source, target);
+
+            await expect(promise).to.eventually.be.rejected;
+            // Make sure nothing changed.
+            await assertDoesNotExist(target);
+        });
+
+        test('fails if the target directory does not exist', async () => {
+            const source = await fix.createFile('x/spam.py', '<text>');
+            const target = await fix.resolve('w/spam.py', false);
+            await assertDoesNotExist(path.dirname(target));
+
+            const promise = fileSystem.move(source, target);
+
+            await expect(promise).to.eventually.be.rejected;
+            // Make sure nothing changed.
+            await assertExists(source);
+            await assertDoesNotExist(target);
+        });
+    });
+
+    suite('chmod (non-Windows)', () => {
+        suiteSetup(function() {
+            // On Windows, chmod won't have any effect on the file itself.
+            if (WINDOWS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+        });
+
+        async function checkMode(filename: string, expected: number) {
+            const stat = await fs.stat(filename);
+            expect(stat.mode & 0o777).to.equal(expected);
+        }
+
+        test('the file mode gets updated (string)', async () => {
+            const filename = await fix.createFile('spam.py', '...');
+            await fs.chmod(filename, 0o644);
+
+            await fileSystem.chmod(filename, '755');
+
+            await checkMode(filename, 0o755);
+        });
+
+        test('the file mode gets updated (number)', async () => {
+            const filename = await fix.createFile('spam.py', '...');
+            await fs.chmod(filename, 0o644);
+
+            await fileSystem.chmod(filename, 0o755);
+
+            await checkMode(filename, 0o755);
+        });
+
+        test('the file mode gets updated for a directory', async () => {
+            const dirname = await fix.createDirectory('spam');
+            await fs.chmod(dirname, 0o755);
+
+            await fileSystem.chmod(dirname, 0o700);
+
+            await checkMode(dirname, 0o700);
+        });
+
+        test('nothing happens if the file mode already matches', async () => {
+            const filename = await fix.createFile('spam.py', '...');
+            await fs.chmod(filename, 0o644);
+
+            await fileSystem.chmod(filename, 0o644);
+
+            await checkMode(filename, 0o644);
+        });
+
+        test('fails if the file does not exist', async () => {
+            const promise = fileSystem.chmod(DOES_NOT_EXIST, 0o755);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    suite('lstat', () => {
+        test('for symlinks, gives the link info', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+            // prettier-ignore
+            const expected = convertStat(
+                await fs.lstat(symlink),
+                FileType.SymbolicLink
+            );
+
+            const stat = await fileSystem.lstat(symlink);
+
+            expect(stat).to.deep.equal(expected);
+        });
+
+        test('for normal files, gives the file info', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            // Ideally we would compare to the result of
+            // fileSystem.stat().  However, we do not have access
+            // to the VS Code API here.
+            // prettier-ignore
+            const expected = convertStat(
+                await fs.lstat(filename),
+                FileType.File
+            );
+
+            const stat = await fileSystem.lstat(filename);
+
+            expect(stat).to.deep.equal(expected);
+        });
+
+        test('fails if the file does not exist', async () => {
+            const promise = fileSystem.lstat(DOES_NOT_EXIST);
+
+            await expect(promise).to.eventually.be.rejected;
+        });
+    });
+
+    // non-async
+
+    suite('readTextSync', () => {
+        test('returns contents of a file', async () => {
+            const expected = '<some text>';
+            const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+            const text = fileSystem.readTextSync(filename);
+
+            expect(text).to.be.equal(expected);
+        });
+
+        test('always UTF-8', async () => {
+            const expected = '... 😁 ...';
+            const filename = await fix.createFile('x/y/z/spam.py', expected);
+
+            const text = fileSystem.readTextSync(filename);
+
+            expect(text).to.equal(expected);
+        });
+
+        test('throws an exception if file does not exist', () => {
+            expect(() => {
+                fileSystem.readTextSync(DOES_NOT_EXIST);
+            }).to.throw(Error);
+        });
+    });
+
+    suite('createReadStream', () => {
+        test('returns the correct ReadStream', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const expected = fs.createReadStream(filename);
+            expected.destroy();
+
+            const stream = fileSystem.createReadStream(filename);
+            stream.destroy();
+
+            expect(stream.path).to.deep.equal(expected.path);
+        });
+
+        // Missing tests:
+        // * creation fails if the file does not exist
+        // * .read() works as expected
+        // * .pipe() works as expected
+    });
+
+    suite('createWriteStream', () => {
+        test('returns the correct WriteStream', async () => {
+            const filename = await fix.resolve('x/y/z/spam.py');
+            const expected = fs.createWriteStream(filename);
+            expected.destroy();
+
+            const stream = fileSystem.createWriteStream(filename);
+            stream.destroy();
+
+            expect(stream.path).to.deep.equal(expected.path);
+        });
+
+        test('creates the file if missing', async () => {
+            const filename = await fix.resolve('x/y/z/spam.py');
+            await assertDoesNotExist(filename);
+            const data = 'line1\nline2\n';
+
+            const stream = fileSystem.createWriteStream(filename);
+            stream.write(data);
+            stream.destroy();
+
+            // prettier-ignore
+            const actual = await fs.readFile(filename)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+        });
+
+        test('always UTF-8', async () => {
+            const filename = await fix.resolve('x/y/z/spam.py');
+            const data = '... 😁 ...';
+
+            const stream = fileSystem.createWriteStream(filename);
+            stream.write(data);
+            stream.destroy();
+
+            // prettier-ignore
+            const actual = await fs.readFile(filename)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+        });
+
+        test('overwrites existing file', async function() {
+            if (OSX) {
+                // tslint:disable-next-line:no-suspicious-comment
+                // TODO(GH-8995) This test is failing on Mac, so
+                // we are temporarily disabling it.
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const data = 'line1\nline2\n';
+
+            const stream = fileSystem.createWriteStream(filename);
+            stream.write(data);
+            stream.destroy();
+
+            // prettier-ignore
+            const actual = await fs.readFile(filename)
+                .then(buffer => buffer.toString());
+            expect(actual).to.equal(data);
+        });
+    });
+});
 
 suite('FileSystem', () => {
     let fileSystem: FileSystem;
@@ -73,25 +841,7 @@ suite('FileSystem', () => {
 
     suite('raw', () => {
         suite('lstat', () => {
-            test('for symlinks, gives the link info', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const filename = await fix.createFile('x/y/z/spam.py', '...');
-                const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-                // prettier-ignore
-                const expected = convertStat(
-                    await fs.lstat(symlink),
-                    FileType.SymbolicLink
-                );
-
-                const stat = await fileSystem.lstat(symlink);
-
-                expect(stat).to.deep.equal(expected);
-            });
-
-            test('for normal files, gives the file info', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 // Ideally we would compare to the result of
                 // fileSystem.stat().  However, we do not have access
@@ -106,29 +856,14 @@ suite('FileSystem', () => {
 
                 expect(stat).to.deep.equal(expected);
             });
-
-            test('fails if the file does not exist', async () => {
-                const promise = fileSystem.lstat(DOES_NOT_EXIST);
-
-                await expect(promise).to.eventually.be.rejected;
-            });
         });
 
         suite('createDirectory', () => {
-            test('creates the directory and all missing parents', async () => {
+            test('wraps the low-level impl', async () => {
                 await fix.createDirectory('x');
                 // x/y, x/y/z, and x/y/z/spam are all missing.
-                const dirname = await fix.resolve('x/y/z/spam', false);
+                const dirname = await fix.resolve('x/spam', false);
                 await assertDoesNotExist(dirname);
-
-                await fileSystem.createDirectory(dirname);
-
-                await assertExists(dirname);
-            });
-
-            test('works if the directory already exists', async () => {
-                const dirname = await fix.createDirectory('spam');
-                await assertExists(dirname);
 
                 await fileSystem.createDirectory(dirname);
 
@@ -137,7 +872,7 @@ suite('FileSystem', () => {
         });
 
         suite('deleteDirectory', () => {
-            test('deletes the directory if empty', async () => {
+            test('wraps the low-level impl', async () => {
                 const dirname = await fix.createDirectory('x');
                 await assertExists(dirname);
 
@@ -145,162 +880,28 @@ suite('FileSystem', () => {
 
                 await assertDoesNotExist(dirname);
             });
-
-            test('fails if the directory is not empty', async () => {
-                const dirname = await fix.createDirectory('x');
-                const filename = await fix.createFile('x/y/z/spam.py');
-                await assertExists(filename);
-
-                const promise = fileSystem.deleteDirectory(dirname);
-
-                await expect(promise).to.eventually.be.rejected;
-            });
-
-            test('fails if the directory does not exist', async () => {
-                const promise = fileSystem.deleteDirectory(DOES_NOT_EXIST);
-
-                await expect(promise).to.eventually.be.rejected;
-            });
         });
 
         suite('listdir', () => {
-            setup(function() {
-                if (WINDOWS) {
-                    // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-8995) These tests are failing on Windows,
-                    // so we are // temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
-            });
-            if (SUPPORTS_SYMLINKS) {
+            test('wraps the low-level impl', async () => {
                 test('mixed', async () => {
                     // Create the target directory and its contents.
                     const dirname = await fix.createDirectory('x/y/z');
-                    const file1 = await fix.createFile('x/y/z/__init__.py', '');
-                    const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
-                    const file2 = await fix.createFile('x/y/z/spam.py', '...');
-                    const symlink1 = await fix.createSymlink(
-                        'x/y/z/info.py',
-                        // Link to an ignored file.
-                        await fix.createFile('x/_info.py', '<info here>') // source
-                    );
-                    const sock = await fix.createSocket('x/y/z/ipc.sock');
-                    const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
-                    const symlink2 = await fix.createSymlink(
-                        'x/y/z/broken',
-                        DOES_NOT_EXIST // source
-                    );
-                    const symlink3 = await fix.createSymlink(
-                        'x/y/z/ipc.sck',
-                        sock // source
-                    );
+                    const file = await fix.createFile('x/y/z/__init__.py', '');
                     const subdir = await fix.createDirectory('x/y/z/w');
-                    const symlink4 = await fix.createSymlink(
-                        'x/y/z/static_files',
-                        await fix.resolve('x/y/z/w/data') // source
-                    );
-                    // Create other files and directories (should be ignored).
-                    await fix.createSymlink(
-                        'my-script.py',
-                        // Link to a listed file.
-                        script // source (__main__.py)
-                    );
-                    const ignored1 = await fix.createFile('x/__init__.py', '');
-                    await fix.createFile('x/y/__init__.py', '');
-                    await fix.createSymlink(
-                        'x/y/z/w/__init__.py',
-                        ignored1 // source (x/__init__.py)
-                    );
-                    await fix.createDirectory('x/y/z/w/data');
-                    await fix.createFile('x/y/z/w/data/v1.json');
 
                     const entries = await fileSystem.listdir(dirname);
 
                     expect(entries.sort()).to.deep.equal([
-                        [file1, FileType.File],
-                        [script, FileType.File],
-                        [symlink2, FileType.SymbolicLink],
-                        [file3, FileType.File],
-                        [symlink1, FileType.SymbolicLink | FileType.File],
-                        [symlink3, FileType.SymbolicLink],
-                        [sock, FileType.Unknown],
-                        [file2, FileType.File],
-                        [symlink4, FileType.SymbolicLink | FileType.Directory],
+                        [file, FileType.File],
                         [subdir, FileType.Directory]
                     ]);
                 });
-            } else if (SUPPORTS_SOCKETS) {
-                test('mixed', async () => {
-                    // Create the target directory and its contents.
-                    const dirname = await fix.createDirectory('x/y/z');
-                    const file1 = await fix.createFile('x/y/z/__init__.py', '');
-                    const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
-                    const file2 = await fix.createFile('x/y/z/spam.py', '...');
-                    const sock = await fix.createSocket('x/y/z/ipc.sock');
-                    const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
-                    const subdir = await fix.createDirectory('x/y/z/w');
-                    // Create other files and directories (should be ignored).
-                    await fix.createFile('x/__init__.py', '');
-                    await fix.createFile('x/y/__init__.py', '');
-                    await fix.createDirectory('x/y/z/w/data');
-                    await fix.createFile('x/y/z/w/data/v1.json');
-
-                    const entries = await fileSystem.listdir(dirname);
-
-                    expect(entries.sort()).to.deep.equal([
-                        [file1, FileType.File],
-                        [script, FileType.File],
-                        [file3, FileType.File],
-                        [sock, FileType.Unknown],
-                        [file2, FileType.File],
-                        [subdir, FileType.Directory]
-                    ]);
-                });
-            } else {
-                test('mixed', async () => {
-                    // Create the target directory and its contents.
-                    const dirname = await fix.createDirectory('x/y/z');
-                    const file1 = await fix.createFile('x/y/z/__init__.py', '');
-                    const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
-                    const file2 = await fix.createFile('x/y/z/spam.py', '...');
-                    const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
-                    const subdir = await fix.createDirectory('x/y/z/w');
-                    // Create other files and directories (should be ignored).
-                    await fix.createFile('x/__init__.py', '');
-                    await fix.createFile('x/y/__init__.py', '');
-                    await fix.createDirectory('x/y/z/w/data');
-                    await fix.createFile('x/y/z/w/data/v1.json');
-
-                    const entries = await fileSystem.listdir(dirname);
-
-                    expect(entries.sort()).to.deep.equal([
-                        [file1, FileType.File],
-                        [script, FileType.File],
-                        [file3, FileType.File],
-                        [file2, FileType.File],
-                        [subdir, FileType.Directory]
-                    ]);
-                });
-            }
-
-            test('empty', async () => {
-                const dirname = await fix.createDirectory('x/y/z/eggs');
-
-                const entries = await fileSystem.listdir(dirname);
-
-                expect(entries).to.deep.equal([]);
-            });
-
-            test('fails if the directory does not exist', async () => {
-                const promise = fileSystem.listdir(DOES_NOT_EXIST);
-
-                await expect(promise).to.eventually.be.rejected;
             });
         });
 
         suite('readFile', () => {
-            test('returns contents of a file', async () => {
+            test('wraps the low-level impl', async () => {
                 const expected = '<some text>';
                 const filename = await fix.createFile('x/y/z/spam.py', expected);
 
@@ -308,63 +909,22 @@ suite('FileSystem', () => {
 
                 expect(content).to.be.equal(expected);
             });
+        });
 
-            test('always UTF-8', async () => {
-                const expected = '... 😁 ...';
-                const filename = await fix.createFile('x/y/z/spam.py', expected);
+        suite('readData', () => {
+            test('wraps the low-level impl', async () => {
+                const text = '<some text>';
+                const expected = Buffer.from(text, 'utf8');
+                const filename = await fix.createFile('x/y/z/spam.py', text);
 
-                const text = await fileSystem.readFile(filename);
+                const content = await fileSystem.readData(filename);
 
-                expect(text).to.equal(expected);
-            });
-
-            test('returns garbage if encoding is UCS-2', async () => {
-                const filename = await fix.resolve('spam.py');
-                // There are probably cases where this would fail too.
-                // However, the extension never has to deal with non-UTF8
-                // cases, so it doesn't matter too much.
-                const original = '... 😁 ...';
-                await fs.writeFile(filename, original, { encoding: 'ucs2' });
-
-                const text = await fileSystem.readFile(filename);
-
-                expect(text).to.equal('.\u0000.\u0000.\u0000 \u0000=�\u0001� \u0000.\u0000.\u0000.\u0000');
-            });
-
-            test('throws an exception if file does not exist', async () => {
-                const promise = fileSystem.readFile(DOES_NOT_EXIST);
-
-                await expect(promise).to.eventually.be.rejected;
+                expect(content).to.deep.equal(expected);
             });
         });
 
         suite('writeFile', () => {
-            test('creates the file if missing', async () => {
-                const filename = await fix.resolve('x/y/z/spam.py');
-                await assertDoesNotExist(filename);
-                const data = 'line1\nline2\n';
-
-                await fileSystem.writeFile(filename, data);
-
-                // prettier-ignore
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
-            });
-
-            test('always UTF-8', async () => {
-                const filename = await fix.resolve('x/y/z/spam.py');
-                const data = '... 😁 ...';
-
-                await fileSystem.writeFile(filename, data);
-
-                // prettier-ignore
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
-            });
-
-            test('overwrites existing file', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const data = 'line1\nline2\n';
 
@@ -378,19 +938,7 @@ suite('FileSystem', () => {
         });
 
         suite('appendFile', () => {
-            test('existing file', async () => {
-                const orig = 'spamspamspam\n\n';
-                const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
-                const filename = await fix.createFile('spam.txt', orig);
-                const expected = `${orig}${dataToAppend}`;
-
-                await fileSystem.appendFile(filename, dataToAppend);
-
-                const actual = await fs.readFile(filename, 'utf8');
-                expect(actual).to.be.equal(expected);
-            });
-
-            test('existing empty file', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.createFile('spam.txt');
                 const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
                 const expected = dataToAppend;
@@ -400,25 +948,10 @@ suite('FileSystem', () => {
                 const actual = await fs.readFile(filename, 'utf8');
                 expect(actual).to.be.equal(expected);
             });
-
-            test('creates the file if it does not already exist', async () => {
-                await fileSystem.appendFile(DOES_NOT_EXIST, 'spam');
-
-                const actual = await fs.readFile(DOES_NOT_EXIST, 'utf8');
-                expect(actual).to.be.equal('spam');
-            });
-
-            test('fails if not a file', async () => {
-                const dirname = await fix.createDirectory('spam');
-
-                const promise = fileSystem.appendFile(dirname, 'spam');
-
-                await expect(promise).to.eventually.be.rejected;
-            });
         });
 
         suite('copyFile', () => {
-            test('the source file gets copied (same directory)', async () => {
+            test('wraps the low-level impl', async () => {
                 const data = '<content>';
                 const src = await fix.createFile('x/y/z/spam.py', data);
                 const dest = await fix.resolve('x/y/z/spam.py.bak');
@@ -435,58 +968,16 @@ suite('FileSystem', () => {
                     .then(buffer => buffer.toString());
                 expect(original).to.equal(data);
             });
-
-            test('the source file gets copied (different directory)', async () => {
-                const data = '<content>';
-                const src = await fix.createFile('x/y/z/spam.py', data);
-                const dest = await fix.resolve('x/y/eggs.py');
-                await assertDoesNotExist(dest);
-
-                await fileSystem.copyFile(src, dest);
-
-                // prettier-ignore
-                const actual = await fs.readFile(dest)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
-                // prettier-ignore
-                const original = await fs.readFile(src)
-                    .then(buffer => buffer.toString());
-                expect(original).to.equal(data);
-            });
-
-            test('fails if the source does not exist', async () => {
-                const dest = await fix.resolve('x/spam.py');
-
-                const promise = fileSystem.copyFile(DOES_NOT_EXIST, dest);
-
-                await expect(promise).to.eventually.be.rejected;
-            });
-
-            test('fails if the target parent directory does not exist', async () => {
-                const src = await fix.createFile('x/spam.py', '...');
-                const dest = await fix.resolve('y/eggs.py', false);
-                await assertDoesNotExist(path.dirname(dest));
-
-                const promise = fileSystem.copyFile(src, dest);
-
-                await expect(promise).to.eventually.be.rejected;
-            });
         });
 
         suite('deleteFile', () => {
-            test('deletes the file', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 await assertExists(filename);
 
                 await fileSystem.deleteFile(filename);
 
                 await assertDoesNotExist(filename);
-            });
-
-            test('fails if the file does not exist', async () => {
-                const promise = fileSystem.deleteFile(DOES_NOT_EXIST);
-
-                await expect(promise).to.eventually.be.rejected;
             });
         });
 
@@ -499,56 +990,19 @@ suite('FileSystem', () => {
                 }
             });
 
-            async function checkMode(filename: string, expected: number) {
-                const stat = await fs.stat(filename);
-                expect(stat.mode & 0o777).to.equal(expected);
-            }
-
-            test('the file mode gets updated (string)', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.createFile('spam.py', '...');
                 await fs.chmod(filename, 0o644);
 
                 await fileSystem.chmod(filename, '755');
 
-                await checkMode(filename, 0o755);
-            });
-
-            test('the file mode gets updated (number)', async () => {
-                const filename = await fix.createFile('spam.py', '...');
-                await fs.chmod(filename, 0o644);
-
-                await fileSystem.chmod(filename, 0o755);
-
-                await checkMode(filename, 0o755);
-            });
-
-            test('the file mode gets updated for a directory', async () => {
-                const dirname = await fix.createDirectory('spam');
-                await fs.chmod(dirname, 0o755);
-
-                await fileSystem.chmod(dirname, 0o700);
-
-                await checkMode(dirname, 0o700);
-            });
-
-            test('nothing happens if the file mode already matches', async () => {
-                const filename = await fix.createFile('spam.py', '...');
-                await fs.chmod(filename, 0o644);
-
-                await fileSystem.chmod(filename, 0o644);
-
-                await checkMode(filename, 0o644);
-            });
-
-            test('fails if the file does not exist', async () => {
-                const promise = fileSystem.chmod(DOES_NOT_EXIST, 0o755);
-
-                await expect(promise).to.eventually.be.rejected;
+                const stat = await fs.stat(filename);
+                expect(stat.mode & 0o777).to.equal(0o755);
             });
         });
 
         suite('move', () => {
-            test('rename file', async () => {
+            test('wraps the low-level impl', async () => {
                 const source = await fix.createFile('spam.py', '<text>');
                 const target = await fix.resolve('eggs-txt');
                 await assertDoesNotExist(target);
@@ -560,149 +1014,13 @@ suite('FileSystem', () => {
                 expect(text).to.equal('<text>');
                 await assertDoesNotExist(source);
             });
-
-            test('rename directory', async () => {
-                const source = await fix.createDirectory('spam');
-                await fix.createFile('spam/data.json', '<text>');
-                const target = await fix.resolve('eggs');
-                const filename = await fix.resolve('eggs/data.json', false);
-                await assertDoesNotExist(target);
-
-                await fileSystem.move(source, target);
-
-                await assertExists(filename);
-                const text = await fs.readFile(filename, 'utf8');
-                expect(text).to.equal('<text>');
-                await assertDoesNotExist(source);
-            });
-
-            test('rename symlink', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const filename = await fix.createFile('spam.py');
-                const symlink = await fix.createSymlink('spam.lnk', filename);
-                const target = await fix.resolve('eggs');
-                await assertDoesNotExist(target);
-
-                await fileSystem.move(symlink, target);
-
-                await assertExists(target);
-                const linked = await fs.readlink(target);
-                expect(linked).to.equal(filename);
-                await assertDoesNotExist(symlink);
-            });
-
-            test('move file', async () => {
-                const source = await fix.createFile('spam.py', '<text>');
-                await fix.createDirectory('eggs');
-                const target = await fix.resolve('eggs/spam.py');
-                await assertDoesNotExist(target);
-
-                await fileSystem.move(source, target);
-
-                await assertExists(target);
-                const text = await fs.readFile(target, 'utf8');
-                expect(text).to.equal('<text>');
-                await assertDoesNotExist(source);
-            });
-
-            test('move directory', async () => {
-                const source = await fix.createDirectory('spam/spam/spam/eggs/spam');
-                await fix.createFile('spam/spam/spam/eggs/spam/data.json', '<text>');
-                await fix.createDirectory('spam/spam/spam/hash');
-                const target = await fix.resolve('spam/spam/spam/hash/spam');
-                const filename = await fix.resolve('spam/spam/spam/hash/spam/data.json', false);
-                await assertDoesNotExist(target);
-
-                await fileSystem.move(source, target);
-
-                await assertExists(filename);
-                const text = await fs.readFile(filename, 'utf8');
-                expect(text).to.equal('<text>');
-                await assertDoesNotExist(source);
-            });
-
-            test('move symlink', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const filename = await fix.createFile('spam.py');
-                const symlink = await fix.createSymlink('w/spam.lnk', filename);
-                const target = await fix.resolve('x/spam.lnk');
-                await assertDoesNotExist(target);
-
-                await fileSystem.move(symlink, target);
-
-                await assertExists(target);
-                const linked = await fs.readlink(target);
-                expect(linked).to.equal(filename);
-                await assertDoesNotExist(symlink);
-            });
-
-            test('file target already exists', async () => {
-                const source = await fix.createFile('spam.py', '<text>');
-                const target = await fix.createFile('eggs-txt', '<other>');
-
-                await fileSystem.move(source, target);
-
-                await assertDoesNotExist(source);
-                await assertExists(target);
-                const text2 = await fs.readFile(target, 'utf8');
-                expect(text2).to.equal('<text>');
-            });
-
-            test('directory target already exists', async () => {
-                const source = await fix.createDirectory('spam');
-                const file3 = await fix.createFile('spam/data.json', '<text>');
-                const target = await fix.createDirectory('eggs');
-                const file1 = await fix.createFile('eggs/spam.py', '<code>');
-                const file2 = await fix.createFile('eggs/data.json', '<other>');
-
-                const promise = fileSystem.move(source, target);
-
-                await expect(promise).to.eventually.be.rejected;
-                // Make sure nothing changed.
-                const text1 = await fs.readFile(file1, 'utf8');
-                expect(text1).to.equal('<code>');
-                const text2 = await fs.readFile(file2, 'utf8');
-                expect(text2).to.equal('<other>');
-                const text3 = await fs.readFile(file3, 'utf8');
-                expect(text3).to.equal('<text>');
-            });
-
-            test('fails if the file does not exist', async () => {
-                const source = await fix.resolve(DOES_NOT_EXIST);
-                const target = await fix.resolve('spam.py');
-
-                const promise = fileSystem.move(source, target);
-
-                await expect(promise).to.eventually.be.rejected;
-                // Make sure nothing changed.
-                await assertDoesNotExist(target);
-            });
-
-            test('fails if the target directory does not exist', async () => {
-                const source = await fix.createFile('x/spam.py', '<text>');
-                const target = await fix.resolve('w/spam.py', false);
-                await assertDoesNotExist(path.dirname(target));
-
-                const promise = fileSystem.move(source, target);
-
-                await expect(promise).to.eventually.be.rejected;
-                // Make sure nothing changed.
-                await assertExists(source);
-                await assertDoesNotExist(target);
-            });
         });
 
         //=============================
         // sync methods
 
         suite('readFileSync', () => {
-            test('returns contents of a file', async () => {
+            test('wraps the low-level impl', async () => {
                 const expected = '<some text>';
                 const filename = await fix.createFile('x/y/z/spam.py', expected);
 
@@ -710,25 +1028,10 @@ suite('FileSystem', () => {
 
                 expect(text).to.be.equal(expected);
             });
-
-            test('always UTF-8', async () => {
-                const expected = '... 😁 ...';
-                const filename = await fix.createFile('x/y/z/spam.py', expected);
-
-                const text = fileSystem.readFileSync(filename);
-
-                expect(text).to.equal(expected);
-            });
-
-            test('throws an exception if file does not exist', () => {
-                expect(() => {
-                    fileSystem.readFileSync(DOES_NOT_EXIST);
-                }).to.throw(Error);
-            });
         });
 
         suite('createReadStream', () => {
-            test('returns the correct ReadStream', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const expected = fs.createReadStream(filename);
                 expected.destroy();
@@ -738,15 +1041,10 @@ suite('FileSystem', () => {
 
                 expect(stream.path).to.deep.equal(expected.path);
             });
-
-            // Missing tests:
-            // * creation fails if the file does not exist
-            // * .read() works as expected
-            // * .pipe() works as expected
         });
 
         suite('createWriteStream', () => {
-            test('returns the correct WriteStream', async () => {
+            test('wraps the low-level impl', async () => {
                 const filename = await fix.resolve('x/y/z/spam.py');
                 const expected = fs.createWriteStream(filename);
                 expected.destroy();
@@ -755,56 +1053,6 @@ suite('FileSystem', () => {
                 stream.destroy();
 
                 expect(stream.path).to.deep.equal(expected.path);
-            });
-
-            test('creates the file if missing', async () => {
-                const filename = await fix.resolve('x/y/z/spam.py');
-                await assertDoesNotExist(filename);
-                const data = 'line1\nline2\n';
-
-                const stream = fileSystem.createWriteStream(filename);
-                stream.write(data);
-                stream.destroy();
-
-                // prettier-ignore
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
-            });
-
-            test('always UTF-8', async () => {
-                const filename = await fix.resolve('x/y/z/spam.py');
-                const data = '... 😁 ...';
-
-                const stream = fileSystem.createWriteStream(filename);
-                stream.write(data);
-                stream.destroy();
-
-                // prettier-ignore
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
-            });
-
-            test('overwrites existing file', async function() {
-                if (OSX) {
-                    // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-8995) This test is failing on Mac, so
-                    // we are temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
-                const filename = await fix.createFile('x/y/z/spam.py', '...');
-                const data = 'line1\nline2\n';
-
-                const stream = fileSystem.createWriteStream(filename);
-                stream.write(data);
-                stream.destroy();
-
-                // prettier-ignore
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
-                expect(actual).to.equal(data);
             });
         });
     });
@@ -1111,18 +1359,6 @@ suite('FileSystem', () => {
                 const files = await fileSystem.search(pattern);
 
                 expect(files).to.deep.equal([]);
-            });
-        });
-
-        suite('createFile', () => {
-            // tested fully in the TemporaryFileSystem tests.
-
-            test('calls wrapped object', async () => {
-                const tempfile = await fileSystem.createTemporaryFile('.tmp');
-                fix.addFSCleanup(tempfile.filePath, tempfile.dispose);
-                await assertExists(tempfile.filePath);
-
-                expect(tempfile.filePath.endsWith('.tmp')).to.equal(true);
             });
         });
 

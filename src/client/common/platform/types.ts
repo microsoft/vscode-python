@@ -91,6 +91,7 @@ export interface IFileSystemPathUtils {
 
 export import FileType = vscode.FileType;
 export import FileStat = vscode.FileStat;
+export type ReadStream = fs.ReadStream;
 export type WriteStream = fs.WriteStream;
 
 export const IFileSystem = Symbol('IFileSystem');
@@ -106,8 +107,8 @@ export interface IFileSystem {
     listdir(dirname: string): Promise<[string, FileType][]>;
     readFile(filePath: string): Promise<string>;
     readData(filePath: string): Promise<Buffer>;
-    writeFile(filePath: string, data: {}, options?: string | fsextra.WriteFileOptions): Promise<void>;
-    appendFile(filename: string, data: {}): Promise<void>;
+    writeFile(filePath: string, text: string | Buffer, options?: string | fsextra.WriteFileOptions): Promise<void>;
+    appendFile(filename: string, text: string | Buffer): Promise<void>;
     copyFile(src: string, dest: string): Promise<void>;
     deleteFile(filename: string): Promise<void>;
     chmod(path: string, mode: string | number): Promise<void>;
