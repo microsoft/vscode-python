@@ -49,10 +49,6 @@ suite('FileSystem - Path Utils', () => {
                 const osType = item.value;
 
                 function setNormCase(filename: string, numCalls = 1): string {
-                    //if (numCalls !== 1) {
-                    //    console.log(filename);
-                    //    return filename;
-                    //}
                     const norm = (osType === OSType.Windows)
                         ? path.normalize(filename).toUpperCase()
                         : filename;
