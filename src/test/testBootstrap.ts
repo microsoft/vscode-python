@@ -108,4 +108,8 @@ async function start() {
     proc.once('close', end);
 }
 
-start().catch(ex => console.error(ex));
+start().catch(ex => {
+    console.error('File testBootstrap.ts failed with Errors');
+    console.error(ex);
+    process.exit(1);
+});
