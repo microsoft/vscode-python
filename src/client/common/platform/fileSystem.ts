@@ -7,11 +7,11 @@ import * as fileSystem from 'fs';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
-import * as tmp from 'tmp';
 import { promisify } from 'util';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
+import { TemporaryFileSystem } from './fs-temp';
 // prettier-ignore
 import {
     FileStat, FileType,
@@ -85,6 +85,7 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
 export class FileSystem implements IFileSystem {
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
+    private readonly tmp: TemporaryFileSystem;
     // prettier-ignore
     constructor(
         @inject(IPlatformService) platformService: IPlatformService
@@ -94,6 +95,7 @@ export class FileSystem implements IFileSystem {
             platformService.isWindows
         );
         this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
+        this.tmp = TemporaryFileSystem.withDefaults();
     }
 
     //=================================
@@ -307,14 +309,7 @@ export class FileSystem implements IFileSystem {
     }
 
     public createTemporaryFile(extension: string): Promise<TemporaryFile> {
-        return new Promise<TemporaryFile>((resolve, reject) => {
-            tmp.file({ postfix: extension }, (err, tmpFile, _, cleanupCallback) => {
-                if (err) {
-                    return reject(err);
-                }
-                resolve({ filePath: tmpFile, dispose: cleanupCallback });
-            });
-        });
+        return this.tmp.createFile(extension);
     }
 
     public async isDirReadonly(dirname: string): Promise<boolean> {
