@@ -69,6 +69,10 @@ export class FileSystemPaths {
     }
 }
 
+// Where to fine executables.
+//
+// In particular this class provides all the tools needed to find
+// executables, including through an environment variable.
 export class Executables {
     constructor(
         public readonly delimiter: string,
@@ -91,10 +95,12 @@ export class Executables {
     }
 }
 
+// The dependencies FileSystemPathUtils has on node's path module.
 interface IRawPaths {
     relative(relpath: string, rootpath: string): string;
 }
 
+// A collection of high-level utilities related to filesystem paths.
 export class FileSystemPathUtils {
     constructor(
         public readonly home: string,
@@ -119,12 +125,16 @@ export class FileSystemPathUtils {
         );
     }
 
+    // Return true if the two paths are equivalent on the current
+    // filesystem and false otherwise.  On Windows this is significant.
+    // On non-Windows the filenames must always be exactly the same.
     public arePathsSame(path1: string, path2: string): boolean {
         path1 = this.paths.normCase(path1);
         path2 = this.paths.normCase(path2);
         return path1 === path2;
     }
 
+    // Return the canonicalized absolute filename.
     public async getRealPath(filename: string): Promise<string> {
         try {
             return await fs.realpath(filename);
@@ -134,13 +144,14 @@ export class FileSystemPathUtils {
         }
     }
 
-    public getDisplayName(pathValue: string, cwd?: string): string {
-        if (cwd && pathValue.startsWith(cwd)) {
-            return `.${this.paths.sep}${this.raw.relative(cwd, pathValue)}`;
-        } else if (pathValue.startsWith(this.home)) {
-            return `~${this.paths.sep}${this.raw.relative(this.home, pathValue)}`;
+    // Return the clean (displayable) form of the given filename.
+    public getDisplayName(filename: string, cwd?: string): string {
+        if (cwd && filename.startsWith(cwd)) {
+            return `.${this.paths.sep}${this.raw.relative(cwd, filename)}`;
+        } else if (filename.startsWith(this.home)) {
+            return `~${this.paths.sep}${this.raw.relative(this.home, filename)}`;
         } else {
-            return pathValue;
+            return filename;
         }
     }
 }
