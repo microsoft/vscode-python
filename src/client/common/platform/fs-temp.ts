@@ -9,6 +9,7 @@ interface IRawTempFS {
     file(config: tmp.Options, callback?: (err: any, path: string, fd: number, cleanupCallback: () => void) => void): void;
 }
 
+// Operations related to temporary files and directories.
 export class TemporaryFileSystem {
     // prettier-ignore
     constructor(
@@ -21,6 +22,7 @@ export class TemporaryFileSystem {
         );
     }
 
+    // Create a new temp file with the given filename suffix.
     public createFile(suffix: string): Promise<TemporaryFile> {
         const opts = {
             postfix: suffix
