@@ -9,6 +9,30 @@ export namespace PsProcessParser {
     const secondColumnCharacters = 50;
     const commColumnTitle = ''.padStart(secondColumnCharacters, 'a');
 
+    // Perf numbers:
+    // OS X 10.10
+    // | # of processes | Time (ms) |
+    // |----------------+-----------|
+    // |            272 |        52 |
+    // |            296 |        49 |
+    // |            384 |        53 |
+    // |            784 |       116 |
+    //
+    // Ubuntu 16.04
+    // | # of processes | Time (ms) |
+    // |----------------+-----------|
+    // |            232 |        26 |
+    // |            336 |        34 |
+    // |            736 |        62 |
+    // |           1039 |       115 |
+    // |           1239 |       182 |
+
+    // ps outputs as a table. With the option "ww", ps will use as much width as necessary.
+    // However, that only applies to the right-most column. Here we use a hack of setting
+    // the column header to 50 a's so that the second column will have at least that many
+    // characters. 50 was chosen because that's the maximum length of a "label" in the
+    // QuickPick UI in VS Code.
+
     // the BSD version of ps uses '-c' to have 'comm' only output the executable name and not
     // the full path. The Linux version of ps has 'comm' to only display the name of the executable
     // Note that comm on Linux systems is truncated to 16 characters:
