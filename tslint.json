@@ -23,7 +23,7 @@
         "newline-per-chained-call": false,
         "class-name": true,
         "semicolon": [
-            true, "always", "ignore-bound-class-methods"
+            true, "always", "strict-bound-class-methods"
         ],
         "triple-equals": true,
         "no-relative-imports": false,
