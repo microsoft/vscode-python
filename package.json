@@ -1372,19 +1372,8 @@
                                 "default": true
                             },
                             "processId": {
-                                "anyOf": [
-                                    {
-                                        "enum": [
-                                            "${command:pickProcess}"
-                                        ],
-                                        "description": "Use process picker to select a process to attach, or Process ID as integer.",
-                                        "default": "${command:pickProcess}"
-                                    },
-                                    {
-                                        "type": "integer",
-                                        "description": "ID of the local process to attach to."
-                                    }
-                                ]
+                                "type": "number",
+                                "description": "ID of the local process to attach to."
                             }
                         }
                     }

@@ -19,7 +19,6 @@ import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPers
 import { sleep } from './utils/async';
 import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
-import { DebugAdapterNewPtvsd, DebugAdapterDescriptorFactory } from './experimentGroups';
 
 const EXPIRY_DURATION_MS = 30 * 60 * 1000;
 export const isDownloadedStorageValidKey = 'IS_EXPERIMENTS_STORAGE_VALID_KEY';
@@ -113,9 +112,6 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to identify if user is in experiment')
     public inExperiment(experimentName: string): boolean {
-        if (experimentName === DebugAdapterNewPtvsd.experiment || experimentName === DebugAdapterDescriptorFactory.experiment) {
-            return true;
-        }
         if (!this.enabled) {
             return false;
         }
