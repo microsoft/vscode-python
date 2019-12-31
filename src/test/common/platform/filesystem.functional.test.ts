@@ -1127,6 +1127,18 @@ suite('FileSystem', () => {
             });
         });
 
+        suite('createFile', () => {
+            // tested fully in the TemporaryFileSystem tests.
+
+            test('calls wrapped object', async () => {
+                const tempfile = await fileSystem.createTemporaryFile('.tmp');
+                fix.addFSCleanup(tempfile.filePath, tempfile.dispose);
+                await assertExists(tempfile.filePath);
+
+                expect(tempfile.filePath.endsWith('.tmp')).to.equal(true);
+            });
+        });
+
         suite('isDirReadonly', () => {
             suite('non-Windows', () => {
                 suiteSetup(function() {
