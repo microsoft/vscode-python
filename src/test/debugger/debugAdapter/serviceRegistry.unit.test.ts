@@ -6,9 +6,6 @@
 import { expect } from 'chai';
 import { anything, instance, mock, verify } from 'ts-mockito';
 import { SocketServer } from '../../../client/common/net/socket/socketServer';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
-import { IFileSystem, IPlatformService } from '../../../client/common/platform/types';
 import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { BufferDecoder } from '../../../client/common/process/decoder';
 import { IBufferDecoder, IProcessServiceFactory } from '../../../client/common/process/types';
@@ -38,8 +35,6 @@ suite('Debugger debug adapter Service Registry', () => {
         verify(serviceManager.addSingleton<IDebugStreamProvider>(IDebugStreamProvider, DebugStreamProvider)).once();
         verify(serviceManager.addSingleton<IProtocolLogger>(IProtocolLogger, ProtocolLogger)).once();
         verify(serviceManager.add<IProtocolParser>(IProtocolParser, ProtocolParser)).once();
-        verify(serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem)).once();
-        verify(serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService)).once();
         verify(serviceManager.addSingleton<ISocketServer>(ISocketServer, SocketServer)).once();
         verify(serviceManager.addSingleton<IProtocolMessageWriter>(IProtocolMessageWriter, ProtocolMessageWriter)).once();
         verify(serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder)).once();
