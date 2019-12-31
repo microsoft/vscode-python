@@ -25,9 +25,7 @@ suite('Environment Variables Service', () => {
     let variablesService: IEnvironmentVariablesService;
     setup(() => {
         pathUtils = new PathUtils(getOSType() === OSType.Windows);
-        const fs = new FileSystem(
-            new PlatformService()
-        );
+        const fs = new FileSystem(new PlatformService());
         variablesService = new EnvironmentVariablesService(pathUtils, fs);
     });
 
@@ -73,10 +71,7 @@ suite('Environment Variables Service', () => {
     });
 
     test('Simple variable substitution is supported', async () => {
-        const vars = await variablesService.parseFile(
-            path.join(envFilesFolderPath, '.env6'),
-            { BINDIR: '/usr/bin' }
-        );
+        const vars = await variablesService.parseFile(path.join(envFilesFolderPath, '.env6'), { BINDIR: '/usr/bin' });
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
         expect(Object.keys(vars!)).lengthOf(3, 'Incorrect number of variables');
@@ -219,7 +214,6 @@ suite('Environment Variables Service', () => {
 
 // tslint:disable-next-line:max-func-body-length
 suite('Parsing Environment Variables Files', () => {
-
     test('Custom variables should be parsed from env file', () => {
         // tslint:disable-next-line:no-multiline-string
         const vars = parseEnvFile(`
@@ -312,13 +306,13 @@ VAR4="QR"ST"
         expect(vars).to.have.property('HAM', '5678', 'value is invalid');
         expect(vars).to.have.property('EGGS', '9012', 'value is invalid');
         expect(vars).to.have.property('FOO', '"3456"', 'value is invalid');
-        expect(vars).to.have.property('BAR', '\'7890\'', 'value is invalid');
+        expect(vars).to.have.property('BAR', "'7890'", 'value is invalid');
         expect(vars).to.have.property('BAZ', '"ABCD', 'value is invalid');
         expect(vars).to.have.property('VAR1', '"EFGH', 'value is invalid');
         expect(vars).to.have.property('VAR2', 'IJKL"', 'value is invalid');
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Should the outer marks be left?
-        expect(vars).to.have.property('VAR3', 'MN\'OP', 'value is invalid');
+        expect(vars).to.have.property('VAR3', "MN'OP", 'value is invalid');
         expect(vars).to.have.property('VAR4', 'QR"ST', 'value is invalid');
     });
 
@@ -420,7 +414,8 @@ EGGS=$SPAM \n\
 
     test('Nested substitution is not supported', () => {
         // tslint:disable-next-line:no-multiline-string
-        const vars = parseEnvFile('\
+        const vars = parseEnvFile(
+            '\
 SPAM=EGGS \n\
 EGGS=??? \n\
 HAM1="-- ${${SPAM}} --"\n\
@@ -428,7 +423,8 @@ abcEGGSxyz=!!! \n\
 HAM2="-- ${abc${SPAM}xyz} --"\n\
 HAM3="-- ${${SPAM} --"\n\
 HAM4="-- ${${SPAM}} ${EGGS} --"\n\
-            ');
+            '
+        );
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
         expect(Object.keys(vars!)).lengthOf(7, 'Incorrect number of variables');
@@ -481,7 +477,7 @@ PYTHONPATH=${PYTHONPATH}:${REPO}/bar \n\
         const vars = parseEnvFile('\
 SPAM=1234 \n\
 EGGS=\\${SPAM}/foo:\\${SPAM}/bar \n\
-HAM=\$ ... $$ \n\
+HAM=$ ... $$ \n\
             ');
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
@@ -496,8 +492,8 @@ HAM=\$ ... $$ \n\
         const vars = parseEnvFile('\
 PYTHONPATH=${REPO}/foo:${REPO}/bar \n\
             ', {
-                REPO: '/home/user/git/foobar'
-            });
+            REPO: '/home/user/git/foobar'
+        });
 
         expect(vars).to.not.equal(undefined, 'Variables is undefiend');
         expect(Object.keys(vars!)).lengthOf(1, 'Incorrect number of variables');

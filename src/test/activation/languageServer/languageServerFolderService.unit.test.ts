@@ -33,9 +33,7 @@ suite('Language Server Folder Service', () => {
         setup(() => {
             languageServerPackageService = TypeMoq.Mock.ofType<ILanguageServerPackageService>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            serviceContainer
-                .setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
-                .returns(() => languageServerPackageService.object);
+            serviceContainer.setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService)).returns(() => languageServerPackageService.object);
         });
         teardown(() => {
             sinon.restore();
@@ -73,9 +71,7 @@ suite('Language Server Folder Service', () => {
                 version: new semver.SemVer('1.1.3'),
                 uri: 'nugetUri'
             };
-            languageServerPackageService
-                .setup(l => l.getLatestNugetPackageVersion(resource))
-                .returns(() => Promise.resolve(nugetPackage));
+            languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource)).returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
@@ -91,9 +87,7 @@ suite('Language Server Folder Service', () => {
                 version: new semver.SemVer('1.3.2'),
                 uri: 'nugetUri'
             };
-            languageServerPackageService
-                .setup(l => l.getLatestNugetPackageVersion(resource))
-                .returns(() => Promise.resolve(nugetPackage));
+            languageServerPackageService.setup(l => l.getLatestNugetPackageVersion(resource)).returns(() => Promise.resolve(nugetPackage));
             getCurrentLanguageServerDirectory = sinon.stub(LanguageServerFolderService.prototype, 'getCurrentLanguageServerDirectory');
             getCurrentLanguageServerDirectory.resolves(currentLSDirectory);
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
@@ -115,22 +109,14 @@ suite('Language Server Folder Service', () => {
             lsPackageService = TypeMoq.Mock.ofType<ILanguageServerPackageService>();
             downloadChannelRule = TypeMoq.Mock.ofType<IDownloadChannelRule>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            serviceContainer
-                .setup(s => s.get<IConfigurationService>(IConfigurationService))
-                .returns(() => configurationService.object);
-            serviceContainer
-                .setup(s => s.get<IDownloadChannelRule>(IDownloadChannelRule, 'beta'))
-                .returns(() => downloadChannelRule.object);
-            serviceContainer
-                .setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService))
-                .returns(() => lsPackageService.object);
-            lsPackageService
-                .setup(l => l.getLanguageServerDownloadChannel())
-                .returns(() => 'beta');
+            serviceContainer.setup(s => s.get<IConfigurationService>(IConfigurationService)).returns(() => configurationService.object);
+            serviceContainer.setup(s => s.get<IDownloadChannelRule>(IDownloadChannelRule, 'beta')).returns(() => downloadChannelRule.object);
+            serviceContainer.setup(s => s.get<ILanguageServerPackageService>(ILanguageServerPackageService)).returns(() => lsPackageService.object);
+            lsPackageService.setup(l => l.getLanguageServerDownloadChannel()).returns(() => 'beta');
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
         });
 
-        test(('Returns false if current folder is provided and setting `python.downloadLanguageServer` is set to false'), async () => {
+        test('Returns false if current folder is provided and setting `python.downloadLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: false,
                 autoUpdateLanguageServer: true
@@ -143,7 +129,7 @@ suite('Language Server Folder Service', () => {
             expect(result).to.equal(false, 'Should be false');
         });
 
-        test(('Returns false if current folder is provided and setting `python.autoUpdateLanguageServer` is set to false'), async () => {
+        test('Returns false if current folder is provided and setting `python.autoUpdateLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: true,
                 autoUpdateLanguageServer: false
@@ -156,7 +142,7 @@ suite('Language Server Folder Service', () => {
             expect(result).to.equal(false, 'Should be false');
         });
 
-        test(('Returns whatever the rule to infer LS returns otherwise'), async () => {
+        test('Returns whatever the rule to infer LS returns otherwise', async () => {
             const settings = {
                 downloadLanguageServer: true,
                 autoUpdateLanguageServer: false
@@ -182,16 +168,12 @@ suite('Language Server Folder Service', () => {
             configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
             fs = TypeMoq.Mock.ofType<IFileSystem>();
             serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-            serviceContainer
-                .setup(s => s.get<IConfigurationService>(IConfigurationService))
-                .returns(() => configurationService.object);
-            serviceContainer
-                .setup(s => s.get<IFileSystem>(IFileSystem))
-                .returns(() => fs.object);
+            serviceContainer.setup(s => s.get<IConfigurationService>(IConfigurationService)).returns(() => configurationService.object);
+            serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fs.object);
             languageServerFolderService = new LanguageServerFolderService(serviceContainer.object);
         });
 
-        test(('Returns the expected LS directory if setting `python.downloadLanguageServer` is set to false'), async () => {
+        test('Returns the expected LS directory if setting `python.downloadLanguageServer` is set to false', async () => {
             const settings = {
                 downloadLanguageServer: false
             };
@@ -207,7 +189,7 @@ suite('Language Server Folder Service', () => {
             assert.deepEqual(result, expectedLSDirectory);
         });
 
-        test(('Returns `undefined` if no LS directory exists'), async () => {
+        test('Returns `undefined` if no LS directory exists', async () => {
             const settings = {
                 downloadLanguageServer: true
             };
@@ -216,18 +198,22 @@ suite('Language Server Folder Service', () => {
                 .setup(c => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
-            fs
-                .setup(f => f.getSubDirectories(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(directories));
+            fs.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
             assert.deepEqual(result, undefined);
         });
 
-        test(('Returns the LS directory with highest version if multiple LS directories exists'), async () => {
+        test('Returns the LS directory with highest version if multiple LS directories exists', async () => {
             const settings = {
                 downloadLanguageServer: true
             };
-            const directories = ['path/to/languageServer', 'path/to/languageServer.0.9.3', 'path/to/languageServer.1.0.7', 'path/to/languageServer.1.2.3', 'path/to/languageServer.1.2.3.5'];
+            const directories = [
+                'path/to/languageServer',
+                'path/to/languageServer.0.9.3',
+                'path/to/languageServer.1.0.7',
+                'path/to/languageServer.1.2.3',
+                'path/to/languageServer.1.2.3.5'
+            ];
             const expectedLSDirectory = {
                 path: 'path/to/languageServer.1.2.3',
                 version: semver.parse('1.2.3', true)!
@@ -236,9 +222,7 @@ suite('Language Server Folder Service', () => {
                 .setup(c => c.getSettings())
                 // tslint:disable-next-line: no-any
                 .returns(() => settings as any);
-            fs
-                .setup(f => f.getSubDirectories(TypeMoq.It.isAny()))
-                .returns(() => Promise.resolve(directories));
+            fs.setup(f => f.getSubDirectories(TypeMoq.It.isAny())).returns(() => Promise.resolve(directories));
             const result = await languageServerFolderService.getCurrentLanguageServerDirectory();
             assert.deepEqual(result, expectedLSDirectory);
         });

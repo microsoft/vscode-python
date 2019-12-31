@@ -22,9 +22,7 @@ export class TerminalProvider implements Disposable {
     @swallowExceptions('Failed to initialize terminal provider')
     public async initialize(currentTerminal: Terminal | undefined) {
         const configuration = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-       const pythonSettings = configuration.getSettings(
-           this.activeResourceService.getActiveResource()
-       );
+        const pythonSettings = configuration.getSettings(this.activeResourceService.getActiveResource());
 
         if (pythonSettings.terminal.activateEnvInCurrentTerminal) {
             if (currentTerminal) {

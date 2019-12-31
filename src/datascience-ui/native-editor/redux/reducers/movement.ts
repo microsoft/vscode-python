@@ -47,7 +47,11 @@ export namespace Movement {
         if (index > 0) {
             const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index - 1].cell.id, cursorPos: CursorPos.Bottom } });
             const newVMs = [...newState.cellVMs];
-            newVMs[index] = Helpers.asCellViewModel({ ...newVMs[index], inputBlockText: arg.payload.code, cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } } });
+            newVMs[index] = Helpers.asCellViewModel({
+                ...newVMs[index],
+                inputBlockText: arg.payload.code,
+                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } }
+            });
             return {
                 ...newState,
                 cellVMs: newVMs
@@ -62,7 +66,11 @@ export namespace Movement {
         if (index < arg.prevState.cellVMs.length - 1) {
             const newState = Effects.selectCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[index + 1].cell.id, cursorPos: CursorPos.Top } });
             const newVMs = [...newState.cellVMs];
-            newVMs[index] = Helpers.asCellViewModel({ ...newVMs[index], inputBlockText: arg.payload.code, cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } } });
+            newVMs[index] = Helpers.asCellViewModel({
+                ...newVMs[index],
+                inputBlockText: arg.payload.code,
+                cell: { ...newVMs[index].cell, data: { ...newVMs[index].cell.data, source: arg.payload.code } }
+            });
             return {
                 ...newState,
                 cellVMs: newVMs

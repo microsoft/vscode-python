@@ -10,7 +10,6 @@ import { storeLocStrings } from '../../../react-common/locReactSide';
 import { CommonReducerArg } from './types';
 
 export namespace CommonEffects {
-
     export function notebookDirty<T>(arg: CommonReducerArg<T>): IMainState {
         return {
             ...arg.prevState,
@@ -60,11 +59,11 @@ export namespace CommonEffects {
 
         // We also get this in our response, but computing is more reliable
         // than searching for it.
-        const newBaseTheme = (arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode) ?
-            computedKnownDark ? 'vscode-dark' : 'vscode-light' : arg.prevState.baseTheme;
+        const newBaseTheme =
+            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode ? (computedKnownDark ? 'vscode-dark' : 'vscode-light') : arg.prevState.baseTheme;
 
         let fontSize: number = 14;
-        let fontFamily: string = 'Consolas, \'Courier New\', monospace';
+        let fontFamily: string = "Consolas, 'Courier New', monospace";
         const sizeSetting = '--code-font-size: ';
         const familySetting = '--code-font-family: ';
         const fontSizeIndex = arg.payload.css.indexOf(sizeSetting);

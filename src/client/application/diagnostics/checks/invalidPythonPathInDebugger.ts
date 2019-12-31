@@ -19,39 +19,23 @@ import { BaseDiagnostic, BaseDiagnosticsService } from '../base';
 import { IDiagnosticsCommandFactory } from '../commands/types';
 import { DiagnosticCodes } from '../constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../promptHandler';
-import {
-    DiagnosticScope,
-    IDiagnostic,
-    IDiagnosticCommand,
-    IDiagnosticHandlerService,
-    IInvalidPythonPathInDebuggerService
-} from '../types';
+import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService, IInvalidPythonPathInDebuggerService } from '../types';
 
 const messages = {
-    [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]:
-        Diagnostics.invalidPythonPathInDebuggerSettings(),
-    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]:
-        Diagnostics.invalidPythonPathInDebuggerLaunch()
+    [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic]: Diagnostics.invalidPythonPathInDebuggerSettings(),
+    [DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic]: Diagnostics.invalidPythonPathInDebuggerLaunch()
 };
 
 export class InvalidPythonPathInDebuggerDiagnostic extends BaseDiagnostic {
     constructor(code: DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic | DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, resource: Resource) {
-        super(
-            code,
-            messages[code],
-            DiagnosticSeverity.Error,
-            DiagnosticScope.WorkspaceFolder,
-            resource,
-            'always'
-        );
+        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, 'always');
     }
 }
 
 export const InvalidPythonPathInDebuggerServiceId = 'InvalidPythonPathInDebuggerServiceId';
 
 @injectable()
-export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
-    implements IInvalidPythonPathInDebuggerService {
+export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService implements IInvalidPythonPathInDebuggerService {
     constructor(
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -65,10 +49,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
         protected readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
     ) {
         super(
-            [
-                DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic,
-                DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic
-            ],
+            [DiagnosticCodes.InvalidPythonPathInDebuggerSettingsDiagnostic, DiagnosticCodes.InvalidPythonPathInDebuggerLaunchDiagnostic],
             serviceContainer,
             disposableRegistry,
             true
@@ -141,7 +122,7 @@ export class InvalidPythonPathInDebuggerService extends BaseDiagnosticsService
                 ];
             }
             default: {
-                throw new Error('Invalid diagnostic for \'InvalidPythonPathInDebuggerService\'');
+                throw new Error("Invalid diagnostic for 'InvalidPythonPathInDebuggerService'");
             }
         }
     }

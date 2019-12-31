@@ -14,7 +14,6 @@ import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
 
 export namespace Effects {
-
     export function expandAll(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.settings?.showCellInputCode) {
             const newVMs = arg.prevState.cellVMs.map(c => Creation.alterCellVM({ ...c }, arg.prevState.settings, true, true));
@@ -70,8 +69,7 @@ export namespace Effects {
         // Update our input cell state if the user changed this setting
         let newVMs = arg.prevState.cellVMs;
         if (newSettings.showCellInputCode !== arg.prevState.settings?.showCellInputCode) {
-            newVMs = arg.prevState.cellVMs.map(c => Creation.alterCellVM(
-                c, newSettings, newSettings.showCellInputCode, !newSettings.collapseCellInputCodeByDefault));
+            newVMs = arg.prevState.cellVMs.map(c => Creation.alterCellVM(c, newSettings, newSettings.showCellInputCode, !newSettings.collapseCellInputCodeByDefault));
         }
 
         return {

@@ -28,7 +28,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
         @inject(IApplicationDiagnostics) private readonly appDiagnostics: IApplicationDiagnostics,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService
-    ) { }
+    ) {}
 
     public dispose() {
         while (this.disposables.length > 0) {
@@ -43,10 +43,7 @@ export class ExtensionActivationManager implements IExtensionActivationManager {
     public async activate(): Promise<void> {
         await this.initialize();
         // Activate all activation services together.
-        await Promise.all([
-            Promise.all(this.singleActivationServices.map(item => item.activate())),
-            this.activateWorkspace(this.activeResourceService.getActiveResource())
-        ]);
+        await Promise.all([Promise.all(this.singleActivationServices.map(item => item.activate())), this.activateWorkspace(this.activeResourceService.getActiveResource())]);
         await this.autoSelection.autoSelectInterpreter(undefined);
     }
     @traceDecorators.error('Failed to activate a workspace')

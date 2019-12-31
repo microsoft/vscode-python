@@ -121,7 +121,7 @@ suite('Module Installer', () => {
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             outputChannel
-                .setup(o => o.append((stdout)))
+                .setup(o => o.append(stdout))
                 .returns(() => undefined)
                 .verifiable(TypeMoq.Times.once());
             installer.elevatedInstall(execPath, args);
@@ -158,10 +158,15 @@ suite('Module Installer', () => {
         proxyServers.forEach(proxyServer => {
             [undefined, Uri.file('/users/dev/xyz')].forEach(resource => {
                 // Conda info is relevant only for CondaInstaller.
-                const condaEnvs = installerClass === CondaInstaller ? [
-                    { name: 'My-Env01', path: '' }, { name: '', path: path.join('conda', 'path') },
-                    { name: 'My-Env01 With Spaces', path: '' }, { name: '', path: path.join('conda with spaces', 'path') }
-                ] : [];
+                const condaEnvs =
+                    installerClass === CondaInstaller
+                        ? [
+                              { name: 'My-Env01', path: '' },
+                              { name: '', path: path.join('conda', 'path') },
+                              { name: 'My-Env01 With Spaces', path: '' },
+                              { name: '', path: path.join('conda with spaces', 'path') }
+                          ]
+                        : [];
                 [undefined, ...condaEnvs].forEach(condaEnvInfo => {
                     const testProxySuffix = proxyServer.length === 0 ? 'without proxy info' : 'with proxy info';
                     const testCondaEnv = condaEnvInfo ? (condaEnvInfo.name ? 'without conda name' : 'with conda path') : 'without conda';
@@ -235,7 +240,8 @@ suite('Module Installer', () => {
                         getModuleNamesForTesting().forEach(product => {
                             const moduleName = product.moduleName;
                             async function installModuleAndVerifyCommand(command: string, expectedArgs: string[]) {
-                                terminalService.setup(t => t.sendCommand(TypeMoq.It.isValue(command), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue(undefined)))
+                                terminalService
+                                    .setup(t => t.sendCommand(TypeMoq.It.isValue(command), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue(undefined)))
                                     .returns(() => Promise.resolve())
                                     .verifiable(TypeMoq.Times.once());
 
@@ -327,9 +333,7 @@ suite('Module Installer', () => {
                                         pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
                                         const elevatedInstall = sinon.stub(TestModuleInstaller.prototype, 'elevatedInstall');
                                         elevatedInstall.returns();
-                                        fs
-                                            .setup(f => f.isDirReadonly(path.dirname(pythonPath)))
-                                            .returns(() => Promise.resolve(true));
+                                        fs.setup(f => f.isDirReadonly(path.dirname(pythonPath))).returns(() => Promise.resolve(true));
                                         try {
                                             await installer.installModule(product.name, resource);
                                         } catch (ex) {
@@ -345,9 +349,7 @@ suite('Module Installer', () => {
                                         info.setup(t => t.version).returns(() => new SemVer('3.5.0-final'));
                                         setActiveInterpreter(info.object);
                                         pythonSettings.setup(p => p.globalModuleInstallation).returns(() => true);
-                                        fs
-                                            .setup(f => f.isDirReadonly(path.dirname(pythonPath)))
-                                            .returns(() => Promise.resolve(false));
+                                        fs.setup(f => f.isDirReadonly(path.dirname(pythonPath))).returns(() => Promise.resolve(false));
                                         terminalService
                                             .setup(t => t.sendCommand(pythonPath, ['-m', 'executionInfo'], undefined))
                                             .returns(() => Promise.resolve())
@@ -387,10 +389,7 @@ suite('Module Installer', () => {
                                         };
                                         appShell
                                             .setup(a => a.withProgress(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-                                            .callback(
-                                                (expected, _) =>
-                                                    assert.deepEqual(expected, options)
-                                            )
+                                            .callback((expected, _) => assert.deepEqual(expected, options))
                                             .returns(() => Promise.resolve())
                                             .verifiable(TypeMoq.Times.once());
                                         try {

@@ -15,14 +15,7 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JupyterCommands, Telemetry } from '../constants';
-import {
-    IConnection,
-    IJupyterExecution,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerLaunchInfo,
-    INotebookServerOptions
-} from '../types';
+import { IConnection, IJupyterExecution, IJupyterSessionManagerFactory, INotebookServer, INotebookServerLaunchInfo, INotebookServerOptions } from '../types';
 import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
@@ -33,7 +26,6 @@ import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector'
 import { NotebookStarter } from './notebookStarter';
 
 export class JupyterExecutionBase implements IJupyterExecution {
-
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private disposed: boolean = false;
@@ -175,7 +167,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 // Keep retrying, until it works or user cancels.
                                 // Sometimes if a bad kernel is selected, starting a session can fail.
                                 // In such cases we need to let the user know about this and prompt them to select another kernel.
-                                const message = localize.DataScience.sessionStartFailedWithKernel().format(launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name || '', Commands.ViewJupyterOutput);
+                                const message = localize.DataScience.sessionStartFailedWithKernel().format(
+                                    launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name || '',
+                                    Commands.ViewJupyterOutput
+                                );
                                 const selectKernel = localize.DataScience.selectDifferentKernel();
                                 const cancel = localize.Common.cancel();
                                 const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
@@ -330,7 +325,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         return undefined;
-    }
+    };
 
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
@@ -349,5 +344,5 @@ export class JupyterExecutionBase implements IJupyterExecution {
             this.logger.logWarning(err);
             return false;
         }
-    }
+    };
 }

@@ -368,7 +368,6 @@ export interface IApplicationShell {
 export const ICommandManager = Symbol('ICommandManager');
 
 export interface ICommandManager {
-
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
      * a menu item, an action, or directly.
@@ -381,7 +380,11 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, callback: (...args: U) => any, thisArg?: any): Disposable;
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        callback: (...args: U) => any,
+        thisArg?: any
+    ): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -584,7 +587,6 @@ export interface IDocumentManager {
      * @return A new decoration type instance.
      */
     createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType;
-
 }
 
 export const IWorkspaceService = Symbol('IWorkspaceService');

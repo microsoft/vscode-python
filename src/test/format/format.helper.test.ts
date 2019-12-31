@@ -49,11 +49,10 @@ suite('Formatting - Helper', () => {
 
         [Product.autopep8, Product.black, Product.yapf].forEach(formatter => {
             const names = formatHelper.getSettingsPropertyNames(formatter);
-            const args: string[] = Array.isArray(settings.formatting[names.argsName]) ? settings.formatting[names.argsName] as string[] : [];
+            const args: string[] = Array.isArray(settings.formatting[names.argsName]) ? (settings.formatting[names.argsName] as string[]) : [];
             const expectedArgs = args.concat(customArgs).join(',');
 
             assert.equal(expectedArgs.endsWith(customArgs.join(',')), true, `Incorrect custom arguments for product ${formatHelper.translateToId(formatter)}`);
-
         });
     });
 

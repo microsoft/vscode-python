@@ -31,12 +31,7 @@ import { IConfigurationService, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import {
-    ILanguageServerActivator,
-    ILanguageServerDownloader,
-    ILanguageServerFolderService,
-    ILanguageServerManager
-} from '../types';
+import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -55,13 +50,11 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) { }
+    ) {}
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
         if (!resource) {
-            resource = this.workspace.hasWorkspaceFolders
-                ? this.workspace.workspaceFolders![0].uri
-                : undefined;
+            resource = this.workspace.hasWorkspaceFolders ? this.workspace.workspaceFolders![0].uri : undefined;
         }
         this.resource = resource;
         await this.ensureLanguageServerIsAvailable(resource);
@@ -91,8 +84,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         if (await this.fs.fileExists(targetJsonFile)) {
             try {
                 content = JSON.parse(await this.fs.readFile(targetJsonFile));
-                if (content.runtimeOptions && content.runtimeOptions.configProperties &&
-                    content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
+                if (content.runtimeOptions && content.runtimeOptions.configProperties && content.runtimeOptions.configProperties['System.Globalization.Invariant'] === true) {
                     return;
                 }
             } catch {
@@ -116,16 +108,17 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
     public handleOpen(document: TextDocument): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type,
-                languageClient.code2ProtocolConverter.asOpenTextDocumentParams(document));
+            languageClient.sendNotification(vscodeLanguageClient.DidOpenTextDocumentNotification.type, languageClient.code2ProtocolConverter.asOpenTextDocumentParams(document));
         }
     }
 
     public handleChanges(document: TextDocument, changes: TextDocumentContentChangeEvent[]): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            languageClient.sendNotification(vscodeLanguageClient.DidChangeTextDocumentNotification.type,
-                languageClient.code2ProtocolConverter.asChangeTextDocumentParams({ document, contentChanges: changes }));
+            languageClient.sendNotification(
+                vscodeLanguageClient.DidChangeTextDocumentNotification.type,
+                languageClient.code2ProtocolConverter.asChangeTextDocumentParams({ document, contentChanges: changes })
+            );
         }
     }
 
@@ -145,7 +138,12 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         return this.handleProvideReferences(document, position, context, token);
     }
 
-    public provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
+    public provideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        context: CompletionContext
+    ): ProviderResult<CompletionItem[] | CompletionList> {
         return this.handleProvideCompletionItems(document, position, token, context);
     }
 
@@ -164,9 +162,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
     public clearAnalysisCache(): void {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
-            languageClient.sendRequest('python/clearAnalysisCache').then(noop, ex =>
-                traceError('Request python/clearAnalysisCache failed', ex)
-            );
+            languageClient.sendRequest('python/clearAnalysisCache').then(noop, ex => traceError('Request python/clearAnalysisCache failed', ex));
         }
     }
 
@@ -185,11 +181,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
                 position: languageClient.code2ProtocolConverter.asPosition(position),
                 newName
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.RenameRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.RenameRequest.type, args, token);
             if (result) {
                 return languageClient.protocol2CodeConverter.asWorkspaceEdit(result);
             }
@@ -203,11 +195,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 position: languageClient.code2ProtocolConverter.asPosition(position)
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.DefinitionRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.DefinitionRequest.type, args, token);
             if (result) {
                 return languageClient.protocol2CodeConverter.asDefinitionResult(result);
             }
@@ -221,11 +209,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 position: languageClient.code2ProtocolConverter.asPosition(position)
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.HoverRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.HoverRequest.type, args, token);
             if (result) {
                 return languageClient.protocol2CodeConverter.asHover(result);
             }
@@ -240,11 +224,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
                 position: languageClient.code2ProtocolConverter.asPosition(position),
                 context
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.ReferencesRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.ReferencesRequest.type, args, token);
             if (result) {
                 // Remove undefined part.
                 return result.map(l => {
@@ -261,26 +241,23 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
             const args: vscodeLanguageClient.CodeLensParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document)
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.CodeLensRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.CodeLensRequest.type, args, token);
             if (result) {
                 return languageClient.protocol2CodeConverter.asCodeLenses(result);
             }
         }
     }
 
-    private async handleProvideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext): Promise<CompletionItem[] | CompletionList | undefined> {
+    private async handleProvideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        context: CompletionContext
+    ): Promise<CompletionItem[] | CompletionList | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args = languageClient.code2ProtocolConverter.asCompletionParams(document, position, context);
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.CompletionRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.CompletionRequest.type, args, token);
             if (result) {
                 return languageClient.protocol2CodeConverter.asCompletionResult(result);
             }
@@ -293,11 +270,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
             const args: vscodeLanguageClient.DocumentSymbolParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document)
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.DocumentSymbolRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.DocumentSymbolRequest.type, args, token);
             if (result && result.length) {
                 // tslint:disable-next-line: no-any
                 if ((result[0] as any).range) {
@@ -313,18 +286,19 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         }
     }
 
-    private async handleProvideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, _context: SignatureHelpContext): Promise<SignatureHelp | undefined> {
+    private async handleProvideSignatureHelp(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        _context: SignatureHelpContext
+    ): Promise<SignatureHelp | undefined> {
         const languageClient = this.getLanguageClient();
         if (languageClient) {
             const args: vscodeLanguageClient.TextDocumentPositionParams = {
                 textDocument: languageClient.code2ProtocolConverter.asTextDocumentIdentifier(document),
                 position: languageClient.code2ProtocolConverter.asPosition(position)
             };
-            const result = await languageClient.sendRequest(
-                vscodeLanguageClient.SignatureHelpRequest.type,
-                args,
-                token
-            );
+            const result = await languageClient.sendRequest(vscodeLanguageClient.SignatureHelpRequest.type, args, token);
             if (result) {
                 return languageClient.protocol2CodeConverter.asSignatureHelp(result);
             }

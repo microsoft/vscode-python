@@ -11,10 +11,7 @@ import { IPythonToolExecutionService } from '../common/process/types';
 import { ExecutionInfo, IConfigurationService, ILogger, IPythonSettings, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { ErrorHandler } from './errorHandlers/errorHandler';
-import {
-    ILinter, ILinterInfo, ILinterManager, ILintMessage,
-    LinterId, LintMessageSeverity
-} from './types';
+import { ILinter, ILinterInfo, ILinterManager, ILintMessage, LinterId, LintMessageSeverity } from './types';
 
 // tslint:disable-next-line:no-require-imports no-var-requires no-any
 const namedRegexp = require('named-js-regexp');
@@ -40,12 +37,7 @@ export function matchNamedRegEx(data: string, regex: string): IRegexGroup | unde
     return undefined;
 }
 
-export function parseLine(
-    line: string,
-    regex: string,
-    linterID: LinterId,
-    colOffset: number = 0
-): ILintMessage | undefined {
+export function parseLine(line: string, regex: string, linterID: LinterId, colOffset: number = 0): ILintMessage | undefined {
     const match = matchNamedRegEx(line, regex)!;
     if (!match) {
         return;
@@ -78,10 +70,12 @@ export abstract class BaseLinter implements ILinter {
         return this._pythonSettings;
     }
 
-    constructor(product: Product,
+    constructor(
+        product: Product,
         protected readonly outputChannel: vscode.OutputChannel,
         protected readonly serviceContainer: IServiceContainer,
-        protected readonly columnOffset = 0) {
+        protected readonly columnOffset = 0
+    ) {
         this._info = serviceContainer.get<ILinterManager>(ILinterManager).getLinterInfo(product);
         this.errorHandler = new ErrorHandler(this.info.product, outputChannel, serviceContainer);
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -99,7 +93,7 @@ export abstract class BaseLinter implements ILinter {
 
     protected getWorkspaceRootPath(document: vscode.TextDocument): string {
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-        const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
+        const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         return typeof workspaceRootPath === 'string' ? workspaceRootPath : path.dirname(document.uri.fsPath);
     }
     protected get logger(): ILogger {
@@ -123,7 +117,7 @@ export abstract class BaseLinter implements ILinter {
                 default: {
                     if (LintMessageSeverity[severityName]) {
                         // tslint:disable-next-line:no-any
-                        return <LintMessageSeverity><any>LintMessageSeverity[severityName];
+                        return <LintMessageSeverity>(<any>LintMessageSeverity[severityName]);
                     }
                 }
             }
@@ -155,10 +149,10 @@ export abstract class BaseLinter implements ILinter {
 
     protected async handleError(error: Error, resource: vscode.Uri, execInfo: ExecutionInfo) {
         if (isTestExecution()) {
-            this.errorHandler.handleError(error, resource, execInfo)
-                .ignoreErrors();
+            this.errorHandler.handleError(error, resource, execInfo).ignoreErrors();
         } else {
-            this.errorHandler.handleError(error, resource, execInfo)
+            this.errorHandler
+                .handleError(error, resource, execInfo)
                 .catch(this.logger.logError.bind(this, 'Error in errorHandler.handleError'))
                 .ignoreErrors();
         }

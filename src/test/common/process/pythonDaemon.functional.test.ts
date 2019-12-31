@@ -42,8 +42,8 @@ suite('Daemon', () => {
                 .trim();
         }
     });
-    setup(async function () {
-        if (isPythonVersion('2.7')){
+    setup(async function() {
+        if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
@@ -117,9 +117,9 @@ suite('Daemon', () => {
         await assert.eventually.equal(pythonDaemon.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
 
-    test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
-    test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
-    test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'pip' module is installed", async () => testModuleInstalled('pip', true));
+    test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
+    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`
@@ -239,7 +239,10 @@ suite('Daemon', () => {
         await new Promise((resolve, reject) => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
         });
-        assert.deepEqual(outputsReceived.filter(item => item.length > 0), ['0', '1', '2', '3', '4']);
+        assert.deepEqual(
+            outputsReceived.filter(item => item.length > 0),
+            ['0', '1', '2', '3', '4']
+        );
     }).timeout(10_000);
 
     test('Execute a file and throw exception if stderr is not empty', async () => {

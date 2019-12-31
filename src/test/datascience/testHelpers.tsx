@@ -67,8 +67,8 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
 // tslint:disable-next-line: unified-signatures
 export function waitForMessage(ioc: DataScienceIocContainer, message: string, timeoutMs?: number): Promise<void>;
 export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: number | WaitForMessageOptions): Promise<void> {
-    const timeoutMs = !options ? 65_000 : (typeof options === 'number' ? 65_000 : (options.timeoutMs ?? 65_000));
-    const numberOfTimes = !options ? 1 : (typeof options === 'number' ? 1 : (options.numberOfTimes ?? 1));
+    const timeoutMs = !options ? 65_000 : typeof options === 'number' ? 65_000 : options.timeoutMs ?? 65_000;
+    const numberOfTimes = !options ? 1 : typeof options === 'number' ? 1 : options.numberOfTimes ?? 1;
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
     let handler: (m: string, p: any) => void;
@@ -81,7 +81,7 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
     handler = (m: string, _p: any) => {
         if (m === message) {
             timesMessageReceived += 1;
-            if (timesMessageReceived < numberOfTimes){
+            if (timesMessageReceived < numberOfTimes) {
                 return;
             }
             ioc.removeMessageListener(handler);
@@ -120,10 +120,8 @@ async function testInnerLoop(
 
 export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
-    test(`${name} (interactive)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
-    test(`${name} (native)`, async () =>
-        testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
+    test(`${name} (interactive)`, async () => testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+    test(`${name} (native)`, async () => testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
 }
 
 export function mountWebView(ioc: DataScienceIocContainer, type: 'native' | 'interactive'): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -166,9 +164,13 @@ export function addContinuousMockData(ioc: DataScienceIocContainer, code: string
     }
 }
 
-export function getOutputCell(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, cellIndex: number | CellPosition): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
+export function getOutputCell(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    cellType: string,
+    cellIndex: number | CellPosition
+): ReactWrapper<any, Readonly<{}>, React.Component> | undefined {
     const foundResult = wrapper.find(cellType);
-    let targetCell: ReactWrapper | undefined ;
+    let targetCell: ReactWrapper | undefined;
     // Get the correct result that we are dealing with
     if (typeof cellIndex === 'number') {
         if (cellIndex >= 0 && cellIndex <= foundResult.length - 1) {
@@ -206,7 +208,7 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     wrapper.update();
 
     const foundResult = wrapper.find(cellType);
-    assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+    assert.ok(foundResult.length >= 1, "Didn't find any cells being rendered");
 
     let targetCell: ReactWrapper;
     // Get the correct result that we are dealing with
@@ -232,7 +234,7 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     }
 
     // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
-    assert.ok(targetCell!, 'Target cell doesn\'t exist');
+    assert.ok(targetCell!, "Target cell doesn't exist");
 
     // If html is specified, check it
     const output = targetCell!.find('div.cell-output');
@@ -331,7 +333,7 @@ function verifyCell(
 ) {
     wrapper.update();
     const foundResult = wrapper.find(cellType);
-    assert.ok(foundResult.length >= 1, 'Didn\'t find any cells being rendered');
+    assert.ok(foundResult.length >= 1, "Didn't find any cells being rendered");
 
     let targetCell: ReactWrapper;
     // Get the correct result that we are dealing with
@@ -357,7 +359,7 @@ function verifyCell(
     }
 
     // ! is ok here to get rid of undefined type check as we want a fail here if we have not initialized targetCell
-    assert.ok(targetCell!, 'Target cell doesn\'t exist');
+    assert.ok(targetCell!, "Target cell doesn't exist");
 
     if (options.shouldNotExist) {
         assert.ok(targetCell!.find(options.selector).length === 0, `Found cells with the matching selector '${options.selector}'`);
@@ -368,7 +370,7 @@ function verifyCell(
 
 export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string, state: CellInputState) {
     const lastCell = getLastOutputCell(wrapper, cellType);
-    assert.ok(lastCell, 'Last cell doesn\'t exist');
+    assert.ok(lastCell, "Last cell doesn't exist");
 
     const inputBlock = lastCell.find('div.cell-input');
     const toggleButton = lastCell.find('polygon.collapse-input-svg');
@@ -549,7 +551,7 @@ export async function enterInput(
     code: string,
     resultClass: string
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    const editor = (resultClass === 'InteractiveCell') ? getInteractiveEditor(wrapper) : getNativeFocusedEditor(wrapper);
+    const editor = resultClass === 'InteractiveCell' ? getInteractiveEditor(wrapper) : getNativeFocusedEditor(wrapper);
 
     // First we have to type the code into the input box
     const textArea = typeCode(editor, code);
@@ -587,7 +589,7 @@ export function getMainPanel<P>(wrapper: ReactWrapper<any, Readonly<{}>>, mainCl
 export function toggleCellExpansion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, cellType: string) {
     // Find the last cell added
     const lastCell = getLastOutputCell(wrapper, cellType);
-    assert.ok(lastCell, 'Last call doesn\'t exist');
+    assert.ok(lastCell, "Last call doesn't exist");
 
     const toggleButton = lastCell.find('button.collapse-input');
     assert.ok(toggleButton);
@@ -612,6 +614,7 @@ export function mountConnectedMainPanel(type: 'native' | 'interactive') {
     // Mount this with a react redux provider
     return mount(
         <Provider store={store}>
-            <ConnectedMainPanel/>
-        </Provider>);
+            <ConnectedMainPanel />
+        </Provider>
+    );
 }

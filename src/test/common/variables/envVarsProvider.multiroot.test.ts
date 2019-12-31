@@ -35,7 +35,7 @@ const workspace4PyFile = Uri.file(path.join(workspace4Path.fsPath, 'one.py'));
 suite('Multiroot Environment Variables Provider', () => {
     let ioc: UnitTestIocContainer;
     const pathVariableName = IS_WINDOWS ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
-    suiteSetup(async function () {
+    suiteSetup(async function() {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
@@ -74,8 +74,7 @@ suite('Multiroot Environment Variables Provider', () => {
         ioc.serviceManager.addSingletonInstance(IInterpreterAutoSelectionService, new MockAutoSelectionService());
         const cfgService = new ConfigurationService(ioc.serviceContainer);
         const workspaceService = new WorkspaceService();
-        return new EnvironmentVariablesProvider(variablesService, disposables,
-            new PlatformService(), workspaceService, cfgService, mockProcess);
+        return new EnvironmentVariablesProvider(variablesService, disposables, new PlatformService(), workspaceService, cfgService, mockProcess);
     }
 
     test('Custom variables should not be undefined without an env file', async () => {
@@ -167,7 +166,7 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property(pathVariableName, processVariables[pathVariableName], 'PATH value is invalid');
     });
 
-    test('PATH from process variables should be included in in variables returned', async function () {
+    test('PATH from process variables should be included in in variables returned', async function() {
         // this test is flaky on windows (likely the value of the path property
         // has incorrect path separator chars). Tracked by GH #4756
         if (isOs(OSType.Windows)) {

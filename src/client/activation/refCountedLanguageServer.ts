@@ -28,12 +28,11 @@ import { ILanguageServerActivator, LanguageServerType } from './types';
 
 export class RefCountedLanguageServer implements ILanguageServerActivator {
     private refCount = 1;
-    constructor(private impl: ILanguageServerActivator, private _type: LanguageServerType, private disposeCallback: () => void) {
-    }
+    constructor(private impl: ILanguageServerActivator, private _type: LanguageServerType, private disposeCallback: () => void) {}
 
     public increment = () => {
         this.refCount += 1;
-    }
+    };
 
     public get type() {
         return this._type;
@@ -82,7 +81,12 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
     public provideReferences(document: TextDocument, position: Position, context: ReferenceContext, token: CancellationToken): ProviderResult<Location[]> {
         return this.impl.provideReferences(document, position, context, token);
     }
-    public provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
+    public provideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        context: CompletionContext
+    ): ProviderResult<CompletionItem[] | CompletionList> {
         return this.impl.provideCompletionItems(document, position, token, context);
     }
     public provideCodeLenses(document: TextDocument, token: CancellationToken): ProviderResult<CodeLens[]> {
@@ -94,5 +98,4 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
     public provideSignatureHelp(document: TextDocument, position: Position, token: CancellationToken, context: SignatureHelpContext): ProviderResult<SignatureHelp> {
         return this.impl.provideSignatureHelp(document, position, token, context);
     }
-
 }

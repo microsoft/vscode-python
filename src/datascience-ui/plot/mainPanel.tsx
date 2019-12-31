@@ -57,15 +57,22 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
         super(props);
-        const images = !props.skipDefault ?
-            [TestSvg, TestSvg, TestSvg] :
-            [];
+        const images = !props.skipDefault ? [TestSvg, TestSvg, TestSvg] : [];
         const thumbnails = images.map(this.generateThumbnail);
         const sizes = images.map(this.extractSize);
         const values = images.map(_i => undefined);
         const ids = images.map(_i => uuid());
 
-        this.state = { images, thumbnails, sizes, values, ids, tool: 'pan', currentImage: images.length > 0 ? 0 : -1, settings: this.props.testMode ? getDefaultSettings() : undefined };
+        this.state = {
+            images,
+            thumbnails,
+            sizes,
+            values,
+            ids,
+            tool: 'pan',
+            currentImage: images.length > 0 ? 0 : -1,
+            settings: this.props.testMode ? getDefaultSettings() : undefined
+        };
     }
 
     public componentWillMount() {
@@ -90,12 +97,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (this.state.settings) {
             const baseTheme = this.computeBaseTheme();
             return (
-                <div className='main-panel' role='group' ref={this.container}>
+                <div className="main-panel" role="group" ref={this.container}>
                     <StyleInjector
                         expectingDark={this.props.baseTheme !== 'vscode-light'}
                         settings={this.state.settings}
                         darkChanged={this.darkChanged}
-                        postOffice={this.postOffice} />
+                        postOffice={this.postOffice}
+                    />
                     {this.renderToolbar(baseTheme)}
                     {this.renderThumbnails(baseTheme)}
                     {this.renderPlot(baseTheme)}
@@ -104,7 +112,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         } else {
             return null;
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
@@ -126,7 +134,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         }
 
         return false;
-    }
+    };
 
     private initializeLoc(content: string) {
         const locJSON = JSON.parse(content);
@@ -145,13 +153,11 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // update our base theme if allowed. Don't do this
         // during testing as it will mess up the expected render count.
         if (!this.props.testMode) {
-            this.setState(
-                {
-                    forceDark: newDark
-                }
-            );
+            this.setState({
+                forceDark: newDark
+            });
         }
-    }
+    };
 
     private computeBaseTheme(): string {
         // If we're ignoring, always light
@@ -221,7 +227,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                     break;
             }
         }
-    }
+    };
 
     private addPlot(payload: any) {
         this.setState({
@@ -236,7 +242,12 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private renderThumbnails(_baseTheme: string) {
         return (
-            <SvgList images={this.state.thumbnails} currentImage={this.state.currentImage} imageClicked={this.imageClicked} themeMatplotlibBackground={this.state.settings?.themeMatplotlibPlots ? true : false} />
+            <SvgList
+                images={this.state.thumbnails}
+                currentImage={this.state.currentImage}
+                imageClicked={this.imageClicked}
+                themeMatplotlibBackground={this.state.settings?.themeMatplotlibPlots ? true : false}
+            />
         );
     }
 
@@ -252,7 +263,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 copyButtonClicked={this.copyCurrent}
                 prevButtonClicked={prev}
                 nextButtonClicked={next}
-                deleteButtonClicked={deleteClickHandler} />
+                deleteButtonClicked={deleteClickHandler}
+            />
         );
     }
     private renderPlot(baseTheme: string) {
@@ -283,17 +295,17 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private generateThumbnail(image: string): string {
         // A 'thumbnail' is really just an svg image with
         // the width and height forced to 100%
-        const h = image.replace(RegExpValues.SvgHeightRegex, '$1100%\"');
-        return h.replace(RegExpValues.SvgWidthRegex, '$1100%\"');
+        const h = image.replace(RegExpValues.SvgHeightRegex, '$1100%"');
+        return h.replace(RegExpValues.SvgWidthRegex, '$1100%"');
     }
 
     private changeCurrentValue = (value: Value) => {
         this.currentValue = { ...value };
-    }
+    };
 
     private changeTool = (tool: Tool) => {
         this.setState({ tool });
-    }
+    };
 
     private extractSize(image: string): ISize {
         let height = '100px';
@@ -339,7 +351,7 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
 
     private imageClicked = (index: number) => {
         this.changeCurrentImage(index);
-    }
+    };
 
     private sendMessage<M extends IPlotViewerMapping, T extends keyof M>(type: T, payload?: M[T]) {
         this.postOffice.sendMessage<M, T>(type, payload);
@@ -377,19 +389,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 }
             }
         }
-    }
+    };
 
     private copyCurrent = async () => {
         // Not supported at the moment.
-    }
+    };
 
     private prevClicked = () => {
         this.changeCurrentImage(this.state.currentImage - 1);
-    }
+    };
 
     private nextClicked = () => {
         this.changeCurrentImage(this.state.currentImage + 1);
-    }
+    };
 
     private deleteClicked = () => {
         if (this.state.currentImage >= 0) {
@@ -407,5 +419,5 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
             // Tell the other side too as we don't want it sending this image again
             this.sendMessage(PlotViewerMessages.RemovePlot, oldCurrent);
         }
-    }
+    };
 }

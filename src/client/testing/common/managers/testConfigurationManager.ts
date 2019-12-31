@@ -13,11 +13,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     protected readonly outputChannel: OutputChannel;
     protected readonly installer: IInstaller;
     protected readonly testConfigSettingsService: ITestConfigSettingsService;
-    constructor(protected workspace: Uri,
-        protected product: UnitTestProduct,
-        protected readonly serviceContainer: IServiceContainer,
-        cfg?: ITestConfigSettingsService
-    ) {
+    constructor(protected workspace: Uri, protected product: UnitTestProduct, protected readonly serviceContainer: IServiceContainer, cfg?: ITestConfigSettingsService) {
         this.outputChannel = serviceContainer.get<OutputChannel>(IOutputChannel, TEST_OUTPUT_CHANNEL);
         this.installer = serviceContainer.get<IInstaller>(IInstaller);
         this.testConfigSettingsService = cfg ? cfg : serviceContainer.get<ITestConfigSettingsService>(ITestConfigSettingsService);
@@ -26,9 +22,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
     public abstract requiresUserToConfigure(wkspace: Uri): Promise<boolean>;
     public async enable() {
         // Disable other test frameworks.
-        await Promise.all(UNIT_TEST_PRODUCTS
-            .filter(prod => prod !== this.product)
-            .map(prod => this.testConfigSettingsService.disable(this.workspace, prod)));
+        await Promise.all(UNIT_TEST_PRODUCTS.filter(prod => prod !== this.product).map(prod => this.testConfigSettingsService.disable(this.workspace, prod)));
         await this.testConfigSettingsService.enable(this.workspace, this.product);
     }
     // tslint:disable-next-line:no-any
@@ -62,7 +56,7 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         appShell.showQuickPick(items, options).then(item => {
             if (!item) {
-                this.handleCancelled();  // This will throw an exception.
+                this.handleCancelled(); // This will throw an exception.
                 return;
             }
 
@@ -80,18 +74,18 @@ export abstract class TestConfigurationManager implements ITestConfigurationMana
             placeHolder: 'Select the pattern to identify test files'
         };
         const items: QuickPickItem[] = [
-            { label: '*test.py', description: 'Python Files ending with \'test\'' },
-            { label: '*_test.py', description: 'Python Files ending with \'_test\'' },
-            { label: 'test*.py', description: 'Python Files beginning with \'test\'' },
-            { label: 'test_*.py', description: 'Python Files beginning with \'test_\'' },
-            { label: '*test*.py', description: 'Python Files containing the word \'test\'' }
+            { label: '*test.py', description: "Python Files ending with 'test'" },
+            { label: '*_test.py', description: "Python Files ending with '_test'" },
+            { label: 'test*.py', description: "Python Files beginning with 'test'" },
+            { label: 'test_*.py', description: "Python Files beginning with 'test_'" },
+            { label: '*test*.py', description: "Python Files containing the word 'test'" }
         ];
 
         const def = createDeferred<string>();
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         appShell.showQuickPick(items, options).then(item => {
             if (!item) {
-                this.handleCancelled();  // This will throw an exception.
+                this.handleCancelled(); // This will throw an exception.
                 return;
             }
 

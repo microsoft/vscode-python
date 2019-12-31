@@ -7,18 +7,11 @@ import { Event, EventEmitter, Uri } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../client/common/types';
-import {
-    InteractiveWindowMessageListener
-} from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
+import { InteractiveWindowMessageListener } from '../../client/datascience/interactive-common/interactiveWindowMessageListener';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
-import {
-    IDataScienceErrorHandler,
-    INotebookEditor,
-    INotebookEditorProvider,
-    INotebookServerOptions
-} from '../../client/datascience/types';
+import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INotebookServerOptions } from '../../client/datascience/types';
 import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
@@ -49,7 +42,8 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
             fileSystem,
             documentManager,
             cmdManager,
-            dataScienceErrorHandler);
+            dataScienceErrorHandler
+        );
         this.realProvider.onDidOpenNotebookEditor(e => this._onDidOpenNotebookEditor.fire(e));
     }
 
@@ -67,7 +61,7 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
         // tslint:disable-next-line: no-any
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
+        const listener = (result as any).messageListener as InteractiveWindowMessageListener;
         listener.onMessage(InteractiveWindowMessages.Started, {});
 
         // Also need the css request so that other messages can go through
@@ -86,7 +80,7 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         // During testing the MainPanel sends the init message before our interactive window is created.
         // Pretend like it's happening now
         // tslint:disable-next-line: no-any
-        const listener = ((result as any).messageListener) as InteractiveWindowMessageListener;
+        const listener = (result as any).messageListener as InteractiveWindowMessageListener;
         listener.onMessage(InteractiveWindowMessages.Started, {});
 
         // Also need the css request so that other messages can go through

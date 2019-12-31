@@ -1,4 +1,3 @@
-
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
@@ -68,13 +67,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     private enteredHover: boolean = false;
     private lastOffsetLeft: number | undefined;
     private lastOffsetTop: number | undefined;
-    private debouncedUpdateEditorSize : () => void | undefined;
-    private styleObserver : MutationObserver | undefined;
+    private debouncedUpdateEditorSize: () => void | undefined;
+    private styleObserver: MutationObserver | undefined;
     private watchingMargin: boolean = false;
     private throttledUpdateWidgetPosition = throttle(this.updateWidgetPosition.bind(this), 100);
     private throttledScrollCurrentPosition = throttle(this.scrollToCurrentPosition.bind(this), 100);
-    private monacoContainer : HTMLDivElement | undefined;
-    private lineTops: {top: number; index: number}[] = [];
+    private monacoContainer: HTMLDivElement | undefined;
+    private lineTops: { top: number; index: number }[] = [];
     private debouncedComputeLineTops = debounce(this.computeLineTops.bind(this), 100);
 
     /**
@@ -116,12 +115,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             this.monacoContainer.setAttribute('class', 'monaco-editor-container');
 
             // Create the editor
-            const editor = monacoEditor.editor.create(this.monacoContainer,
-                {
-                    value: this.props.value,
-                    language: this.props.language,
-                    ...this.props.options
-                });
+            const editor = monacoEditor.editor.create(this.monacoContainer, {
+                value: this.props.value,
+                language: this.props.language,
+                ...this.props.options
+            });
 
             // Force the editor to behave like a unix editor as
             // all of our code is assuming that.
@@ -148,62 +146,70 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
             // on each edit recompute height (wait a bit)
             if (model) {
-                this.subscriptions.push(model.onDidChangeContent(() => {
-                    this.windowResized();
-                    if (this.state.editor && this.state.editor.hasWidgetFocus()){
-                        this.hideAllOtherHoverAndParameterWidgets();
-                    }
-                }));
+                this.subscriptions.push(
+                    model.onDidChangeContent(() => {
+                        this.windowResized();
+                        if (this.state.editor && this.state.editor.hasWidgetFocus()) {
+                            this.hideAllOtherHoverAndParameterWidgets();
+                        }
+                    })
+                );
             }
 
             // On layout recompute height
-            this.subscriptions.push(editor.onDidLayoutChange(() => {
-                this.windowResized();
-                // Also recompute our visible line heights
-                this.debouncedComputeLineTops();
-            }));
+            this.subscriptions.push(
+                editor.onDidLayoutChange(() => {
+                    this.windowResized();
+                    // Also recompute our visible line heights
+                    this.debouncedComputeLineTops();
+                })
+            );
 
             // Setup our context menu to show up outside. Autocomplete doesn't have this problem so it just works
-            this.subscriptions.push(editor.onContextMenu((e) => {
-                if (this.state.editor) {
-                    const domNode = this.state.editor.getDomNode();
-                    const contextMenuElement = domNode ? domNode.querySelector('.monaco-menu-container') as HTMLElement : null;
-                    if (contextMenuElement) {
-                        const posY = (e.event.posy + contextMenuElement.clientHeight) > window.outerHeight
-                            ? e.event.posy - contextMenuElement.clientHeight
-                            : e.event.posy;
-                        const posX = (e.event.posx + contextMenuElement.clientWidth) > window.outerWidth
-                            ? e.event.posx - contextMenuElement.clientWidth
-                            : e.event.posx;
-                        contextMenuElement.style.position = 'fixed';
-                        contextMenuElement.style.top = `${Math.max(0, Math.floor(posY))}px`;
-                        contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
+            this.subscriptions.push(
+                editor.onContextMenu(e => {
+                    if (this.state.editor) {
+                        const domNode = this.state.editor.getDomNode();
+                        const contextMenuElement = domNode ? (domNode.querySelector('.monaco-menu-container') as HTMLElement) : null;
+                        if (contextMenuElement) {
+                            const posY = e.event.posy + contextMenuElement.clientHeight > window.outerHeight ? e.event.posy - contextMenuElement.clientHeight : e.event.posy;
+                            const posX = e.event.posx + contextMenuElement.clientWidth > window.outerWidth ? e.event.posx - contextMenuElement.clientWidth : e.event.posx;
+                            contextMenuElement.style.position = 'fixed';
+                            contextMenuElement.style.top = `${Math.max(0, Math.floor(posY))}px`;
+                            contextMenuElement.style.left = `${Math.max(0, Math.floor(posX))}px`;
+                        }
                     }
-                }
-            }));
+                })
+            );
 
             // When editor loses focus, hide parameter widgets (if any currently displayed).
-            this.subscriptions.push(editor.onDidBlurEditorWidget(() => {
-                this.hideParameterWidget();
-            }));
+            this.subscriptions.push(
+                editor.onDidBlurEditorWidget(() => {
+                    this.hideParameterWidget();
+                })
+            );
 
             // Track focus changes to make sure we update our widget parent and widget position
-            this.subscriptions.push(editor.onDidFocusEditorWidget(() => {
-                this.throttledUpdateWidgetPosition();
-                this.updateWidgetParent(editor);
-                this.hideAllOtherHoverAndParameterWidgets();
+            this.subscriptions.push(
+                editor.onDidFocusEditorWidget(() => {
+                    this.throttledUpdateWidgetPosition();
+                    this.updateWidgetParent(editor);
+                    this.hideAllOtherHoverAndParameterWidgets();
 
-                // Also update our scroll position, but do that after focus is established.
-                // This is necessary so that markdown can switch to edit mode before we
-                // try to scroll to it.
-                setTimeout(() => this.throttledScrollCurrentPosition(editor), 0) ;
-            }));
+                    // Also update our scroll position, but do that after focus is established.
+                    // This is necessary so that markdown can switch to edit mode before we
+                    // try to scroll to it.
+                    setTimeout(() => this.throttledScrollCurrentPosition(editor), 0);
+                })
+            );
 
             // Track cursor changes and make sure line is on the screen
-            this.subscriptions.push(editor.onDidChangeCursorPosition(() => {
-                this.throttledUpdateWidgetPosition();
-                this.throttledScrollCurrentPosition(editor);
-            }));
+            this.subscriptions.push(
+                editor.onDidChangeCursorPosition(() => {
+                    this.throttledUpdateWidgetPosition();
+                    this.throttledScrollCurrentPosition(editor);
+                })
+            );
 
             // Update our margin to include the correct line number style
             this.updateMargin(editor);
@@ -224,13 +230,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // Tell our parent the editor is ready to use
             this.props.editorMounted(editor);
 
-            if (editor){
-                this.subscriptions.push(editor.onMouseMove(() => {
-                    this.hideAllOtherHoverAndParameterWidgets();
-                }));
+            if (editor) {
+                this.subscriptions.push(
+                    editor.onMouseMove(() => {
+                        this.hideAllOtherHoverAndParameterWidgets();
+                    })
+                );
             }
         }
-    }
+    };
 
     public componentWillUnmount = () => {
         if (this.resizeTimer) {
@@ -240,7 +248,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (window) {
             window.removeEventListener('resize', this.windowResized);
         }
-        if (this.parameterWidget){
+        if (this.parameterWidget) {
             this.parameterWidget.removeEventListener('mouseleave', this.outermostParentLeave);
             this.parameterWidget = undefined;
         }
@@ -260,7 +268,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         if (this.styleObserver) {
             this.styleObserver.disconnect();
         }
-    }
+    };
 
     public componentDidUpdate(prevProps: IMonacoEditorProps, prevState: IMonacoEditorState) {
         if (this.state.editor) {
@@ -297,13 +305,13 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     public render() {
         const measureWidthClassName = this.props.measureWidthClassName ? this.props.measureWidthClassName : 'measure-width-div';
         return (
-            <div className='monaco-editor-outer-container' ref={this.containerRef}>
+            <div className="monaco-editor-outer-container" ref={this.containerRef}>
                 <div className={measureWidthClassName} ref={this.measureWidthRef} />
             </div>
         );
     }
 
-    public isSuggesting() : boolean {
+    public isSuggesting(): boolean {
         // This should mean our widgetParent has some height
         if (this.widgetParent && this.widgetParent.firstChild && this.widgetParent.firstChild.childNodes.length >= 2) {
             const htmlFirstChild = this.widgetParent.firstChild as HTMLElement;
@@ -359,10 +367,12 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         const lines = this.getVisibleLines();
 
         // Lines are not sorted by monaco, so we have to sort them by their top value
-        this.lineTops = lines.map((l, i) => {
-            const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
-            return { top: match ? parseInt(match[0], 10) : Infinity, index: i };
-        }).sort((a, b) => a.top - b.top);
+        this.lineTops = lines
+            .map((l, i) => {
+                const match = l.style.top ? /(.+)px/.exec(l.style.top) : null;
+                return { top: match ? parseInt(match[0], 10) : Infinity, index: i };
+            })
+            .sort((a, b) => a.top - b.top);
         return this.lineTops;
     }
 
@@ -403,11 +413,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             clearTimeout(this.resizeTimer);
         }
         this.resizeTimer = window.setTimeout(this.updateEditorSize.bind(this), 0);
-    }
+    };
 
     private startUpdateWidgetPosition = () => {
         this.throttledUpdateWidgetPosition();
-    }
+    };
 
     private updateBackgroundStyle = () => {
         if (this.state.editor && this.containerRef.current) {
@@ -426,7 +436,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 }
             }
         }
-    }
+    };
 
     private updateWidgetPosition(width?: number) {
         if (this.state.editor && this.widgetParent) {
@@ -434,14 +444,11 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             const editorDomNode = this.state.editor.getDomNode();
             if (editorDomNode) {
                 const rect = editorDomNode.getBoundingClientRect();
-                if (rect &&
-                    (rect.left !== this.lastOffsetLeft || rect.top !== this.lastOffsetTop)) {
+                if (rect && (rect.left !== this.lastOffsetLeft || rect.top !== this.lastOffsetTop)) {
                     this.lastOffsetLeft = rect.left;
                     this.lastOffsetTop = rect.top;
 
-                    this.widgetParent.setAttribute(
-                        'style',
-                        `position: absolute; left: ${rect.left}px; top: ${rect.top}px; width:${width ? width : rect.width}px`);
+                    this.widgetParent.setAttribute('style', `position: absolute; left: ${rect.left}px; top: ${rect.top}px; width:${width ? width : rect.width}px`);
                 }
             }
         } else {
@@ -452,22 +459,25 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
     }
 
     private updateEditorSize() {
-        if (this.measureWidthRef.current &&
+        if (
+            this.measureWidthRef.current &&
             this.containerRef.current &&
             this.containerRef.current.parentElement &&
             this.containerRef.current.parentElement.parentElement &&
             this.state.editor &&
-            this.state.model) {
+            this.state.model
+        ) {
             const editorDomNode = this.state.editor.getDomNode();
-            if (!editorDomNode) { return; }
+            if (!editorDomNode) {
+                return;
+            }
             const grandParent = this.containerRef.current.parentElement.parentElement;
             const container = editorDomNode.getElementsByClassName('view-lines')[0] as HTMLElement;
             const currLineCount = Math.max(container.childElementCount, this.state.model.getLineCount());
-            const lineHeightPx = container.firstChild && (container.firstChild as HTMLElement).style.height ?
-                (container.firstChild as HTMLElement).style.height
-                : `${LINE_HEIGHT}px`;
+            const lineHeightPx =
+                container.firstChild && (container.firstChild as HTMLElement).style.height ? (container.firstChild as HTMLElement).style.height : `${LINE_HEIGHT}px`;
             const lineHeight = lineHeightPx && lineHeightPx.endsWith('px') ? parseInt(lineHeightPx.substr(0, lineHeightPx.length - 2), 10) : LINE_HEIGHT;
-            const height = (currLineCount * lineHeight) + 3; // Fudge factor
+            const height = currLineCount * lineHeight + 3; // Fudge factor
             const width = this.measureWidthRef.current.clientWidth - grandParent.offsetLeft - 15; // Leave room for the scroll bar in regular cell table
 
             const layoutInfo = this.state.editor.getLayoutInfo();
@@ -477,8 +487,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                     this.containerRef.current.appendChild(this.monacoContainer);
                     this.monacoContainer.addEventListener('mousemove', this.onContainerMove);
                 }
-                this.setState({visibleLineCount: currLineCount, attached: true});
-                this.state.editor.layout({width, height});
+                this.setState({ visibleLineCount: currLineCount, attached: true });
+                this.state.editor.layout({ width, height });
             }
         }
     }
@@ -492,7 +502,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // Since only doing this once, remove the listener.
             this.monacoContainer.removeEventListener('mousemove', this.onContainerMove);
         }
-    }
+    };
 
     private onHoverLeave = () => {
         // If the hover is active, make sure to hide it.
@@ -504,14 +514,14 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
                 hover._hideWidgets();
             }
         }
-    }
+    };
 
     private onHoverEnter = () => {
         if (this.state.editor && this.widgetParent) {
             // If we enter the hover, indicate it so we don't leave
             this.enteredHover = true;
         }
-    }
+    };
 
     private outermostParentLeave = () => {
         // Have to bounce this because the leave for the cell is the
@@ -520,7 +530,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             clearTimeout(this.leaveTimer);
         }
         this.leaveTimer = window.setTimeout(this.outermostParentLeaveBounced, 0);
-    }
+    };
 
     private outermostParentLeaveBounced = () => {
         if (this.state.editor && !this.enteredHover) {
@@ -530,7 +540,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             // Waiting for 1s is too long to move the mouse and hide the hints (100ms seems like a good fit).
             setTimeout(() => this.hideParameterWidget(), 100);
         }
-    }
+    };
 
     /**
      * This will hide the parameter widget if the user is not hovering over
@@ -546,8 +556,8 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
      * @returns
      * @memberof MonacoEditor
      */
-    private hideParameterWidget(){
-        if (!this.state.editor || !this.state.editor.getDomNode() || !this.widgetParent){
+    private hideParameterWidget() {
+        if (!this.state.editor || !this.state.editor.getDomNode() || !this.widgetParent) {
             return;
         }
         // Find all elements that the user is hovering over.
@@ -555,7 +565,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         const hoverElements: Element[] = Array.prototype.slice.call(document.querySelectorAll(':hover'));
         // Find all parameter widgets related to this monaco editor that are currently displayed.
         const visibleParameterHintsWidgets: Element[] = Array.prototype.slice.call(this.widgetParent.querySelectorAll('.parameter-hints-widget.visible'));
-        if (hoverElements.length === 0 && visibleParameterHintsWidgets.length === 0){
+        if (hoverElements.length === 0 && visibleParameterHintsWidgets.length === 0) {
             // If user is not hovering over anything and there are no visible parameter widgets,
             // then, we have nothing to do but get out of here.
             return;
@@ -566,7 +576,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
 
         // Lets not assume we'll have the exact same DOM for parameter widgets.
         // So, just remove the event handler, and add it again later.
-        if (this.parameterWidget){
+        if (this.parameterWidget) {
             this.parameterWidget.removeEventListener('mouseleave', this.outermostParentLeave);
         }
         // These are the classes that will appear on a parameter widget when they are visible.
@@ -579,7 +589,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             }
             // Check if user is hovering over a parameter widget.
             const classes = item.className.split(' ');
-            if (!parameterWidgetClasses.every(cls => classes.indexOf(cls) >= 0)){
+            if (!parameterWidgetClasses.every(cls => classes.indexOf(cls) >= 0)) {
                 // Not all classes required in a parameter hint widget are in this element.
                 // Hence this is not a parameter widget.
                 return false;
@@ -592,7 +602,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             return knownParameterHintsWidgets.some(widget => widget === item);
         });
 
-        if (this.parameterWidget){
+        if (this.parameterWidget) {
             // We know the user is hovering over the parameter widget for this editor.
             // Hovering could mean the user is scrolling through a large parameter list.
             // We need to add a mouse leave event handler, so as to hide this.
@@ -602,7 +612,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
             setTimeout(() => this.hideParameterWidget(), 1000);
             return;
         }
-        if (visibleParameterHintsWidgets.length === 0){
+        if (visibleParameterHintsWidgets.length === 0) {
             // There are no parameter widgets displayed for this editor.
             // Hence nothing to do.
             return;
@@ -630,10 +640,16 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
      * @param {string[]} selectors
      * @memberof MonacoEditor
      */
-    private hideWidgets(widgetParent: HTMLDivElement, selectors: string[]){
-        for (const selector of selectors){
+    private hideWidgets(widgetParent: HTMLDivElement, selectors: string[]) {
+        for (const selector of selectors) {
             for (const widget of Array.from<HTMLDivElement>(widgetParent.querySelectorAll(selector))) {
-                widget.setAttribute('class', widget.className.split(' ').filter((cls: string) => cls !== 'visible').join(' '));
+                widget.setAttribute(
+                    'class',
+                    widget.className
+                        .split(' ')
+                        .filter((cls: string) => cls !== 'visible')
+                        .join(' ')
+                );
                 if (widget.style.visibility !== 'hidden') {
                     widget.style.visibility = 'hidden';
                 }
@@ -648,15 +664,15 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
      * @returns
      * @memberof MonacoEditor
      */
-    private hideAllOtherHoverAndParameterWidgets(){
+    private hideAllOtherHoverAndParameterWidgets() {
         const root = document.getElementById('root');
-        if (!root || !this.widgetParent){
+        if (!root || !this.widgetParent) {
             return;
         }
         const widgetParents: HTMLDivElement[] = Array.prototype.slice.call(root.querySelectorAll('div.monaco-editor-pretend-parent'));
         widgetParents
-        .filter(widgetParent => widgetParent !== this.widgetParent)
-        .forEach(widgetParent => this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover]));
+            .filter(widgetParent => widgetParent !== this.widgetParent)
+            .forEach(widgetParent => this.hideWidgets(widgetParent, [WidgetCSSSelector.Parameters, WidgetCSSSelector.Hover]));
     }
     private updateMargin(editor: monacoEditor.editor.IStandaloneCodeEditor) {
         const editorNode = editor.getDomNode();
@@ -694,7 +710,7 @@ export class MonacoEditor extends React.Component<IMonacoEditorProps, IMonacoEdi
         // https://developer.mozilla.org/en-US/docs/Web/API/Node/appendChild
         const editorNode = editor ? editor.getDomNode() : undefined;
         if (editor && editorNode && !this.state.widgetsReparented) {
-            this.setState({widgetsReparented: true});
+            this.setState({ widgetsReparented: true });
             try {
                 const elements = editorNode.getElementsByClassName('overflowingContentWidgets');
                 if (elements && elements.length) {

@@ -135,15 +135,30 @@ export abstract class BaseTestManager implements ITestManager {
 
         this.testResultsService.resetResults(this.tests!);
     }
-    public async discoverTests(cmdSource: CommandSource, ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false, clearTestStatus: boolean = false): Promise<Tests> {
+    public async discoverTests(
+        cmdSource: CommandSource,
+        ignoreCache: boolean = false,
+        quietMode: boolean = false,
+        userInitiated: boolean = false,
+        clearTestStatus: boolean = false
+    ): Promise<Tests> {
         if (this.discoverTestsPromise) {
             return this.discoverTestsPromise;
         }
         this.discoverTestsPromise = this._discoverTests(cmdSource, ignoreCache, quietMode, userInitiated, clearTestStatus);
-        this.discoverTestsPromise.catch(noop).then(() => this.discoverTestsPromise = undefined).ignoreErrors();
+        this.discoverTestsPromise
+            .catch(noop)
+            .then(() => (this.discoverTestsPromise = undefined))
+            .ignoreErrors();
         return this.discoverTestsPromise;
     }
-    private async _discoverTests(cmdSource: CommandSource, ignoreCache: boolean = false, quietMode: boolean = false, userInitiated: boolean = false, clearTestStatus: boolean = false): Promise<Tests> {
+    private async _discoverTests(
+        cmdSource: CommandSource,
+        ignoreCache: boolean = false,
+        quietMode: boolean = false,
+        userInitiated: boolean = false,
+        clearTestStatus: boolean = false
+    ): Promise<Tests> {
         if (!ignoreCache && this.tests! && this.tests!.testFunctions.length > 0) {
             this.updateStatus(TestStatus.Idle);
             return Promise.resolve(this.tests!);
@@ -206,9 +221,8 @@ export abstract class BaseTestManager implements ITestManager {
                 if (userInitiated) {
                     this.testsStatusUpdaterService.updateStatusAsUnknown(this.workspaceFolder, this.tests);
                 }
-                if (isNotInstalledError(reason as Error) && !quietMode && !await this.installer.isInstalled(this.product, this.workspaceFolder)) {
-                    this.installer.promptToInstall(this.product, this.workspaceFolder)
-                    .catch(ex => traceError('isNotInstalledError', ex));
+                if (isNotInstalledError(reason as Error) && !quietMode && !(await this.installer.isInstalled(this.product, this.workspaceFolder))) {
+                    this.installer.promptToInstall(this.product, this.workspaceFolder).catch(ex => traceError('isNotInstalledError', ex));
                 }
 
                 this.tests = undefined;

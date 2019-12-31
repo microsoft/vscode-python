@@ -15,8 +15,9 @@ export function lookForTestFile(tests: Tests, testFile: string) {
     if (IS_WINDOWS) {
         // In the mock output, we'd have paths separated using '/' (but on windows, path separators are '\')
         const testFileToSearch = testFile.split(sep).join('/');
-        found = tests.testFiles.some(t => (t.name.toUpperCase() === testFile.toUpperCase() || t.name.toUpperCase() === testFileToSearch.toUpperCase()) &&
-            t.nameToRun.toUpperCase() === t.name.toUpperCase());
+        found = tests.testFiles.some(
+            t => (t.name.toUpperCase() === testFile.toUpperCase() || t.name.toUpperCase() === testFileToSearch.toUpperCase()) && t.nameToRun.toUpperCase() === t.name.toUpperCase()
+        );
     } else {
         found = tests.testFiles.some(t => t.name === testFile && t.nameToRun === t.name);
     }

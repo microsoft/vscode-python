@@ -10,13 +10,11 @@ import { KernelSelector } from './kernels/kernelSelector';
 
 @injectable()
 export class JupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
-
     constructor(
         @inject(IJupyterPasswordConnect) private jupyterPasswordConnect: IJupyterPasswordConnect,
         @inject(IConfigurationService) private config: IConfigurationService,
         @inject(KernelSelector) private kernelSelector: KernelSelector
-    ) {
-    }
+    ) {}
 
     /**
      * Creates a new IJupyterSessionManager.

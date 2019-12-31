@@ -15,7 +15,7 @@ import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from '.
 
 @injectable()
 export class InstallationChannelManager implements IInstallationChannelManager {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public async getInstallationChannel(product: Product, resource?: InterpreterUri): Promise<IModuleInstaller | undefined> {
         const channels = await this.getInstallationChannels(resource);
@@ -83,10 +83,8 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         }
         if (result === search) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-            const osName = platform.isWindows
-                ? 'Windows'
-                : (platform.isMac ? 'MacOS' : 'Linux');
-            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${(interpreter.type === InterpreterType.Conda) ? 'Conda' : ''}`);
+            const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
+            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${interpreter.type === InterpreterType.Conda ? 'Conda' : ''}`);
         }
     }
 }

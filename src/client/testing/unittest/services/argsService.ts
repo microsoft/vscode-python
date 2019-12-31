@@ -7,12 +7,9 @@ import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
-const OptionsWithArguments = ['-k', '-p', '-s', '-t', '--pattern',
-    '--start-directory', '--top-level-directory'];
+const OptionsWithArguments = ['-k', '-p', '-s', '-t', '--pattern', '--start-directory', '--top-level-directory'];
 
-const OptionsWithoutArguments = ['-b', '-c', '-f', '-h', '-q', '-v',
-    '--buffer', '--catch', '--failfast', '--help', '--locals',
-    '--quiet', '--verbose'];
+const OptionsWithoutArguments = ['-b', '-c', '-f', '-h', '-q', '-v', '--buffer', '--catch', '--failfast', '--help', '--locals', '--quiet', '--verbose'];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {

@@ -34,7 +34,7 @@ suite('Terminal Provider', () => {
         try {
             terminalProvider.dispose();
             // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {}
     });
 
     test('Ensure command is registered', () => {
@@ -55,10 +55,12 @@ suite('Terminal Provider', () => {
     test('Ensure terminal is created and displayed when command is invoked', () => {
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Create_Terminal), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         activeResourceService
             .setup(a => a.getActiveResource())
             .returns(() => resource)
@@ -80,7 +82,6 @@ suite('Terminal Provider', () => {
 
     // tslint:disable-next-line: max-func-body-length
     suite('terminal.activateCurrentTerminal setting', () => {
-
         let pythonSettings: TypeMoq.IMock<IPythonSettings>;
         let terminalSettings: TypeMoq.IMock<ITerminalSettings>;
         let configService: TypeMoq.IMock<IConfigurationService>;
@@ -161,15 +162,9 @@ suite('Terminal Provider', () => {
         });
 
         test('Exceptions are swallowed if initializing terminal provider fails', async () => {
-            terminalSettings
-                .setup(t => t.activateEnvInCurrentTerminal)
-                .returns(() => true);
-            configService
-                .setup(c => c.getSettings(resource))
-                .throws(new Error('Kaboom'));
-            activeResourceService
-                .setup(a => a.getActiveResource())
-                .returns(() => resource);
+            terminalSettings.setup(t => t.activateEnvInCurrentTerminal).returns(() => true);
+            configService.setup(c => c.getSettings(resource)).throws(new Error('Kaboom'));
+            activeResourceService.setup(a => a.getActiveResource()).returns(() => resource);
 
             terminalProvider = new TerminalProvider(serviceContainer.object);
             try {

@@ -26,8 +26,8 @@ export class WorkspaceVirtualEnvInterpretersAutoSelectionRule extends BaseRuleSe
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IInterpreterLocatorService) @named(PIPENV_SERVICE) private readonly pipEnvInterpreterLocator: IInterpreterLocatorService,
-        @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService) {
-
+        @inject(IInterpreterLocatorService) @named(WORKSPACE_VIRTUAL_ENV_SERVICE) private readonly workspaceVirtualEnvInterpreterLocator: IInterpreterLocatorService
+    ) {
         super(AutoSelectionRule.workspaceVirtualEnvs, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {

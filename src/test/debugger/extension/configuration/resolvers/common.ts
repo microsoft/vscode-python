@@ -20,22 +20,17 @@ interface IPathModule {
 // The set of information, related to a target OS, that are available
 // to tests.  The target OS is not necessarily the native OS.
 type OSTestInfo = [
-    string,  // os name
+    string, // os name
     OSType,
     IPathModule
 ];
 
 // For each supported OS, provide a set of helpers to use in tests.
 export function getInfoPerOS(): OSTestInfo[] {
-    return getNamesAndValues(OSType)
-        .map(os => {
-            const osType = os.value as OSType;
-            return [
-                os.name,
-                osType,
-                getPathModuleForOS(osType)
-            ];
-        });
+    return getNamesAndValues(OSType).map(os => {
+        const osType = os.value as OSType;
+        return [os.name, osType, getPathModuleForOS(osType)];
+    });
 }
 
 // Decide which "path" module to use.
@@ -47,21 +42,13 @@ function getPathModuleForOS(osType: OSType): IPathModule {
 
     // We are testing a different OS from the native one.
     // So use a "path" module matching the target OS.
-    return osType === OSType.Windows
-        ? path.win32
-        : path.posix;
+    return osType === OSType.Windows ? path.win32 : path.posix;
 }
 
 // Generate the function to use for populating the
 // relevant mocks relative to the target OS.
-export function setUpOSMocks(
-    osType: OSType,
-    platformService: TypeMoq.IMock<IPlatformService>
-) {
-    platformService.setup(p => p.isWindows)
-        .returns(() => osType === OSType.Windows);
-    platformService.setup(p => p.isMac)
-        .returns(() => osType === OSType.OSX);
-    platformService.setup(p => p.isLinux)
-        .returns(() => osType === OSType.Linux);
+export function setUpOSMocks(osType: OSType, platformService: TypeMoq.IMock<IPlatformService>) {
+    platformService.setup(p => p.isWindows).returns(() => osType === OSType.Windows);
+    platformService.setup(p => p.isMac).returns(() => osType === OSType.OSX);
+    platformService.setup(p => p.isLinux).returns(() => osType === OSType.Linux);
 }

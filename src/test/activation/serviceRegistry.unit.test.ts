@@ -9,19 +9,10 @@ import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
 import { LanguageServerAnalysisOptions } from '../../client/activation/languageServer/analysisOptions';
-import {
-    DownloadBetaChannelRule,
-    DownloadDailyChannelRule
-} from '../../client/activation/languageServer/downloadChannelRules';
+import { DownloadBetaChannelRule, DownloadDailyChannelRule } from '../../client/activation/languageServer/downloadChannelRules';
 import { LanguageServerDownloader } from '../../client/activation/languageServer/downloader';
-import {
-    BaseLanguageClientFactory,
-    DownloadedLanguageClientFactory,
-    SimpleLanguageClientFactory
-} from '../../client/activation/languageServer/languageClientFactory';
-import {
-    LanguageServerCompatibilityService
-} from '../../client/activation/languageServer/languageServerCompatibilityService';
+import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from '../../client/activation/languageServer/languageClientFactory';
+import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
 import {
@@ -60,13 +51,7 @@ import {
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService } from '../../client/common/application/types';
 import { INugetRepository } from '../../client/common/nuget/types';
-import {
-    BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    BANNER_NAME_LS_SURVEY,
-    BANNER_NAME_PROPOSE_LS,
-    IPythonExtensionBanner
-} from '../../client/common/types';
+import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../../client/common/types';
 import { DataScienceSurveyBanner } from '../../client/datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../../client/datascience/shiftEnterBanner';
 import { ServiceManager } from '../../client/ioc/serviceManager';

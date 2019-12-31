@@ -49,7 +49,12 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         return this.provideDocumentRangeFormattingEdits(document, undefined, options, token);
     }
 
-    public async provideDocumentRangeFormattingEdits(document: vscode.TextDocument, range: vscode.Range | undefined, options: vscode.FormattingOptions, token: vscode.CancellationToken): Promise<vscode.TextEdit[]> {
+    public async provideDocumentRangeFormattingEdits(
+        document: vscode.TextDocument,
+        range: vscode.Range | undefined,
+        options: vscode.FormattingOptions,
+        token: vscode.CancellationToken
+    ): Promise<vscode.TextEdit[]> {
         // Workaround for https://github.com/Microsoft/vscode/issues/41194
         // VSC rejects 'format on save' promise in 750 ms. Python formatting may take quite a bit longer.
         // Workaround is to resolve promise to nothing here, then execute format document and force new save.
@@ -81,9 +86,7 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         // Don't format inside the event handler, do it on timeout
         setTimeout(() => {
             try {
-                if (this.formatterMadeChanges
-                    && !document.isDirty
-                    && document.version === this.documentVersionBeforeFormatting) {
+                if (this.formatterMadeChanges && !document.isDirty && document.version === this.documentVersionBeforeFormatting) {
                     // Formatter changes were not actually applied due to the timeout on save.
                     // Force formatting now and then save the document.
                     this.commands.executeCommand('editor.action.formatDocument').then(async () => {

@@ -85,13 +85,13 @@ export namespace Creation {
                 const cellVM = result.cellVMs[result.cellVMs.length - 1];
 
                 // We're adding a new cell here. Tell the intellisense engine we have a new cell
-                arg.queueAction(createPostableAction(
-                    InteractiveWindowMessages.AddCell,
-                    {
+                arg.queueAction(
+                    createPostableAction(InteractiveWindowMessages.AddCell, {
                         fullText: extractInputText(cellVM, result.settings),
                         currentText: cellVM.inputBlockText,
                         cell: cellVM.cell
-                    }));
+                    })
+                );
             }
 
             return result;

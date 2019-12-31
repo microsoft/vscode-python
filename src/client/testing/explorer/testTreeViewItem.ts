@@ -26,11 +26,7 @@ function getDefaultCollapsibleState(data: TestDataItem): TreeItemCollapsibleStat
 export class TestTreeItem extends TreeItem {
     public readonly testType: TestDataItemType;
 
-    constructor(
-        public readonly resource: Uri,
-        public readonly data: Readonly<TestDataItem>,
-        collapsibleStatue: TreeItemCollapsibleState = getDefaultCollapsibleState(data)
-    ) {
+    constructor(public readonly resource: Uri, public readonly data: Readonly<TestDataItem>, collapsibleStatue: TreeItemCollapsibleState = getDefaultCollapsibleState(data)) {
         super(data.name, collapsibleStatue);
         this.testType = getTestDataItemType(this.data);
         this.setCommand();

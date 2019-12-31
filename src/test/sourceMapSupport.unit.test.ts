@@ -59,7 +59,9 @@ suite('Source Map Support', () => {
         disposables.forEach(disposable => {
             try {
                 disposable.dispose();
-            } catch { noop(); }
+            } catch {
+                noop();
+            }
         });
     });
     test('Test message is not displayed when source maps are not enabled', async () => {
@@ -72,12 +74,12 @@ suite('Source Map Support', () => {
     });
     test('Test message is displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true);
-        const instance = new class extends SourceMapSupport {
+        const instance = new (class extends SourceMapSupport {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
-        // tslint:disable-next-line: no-any
-        }(stub.vscode as any);
+            // tslint:disable-next-line: no-any
+        })(stub.vscode as any);
         rewiremock.enable();
         const installStub = sinon.stub();
         rewiremock('source-map-support').with({ install: installStub });
@@ -90,12 +92,12 @@ suite('Source Map Support', () => {
     });
     test('Test message is not displayed when source maps are not enabled', async () => {
         const stub = createVSCStub(true, true);
-        const instance = new class extends SourceMapSupport {
+        const instance = new (class extends SourceMapSupport {
             protected async enableSourceMaps(_enable: boolean) {
                 noop();
             }
-        // tslint:disable-next-line: no-any
-        }(stub.vscode as any);
+            // tslint:disable-next-line: no-any
+        })(stub.vscode as any);
 
         await instance.initialize();
         expect(stub.stubInfo.configValueRetrieved).to.be.equal(true, 'Config Value not retrieved');
@@ -105,7 +107,7 @@ suite('Source Map Support', () => {
     async function testRenamingFilesWhenEnablingDisablingSourceMaps(enableSourceMaps: boolean) {
         const stub = createVSCStub(true, true);
         const sourceFilesPassed: string[] = [];
-        const instance = new class extends SourceMapSupport {
+        const instance = new (class extends SourceMapSupport {
             public async enableSourceMaps(enable: boolean) {
                 return super.enableSourceMaps(enable);
             }
@@ -114,8 +116,8 @@ suite('Source Map Support', () => {
                 sourceFilesPassed.push(sourceFile);
                 return Promise.resolve();
             }
-        // tslint:disable-next-line: no-any
-        }(stub.vscode as any);
+            // tslint:disable-next-line: no-any
+        })(stub.vscode as any);
 
         await instance.enableSourceMaps(enableSourceMaps);
         const extensionSourceMap = path.join(EXTENSION_ROOT_DIR, 'out', 'client', 'extension.js');

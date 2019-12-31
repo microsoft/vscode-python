@@ -12,14 +12,10 @@ import { WebPanel } from './webPanel';
 
 @injectable()
 export class WebPanelProvider implements IWebPanelProvider {
-
     private port: number | undefined;
     private token: string | undefined;
 
-    constructor(
-        @inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry,
-        @inject(IFileSystem) private fs: IFileSystem
-    ) { }
+    constructor(@inject(IDisposableRegistry) private disposableRegistry: IDisposableRegistry, @inject(IFileSystem) private fs: IFileSystem) {}
 
     // tslint:disable-next-line:no-any
     public async create(options: IWebPanelOptions): Promise<IWebPanel> {

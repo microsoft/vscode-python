@@ -42,7 +42,7 @@ suite('DataScience Intellisense tests', () => {
     //     asyncDump();
     // });
 
-    function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : string[] {
+    function getIntellisenseTextLines(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): string[] {
         assert.ok(wrapper);
         const editor = getInteractiveEditor(wrapper);
         assert.ok(editor);
@@ -66,7 +66,7 @@ suite('DataScience Intellisense tests', () => {
         assert.ok(innerTexts.includes(expectedSpan), 'Intellisense row not matching');
     }
 
-    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) : { disposable: IDisposable; promise: Promise<void>} {
+    function waitForSuggestion(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): { disposable: IDisposable; promise: Promise<void> } {
         const editorEnzyme = getInteractiveEditor(wrapper);
         const reactEditor = editorEnzyme.instance() as MonacoEditor;
         const editor = reactEditor.state.editor;
@@ -100,67 +100,9 @@ suite('DataScience Intellisense tests', () => {
         inst.state.model!.setValue('');
     }
 
-    runMountedTest('Simple autocomplete', async (wrapper) => {
-        // Create an interactive window so that it listens to the results.
-        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-        await interactiveWindow.show();
-
-        // Then enter some code. Don't submit, we're just testing that autocomplete appears
-        const suggestion = waitForSuggestion(wrapper);
-        typeCode(getInteractiveEditor(wrapper), 'print');
-        await suggestion.promise;
-        suggestion.disposable.dispose();
-        verifyIntellisenseVisible(wrapper, 'print');
-
-        // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
-        // while we're destroying the editor.
-        clearEditor(wrapper);
-    }, () => { return ioc; });
-
-    runMountedTest('Multiple interpreters', async (wrapper) => {
-        // Create an interactive window so that it listens to the results.
-        const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
-        await interactiveWindow.show();
-
-        // Then enter some code. Don't submit, we're just testing that autocomplete appears
-        let suggestion = waitForSuggestion(wrapper);
-        typeCode(getInteractiveEditor(wrapper), 'print');
-        await suggestion.promise;
-        suggestion.disposable.dispose();
-        verifyIntellisenseVisible(wrapper, 'print');
-
-        // Clear the code
-        const editor = getInteractiveEditor(wrapper);
-        const inst = editor.instance() as MonacoEditor;
-        inst.state.model!.setValue('');
-
-        // Then change our current interpreter
-        const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
-        const oldActive = await interpreterService.getActiveInterpreter();
-        const interpreters = await interpreterService.getInterpreters();
-        if (interpreters.length > 1 && oldActive) {
-            const firstOther = interpreters.filter(i => i.path !== oldActive.path);
-            ioc.forceSettingsChanged(firstOther[0].path);
-            const active = await interpreterService.getActiveInterpreter();
-            assert.notDeepEqual(active, oldActive, 'Should have changed interpreter');
-        }
-
-        // Type in again, make sure it works (should use the current interpreter in the server)
-        suggestion = waitForSuggestion(wrapper);
-        typeCode(getInteractiveEditor(wrapper), 'print');
-        await suggestion.promise;
-        suggestion.disposable.dispose();
-        verifyIntellisenseVisible(wrapper, 'print');
-
-        // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
-        // while we're destroying the editor.
-        inst.state.model!.setValue('');
-    }, () => { return ioc; });
-
-    runMountedTest('Jupyter autocomplete', async (wrapper) => {
-        if (ioc.mockJupyter) {
-            // This test only works when mocking.
-
+    runMountedTest(
+        'Simple autocomplete',
+        async wrapper => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
@@ -170,35 +112,117 @@ suite('DataScience Intellisense tests', () => {
             typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
-            verifyIntellisenseVisible(wrapper, 'printly');
+            verifyIntellisenseVisible(wrapper, 'print');
 
             // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
             // while we're destroying the editor.
             clearEditor(wrapper);
+        },
+        () => {
+            return ioc;
         }
-    }, () => { return ioc; });
+    );
 
-    runMountedTest('Jupyter autocomplete not timeout', async (wrapper) => {
-        if (ioc.mockJupyter) {
-            // This test only works when mocking.
-
+    runMountedTest(
+        'Multiple interpreters',
+        async wrapper => {
             // Create an interactive window so that it listens to the results.
             const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
             await interactiveWindow.show();
 
-            // Force a timeout on the jupyter completions so that it takes some amount of time
-            ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
-
             // Then enter some code. Don't submit, we're just testing that autocomplete appears
-            const suggestion = waitForSuggestion(wrapper);
+            let suggestion = waitForSuggestion(wrapper);
             typeCode(getInteractiveEditor(wrapper), 'print');
             await suggestion.promise;
             suggestion.disposable.dispose();
-            verifyIntellisenseVisible(wrapper, 'printly');
+            verifyIntellisenseVisible(wrapper, 'print');
+
+            // Clear the code
+            const editor = getInteractiveEditor(wrapper);
+            const inst = editor.instance() as MonacoEditor;
+            inst.state.model!.setValue('');
+
+            // Then change our current interpreter
+            const interpreterService = ioc.get<IInterpreterService>(IInterpreterService);
+            const oldActive = await interpreterService.getActiveInterpreter();
+            const interpreters = await interpreterService.getInterpreters();
+            if (interpreters.length > 1 && oldActive) {
+                const firstOther = interpreters.filter(i => i.path !== oldActive.path);
+                ioc.forceSettingsChanged(firstOther[0].path);
+                const active = await interpreterService.getActiveInterpreter();
+                assert.notDeepEqual(active, oldActive, 'Should have changed interpreter');
+            }
+
+            // Type in again, make sure it works (should use the current interpreter in the server)
+            suggestion = waitForSuggestion(wrapper);
+            typeCode(getInteractiveEditor(wrapper), 'print');
+            await suggestion.promise;
+            suggestion.disposable.dispose();
+            verifyIntellisenseVisible(wrapper, 'print');
 
             // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
             // while we're destroying the editor.
-            clearEditor(wrapper);
+            inst.state.model!.setValue('');
+        },
+        () => {
+            return ioc;
         }
-    }, () => { return ioc; });
+    );
+
+    runMountedTest(
+        'Jupyter autocomplete',
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
+
+                // Create an interactive window so that it listens to the results.
+                const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+                await interactiveWindow.show();
+
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(getInteractiveEditor(wrapper), 'print');
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseVisible(wrapper, 'printly');
+
+                // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+                // while we're destroying the editor.
+                clearEditor(wrapper);
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
+
+    runMountedTest(
+        'Jupyter autocomplete not timeout',
+        async wrapper => {
+            if (ioc.mockJupyter) {
+                // This test only works when mocking.
+
+                // Create an interactive window so that it listens to the results.
+                const interactiveWindow = await getOrCreateInteractiveWindow(ioc);
+                await interactiveWindow.show();
+
+                // Force a timeout on the jupyter completions so that it takes some amount of time
+                ioc.mockJupyter.getCurrentSession()!.setCompletionTimeout(1000);
+
+                // Then enter some code. Don't submit, we're just testing that autocomplete appears
+                const suggestion = waitForSuggestion(wrapper);
+                typeCode(getInteractiveEditor(wrapper), 'print');
+                await suggestion.promise;
+                suggestion.disposable.dispose();
+                verifyIntellisenseVisible(wrapper, 'printly');
+
+                // Force suggestion box to disappear so that shutdown doesn't try to generate suggestions
+                // while we're destroying the editor.
+                clearEditor(wrapper);
+            }
+        },
+        () => {
+            return ioc;
+        }
+    );
 });

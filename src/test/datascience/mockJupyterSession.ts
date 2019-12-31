@@ -149,5 +149,5 @@ export class MockJupyterSession implements IJupyterSession {
         // tslint:disable-next-line:no-console
         console.log(`Dict has these keys ${Object.keys(this.dict).join('","')}`);
         throw new Error(`Cell '${code}' not found in mock`);
-    }
+    };
 }

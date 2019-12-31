@@ -15,15 +15,7 @@ import { CellMatcher } from '../cellMatcher';
 import { splitMultilineString } from '../common';
 import { Identifiers } from '../constants';
 import { InteractiveWindowMessages, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
-import {
-    ICell,
-    ICellHash,
-    ICellHashListener,
-    ICellHashProvider,
-    IFileHashes,
-    IInteractiveWindowListener,
-    INotebookExecutionLogger
-} from '../types';
+import { ICell, ICellHash, ICellHashListener, ICellHashProvider, IFileHashes, IInteractiveWindowListener, INotebookExecutionLogger } from '../types';
 
 interface IRangedCellHash extends ICellHash {
     code: string;
@@ -37,7 +29,6 @@ interface IRangedCellHash extends ICellHash {
 // hashes for cells.
 @injectable()
 export class CellHashProvider implements ICellHashProvider, IInteractiveWindowListener, INotebookExecutionLogger {
-
     // tslint:disable-next-line: no-any
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
     // Map of file to Map of start line to actual hash
@@ -89,12 +80,14 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
     }
 
     public getHashes(): IFileHashes[] {
-        return [...this.hashes.entries()].map(e => {
-            return {
-                file: e[0],
-                hashes: e[1].filter(h => !h.deleted)
-            };
-        }).filter(e => e.hashes.length > 0);
+        return [...this.hashes.entries()]
+            .map(e => {
+                return {
+                    file: e[0],
+                    hashes: e[1].filter(h => !h.deleted)
+                };
+            })
+            .filter(e => e.hashes.length > 0);
     }
 
     public async preExecute(cell: ICell, silent: boolean): Promise<void> {
@@ -224,7 +217,11 @@ export class CellHashProvider implements ICellHashProvider, IInteractiveWindowLi
             const realCode = doc.getText(new Range(new Position(cell.line, 0), endLine.rangeIncludingLineBreak.end));
 
             const hash: IRangedCellHash = {
-                hash: hashjs.sha1().update(hashedCode).digest('hex').substr(0, 12),
+                hash: hashjs
+                    .sha1()
+                    .update(hashedCode)
+                    .digest('hex')
+                    .substr(0, 12),
                 line: line.lineNumber + 1,
                 endLine: endLine.lineNumber + 1,
                 executionCount: expectedCount,

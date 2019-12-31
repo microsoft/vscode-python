@@ -43,8 +43,7 @@ export class NotebookStarter implements Disposable {
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel
-    ) {
-    }
+    ) {}
     public dispose() {
         while (this.disposables.length > 0) {
             const disposable = this.disposables.shift();
@@ -68,10 +67,7 @@ export class NotebookStarter implements Disposable {
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
             // Before starting the notebook process, make sure we generate a kernel spec
-            const [args, notebookCommand] = await Promise.all([
-                this.generateArguments(useDefaultConfig, tempDirPromise),
-                notebookCommandPromise
-            ]);
+            const [args, notebookCommand] = await Promise.all([this.generateArguments(useDefaultConfig, tempDirPromise), notebookCommandPromise]);
 
             // Make sure we haven't canceled already.
             if (cancelToken && cancelToken.isCancellationRequested) {
@@ -233,20 +229,19 @@ export class NotebookStarter implements Disposable {
     }
     private getJupyterServerInfo = async (cancelToken?: CancellationToken): Promise<JupyterServerInfo[] | undefined> => {
         const notebookCommand = await this.commandFinder.findBestCommand(JupyterCommands.NotebookCommand);
-        if (!notebookCommand.command){
+        if (!notebookCommand.command) {
             return;
         }
         const [interpreter, activeInterpreter] = await Promise.all([notebookCommand.command.interpreter(), this.interpreterService.getActiveInterpreter()]);
-        if (!interpreter){
+        if (!interpreter) {
             return;
         }
         // Create a daemon only when using the current interpreter.
         // We dont' want to create daemons for all interpreters.
         const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
-        const daemon = await (isActiveInterpreter ?
-            this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }) :
-            this.executionFactory.createActivatedEnvironment({allowEnvironmentFetchExceptions: true, interpreter})
-        );
+        const daemon = await (isActiveInterpreter
+            ? this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path })
+            : this.executionFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, interpreter }));
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
@@ -261,5 +256,5 @@ export class NotebookStarter implements Disposable {
             return;
         }
         return serverInfos;
-    }
+    };
 }

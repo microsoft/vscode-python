@@ -167,5 +167,4 @@ suite('Attach to process - base process provider', () => {
 
         assert.deepEqual(output, expectedOutput);
     });
-
 });

@@ -13,7 +13,7 @@ const nugetPackageBaseAddress = 'https://dotnetmyget.blob.core.windows.net/artif
 
 @injectable()
 export class NugetRepository implements INugetRepository {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     public async getPackages(packageName: string): Promise<NugetPackage[]> {
         const versions = await this.getVersions(nugetPackageBaseAddress, packageName);
         return versions.map(version => {

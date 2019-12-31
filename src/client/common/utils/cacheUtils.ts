@@ -57,7 +57,7 @@ function getCacheStore(resource: Resource, vscode: VSCodeType = require('vscode'
     return resourceSpecificCacheStores.get(key)!;
 }
 
-const globalCacheStore = new Map<string, {expiry: number; data: any}>();
+const globalCacheStore = new Map<string, { expiry: number; data: any }>();
 
 /**
  * Gets a cache store to be used to store return values of methods or any other.
@@ -81,10 +81,12 @@ export function clearCache() {
 export class InMemoryInterpreterSpecificCache<T> {
     private readonly resource: Resource;
     private readonly args: any[];
-    constructor(private readonly keyPrefix: string,
+    constructor(
+        private readonly keyPrefix: string,
         protected readonly expiryDurationMs: number,
         args: [Uri | undefined, ...any[]],
-        private readonly vscode: VSCodeType = require('vscode')) {
+        private readonly vscode: VSCodeType = require('vscode')
+    ) {
         this.resource = args[0];
         this.args = args.slice(1);
     }

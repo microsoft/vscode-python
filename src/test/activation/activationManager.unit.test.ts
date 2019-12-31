@@ -57,7 +57,8 @@ suite('Language Server Activation - ActivationManager', () => {
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
-            [instance(activationService1), instance(activationService2)], [],
+            [instance(activationService1), instance(activationService2)],
+            [],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,
@@ -73,7 +74,10 @@ suite('Language Server Activation - ActivationManager', () => {
         when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
-        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        documentManager
+            .setup(d => d.onDidOpenTextDocument)
+            .returns(() => eventDef)
+            .verifiable(typemoq.Times.once());
 
         await managerTest.initialize();
 
@@ -98,7 +102,10 @@ suite('Language Server Activation - ActivationManager', () => {
         when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
-        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        documentManager
+            .setup(d => d.onDidOpenTextDocument)
+            .returns(() => eventDef)
+            .verifiable(typemoq.Times.once());
         disposable.setup(d => d.dispose());
         disposable2.setup(d => d.dispose());
 
@@ -205,7 +212,7 @@ suite('Language Server Activation - ActivationManager', () => {
         verify(activationService2.activate(resource)).once();
     });
 
-    test('The same workspace isn\'t activated more than once', async () => {
+    test("The same workspace isn't activated more than once", async () => {
         const resource = Uri.parse('two');
         when(activationService1.activate(resource)).thenResolve();
         when(activationService2.activate(resource)).thenResolve();
@@ -275,7 +282,10 @@ suite('Language Server Activation - ActivationManager', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup(d => d.uri).returns(() => documentUri);
 
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => { workspaceFoldersChangedHandler = cb; return disposable1.object; });
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => {
+            workspaceFoldersChangedHandler = cb;
+            return disposable1.object;
+        });
         documentManager
             .setup(w => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
             .callback(cb => (docOpenedHandler = cb))
@@ -351,7 +361,8 @@ suite('Language Server Activation - activate()', () => {
         activateWorkspace = sinon.stub(ExtensionActivationManager.prototype, 'activateWorkspace');
         activateWorkspace.resolves();
         managerTest = new ExtensionActivationManager(
-            [instance(activationService1), instance(activationService2)], [singleActivationService.object],
+            [instance(activationService1), instance(activationService2)],
+            [singleActivationService.object],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,

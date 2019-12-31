@@ -59,9 +59,7 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
-        const fs = new FileSystem(
-            new PlatformService()
-        );
+        const fs = new FileSystem(new PlatformService());
         if (await fs.fileExists(targetFile)) {
             return;
         }

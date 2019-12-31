@@ -29,10 +29,8 @@ suite('Propose New Language Server Banner', () => {
         expect(testBanner.enabled).to.be.equal(true, 'Sampling 100/100 should always enable the banner.');
     });
     test('Do not show banner when it is disabled', () => {
-        appShell.setup(a => a.showInformationMessage(typemoq.It.isValue(message),
-                                                    typemoq.It.isValue(yes),
-                                                    typemoq.It.isValue(no),
-                                                    typemoq.It.isValue(later)))
+        appShell
+            .setup(a => a.showInformationMessage(typemoq.It.isValue(message), typemoq.It.isValue(yes), typemoq.It.isValue(no), typemoq.It.isValue(later)))
             .verifiable(typemoq.Times.never());
         const enabled: boolean = true;
         const testBanner: ProposeLanguageServerBanner = preparePopup(enabled, 0, appShell.object, config.object);
@@ -67,19 +65,15 @@ function preparePopup(enabledValue: boolean, sampleValue: number, appShell: IApp
     val.setup(a => a.value).returns(() => {
         return enabledValue;
     });
-    myfactory.setup(a => a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner),
-                                                    typemoq.It.isValue(true)))
+    myfactory
+        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(true)))
         .returns(() => {
             return val.object;
         });
-    myfactory.setup(a => a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner),
-                                                    typemoq.It.isValue(false)))
+    myfactory
+        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(ProposeLSStateKeys.ShowBanner), typemoq.It.isValue(false)))
         .returns(() => {
             return val.object;
         });
-    return new ProposeLanguageServerBanner(
-        appShell,
-        myfactory.object,
-        config,
-        sampleValue);
+    return new ProposeLanguageServerBanner(appShell, myfactory.object, config, sampleValue);
 }

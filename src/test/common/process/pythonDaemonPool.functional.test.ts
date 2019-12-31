@@ -55,8 +55,8 @@ suite('Daemon - Python Daemon Pool', () => {
                 .trim();
         }
     });
-    setup(async function () {
-        if (isPythonVersion('2.7')){
+    setup(async function() {
+        if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
@@ -131,9 +131,9 @@ suite('Daemon - Python Daemon Pool', () => {
         await assert.eventually.equal(pythonDaemonPool.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
 
-    test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
-    test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
-    test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'pip' module is installed", async () => testModuleInstalled('pip', true));
+    test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
+    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`

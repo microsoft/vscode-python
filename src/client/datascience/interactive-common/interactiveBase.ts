@@ -12,13 +12,7 @@ import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import {
-    IApplicationShell,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -132,7 +126,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             rootPath,
             scripts,
             title,
-            viewColumn);
+            viewColumn
+        );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
         this._id = uuid();
@@ -142,14 +137,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.disposables.push(handler);
 
         // If our execution changes its liveshare session, we need to close our server
-        this.jupyterExecution.sessionChanged(() => this.loadPromise = this.reloadAfterShutdown());
+        this.jupyterExecution.sessionChanged(() => (this.loadPromise = this.reloadAfterShutdown()));
 
         // For each listener sign up for their post events
-        this.listeners.forEach(l => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
+        this.listeners.forEach(l => l.postMessage(e => this.postMessageInternal(e.message, e.payload)));
 
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
-            this.getNotebookIdentity().then(uri => this.listeners.forEach(l => l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() }))).ignoreErrors();
+            this.getNotebookIdentity()
+                .then(uri => this.listeners.forEach(l => l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() })))
+                .ignoreErrors();
         }, 0);
     }
 
@@ -290,14 +287,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             case CssMessages.GetCssRequest:
                 // Update the notebook if we have one:
                 if (this.notebook) {
-                    this.isDark().then(d => this.notebook ? this.notebook.setMatplotLibStyle(d) : Promise.resolve()).ignoreErrors();
+                    this.isDark()
+                        .then(d => (this.notebook ? this.notebook.setMatplotLibStyle(d) : Promise.resolve()))
+                        .ignoreErrors();
                 }
                 break;
 
             default:
                 break;
         }
-
     }
 
     public dispose() {
@@ -533,7 +531,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                             result = result && cells.find(c => c.state === CellState.error) === undefined;
                         }
                     },
-                    (error) => {
+                    error => {
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
                             this.applicationShell.showErrorMessage(error.toString());
@@ -542,7 +540,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     () => {
                         // Indicate executing until this cell is done.
                         status.dispose();
-                    });
+                    }
+                );
 
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
@@ -668,13 +667,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
             }
         }
-    }
+    };
 
     protected setStatus = (message: string, showInWebView: boolean): Disposable => {
         const result = this.statusProvider.set(message, showInWebView, undefined, undefined, this);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
-    }
+    };
 
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {
         if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
@@ -740,8 +739,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async startServerImpl(): Promise<void> {
         // Status depends upon if we're about to connect to existing server or not.
-        const status = (await this.jupyterExecution.getServer(await this.getNotebookOptions())) ?
-            this.setStatus(localize.DataScience.connectingToJupyter(), true) : this.setStatus(localize.DataScience.startingJupyter(), true);
+        const status = (await this.jupyterExecution.getServer(await this.getNotebookOptions()))
+            ? this.setStatus(localize.DataScience.connectingToJupyter(), true)
+            : this.setStatus(localize.DataScience.startingJupyter(), true);
 
         // Check to see if we support ipykernel or not
         try {
@@ -751,7 +751,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 status.dispose();
 
                 // Indicate failing.
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()), localize.DataScience.pythonInteractiveHelpLink());
+                throw new JupyterInstallError(
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                );
             }
             // Then load the jupyter server
             await this.createNotebook();
@@ -835,7 +838,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
-
             // Not from us, must come from a different interactive window. Add to our
             // own to keep in sync
             if (sysInfo.sysInfoCell) {
@@ -922,7 +924,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private logTelemetry = (event: Telemetry) => {
         sendTelemetryEvent(event);
-    }
+    };
 
     private async stopServer(): Promise<void> {
         if (this.loadPromise) {
@@ -978,8 +980,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         let editor = this.documentManager.activeTextEditor;
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
-            const pythonEditors = this.documentManager.visibleTextEditors.filter(
-                e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
+            const pythonEditors = this.documentManager.visibleTextEditors.filter(e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
 
             if (pythonEditors.length > 0) {
                 editor = pythonEditors[0];
@@ -1008,7 +1009,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 newCode = `${defaultCellMarker}${os.EOL}${source}${os.EOL}`;
             }
 
-            await editor.edit((editBuilder) => {
+            await editor.edit(editBuilder => {
                 editBuilder.insert(new Position(line, 0), newCode);
             });
             editor.revealRange(new Range(revealLine, 0, revealLine + source.split('\n').length + 3, 0));
@@ -1133,7 +1134,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return sysInfo;
             }
         }
-    }
+    };
 
     private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
         switch (reason) {
@@ -1186,7 +1187,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
                         const notebookError = await this.jupyterExecution.getNotebookError();
                         if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
-                            this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName, notebookError));
+                            this.applicationShell.showWarningMessage(
+                                localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName, notebookError)
+                            );
                         }
                     }
                 }
@@ -1200,7 +1203,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 const displayName = activeInterpreter.displayName ? activeInterpreter.displayName : activeInterpreter.path;
                 throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString()));
             } else {
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()), localize.DataScience.pythonInteractiveHelpLink());
+                throw new JupyterInstallError(
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                );
             }
         }
     }
@@ -1222,7 +1228,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         if (excludeString) {
             const excludeArray = excludeString.split(';');
-            variablesResponse.variables = variablesResponse.variables.filter((value) => {
+            variablesResponse.variables = variablesResponse.variables.filter(value => {
                 return excludeArray.indexOf(value.type) === -1;
             });
         }
@@ -1247,7 +1253,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             } else {
                 this.variableRequestPendingCount = Math.max(0, this.variableRequestPendingCount - 1);
             }
-
         }
     }
 
@@ -1260,16 +1265,19 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // Log the state in our Telemetry
             sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
         }
-    }
+    };
 
     private requestTmLanguage() {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
-        this.themeFinder.findTmLanguage(PYTHON_LANGUAGE).then(s => {
-            this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
-        }).catch(_e => {
-            this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
-        });
+        this.themeFinder
+            .findTmLanguage(PYTHON_LANGUAGE)
+            .then(s => {
+                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
+            })
+            .catch(_e => {
+                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
+            });
     }
 
     private async requestOnigasm(): Promise<void> {
@@ -1307,7 +1315,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const settings = this.configuration.getSettings();
 
         let kernel: KernelSpecInterpreter | undefined;
-        const isLocalConnection = this.notebook?.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection =
+            this.notebook?.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
         if (isLocalConnection) {
             kernel = await this.dataScience.selectLocalJupyterKernel(this.notebook?.getKernelSpec());
         } else if (this.notebook) {
@@ -1324,7 +1333,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
     private async switchKernelWithRetry(kernel: KernelSpecInterpreter) {
         const settings = this.configuration.getSettings();
-        const isLocalConnection = this.notebook?.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
+        const isLocalConnection =
+            this.notebook?.server.getConnectionInfo()?.localLaunch ?? settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch;
         if (!isLocalConnection) {
             return this.switchKernel(kernel);
         }

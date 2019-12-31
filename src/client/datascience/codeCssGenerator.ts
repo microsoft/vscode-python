@@ -24,7 +24,7 @@ const ThreeColorRegEx = /^#?([0-9A-Fa-f])([0-9A-Fa-f])([0-9A-Fa-f])$/;
 // are ignoring themes.
 //tslint:disable:no-multiline-string object-literal-key-quotes
 const DefaultCssVars: { [key: string]: string } = {
-    'light': `
+    light: `
     :root {
         --override-widget-background: #f3f3f3;
         --override-foreground: #000000;
@@ -38,7 +38,7 @@ const DefaultCssVars: { [key: string]: string } = {
         --override-peek-background: #f2f8fc;
     }
 `,
-    'dark': `
+    dark: `
     :root {
         --override-widget-background: #1e1e1e;
         --override-foreground: #d4d4d4;
@@ -100,7 +100,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(ILogger) private logger: ILogger,
         @inject(IFileSystem) private fs: IFileSystem
-    ) { }
+    ) {}
 
     public generateThemeCss(isDark: boolean, theme: string): Promise<string> {
         return this.applyThemeData(isDark, theme, '', this.generateCss.bind(this));
@@ -117,7 +117,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
             const ignoreTheme = this.configService.getSettings().datascience.ignoreVscodeTheme ? true : false;
             theme = ignoreTheme ? DefaultTheme : theme;
             const editor = this.workspaceService.getConfiguration('editor', undefined);
-            const fontFamily = editor ? editor.get<string>('fontFamily', 'Consolas, \'Courier New\', monospace') : 'Consolas, \'Courier New\', monospace';
+            const fontFamily = editor ? editor.get<string>('fontFamily', "Consolas, 'Courier New', monospace") : "Consolas, 'Courier New', monospace";
             const fontSize = editor ? editor.get<number>('fontSize', 14) : 14;
             const isDarkUpdated = ignoreTheme ? false : isDark;
 
@@ -147,7 +147,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private getScopes(entry: any): JSONArray {
         if (entry && entry.scope) {
-            return Array.isArray(entry.scope) ? entry.scope as JSONArray : entry.scope.toString().split(',');
+            return Array.isArray(entry.scope) ? (entry.scope as JSONArray) : entry.scope.toString().split(',');
         }
         return [];
     }
@@ -162,14 +162,19 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         });
     }
 
-    private getScopeStyle = (tokenColors: JSONArray | null | undefined, scope: string, secondary: string, defaultStyle: string | undefined): { color: string; fontStyle: string } => {
+    private getScopeStyle = (
+        tokenColors: JSONArray | null | undefined,
+        scope: string,
+        secondary: string,
+        defaultStyle: string | undefined
+    ): { color: string; fontStyle: string } => {
         // Search through the scopes on the json object
         if (tokenColors) {
             let match = this.matchTokenColor(tokenColors, scope);
             if (match < 0 && secondary) {
                 match = this.matchTokenColor(tokenColors, secondary);
             }
-            const found = match >= 0 ? tokenColors[match] as any : null;
+            const found = match >= 0 ? (tokenColors[match] as any) : null;
             if (found !== null) {
                 const settings = found.settings;
                 if (settings && settings !== null) {
@@ -183,7 +188,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Default to editor foreground
         return { color: this.getDefaultColor(defaultStyle, scope), fontStyle: 'normal' };
-    }
+    };
 
     private getDefaultColor(style: string | undefined, scope: string): string {
         return style ? DefaultColors[`${style}.${scope}`] : 'var(--override-foreground, var(--vscode-editor-foreground))';
@@ -191,7 +196,6 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     // tslint:disable-next-line:max-func-body-length
     private generateCss(args: IApplyThemeArgs): string {
-
         // There's a set of values that need to be found
         const commentStyle = this.getScopeStyle(args.tokenColors, 'comment', 'comment', args.defaultStyle);
         const numericStyle = this.getScopeStyle(args.tokenColors, 'constant.numeric', 'constant', args.defaultStyle);
@@ -324,11 +328,11 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
     private mergeColors = (colors1: JSONArray, colors2: JSONArray): JSONArray => {
         return [...colors1, ...colors2];
-    }
+    };
 
     private mergeBaseColors = (colors1: JSONObject, colors2: JSONObject): JSONObject => {
         return { ...colors1, ...colors2 };
-    }
+    };
 
     private readTokenColors = async (themeFile: string): Promise<JSONArray> => {
         const tokenContent = await this.fs.readFile(themeFile);
@@ -354,7 +358,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
         }
 
         return [];
-    }
+    };
 
     private readBaseColors = async (themeFile: string): Promise<JSONObject> => {
         const tokenContent = await this.fs.readFile(themeFile);
@@ -371,10 +375,9 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Theme is a root, don't need to include others
         return colors;
-    }
+    };
 
     private findTokenColors = async (theme: string): Promise<JSONArray | null> => {
-
         try {
             this.logger.logInformation('Attempting search for colors ...');
             const themeRoot = await this.themeFinder.findThemeRootJson(theme);
@@ -407,7 +410,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     return e !== null && (e.id === theme || e.name === theme);
                 });
 
-                const found = index >= 0 ? themes[index] as any : null;
+                const found = index >= 0 ? (themes[index] as any) : null;
                 if (found !== null) {
                     // Then the path entry should contain a relative path to the json file with
                     // the tokens in it
@@ -425,7 +428,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Force the colors to the defaults
         return null;
-    }
+    };
 
     private findBaseColors = async (theme: string): Promise<JSONObject | null> => {
         try {
@@ -457,7 +460,7 @@ export class CodeCssGenerator implements ICodeCssGenerator {
                     return e !== null && (e.id === theme || e.name === theme);
                 });
 
-                const found = index >= 0 ? themes[index] as any : null;
+                const found = index >= 0 ? (themes[index] as any) : null;
                 if (found !== null) {
                     // Then the path entry should contain a relative path to the json file with
                     // the tokens in it
@@ -475,5 +478,5 @@ export class CodeCssGenerator implements ICodeCssGenerator {
 
         // Force the colors to the defaults
         return null;
-    }
+    };
 }

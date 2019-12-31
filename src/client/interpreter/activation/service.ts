@@ -11,10 +11,7 @@ import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
-import {
-    cacheResourceSpecificInterpreterData,
-    clearCachedResourceSpecificIngterpreterData
-} from '../../common/utils/decorators';
+import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngterpreterData } from '../../common/utils/decorators';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
@@ -38,12 +35,13 @@ const defaultShells = {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
-    constructor(@inject(ITerminalHelper) private readonly helper: ITerminalHelper,
+    constructor(
+        @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider) {
-
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider
+    ) {
         this.envVarsService.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange, this, this.disposables);
     }
 
@@ -65,7 +63,10 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                 return;
             }
-            isPossiblyCondaEnv = activationCommands.join(' ').toLowerCase().includes('conda');
+            isPossiblyCondaEnv = activationCommands
+                .join(' ')
+                .toLowerCase()
+                .includes('conda');
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
             const processService = await this.processServiceFactory.create(resource);
@@ -91,7 +92,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             return this.parseEnvironmentOutput(result.stdout);
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
-            sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, {isPossiblyCondaEnv, terminal: shellInfo.shellType});
+            sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, { isPossiblyCondaEnv, terminal: shellInfo.shellType });
 
             // Some callers want this to bubble out, others don't
             if (allowExceptions) {

@@ -7,17 +7,16 @@
 
 import { expect } from 'chai';
 
-import {
-    getLanguageConfiguration
-} from '../../client/language/languageConfiguration';
+import { getLanguageConfiguration } from '../../client/language/languageConfiguration';
 
 const NEEDS_INDENT = [
     /^break$/,
     /^continue$/,
-    /^raise$/,  // only re-raise
+    /^raise$/, // only re-raise
     /^return\b/
 ];
-const INDENT_ON_ENTER = [  // block-beginning statements
+const INDENT_ON_ENTER = [
+    // block-beginning statements
     /^async\s+def\b/,
     /^async\s+for\b/,
     /^async\s+with\b/,
@@ -33,7 +32,8 @@ const INDENT_ON_ENTER = [  // block-beginning statements
     /^elif\b/,
     /^else\b/
 ];
-const DEDENT_ON_ENTER = [  // block-ending statements
+const DEDENT_ON_ENTER = [
+    // block-ending statements
     // For now we are ignoring "return" completely.  See gh-6564.
     ///^return\b/,
     /^break$/,
@@ -51,13 +51,7 @@ function isMember(line: string, regexes: RegExp[]): boolean {
     return false;
 }
 
-function resolveExample(
-    base: string,
-    leading: string,
-    postKeyword: string,
-    preColon: string,
-    trailing: string
-): [string | undefined, string | undefined, boolean] {
+function resolveExample(base: string, leading: string, postKeyword: string, preColon: string, trailing: string): [string | undefined, string | undefined, boolean] {
     let invalid: string | undefined;
     if (base.trim() === '') {
         invalid = 'blank line';
@@ -130,12 +124,12 @@ suite('Language Configuration', () => {
         });
 
         test('Multiline separator indent regex should not pick up strings with escaped characters', async () => {
-            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'hello \\n\'');
+            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test("a = 'hello \\n'");
             expect(result).to.be.equal(false, 'Multiline separator indent regex for strings with escaped characters should not have matches');
         });
 
         test('Multiline separator indent regex should pick up strings ending with a multiline separator', async () => {
-            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test('a = \'multiline \\');
+            const result = MULTILINE_SEPARATOR_INDENT_REGEX.test("a = 'multiline \\");
             expect(result).to.be.equal(true, 'Multiline separator indent regex for strings with newline separator should have matches');
         });
 
@@ -159,7 +153,7 @@ suite('Language Configuration', () => {
             'if foo is None:',
             'if :',
             'try:',
-            'while \'::\' in macaddress:',
+            "while '::' in macaddress:",
             'while :',
             'with self.test:',
             'with :',
@@ -173,7 +167,7 @@ suite('Language Configuration', () => {
             'pass',
             'raise Exception(msg)',
             'raise Exception',
-            'raise',  // re-raise
+            'raise', // re-raise
             'break',
             'continue',
             'return',
@@ -194,7 +188,7 @@ suite('Language Configuration', () => {
                 ['', '', '', ''],
                 // leading
                 ['    ', '', '', ''],
-                ['   ', '', '', ''],  // unusual indent
+                ['   ', '', '', ''], // unusual indent
                 ['\t\t', '', '', ''],
                 // pre-keyword
                 ['x', '', '', ''],

@@ -2,17 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { inject, injectable } from 'inversify';
-import {
-    CodeLens,
-    Event,
-    EventEmitter,
-    Position,
-    Range,
-    Selection,
-    TextDocument,
-    TextEditor,
-    TextEditorRevealType
-} from 'vscode';
+import { CodeLens, Event, EventEmitter, Position, Range, Selection, TextDocument, TextEditor, TextEditorRevealType } from 'vscode';
 
 import { IDocumentManager } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
@@ -35,15 +25,15 @@ export class CodeWatcher implements ICodeWatcher {
     private cachedSettings: IDataScienceSettings | undefined;
     private codeLensUpdatedEvent: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(@inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
+    constructor(
+        @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICodeExecutionHelper) private executionHelper: ICodeExecutionHelper,
         @inject(IDataScienceErrorHandler) protected dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(ICodeLensFactory) private codeLensFactory: ICodeLensFactory
-    ) {
-    }
+    ) {}
 
     public setDocument(document: TextDocument) {
         this.document = document;
@@ -199,8 +189,7 @@ export class CodeWatcher implements ICodeWatcher {
 
     @captureTelemetry(Telemetry.RunSelectionOrLine)
     public async runSelectionOrLine(activeEditor: TextEditor | undefined) {
-        if (this.document && activeEditor &&
-            this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
+        if (this.document && activeEditor && this.fileSystem.arePathsSame(activeEditor.document.fileName, this.document.fileName)) {
             // Get just the text of the selection or the current line if none
             const codeToExecute = await this.executionHelper.getSelectedTextToExecute(activeEditor);
             if (!codeToExecute) {
@@ -283,7 +272,7 @@ export class CodeWatcher implements ICodeWatcher {
         const editor = this.documentManager.activeTextEditor;
         const cellDelineator = this.defaultCellMarker;
         if (editor) {
-            editor.edit((editBuilder) => {
+            editor.edit(editBuilder => {
                 editBuilder.insert(new Position(editor.document.lineCount, 0), `\n\n${cellDelineator}\n`);
             });
 
@@ -303,7 +292,7 @@ export class CodeWatcher implements ICodeWatcher {
         const cellDelineator = this.defaultCellMarker;
 
         if (editor) {
-            editor.edit((editBuilder) => {
+            editor.edit(editBuilder => {
                 let lastCell = true;
 
                 for (let i = editor.selection.end.line + 1; i < editor.document.lineCount; i += 1) {
@@ -324,8 +313,7 @@ export class CodeWatcher implements ICodeWatcher {
 
         // Run the cell that matches the current cursor position, and then advance to the new cell
         const newPosition = new Position(index + 1, 0);
-        return this.runMatchingCell(editor.selection, false)
-            .then(() => this.advanceToRange(new Range(newPosition, newPosition)));
+        return this.runMatchingCell(editor.selection, false).then(() => this.advanceToRange(new Range(newPosition, newPosition)));
     }
 
     private get defaultCellMarker(): string {
@@ -437,7 +425,7 @@ export class CodeWatcher implements ICodeWatcher {
         const newPosition = new Position(currentRange.end.line + 3, 0); // +3 to account for the added spaces and to position after the new mark
 
         if (editor) {
-            editor.edit((editBuilder) => {
+            editor.edit(editBuilder => {
                 editBuilder.insert(new Position(currentRange.end.line + 1, 0), `\n\n${this.defaultCellMarker}\n`);
             });
         }

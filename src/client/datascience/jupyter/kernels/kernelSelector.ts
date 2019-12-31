@@ -87,7 +87,11 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async selectRemoteKernel(session: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
+    public async selectRemoteKernel(
+        session: IJupyterSessionManager,
+        cancelToken?: CancellationToken,
+        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+    ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(suggestions, session, cancelToken, currentKernel);
@@ -100,7 +104,11 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
-    public async selectLocalKernel(session?: IJupyterSessionManager, cancelToken?: CancellationToken, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
+    public async selectLocalKernel(
+        session?: IJupyterSessionManager,
+        cancelToken?: CancellationToken,
+        currentKernel?: IJupyterKernelSpec | LiveKernelModel
+    ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
         return this.selectKernel(suggestions, session, cancelToken, currentKernel);

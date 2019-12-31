@@ -11,7 +11,6 @@ import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Effects {
-
     export function focusCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
         // Do nothing if already the focused cell.
         if (arg.prevState.focusedCellId !== arg.payload.cellId) {
@@ -84,7 +83,7 @@ export namespace Effects {
             };
 
             // tslint:disable-next-line: no-any
-            newVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here
+            newVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here
 
             return {
                 ...arg.prevState,
@@ -169,7 +168,7 @@ export namespace Effects {
         return {
             ...arg.prevState,
             settings: newSettings,
-            editorOptions: { ...newEditorOptions, lineDecorationsWidth: 5},
+            editorOptions: { ...newEditorOptions, lineDecorationsWidth: 5 },
             font: {
                 size: newFontSize,
                 family: newFontFamily

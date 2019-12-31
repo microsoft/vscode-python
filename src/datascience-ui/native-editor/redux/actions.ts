@@ -27,11 +27,20 @@ export const actionCreators = {
     insertAbove: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.INSERT_ABOVE, payload: { cellId } }),
     insertAboveFirst: (): CommonAction<never | undefined> => ({ type: CommonActionType.INSERT_ABOVE_FIRST }),
     insertBelow: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.INSERT_BELOW, payload: { cellId } }),
-    focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({ type: CommonActionType.FOCUS_CELL, payload: { cellId, cursorPos } }),
+    focusCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({
+        type: CommonActionType.FOCUS_CELL,
+        payload: { cellId, cursorPos }
+    }),
     unfocusCell: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId, code } }),
-    selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({ type: CommonActionType.SELECT_CELL, payload: { cellId, cursorPos } }),
+    selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({
+        type: CommonActionType.SELECT_CELL,
+        payload: { cellId, cursorPos }
+    }),
     addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL }),
-    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => ({ type: CommonActionType.EXECUTE_CELL, payload: { cellId, code, moveOp } }),
+    executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => ({
+        type: CommonActionType.EXECUTE_CELL,
+        payload: { cellId, code, moveOp }
+    }),
     executeAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXECUTE_ALL_CELLS }),
     executeAbove: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.EXECUTE_ABOVE, payload: { cellId } }),
     executeCellAndBelow: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.EXECUTE_CELL_AND_BELOW, payload: { cellId, code } }),
@@ -42,8 +51,14 @@ export const actionCreators = {
     clearAllOutputs: (): CommonAction<never | undefined> => ({ type: CommonActionType.CLEAR_ALL_OUTPUTS }),
     export: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXPORT }),
     save: (): CommonAction<never | undefined> => ({ type: CommonActionType.SAVE }),
-    showDataViewer: (variableName: string, columnSize: number): CommonAction<IShowDataViewerAction> => ({ type: CommonActionType.SHOW_DATA_VIEWER, payload: { variableName, columnSize } }),
-    sendCommand: (command: NativeCommandType, commandType: 'mouse' | 'keyboard'): CommonAction<ISendCommandAction> => ({ type: CommonActionType.SEND_COMMAND, payload: { command, commandType } }),
+    showDataViewer: (variableName: string, columnSize: number): CommonAction<IShowDataViewerAction> => ({
+        type: CommonActionType.SHOW_DATA_VIEWER,
+        payload: { variableName, columnSize }
+    }),
+    sendCommand: (command: NativeCommandType, commandType: 'mouse' | 'keyboard'): CommonAction<ISendCommandAction> => ({
+        type: CommonActionType.SEND_COMMAND,
+        payload: { command, commandType }
+    }),
     moveCellUp: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.MOVE_CELL_UP, payload: { cellId } }),
     moveCellDown: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.MOVE_CELL_DOWN, payload: { cellId } }),
     changeCellType: (cellId: string, currentCode: string): CommonAction<IChangeCellTypeAction> => ({ type: CommonActionType.CHANGE_CELL_TYPE, payload: { cellId, currentCode } }),
@@ -54,7 +69,10 @@ export const actionCreators = {
     redo: (): CommonAction<never | undefined> => ({ type: CommonActionType.REDO }),
     arrowUp: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.ARROW_UP, payload: { cellId, code } }),
     arrowDown: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.ARROW_DOWN, payload: { cellId, code } }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({ type: CommonActionType.EDIT_CELL, payload: { cellId, changes, modelId } }),
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({
+        type: CommonActionType.EDIT_CELL,
+        payload: { cellId, changes, modelId }
+    }),
     linkClick: (href: string): CommonAction<ILinkClickAction> => ({ type: CommonActionType.LINK_CLICK, payload: { href } }),
     showPlot: (imageHtml: string): CommonAction<IShowPlotAction> => ({ type: CommonActionType.SHOW_PLOT, payload: { imageHtml } }),
     gatherCell: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.GATHER_CELL, payload: { cellId } }),

@@ -35,7 +35,6 @@ suite('Terminal Service Factory', () => {
 
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IWorkspaceService), TypeMoq.It.isAny())).returns(() => workspaceService.object);
-
     });
     teardown(() => {
         disposables.forEach(disposable => {

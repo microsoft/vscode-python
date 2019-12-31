@@ -8,15 +8,7 @@ import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as typemoq from 'typemoq';
-import {
-    ConfigurationChangeEvent,
-    ConfigurationTarget,
-    Disposable,
-    EventEmitter,
-    TextEditor,
-    Uri,
-    WorkspaceConfiguration
-} from 'vscode';
+import { ConfigurationChangeEvent, ConfigurationTarget, Disposable, EventEmitter, TextEditor, Uri, WorkspaceConfiguration } from 'vscode';
 
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
 import { CommandManager } from '../../../client/common/application/commandManager';
@@ -290,7 +282,9 @@ suite('Data Science - Native Editor', () => {
                 listener.onMessage(InteractiveWindowMessages.Started, undefined);
                 return true;
             }
-            public toString() { return ''; }
+            public toString() {
+                return '';
+            }
         }
         const matcher = (): any => {
             return new WebPanelCreateMatcher();
@@ -298,22 +292,25 @@ suite('Data Science - Native Editor', () => {
         when(webPanelProvider.create(matcher())).thenResolve(instance(webPanel));
         lastWriteFileValue = undefined;
         wroteToFileEvent = new EventEmitter<string>();
-        fileSystem.setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny())).returns((a1, a2) => {
-            if (a1.includes(`${testIndex}.ipynb`)) {
-                lastWriteFileValue = a2;
-                wroteToFileEvent.fire(a2);
-            }
-            return Promise.resolve();
-        });
-        fileSystem.setup(f => f.readFile(typemoq.It.isAny())).returns((_a1) => {
-            return Promise.resolve(lastWriteFileValue);
-        });
+        fileSystem
+            .setup(f => f.writeFile(typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns((a1, a2) => {
+                if (a1.includes(`${testIndex}.ipynb`)) {
+                    lastWriteFileValue = a2;
+                    wroteToFileEvent.fire(a2);
+                }
+                return Promise.resolve();
+            });
+        fileSystem
+            .setup(f => f.readFile(typemoq.It.isAny()))
+            .returns(_a1 => {
+                return Promise.resolve(lastWriteFileValue);
+            });
     });
 
     teardown(() => {
         storage.clear();
         sinon.reset();
-
     });
 
     function createEditor() {
@@ -374,17 +371,19 @@ suite('Data Science - Native Editor', () => {
         expect(await editor.getContents()).to.be.equal(baseFile);
         expect(editor.isDirty).to.be.equal(false, 'Editor should not be dirty');
         editor.onMessage(InteractiveWindowMessages.EditCell, {
-            changes: [{
-                range: {
-                    startLineNumber: 2,
-                    startColumn: 1,
-                    endLineNumber: 2,
-                    endColumn: 1
-                },
-                rangeOffset: 4,
-                rangeLength: 0,
-                text: 'a'
-            }],
+            changes: [
+                {
+                    range: {
+                        startLineNumber: 2,
+                        startColumn: 1,
+                        endLineNumber: 2,
+                        endColumn: 1
+                    },
+                    rangeOffset: 4,
+                    rangeLength: 0,
+                    text: 'a'
+                }
+            ],
             id: 'NotebookImport#1'
         });
         expect(editor.cells).to.be.lengthOf(3);
@@ -616,15 +615,19 @@ suite('Data Science - Native Editor', () => {
         // Make our call to actually export
         editor.onMessage(InteractiveWindowMessages.Export, editor.cells);
 
-        await waitForCondition(async () => {
-            try {
-                // Wait until showTextDocument has been called, that's the signal that export is done
-                verify(docManager.showTextDocument(anything(), anything())).atLeast(1);
-                return true;
-            } catch {
-                return false;
-            }
-        }, 1_000, 'Timeout');
+        await waitForCondition(
+            async () => {
+                try {
+                    // Wait until showTextDocument has been called, that's the signal that export is done
+                    verify(docManager.showTextDocument(anything(), anything())).atLeast(1);
+                    return true;
+                } catch {
+                    return false;
+                }
+            },
+            1_000,
+            'Timeout'
+        );
 
         // Verify that we also opened our text document not exact match as verify doesn't seem to match that
         verify(docManager.openTextDocument(anything())).once();

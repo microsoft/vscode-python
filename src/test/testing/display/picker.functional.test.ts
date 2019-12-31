@@ -31,10 +31,12 @@ suite('Testing - TestDisplay', () => {
     let testDisplay: TestDisplay;
 
     function fullPathInTests(collectedTests: Tests, fullpath?: string): Tests {
-        collectedTests.testFiles = [{
-            fullPath: fullpath ? fullpath : 'path/to/testfile',
-            ...anything()
-        }];
+        collectedTests.testFiles = [
+            {
+                fullPath: fullpath ? fullpath : 'path/to/testfile',
+                ...anything()
+            }
+        ];
         return collectedTests;
     }
 
@@ -43,10 +45,8 @@ suite('Testing - TestDisplay', () => {
         mockedServiceContainer = mock(ServiceContainer);
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
-        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService))
-            .thenReturn(instance(mockedTestCollectionStorage));
-        when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell))
-            .thenReturn(instance(mockedAppShell));
+        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(mockedTestCollectionStorage));
+        when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
         testDisplay = new TestDisplay(instance(mockedServiceContainer), instance(mockedCommandManager));
     });
@@ -98,7 +98,7 @@ suite('Testing - TestDisplay', () => {
             verify(mockedAppShell.showQuickPick(anything(), anything())).never();
         });
 
-        test(`Test that clicking a codelens on parametrized tests opens a dropdown picker on windows (#8627)`, function () {
+        test(`Test that clicking a codelens on parametrized tests opens a dropdown picker on windows (#8627)`, function() {
             if (process.platform !== 'win32') {
                 // tslint:disable-next-line: no-invalid-this
                 this.skip();

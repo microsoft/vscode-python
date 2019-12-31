@@ -16,9 +16,7 @@ import { InterpreterUri } from './types';
 export class CondaInstaller extends ModuleInstaller {
     public _isCondaAvailable: boolean | undefined;
 
-    constructor(
-        @inject(IServiceContainer) serviceContainer: IServiceContainer
-    ) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer);
     }
 
@@ -87,9 +85,7 @@ export class CondaInstaller extends ModuleInstaller {
      */
     private async isCurrentEnvironmentACondaEnvironment(resource?: InterpreterUri): Promise<boolean> {
         const condaService = this.serviceContainer.get<ICondaService>(ICondaService);
-        const pythonPath = isResource(resource) ?
-            this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath :
-            resource.path;
+        const pythonPath = isResource(resource) ? this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(resource).pythonPath : resource.path;
         return condaService.isCondaEnvironment(pythonPath);
     }
 }

@@ -17,7 +17,7 @@ import { DebugConfigurationState, DebugConfigurationType, IDebugConfigurationPro
 
 @injectable()
 export class FlaskLaunchDebugConfigurationProvider implements IDebugConfigurationProvider {
-    constructor(@inject(IFileSystem) private fs: IFileSystem) { }
+    constructor(@inject(IFileSystem) private fs: IFileSystem) {}
     public isSupported(debugConfigurationType: DebugConfigurationType): boolean {
         return debugConfigurationType === DebugConfigurationType.launchFlask;
     }
@@ -34,11 +34,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
                 FLASK_ENV: 'development',
                 FLASK_DEBUG: '0'
             },
-            args: [
-                'run',
-                '--no-debugger',
-                '--no-reload'
-            ],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true
         };
 
@@ -47,7 +43,7 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
                 title: DebugConfigStrings.flask.enterAppPathOrNamePath.title(),
                 value: 'app.py',
                 prompt: DebugConfigStrings.flask.enterAppPathOrNamePath.prompt(),
-                validate: value => Promise.resolve((value && value.trim().length > 0) ? undefined : DebugConfigStrings.flask.enterAppPathOrNamePath.invalid())
+                validate: value => Promise.resolve(value && value.trim().length > 0 ? undefined : DebugConfigStrings.flask.enterAppPathOrNamePath.invalid())
             });
             if (selectedApp) {
                 manuallyEnteredAValue = true;
@@ -55,7 +51,11 @@ export class FlaskLaunchDebugConfigurationProvider implements IDebugConfiguratio
             }
         }
 
-        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, { configurationType: DebugConfigurationType.launchFlask, autoDetectedFlaskAppPyPath: !!application, manuallyEnteredAValue });
+        sendTelemetryEvent(EventName.DEBUGGER_CONFIGURATION_PROMPTS, undefined, {
+            configurationType: DebugConfigurationType.launchFlask,
+            autoDetectedFlaskAppPyPath: !!application,
+            manuallyEnteredAValue
+        });
         Object.assign(state.config, config);
     }
     protected async getApplicationPath(folder: WorkspaceFolder | undefined): Promise<string | undefined> {

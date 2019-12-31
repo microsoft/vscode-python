@@ -30,13 +30,13 @@ import {
 type ErrorResponse = { error?: string };
 
 export class ConnectionClosedError extends Error {
-    constructor(public readonly message: string){
+    constructor(public readonly message: string) {
         super();
     }
 }
 
 export class DaemonError extends Error {
-    constructor(public readonly message: string){
+    constructor(public readonly message: string) {
         super();
     }
 }
@@ -257,7 +257,7 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
                 response = await this.sendRequest(request, { module_name: moduleOrFile.moduleName, args, cwd: options.cwd, env: options.env });
             }
             // Might not get a response object back, as its observable.
-            if (response && response.error){
+            if (response && response.error) {
                 throw new DaemonError(response.error);
             }
         };
@@ -313,12 +313,12 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         // Wire up stdout/stderr.
         const OuputNotification = new NotificationType<Output<string>, void>('output');
         this.connection.onNotification(OuputNotification, output => this.outputObservale.next(output));
-        const logNotification = new NotificationType<{level: 'WARN'|'WARNING'|'INFO'|'DEBUG'|'NOTSET'; msg: string}, void>('log');
+        const logNotification = new NotificationType<{ level: 'WARN' | 'WARNING' | 'INFO' | 'DEBUG' | 'NOTSET'; msg: string }, void>('log');
         this.connection.onNotification(logNotification, output => {
             const msg = `Python Daemon: ${output.msg}`;
-            if (output.level === 'DEBUG' || output.level === 'NOTSET'){
+            if (output.level === 'DEBUG' || output.level === 'NOTSET') {
                 traceVerbose(msg);
-            } else if (output.level === 'INFO'){
+            } else if (output.level === 'INFO') {
                 traceInfo(msg);
             } else if (output.level === 'WARN' || output.level === 'WARNING') {
                 traceWarning(msg);

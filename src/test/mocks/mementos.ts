@@ -13,7 +13,7 @@ export class MockMemento implements Memento {
     public get<T>(key: string, defaultValue?: T): T {
         const exists = this._value.hasOwnProperty(key);
         // tslint:disable-next-line:no-any
-        return exists ? this._value[key] : defaultValue! as any;
+        return exists ? this._value[key] : (defaultValue! as any);
     }
     // tslint:disable-next-line:no-any
     public update(key: string, value: any): Thenable<void> {

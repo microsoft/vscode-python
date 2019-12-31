@@ -24,11 +24,11 @@ import { IS_MULTI_ROOT_TEST, TEST_DEBUGGER } from '../initialize';
 
 const fileToDebug = path.join(EXTENSION_ROOT_DIR, 'src', 'testMultiRootWkspc', 'workspace5', 'remoteDebugger-start-with-ptvsd-nowait.py');
 
-suite('Debugging - Capabilities', function () {
+suite('Debugging - Capabilities', function() {
     this.timeout(30000);
     let disposables: { dispose?: Function; destroy?: Function }[];
     let proc: ChildProcess;
-    setup(function () {
+    setup(function() {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         this.skip();
@@ -57,16 +57,16 @@ suite('Debugging - Capabilities', function () {
         }
     });
     function createRequest(cmd: string, requestArgs: any) {
-        return new class extends Message implements DebugProtocol.InitializeRequest {
+        return new (class extends Message implements DebugProtocol.InitializeRequest {
             public arguments: any;
             constructor(public command: string, args: any) {
                 super('request');
                 this.arguments = args;
             }
-        }(cmd, requestArgs);
+        })(cmd, requestArgs);
     }
     function createDebugSession() {
-        return new class extends PythonDebugger {
+        return new (class extends PythonDebugger {
             constructor() {
                 super({} as any);
             }
@@ -75,12 +75,12 @@ suite('Debugging - Capabilities', function () {
                 let initializeResponse = {
                     body: {}
                 } as DebugProtocol.InitializeResponse;
-                this.sendResponse = resp => initializeResponse = resp;
+                this.sendResponse = resp => (initializeResponse = resp);
 
                 this.initializeRequest(initializeResponse, { supportsRunInTerminalRequest: true, adapterID: '' });
                 return initializeResponse;
             }
-        }();
+        })();
     }
     test('Compare capabilities', async () => {
         const customDebugger = createDebugSession();

@@ -7,8 +7,7 @@ import { inject, injectable } from 'inversify';
 import { ConfigurationTarget } from 'vscode';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import { IConfigurationService, IPersistentStateFactory,
-    IPythonExtensionBanner } from '../common/types';
+import { IConfigurationService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry';
 import { Telemetry } from './constants';
@@ -35,8 +34,8 @@ export class InteractiveShiftEnterBanner implements IPythonExtensionBanner {
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IPersistentStateFactory) private persistentState: IPersistentStateFactory,
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
-        @inject(IConfigurationService) private configuration: IConfigurationService)
-    {
+        @inject(IConfigurationService) private configuration: IConfigurationService
+    ) {
         this.initialize();
     }
 

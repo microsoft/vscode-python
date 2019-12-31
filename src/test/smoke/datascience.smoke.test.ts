@@ -21,7 +21,7 @@ suite('Smoke Test: Interactive Window', () => {
             return this.skip();
         }
         // Skip for now on windows.
-        if (getOSType() === OSType.Windows){
+        if (getOSType() === OSType.Windows) {
             return this.skip();
         }
         await initialize();
@@ -50,7 +50,7 @@ suite('Smoke Test: Interactive Window', () => {
         const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'datascience', 'simple_nb.ipynb');
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
         const outputFile = path.join(path.dirname(file), 'ds.log');
-        await fs.writeFile(file, fileContents.replace('\'ds.log\'', `'${outputFile}'`), { encoding: 'utf-8' });
+        await fs.writeFile(file, fileContents.replace("'ds.log'", `'${outputFile}'`), { encoding: 'utf-8' });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }

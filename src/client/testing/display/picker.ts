@@ -13,8 +13,7 @@ import { ITestDisplay } from '../types';
 export class TestDisplay implements ITestDisplay {
     private readonly testCollectionStorage: ITestCollectionStorageService;
     private readonly appShell: IApplicationShell;
-    constructor(@inject(IServiceContainer) private readonly serviceRegistry: IServiceContainer,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
+    constructor(@inject(IServiceContainer) private readonly serviceRegistry: IServiceContainer, @inject(ICommandManager) private readonly commandManager: ICommandManager) {
         this.testCollectionStorage = serviceRegistry.get<ITestCollectionStorageService>(ITestCollectionStorageService);
         this.appShell = serviceRegistry.get<IApplicationShell>(IApplicationShell);
     }
@@ -27,29 +26,28 @@ export class TestDisplay implements ITestDisplay {
     }
     public displayTestUI(cmdSource: CommandSource, wkspace: Uri) {
         const tests = this.testCollectionStorage.getTests(wkspace);
-        this.appShell.showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
-            .then(item => item ? onItemSelected(this.commandManager, cmdSource, wkspace, item, false) : Promise.resolve());
+        this.appShell
+            .showQuickPick(buildItems(tests), { matchOnDescription: true, matchOnDetail: true })
+            .then(item => (item ? onItemSelected(this.commandManager, cmdSource, wkspace, item, false) : Promise.resolve()));
     }
     public selectTestFunction(rootDirectory: string, tests: Tests): Promise<FlattenedTestFunction> {
         return new Promise<FlattenedTestFunction>((resolve, reject) => {
-            this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, tests.testFunctions), { matchOnDescription: true, matchOnDetail: true })
-                .then(item => {
-                    if (item && item.fn) {
-                        return resolve(item.fn);
-                    }
-                    return reject();
-                }, reject);
+            this.appShell.showQuickPick(buildItemsForFunctions(rootDirectory, tests.testFunctions), { matchOnDescription: true, matchOnDetail: true }).then(item => {
+                if (item && item.fn) {
+                    return resolve(item.fn);
+                }
+                return reject();
+            }, reject);
         });
     }
     public selectTestFile(rootDirectory: string, tests: Tests): Promise<TestFile> {
         return new Promise<TestFile>((resolve, reject) => {
-            this.appShell.showQuickPick(buildItemsForTestFiles(rootDirectory, tests.testFiles), { matchOnDescription: true, matchOnDetail: true })
-                .then(item => {
-                    if (item && item.testFile) {
-                        return resolve(item.testFile);
-                    }
-                    return reject();
-                }, reject);
+            this.appShell.showQuickPick(buildItemsForTestFiles(rootDirectory, tests.testFiles), { matchOnDescription: true, matchOnDetail: true }).then(item => {
+                if (item && item.testFile) {
+                    return resolve(item.testFile);
+                }
+                return reject();
+            }, reject);
         });
     }
     public displayFunctionTestPickerUI(cmdSource: CommandSource, wkspace: Uri, rootDirectory: string, file: Uri, testFunctions: TestFunction[], debug?: boolean) {
@@ -64,13 +62,13 @@ export class TestDisplay implements ITestDisplay {
             return;
         }
         const flattenedFunctions = tests.testFunctions.filter(fn => {
-            return fn.parentTestFile.name === testFile.name &&
-                testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
+            return fn.parentTestFile.name === testFile.name && testFunctions.some(testFunc => testFunc.nameToRun === fn.testFunction.nameToRun);
         });
         const runAllItem = buildRunAllParametrizedItem(flattenedFunctions, debug);
         const functionItems = buildItemsForFunctions(rootDirectory, flattenedFunctions, undefined, undefined, debug);
-        this.appShell.showQuickPick(runAllItem.concat(...functionItems), { matchOnDescription: true, matchOnDetail: true })
-            .then(testItem => testItem ? onItemSelected(this.commandManager, cmdSource, wkspace, testItem, debug) : Promise.resolve());
+        this.appShell
+            .showQuickPick(runAllItem.concat(...functionItems), { matchOnDescription: true, matchOnDetail: true })
+            .then(testItem => (testItem ? onItemSelected(this.commandManager, cmdSource, wkspace, testItem, debug) : Promise.resolve()));
     }
 }
 
@@ -159,14 +157,22 @@ function buildRunAllParametrizedItem(tests: FlattenedTestFunction[], debug: bool
     tests.forEach(fn => {
         testFunctions.push(fn.testFunction);
     });
-    return [{
-        description: '',
-        label: debug ? 'Debug All' : 'Run All',
-        type: Type.RunParametrized,
-        fns: testFunctions
-    }];
+    return [
+        {
+            description: '',
+            label: debug ? 'Debug All' : 'Run All',
+            type: Type.RunParametrized,
+            fns: testFunctions
+        }
+    ];
 }
-function buildItemsForFunctions(rootDirectory: string, tests: FlattenedTestFunction[], sortBasedOnResults: boolean = false, displayStatusIcons: boolean = false, debug: boolean = false): TestItem[] {
+function buildItemsForFunctions(
+    rootDirectory: string,
+    tests: FlattenedTestFunction[],
+    sortBasedOnResults: boolean = false,
+    displayStatusIcons: boolean = false,
+    debug: boolean = false
+): TestItem[] {
     const functionItems: TestItem[] = [];
     tests.forEach(fn => {
         let icon = '';

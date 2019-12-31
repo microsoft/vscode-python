@@ -62,7 +62,7 @@ class DebugSessionLoggingTracker implements DebugAdapterTracker {
 
 @injectable()
 export class DebugSessionLoggingFactory implements DebugAdapterTrackerFactory {
-    constructor(@inject(IFileSystem) private readonly fileSystem: IFileSystem) { }
+    constructor(@inject(IFileSystem) private readonly fileSystem: IFileSystem) {}
 
     public createDebugAdapterTracker(session: DebugSession): ProviderResult<DebugAdapterTracker> {
         return new DebugSessionLoggingTracker(session, this.fileSystem);

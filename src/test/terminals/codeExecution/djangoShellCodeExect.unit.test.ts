@@ -37,10 +37,10 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace
             .setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
-            return {
-                dispose: () => void 0
-            };
-        });
+                return {
+                    dispose: () => void 0
+                };
+            });
         platform = TypeMoq.Mock.ofType<IPlatformService>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -74,7 +74,14 @@ suite('Terminal - Django Shell Code Execution', () => {
         disposables = [];
     });
 
-    async function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[], expectedTerminalArgs: string[], resource?: Uri) {
+    async function testReplCommandArguments(
+        isWindows: boolean,
+        pythonPath: string,
+        expectedPythonPath: string,
+        terminalArgs: string[],
+        expectedTerminalArgs: string[],
+        resource?: Uri
+    ) {
         platform.setup(p => p.isWindows).returns(() => isWindows);
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
@@ -182,7 +189,9 @@ suite('Terminal - Django Shell Code Execution', () => {
         const hasEnvName = condaEnv.name !== '';
         const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
         const expectedTerminalArgs = [...condaArgs, ...terminalArgs, 'manage.py', 'shell'];
-        pythonExecutionFactory.setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(condaExecutionService));
+        pythonExecutionFactory
+            .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(condaExecutionService));
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
 

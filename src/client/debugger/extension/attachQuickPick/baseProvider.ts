@@ -11,9 +11,11 @@ import { AttachPicker } from './picker';
 import { IAttachItem, IAttachProcessProvider } from './types';
 
 export abstract class BaseAttachProcessProvider implements IAttachProcessProvider {
-    constructor(@inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
+    constructor(
+        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry) { }
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+    ) {}
 
     public registerCommands() {
         const picker = new AttachPicker(this.applicationShell, this);

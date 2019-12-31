@@ -61,7 +61,9 @@ suite('Module Installer - Invalid Paths', () => {
                         return;
                     }
                     default: {
-                        test(`Ensure invalid path message is ${isExecutableAModule ? 'not displayed' : 'displayed'} ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
+                        test(`Ensure invalid path message is ${isExecutableAModule ? 'not displayed' : 'displayed'} ${product.name} (${
+                            resource ? 'With a resource' : 'without a resource'
+                        })`, async () => {
                             // If the path to executable is a module, then we won't display error message indicating path is invalid.
 
                             productPathService
@@ -84,9 +86,9 @@ suite('Module Installer - Invalid Paths', () => {
                             const persistValue = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
                             persistValue.setup(pv => pv.value).returns(() => false);
                             persistValue.setup(pv => pv.updateValue(TypeMoq.It.isValue(true)));
-                            persistentState.setup(ps =>
-                                ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))
-                            ).returns(() => persistValue.object);
+                            persistentState
+                                .setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined)))
+                                .returns(() => persistValue.object);
                             await installer.promptToInstall(product.value, resource);
                             productPathService.verifyAll();
                         });

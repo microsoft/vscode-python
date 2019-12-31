@@ -32,7 +32,13 @@ suite('Attach to process - attach process provider factory', () => {
         processServiceFactory = mock(ProcessServiceFactory);
         disposableRegistry = [];
 
-        factory = new AttachProcessProviderFactory(instance(applicationShell), instance(commandManager), instance(platformService), instance(processServiceFactory), disposableRegistry);
+        factory = new AttachProcessProviderFactory(
+            instance(applicationShell),
+            instance(commandManager),
+            instance(platformService),
+            instance(processServiceFactory),
+            disposableRegistry
+        );
     });
 
     test('getProvider should return a PsAttachProcessProvider instance (until the PR that adds Windows support lands)', () => {

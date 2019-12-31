@@ -41,7 +41,7 @@ export function getDefaultSettings() {
                 fontLigatures: false
             },
             fontSize: 14,
-            fontFamily: 'Consolas, \'Courier New\', monospace',
+            fontFamily: "Consolas, 'Courier New', monospace",
             theme: 'Default Dark+'
         },
         intellisenseOptions: {

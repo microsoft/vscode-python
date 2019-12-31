@@ -343,7 +343,7 @@ export class JediProxy implements Disposable {
                 this.proc.kill();
             }
             // tslint:disable-next-line:no-empty
-        } catch (ex) { }
+        } catch (ex) {}
         this.proc = undefined;
     }
 
@@ -357,7 +357,9 @@ export class JediProxy implements Disposable {
             this.languageServerStarted.reject(new Error('Language Server not started.'));
         }
         this.languageServerStarted = createDeferred<void>();
-        const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
+        const pythonProcess = await this.serviceContainer
+            .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+            .create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
         // Check if the python path is valid.
         if ((await pythonProcess.getExecutablePath().catch(() => '')).length === 0) {
             return;
@@ -634,7 +636,9 @@ export class JediProxy implements Disposable {
 
     private async getPathFromPythonCommand(args: string[]): Promise<string> {
         try {
-            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
+            const pythonProcess = await this.serviceContainer
+                .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                .create({ resource: Uri.file(this.workspacePath), pythonPath: this.lastKnownPythonInterpreter });
             const result = await pythonProcess.exec(args, { cwd: this.workspacePath });
             const lines = result.stdout.trim().splitLines();
             if (lines.length === 0) {
@@ -694,14 +698,14 @@ export class JediProxy implements Disposable {
         // Add support for paths relative to workspace.
         const extraPaths = this.pythonSettings.autoComplete
             ? this.pythonSettings.autoComplete.extraPaths.map(extraPath => {
-                if (path.isAbsolute(extraPath)) {
-                    return extraPath;
-                }
-                if (typeof this.workspacePath !== 'string') {
-                    return '';
-                }
-                return path.join(this.workspacePath, extraPath);
-            })
+                  if (path.isAbsolute(extraPath)) {
+                      return extraPath;
+                  }
+                  if (typeof this.workspacePath !== 'string') {
+                      return '';
+                  }
+                  return path.join(this.workspacePath, extraPath);
+              })
             : [];
 
         // Always add workspace path into extra paths.

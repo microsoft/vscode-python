@@ -17,7 +17,25 @@ import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { DataScience } from '../datascience';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
-import { ICell, ICodeCssGenerator, IDataScience, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindow, IInteractiveWindowInfo, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditorProvider, INotebookExporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
+import {
+    ICell,
+    ICodeCssGenerator,
+    IDataScience,
+    IDataScienceErrorHandler,
+    IDataViewerProvider,
+    IInteractiveWindow,
+    IInteractiveWindowInfo,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterDebugger,
+    IJupyterExecution,
+    IJupyterVariables,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookServerOptions,
+    IStatusProvider,
+    IThemeFinder
+} from '../types';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react');
 
@@ -81,7 +99,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             historyReactDir,
             [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
-            ViewColumn.Two);
+            ViewColumn.Two
+        );
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
@@ -211,9 +230,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.interactiveWindowProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
-            }).ignoreErrors();
+            this.interactiveWindowProvider
+                .getOrCreateActive()
+                .then(_v => {
+                    this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
+                        code: info.code,
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        id: info.id,
+                        originator: this.id,
+                        debug: false
+                    });
+                })
+                .ignoreErrors();
         }
     }
 
@@ -266,17 +295,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private export(cells: ICell[]) {
         // Should be an array of cells
         if (cells && this.applicationShell) {
-
             const filtersKey = localize.DataScience.exportDialogFilter();
             const filtersObject: Record<string, string[]> = {};
             filtersObject[filtersKey] = ['ipynb'];
 
             // Bring up the open file dialog box
-            this.applicationShell.showSaveDialog(
-                {
+            this.applicationShell
+                .showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
                     filters: filtersObject
-                }).then(async (uri: Uri | undefined) => {
+                })
+                .then(async (uri: Uri | undefined) => {
                     if (uri) {
                         await this.exportToFile(cells, uri.fsPath);
                     }
@@ -291,5 +320,4 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.export(cells);
         }
     }
-
 }

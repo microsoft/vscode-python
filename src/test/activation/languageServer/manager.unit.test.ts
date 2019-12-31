@@ -10,11 +10,7 @@ import { LanguageServerAnalysisOptions } from '../../../client/activation/langua
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import {
-    ILanguageServerAnalysisOptions,
-    ILanguageServerExtension,
-    ILanguageServerProxy
-} from '../../../client/activation/types';
+import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerProxy } from '../../../client/activation/types';
 import { IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -40,12 +36,7 @@ suite('Language Server - Manager', () => {
         languageServer = mock(LanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);
-        manager = new LanguageServerManager(
-            instance(serviceContainer),
-            instance(analysisOptions),
-            instance(lsExtension),
-            instance(surveyBanner)
-        );
+        manager = new LanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {

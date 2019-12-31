@@ -42,15 +42,15 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
     }
 
     public render() {
-        return(
-            <div id='content-panel-div' ref={this.containerRef}>
-                <div id='cell-table'>
-                    <div id='cell-table-body' role='list'>
+        return (
+            <div id="content-panel-div" ref={this.containerRef}>
+                <div id="cell-table">
+                    <div id="cell-table-body" role="list">
                         {this.renderCells()}
                         {this.renderEdit()}
                     </div>
                 </div>
-                <div ref={this.bottomRef}/>
+                <div ref={this.bottomRef} />
             </div>
         );
     }
@@ -59,7 +59,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         return this.props.cellVMs.map((cellVM: ICellViewModel, index: number) => {
             return this.props.renderCell(cellVM, index);
         });
-    }
+    };
 
     private renderEdit = () => {
         if (this.props.editable && this.props.newCellVM) {
@@ -67,7 +67,7 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
         } else {
             return null;
         }
-    }
+    };
 
     private scrollIntoView() {
         if (this.bottomRef.current && this.props.scrollToBottom) {
@@ -81,5 +81,4 @@ export class ContentPanel extends React.Component<IContentPanelProps> {
             this.throttledScrollIntoView();
         }
     }
-
 }

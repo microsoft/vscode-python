@@ -12,14 +12,10 @@ import { IDebugLocationTracker } from './types';
 // Hook up our IDebugLocationTracker to python debugging sessions
 @injectable()
 export class DebugLocationTrackerFactory implements IDebugLocationTracker, DebugAdapterTrackerFactory {
-
     private activeTrackers: Map<string, DebugLocationTracker> = new Map<string, DebugLocationTracker>();
     private updatedEmitter: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(
-        @inject(IDebugService) debugService: IDebugService,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry
-    ) {
+    constructor(@inject(IDebugService) debugService: IDebugService, @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
         disposableRegistry.push(debugService.registerDebugAdapterTrackerFactory('python', this));
     }
 

@@ -8,20 +8,13 @@ import { CellState } from '../../../../client/datascience/types';
 import { CursorPos, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import {
-    CommonActionType,
-    ICellAction,
-    IChangeCellTypeAction,
-    ICodeAction,
-    IExecuteAction
-} from '../../../interactive-common/redux/reducers/types';
+import { CommonActionType, ICellAction, IChangeCellTypeAction, ICodeAction, IExecuteAction } from '../../../interactive-common/redux/reducers/types';
 import { QueueAnotherFunc } from '../../../react-common/reduxUtils';
 import { NativeEditorReducerArg } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
 
 export namespace Execution {
-
     function executeRange(prevState: IMainState, start: number, end: number, codes: string[], queueAction: QueueAnotherFunc<CommonActionType>): IMainState {
         const newVMs = [...prevState.cellVMs];
         for (let pos = start; pos <= end; pos += 1) {
@@ -32,7 +25,11 @@ export namespace Execution {
             if (code && matcher.stripFirstMarker(code).length > 0) {
                 if (orig.cell.data.cell_type === 'code') {
                     // Update our input cell to be in progress again and clear outputs
-                    newVMs[pos] = Helpers.asCellViewModel({ ...orig, inputBlockText: code, cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code, outputs: [] } } });
+                    newVMs[pos] = Helpers.asCellViewModel({
+                        ...orig,
+                        inputBlockText: code,
+                        cell: { ...orig.cell, state: CellState.executing, data: { ...orig.cell.data, source: code, outputs: [] } }
+                    });
 
                     // Send a message if a code cell
                     queueAction(createPostableAction(InteractiveWindowMessages.ReExecuteCell, { code, id: orig.cell.id }));
@@ -41,7 +38,6 @@ export namespace Execution {
                     newVMs[pos] = Helpers.asCellViewModel({ ...orig, inputBlockText: code, cell: { ...orig.cell, data: { ...orig.cell.data, source: code } } });
                 }
             }
-
         }
 
         return {
@@ -119,7 +115,10 @@ export namespace Execution {
         // This is the same thing as executing the selected cell
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
         if (arg.prevState.selectedCellId && index >= 0) {
-            return executeCell({ ...arg, payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' } });
+            return executeCell({
+                ...arg,
+                payload: { cellId: arg.prevState.selectedCellId, code: concatMultilineStringInput(arg.prevState.cellVMs[index].cell.data.source), moveOp: 'none' }
+            });
         }
 
         return arg.prevState;
@@ -153,13 +152,18 @@ export namespace Execution {
                 }
             };
             // tslint:disable-next-line: no-any
-            cellVMs[index] = (newCell as any); // This is because IMessageCell doesn't fit in here. But message cells can't change type
+            cellVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here. But message cells can't change type
             if (newType === 'code') {
-                arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell,
-                    { cell: cellVMs[index].cell, index, code: arg.payload.currentCode, codeCellAboveId: Helpers.firstCodeCellAbove(arg.prevState, current.cell.id) }));
+                arg.queueAction(
+                    createPostableAction(InteractiveWindowMessages.InsertCell, {
+                        cell: cellVMs[index].cell,
+                        index,
+                        code: arg.payload.currentCode,
+                        codeCellAboveId: Helpers.firstCodeCellAbove(arg.prevState, current.cell.id)
+                    })
+                );
             } else {
-                arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell,
-                    { id: current.cell.id }));
+                arg.queueAction(createPostableAction(InteractiveWindowMessages.RemoveCell, { id: current.cell.id }));
             }
 
             // When changing a cell type, also give the cell focus.

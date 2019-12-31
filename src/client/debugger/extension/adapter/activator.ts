@@ -21,7 +21,7 @@ export class DebugAdapterActivator implements IExtensionSingleActivationService 
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager,
         @inject(IAttachProcessProviderFactory) private readonly attachProcessProviderFactory: IAttachProcessProviderFactory
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment)) {
             const attachProcessProvider = this.attachProcessProviderFactory.getProvider();

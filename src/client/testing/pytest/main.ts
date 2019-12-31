@@ -16,8 +16,7 @@ export class TestManager extends BaseTestManager {
     public get enabled() {
         return this.settings.testing.pytestEnabled;
     }
-    constructor(workspaceFolder: Uri, rootDirectory: string,
-        serviceContainer: IServiceContainer) {
+    constructor(workspaceFolder: Uri, rootDirectory: string, serviceContainer: IServiceContainer) {
         super(PYTEST_PROVIDER, Product.pytest, workspaceFolder, rootDirectory, serviceContainer);
         this.argsService = this.serviceContainer.get<IArgumentsService>(IArgumentsService, this.testProvider);
         this.helper = this.serviceContainer.get<ITestsHelper>(ITestsHelper);
@@ -28,8 +27,10 @@ export class TestManager extends BaseTestManager {
         const args = this.settings.testing.pytestArgs.slice(0);
         return {
             workspaceFolder: this.workspaceFolder,
-            cwd: this.rootDirectory, args,
-            token: this.testDiscoveryCancellationToken!, ignoreCache,
+            cwd: this.rootDirectory,
+            args,
+            token: this.testDiscoveryCancellationToken!,
+            ignoreCache,
             outChannel: this.outputChannel
         };
     }
@@ -49,7 +50,10 @@ export class TestManager extends BaseTestManager {
         const options: TestRunOptions = {
             workspaceFolder: this.workspaceFolder,
             cwd: this.rootDirectory,
-            tests, args, testsToRun, debug,
+            tests,
+            args,
+            testsToRun,
+            debug,
             token: this.testRunnerCancellationToken!,
             outChannel: this.outputChannel
         };

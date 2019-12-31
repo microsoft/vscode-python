@@ -1,20 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    InteractiveWindowMessages,
-    IRefreshVariablesRequest
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, IRefreshVariablesRequest } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable, IJupyterVariablesResponse } from '../../../../client/datascience/types';
 import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../postOffice';
 import { CommonReducerArg } from './types';
 
 export namespace Variables {
-
     export function refreshVariables<T>(arg: CommonReducerArg<T, IRefreshVariablesRequest>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariablesRequest,
-            arg.payload.newExecutionCount === undefined ? arg.prevState.currentExecutionCount : arg.payload.newExecutionCount));
+        arg.queueAction(
+            createPostableAction(
+                InteractiveWindowMessages.GetVariablesRequest,
+                arg.payload.newExecutionCount === undefined ? arg.prevState.currentExecutionCount : arg.payload.newExecutionCount
+            )
+        );
         return arg.prevState;
     }
 

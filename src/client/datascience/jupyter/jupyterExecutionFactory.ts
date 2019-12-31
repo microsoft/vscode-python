@@ -6,34 +6,23 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    ILogger,
-    IOutputChannel
-} from '../../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
-import {
-    IJupyterExecution,
-    INotebookServer,
-    INotebookServerOptions
-} from '../types';
+import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
 import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { NotebookStarter } from './notebookStarter';
 
-interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {
-}
+interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {}
 
 // tslint:disable:callable-types
 type JupyterExecutionClassType = {
-    new(liveShare: ILiveShareApi,
+    new (
+        liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
@@ -52,11 +41,11 @@ type JupyterExecutionClassType = {
 
 @injectable()
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
-
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
+    constructor(
+        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
         @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
@@ -68,7 +57,8 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         @inject(NotebookStarter) notebookStarter: NotebookStarter,
         @inject(IApplicationShell) appShell: IApplicationShell,
         @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
             liveShare,

@@ -4,9 +4,7 @@ import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
-import {
-    IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product
-} from '../common/types';
+import { IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Generator } from './generator';
 import { WorkspaceSymbolProvider } from './provider';
@@ -73,12 +71,11 @@ export class WorkspaceSymbols implements Disposable {
 
     private registerCommands() {
         this.disposables.push(
-            this.commandMgr.registerCommand(
-                Commands.Build_Workspace_Symbols,
-                async (rebuild: boolean = true, token?: CancellationToken) => {
-                    const promises = this.buildWorkspaceSymbols(rebuild, token);
-                    return Promise.all(promises);
-                }));
+            this.commandMgr.registerCommand(Commands.Build_Workspace_Symbols, async (rebuild: boolean = true, token?: CancellationToken) => {
+                const promises = this.buildWorkspaceSymbols(rebuild, token);
+                return Promise.all(promises);
+            })
+        );
     }
 
     private onDocumentSaved(document: TextDocument) {
@@ -133,7 +130,7 @@ export class WorkspaceSymbols implements Disposable {
                     promptPromise = installer.promptToInstall(Product.ctags, this.workspace.workspaceFolders![0]!.uri);
                     promptResponse = await promptPromise;
                 }
-                if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {
+                if (promptResponse !== InstallerResponse.Installed || !token || token.isCancellationRequested) {
                     return;
                 }
             }

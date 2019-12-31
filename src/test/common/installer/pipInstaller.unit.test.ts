@@ -37,7 +37,7 @@ suite('Pip installer', async () => {
         };
         pythonExecutionFactory
             .setup(p => p.create(TypeMoq.It.isAny()))
-            .callback((options) => {
+            .callback(options => {
                 assert.deepEqual(options, { resource: undefined, pythonPath: interpreter.path });
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
@@ -58,7 +58,7 @@ suite('Pip installer', async () => {
         const resource = Uri.parse('a');
         pythonExecutionFactory
             .setup(p => p.create(TypeMoq.It.isAny()))
-            .callback((options) => {
+            .callback(options => {
                 assert.deepEqual(options, { resource, pythonPath: undefined });
             })
             .returns(() => Promise.resolve(pythonExecutionService.object))
@@ -76,16 +76,12 @@ suite('Pip installer', async () => {
     test('Method isSupported() returns true if pip module is installed', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
-        pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
             .setup(p => (p as any).then)
             .returns(() => undefined);
-        pythonExecutionService
-            .setup(p => p.isModuleInstalled('pip'))
-            .returns(() => Promise.resolve(true));
+        pythonExecutionService.setup(p => p.isModuleInstalled('pip')).returns(() => Promise.resolve(true));
 
         const expected = await pipInstaller.isSupported(resource);
 
@@ -95,16 +91,12 @@ suite('Pip installer', async () => {
     test('Method isSupported() returns false if pip module is not installed', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
-        pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
             .setup(p => (p as any).then)
             .returns(() => undefined);
-        pythonExecutionService
-            .setup(p => p.isModuleInstalled('pip'))
-            .returns(() => Promise.resolve(false));
+        pythonExecutionService.setup(p => p.isModuleInstalled('pip')).returns(() => Promise.resolve(false));
 
         const expected = await pipInstaller.isSupported(resource);
 
@@ -114,16 +106,12 @@ suite('Pip installer', async () => {
     test('Method isSupported() returns false if checking if pip module is installed fails with error', async () => {
         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
         const resource = Uri.parse('a');
-        pythonExecutionFactory
-            .setup(p => p.create(TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve(pythonExecutionService.object));
+        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
         pythonExecutionService
             // tslint:disable-next-line: no-any
             .setup(p => (p as any).then)
             .returns(() => undefined);
-        pythonExecutionService
-            .setup(p => p.isModuleInstalled('pip'))
-            .returns(() => Promise.reject('Unable to check if module is installed'));
+        pythonExecutionService.setup(p => p.isModuleInstalled('pip')).returns(() => Promise.reject('Unable to check if module is installed'));
 
         const expected = await pipInstaller.isSupported(resource);
 

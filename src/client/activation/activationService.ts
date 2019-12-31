@@ -11,15 +11,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experimentGroups';
 import { traceError } from '../common/logger';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentsManager,
-    IOutputChannel,
-    IPersistentStateFactory,
-    IPythonSettings,
-    Resource
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
@@ -28,12 +20,7 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
-import {
-    IExtensionActivationService,
-    ILanguageServerActivator,
-    ILanguageServerCache,
-    LanguageServerType
-} from './types';
+import { IExtensionActivationService, ILanguageServerActivator, ILanguageServerCache, LanguageServerType } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
 const languageServerSetting: keyof IPythonSettings = 'languageServer';
@@ -56,17 +43,16 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private readonly interpreterService: IInterpreterService;
     private resource!: Resource;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager) {
+        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+    ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-            IDiagnosticsService,
-            LSNotSupportedDiagnosticServiceId
-        );
+        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
@@ -154,7 +140,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
             return false;
         }
-        return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
+        return settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined;
     }
 
     /**
@@ -172,7 +158,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         let enabled = configurationService.getSettings(this.resource).jediEnabled;
         const languageServerType = configurationService.getSettings(this.resource).languageServer;
-        enabled = enabled || (languageServerType === LanguageServerType.Jedi);
+        enabled = enabled || languageServerType === LanguageServerType.Jedi;
         this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
         return enabled;
     }
@@ -269,8 +255,10 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
             : [undefined];
-        if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
-            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1) {
+        if (
+            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
+            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
+        ) {
             return;
         }
         const jedi = this.useJedi();
@@ -285,10 +273,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             }
         }
 
-        const item = await this.appShell.showInformationMessage(
-            'Please reload the window switching between language engines.',
-            'Reload'
-        );
+        const item = await this.appShell.showInformationMessage('Please reload the window switching between language engines.', 'Reload');
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
@@ -302,6 +287,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     private async onClearAnalysisCaches() {
         const values = await Promise.all([...this.cache.values()]);
-        values.forEach(v => v.clearAnalysisCache ? v.clearAnalysisCache() : noop());
+        values.forEach(v => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
     }
 }

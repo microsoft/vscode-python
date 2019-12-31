@@ -12,7 +12,6 @@ import { LiveShareProxy } from './liveshareProxy';
 
 @injectable()
 export class LiveShareApi implements ILiveShareApi {
-
     private supported: boolean = false;
     private apiPromise: Promise<vsls.LiveShare | null> | undefined;
     private disposed: boolean = false;
@@ -50,10 +49,7 @@ export class LiveShareApi implements ILiveShareApi {
         if (supported !== this.supported) {
             this.supported = supported ? true : false;
             const liveShareTimeout = this.configService.getSettings().datascience.liveShareConnectionTimeout;
-            this.apiPromise = supported ?
-                vsls.getApi().then(a => a ? new LiveShareProxy(this.appShell, liveShareTimeout, a) : a) :
-                Promise.resolve(null);
-
+            this.apiPromise = supported ? vsls.getApi().then(a => (a ? new LiveShareProxy(this.appShell, liveShareTimeout, a) : a)) : Promise.resolve(null);
         } else if (!this.apiPromise) {
             this.apiPromise = Promise.resolve(null);
         }

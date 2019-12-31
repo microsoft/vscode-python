@@ -32,7 +32,7 @@ export abstract class BaseProductPathsService implements IProductPathService {
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);
             // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {}
 
         // User may have customized the module name or provided the fully qualifieid path.
         const executableName = this.getExecutableNameFromSettings(product, resource);

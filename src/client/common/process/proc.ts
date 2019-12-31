@@ -8,16 +8,7 @@ import { IDisposable } from '../types';
 import { createDeferred } from '../utils/async';
 import { EnvironmentVariables } from '../variables/types';
 import { DEFAULT_ENCODING } from './constants';
-import {
-    ExecutionResult,
-    IBufferDecoder,
-    IProcessService,
-    ObservableExecutionResult,
-    Output,
-    ShellOptions,
-    SpawnOptions,
-    StdErrError
-} from './types';
+import { ExecutionResult, IBufferDecoder, IProcessService, ObservableExecutionResult, Output, ShellOptions, SpawnOptions, StdErrError } from './types';
 
 // tslint:disable:no-any
 export class ProcessService extends EventEmitter implements IProcessService {
@@ -61,7 +52,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         let procExited = false;
-        const disposable : IDisposable = {
+        const disposable: IDisposable = {
             dispose: () => {
                 if (proc && !proc.killed && !procExited) {
                     ProcessService.kill(proc.pid);
@@ -82,12 +73,14 @@ export class ProcessService extends EventEmitter implements IProcessService {
             };
 
             if (options.token) {
-                disposables.push(options.token.onCancellationRequested(() => {
-                    if (!procExited && !proc.killed) {
-                        proc.kill();
-                        procExited = true;
-                    }
-                }));
+                disposables.push(
+                    options.token.onCancellationRequested(() => {
+                        if (!procExited && !proc.killed) {
+                            proc.kill();
+                            procExited = true;
+                        }
+                    })
+                );
             }
 
             const sendOutput = (source: 'stdout' | 'stderr', data: Buffer) => {
@@ -132,7 +125,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';
         const proc = spawn(file, args, spawnOptions);
         const deferred = createDeferred<ExecutionResult<string>>();
-        const disposable : IDisposable = {
+        const disposable: IDisposable = {
             dispose: () => {
                 if (!proc.killed && !deferred.completed) {
                     proc.kill();
@@ -200,7 +193,7 @@ export class ProcessService extends EventEmitter implements IProcessService {
                     resolve({ stderr: stderr && stderr.length > 0 ? stderr : undefined, stdout: stdout });
                 }
             });
-            const disposable : IDisposable = {
+            const disposable: IDisposable = {
                 dispose: () => {
                     if (!proc.killed) {
                         proc.kill();
@@ -211,11 +204,11 @@ export class ProcessService extends EventEmitter implements IProcessService {
         });
     }
 
-    private getDefaultOptions<T extends (ShellOptions | SpawnOptions)>(options: T): T {
+    private getDefaultOptions<T extends ShellOptions | SpawnOptions>(options: T): T {
         const defaultOptions = { ...options };
         const execOptions = defaultOptions as SpawnOptions;
         if (execOptions) {
-            const encoding = execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING;
+            const encoding = (execOptions.encoding = typeof execOptions.encoding === 'string' && execOptions.encoding.length > 0 ? execOptions.encoding : DEFAULT_ENCODING);
             delete execOptions.encoding;
             execOptions.encoding = encoding;
         }
@@ -234,5 +227,4 @@ export class ProcessService extends EventEmitter implements IProcessService {
 
         return defaultOptions;
     }
-
 }

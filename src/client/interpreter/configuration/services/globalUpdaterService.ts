@@ -2,7 +2,7 @@ import { IWorkspaceService } from '../../../common/application/types';
 import { IPythonPathUpdaterService } from '../types';
 
 export class GlobalPythonPathUpdaterService implements IPythonPathUpdaterService {
-    constructor(private readonly workspaceService: IWorkspaceService) { }
+    constructor(private readonly workspaceService: IWorkspaceService) {}
     public async updatePythonPath(pythonPath: string): Promise<void> {
         const pythonConfig = this.workspaceService.getConfiguration('python');
         const pythonPathValue = pythonConfig.inspect<string>('pythonPath');

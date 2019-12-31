@@ -45,7 +45,8 @@ export class PipInstaller extends ModuleInstaller {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const resource = isResource(info) ? info : undefined;
         const pythonPath = isResource(info) ? undefined : info.path;
-        return pythonExecutionFactory.create({ resource, pythonPath })
+        return pythonExecutionFactory
+            .create({ resource, pythonPath })
             .then(proc => proc.isModuleInstalled('pip'))
             .catch(() => false);
     }

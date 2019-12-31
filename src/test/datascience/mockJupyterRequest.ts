@@ -54,12 +54,8 @@ class SimpleMessageProducer implements IMessageProducer {
                 msg_type: msgType,
                 date: ''
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
+            parent_header: {},
+            metadata: {},
             content: result
         };
     }
@@ -75,12 +71,8 @@ class SimpleMessageProducer implements IMessageProducer {
                 msg_type: 'stdin' as any,
                 date: ''
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
+            parent_header: {},
+            metadata: {},
             content: {
                 prompt: 'Type Something',
                 password: false
@@ -99,18 +91,13 @@ class SimpleMessageProducer implements IMessageProducer {
                 msg_type: 'clear_output',
                 date: ''
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
+            parent_header: {},
+            metadata: {},
             content: {
                 wait
             }
         };
     }
-
 }
 
 class OutputMessageProducer extends SimpleMessageProducer {
@@ -179,12 +166,8 @@ class OutputMessageProducer extends SimpleMessageProducer {
                 msg_id: '1.1',
                 msg_type: 'stdin' as any
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
+            parent_header: {},
+            metadata: {},
             content: {}
         } as any;
     }
@@ -219,18 +202,12 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
                 version: '1.1',
                 session: '1111111111',
                 msg_id: '1.1',
-                msg_type: 'shell' as any as KernelMessage.ShellMessageType,
+                msg_type: ('shell' as any) as KernelMessage.ShellMessageType,
                 date: ''
             },
-            parent_header: {
-
-            },
-            metadata: {
-
-            },
-            content: {
-
-            }
+            parent_header: {},
+            metadata: {},
+            content: {}
         };
         this.onIOPub = noop;
         this.onReply = noop;
@@ -291,31 +268,37 @@ export class MockJupyterRequest implements Kernel.IFuture<any, any> {
             this.currentProducer = producer;
             setTimeout(() => {
                 // Produce the next message
-                producer.produceNextMessage().then(r => {
-                    // If there's a message, send it.
-                    if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
-                        this.onIOPub(r.message as KernelMessage.IIOPubMessage);
-                    } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
-                        this.onStdin(r.message as KernelMessage.IStdinMessage);
-                    }
-
-                    // Move onto the next producer if allowed
-                    if (!this.cancelToken.isCancellationRequested) {
-                        if (r.haveMore) {
-                            this.sendMessages(producers, delay);
-                        } else {
-                            this.sendMessages(producers.slice(1), delay);
+                producer
+                    .produceNextMessage()
+                    .then(r => {
+                        // If there's a message, send it.
+                        if (r.message && r.message.channel === 'iopub' && this.onIOPub) {
+                            this.onIOPub(r.message as KernelMessage.IIOPubMessage);
+                        } else if (r.message && r.message.channel === 'stdin' && this.onStdin) {
+                            this.onStdin(r.message as KernelMessage.IStdinMessage);
                         }
-                    }
-                }).ignoreErrors();
+
+                        // Move onto the next producer if allowed
+                        if (!this.cancelToken.isCancellationRequested) {
+                            if (r.haveMore) {
+                                this.sendMessages(producers, delay);
+                            } else {
+                                this.sendMessages(producers.slice(1), delay);
+                            }
+                        }
+                    })
+                    .ignoreErrors();
             }, delay);
         } else {
             this.currentProducer = undefined;
             // No more messages, create a simple producer for our shell message
             const shellProducer = new SimpleMessageProducer('done' as any, { status: 'success' }, 'shell');
-            shellProducer.produceNextMessage().then((r) => {
-                this.deferred.resolve(<any>r.message as KernelMessage.IShellMessage);
-            }).ignoreErrors();
+            shellProducer
+                .produceNextMessage()
+                .then(r => {
+                    this.deferred.resolve((<any>r.message) as KernelMessage.IShellMessage);
+                })
+                .ignoreErrors();
         }
     }
 }

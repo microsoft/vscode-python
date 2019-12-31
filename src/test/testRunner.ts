@@ -15,7 +15,7 @@ import { initialize } from './initialize';
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function (): number[] {
+    tty.getWindowSize = function(): number[] {
         return [80, 75];
     };
 }

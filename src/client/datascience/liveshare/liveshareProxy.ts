@@ -16,11 +16,7 @@ export class LiveShareProxy implements vsls.LiveShare {
     private guestChecker: vsls.SharedService | vsls.SharedServiceProxy | null = null;
     private pendingGuestCheckCount = 0;
     private peerCheckPromise: Deferred<boolean> | undefined;
-    constructor(
-        private applicationShell: IApplicationShell,
-        private peerTimeout: number | undefined,
-        private realApi: vsls.LiveShare
-    ) {
+    constructor(private applicationShell: IApplicationShell, private peerTimeout: number | undefined, private realApi: vsls.LiveShare) {
         this.realApi.onDidChangePeers(this.onPeersChanged, this);
         this.realApi.onDidChangeSession(this.onSessionChanged, this);
         this.onSessionChanged({ session: this.realApi.session }).ignoreErrors();
@@ -53,7 +49,11 @@ export class LiveShareProxy implements vsls.LiveShare {
         // Create a proxy for the shared service. This allows us to wait for the next request/response
         // on the shared service to cause a failure when the guest doesn't have the python extension installed.
         if (realService) {
-            return new ServiceProxy(realService, () => this.peersAreOkay(), () => this.forceShutdown());
+            return new ServiceProxy(
+                realService,
+                () => this.peersAreOkay(),
+                () => this.forceShutdown()
+            );
         }
 
         return realService;
@@ -163,10 +163,13 @@ export class LiveShareProxy implements vsls.LiveShare {
 
     private forceShutdown() {
         // One or more guests doesn't have the python extension installed. Force our live share session to disconnect
-        this.realApi.end().then(() => {
-            this.pendingGuestCheckCount = 0;
-            this.peerCheckPromise = undefined;
-            this.applicationShell.showErrorMessage(localize.DataScience.liveShareInvalid());
-        }).ignoreErrors();
+        this.realApi
+            .end()
+            .then(() => {
+                this.pendingGuestCheckCount = 0;
+                this.peerCheckPromise = undefined;
+                this.applicationShell.showErrorMessage(localize.DataScience.liveShareInvalid());
+            })
+            .ignoreErrors();
     }
 }

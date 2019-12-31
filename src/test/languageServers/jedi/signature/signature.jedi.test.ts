@@ -14,12 +14,7 @@ import { UnitTestIocContainer } from '../../../testing/serviceRegistry';
 const autoCompPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'signature');
 
 class SignatureHelpResult {
-    constructor(
-        public line: number,
-        public index: number,
-        public signaturesCount: number,
-        public activeParameter: number,
-        public parameterName: string | null) { }
+    constructor(public line: number, public index: number, public signaturesCount: number, public activeParameter: number, public parameterName: string | null) {}
 }
 
 // tslint:disable-next-line:max-func-body-length
@@ -29,7 +24,7 @@ suite('Signatures (Jedi)', () => {
     suiteSetup(async () => {
         await initialize();
         initializeDI();
-        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri!) === 2;
+        isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -79,22 +74,22 @@ suite('Signatures (Jedi)', () => {
             ];
         } else {
             expected = [
-            new SignatureHelpResult(0, 0, 0, 0, null),
-            new SignatureHelpResult(0, 1, 0, 0, null),
-            new SignatureHelpResult(0, 2, 0, 0, null),
-            new SignatureHelpResult(0, 3, 0, 0, null),
-            new SignatureHelpResult(0, 4, 0, 0, null),
-            new SignatureHelpResult(0, 5, 0, 0, null),
-            new SignatureHelpResult(0, 6, 2, 0, 'start'),
-            new SignatureHelpResult(0, 7, 2, 0, 'start')
-            // new SignatureHelpResult(0, 6, 1, 0, 'start'),
-            // new SignatureHelpResult(0, 7, 1, 0, 'start'),
-            // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
-            // new SignatureHelpResult(0, 9, 1, 1, 'stop'),
-            // new SignatureHelpResult(0, 10, 1, 1, 'stop'),
-            // new SignatureHelpResult(0, 11, 1, 2, 'step'),
-            // new SignatureHelpResult(1, 0, 1, 2, 'step')
-        ];
+                new SignatureHelpResult(0, 0, 0, 0, null),
+                new SignatureHelpResult(0, 1, 0, 0, null),
+                new SignatureHelpResult(0, 2, 0, 0, null),
+                new SignatureHelpResult(0, 3, 0, 0, null),
+                new SignatureHelpResult(0, 4, 0, 0, null),
+                new SignatureHelpResult(0, 5, 0, 0, null),
+                new SignatureHelpResult(0, 6, 2, 0, 'start'),
+                new SignatureHelpResult(0, 7, 2, 0, 'start')
+                // new SignatureHelpResult(0, 6, 1, 0, 'start'),
+                // new SignatureHelpResult(0, 7, 1, 0, 'start'),
+                // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
+                // new SignatureHelpResult(0, 9, 1, 1, 'stop'),
+                // new SignatureHelpResult(0, 10, 1, 1, 'stop'),
+                // new SignatureHelpResult(0, 11, 1, 2, 'step'),
+                // new SignatureHelpResult(1, 0, 1, 2, 'step')
+            ];
         }
 
         const document = await openDocument(path.join(autoCompPath, 'basicSig.py'));
@@ -103,7 +98,7 @@ suite('Signatures (Jedi)', () => {
         }
     });
 
-    test('For ellipsis', async function () {
+    test('For ellipsis', async function() {
         if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

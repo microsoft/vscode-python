@@ -80,19 +80,18 @@ export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
 
-export interface ILanguageServer extends
-    RenameProvider,
-    DefinitionProvider,
-    HoverProvider,
-    ReferenceProvider,
-    CompletionItemProvider,
-    CodeLensProvider,
-    DocumentSymbolProvider,
-    SignatureHelpProvider,
-    Partial<DocumentHandler>,
-    Partial<LanguageServerCommandHandler>,
-    IDisposable {
-}
+export interface ILanguageServer
+    extends RenameProvider,
+        DefinitionProvider,
+        HoverProvider,
+        ReferenceProvider,
+        CompletionItemProvider,
+        CodeLensProvider,
+        DocumentSymbolProvider,
+        SignatureHelpProvider,
+        Partial<DocumentHandler>,
+        Partial<LanguageServerCommandHandler>,
+        IDisposable {}
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {

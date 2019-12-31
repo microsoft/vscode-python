@@ -34,12 +34,7 @@ suite('Terminals Activation - Pipenv', () => {
                 workspaceService = mock(WorkspaceService);
                 interpreterService = mock(InterpreterService);
                 pipenvService = TypeMoq.Mock.ofType<IPipEnvService>();
-                activationProvider = new PipEnvActivationCommandProvider(
-                    instance(interpreterService),
-                    pipenvService.object,
-                    instance(workspaceService),
-                    instance(fs)
-                );
+                activationProvider = new PipEnvActivationCommandProvider(instance(interpreterService), pipenvService.object, instance(workspaceService), instance(fs));
 
                 pipenvService.setup(p => p.executable).returns(() => pipenvExecFile);
             });
@@ -54,8 +49,7 @@ suite('Terminals Activation - Pipenv', () => {
                 }
             });
             test('No commands for an interpreter that is not Pipenv', async () => {
-                const nonPipInterpreterTypes = getNamesAndValues<InterpreterType>(InterpreterType)
-                    .filter(t => t.value !== InterpreterType.Pipenv);
+                const nonPipInterpreterTypes = getNamesAndValues<InterpreterType>(InterpreterType).filter(t => t.value !== InterpreterType.Pipenv);
                 for (const interpreterType of nonPipInterpreterTypes) {
                     when(interpreterService.getActiveInterpreter(resource)).thenResolve({ type: interpreterType } as any);
 

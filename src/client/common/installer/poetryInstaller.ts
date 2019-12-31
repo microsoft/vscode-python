@@ -20,7 +20,6 @@ const poetryFile = 'poetry.lock';
 
 @injectable()
 export class PoetryInstaller extends ModuleInstaller {
-
     public get name(): string {
         return 'poetry';
     }
@@ -32,11 +31,13 @@ export class PoetryInstaller extends ModuleInstaller {
         return 10;
     }
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory) {
+        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory
+    ) {
         super(serviceContainer);
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
@@ -57,7 +58,7 @@ export class PoetryInstaller extends ModuleInstaller {
             const processService = await this.processFactory.create(workfolder);
             const execPath = this.configurationService.getSettings(workfolder).poetryPath;
             const result = await processService.exec(execPath, ['list'], { cwd: workfolder.fsPath });
-            return result && ((result.stderr || '').trim().length === 0);
+            return result && (result.stderr || '').trim().length === 0;
         } catch (error) {
             traceError(`${poetryFile} exists but Poetry not found`, error);
             return false;

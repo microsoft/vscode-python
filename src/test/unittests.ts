@@ -20,12 +20,12 @@ const Module = require('module');
 
 // Required for DS functional tests.
 // tslint:disable-next-line:no-function-expression
-(function () {
+(function() {
     const origRequire = Module.prototype.require;
     const _require = (context: any, filepath: any) => {
         return origRequire.call(context, filepath);
     };
-    Module.prototype.require = function (filepath: string) {
+    Module.prototype.require = function(filepath: string) {
         if (filepath.endsWith('.css') || filepath.endsWith('.svg')) {
             return '';
         }

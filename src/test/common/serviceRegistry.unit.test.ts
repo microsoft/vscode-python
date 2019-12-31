@@ -16,7 +16,17 @@ import { DocumentManager } from '../../client/common/application/documentManager
 import { Extensions } from '../../client/common/application/extensions';
 import { LanguageService } from '../../client/common/application/languageService';
 import { TerminalManager } from '../../client/common/application/terminalManager';
-import { IApplicationEnvironment, IApplicationShell, ICommandManager, IDebugService, IDocumentManager, ILanguageService, ILiveShareApi, ITerminalManager, IWorkspaceService } from '../../client/common/application/types';
+import {
+    IApplicationEnvironment,
+    IApplicationShell,
+    ICommandManager,
+    IDebugService,
+    IDocumentManager,
+    ILanguageService,
+    ILiveShareApi,
+    ITerminalManager,
+    IWorkspaceService
+} from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { ConfigurationService } from '../../client/common/configuration/service';
@@ -52,8 +62,32 @@ import { SettingsShellDetector } from '../../client/common/terminal/shellDetecto
 import { TerminalNameShellDetector } from '../../client/common/terminal/shellDetectors/terminalNameShellDetector';
 import { UserEnvironmentShellDetector } from '../../client/common/terminal/shellDetectors/userEnvironmentShellDetector';
 import { VSCEnvironmentShellDetector } from '../../client/common/terminal/shellDetectors/vscEnvironmentShellDetector';
-import { IShellDetector, ITerminalActivationCommandProvider, ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, ITerminalServiceFactory, TerminalActivationProviders } from '../../client/common/terminal/types';
-import { IAsyncDisposableRegistry, IBrowserService, IConfigurationService, ICryptoUtils, ICurrentProcess, IEditorUtils, IExperimentsManager, IExtensions, IFeatureDeprecationManager, IHttpClient, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IRandom } from '../../client/common/types';
+import {
+    IShellDetector,
+    ITerminalActivationCommandProvider,
+    ITerminalActivationHandler,
+    ITerminalActivator,
+    ITerminalHelper,
+    ITerminalServiceFactory,
+    TerminalActivationProviders
+} from '../../client/common/terminal/types';
+import {
+    IAsyncDisposableRegistry,
+    IBrowserService,
+    IConfigurationService,
+    ICryptoUtils,
+    ICurrentProcess,
+    IEditorUtils,
+    IExperimentsManager,
+    IExtensions,
+    IFeatureDeprecationManager,
+    IHttpClient,
+    IInstaller,
+    ILogger,
+    IPathUtils,
+    IPersistentStateFactory,
+    IRandom
+} from '../../client/common/types';
 import { IMultiStepInputFactory, MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
 import { Random } from '../../client/common/utils/random';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
@@ -115,7 +149,12 @@ suite('Common - Service Registry', () => {
         ].forEach(mapping => {
             if (mapping.length === 2) {
                 serviceManager
-                    .setup(s => s.addSingleton(typemoq.It.isValue(mapping[0] as any), typemoq.It.is(value => mapping[1] === value)))
+                    .setup(s =>
+                        s.addSingleton(
+                            typemoq.It.isValue(mapping[0] as any),
+                            typemoq.It.is(value => mapping[1] === value)
+                        )
+                    )
                     .verifiable(typemoq.Times.atLeastOnce());
             } else {
                 serviceManager

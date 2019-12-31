@@ -44,7 +44,7 @@ suite('Variable Extraction', () => {
         commands.executeCommand = oldExecuteCommand;
         try {
             await fs.unlink(refactorTargetFile);
-        } catch { }
+        } catch {}
         await closeActiveWindows();
     });
 
@@ -63,7 +63,8 @@ suite('Variable Extraction', () => {
         const rangeOfTextToExtract = new Range(startPos, endPos);
         const proxy = new RefactorProxy(EXTENSION_DIR, pythonSettings, path.dirname(refactorTargetFile), ioc.serviceContainer);
 
-        const DIFF = '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
+        const DIFF =
+            '--- a/refactor.py\n+++ b/refactor.py\n@@ -232,7 +232,8 @@\n         sys.stdout.flush()\n \n     def watch(self):\n-        self._write_response("STARTED")\n+        myNewVariable = "STARTED"\n+        self._write_response(myNewVariable)\n         while True:\n             try:\n                 self._process_request(self._input.readline())\n';
         const mockTextDoc = await workspace.openTextDocument(refactorTargetFile);
         const expectedTextEdits = getTextEditsFromPatch(mockTextDoc.getText(), DIFF);
         try {
@@ -86,7 +87,7 @@ suite('Variable Extraction', () => {
     }
 
     // tslint:disable-next-line:no-function-expression
-    test('Extract Variable', async function () {
+    test('Extract Variable', async function() {
         if (isPythonVersion('3.7')) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

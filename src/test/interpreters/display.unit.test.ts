@@ -85,7 +85,7 @@ suite('Interpreters Display', () => {
         }
     }
     test('Sattusbar must be created and have command name initialized', () => {
-        statusBar.verify(s => s.command = TypeMoq.It.isValue('python.setInterpreter'), TypeMoq.Times.once());
+        statusBar.verify(s => (s.command = TypeMoq.It.isValue('python.setInterpreter')), TypeMoq.Times.once());
         expect(disposableRegistry).to.be.lengthOf.above(0);
         expect(disposableRegistry).contain(statusBar.object);
     });
@@ -106,8 +106,8 @@ suite('Interpreters Display', () => {
         await interpreterDisplay.refresh(resource);
 
         verify(autoSelection.autoSelectInterpreter(anything())).once();
-        statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
-        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!, TypeMoq.Times.once());
+        statusBar.verify(s => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(activeInterpreter.path)!), TypeMoq.Times.once());
     });
     test('If interpreter is not identified then tooltip should point to python Path', async () => {
         const resource = Uri.file('x');
@@ -116,16 +116,16 @@ suite('Interpreters Display', () => {
         const displayName = 'This is the display name';
 
         setupWorkspaceFolder(resource, workspaceFolder);
-        const pythonInterpreter: PythonInterpreter = {
+        const pythonInterpreter: PythonInterpreter = ({
             displayName,
             path: pythonPath
-        } as any as PythonInterpreter;
+        } as any) as PythonInterpreter;
         interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isValue(workspaceFolder))).returns(() => Promise.resolve(pythonInterpreter));
 
         await interpreterDisplay.refresh(resource);
 
-        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(pythonPath), TypeMoq.Times.once());
-        statusBar.verify(s => s.text = TypeMoq.It.isValue(displayName), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)), TypeMoq.Times.once());
+        statusBar.verify(s => (s.text = TypeMoq.It.isValue(displayName)), TypeMoq.Times.once());
     });
     test('If interpreter file does not exist then update status bar accordingly', async () => {
         const resource = Uri.file('x');
@@ -143,8 +143,8 @@ suite('Interpreters Display', () => {
 
         await interpreterDisplay.refresh(resource);
 
-        statusBar.verify(s => s.color = TypeMoq.It.isValue('yellow'), TypeMoq.Times.once());
-        statusBar.verify(s => s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter'), TypeMoq.Times.once());
+        statusBar.verify(s => (s.color = TypeMoq.It.isValue('yellow')), TypeMoq.Times.once());
+        statusBar.verify(s => (s.text = TypeMoq.It.isValue('$(alert) Select Python Interpreter')), TypeMoq.Times.once());
     });
     test('Ensure we try to identify the active workspace when a resource is not provided ', async () => {
         const workspaceFolder = Uri.file('x');
@@ -165,14 +165,16 @@ suite('Interpreters Display', () => {
             .verifiable(TypeMoq.Times.once());
         interpreterHelper
             .setup(i => i.getActiveWorkspaceUri(undefined))
-            .returns(() => { return { folderUri: workspaceFolder, configTarget: ConfigurationTarget.Workspace }; })
+            .returns(() => {
+                return { folderUri: workspaceFolder, configTarget: ConfigurationTarget.Workspace };
+            })
             .verifiable(TypeMoq.Times.once());
 
         await interpreterDisplay.refresh();
 
         interpreterHelper.verifyAll();
         interpreterService.verifyAll();
-        statusBar.verify(s => s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!, TypeMoq.Times.once());
-        statusBar.verify(s => s.tooltip = TypeMoq.It.isValue(pythonPath)!, TypeMoq.Times.once());
+        statusBar.verify(s => (s.text = TypeMoq.It.isValue(activeInterpreter.displayName)!), TypeMoq.Times.once());
+        statusBar.verify(s => (s.tooltip = TypeMoq.It.isValue(pythonPath)!), TypeMoq.Times.once());
     });
 });

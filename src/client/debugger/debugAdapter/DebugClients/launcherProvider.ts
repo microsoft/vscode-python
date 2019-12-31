@@ -12,15 +12,15 @@ import { IDebugLauncherScriptProvider, IRemoteDebugLauncherScriptProvider, Local
 
 const pathToScript = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'ptvsd_launcher.py');
 export class NoDebugLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions> {
-    constructor(@optional() private script: string = pathToScript) { }
+    constructor(@optional() private script: string = pathToScript) {}
     public getLauncherArgs(options: LocalDebugOptions): string[] {
         const customDebugger = options.customDebugger ? '--custom' : '--default';
         return [this.script, customDebugger, '--nodebug', '--client', '--host', options.host, '--port', options.port.toString()];
     }
 }
 
-export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions>  {
-    constructor(@optional() private script: string = pathToScript) { }
+export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvider<LocalDebugOptions> {
+    constructor(@optional() private script: string = pathToScript) {}
     public getLauncherArgs(options: LocalDebugOptions): string[] {
         const customDebugger = options.customDebugger ? '--custom' : '--default';
         return [this.script, customDebugger, '--client', '--host', options.host, '--port', options.port.toString()];
@@ -35,7 +35,7 @@ export class DebuggerLauncherScriptProvider implements IDebugLauncherScriptProvi
  * @implements {IRemoteDebugLauncherScriptProvider}
  */
 export class RemoteDebuggerExternalLauncherScriptProvider implements IRemoteDebugLauncherScriptProvider {
-    constructor(@optional() private script: string = pathToScript) { }
+    constructor(@optional() private script: string = pathToScript) {}
     public getLauncherArgs(options: RemoteDebugOptions): string[] {
         const waitArgs = options.waitUntilDebuggerAttaches ? ['--wait'] : [];
         return [this.script.fileToCommandArgument(), '--default', '--host', options.host, '--port', options.port.toString()].concat(waitArgs);

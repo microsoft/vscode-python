@@ -305,7 +305,7 @@ export class DataScience implements IDataScience {
         } catch {
             return localize.DataScience.jupyterSelectURIInvalidURI();
         }
-    }
+    };
 
     private async startSelectingURI(input: IMultiStepInput<{}>, _state: {}): Promise<InputStep<{}> | void> {
         // First step, show a quick pick to choose either the remote or the local.
@@ -450,7 +450,7 @@ export class DataScience implements IDataScience {
         const ownsSelection = settings.datascience.sendSelectionToInteractiveWindow;
         editorContext = new ContextKey(EditorContexts.OwnsSelection, this.commandManager);
         editorContext.set(ownsSelection && enabled).catch();
-    }
+    };
 
     private getCodeWatcher(file: string): ICodeWatcher | undefined {
         const possibleDocuments = this.documentManager.textDocuments.filter(d => d.fileName === file);

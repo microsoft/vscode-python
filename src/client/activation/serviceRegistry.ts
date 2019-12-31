@@ -3,13 +3,7 @@
 import { ActiveResourceService } from '../common/application/activeResource';
 import { IActiveResourceService } from '../common/application/types';
 import { INugetRepository } from '../common/nuget/types';
-import {
-    BANNER_NAME_DS_SURVEY,
-    BANNER_NAME_INTERACTIVE_SHIFTENTER,
-    BANNER_NAME_LS_SURVEY,
-    BANNER_NAME_PROPOSE_LS,
-    IPythonExtensionBanner
-} from '../common/types';
+import { BANNER_NAME_DS_SURVEY, BANNER_NAME_INTERACTIVE_SHIFTENTER, BANNER_NAME_LS_SURVEY, BANNER_NAME_PROPOSE_LS, IPythonExtensionBanner } from '../common/types';
 import { DataScienceSurveyBanner } from '../datascience/dataScienceSurveyBanner';
 import { InteractiveShiftEnterBanner } from '../datascience/shiftEnterBanner';
 import { IServiceManager } from '../ioc/types';
@@ -24,11 +18,7 @@ import { LanguageServerExtensionActivator } from './languageServer/activator';
 import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from './languageServer/downloadChannelRules';
 import { LanguageServerDownloader } from './languageServer/downloader';
-import {
-    BaseLanguageClientFactory,
-    DownloadedLanguageClientFactory,
-    SimpleLanguageClientFactory
-} from './languageServer/languageClientFactory';
+import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from './languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from './languageServer/languageServerExtension';
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';

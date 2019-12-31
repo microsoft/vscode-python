@@ -298,7 +298,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test('Don\'t pass the --log-dir argument to PTVSD if configuration.logToFile is not set, with active interpreter Python 3.7', async () => {
+    test("Don't pass the --log-dir argument to PTVSD if configuration.logToFile is not set, with active interpreter Python 3.7", async () => {
         const session = createSession({});
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPathWithWheels]);
 
@@ -309,7 +309,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test('Don\'t pass the --log-dir argument to PTVSD if configuration.logToFile is not set, with active interpreter not Python 3.7', async () => {
+    test("Don't pass the --log-dir argument to PTVSD if configuration.logToFile is not set, with active interpreter not Python 3.7", async () => {
         const session = createSession({});
         const debugExecutable = new DebugAdapterExecutable(python36Path, [ptvsdAdapterPathWithoutWheels]);
 
@@ -322,7 +322,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test('Don\'t pass the --log-dir argument to PTVSD if configuration.logToFile is set but false, with active interpreter Python 3.7', async () => {
+    test("Don't pass the --log-dir argument to PTVSD if configuration.logToFile is set but false, with active interpreter Python 3.7", async () => {
         const session = createSession({ logToFile: false });
         const debugExecutable = new DebugAdapterExecutable(pythonPath, [ptvsdAdapterPathWithWheels]);
 
@@ -333,7 +333,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(descriptor, debugExecutable);
     });
 
-    test('Don\'t pass the --log-dir argument to PTVSD if configuration.logToFile is set but false, with active interpreter not Python 3.7', async () => {
+    test("Don't pass the --log-dir argument to PTVSD if configuration.logToFile is set but false, with active interpreter not Python 3.7", async () => {
         const session = createSession({ logToFile: false });
         const debugExecutable = new DebugAdapterExecutable(python36Path, [ptvsdAdapterPathWithoutWheels]);
 
@@ -387,7 +387,7 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(Reporter.properties, [{ expName: DebugAdapterNewPtvsd.control }]);
     });
 
-    test('Don\'t send any telemetry if not inside the DA experiment nor control group', async () => {
+    test("Don't send any telemetry if not inside the DA experiment nor control group", async () => {
         const session = createSession({});
         when(spiedInstance.userExperiments).thenReturn([]);
 

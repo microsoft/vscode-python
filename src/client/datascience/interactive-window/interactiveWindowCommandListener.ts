@@ -48,8 +48,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         @inject(INotebookImporter) private jupyterImporter: INotebookImporter,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler,
         @inject(INotebookEditorProvider) protected ipynbProvider: INotebookEditorProvider
-    ) {
-    }
+    ) {}
 
     public register(commandManager: ICommandManager): void {
         let disposable = commandManager.registerCommand(Commands.ShowHistoryPane, () => this.showInteractiveWindow());
@@ -161,18 +160,22 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         saveLabel: localize.DataScience.exportDialogTitle(),
                         filters: filtersObject
                     });
-                    await this.waitForStatus(async () => {
-                        if (uri) {
-                            let directoryChange;
-                            const settings = this.configuration.getSettings();
-                            if (settings.datascience.changeDirOnImportExport) {
-                                directoryChange = uri.fsPath;
-                            }
+                    await this.waitForStatus(
+                        async () => {
+                            if (uri) {
+                                let directoryChange;
+                                const settings = this.configuration.getSettings();
+                                if (settings.datascience.changeDirOnImportExport) {
+                                    directoryChange = uri.fsPath;
+                                }
 
-                            const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
-                            await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
-                        }
-                    }, localize.DataScience.exportingFormat(), file);
+                                const notebook = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
+                                await this.fileSystem.writeFile(uri.fsPath, JSON.stringify(notebook));
+                            }
+                        },
+                        localize.DataScience.exportingFormat(),
+                        file
+                    );
                     // When all done, show a notice that it completed.
                     if (uri && uri.fsPath) {
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
@@ -194,7 +197,7 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
     @captureTelemetry(Telemetry.ExportPythonFileAndOutput, undefined, false)
     private async exportFileAndOutput(file: string): Promise<Uri | undefined> {
-        if (file && file.length > 0 && await this.jupyterExecution.isNotebookSupported()) {
+        if (file && file.length > 0 && (await this.jupyterExecution.isNotebookSupported())) {
             // If the current file is the active editor, then generate cells from the document.
             const activeEditor = this.documentManager.activeTextEditor;
             if (activeEditor && activeEditor.document && this.fileSystem.arePathsSame(activeEditor.document.fileName, file)) {
@@ -210,18 +213,23 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
                         const cancelSource = new CancellationTokenSource();
 
                         // Then wait with status that lets the user cancel
-                        await this.waitForStatus(() => {
-                            try {
-                                return this.exportCellsWithOutput(ranges, activeEditor.document, output, cancelSource.token);
-                            } catch (err) {
-                                if (!(err instanceof CancellationError)) {
-                                    this.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
+                        await this.waitForStatus(
+                            () => {
+                                try {
+                                    return this.exportCellsWithOutput(ranges, activeEditor.document, output, cancelSource.token);
+                                } catch (err) {
+                                    if (!(err instanceof CancellationError)) {
+                                        this.showInformationMessage(localize.DataScience.exportDialogFailed().format(err));
+                                    }
                                 }
+                                return Promise.resolve();
+                            },
+                            localize.DataScience.exportingFormat(),
+                            file,
+                            () => {
+                                cancelSource.cancel();
                             }
-                            return Promise.resolve();
-                        }, localize.DataScience.exportingFormat(), file, () => {
-                            cancelSource.cancel();
-                        });
+                        );
 
                         // When all done, show a notice that it completed.
                         const openQuestion1 = localize.DataScience.exportOpenQuestion1();
@@ -244,7 +252,9 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             await this.dataScienceErrorHandler.handleError(
                 new JupyterInstallError(
                     localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
-                    localize.DataScience.pythonInteractiveHelpLink()));
+                    localize.DataScience.pythonInteractiveHelpLink()
+                )
+            );
         }
     }
 
@@ -260,10 +270,14 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
 
             // If that works, then execute all of the cells.
-            const cells = Array.prototype.concat(... await Promise.all(ranges.map(r => {
-                const code = document.getText(r.range);
-                return notebook ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
-            })));
+            const cells = Array.prototype.concat(
+                ...(await Promise.all(
+                    ranges.map(r => {
+                        const code = document.getText(r.range);
+                        return notebook ? notebook.execute(code, document.fileName, r.range.start.line, uuid(), cancelToken) : [];
+                    })
+                ))
+            );
 
             // Then save them to the file
             let directoryChange;
@@ -273,7 +287,6 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
 
             const notebookJson = await this.jupyterExporter.translateToNotebook(cells, directoryChange);
             await this.fileSystem.writeFile(file, JSON.stringify(notebookJson));
-
         } finally {
             if (server) {
                 await server.dispose();
@@ -368,28 +381,35 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         const filtersObject: { [name: string]: string[] } = {};
         filtersObject[filtersKey] = ['ipynb'];
 
-        const uris = await this.applicationShell.showOpenDialog(
-            {
-                openLabel: localize.DataScience.importDialogTitle(),
-                filters: filtersObject
-            });
+        const uris = await this.applicationShell.showOpenDialog({
+            openLabel: localize.DataScience.importDialogTitle(),
+            filters: filtersObject
+        });
 
         if (uris && uris.length > 0) {
             // Don't call the other overload as we'll end up with double telemetry.
-            await this.waitForStatus(async () => {
-                const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
-                await this.viewDocument(contents);
-            }, localize.DataScience.importingFormat(), uris[0].fsPath);
+            await this.waitForStatus(
+                async () => {
+                    const contents = await this.jupyterImporter.importFromFile(uris[0].fsPath);
+                    await this.viewDocument(contents);
+                },
+                localize.DataScience.importingFormat(),
+                uris[0].fsPath
+            );
         }
     }
 
     @captureTelemetry(Telemetry.ImportNotebook, { scope: 'file' }, false)
     private async importNotebookOnFile(file: string): Promise<void> {
         if (file && file.length > 0) {
-            await this.waitForStatus(async () => {
-                const contents = await this.jupyterImporter.importFromFile(file);
-                await this.viewDocument(contents);
-            }, localize.DataScience.importingFormat(), file);
+            await this.waitForStatus(
+                async () => {
+                    const contents = await this.jupyterImporter.importFromFile(file);
+                    await this.viewDocument(contents);
+                },
+                localize.DataScience.importingFormat(),
+                file
+            );
         }
     }
 
@@ -398,10 +418,10 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
         const editor = await this.documentManager.showTextDocument(doc, ViewColumn.One);
 
         // Edit the document so that it is dirty (add a space at the end)
-        editor.edit((editBuilder) => {
+        editor.edit(editBuilder => {
             editBuilder.insert(new Position(editor.document.lineCount, 0), '\n');
         });
-    }
+    };
 
     private async scrollToCell(id: string): Promise<void> {
         if (id) {
@@ -409,5 +429,4 @@ export class InteractiveWindowCommandListener implements IDataScienceCommandList
             interactiveWindow.scrollToCell(id);
         }
     }
-
 }

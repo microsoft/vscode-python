@@ -58,7 +58,13 @@ suite('Attach to process - ps process provider', () => {
 
         disposableRegistry = [];
 
-        provider = new PsAttachProcessProvider(instance(applicationShell), instance(commandManager), disposableRegistry, instance(platformService), instance(processServiceFactory));
+        provider = new PsAttachProcessProvider(
+            instance(applicationShell),
+            instance(commandManager),
+            disposableRegistry,
+            instance(platformService),
+            instance(processServiceFactory)
+        );
     });
 
     teardown(() => {
@@ -106,7 +112,6 @@ suite('Attach to process - ps process provider', () => {
 
         verify(processService.exec(PsProcessParser.psLinuxCommand.command, PsProcessParser.psLinuxCommand.args, anything())).once();
         assert.deepEqual(attachItems, expectedOutput);
-
     });
 
     test('The macOS process list command should be called if the platform is macOS', async () => {

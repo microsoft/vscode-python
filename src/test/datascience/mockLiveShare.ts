@@ -82,7 +82,6 @@ function checkArg(value: any, name: string, type?: ArgumentType) {
 type Listener = [Function, any] | Function;
 
 class Emitter<T> {
-
     private _event: Event<T> | undefined;
     private _disposed: boolean = false;
     private _deliveryQueue: { listener: Listener; event?: T }[] = [];
@@ -335,8 +334,7 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
 
         const scheme = 'vsls';
         if (sharedUri.scheme !== scheme) {
-            throw new Error(
-                `Not a shared URI: ${sharedUri}`);
+            throw new Error(`Not a shared URI: ${sharedUri}`);
         }
 
         return Uri.file(sharedUri.fsPath);
@@ -367,7 +365,6 @@ class MockLiveShare implements vsls.LiveShare, vsls.Session, vsls.Peer, IDisposa
 
 @injectable()
 export class MockLiveShareApi implements ILiveShareTestingApi {
-
     private currentRole: vsls.Role = vsls.Role.None;
     private internalApi: MockLiveShare | null = null;
     private externalProxy: vsls.LiveShare | null = null;
@@ -377,8 +374,7 @@ export class MockLiveShareApi implements ILiveShareTestingApi {
         @inject(IDisposableRegistry) private disposables: IDisposableRegistry,
         @inject(IApplicationShell) private appShell: IApplicationShell,
         @inject(IConfigurationService) private config: IConfigurationService
-    ) {
-    }
+    ) {}
 
     public getApi(): Promise<vsls.LiveShare | null> {
         return Promise.resolve(this.externalProxy);

@@ -15,8 +15,7 @@ import { GuestJupyterNotebook } from './guestJupyterNotebook';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ILiveShareParticipant } from './types';
 
-export class GuestJupyterServer
-    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
+export class GuestJupyterServer extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterServerSharedService)
     implements INotebookServer, ILiveShareParticipant {
     private launchInfo: INotebookServerLaunchInfo | undefined;
     private connectPromise: Deferred<INotebookServerLaunchInfo> = createDeferred<INotebookServerLaunchInfo>();

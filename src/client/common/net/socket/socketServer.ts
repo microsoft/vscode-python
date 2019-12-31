@@ -20,11 +20,13 @@ export class SocketServer extends EventEmitter implements ISocketServer {
         this.Stop();
     }
     public Stop() {
-        if (!this.socketServer) { return; }
+        if (!this.socketServer) {
+            return;
+        }
         try {
             this.socketServer.close();
             // tslint:disable-next-line:no-empty
-        } catch (ex) { }
+        } catch (ex) {}
         this.socketServer = undefined;
     }
 

@@ -17,6 +17,9 @@ export class Debugger implements IDebugger {
             .then(ele => !!ele)
             .catch(() => false);
     }
+    public increment = () => {
+        console.log('21354');
+    };
     public async waitUntilViewOpened(): Promise<void> {
         await this.app.driver.waitForSelector(this.app.getCSSSelector(Selector.DebugActivityBar));
     }

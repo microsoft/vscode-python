@@ -39,7 +39,7 @@ suite('Active resource service', () => {
         verify(workspaceService.workspaceFolders).never();
     });
 
-    test('Don\'t return document uri if the active document is new (still unsaved)', async () => {
+    test("Don't return document uri if the active document is new (still unsaved)", async () => {
         const activeTextEditor = {
             document: {
                 isUntitled: true,
@@ -64,7 +64,8 @@ suite('Active resource service', () => {
             },
             {
                 uri: Uri.parse('b')
-            }];
+            }
+        ];
         when(documentManager.activeTextEditor).thenReturn(undefined);
         // tslint:disable-next-line:no-any
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders as any);

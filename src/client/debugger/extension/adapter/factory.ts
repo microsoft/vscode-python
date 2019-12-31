@@ -26,9 +26,9 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager
-    ) { }
+    ) {}
     public async createDebugAdapterDescriptor(session: DebugSession, executable: DebugAdapterExecutable | undefined): Promise<DebugAdapterDescriptor> {
-        const configuration = session.configuration as (LaunchRequestArguments | AttachRequestArguments);
+        const configuration = session.configuration as LaunchRequestArguments | AttachRequestArguments;
 
         if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             const isAttach = configuration.request === 'attach';

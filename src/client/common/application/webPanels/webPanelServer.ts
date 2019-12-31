@@ -108,7 +108,6 @@ export class WebPanelServer {
             // Here is where we'd likely support loading split bundles.
             default:
                 break;
-
         }
         ctx.body = this.fs.createReadStream(filePath);
     }
@@ -125,7 +124,7 @@ export class WebPanelServer {
 
     // tslint:disable: no-any
     private generateReactHtml(query: any) {
-        const scripts = query.scripts ? Array.isArray(query.scripts) ? query.Scripts : [query.scripts] : [''];
+        const scripts = query.scripts ? (Array.isArray(query.scripts) ? query.Scripts : [query.scripts]) : [''];
 
         return `<!doctype html>
         <html lang="en">

@@ -90,7 +90,7 @@ suite('Daemon - Python Daemon Pool', () => {
     });
     test('Throw error if daemon does not respond to ping within 5s', async () => {
         sendRequestStub.reset();
-        sendRequestStub.returns(sleep(6_000).then(({ pong: 'hello' } as any)));
+        sendRequestStub.returns(sleep(6_000).then({ pong: 'hello' } as any));
         // Create and initialize the pool.
         const pool = new DaemonPool(logger, [], { daemonCount: 5, observableDaemonCount: 3, pythonPath: 'py.exe' }, instance(pythonExecService), undefined);
         const promise = setupDaemon(pool);
@@ -177,7 +177,7 @@ suite('Daemon - Python Daemon Pool', () => {
 
         // Invoke the execModuleObservable method twice (one to use daemon, other will use python exec service).
         reset(pythonExecService);
-        when(pythonExecService.execModuleObservable(anything(), anything(), anything())).thenReturn(({ out } as any));
+        when(pythonExecService.execModuleObservable(anything(), anything(), anything())).thenReturn({ out } as any);
         await Promise.all([pool.execModuleObservable('x', [], {}), pool.execModuleObservable('x', [], {})]);
 
         // Verify we used the daemon.

@@ -65,7 +65,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         return CellOutput.ansiToHtmlClass_ctor!;
     }
 
-    private static getAnsiToHtmlOptions() : { fg: string; bg: string; colors: string [] } {
+    private static getAnsiToHtmlOptions(): { fg: string; bg: string; colors: string[] } {
         // Here's the default colors for ansiToHtml. We need to use the
         // colors from our current theme.
         // const colors = {
@@ -90,31 +90,29 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             fg: 'var(--vscode-terminal-foreground)',
             bg: 'var(--vscode-terminal-background)',
             colors: [
-                'var(--vscode-terminal-ansiBlack)',         // 0
-                'var(--vscode-terminal-ansiBrightRed)',     // 1
-                'var(--vscode-terminal-ansiGreen)',         // 2
-                'var(--vscode-terminal-ansiYellow)',        // 3
-                'var(--vscode-terminal-ansiBrightBlue)',    // 4
-                'var(--vscode-terminal-ansiMagenta)',       // 5
-                'var(--vscode-terminal-ansiCyan)',          // 6
-                'var(--vscode-terminal-ansiBrightBlack)',   // 7
-                'var(--vscode-terminal-ansiWhite)',         // 8
-                'var(--vscode-terminal-ansiRed)',           // 9
-                'var(--vscode-terminal-ansiBrightGreen)',   // 10
-                'var(--vscode-terminal-ansiBrightYellow)',  // 11
-                'var(--vscode-terminal-ansiBlue)',          // 12
+                'var(--vscode-terminal-ansiBlack)', // 0
+                'var(--vscode-terminal-ansiBrightRed)', // 1
+                'var(--vscode-terminal-ansiGreen)', // 2
+                'var(--vscode-terminal-ansiYellow)', // 3
+                'var(--vscode-terminal-ansiBrightBlue)', // 4
+                'var(--vscode-terminal-ansiMagenta)', // 5
+                'var(--vscode-terminal-ansiCyan)', // 6
+                'var(--vscode-terminal-ansiBrightBlack)', // 7
+                'var(--vscode-terminal-ansiWhite)', // 8
+                'var(--vscode-terminal-ansiRed)', // 9
+                'var(--vscode-terminal-ansiBrightGreen)', // 10
+                'var(--vscode-terminal-ansiBrightYellow)', // 11
+                'var(--vscode-terminal-ansiBlue)', // 12
                 'var(--vscode-terminal-ansiBrightMagenta)', // 13
-                'var(--vscode-terminal-ansiBrightCyan)',    // 14
-                'var(--vscode-terminal-ansiBrightWhite)'    // 15
+                'var(--vscode-terminal-ansiBrightCyan)', // 14
+                'var(--vscode-terminal-ansiBrightWhite)' // 15
             ]
         };
     }
     public render() {
         // Only render results if not an edit cell
         if (this.props.cellVM.cell.id !== Identifiers.EditCellId) {
-            const outputClassNames = this.isCodeCell() ?
-                `cell-output cell-output-${this.props.baseTheme}` :
-                'markdown-cell-output-container';
+            const outputClassNames = this.isCodeCell() ? `cell-output cell-output-${this.props.baseTheme}` : 'markdown-cell-output-container';
 
             // Then combine them inside a div
             return <div className={outputClassNames}>{this.renderResults()}</div>;
@@ -129,25 +127,25 @@ export class CellOutput extends React.Component<ICellOutputProps> {
 
     private getCell = () => {
         return this.props.cellVM.cell;
-    }
+    };
 
     private isCodeCell = () => {
         return this.props.cellVM.cell.data.cell_type === 'code';
-    }
+    };
 
     private hasOutput = () => {
         return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
-    }
+    };
 
     private getCodeCell = () => {
         return this.props.cellVM.cell.data as nbformat.ICodeCell;
-    }
+    };
 
     private getMarkdownCell = () => {
         return this.props.cellVM.cell.data as nbformat.IMarkdownCell;
-    }
+    };
 
-     private renderResults = (): JSX.Element[] => {
+    private renderResults = (): JSX.Element[] => {
         // Results depend upon the type of cell
         if (this.isCodeCell()) {
             return this.renderCodeOutputs();
@@ -156,7 +154,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         } else {
             return [];
         }
-    }
+    };
 
     private renderCodeOutputs = () => {
         if (this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && !this.props.hideOutput) {
@@ -165,7 +163,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         }
 
         return [];
-    }
+    };
 
     private renderMarkdownOutputs = () => {
         const markdown = this.getMarkdownCell();
@@ -174,8 +172,12 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const Transform = transforms['text/markdown'];
         const MarkdownClassName = 'markdown-cell-output';
 
-        return [<div key={0} className={MarkdownClassName}><Transform key={0} data={source} /></div>];
-    }
+        return [
+            <div key={0} className={MarkdownClassName}>
+                <Transform key={0} data={source} />
+            </div>
+        ];
+    };
 
     // tslint:disable-next-line: max-func-body-length
     private transformOutput(output: nbformat.IOutput): ICellOutput {
@@ -277,9 +279,9 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                         this.props.expandImage(svg.toString());
                     };
                     extraButton = (
-                        <div className='plot-open-button'>
+                        <div className="plot-open-button">
                             <ImageButton baseTheme={buttonTheme} tooltip={getLocString('DataScience.plotOpen', 'Expand image')} onClick={openClick}>
-                                <Image baseTheme={buttonTheme} class='image-button-image' image={ImageName.OpenPlot} />
+                                <Image baseTheme={buttonTheme} class="image-button-image" image={ImageName.OpenPlot} />
                             </ImageButton>
                         </div>
                     );
@@ -318,7 +320,6 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     outputSpanClassName: this.props.themeMatplotlibPlots ? undefined : 'cell-output-plot-background'
                 };
             }
-
         } catch (e) {
             return {
                 data: e.toString(),
@@ -355,7 +356,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                 // If we are not theming plots then wrap them in a white span
                 if (transformed.outputSpanClassName) {
                     buffer.push(
-                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                        <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
                             <span className={transformed.outputSpanClassName}>
                                 {transformed.extraButton}
                                 <Transform data={transformed.data} />
@@ -364,7 +365,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
                     );
                 } else {
                     buffer.push(
-                        <div role='group' key={index} onDoubleClick={transformed.doubleClick} className={className}>
+                        <div role="group" key={index} onDoubleClick={transformed.doubleClick} className={className}>
                             {transformed.extraButton}
                             <Transform data={transformed.data} />
                         </div>
@@ -383,8 +384,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         });
 
         // Create a default set of properties
-        const style: React.CSSProperties = {
-        };
+        const style: React.CSSProperties = {};
 
         // Create a scrollbar style if necessary
         if (transformedList.some(transformed => transformed.renderWithScrollbars) && this.props.maxTextSize) {
@@ -392,6 +392,10 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             style.maxHeight = `${this.props.maxTextSize}px`;
         }
 
-        return <div key={0} style={style}>{buffer}</div>;
-    }
+        return (
+            <div key={0} style={style}>
+                {buffer}
+            </div>
+        );
+    };
 }

@@ -33,7 +33,7 @@ export function initialize() {
     generateMock('scm');
 
     // When upgrading to npm 9-10, this might have to change, as we could have explicit imports (named imports).
-    Module._load = function (request: any, _parent: any) {
+    Module._load = function(request: any, _parent: any) {
         if (request === 'vscode') {
             return mockedVSCode;
         }

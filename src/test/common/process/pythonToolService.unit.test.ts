@@ -13,7 +13,14 @@ import { ProcessServiceFactory } from '../../../client/common/process/processFac
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { PythonToolExecutionService } from '../../../client/common/process/pythonToolService';
-import { ExecutionResult, IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, ObservableExecutionResult } from '../../../client/common/process/types';
+import {
+    ExecutionResult,
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    ObservableExecutionResult
+} from '../../../client/common/process/types';
 import { ExecutionInfo } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { noop } from '../../core';

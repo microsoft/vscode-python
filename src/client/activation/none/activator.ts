@@ -34,13 +34,13 @@ import { ILanguageServerActivator } from '../types';
 @injectable()
 export class NoLanguageServerExtensionActivator implements ILanguageServerActivator {
     // tslint:disable-next-line: no-empty
-    public async start(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> { }
+    public async start(_resource: Resource, _interpreter?: PythonInterpreter): Promise<void> {}
     // tslint:disable-next-line: no-empty
-    public dispose(): void { }
+    public dispose(): void {}
     // tslint:disable-next-line: no-empty
-    public activate(): void { }
+    public activate(): void {}
     // tslint:disable-next-line: no-empty
-    public deactivate(): void { }
+    public deactivate(): void {}
 
     public provideRenameEdits(_document: TextDocument, _position: Position, _newName: string, _token: CancellationToken): ProviderResult<WorkspaceEdit> {
         return null;
@@ -54,7 +54,12 @@ export class NoLanguageServerExtensionActivator implements ILanguageServerActiva
     public provideReferences(_document: TextDocument, _position: Position, _context: ReferenceContext, _token: CancellationToken): ProviderResult<Location[]> {
         return null;
     }
-    public provideCompletionItems(_document: TextDocument, _position: Position, _token: CancellationToken, _context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
+    public provideCompletionItems(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken,
+        _context: CompletionContext
+    ): ProviderResult<CompletionItem[] | CompletionList> {
         return null;
     }
     public provideCodeLenses(_document: TextDocument, _token: CancellationToken): ProviderResult<CodeLens[]> {

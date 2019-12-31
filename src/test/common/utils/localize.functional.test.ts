@@ -122,7 +122,7 @@ suite('Localization', () => {
         done();
     });
 
-    test('all keys used', function (done) {
+    test('all keys used', function(done) {
         // tslint:disable-next-line:no-suspicious-comment
         // TODO: Unused keys need to be cleaned up.
         // tslint:disable-next-line:no-invalid-this

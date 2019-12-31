@@ -103,19 +103,35 @@ export class LanguageClientMiddleware implements Middleware {
             return next(document, position, token);
         }
     }
-    public provideDefinition(document: TextDocument, position: Position, token: CancellationToken, next: ProvideDefinitionSignature): ProviderResult<Definition | DefinitionLink[]> {
+    public provideDefinition(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        next: ProvideDefinitionSignature
+    ): ProviderResult<Definition | DefinitionLink[]> {
         if (this.connected) {
             return next(document, position, token);
         }
     }
-    public provideReferences(document: TextDocument, position: Position, options: {
-        includeDeclaration: boolean;
-    }, token: CancellationToken, next: ProvideReferencesSignature): ProviderResult<Location[]> {
+    public provideReferences(
+        document: TextDocument,
+        position: Position,
+        options: {
+            includeDeclaration: boolean;
+        },
+        token: CancellationToken,
+        next: ProvideReferencesSignature
+    ): ProviderResult<Location[]> {
         if (this.connected) {
             return next(document, position, options, token);
         }
     }
-    public provideDocumentHighlights(document: TextDocument, position: Position, token: CancellationToken, next: ProvideDocumentHighlightsSignature): ProviderResult<DocumentHighlight[]> {
+    public provideDocumentHighlights(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        next: ProvideDocumentHighlightsSignature
+    ): ProviderResult<DocumentHighlight[]> {
         if (this.connected) {
             return next(document, position, token);
         }
@@ -130,7 +146,13 @@ export class LanguageClientMiddleware implements Middleware {
             return next(query, token);
         }
     }
-    public provideCodeActions(document: TextDocument, range: Range, context: CodeActionContext, token: CancellationToken, next: ProvideCodeActionsSignature): ProviderResult<(Command | CodeAction)[]> {
+    public provideCodeActions(
+        document: TextDocument,
+        range: Range,
+        context: CodeActionContext,
+        token: CancellationToken,
+        next: ProvideCodeActionsSignature
+    ): ProviderResult<(Command | CodeAction)[]> {
         if (this.connected) {
             return next(document, range, context, token);
         }
@@ -145,30 +167,62 @@ export class LanguageClientMiddleware implements Middleware {
             return next(codeLens, token);
         }
     }
-    public provideDocumentFormattingEdits(document: TextDocument, options: FormattingOptions, token: CancellationToken, next: ProvideDocumentFormattingEditsSignature): ProviderResult<TextEdit[]> {
+    public provideDocumentFormattingEdits(
+        document: TextDocument,
+        options: FormattingOptions,
+        token: CancellationToken,
+        next: ProvideDocumentFormattingEditsSignature
+    ): ProviderResult<TextEdit[]> {
         if (this.connected) {
             return next(document, options, token);
         }
     }
-    public provideDocumentRangeFormattingEdits(document: TextDocument, range: Range, options: FormattingOptions, token: CancellationToken, next: ProvideDocumentRangeFormattingEditsSignature): ProviderResult<TextEdit[]> {
+    public provideDocumentRangeFormattingEdits(
+        document: TextDocument,
+        range: Range,
+        options: FormattingOptions,
+        token: CancellationToken,
+        next: ProvideDocumentRangeFormattingEditsSignature
+    ): ProviderResult<TextEdit[]> {
         if (this.connected) {
             return next(document, range, options, token);
         }
     }
-    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, ch: string, options: FormattingOptions, token: CancellationToken, next: ProvideOnTypeFormattingEditsSignature): ProviderResult<TextEdit[]> {
+    public provideOnTypeFormattingEdits(
+        document: TextDocument,
+        position: Position,
+        ch: string,
+        options: FormattingOptions,
+        token: CancellationToken,
+        next: ProvideOnTypeFormattingEditsSignature
+    ): ProviderResult<TextEdit[]> {
         if (this.connected) {
             return next(document, position, ch, options, token);
         }
     }
-    public provideRenameEdits(document: TextDocument, position: Position, newName: string, token: CancellationToken, next: ProvideRenameEditsSignature): ProviderResult<WorkspaceEdit> {
+    public provideRenameEdits(
+        document: TextDocument,
+        position: Position,
+        newName: string,
+        token: CancellationToken,
+        next: ProvideRenameEditsSignature
+    ): ProviderResult<WorkspaceEdit> {
         if (this.connected) {
             return next(document, position, newName, token);
         }
     }
-    public prepareRename(document: TextDocument, position: Position, token: CancellationToken, next: PrepareRenameSignature): ProviderResult<Range | {
-        range: Range;
-        placeholder: string;
-    }> {
+    public prepareRename(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        next: PrepareRenameSignature
+    ): ProviderResult<
+        | Range
+        | {
+              range: Range;
+              placeholder: string;
+          }
+    > {
         if (this.connected) {
             return next(document, position, token);
         }

@@ -42,14 +42,14 @@ enum monacoCompletionItemKind {
 // Left side is the vscode value.
 const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [vscode.CompletionItemKind.Text, monacoCompletionItemKind.Text], // Text
-    [vscode.CompletionItemKind.Method, monacoCompletionItemKind.Method],  // Method
-    [vscode.CompletionItemKind.Function, monacoCompletionItemKind.Function],  // Function
-    [vscode.CompletionItemKind.Constructor, monacoCompletionItemKind.Constructor],  // Constructor
-    [vscode.CompletionItemKind.Field, monacoCompletionItemKind.Field],  // Field
-    [vscode.CompletionItemKind.Variable, monacoCompletionItemKind.Variable],  // Variable
-    [vscode.CompletionItemKind.Class, monacoCompletionItemKind.Class],  // Class
-    [vscode.CompletionItemKind.Interface, monacoCompletionItemKind.Interface],  // Interface
-    [vscode.CompletionItemKind.Module, monacoCompletionItemKind.Module],  // Module
+    [vscode.CompletionItemKind.Method, monacoCompletionItemKind.Method], // Method
+    [vscode.CompletionItemKind.Function, monacoCompletionItemKind.Function], // Function
+    [vscode.CompletionItemKind.Constructor, monacoCompletionItemKind.Constructor], // Constructor
+    [vscode.CompletionItemKind.Field, monacoCompletionItemKind.Field], // Field
+    [vscode.CompletionItemKind.Variable, monacoCompletionItemKind.Variable], // Variable
+    [vscode.CompletionItemKind.Class, monacoCompletionItemKind.Class], // Class
+    [vscode.CompletionItemKind.Interface, monacoCompletionItemKind.Interface], // Interface
+    [vscode.CompletionItemKind.Module, monacoCompletionItemKind.Module], // Module
     [vscode.CompletionItemKind.Property, monacoCompletionItemKind.Property], // Property
     [vscode.CompletionItemKind.Unit, monacoCompletionItemKind.Unit], // Unit
     [vscode.CompletionItemKind.Value, monacoCompletionItemKind.Value], // Value
@@ -65,7 +65,7 @@ const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [vscode.CompletionItemKind.Struct, monacoCompletionItemKind.Struct], // Struct
     [vscode.CompletionItemKind.Event, monacoCompletionItemKind.Event], // Event
     [vscode.CompletionItemKind.Operator, monacoCompletionItemKind.Operator], // Operator
-    [vscode.CompletionItemKind.TypeParameter, monacoCompletionItemKind.TypeParameter]  // TypeParameter
+    [vscode.CompletionItemKind.TypeParameter, monacoCompletionItemKind.TypeParameter] // TypeParameter
 ]);
 
 const mapJupyterKind: Map<string, number> = new Map<string, number>([
@@ -158,7 +158,8 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
 
 export function convertToMonacoCompletionList(
     result: vscodeLanguageClient.CompletionList | vscodeLanguageClient.CompletionItem[] | vscode.CompletionItem[] | vscode.CompletionList | null,
-    requiresKindConversion: boolean): monacoEditor.languages.CompletionList {
+    requiresKindConversion: boolean
+): monacoEditor.languages.CompletionList {
     if (result) {
         if (result.hasOwnProperty('items')) {
             const list = result as vscodeLanguageClient.CompletionList;
@@ -182,7 +183,9 @@ export function convertToMonacoCompletionList(
     };
 }
 
-function convertToMonacoMarkdown(strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]): monacoEditor.IMarkdownString[] {
+function convertToMonacoMarkdown(
+    strings: vscodeLanguageClient.MarkupContent | vscodeLanguageClient.MarkedString | vscodeLanguageClient.MarkedString[] | vscode.MarkedString | vscode.MarkedString[]
+): monacoEditor.IMarkdownString[] {
     if (strings.hasOwnProperty('kind')) {
         const content = strings as vscodeLanguageClient.MarkupContent;
         return [
@@ -248,8 +251,7 @@ export function convertStringsToSuggestions(strings: ReadonlyArray<string>, rang
     });
 }
 
-export function convertToMonacoSignatureHelp(
-    result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null): monacoEditor.languages.SignatureHelp {
+export function convertToMonacoSignatureHelp(result: vscodeLanguageClient.SignatureHelp | vscode.SignatureHelp | null): monacoEditor.languages.SignatureHelp {
     if (result) {
         return result as monacoEditor.languages.SignatureHelp;
     }

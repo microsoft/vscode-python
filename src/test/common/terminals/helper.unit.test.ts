@@ -13,23 +13,13 @@ import { PlatformService } from '../../../client/common/platform/platformService
 import { IPlatformService } from '../../../client/common/platform/types';
 import { Bash } from '../../../client/common/terminal/environmentActivationProviders/bash';
 import { CommandPromptAndPowerShell } from '../../../client/common/terminal/environmentActivationProviders/commandPrompt';
-import {
-    CondaActivationCommandProvider
-} from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
-import {
-    PipEnvActivationCommandProvider
-} from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
-import {
-    PyEnvActivationCommandProvider
-} from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
+import { CondaActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/condaActivationProvider';
+import { PipEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pipEnvActivationProvider';
+import { PyEnvActivationCommandProvider } from '../../../client/common/terminal/environmentActivationProviders/pyenvActivationProvider';
 import { TerminalHelper } from '../../../client/common/terminal/helper';
 import { ShellDetector } from '../../../client/common/terminal/shellDetector';
 import { TerminalNameShellDetector } from '../../../client/common/terminal/shellDetectors/terminalNameShellDetector';
-import {
-    IShellDetector,
-    ITerminalActivationCommandProvider,
-    TerminalShellType
-} from '../../../client/common/terminal/types';
+import { IShellDetector, ITerminalActivationCommandProvider, TerminalShellType } from '../../../client/common/terminal/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
@@ -75,7 +65,9 @@ suite('Terminal Service helpers', () => {
         pipenvActivationProvider = mock(PipEnvActivationCommandProvider);
         pythonSettings = mock(PythonSettings);
         shellDetectorIdentifyTerminalShell = sinon.stub(ShellDetector.prototype, 'identifyTerminalShell');
-        helper = new TerminalHelper(instance(platformService), instance(terminalManager),
+        helper = new TerminalHelper(
+            instance(platformService),
+            instance(terminalManager),
             instance(condaService),
             instance(mock(InterpreterService)),
             instance(configurationService),
@@ -84,7 +76,8 @@ suite('Terminal Service helpers', () => {
             instance(cmdActivationProvider),
             instance(pyenvActivationProvider),
             instance(pipenvActivationProvider),
-            [instance(mockDetector)]);
+            [instance(mockDetector)]
+        );
     }
     teardown(() => shellDetectorIdentifyTerminalShell.restore());
     suite('Misc', () => {
@@ -117,7 +110,7 @@ suite('Terminal Service helpers', () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
                 const command = 'c:\\python 3.7.exe';
                 const args = ['1', '2'];
-                const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
+                const commandPrefix = item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore ? '& ' : '';
                 const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()} 1 2`;
 
                 const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
@@ -129,7 +122,7 @@ suite('Terminal Service helpers', () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
                 const command = 'python3.7.exe';
                 const args: string[] = [];
-                const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
+                const commandPrefix = item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore ? '& ' : '';
                 const expectedTerminalCommand = `${commandPrefix}${command}`;
 
                 const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
@@ -141,7 +134,7 @@ suite('Terminal Service helpers', () => {
             getNamesAndValues<TerminalShellType>(TerminalShellType).forEach(item => {
                 const command = 'c:\\python 3.7.exe';
                 const args: string[] = [];
-                const commandPrefix = (item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore) ? '& ' : '';
+                const commandPrefix = item.value === TerminalShellType.powershell || item.value === TerminalShellType.powershellCore ? '& ' : '';
                 const expectedTerminalCommand = `${commandPrefix}${command.fileToCommandArgument()}`;
 
                 const terminalCommand = helper.buildCommandForTerminal(item.value, command, args);
@@ -197,7 +190,7 @@ suite('Terminal Service helpers', () => {
                     when(pyenvActivationProvider.isShellSupported(anything())).thenReturn(false);
                     when(pipenvActivationProvider.isShellSupported(anything())).thenReturn(false);
 
-                    const cmd = await helper.getEnvironmentActivationCommands('someShell' as any as TerminalShellType, resource);
+                    const cmd = await helper.getEnvironmentActivationCommands(('someShell' as any) as TerminalShellType, resource);
 
                     expect(cmd).to.equal(undefined, 'Command must be undefined');
                     verify(pythonSettings.terminal).once();

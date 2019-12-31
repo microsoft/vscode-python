@@ -115,7 +115,7 @@ suite('Extension version tests', () => {
     let applicationEnvironment: IApplicationEnvironment;
     const branchName = process.env.CI_BRANCH_NAME;
 
-    suiteSetup(async function () {
+    suiteSetup(async function() {
         // Skip the entire suite if running locally
         if (!branchName) {
             // tslint:disable-next-line: no-invalid-this
@@ -128,7 +128,7 @@ suite('Extension version tests', () => {
         version = applicationEnvironment.packageJson.version;
     });
 
-    test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function () {
+    test('If we are running a pipeline in the master branch, the extension version in `package.json` should have the "-dev" suffix', async function() {
         if (branchName !== 'master') {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
@@ -137,7 +137,7 @@ suite('Extension version tests', () => {
         return expect(version.endsWith('-dev'), 'When running a pipeline in the master branch, the extension version in package.json should have the -dev suffix').to.be.true;
     });
 
-    test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function () {
+    test('If we are running a pipeline in the release branch, the extension version in `package.json` should not have the "-dev" suffix', async function() {
         if (!branchName!.startsWith('release')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();

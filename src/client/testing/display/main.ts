@@ -189,7 +189,7 @@ export class TestResultDisplay implements ITestResultDisplay {
         this.statusBar.show();
         if (reason !== CANCELLATION_REASON) {
             this.statusBar.text = '$(alert) Test discovery failed';
-            this.statusBar.tooltip = 'Discovering Tests failed (view \'Python Test Log\' output panel for details)';
+            this.statusBar.tooltip = "Discovering Tests failed (view 'Python Test Log' output panel for details)";
             // tslint:disable-next-line:no-suspicious-comment
             // TODO: ignore this quitemode, always display the error message (inform the user).
             if (!isNotInstalledError(reason)) {

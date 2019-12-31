@@ -22,14 +22,14 @@ import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseF
 import { KernelSelector } from './kernels/kernelSelector';
 import { LiveKernelModel } from './kernels/types';
 
-type ISession = (Session.ISession & {
+type ISession = Session.ISession & {
     /**
      * Whether this is a remote session that we attached to.
      *
      * @type {boolean}
      */
     isRemoteSession?: boolean;
-});
+};
 
 /**
  * Exception raised when starting a Jupyter Session fails.
@@ -39,7 +39,7 @@ type ISession = (Session.ISession & {
  * @extends {Error}
  */
 export class JupyterSessionStartError extends Error {
-    constructor(originalException: Error){
+    constructor(originalException: Error) {
         super(originalException.message);
         this.stack = originalException.stack;
         sendTelemetryEvent(Telemetry.StartSessionFailedJupyter);
@@ -273,7 +273,7 @@ export class JupyterSession implements IJupyterSession {
         if (session && session.kernel) {
             traceInfo(`Waiting for idle on (kernel): ${session.kernel.id} -> ${session.kernel.status}`);
 
-            const kernelStatusChangedPromise = new Promise(resolve => session.statusChanged.connect((_, e) => e === 'idle' ? resolve() : undefined));
+            const kernelStatusChangedPromise = new Promise(resolve => session.statusChanged.connect((_, e) => (e === 'idle' ? resolve() : undefined)));
             const statusChangedPromise = new Promise(resolve => session.kernelChanged.connect((_, e) => (e.newValue && e.newValue.status === 'idle' ? resolve() : undefined)));
             const checkStatusPromise = new Promise(async resolve => {
                 // This function seems to cause CI builds to timeout randomly on

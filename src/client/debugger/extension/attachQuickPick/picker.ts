@@ -12,9 +12,7 @@ import { IAttachItem, IAttachPicker, IAttachProcessProvider, REFRESH_BUTTON_ICON
 
 @injectable()
 export class AttachPicker implements IAttachPicker {
-    constructor(
-        @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
-        private readonly attachItemsProvider: IAttachProcessProvider) { }
+    constructor(@inject(IApplicationShell) private readonly applicationShell: IApplicationShell, private readonly attachItemsProvider: IAttachProcessProvider) {}
 
     public showQuickPick(): Promise<string> {
         return new Promise<string>(async (resolve, reject) => {
@@ -36,30 +34,42 @@ export class AttachPicker implements IAttachPicker {
 
             const disposables: Disposable[] = [];
 
-            quickPick.onDidTriggerButton(async () => {
-                const attachItems = await this.attachItemsProvider.getAttachItems();
-                quickPick.items = attachItems;
-            }, this, disposables);
+            quickPick.onDidTriggerButton(
+                async () => {
+                    const attachItems = await this.attachItemsProvider.getAttachItems();
+                    quickPick.items = attachItems;
+                },
+                this,
+                disposables
+            );
 
-            quickPick.onDidAccept(() => {
-                if (quickPick.selectedItems.length !== 1) {
+            quickPick.onDidAccept(
+                () => {
+                    if (quickPick.selectedItems.length !== 1) {
+                        reject(new Error(AttachProcess.noProcessSelected()));
+                    }
+
+                    const selectedId = quickPick.selectedItems[0].id;
+
+                    disposables.forEach(item => item.dispose());
+                    quickPick.dispose();
+
+                    resolve(selectedId);
+                },
+                undefined,
+                disposables
+            );
+
+            quickPick.onDidHide(
+                () => {
+                    disposables.forEach(item => item.dispose());
+                    quickPick.dispose();
+
                     reject(new Error(AttachProcess.noProcessSelected()));
-                }
-
-                const selectedId = quickPick.selectedItems[0].id;
-
-                disposables.forEach(item => item.dispose());
-                quickPick.dispose();
-
-                resolve(selectedId);
-            }, undefined, disposables);
-
-            quickPick.onDidHide(() => {
-                disposables.forEach(item => item.dispose());
-                quickPick.dispose();
-
-                reject(new Error(AttachProcess.noProcessSelected()));
-            }, undefined, disposables);
+                },
+                undefined,
+                disposables
+            );
 
             quickPick.show();
         });

@@ -24,7 +24,7 @@ export abstract class ModuleInstaller implements IModuleInstaller {
     public abstract get name(): string;
     public abstract get displayName(): string;
 
-    constructor(protected serviceContainer: IServiceContainer) { }
+    constructor(protected serviceContainer: IServiceContainer) {}
 
     public async installModule(name: string, resource?: InterpreterUri, cancel?: CancellationToken): Promise<void> {
         sendTelemetryEvent(EventName.PYTHON_INSTALL_PACKAGE, undefined, { installer: this.displayName });

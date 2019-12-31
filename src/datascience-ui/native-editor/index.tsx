@@ -21,7 +21,8 @@ const store = createStore(
     // tslint:disable-next-line: no-typeof-undefined
     typeof acquireVsCodeApi !== 'undefined',
     baseTheme,
-    false);
+    false
+);
 
 // Wire up a connected react control for our NativeEditor
 const ConnectedNativeEditor = getConnectedNativeEditor();
@@ -30,7 +31,7 @@ const ConnectedNativeEditor = getConnectedNativeEditor();
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
     <Provider store={store}>
-        <ConnectedNativeEditor/>
+        <ConnectedNativeEditor />
     </Provider>,
-  document.getElementById('root') as HTMLElement
+    document.getElementById('root') as HTMLElement
 );

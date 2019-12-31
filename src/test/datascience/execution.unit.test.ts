@@ -217,7 +217,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
 
     public push = (disposable: Disposable): void => {
         this.disposables.push(disposable);
-    }
+    };
 
     public dispose = async (): Promise<void> => {
         for (const disposable of this.disposables) {
@@ -231,7 +231,7 @@ class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistr
             }
         }
         this.disposables = [];
-    }
+    };
 }
 
 suite('Jupyter Execution', async () => {

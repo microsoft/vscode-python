@@ -13,22 +13,22 @@ import { IThemeFinder } from './types';
 
 interface IThemeData {
     rootFile: string;
-    isDark : boolean;
+    isDark: boolean;
 }
 
 @injectable()
 export class ThemeFinder implements IThemeFinder {
-    private themeCache : { [key: string] : IThemeData | undefined } = {};
-    private languageCache: { [key: string] : string | undefined } = {};
+    private themeCache: { [key: string]: IThemeData | undefined } = {};
+    private languageCache: { [key: string]: string | undefined } = {};
 
     constructor(
         @inject(IExtensions) private extensions: IExtensions,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
         @inject(ILogger) private logger: ILogger,
         @inject(IFileSystem) private fs: IFileSystem
-    ) { }
+    ) {}
 
-    public async findThemeRootJson(themeName: string) : Promise<string | undefined> {
+    public async findThemeRootJson(themeName: string): Promise<string | undefined> {
         // find our data
         const themeData = await this.findThemeData(themeName);
 
@@ -38,7 +38,7 @@ export class ThemeFinder implements IThemeFinder {
         }
     }
 
-    public async findTmLanguage(language: string) : Promise<string | undefined> {
+    public async findTmLanguage(language: string): Promise<string | undefined> {
         // See if already found it or not
         if (!this.themeCache.hasOwnProperty(language)) {
             try {
@@ -50,7 +50,7 @@ export class ThemeFinder implements IThemeFinder {
         return this.languageCache[language];
     }
 
-    public async isThemeDark(themeName: string) : Promise<boolean | undefined> {
+    public async isThemeDark(themeName: string): Promise<boolean | undefined> {
         // find our data
         const themeData = await this.findThemeData(themeName);
 
@@ -60,7 +60,7 @@ export class ThemeFinder implements IThemeFinder {
         }
     }
 
-    private async findThemeData(themeName: string) : Promise<IThemeData | undefined> {
+    private async findThemeData(themeName: string): Promise<IThemeData | undefined> {
         // See if already found it or not
         if (!this.themeCache.hasOwnProperty(themeName)) {
             try {
@@ -72,7 +72,7 @@ export class ThemeFinder implements IThemeFinder {
         return this.themeCache[themeName];
     }
 
-    private async findMatchingLanguage(language: string) : Promise<string | undefined> {
+    private async findMatchingLanguage(language: string): Promise<string | undefined> {
         const currentExe = this.currentProcess.execPath;
         let currentPath = path.dirname(currentExe);
 
@@ -95,7 +95,7 @@ export class ThemeFinder implements IThemeFinder {
         return results;
     }
 
-    private async findMatchingLanguages(language: string, rootPath: string) : Promise<string | undefined> {
+    private async findMatchingLanguages(language: string, rootPath: string): Promise<string | undefined> {
         // Environment variable to mimic missing json problem
         if (process.env.VSC_PYTHON_MIMIC_REMOTE) {
             return undefined;
@@ -116,7 +116,7 @@ export class ThemeFinder implements IThemeFinder {
         }
     }
 
-    private async findMatchingTheme(themeName: string) : Promise<IThemeData | undefined> {
+    private async findMatchingTheme(themeName: string): Promise<IThemeData | undefined> {
         // Environment variable to mimic missing json problem
         if (process.env.VSC_PYTHON_MIMIC_REMOTE) {
             return undefined;
@@ -150,7 +150,7 @@ export class ThemeFinder implements IThemeFinder {
         }
     }
 
-    private async findMatchingThemes(rootPath: string, themeName: string) : Promise<IThemeData | undefined> {
+    private async findMatchingThemes(rootPath: string, themeName: string): Promise<IThemeData | undefined> {
         // Search through all package.json files in the directory and below, looking
         // for the themeName in them.
         const foundPackages = await this.fs.search('**/package.json', rootPath);
@@ -166,7 +166,7 @@ export class ThemeFinder implements IThemeFinder {
         }
     }
 
-    private async findMatchingLanguageFromJson(packageJson: string, language: string) : Promise<string | undefined> {
+    private async findMatchingLanguageFromJson(packageJson: string, language: string): Promise<string | undefined> {
         // Read the contents of the json file
         const text = await this.fs.readFile(packageJson);
         const json = JSON.parse(text);
@@ -189,7 +189,7 @@ export class ThemeFinder implements IThemeFinder {
         }
     }
 
-    private async findMatchingThemeFromJson(packageJson: string, themeName: string) : Promise<IThemeData | undefined> {
+    private async findMatchingThemeFromJson(packageJson: string, themeName: string): Promise<IThemeData | undefined> {
         // Read the contents of the json file
         const text = await this.fs.readFile(packageJson);
         const json = JSON.parse(text);
@@ -202,13 +202,12 @@ export class ThemeFinder implements IThemeFinder {
                 const themes = contributes.themes as any[];
                 // Go through each theme, seeing if the label matches our theme name
                 for (const t of themes) {
-                    if ((t.hasOwnProperty('label') && t.label === themeName) ||
-                        (t.hasOwnProperty('id') && t.id === themeName)) {
+                    if ((t.hasOwnProperty('label') && t.label === themeName) || (t.hasOwnProperty('id') && t.id === themeName)) {
                         const isDark = t.hasOwnProperty('uiTheme') && t.uiTheme === 'vs-dark';
                         // Path is relative to the package.json file.
                         const rootFile = t.hasOwnProperty('path') ? path.join(path.dirname(packageJson), t.path.toString()) : '';
 
-                        return {isDark, rootFile};
+                        return { isDark, rootFile };
                     }
                 }
             }

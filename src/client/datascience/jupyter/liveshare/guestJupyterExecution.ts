@@ -12,11 +12,7 @@ import * as localize from '../../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IConnection,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
@@ -42,7 +38,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         notebookStarter: NotebookStarter,
         appShell: IApplicationShell,
         jupyterOutputChannel: IOutputChannel,
-        serviceContainer: IServiceContainer) {
+        serviceContainer: IServiceContainer
+    ) {
         super(
             liveShare,
             interpreterService,
@@ -54,7 +51,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
             notebookStarter,
             appShell,
             jupyterOutputChannel,
-            serviceContainer);
+            serviceContainer
+        );
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);
     }
@@ -80,10 +78,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         const service = await this.waitForService();
         if (service) {
             const purpose = options ? options.purpose : uuid();
-            const connection: IConnection = await service.request(
-                LiveShareCommands.connectToNotebookServer,
-                [options],
-                cancelToken);
+            const connection: IConnection = await service.request(LiveShareCommands.connectToNotebookServer, [options], cancelToken);
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
@@ -95,7 +90,8 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
                         workingDir: options ? options.workingDir : undefined,
                         purpose
                     },
-                    cancelToken);
+                    cancelToken
+                );
             }
         }
     }

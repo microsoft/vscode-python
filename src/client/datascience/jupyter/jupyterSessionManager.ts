@@ -26,8 +26,7 @@ export class JupyterSessionManager implements IJupyterSessionManager {
         private config: IConfigurationService,
         private failOnPassword: boolean | undefined,
         private kernelSelector: KernelSelector
-    ) {
-    }
+    ) {}
 
     public async dispose() {
         if (this.contentsManager) {

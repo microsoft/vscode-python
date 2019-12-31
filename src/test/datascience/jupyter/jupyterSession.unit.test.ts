@@ -196,7 +196,7 @@ suite('Data Science - JupyterSession', () => {
                     },
                     kernel: {
                         status: 'idle',
-                        restart: () => restartCount = restartCount + 1
+                        restart: () => (restartCount = restartCount + 1)
                     },
                     shutdown: () => Promise.resolve(),
                     isRemoteSession: false

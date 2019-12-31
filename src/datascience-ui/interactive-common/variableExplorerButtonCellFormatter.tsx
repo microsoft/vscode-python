@@ -30,15 +30,19 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
         const className = 'variable-explorer-button-cell';
         if (this.props.value !== null && this.props.value !== undefined) {
             if (this.props.value.supportsDataExplorer) {
-                return(
+                return (
                     <div className={className}>
-                        <ImageButton baseTheme={this.props.baseTheme} tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')} onClick={this.onDataExplorerClick}>
-                            <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.OpenInNewWindow}/>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            tooltip={getLocString('DataScience.showDataExplorerTooltip', 'Show variable in data viewer.')}
+                            onClick={this.onDataExplorerClick}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.OpenInNewWindow} />
                         </ImageButton>
                     </div>
                 );
             } else {
-                return(null);
+                return null;
             }
         }
         return [];
@@ -48,5 +52,5 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
         if (this.props.value !== null && this.props.value !== undefined) {
             this.props.showDataExplorer(this.props.value.name, this.props.value.numberOfColumns);
         }
-    }
+    };
 }

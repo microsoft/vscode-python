@@ -61,32 +61,32 @@ export class CellInput extends React.Component<ICellInputProps> {
 
     private isCodeCell = () => {
         return this.props.cellVM.cell.data.cell_type === 'code';
-    }
+    };
 
     private isMarkdownCell = () => {
         return this.props.cellVM.cell.data.cell_type === 'markdown';
-    }
+    };
 
     private getMarkdownCell = () => {
         return this.props.cellVM.cell.data as nbformat.IMarkdownCell;
-    }
+    };
 
-    private shouldRenderCodeEditor = () : boolean => {
-        return (this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable));
-    }
+    private shouldRenderCodeEditor = (): boolean => {
+        return this.isCodeCell() && (this.props.cellVM.inputBlockShow || this.props.cellVM.editable);
+    };
 
-    private shouldRenderMarkdownEditor = () : boolean => {
-        return (this.isMarkdownCell());
-    }
+    private shouldRenderMarkdownEditor = (): boolean => {
+        return this.isMarkdownCell();
+    };
 
-    private getRenderableInputCode = () : string => {
+    private getRenderableInputCode = (): string => {
         return this.props.cellVM.inputBlockText;
-    }
+    };
 
     private renderCodeInputs = () => {
         if (this.shouldRenderCodeEditor()) {
             return (
-                <div className='cell-input'>
+                <div className="cell-input">
                     <Code
                         editorOptions={this.props.editorOptions}
                         history={this.props.history}
@@ -98,7 +98,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         ref={this.codeRef}
                         onChange={this.onCodeChange}
                         onCreated={this.onCodeCreated}
-                        outermostParentClass='cell-wrapper'
+                        outermostParentClass="cell-wrapper"
                         monacoTheme={this.props.monacoTheme}
                         openLink={this.props.openLink}
                         hasFocus={this.props.cellVM.focused}
@@ -110,19 +110,19 @@ export class CellInput extends React.Component<ICellInputProps> {
                         showLineNumbers={this.props.showLineNumbers}
                         useQuickEdit={this.props.cellVM.useQuickEdit}
                         font={this.props.font}
-                        />
+                    />
                 </div>
             );
         }
 
         return null;
-    }
+    };
 
     private renderMarkdownInputs = () => {
         if (this.shouldRenderMarkdownEditor()) {
             const source = concatMultilineStringInput(this.getMarkdownCell().source);
             return (
-                <div className='cell-input'>
+                <div className="cell-input">
                     <Markdown
                         editorOptions={this.props.editorOptions}
                         markdown={source}
@@ -130,7 +130,7 @@ export class CellInput extends React.Component<ICellInputProps> {
                         testMode={this.props.testMode ? true : false}
                         onChange={this.onCodeChange}
                         onCreated={this.onCodeCreated}
-                        outermostParentClass='cell-wrapper'
+                        outermostParentClass="cell-wrapper"
                         hasFocus={this.props.cellVM.focused}
                         cursorPos={this.props.cellVM.cursorPos}
                         monacoTheme={this.props.monacoTheme}
@@ -142,50 +142,49 @@ export class CellInput extends React.Component<ICellInputProps> {
                         ref={this.markdownRef}
                         useQuickEdit={false}
                         font={this.props.font}
-                        />
+                    />
                 </div>
             );
         }
 
         return null;
-    }
+    };
 
     private onKeyDown = (e: IKeyboardEvent) => {
         if (this.props.keyDown) {
             this.props.keyDown(this.props.cellVM.cell.id, e);
         }
-    }
+    };
 
     private onCodeFocused = () => {
         if (this.props.focused) {
             this.props.focused(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onCodeUnfocused = () => {
         if (this.props.unfocused) {
             this.props.unfocused(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onMarkdownFocused = () => {
         if (this.props.focused) {
             this.props.focused(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onMarkdownUnfocused = () => {
         if (this.props.unfocused) {
             this.props.unfocused(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], modelId: string) => {
         this.props.onCodeChange(changes, this.props.cellVM.cell.id, modelId);
-    }
+    };
 
     private onCodeCreated = (code: string, modelId: string) => {
         this.props.onCodeCreated(code, this.props.cellVM.cell.file, this.props.cellVM.cell.id, modelId);
-    }
-
+    };
 }

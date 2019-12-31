@@ -119,7 +119,7 @@ suite('PythonExecutionService', () => {
 
         const result = await executionService.getExecutablePath();
 
-        expect(result).to.equal(pythonPath, 'getExecutablePath() sbould return pythonPath if it\'s a file');
+        expect(result).to.equal(pythonPath, "getExecutablePath() sbould return pythonPath if it's a file");
     });
 
     test('getExecutablePath should not return pythonPath if pythonPath is not a file', async () => {
@@ -131,7 +131,7 @@ suite('PythonExecutionService', () => {
 
         const result = await executionService.getExecutablePath();
 
-        expect(result).to.equal(executablePath, 'getExecutablePath() sbould not return pythonPath if it\'s not a file');
+        expect(result).to.equal(executablePath, "getExecutablePath() sbould not return pythonPath if it's not a file");
     });
 
     test('getExecutablePath should throw if the result of exec() writes to stderr', async () => {

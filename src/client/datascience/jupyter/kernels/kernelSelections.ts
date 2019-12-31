@@ -59,7 +59,11 @@ function getQuickPickItemForActiveKernel(kernel: LiveKernelModel, pathUtils: IPa
 export class ActiveJupyterSessionKernelSelectionListProvider implements IKernelSelectionListProvider {
     constructor(private readonly sessionManager: IJupyterSessionManager, private readonly pathUtils: IPathUtils) {}
     public async getKernelSelections(_cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
-        const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([this.sessionManager.getRunningKernels(), this.sessionManager.getRunningSessions(), this.sessionManager.getKernelSpecs()]);
+        const [activeKernels, activeSessions, kernelSpecs] = await Promise.all([
+            this.sessionManager.getRunningKernels(),
+            this.sessionManager.getRunningSessions(),
+            this.sessionManager.getKernelSpecs()
+        ]);
         const items = activeSessions.map(item => {
             const matchingSpec: Partial<IJupyterKernelSpec> = kernelSpecs.find(spec => spec.name === item.kernel.name) || {};
             const activeKernel = activeKernels.find(active => active.id === item.kernel.id) || {};
@@ -90,9 +94,7 @@ export class InstalledJupyterKernelSelectionListProvider implements IKernelSelec
     constructor(private readonly kernelService: KernelService, private readonly pathUtils: IPathUtils, private readonly sessionManager?: IJupyterSessionManager) {}
     public async getKernelSelections(cancelToken?: CancellationToken | undefined): Promise<IKernelSpecQuickPickItem[]> {
         const items = await this.kernelService.getKernelSpecs(this.sessionManager, cancelToken);
-        return items
-        .filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase())
-            .map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
+        return items.filter(item => (item.language || '').toLowerCase() === PYTHON_LANGUAGE.toLowerCase()).map(item => getQuickPickItemForKernelSpec(item, this.pathUtils));
     }
 }
 
@@ -150,12 +152,12 @@ export class KernelSelectionProvider {
             const [installedKernels, liveKernels] = await Promise.all([installedKernelsPromise, liveKernelsPromise]);
 
             // Sorty by name.
-            installedKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
-            liveKernels.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+            installedKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
+            liveKernels.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
             return [...liveKernels!, ...installedKernels!];
         };
 
-        const liveItems = getSelections().then(items => this.localSuggestionsCache = items);
+        const liveItems = getSelections().then(items => (this.localSuggestionsCache = items));
         // If we have someting in cache, return that, while fetching in the background.
         const cachedItems = this.remoteSuggestionsCache.length > 0 ? Promise.resolve(this.remoteSuggestionsCache) : liveItems;
         return Promise.race([cachedItems, liveItems]);

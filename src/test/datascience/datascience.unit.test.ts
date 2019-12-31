@@ -27,12 +27,7 @@ import { expandWorkingDir } from '../../client/datascience/jupyter/jupyterUtils'
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { ServiceContainer } from '../../client/ioc/container';
 import { InputHistory } from '../../datascience-ui/interactive-common/inputHistory';
-import {
-    createEmptyCell,
-    CursorPos,
-    extractInputText,
-    ICellViewModel
-} from '../../datascience-ui/interactive-common/mainState';
+import { createEmptyCell, CursorPos, extractInputText, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { MockOutputChannel } from '../mockClasses';
 import { MockMemento } from '../mocks/mementos';
 import { defaultDataScienceSettings } from './helpers';
@@ -59,7 +54,7 @@ suite('Data Science Tests', () => {
     });
 
     // tslint:disable: no-invalid-template-strings
-    test('expanding file variables', async function () {
+    test('expanding file variables', async function() {
         // tslint:disable-next-line: no-invalid-this
         this.timeout(10000);
         const uri = Uri.file('test/bar');
@@ -154,19 +149,19 @@ suite('Data Science Tests', () => {
         cells = generateCells(undefined, '#%% [markdown]\n# #a=1\n#a', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown split wrong');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
-        cells = generateCells(undefined, '#%% [markdown]\n\'\'\'\n# a\nb\n\'\'\'', 'foo', 0, true, '1');
+        cells = generateCells(undefined, "#%% [markdown]\n'''\n# a\nb\n'''", 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% [markdown]\n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown]\n"""\n# a\nb\n"""', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for markdown not emitted');
-        cells = generateCells(undefined, '#%% \n\"\"\"\n# a\nb\n\"\"\"', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% \n"""\n# a\nb\n"""', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Code cell multline failed');
         assert.equal(cells[0].data.cell_type, 'code', 'Code cell not generated');
         assert.equal(cells[0].data.source.length, 5, 'Lines for cell not emitted');
-        cells = generateCells(undefined, '#%% [markdown] \n\"\"\"# a\nb\n\"\"\"', 'foo', 0, true, '1');
+        cells = generateCells(undefined, '#%% [markdown] \n"""# a\nb\n"""', 'foo', 0, true, '1');
         assert.equal(cells.length, 1, 'Markdown cell multline failed');
         assert.equal(cells[0].data.cell_type, 'markdown', 'Markdown cell not generated');
         assert.equal(cells[0].data.source.length, 2, 'Lines for cell not emitted');
@@ -335,7 +330,7 @@ class Pizza(object):
 
     test('Local pick server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(zap) Default', '', (v) => value = v);
+        const ds = createDataScienceObject('$(zap) Default', '', v => (value = v));
         await ds.selectJupyterURI();
         assert.equal(value, Settings.JupyterServerLocalLaunch, 'Default should pick local launch');
 
@@ -349,7 +344,14 @@ class Pizza(object):
 
     test('Quick pick MRU tests', async () => {
         const mockStorage = new MockMemento();
-        const ds = createDataScienceObject('$(zap) Default', '', () => { noop(); }, mockStorage);
+        const ds = createDataScienceObject(
+            '$(zap) Default',
+            '',
+            () => {
+                noop();
+            },
+            mockStorage
+        );
 
         await ds.selectJupyterURI();
         // Verify initial default items
@@ -380,13 +382,13 @@ class Pizza(object):
         quickPickCheck(quickPick?.items[2], serverA1);
 
         // Verify that we stick to our settings limit
-        for (let i = 0; i < (Settings.JupyterServerUriListMax + 10); i = i + 1) {
+        for (let i = 0; i < Settings.JupyterServerUriListMax + 10; i = i + 1) {
             addToUriList(mockStorage, i.toString(), i);
         }
 
         await ds.selectJupyterURI();
         // Need a plus 2 here for the two default items
-        assert.equal(quickPick?.items.length, (Settings.JupyterServerUriListMax + 2), 'Wrong number of items in the quick pick');
+        assert.equal(quickPick?.items.length, Settings.JupyterServerUriListMax + 2, 'Wrong number of items in the quick pick');
     });
 
     function quickPickCheck(item: QuickPickItem | undefined, expected: { uri: string; time: Number; date: Date }) {
@@ -399,14 +401,14 @@ class Pizza(object):
 
     test('Remote server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', (v) => value = v);
+        const ds = createDataScienceObject('$(server) Existing', 'http://localhost:1111', v => (value = v));
         await ds.selectJupyterURI();
         assert.equal(value, 'http://localhost:1111', 'Already running should end up with the user inputed value');
     });
 
     test('Invalid server uri', async () => {
         let value = '';
-        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', (v) => value = v);
+        const ds = createDataScienceObject('$(server) Existing', 'httx://localhost:1111', v => (value = v));
         await ds.selectJupyterURI();
         assert.notEqual(value, 'httx://localhost:1111', 'Already running should validate');
         assert.equal(value, '', 'Validation failed');
@@ -468,5 +470,4 @@ class Pizza(object):
         assert.equal(matcher2.exec('# %% CODE HERE'), '', 'Should not have a title');
         assert.equal(matcher2.exec('# %% CODE HERE FOO'), 'FOO', 'Should have a title');
     });
-
 });

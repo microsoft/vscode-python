@@ -26,7 +26,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IDebugService) private readonly debugService: IDebugService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
-    ) { }
+    ) {}
 
     @captureTelemetry(EventName.DEBUGGER_ATTACH_TO_CHILD_PROCESS)
     public async attach(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration), parentSession: DebugSession): Promise<void> {
@@ -78,7 +78,7 @@ export class ChildProcessAttachService implements IChildProcessAttachService {
     private getAttachConfiguration(data: ChildProcessLaunchData): AttachRequestArguments & DebugConfiguration {
         const args = data.rootStartRequest.arguments;
         // tslint:disable-next-line:no-any
-        const config = (JSON.parse(JSON.stringify(args)) as any) as (AttachRequestArguments & DebugConfiguration);
+        const config = (JSON.parse(JSON.stringify(args)) as any) as AttachRequestArguments & DebugConfiguration;
         // tslint:disable-next-line: no-any
         this.fixPathMappings(config as any);
         config.host = args.request === 'attach' ? args.host! : 'localhost';

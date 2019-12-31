@@ -59,9 +59,7 @@ suite('PipEnv installer', async () => {
 
     test('If InterpreterUri is Resource, and if resource does not contain pipEnv interpreters, return false', async () => {
         const resource = Uri.parse('a');
-        locatorService
-            .setup(p => p.getInterpreters(resource))
-            .returns(() => Promise.resolve([]));
+        locatorService.setup(p => p.getInterpreters(resource)).returns(() => Promise.resolve([]));
         const result = await pipEnvInstaller.isSupported(resource);
         expect(result).to.equal(false, 'Should be false');
     });

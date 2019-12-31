@@ -119,7 +119,7 @@ suite('Data Science - KernelSelections', () => {
                             kernel: activeKernels[0] as any,
                             type: '',
                             path: ''
-                        // tslint:disable-next-line: no-any
+                            // tslint:disable-next-line: no-any
                         } as any
                     },
                     kernelSpec: undefined
@@ -131,7 +131,7 @@ suite('Data Science - KernelSelections', () => {
                 )
             }
         ];
-        expectedItems.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        expectedItems.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
 
@@ -165,7 +165,7 @@ suite('Data Science - KernelSelections', () => {
             };
         });
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
-        expectedList.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
         const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager));
 

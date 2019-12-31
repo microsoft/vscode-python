@@ -17,10 +17,7 @@ import { InteractiveWindowMessages } from './interactiveWindowTypes';
 @injectable()
 export class LinkProvider implements IInteractiveWindowListener {
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
-    constructor(
-        @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fileSystem: IFileSystem
-    ) {
+    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell, @inject(IFileSystem) private fileSystem: IFileSystem) {
         noop();
     }
 
@@ -42,15 +39,17 @@ export class LinkProvider implements IInteractiveWindowListener {
                     filtersObject[localize.DataScience.pngFilter()] = ['png'];
 
                     // Ask the user what file to save to
-                    this.applicationShell.showSaveDialog({
-                        saveLabel: localize.DataScience.savePngTitle(),
-                        filters: filtersObject
-                    }).then(f => {
-                        if (f) {
-                            const buffer = new Buffer(payload.replace('data:image/png;base64', ''), 'base64');
-                            this.fileSystem.writeFile(f.fsPath, buffer).ignoreErrors();
-                        }
-                    });
+                    this.applicationShell
+                        .showSaveDialog({
+                            saveLabel: localize.DataScience.savePngTitle(),
+                            filters: filtersObject
+                        })
+                        .then(f => {
+                            if (f) {
+                                const buffer = new Buffer(payload.replace('data:image/png;base64', ''), 'base64');
+                                this.fileSystem.writeFile(f.fsPath, buffer).ignoreErrors();
+                            }
+                        });
                 }
                 break;
             default:

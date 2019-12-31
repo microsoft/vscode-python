@@ -1,14 +1,6 @@
 import { injectable } from 'inversify';
 import { convertFileToPackage } from '../testUtils';
-import {
-    FlattenedTestFunction,
-    FlattenedTestSuite,
-    ITestVisitor,
-    TestFile,
-    TestFolder,
-    TestFunction,
-    TestSuite
-} from '../types';
+import { FlattenedTestFunction, FlattenedTestSuite, ITestVisitor, TestFile, TestFolder, TestFunction, TestSuite } from '../types';
 
 @injectable()
 export class TestFlatteningVisitor implements ITestVisitor {
@@ -23,9 +15,9 @@ export class TestFlatteningVisitor implements ITestVisitor {
         return [...this._flattenedTestSuites.values()];
     }
     // tslint:disable-next-line:no-empty
-    public visitTestFunction(_testFunction: TestFunction): void { }
+    public visitTestFunction(_testFunction: TestFunction): void {}
     // tslint:disable-next-line:no-empty
-    public visitTestSuite(_testSuite: TestSuite): void { }
+    public visitTestSuite(_testSuite: TestSuite): void {}
     public visitTestFile(testFile: TestFile): void {
         // sample test_three (file name without extension and all / replaced with ., meaning this is the package)
         const packageName = convertFileToPackage(testFile.name);
@@ -34,7 +26,7 @@ export class TestFlatteningVisitor implements ITestVisitor {
         testFile.suites.forEach(suite => this.visitTestSuiteOfAFile(suite, testFile));
     }
     // tslint:disable-next-line:no-empty
-    public visitTestFolder(_testFile: TestFolder) { }
+    public visitTestFolder(_testFile: TestFolder) {}
     private visitTestSuiteOfAFile(testSuite: TestSuite, parentTestFile: TestFile): void {
         testSuite.functions.forEach(fn => this.visitTestFunctionOfASuite(fn, testSuite, parentTestFile));
         testSuite.suites.forEach(suite => this.visitTestSuiteOfAFile(suite, parentTestFile));

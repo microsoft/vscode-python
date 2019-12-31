@@ -15,10 +15,11 @@ import { IDataScienceErrorHandler } from '../types';
 
 @injectable()
 export class DataScienceErrorHandler implements IDataScienceErrorHandler {
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell,
+    constructor(
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
         @inject(ILogger) private logger: ILogger,
-        @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager) {
-    }
+        @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager
+    ) {}
 
     public async handleError(err: Error): Promise<void> {
         if (err instanceof JupyterInstallError) {
@@ -27,7 +28,8 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
                 err.message,
                 localize.DataScience.jupyterInstall(),
                 localize.DataScience.notebookCheckForImportNo(),
-                err.actionTitle);
+                err.actionTitle
+            );
             if (response === localize.DataScience.jupyterInstall()) {
                 const installers = await this.channels.getInstallationChannels();
                 if (installers) {
@@ -37,11 +39,9 @@ export class DataScienceErrorHandler implements IDataScienceErrorHandler {
 
                     if (installer && product) {
                         sendTelemetryEvent(Telemetry.UserInstalledJupyter);
-                        installer.installModule(product)
-                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                        installer.installModule(product).catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     } else if (installers[0] && product) {
-                        installers[0].installModule(product)
-                            .catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
+                        installers[0].installModule(product).catch(e => this.applicationShell.showErrorMessage(e.message, localize.DataScience.pythonInteractiveHelpLink()));
                     }
                 }
             } else if (response === localize.DataScience.notebookCheckForImportNo()) {

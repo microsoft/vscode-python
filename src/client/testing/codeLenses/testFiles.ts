@@ -2,7 +2,21 @@
 
 // tslint:disable:no-object-literal-type-assertion
 
-import { CancellationToken, CancellationTokenSource, CodeLens, CodeLensProvider, DocumentSymbolProvider, Event, EventEmitter, Position, Range, SymbolInformation, SymbolKind, TextDocument, Uri } from 'vscode';
+import {
+    CancellationToken,
+    CancellationTokenSource,
+    CodeLens,
+    CodeLensProvider,
+    DocumentSymbolProvider,
+    Event,
+    EventEmitter,
+    Position,
+    Range,
+    SymbolInformation,
+    SymbolKind,
+    TextDocument,
+    Uri
+} from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -19,10 +33,12 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
     private workspaceService: IWorkspaceService;
     private fileSystem: IFileSystem;
     // tslint:disable-next-line:variable-name
-    constructor(private _onDidChange: EventEmitter<void>,
+    constructor(
+        private _onDidChange: EventEmitter<void>,
         private symbolProvider: DocumentSymbolProvider,
         private testCollectionStorage: ITestCollectionStorageService,
-        serviceContainer: IServiceContainer) {
+        serviceContainer: IServiceContainer
+    ) {
         this.workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
@@ -42,7 +58,9 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         }
 
         const cancelTokenSrc = new CancellationTokenSource();
-        token.onCancellationRequested(() => { cancelTokenSrc.cancel(); });
+        token.onCancellationRequested(() => {
+            cancelTokenSrc.cancel();
+        });
 
         // Strop trying to build the code lenses if unable to get a list of
         // symbols in this file afrer x time.
@@ -85,18 +103,13 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
                 return [];
             }
             return symbols
-                .filter(symbol => symbol.kind === SymbolKind.Function ||
-                    symbol.kind === SymbolKind.Method ||
-                    symbol.kind === SymbolKind.Class)
+                .filter(symbol => symbol.kind === SymbolKind.Function || symbol.kind === SymbolKind.Method || symbol.kind === SymbolKind.Class)
                 .map(symbol => {
                     // This is bloody crucial, if the start and end columns are the same
                     // then vscode goes bonkers when ever you edit a line (start scrolling magically).
-                    const range = new Range(symbol.location.range.start,
-                        new Position(symbol.location.range.end.line,
-                            symbol.location.range.end.character + 1));
+                    const range = new Range(symbol.location.range.start, new Position(symbol.location.range.end.line, symbol.location.range.end.character + 1));
 
-                    return this.getCodeLens(document.uri, allFuncsAndSuites,
-                        range, symbol.name, symbol.kind, symbol.containerName);
+                    return this.getCodeLens(document.uri, allFuncsAndSuites, range, symbol.name, symbol.kind, symbol.containerName);
                 })
                 .reduce((previous, current) => previous.concat(current), [])
                 .filter(codeLens => codeLens !== null);
@@ -108,9 +121,7 @@ export class TestFileCodeLensProvider implements CodeLensProvider {
         }
     }
 
-    private getCodeLens(file: Uri, allFuncsAndSuites: FunctionsAndSuites,
-        range: Range, symbolName: string, symbolKind: SymbolKind, symbolContainer: string): CodeLens[] {
-
+    private getCodeLens(file: Uri, allFuncsAndSuites: FunctionsAndSuites, range: Range, symbolName: string, symbolKind: SymbolKind, symbolContainer: string): CodeLens[] {
         switch (symbolKind) {
             case SymbolKind.Function:
             case SymbolKind.Method: {
@@ -182,9 +193,7 @@ function getTestStatusIcons(fns: TestFunction[]): string {
 
     return statuses.join(' ');
 }
-function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites,
-    symbolName: string, range: Range, symbolContainer: string): CodeLens[] {
-
+function getFunctionCodeLens(file: Uri, functionsAndSuites: FunctionsAndSuites, symbolName: string, range: Range, symbolContainer: string): CodeLens[] {
     let fn: TestFunction | undefined;
     if (symbolContainer.length === 0) {
         fn = functionsAndSuites.functions.find(func => func.name === symbolName);

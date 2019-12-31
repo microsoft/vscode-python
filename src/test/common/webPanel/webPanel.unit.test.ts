@@ -24,9 +24,7 @@ suite('WebPanelServer', () => {
     const historyBundle = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
     setup(async () => {
         // So these are effectively functional tests rather than unit tests...
-        const fs = new FileSystem(
-            new PlatformService()
-        );
+        const fs = new FileSystem(new PlatformService());
         host = new WebPanelServer(await portfinder.getPortPromise(), token, fs);
         server = host.start();
     });
@@ -35,7 +33,7 @@ suite('WebPanelServer', () => {
         host?.dispose();
     });
 
-    test('Server responds with html when given valid input', (done) => {
+    test('Server responds with html when given valid input', done => {
         chai.request(server)
             .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
             .end((e, r) => {
@@ -47,7 +45,7 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server responds with 404 when given invalid input', (done) => {
+    test('Server responds with 404 when given invalid input', done => {
         chai.request(server)
             .get(`/${uuid()}?scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
             .end((_e, r) => {
@@ -57,23 +55,22 @@ suite('WebPanelServer', () => {
             });
     });
 
-    test('Server responds with 404 when given file not found', (done) => {
+    test('Server responds with 404 when given file not found', done => {
         const agent = chai.request(server).keepOpen();
         agent
             .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}`)
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 200 on first request').to.have.status(200);
-                agent.get('/foobar.png')
-                    .end((_e2, r2) => {
-                        chai.expect(r2, 'Response status is not 404').to.have.status(404);
-                        agent.close();
-                        done();
-                    });
+                agent.get('/foobar.png').end((_e2, r2) => {
+                    chai.expect(r2, 'Response status is not 404').to.have.status(404);
+                    agent.close();
+                    done();
+                });
             });
     });
 
-    test('Server can find the index_bundle', (done) => {
+    test('Server can find the index_bundle', done => {
         // See here for where the code for this comes from (you might think keepOpen is required, but instead request.agent is used for multiple requests)
         // https://www.chaijs.com/plugins/chai-http/ and search 'Retaining cookies with each request'
         const agent = chai.request.agent(server);
@@ -83,47 +80,51 @@ suite('WebPanelServer', () => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 200 on first request').to.have.status(200);
                 chai.expect(r, 'Response does not have a cookie').to.have.cookie('id');
-                return agent.get('/index_bundle.js')
-                    .end((_e2, r2) => {
-                        chai.expect(r2, 'Response status is not 200').to.have.status(200);
-                        agent.close();
-                        done();
-                    });
+                return agent.get('/index_bundle.js').end((_e2, r2) => {
+                    chai.expect(r2, 'Response status is not 200').to.have.status(200);
+                    agent.close();
+                    done();
+                });
             });
     });
 
-    test('Server can find the a file in a cwd', (done) => {
+    test('Server can find the a file in a cwd', done => {
         const agent = chai.request.agent(server);
         agent
-            .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}&cwd=${encodeURIComponent(EXTENSION_ROOT_DIR)}`)
+            .get(
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(
+                    path.dirname(historyBundle)
+                )}&cwd=${encodeURIComponent(EXTENSION_ROOT_DIR)}`
+            )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 200 on first request').to.have.status(200);
                 chai.expect(r, 'Response does not have a cookie').to.have.cookie('id');
-                return agent.get('/package.json')
-                    .end((_e2, r2) => {
-                        chai.expect(r2, 'Response status is not 200').to.have.status(200);
-                        agent.close();
-                        done();
-                    });
+                return agent.get('/package.json').end((_e2, r2) => {
+                    chai.expect(r2, 'Response status is not 200').to.have.status(200);
+                    agent.close();
+                    done();
+                });
             });
     });
 
-    test('Server will skip a file not in the cwd', (done) => {
+    test('Server will skip a file not in the cwd', done => {
         const agent = chai.request.agent(server);
         agent
-            .get(`/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(path.dirname(historyBundle))}&cwd=${encodeURIComponent(EXTENSION_ROOT_DIR)}`)
+            .get(
+                `/${uuid()}?token=${token}&scripts=${encodeURIComponent(path.basename(historyBundle))}&rootPath=${encodeURIComponent(
+                    path.dirname(historyBundle)
+                )}&cwd=${encodeURIComponent(EXTENSION_ROOT_DIR)}`
+            )
             .end((_e, r) => {
                 // tslint:disable-next-line: no-unused-expression
                 chai.expect(r, 'Response status is not 200 on first request').to.have.status(200);
                 chai.expect(r, 'Response does not have a cookie').to.have.cookie('id');
-                return agent.get('/package_missing.json')
-                    .end((_e2, r2) => {
-                        chai.expect(r2, 'Response status is not 404').to.have.status(404);
-                        agent.close();
-                        done();
-                    });
+                return agent.get('/package_missing.json').end((_e2, r2) => {
+                    chai.expect(r2, 'Response status is not 404').to.have.status(404);
+                    agent.close();
+                    done();
+                });
             });
     });
-
 });

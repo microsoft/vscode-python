@@ -28,7 +28,7 @@ suite('DataScience PlotViewer tests', () => {
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true}/>));
+        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />));
 
         // Make sure the plot viewer provider and execution factory in the container is created (the extension does this on startup in the extension)
         plotViewerProvider = ioc.get<IPlotViewerProvider>(IPlotViewerProvider);
@@ -56,7 +56,6 @@ suite('DataScience PlotViewer tests', () => {
     });
 
     async function waitForPlot(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, svg: string): Promise<void> {
-
         // Get a render promise with the expected number of renders
         const renderPromise = waitForUpdate(wrapper, MainPanel, 1);
 
@@ -97,13 +96,12 @@ suite('DataScience PlotViewer tests', () => {
 
     const cancelSvg = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16"><defs><style>.icon-canvas-transparent,.icon-vs-out{fill:#f6f6f6;}.icon-canvas-transparent{opacity:0;}.icon-vs-bg{fill:#424242;}</style></defs><title>Cancel_16xMD</title><g id="canvas"><path class="icon-canvas-transparent" d="M16,0V16H0V0Z"/></g><g id="outline" style="display: none;"><path class="icon-vs-out" d="M10.475,8l3.469,3.47L11.47,13.944,8,10.475,4.53,13.944,2.056,11.47,5.525,8,2.056,4.53,4.53,2.056,8,5.525l3.47-3.469L13.944,4.53Z" style="display: none;"/></g><g id="iconBg"><path class="icon-vs-bg" d="M9.061,8l3.469,3.47-1.06,1.06L8,9.061,4.53,12.53,3.47,11.47,6.939,8,3.47,4.53,4.53,3.47,8,6.939,11.47,3.47l1.06,1.06Z"/></g></svg>`;
 
-    runMountedTest('Simple SVG', async (wrapper) => {
+    runMountedTest('Simple SVG', async wrapper => {
         await waitForPlot(wrapper, cancelSvg);
         verifySvgValue(wrapper, cancelSvg);
     });
 
-    runMountedTest('Export', async (_wrapper) => {
+    runMountedTest('Export', async _wrapper => {
         // Export isn't runnable inside of JSDOM. So this test does nothing.
     });
-
 });

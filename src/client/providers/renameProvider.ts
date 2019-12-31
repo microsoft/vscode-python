@@ -1,8 +1,4 @@
-import {
-    CancellationToken, OutputChannel,
-    Position, ProviderResult, RenameProvider,
-    TextDocument, window, workspace, WorkspaceEdit
-} from 'vscode';
+import { CancellationToken, OutputChannel, Position, ProviderResult, RenameProvider, TextDocument, window, workspace, WorkspaceEdit } from 'vscode';
 import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { getWorkspaceEditsFromPatch } from '../common/editor';
 import { traceError } from '../common/logger';
@@ -56,21 +52,23 @@ export class PythonRenameProvider implements RenameProvider {
         const pythonSettings = this.configurationService.getSettings(workspaceFolder ? workspaceFolder.uri : undefined);
 
         const proxy = new RefactorProxy(EXTENSION_ROOT_DIR, pythonSettings, workspaceRoot, this.serviceContainer);
-        return proxy.rename<RenameResponse>(document, newName, document.uri.fsPath, range).then(response => {
-            const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
-            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-            return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot, fs);
-        }).catch(reason => {
-            if (reason === 'Not installed') {
-                const installer = this.serviceContainer.get<IInstaller>(IInstaller);
-                installer.promptToInstall(Product.rope, document.uri)
-                    .catch(ex => traceError('Python Extension: promptToInstall', ex));
-                return Promise.reject('');
-            } else {
-                window.showErrorMessage(reason);
-                this.outputChannel.appendLine(reason);
-            }
-            return Promise.reject(reason);
-        });
+        return proxy
+            .rename<RenameResponse>(document, newName, document.uri.fsPath, range)
+            .then(response => {
+                const fileDiffs = response.results.map(fileChanges => fileChanges.diff);
+                const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+                return getWorkspaceEditsFromPatch(fileDiffs, workspaceRoot, fs);
+            })
+            .catch(reason => {
+                if (reason === 'Not installed') {
+                    const installer = this.serviceContainer.get<IInstaller>(IInstaller);
+                    installer.promptToInstall(Product.rope, document.uri).catch(ex => traceError('Python Extension: promptToInstall', ex));
+                    return Promise.reject('');
+                } else {
+                    window.showErrorMessage(reason);
+                    this.outputChannel.appendLine(reason);
+                }
+                return Promise.reject(reason);
+            });
     }
 }

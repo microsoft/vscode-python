@@ -19,16 +19,10 @@ export class AttachProcessProviderFactory implements IAttachProcessProviderFacto
         @inject(IPlatformService) private readonly platformService: IPlatformService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
-    ) { }
+    ) {}
 
     public getProvider() {
         // Will add Windows provider in a separate PR
-        return new PsAttachProcessProvider(
-            this.applicationShell,
-            this.commandManager,
-            this.disposableRegistry,
-            this.platformService,
-            this.processServiceFactory
-        );
+        return new PsAttachProcessProvider(this.applicationShell, this.commandManager, this.disposableRegistry, this.platformService, this.processServiceFactory);
     }
 }

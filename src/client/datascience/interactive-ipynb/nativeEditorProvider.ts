@@ -17,7 +17,6 @@ import { IDataScienceErrorHandler, INotebookEditor, INotebookEditorProvider, INo
 
 @injectable()
 export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisposable {
-
     private activeEditors: Map<string, INotebookEditor> = new Map<string, INotebookEditor>();
     private executedEditors: Set<string> = new Set<string>();
     private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
@@ -37,7 +36,6 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         @inject(IDocumentManager) private documentManager: IDocumentManager,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager,
         @inject(IDataScienceErrorHandler) private dataScienceErrorHandler: IDataScienceErrorHandler
-
     ) {
         asyncRegistry.push(this);
 
@@ -47,7 +45,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         // on this though.
         const findFilesPromise = this.workspace.findFiles('**/*.ipynb');
         if (findFilesPromise && findFilesPromise.then) {
-            findFilesPromise.then(r => this.notebookCount += r.length);
+            findFilesPromise.then(r => (this.notebookCount += r.length));
         }
 
         this.disposables.push(this.documentManager.onDidChangeActiveTextEditor(this.onDidChangeActiveTextEditorHandler.bind(this)));
@@ -141,7 +139,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
             enableDebugging: true,
             uri: serverURI,
             useDefaultConfig,
-            purpose: Identifiers.HistoryPurpose  // Share the same one as the interactive window. Just need a new session
+            purpose: Identifiers.HistoryPurpose // Share the same one as the interactive window. Just need a new session
         };
     }
 
@@ -244,7 +242,7 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
                 return this.dataScienceErrorHandler.handleError(e);
             }
         }
-    }
+    };
     /**
      * Check if user is attempting to compare two ipynb files.
      * If yes, then return `true`, else `false`.
@@ -268,18 +266,20 @@ export class NativeEditorProvider implements INotebookEditorProvider, IAsyncDisp
         // Also ensure both editors are in the same view column.
         // Possible we have a git diff view (with two editors git and file scheme), and we open the file view
         // on the side (different view column).
-        const gitSchemeEditor = this.documentManager.visibleTextEditors.find(editorUri =>
-            editorUri.document.uri.scheme === 'git' &&
-            this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath));
+        const gitSchemeEditor = this.documentManager.visibleTextEditors.find(
+            editorUri => editorUri.document.uri.scheme === 'git' && this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath)
+        );
 
         if (!gitSchemeEditor) {
             return false;
         }
 
-        const fileSchemeEditor = this.documentManager.visibleTextEditors.find(editorUri =>
-            editorUri.document.uri.scheme === 'file' &&
-            this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
-            editorUri.viewColumn === gitSchemeEditor.viewColumn);
+        const fileSchemeEditor = this.documentManager.visibleTextEditors.find(
+            editorUri =>
+                editorUri.document.uri.scheme === 'file' &&
+                this.fileSystem.arePathsSame(editorUri.document.uri.fsPath, editor.document.uri.fsPath) &&
+                editorUri.viewColumn === gitSchemeEditor.viewColumn
+        );
         if (!fileSchemeEditor) {
             return false;
         }

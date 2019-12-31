@@ -210,7 +210,7 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         if (args.hasOwnProperty('type')) {
             this.responseQueue.push(args as IServerResponse);
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private async sendRequest(command: string, args: any[]): Promise<any> {

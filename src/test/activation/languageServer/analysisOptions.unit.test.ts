@@ -14,13 +14,7 @@ import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { PYTHON_LANGUAGE } from '../../../client/common/constants';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
-import {
-    IConfigurationService,
-    IDisposable,
-    IExtensionContext,
-    IOutputChannel,
-    IPathUtils
-} from '../../../client/common/types';
+import { IConfigurationService, IDisposable, IExtensionContext, IOutputChannel, IPathUtils } from '../../../client/common/types';
 import { EnvironmentVariablesProvider } from '../../../client/common/variables/environmentVariablesProvider';
 import { IEnvironmentVariablesProvider } from '../../../client/common/variables/types';
 import { sleep } from '../../core';
@@ -67,16 +61,18 @@ suite('Language Server - Analysis Options', () => {
         workspace = mock(WorkspaceService);
         outputChannel = typemoq.Mock.ofType<IOutputChannel>().object;
         lsOutputChannel = typemoq.Mock.ofType<ILanguageServerOutputChannel>();
-        lsOutputChannel
-            .setup(l => l.channel)
-            .returns(() => outputChannel);
+        lsOutputChannel.setup(l => l.channel).returns(() => outputChannel);
         pathUtils = mock(PathUtils);
         lsFolderService = mock(LanguageServerFolderService);
-        analysisOptions = new TestClass(context.object, instance(envVarsProvider),
+        analysisOptions = new TestClass(
+            context.object,
+            instance(envVarsProvider),
             instance(configurationService),
             instance(workspace),
             lsOutputChannel.object,
-            instance(pathUtils), instance(lsFolderService));
+            instance(pathUtils),
+            instance(lsFolderService)
+        );
     });
     test('Initialize will add event handlers and will dispose them when running dispose', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
@@ -101,10 +97,13 @@ suite('Language Server - Analysis Options', () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         let configChangedHandler!: Function;
-        when(workspace.onDidChangeConfiguration).thenReturn(cb => { configChangedHandler = cb; return disposable1.object; });
+        when(workspace.onDidChangeConfiguration).thenReturn(cb => {
+            configChangedHandler = cb;
+            return disposable1.object;
+        });
         when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(() => disposable3.object);
         let settingsChangedInvokedCount = 0;
-        analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
+        analysisOptions.onDidChange(() => (settingsChangedInvokedCount += 1));
 
         await analysisOptions.initialize(undefined, undefined);
         expect(configChangedHandler).to.not.be.undefined;
@@ -123,7 +122,7 @@ suite('Language Server - Analysis Options', () => {
         analysisOptions.getTypeshedPaths = () => [];
 
         let eventFired = false;
-        analysisOptions.onDidChange(() => eventFired = true);
+        analysisOptions.onDidChange(() => (eventFired = true));
 
         analysisOptions.onSettingsChanged();
         await sleep(10);
@@ -135,7 +134,7 @@ suite('Language Server - Analysis Options', () => {
         analysisOptions.getTypeshedPaths = () => [];
 
         let eventFired = false;
-        analysisOptions.onDidChange(() => eventFired = true);
+        analysisOptions.onDidChange(() => (eventFired = true));
 
         analysisOptions.onSettingsChanged();
         await sleep(10);
@@ -147,7 +146,7 @@ suite('Language Server - Analysis Options', () => {
         analysisOptions.getTypeshedPaths = () => ['1'];
 
         let eventFired = false;
-        analysisOptions.onDidChange(() => eventFired = true);
+        analysisOptions.onDidChange(() => (eventFired = true));
 
         analysisOptions.onSettingsChanged();
         await sleep(10);
@@ -156,7 +155,7 @@ suite('Language Server - Analysis Options', () => {
     });
     test('Event must be fired if interpreter info is different', async () => {
         let eventFired = false;
-        analysisOptions.onDidChange(() => eventFired = true);
+        analysisOptions.onDidChange(() => (eventFired = true));
 
         analysisOptions.onSettingsChanged();
         await sleep(10);
@@ -169,18 +168,25 @@ suite('Language Server - Analysis Options', () => {
         const disposable3 = typemoq.Mock.ofType<IDisposable>();
         let configChangedHandler!: Function;
         let envVarChangedHandler!: Function;
-        when(workspace.onDidChangeConfiguration).thenReturn(cb => { configChangedHandler = cb; return disposable1.object; });
-        when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(cb => { envVarChangedHandler = cb; return disposable3.object; });
+        when(workspace.onDidChangeConfiguration).thenReturn(cb => {
+            configChangedHandler = cb;
+            return disposable1.object;
+        });
+        when(envVarsProvider.onDidEnvironmentVariablesChange).thenReturn(cb => {
+            envVarChangedHandler = cb;
+            return disposable3.object;
+        });
         let settingsChangedInvokedCount = 0;
 
-        analysisOptions.onDidChange(() => settingsChangedInvokedCount += 1);
+        analysisOptions.onDidChange(() => (settingsChangedInvokedCount += 1));
         await analysisOptions.initialize(uri, undefined);
         expect(configChangedHandler).to.not.be.undefined;
         expect(envVarChangedHandler).to.not.be.undefined;
 
         for (let i = 0; i < 100; i += 1) {
             const event = typemoq.Mock.ofType<ConfigurationChangeEvent>();
-            event.setup(e => e.affectsConfiguration(typemoq.It.isValue('python'), typemoq.It.isValue(uri)))
+            event
+                .setup(e => e.affectsConfiguration(typemoq.It.isValue('python'), typemoq.It.isValue(uri)))
                 .returns(() => true)
                 .verifiable(typemoq.Times.once());
             configChangedHandler.call(analysisOptions, event.object);

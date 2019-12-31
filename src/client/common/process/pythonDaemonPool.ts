@@ -164,7 +164,6 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         } finally {
             this.pushDaemonIntoPool('StandardDaemon', daemon);
         }
-
     }
     /**
      * Wrapper for all observable operations to be performed on a daemon.
@@ -175,7 +174,10 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
      * @returns {ObservableExecutionResult<string>}
      * @memberof PythonDaemonExecutionServicePool
      */
-    private wrapObservableCall(cb: (daemon: IPythonExecutionService) => ObservableExecutionResult<string>, daemonLogMessage: { args: string[]; options?: SpawnOptions }): ObservableExecutionResult<string> {
+    private wrapObservableCall(
+        cb: (daemon: IPythonExecutionService) => ObservableExecutionResult<string>,
+        daemonLogMessage: { args: string[]; options?: SpawnOptions }
+    ): ObservableExecutionResult<string> {
         const execService = this.popDaemonFromObservablePool();
         // Possible the daemon returned is a standard python execution service.
         const daemonProc = execService instanceof PythonDaemonExecutionService ? execService.proc : undefined;
@@ -268,13 +270,15 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         // Ensure we test the daemon before we push it back into the pool.
         // Possible it is dead.
         const testAndPushIntoPool = async () => {
-            const daemonService = (daemon as PythonDaemonExecutionService);
+            const daemonService = daemon as PythonDaemonExecutionService;
             let procIsDead = false;
             if (!daemonService.isAlive || daemonService.proc.killed || !ProcessService.isAlive(daemonService.proc.pid)) {
                 procIsDead = true;
             } else {
                 // Test sending a ping.
-                procIsDead = await this.testDaemon(daemonService.connection).then(() => false).catch(() => true);
+                procIsDead = await this.testDaemon(daemonService.connection)
+                    .then(() => false)
+                    .catch(() => true);
             }
             if (procIsDead) {
                 // The process is dead, create a new daemon.

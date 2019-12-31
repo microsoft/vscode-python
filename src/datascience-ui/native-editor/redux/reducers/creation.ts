@@ -3,19 +3,9 @@
 'use strict';
 import * as uuid from 'uuid/v4';
 
-import {
-    ILoadAllCells,
-    InteractiveWindowMessages
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ILoadAllCells, InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import {
-    createCellVM,
-    createEmptyCell,
-    CursorPos,
-    extractInputText,
-    ICellViewModel,
-    IMainState
-} from '../../../interactive-common/mainState';
+import { createCellVM, createEmptyCell, CursorPos, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction } from '../../../interactive-common/redux/reducers/types';
@@ -67,7 +57,9 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index: position, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index: position, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) })
+        );
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
@@ -100,7 +92,9 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) })
+        );
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
@@ -247,5 +241,4 @@ export namespace Creation {
             redoStack: []
         };
     }
-
 }

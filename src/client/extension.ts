@@ -72,19 +72,9 @@ import { IDebugSessionEventHandlers } from './debugger/extension/hooks/types';
 import { registerTypes as debugConfigurationRegisterTypes } from './debugger/extension/serviceRegistry';
 import { IDebugAdapterDescriptorFactory, IDebugConfigurationService, IDebuggerBanner } from './debugger/extension/types';
 import { registerTypes as formattersRegisterTypes } from './formatters/serviceRegistry';
-import {
-    AutoSelectionRule,
-    IInterpreterAutoSelectionRule,
-    IInterpreterAutoSelectionService
-} from './interpreter/autoSelection/types';
+import { AutoSelectionRule, IInterpreterAutoSelectionRule, IInterpreterAutoSelectionService } from './interpreter/autoSelection/types';
 import { IInterpreterSelector } from './interpreter/configuration/types';
-import {
-    ICondaService,
-    IInterpreterLocatorProgressHandler,
-    IInterpreterLocatorProgressService,
-    IInterpreterService,
-    PythonInterpreter
-} from './interpreter/contracts';
+import { ICondaService, IInterpreterLocatorProgressHandler, IInterpreterLocatorProgressService, IInterpreterService, PythonInterpreter } from './interpreter/contracts';
 import { registerTypes as interpretersRegisterTypes } from './interpreter/serviceRegistry';
 import { ServiceContainer } from './ioc/container';
 import { ServiceManager } from './ioc/serviceManager';
@@ -119,7 +109,7 @@ export async function activate(context: ExtensionContext): Promise<IExtensionApi
         return await activateUnsafe(context);
     } catch (ex) {
         handleError(ex);
-        throw ex;  // re-raise
+        throw ex; // re-raise
     }
 }
 
@@ -158,7 +148,8 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
 
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const interpreterManager = serviceContainer.get<IInterpreterService>(IInterpreterService);
-    interpreterManager.refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
+    interpreterManager
+        .refresh(workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined)
         .catch(ex => traceError('Python Extension: interpreterManager.refresh', ex));
 
     // Activate data science features
@@ -318,9 +309,11 @@ function isUsingGlobalInterpreterInWorkspace(currentPythonPath: string, serviceC
 function hasUserDefinedPythonPath(resource: Resource, serviceContainer: IServiceContainer) {
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     const settings = workspaceService.getConfiguration('python', resource)!.inspect<string>('pythonPath')!;
-    return ((settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
+    return (settings.workspaceFolderValue && settings.workspaceFolderValue !== 'python') ||
         (settings.workspaceValue && settings.workspaceValue !== 'python') ||
-        (settings.globalValue && settings.globalValue !== 'python')) ? true : false;
+        (settings.globalValue && settings.globalValue !== 'python')
+        ? true
+        : false;
 }
 
 function getPreferredWorkspaceInterpreter(resource: Resource, serviceContainer: IServiceContainer) {
@@ -349,7 +342,10 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const mainWorkspaceUri = workspaceService.hasWorkspaceFolders ? workspaceService.workspaceFolders![0].uri : undefined;
     const settings = configurationService.getSettings(mainWorkspaceUri);
     const [condaVersion, interpreter, interpreters] = await Promise.all([
-        condaLocator.getCondaVersion().then(ver => ver ? ver.raw : '').catch<string>(() => ''),
+        condaLocator
+            .getCondaVersion()
+            .then(ver => (ver ? ver.raw : ''))
+            .catch<string>(() => ''),
         interpreterService.getActiveInterpreter().catch<PythonInterpreter | undefined>(() => undefined),
         interpreterService.getInterpreters(mainWorkspaceUri).catch<PythonInterpreter[]>(() => [])
     ]);
@@ -359,10 +355,10 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     const usingUserDefinedInterpreter = hasUserDefinedPythonPath(mainWorkspaceUri, serviceContainer);
     const preferredWorkspaceInterpreter = getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer);
     const usingGlobalInterpreter = isUsingGlobalInterpreterInWorkspace(settings.pythonPath, serviceContainer);
-    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer) : false;
-    const hasPython3 = interpreters!
-        .filter(item => item && item.version ? item.version.major === 3 : false)
-        .length > 0;
+    const usingAutoSelectedWorkspaceInterpreter = preferredWorkspaceInterpreter
+        ? settings.pythonPath === getPreferredWorkspaceInterpreter(mainWorkspaceUri, serviceContainer)
+        : false;
+    const hasPython3 = interpreters!.filter(item => (item && item.version ? item.version.major === 3 : false)).length > 0;
 
     return {
         condaVersion,
@@ -381,10 +377,9 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
 // error handling
 
 function handleError(ex: Error) {
-    notifyUser('Extension activation failed, run the \'Developer: Toggle Developer Tools\' command for more information.');
+    notifyUser("Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.");
     traceError('extension activation failed', ex);
-    sendErrorTelemetry(ex)
-        .ignoreErrors();
+    sendErrorTelemetry(ex).ignoreErrors();
 }
 
 interface IAppShell {
@@ -394,13 +389,12 @@ interface IAppShell {
 function notifyUser(msg: string) {
     try {
         // tslint:disable-next-line:no-any
-        let appShell: IAppShell = (window as any as IAppShell);
+        let appShell: IAppShell = (window as any) as IAppShell;
         if (activatedServiceContainer) {
             // tslint:disable-next-line:no-any
-            appShell = activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any as IAppShell;
+            appShell = (activatedServiceContainer.get<IApplicationShell>(IApplicationShell) as any) as IAppShell;
         }
-        appShell.showErrorMessage(msg)
-            .ignoreErrors();
+        appShell.showErrorMessage(msg).ignoreErrors();
     } catch (ex) {
         // ignore
     }

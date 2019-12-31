@@ -18,10 +18,12 @@ export class TreeViewService implements IExtensionSingleActivationService, IDisp
     public get treeView(): TreeView<TestDataItem> {
         return this._treeView;
     }
-    constructor(@inject(ITestTreeViewProvider) private readonly treeViewProvider: ITestTreeViewProvider,
+    constructor(
+        @inject(ITestTreeViewProvider) private readonly treeViewProvider: ITestTreeViewProvider,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
+    ) {
         disposableRegistry.push(this);
     }
     public dispose() {

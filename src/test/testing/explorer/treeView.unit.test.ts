@@ -27,8 +27,7 @@ suite('Unit Tests Test Explorer Tree View', () => {
         treeViewProvider = mock(TestTreeViewProvider);
         appShell = mock(ApplicationShell);
         treeView = typemoq.Mock.ofType<TreeView<TestDataItem>>();
-        treeViewService = new TreeViewService(instance(treeViewProvider), [],
-            instance(appShell), instance(commandManager));
+        treeViewService = new TreeViewService(instance(treeViewProvider), [], instance(appShell), instance(commandManager));
     });
 
     test('Activation will create the treeview', async () => {

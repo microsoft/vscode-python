@@ -33,12 +33,9 @@ suite('Language Server Package Service', () => {
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPlatformService))).returns(() => platformService);
         const workspace = typeMoq.Mock.ofType<IWorkspaceService>();
         const cfg = typeMoq.Mock.ofType<WorkspaceConfiguration>();
-        cfg.setup(c => c.get('proxyStrictSSL', true))
-            .returns(() => true);
-        workspace.setup(w => w.getConfiguration('http', undefined))
-            .returns(() => cfg.object);
-        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspace.object);
+        cfg.setup(c => c.get('proxyStrictSSL', true)).returns(() => true);
+        workspace.setup(w => w.getConfiguration('http', undefined)).returns(() => cfg.object);
+        serviceContainer.setup(c => c.get(typeMoq.It.isValue(IWorkspaceService))).returns(() => workspace.object);
         const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
         const nugetRepo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetRepository))).returns(() => nugetRepo);
@@ -50,13 +47,14 @@ suite('Language Server Package Service', () => {
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await nugetRepo.getPackages(packageName, undefined);
 
-        const latestReleases = packages
-            .filter(item => nugetService.isReleaseVersion(item.version))
-            .sort((a, b) => a.version.compare(b.version));
+        const latestReleases = packages.filter(item => nugetService.isReleaseVersion(item.version)).sort((a, b) => a.version.compare(b.version));
         const latestRelease = latestReleases[latestReleases.length - 1];
 
         expect(packages).to.be.length.greaterThan(0, 'No packages returned.');
         expect(latestReleases).to.be.length.greaterThan(0, 'No release packages returned.');
-        expect(latestRelease.version.major).to.be.equal(lsPackageService.maxMajorVersion, 'New Major version of Language server has been released, we need to update it at our end.');
+        expect(latestRelease.version.major).to.be.equal(
+            lsPackageService.maxMajorVersion,
+            'New Major version of Language server has been released, we need to update it at our end.'
+        );
     });
 });

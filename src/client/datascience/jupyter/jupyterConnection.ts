@@ -110,7 +110,7 @@ class JupyterConnectionWaiter {
         if (this.logger && !this.connectionDisposed) {
             this.logger.logInformation(data.toString('utf8'));
         }
-    }
+    };
 
     // From a list of jupyter server infos try to find the matching jupyter that we launched
     // tslint:disable-next-line:no-any
@@ -174,13 +174,13 @@ class JupyterConnectionWaiter {
 
         // Sometimes jupyter will return a 403 error. Not sure why. We used
         // to fail on this, but it looks like jupyter works with this error in place.
-    }
+    };
 
     private launchTimedOut = () => {
         if (!this.startPromise.completed) {
             this.rejectStartPromise(localize.DataScience.jupyterLaunchTimedOut());
         }
-    }
+    };
 
     private resolveStartPromise = (baseUrl: string, token: string, hostName: string) => {
         // tslint:disable-next-line: no-any
@@ -195,7 +195,7 @@ class JupyterConnectionWaiter {
             };
             this.startPromise.resolve(connection);
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private rejectStartPromise = (message: string) => {
@@ -204,7 +204,7 @@ class JupyterConnectionWaiter {
         if (!this.startPromise.resolved) {
             this.startPromise.reject(new JupyterConnectError(message, this.stderr.join('\n')));
         }
-    }
+    };
 }
 
 // Represents an active connection to a running jupyter notebook
@@ -250,7 +250,8 @@ export class JupyterConnection implements IConnection {
             notebookExecution,
             notebookDir,
             getServerInfo,
-            (baseUrl: string, token: string, hostName: string, processDisposable: Disposable) => new JupyterConnection(baseUrl, token, hostName, processDisposable, notebookExecution.proc),
+            (baseUrl: string, token: string, hostName: string, processDisposable: Disposable) =>
+                new JupyterConnection(baseUrl, token, hostName, processDisposable, notebookExecution.proc),
             serviceContainer,
             cancelToken
         );

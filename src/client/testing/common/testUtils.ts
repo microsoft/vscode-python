@@ -154,7 +154,17 @@ export class TestsHelper implements ITestsHelper {
                     newPath = path.join(parentPath, currentName);
                 }
                 if (!folderMap.has(newPath)) {
-                    const testFolder: TestFolder = { resource, name: newPath, testFiles: [], folders: [], nameToRun: newPath, time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 };
+                    const testFolder: TestFolder = {
+                        resource,
+                        name: newPath,
+                        testFiles: [],
+                        folders: [],
+                        nameToRun: newPath,
+                        time: 0,
+                        functionsPassed: 0,
+                        functionsFailed: 0,
+                        functionsDidNotRun: 0
+                    };
                     folderMap.set(newPath, testFolder);
                     if (parentFolder) {
                         parentFolder!.folders.push(testFolder);
@@ -197,7 +207,23 @@ export class TestsHelper implements ITestsHelper {
         }
 
         // Just return this as a test file.
-        return { testFile: [{ resource: Uri.file(rootDirectory), name: name, nameToRun: name, functions: [], suites: [], xmlName: name, fullPath: '', time: 0, functionsPassed: 0, functionsFailed: 0, functionsDidNotRun: 0 }] };
+        return {
+            testFile: [
+                {
+                    resource: Uri.file(rootDirectory),
+                    name: name,
+                    nameToRun: name,
+                    functions: [],
+                    suites: [],
+                    xmlName: name,
+                    fullPath: '',
+                    time: 0,
+                    functionsPassed: 0,
+                    functionsFailed: 0,
+                    functionsDidNotRun: 0
+                }
+            ]
+        };
     }
     public displayTestErrorMessage(message: string) {
         this.appShell.showErrorMessage(message, constants.Button_Text_Tests_View_Output).then(action => {
@@ -454,30 +480,19 @@ export function findFlattendTestSuite(tests: Tests, suite: TestSuite): Flattened
 export function getChildren(item: TestDataItem): TestDataItem[] {
     switch (getTestDataItemType(item)) {
         case TestDataItemType.folder: {
-            return [
-                ...(item as TestFolder).folders,
-                ...(item as TestFolder).testFiles
-            ];
+            return [...(item as TestFolder).folders, ...(item as TestFolder).testFiles];
         }
         case TestDataItemType.file: {
             const [subSuites, functions] = divideSubtests((item as TestFile).functions);
-            return [
-                ...functions,
-                ...(item as TestFile).suites,
-                ...subSuites
-            ];
+            return [...functions, ...(item as TestFile).suites, ...subSuites];
         }
         case TestDataItemType.suite: {
             let subSuites: TestSuite[] = [];
             let functions = (item as TestSuite).functions;
-            if (!isSubtestsParent((item as TestSuite))) {
+            if (!isSubtestsParent(item as TestSuite)) {
                 [subSuites, functions] = divideSubtests((item as TestSuite).functions);
             }
-            return [
-                ...functions,
-                ...(item as TestSuite).suites,
-                ...subSuites
-            ];
+            return [...functions, ...(item as TestSuite).suites, ...subSuites];
         }
         case TestDataItemType.function: {
             return [];
@@ -558,9 +573,7 @@ function copyResultsForFunctions(source: TestFunction[], target: TestFunction[])
 
 function copyResultsForSuites(source: TestSuite[], target: TestSuite[]): void {
     source.forEach(sourceSuite => {
-        const targetSuite = target.find(suite => suite.name === sourceSuite.name &&
-            suite.nameToRun === sourceSuite.nameToRun &&
-            suite.xmlName === sourceSuite.xmlName);
+        const targetSuite = target.find(suite => suite.name === sourceSuite.name && suite.nameToRun === sourceSuite.nameToRun && suite.xmlName === sourceSuite.xmlName);
         if (!targetSuite) {
             return;
         }

@@ -27,7 +27,21 @@ import { registerTypes as formattersRegisterTypes } from '../client/formatters/s
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
-import { CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL_VIRTUAL_ENV_SERVICE, IInterpreterLocatorHelper, IInterpreterLocatorService, IInterpreterService, INTERPRETER_LOCATOR_SERVICE, IPipEnvService, KNOWN_PATH_SERVICE, PIPENV_SERVICE, WINDOWS_REGISTRY_SERVICE, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../client/interpreter/contracts';
+import {
+    CONDA_ENV_FILE_SERVICE,
+    CONDA_ENV_SERVICE,
+    CURRENT_PATH_SERVICE,
+    GLOBAL_VIRTUAL_ENV_SERVICE,
+    IInterpreterLocatorHelper,
+    IInterpreterLocatorService,
+    IInterpreterService,
+    INTERPRETER_LOCATOR_SERVICE,
+    IPipEnvService,
+    KNOWN_PATH_SERVICE,
+    PIPENV_SERVICE,
+    WINDOWS_REGISTRY_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
+} from '../client/interpreter/contracts';
 import { InterpreterService } from '../client/interpreter/interpreterService';
 import { PythonInterpreterLocatorService } from '../client/interpreter/locators';
 import { InterpreterLocatorHelper } from '../client/interpreter/locators/helpers';

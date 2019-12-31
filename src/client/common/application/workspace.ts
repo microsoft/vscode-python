@@ -2,7 +2,18 @@
 // Licensed under the MIT License.
 
 import { injectable } from 'inversify';
-import { CancellationToken, ConfigurationChangeEvent, Event, FileSystemWatcher, GlobPattern, Uri, workspace, WorkspaceConfiguration, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import {
+    CancellationToken,
+    ConfigurationChangeEvent,
+    Event,
+    FileSystemWatcher,
+    GlobPattern,
+    Uri,
+    workspace,
+    WorkspaceConfiguration,
+    WorkspaceFolder,
+    WorkspaceFoldersChangeEvent
+} from 'vscode';
 import { Resource } from '../types';
 import { IWorkspaceService } from './types';
 
