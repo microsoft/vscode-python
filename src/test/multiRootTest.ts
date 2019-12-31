@@ -16,8 +16,7 @@ function start() {
         launchArgs: [workspacePath],
         version: 'stable'
     }).catch(ex => {
-        console.error('End Multiroot tests (with errors)');
-        console.error(ex);
+        console.error('End Multiroot tests (with errors)', ex);
         process.exit(1);
     });
 }

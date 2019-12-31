@@ -20,8 +20,7 @@ function start() {
         launchArgs: [workspacePath],
         version: 'stable'
     }).catch(ex => {
-        console.error('End Debugger tests (with errors)');
-        console.error(ex);
+        console.error('End Debugger tests (with errors)', ex);
         process.exit(1);
     });
 }

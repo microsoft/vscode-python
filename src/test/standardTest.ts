@@ -18,8 +18,7 @@ function start() {
         launchArgs: [workspacePath],
         version: 'stable'
     }).catch(ex => {
-        console.error('End Standard tests (with errors)');
-        console.error(ex);
+        console.error('End Standard tests (with errors)', ex);
         if (process.env.IS_SMOKE_TEST) {
             process.exit(1);
         }
