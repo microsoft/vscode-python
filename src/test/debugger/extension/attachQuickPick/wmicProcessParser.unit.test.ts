@@ -138,4 +138,47 @@ ProcessId=6028\r\n\
 
         assert.deepEqual(output, expectedOutput);
     });
+
+    test('Command lines starting with a DOS device path prefix should be parsed correctly', () => {
+        const input = `
+CommandLine=\r\n\
+Name=System\r\n\
+ProcessId=4\r\n\
+\r\n\
+\r\n\
+CommandLine=\\??\\C:\\WINDOWS\\system32\\conhost.exe\r\n\
+Name=conhost.exe\r\n\
+ProcessId=5912\r\n\
+\r\n\
+\r\n\
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r\n\
+Name=python.exe\r\n\
+ProcessId=6028\r\n\
+`;
+
+        const expectedOutput: IAttachItem[] = [
+            {
+                label: 'System',
+                description: '4',
+                detail: '',
+                id: '4'
+            },
+            {
+                label: 'conhost.exe',
+                description: '5912',
+                detail: 'C:\\WINDOWS\\system32\\conhost.exe',
+                id: '5912'
+            },
+            {
+                label: 'python.exe',
+                description: '6028',
+                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                id: '6028'
+            }
+        ];
+
+        const output = WmicProcessParser.parseProcesses(input);
+
+        assert.deepEqual(output, expectedOutput);
+    });
 });

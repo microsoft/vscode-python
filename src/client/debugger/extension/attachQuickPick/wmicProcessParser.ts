@@ -54,9 +54,9 @@ export namespace WmicProcessParser {
         const splitter = line.indexOf('=');
         const currentItem = item;
 
-        if (splitter >= 0) {
-            const key: string = line.slice(0, splitter).trim();
-            let value: string = line.slice(splitter + 1).trim();
+        if (splitter > 0) {
+            const key = line.slice(0, splitter).trim();
+            let value = line.slice(splitter + 1).trim();
 
             if (key === wmicNameTitle) {
                 currentItem.label = value;
@@ -64,9 +64,9 @@ export namespace WmicProcessParser {
                 currentItem.description = value;
                 currentItem.id = value;
             } else if (key === wmicCommandLineTitle) {
-                const extendedLengthPath: string = '\\??\\';
-                if (value.lastIndexOf(extendedLengthPath, 0) === 0) {
-                    value = value.slice(extendedLengthPath.length);
+                const dosDevicePrefix = '\\??\\'; // DOS device prefix, see https://reverseengineering.stackexchange.com/a/15178
+                if (value.lastIndexOf(dosDevicePrefix, 0) === 0) {
+                    value = value.slice(dosDevicePrefix.length);
                 }
 
                 currentItem.detail = value;
