@@ -15,7 +15,11 @@ function start() {
         extensionTestsPath: path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'out', 'test', 'index'),
         launchArgs: [workspacePath],
         version: 'stable'
-    }).then(exitCode => console.log(`Exit code from run tests ${exitCode}`)).catch((ex) =>
-        console.error(`run tests for multiroot failed ${ex}`));
+    }).then(exitCode => console.log(`Exit code from run tests ${exitCode}`))
+        .catch((ex) => {
+            console.error(`run tests for multiroot failed ${ex}`);
+            console.error(ex);
+            process.exit(1);
+        });
 }
 start();
