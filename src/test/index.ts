@@ -146,7 +146,14 @@ export async function run(): Promise<void> {
     // Setup test files that need to be run.
     testFiles.forEach(file => mocha.addFile(path.join(testsRoot, file)));
 
-    await activatePythonExtensionScript();
+    // tslint:disable: no-console
+    console.log('Try activating python extension');
+    try {
+        await activatePythonExtensionScript();
+    } catch (ex) {
+        console.log('Failed activating python extension within timeout');
+        console.log(ex);
+    }
 
     // Run the tests.
     await new Promise<void>((resolve, reject) => {

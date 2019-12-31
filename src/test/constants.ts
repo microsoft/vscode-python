@@ -4,7 +4,7 @@
 import * as path from 'path';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 
-export const MAX_EXTENSION_ACTIVATION_TIME = 120_000;
+export const MAX_EXTENSION_ACTIVATION_TIME = 720_000;
 export const TEST_TIMEOUT = 25000;
 export const TEST_RETRYCOUNT = 3;
 export const IS_SMOKE_TEST = process.env.VSC_PYTHON_SMOKE_TEST === '1';
