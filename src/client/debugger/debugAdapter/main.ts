@@ -47,10 +47,7 @@ export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean = false;
-    constructor(
-        private readonly serviceContainer: IServiceContainer,
-        private readonly fileExistsSync = fsextra.existsSync
-    ) {
+    constructor(private readonly serviceContainer: IServiceContainer, private readonly fileExistsSync = fsextra.existsSync) {
         super(false);
     }
     public shutdown(): void {

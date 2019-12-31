@@ -10,10 +10,7 @@ import { convertStat, FileSystem } from '../../../client/common/platform/fileSys
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
-import {
-    assertDoesNotExist, assertExists, DOES_NOT_EXIST, fixPath, FSFixture,
-    SUPPORTS_SYMLINKS, WINDOWS
-} from './utils';
+import { assertDoesNotExist, assertExists, DOES_NOT_EXIST, fixPath, FSFixture, SUPPORTS_SYMLINKS, WINDOWS } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
@@ -24,9 +21,7 @@ suite('FileSystem', () => {
     let fileSystem: FileSystem;
     let fix: FSFixture;
     setup(async () => {
-        fileSystem = new FileSystem(
-            new PlatformService()
-        );
+        fileSystem = new FileSystem(new PlatformService());
         fix = new FSFixture();
 
         await assertDoesNotExist(DOES_NOT_EXIST);
@@ -220,10 +215,7 @@ suite('FileSystem', () => {
                 }
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-                const expected = convertStat(
-                    await fs.lstat(symlink),
-                    FileType.SymbolicLink
-                );
+                const expected = convertStat(await fs.lstat(symlink), FileType.SymbolicLink);
 
                 const stat = await fileSystem.lstat(symlink);
 
@@ -235,10 +227,7 @@ suite('FileSystem', () => {
                 // Ideally we would compare to the result of
                 // fileSystem.stat().  However, we do not have access
                 // to the VS Code API here.
-                const expected = convertStat(
-                    await fs.lstat(filename),
-                    FileType.File
-                );
+                const expected = convertStat(await fs.lstat(filename), FileType.File);
 
                 const stat = await fileSystem.lstat(filename);
 
@@ -450,8 +439,7 @@ suite('FileSystem', () => {
 
                 await fileSystem.writeFile(filename, data);
 
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -461,8 +449,7 @@ suite('FileSystem', () => {
 
                 await fileSystem.writeFile(filename, data);
 
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -472,8 +459,7 @@ suite('FileSystem', () => {
 
                 await fileSystem.writeFile(filename, data);
 
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
         });
@@ -527,11 +513,9 @@ suite('FileSystem', () => {
 
                 await fileSystem.copyFile(src, dest);
 
-                const actual = await fs.readFile(dest)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(dest).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
-                const original = await fs.readFile(src)
-                    .then(buffer => buffer.toString());
+                const original = await fs.readFile(src).then(buffer => buffer.toString());
                 expect(original).to.equal(data);
             });
 
@@ -543,11 +527,9 @@ suite('FileSystem', () => {
 
                 await fileSystem.copyFile(src, dest);
 
-                const actual = await fs.readFile(dest)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(dest).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
-                const original = await fs.readFile(src)
-                    .then(buffer => buffer.toString());
+                const original = await fs.readFile(src).then(buffer => buffer.toString());
                 expect(original).to.equal(data);
             });
 
@@ -588,7 +570,7 @@ suite('FileSystem', () => {
         });
 
         suite('chmod (non-Windows)', () => {
-            suiteSetup(function () {
+            suiteSetup(function() {
                 // On Windows, chmod won't have any effect on the file itself.
                 if (WINDOWS) {
                     // tslint:disable-next-line:no-invalid-this
@@ -818,9 +800,7 @@ suite('FileSystem', () => {
             });
 
             test('throws an exception if file does not exist', () => {
-                expect(
-                    () => fileSystem.readFileSync(DOES_NOT_EXIST)
-                ).to.throw(Error);
+                expect(() => fileSystem.readFileSync(DOES_NOT_EXIST)).to.throw(Error);
             });
         });
 
@@ -863,8 +843,7 @@ suite('FileSystem', () => {
                 stream.write(data);
                 stream.destroy();
 
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -876,8 +855,7 @@ suite('FileSystem', () => {
                 stream.write(data);
                 stream.destroy();
 
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -889,8 +867,7 @@ suite('FileSystem', () => {
                 stream.write(data);
                 stream.destroy();
 
-                const actual = await fs.readFile(filename)
-                    .then(buffer => buffer.toString());
+                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
         });
@@ -990,11 +967,7 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getSubDirectories(dirname);
 
-                    expect(results.sort()).to.deep.equal([
-                        symlink,
-                        subdir2,
-                        subdir1
-                    ]);
+                    expect(results.sort()).to.deep.equal([symlink, subdir2, subdir1]);
                 });
             } else {
                 test('mixed types', async () => {
@@ -1008,10 +981,7 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getSubDirectories(dirname);
 
-                    expect(results.sort()).to.deep.equal([
-                        subdir2,
-                        subdir1
-                    ]);
+                    expect(results.sort()).to.deep.equal([subdir2, subdir1]);
                 });
             }
 
@@ -1039,12 +1009,7 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getFiles(dirname);
 
-                    expect(results.sort()).to.deep.equal([
-                        file3,
-                        file2,
-                        symlink,
-                        file1
-                    ]);
+                    expect(results.sort()).to.deep.equal([file3, file2, symlink, file1]);
                 });
             } else {
                 test('mixed types', async () => {
@@ -1058,11 +1023,7 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getFiles(dirname);
 
-                    expect(results.sort()).to.deep.equal([
-                        file3,
-                        file2,
-                        file1
-                    ]);
+                    expect(results.sort()).to.deep.equal([file3, file2, file1]);
                 });
             }
 
@@ -1214,15 +1175,13 @@ suite('FileSystem', () => {
                 // Note that on Windows chmod is a noop.
                 const tempfile = await createTemporaryFile('.tmp');
 
-                await expect(
-                    fs.chmod(tempfile.filePath, '7777')
-                ).to.not.eventually.be.rejected;
+                await expect(fs.chmod(tempfile.filePath, '7777')).to.not.eventually.be.rejected;
             });
         });
 
         suite('isDirReadonly', () => {
             suite('non-Windows', () => {
-                suiteSetup(function () {
+                suiteSetup(function() {
                     if (WINDOWS) {
                         // tslint:disable-next-line:no-invalid-this
                         this.skip();

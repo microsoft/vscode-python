@@ -78,9 +78,7 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
 
 @injectable()
 export class FileSystem implements IFileSystem {
-    constructor(
-        @inject(IPlatformService) private platformService: IPlatformService
-    ) { }
+    constructor(@inject(IPlatformService) private platformService: IPlatformService) {}
 
     //=================================
     // path-related
@@ -155,12 +153,11 @@ export class FileSystem implements IFileSystem {
 
     public async listdir(dirname: string): Promise<[string, FileType][]> {
         const files = await fs.readdir(dirname);
-        const promises = files
-            .map(async basename => {
-                const filename = path.join(dirname, basename);
-                const fileType = await getFileType(filename);
-                return [filename, fileType] as [string, FileType];
-            });
+        const promises = files.map(async basename => {
+            const filename = path.join(dirname, basename);
+            const fileType = await getFileType(filename);
+            return [filename, fileType] as [string, FileType];
+        });
         return Promise.all(promises);
     }
 
@@ -261,7 +258,7 @@ export class FileSystem implements IFileSystem {
             files = await this.listdir(dirname);
         } catch (err) {
             // This matches what getSubDirectories() does.
-            if (!await fs.pathExists(dirname)) {
+            if (!(await fs.pathExists(dirname))) {
                 return [];
             }
             throw err; // re-throw

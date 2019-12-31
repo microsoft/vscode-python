@@ -29,7 +29,8 @@ suite('FileSystem', () => {
                 const osType = item.value;
 
                 function setPlatform(numCalls = 1) {
-                    platformService.setup(p => p.isWindows)
+                    platformService
+                        .setup(p => p.isWindows)
                         .returns(() => osType === OSType.Windows)
                         .verifiable(TypeMoq.Times.exactly(numCalls));
                 }

@@ -13,9 +13,7 @@ export async function lookForInterpretersInDirectory(pathToCheck: string, fs: IF
     // that breaks some tests.  So we stick with the broader behavior.
     try {
         const subDirs = await fs.listdir(pathToCheck);
-        return subDirs
-            .map(([filename, _ft]) => filename)
-            .filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
+        return subDirs.map(([filename, _ft]) => filename).filter(fileName => CheckPythonInterpreterRegEx.test(path.basename(fileName)));
     } catch (err) {
         traceError('Python Extension (lookForInterpretersInDirectory.fs.listdir):', err);
         return [] as string[];

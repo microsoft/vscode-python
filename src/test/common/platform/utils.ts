@@ -29,15 +29,11 @@ export const SUPPORTS_SYMLINKS = (() => {
 export const DOES_NOT_EXIST = 'this file does not exist';
 
 export async function assertDoesNotExist(filename: string) {
-    await expect(
-        fsextra.stat(filename)
-    ).to.eventually.be.rejected;
+    await expect(fsextra.stat(filename)).to.eventually.be.rejected;
 }
 
 export async function assertExists(filename: string) {
-    await expect(
-        fsextra.stat(filename)
-    ).to.not.eventually.be.rejected;
+    await expect(fsextra.stat(filename)).to.not.eventually.be.rejected;
 }
 
 export function fixPath(filename: string): string {
@@ -58,17 +54,19 @@ export class CleanupFixture {
         const cleanups = this.cleanups;
         this.cleanups = [];
 
-        return Promise.all(cleanups.map(async (cleanup, i) => {
-            try {
-                const res = cleanup();
-                if (res) {
-                    await res;
+        return Promise.all(
+            cleanups.map(async (cleanup, i) => {
+                try {
+                    const res = cleanup();
+                    if (res) {
+                        await res;
+                    }
+                } catch (err) {
+                    console.log(`cleanup ${i + 1} failed: ${err}`);
+                    console.log('moving on...');
                 }
-            } catch (err) {
-                console.log(`cleanup ${i + 1} failed: ${err}`);
-                console.log('moving on...');
-            }
-        }));
+            })
+        );
     }
 }
 
@@ -85,8 +83,7 @@ export class FSFixture extends CleanupFixture {
         relname = path.normalize(relname);
         const filename = path.join(tempDir, relname);
         if (mkdirs) {
-            await fsextra.mkdirp(
-                path.dirname(filename));
+            await fsextra.mkdirp(path.dirname(filename));
         }
         return filename;
     }
@@ -132,7 +129,7 @@ export class FSFixture extends CleanupFixture {
                 // a non-empty directory, but apparently that isn't
                 // always the case.
                 // (see #8804)
-                if (!await fsextra.pathExists(filename)) {
+                if (!(await fsextra.pathExists(filename))) {
                     return;
                 }
                 console.log(`failure during dispose() for ${filename}: ${err}`);
@@ -144,7 +141,7 @@ export class FSFixture extends CleanupFixture {
         try {
             await fsextra.remove(filename);
         } catch (err) {
-            if (!await fsextra.pathExists(filename)) {
+            if (!(await fsextra.pathExists(filename))) {
                 return;
             }
             console.log(`failure while deleting ${filename}: ${err}`);
