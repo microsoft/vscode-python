@@ -13,6 +13,7 @@ import * as tmpMod from 'tmp';
 // found in filesystem.test.ts.
 
 export const WINDOWS = /^win/.test(process.platform);
+export const OSX = /^darwin/.test(process.platform);
 
 export const SUPPORTS_SYMLINKS = (() => {
     const source = fsextra.readdirSync('.')[0];
@@ -25,6 +26,11 @@ export const SUPPORTS_SYMLINKS = (() => {
     fsextra.unlinkSync(symlink);
     return true;
 })();
+
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8995) For the moment we simply say we cannot test with
+// sockets on Windows.
+export const SUPPORTS_SOCKETS = !WINDOWS;
 
 export const DOES_NOT_EXIST = 'this file does not exist';
 

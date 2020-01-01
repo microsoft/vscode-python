@@ -10,18 +10,15 @@ import { convertStat, FileSystem } from '../../../client/common/platform/fileSys
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
-import { getOSType, OSType } from '../../../client/common/utils/platform';
 import {
     assertDoesNotExist, assertExists, DOES_NOT_EXIST, fixPath, FSFixture,
-    SUPPORTS_SYMLINKS, WINDOWS
+    OSX, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
 } from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
 use(require('chai-as-promised'));
 use(assertArrays);
-
-const platform = getOSType();
 
 suite('FileSystem', () => {
     let fileSystem: FileSystem;
@@ -91,7 +88,7 @@ suite('FileSystem', () => {
             const prevCwd = process.cwd();
             let cwd: string;
             setup(async function() {
-                if (platform === OSType.OSX) {
+                if (OSX) {
                     // tslint:disable-next-line:no-suspicious-comment
                     // TODO(GH-8995) These tests are failing on Mac, so
                     // we are temporarily disabling it.
@@ -312,15 +309,6 @@ suite('FileSystem', () => {
         });
 
         suite('listdir', () => {
-            setup(function() {
-                if (WINDOWS) {
-                    // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-8995) These tests are failing on Windows,
-                    // so we are // temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
-            });
             if (SUPPORTS_SYMLINKS) {
                 test('mixed', async () => {
                     // Create the target directory and its contents.
@@ -378,7 +366,7 @@ suite('FileSystem', () => {
                         [subdir, FileType.Directory]
                     ]);
                 });
-            } else {
+            } else if (SUPPORTS_SOCKETS) {
                 test('mixed', async () => {
                     // Create the target directory and its contents.
                     const dirname = await fix.createDirectory('x/y/z');
@@ -401,6 +389,31 @@ suite('FileSystem', () => {
                         [script, FileType.File],
                         [file3, FileType.File],
                         [sock, FileType.Unknown],
+                        [file2, FileType.File],
+                        [subdir, FileType.Directory]
+                    ]);
+                });
+            } else {
+                test('mixed', async () => {
+                    // Create the target directory and its contents.
+                    const dirname = await fix.createDirectory('x/y/z');
+                    const file1 = await fix.createFile('x/y/z/__init__.py', '');
+                    const script = await fix.createFile('x/y/z/__main__.py', '<script here>');
+                    const file2 = await fix.createFile('x/y/z/spam.py', '...');
+                    const file3 = await fix.createFile('x/y/z/eggs.py', '"""..."""');
+                    const subdir = await fix.createDirectory('x/y/z/w');
+                    // Create other files and directories (should be ignored).
+                    await fix.createFile('x/__init__.py', '');
+                    await fix.createFile('x/y/__init__.py', '');
+                    await fix.createDirectory('x/y/z/w/data');
+                    await fix.createFile('x/y/z/w/data/v1.json');
+
+                    const entries = await fileSystem.listdir(dirname);
+
+                    expect(entries.sort()).to.deep.equal([
+                        [file1, FileType.File],
+                        [script, FileType.File],
+                        [file3, FileType.File],
                         [file2, FileType.File],
                         [subdir, FileType.Directory]
                     ]);
@@ -900,7 +913,14 @@ suite('FileSystem', () => {
                 expect(actual).to.equal(data);
             });
 
-            test('overwrites existing file', async () => {
+            test('overwrites existing file', async function() {
+                if (OSX) {
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-8995) This test is failing on Mac, so
+                    // we are temporarily disabling it.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const data = 'line1\nline2\n';
 
@@ -947,7 +967,11 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('unknown', async () => {
+            test('unknown', async function() {
+                if (!SUPPORTS_SOCKETS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
                 const sockFile = await fix.createSocket('x/y/z/ipc.sock');
 
                 const exists = await fileSystem.fileExists(sockFile);
@@ -983,7 +1007,11 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('unknown', async () => {
+            test('unknown', async function() {
+                if (!SUPPORTS_SOCKETS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
                 const sockFile = await fix.createSocket('x/y/z/ipc.sock');
 
                 const exists = await fileSystem.directoryExists(sockFile);
@@ -1022,7 +1050,9 @@ suite('FileSystem', () => {
                     await fix.createFile('x/y/z/scripts/spam.py');
                     const subdir2 = await fix.createDirectory('x/y/z/scripts/v');
                     await fix.createFile('x/y/z/scripts/eggs.py');
-                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                    if (SUPPORTS_SOCKETS) {
+                        await fix.createSocket('x/y/z/scripts/spam.sock');
+                    }
                     await fix.createFile('x/y/z/scripts/data.json');
 
                     const results = await fileSystem.getSubDirectories(dirname);
@@ -1072,7 +1102,9 @@ suite('FileSystem', () => {
                     const file1 = await fix.createFile('x/y/z/scripts/spam.py');
                     await fix.createDirectory('x/y/z/scripts/v');
                     const file2 = await fix.createFile('x/y/z/scripts/eggs.py');
-                    await fix.createSocket('x/y/z/scripts/spam.sock');
+                    if (SUPPORTS_SOCKETS) {
+                        await fix.createSocket('x/y/z/scripts/spam.sock');
+                    }
                     const file3 = await fix.createFile('x/y/z/scripts/data.json');
 
                     const results = await fileSystem.getFiles(dirname);
@@ -1317,7 +1349,11 @@ suite('FileSystem', () => {
                 expect(exists).to.equal(true);
             });
 
-            test('unknown', async () => {
+            test('unknown', async function() {
+                if (!SUPPORTS_SOCKETS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
                 const sockFile = await fix.createSocket('x/y/z/ipc.sock');
 
                 const exists = fileSystem.fileExistsSync(sockFile);
