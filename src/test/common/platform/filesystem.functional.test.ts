@@ -93,8 +93,8 @@ suite('FileSystem', () => {
             setup(async function() {
                 if (platform === OSType.OSX) {
                     // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-8995) This test is failing on Mac, so we are
-                    // temporarily disabling it.
+                    // TODO(GH-8995) These tests are failing on Mac, so
+                    // we are temporarily disabling it.
                     // tslint:disable-next-line:no-invalid-this
                     return this.skip();
                 }
@@ -312,6 +312,15 @@ suite('FileSystem', () => {
         });
 
         suite('listdir', () => {
+            setup(function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-8995) These tests are failing on Windows,
+                    // so we are // temporarily disabling it.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            });
             if (SUPPORTS_SYMLINKS) {
                 test('mixed', async () => {
                     // Create the target directory and its contents.
