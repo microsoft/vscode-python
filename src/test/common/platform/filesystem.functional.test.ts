@@ -1228,8 +1228,11 @@ suite('FileSystem', () => {
                 await fix.createFile('x/y/z/spam');
                 await fix.createFile('x/spam.py');
 
-                const files = await fileSystem.search(pattern);
+                let files = await fileSystem.search(pattern);
 
+                // For whatever reason, on Windows "search()" is
+                // returning filenames with forward slasshes...
+                files = files.map(fixPath);
                 expect(files.sort()).to.deep.equal(expected.sort());
             });
 
