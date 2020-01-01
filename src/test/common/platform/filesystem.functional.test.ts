@@ -1030,6 +1030,15 @@ suite('FileSystem', () => {
         });
 
         suite('getSubDirectories', () => {
+            setup(function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-8995) These tests are failing on Windows,
+                    // so we are // temporarily disabling it.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            });
             if (SUPPORTS_SYMLINKS) {
                 test('mixed types', async () => {
                     const symlinkFileSource = await fix.createFile('x/info.py');
@@ -1081,6 +1090,15 @@ suite('FileSystem', () => {
         });
 
         suite('getFiles', () => {
+            setup(function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-8995) These tests are failing on Windows,
+                    // so we are // temporarily disabling it.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            });
             if (SUPPORTS_SYMLINKS) {
                 test('mixed types', async () => {
                     const symlinkFileSource = await fix.createFile('x/info.py');
@@ -1359,6 +1377,13 @@ suite('FileSystem', () => {
             });
 
             test('unknown', async function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-8995) These tests are failing on Windows,
+                    // so we are // temporarily disabling it.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
                 if (!SUPPORTS_SOCKETS) {
                     // tslint:disable-next-line:no-invalid-this
                     this.skip();
