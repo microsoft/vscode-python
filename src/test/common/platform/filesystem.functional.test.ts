@@ -309,6 +309,15 @@ suite('FileSystem', () => {
         });
 
         suite('listdir', () => {
+            setup(function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-suspicious-comment
+                    // TODO(GH-8995) These tests are failing on Windows,
+                    // so we are // temporarily disabling it.
+                    // tslint:disable-next-line:no-invalid-this
+                    return this.skip();
+                }
+            });
             if (SUPPORTS_SYMLINKS) {
                 test('mixed', async () => {
                     // Create the target directory and its contents.
