@@ -4,6 +4,7 @@
 import * as path from 'path';
 import { IS_CI_SERVER, IS_CI_SERVER_TEST_DEBUGGER } from './ciConstants';
 
+// Activating extension for Multiroot and Debugger CI tests for Windows takes just over 2 minutes sometimes, so 3 minutes seems like a safe margin
 export const MAX_EXTENSION_ACTIVATION_TIME = 180_000;
 export const TEST_TIMEOUT = 25000;
 export const TEST_RETRYCOUNT = 3;
