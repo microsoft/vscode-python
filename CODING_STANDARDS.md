@@ -38,7 +38,7 @@ Use single quotes for strings.
 
 ### Style
 
-* `prettier` formatter must be used to format `typescript,javascript` code.
+* Use `prettier` to format `TypeScript` and `JavaScript` code.
 * Use arrow functions over anonymous function expressions.
 * Always surround loop and conditional bodies with curly braces. Statements on the same line are allowed to omit braces.
 * Open curly braces always go on the same line as whatever necessitates them.
