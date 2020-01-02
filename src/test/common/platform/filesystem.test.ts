@@ -48,7 +48,7 @@ suite('FileSystem', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('for symlinks, gets the info for the linked file', async function () {
+        test('for symlinks, gets the info for the linked file', async function() {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -63,7 +63,7 @@ suite('FileSystem', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('gets the info for a socket', async function () {
+        test('gets the info for a socket', async function() {
             if (!SUPPORTS_SOCKETS) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
