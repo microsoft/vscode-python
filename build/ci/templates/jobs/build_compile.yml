@@ -28,3 +28,7 @@ jobs:
     - bash: npx tslint --project tsconfig.json
       displayName: "Lint"
       workingDirectory: $(Build.SourcesDirectory)
+
+    - bash: npx prettier "src/**/*.ts*" --check
+      displayName: "Code Format"
+      workingDirectory: $(Build.SourcesDirectory)

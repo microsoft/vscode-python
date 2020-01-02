@@ -378,7 +378,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
 
 function handleError(ex: Error) {
     notifyUser("Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.");
-    traceError('extension activation failed', ex);
+    traceError("extension activation failed", ex);
     sendErrorTelemetry(ex).ignoreErrors();
 }
 

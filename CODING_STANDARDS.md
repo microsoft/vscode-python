@@ -50,3 +50,4 @@ Use single quotes for strings.
 * `else` goes on the same line from the closing curly brace.
 * Use 4 spaces per indentation.
 * All files must end with an empty line.
+* `prettier` formatter must be used to format `typescript,javascript` code.
