@@ -109,11 +109,8 @@ function activatePythonExtensionScript() {
     });
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
-    promise.catch(ex => console.error(ex)).finally(() => clearTimeout(timer!))
-        // tslint:disable-next-line: no-console
-        console.error(ex);
-        clearTimeout(timer!);
-    });
+    // tslint:disable-next-line: no-console
+    promise.catch(ex => console.error(ex)).finally(() => clearTimeout(timer!));
     return initializationPromise;
 }
 
