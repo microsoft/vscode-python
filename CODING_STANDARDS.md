@@ -38,6 +38,7 @@ Use single quotes for strings.
 
 ### Style
 
+* `prettier` formatter must be used to format `typescript,javascript` code.
 * Use arrow functions over anonymous function expressions.
 * Always surround loop and conditional bodies with curly braces. Statements on the same line are allowed to omit braces.
 * Open curly braces always go on the same line as whatever necessitates them.
@@ -50,4 +51,3 @@ Use single quotes for strings.
 * `else` goes on the same line from the closing curly brace.
 * Use 4 spaces per indentation.
 * All files must end with an empty line.
-* `prettier` formatter must be used to format `typescript,javascript` code.
