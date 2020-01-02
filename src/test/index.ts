@@ -14,7 +14,6 @@ if ((Reflect as any).metadata === undefined) {
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import { traceError } from '../client/common/logger';
 import { IS_CI_SERVER_TEST_DEBUGGER, MOCHA_REPORTER_JUNIT } from './ciConstants';
 import { IS_MULTI_ROOT_TEST, IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME, TEST_RETRYCOUNT, TEST_TIMEOUT } from './constants';
 import { initialize } from './initialize';
@@ -110,8 +109,9 @@ function activatePythonExtensionScript() {
     });
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
-    promise.then(() => clearTimeout(timer!)).catch((e) => {
-        traceError(e);
+    promise.then(() => clearTimeout(timer!)).catch(() => {
+        // tslint:disable-next-line: no-console
+        console.error(ex);
         clearTimeout(timer!);
     });
     return initializationPromise;
@@ -157,7 +157,7 @@ export async function run(): Promise<void> {
         await activatePythonExtensionScript();
         console.timeEnd('Time taken to activate the extension');
     } catch (ex) {
-        traceError('Failed to activate python extension without errors', ex);
+        console.error('Failed to activate python extension without errors', ex);
     }
 
     // Run the tests.
