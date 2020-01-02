@@ -9,7 +9,7 @@ import * as fsextra from 'fs-extra';
 import { convertStat, FileSystem } from '../../../client/common/platform/fileSystem';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType, IFileSystem } from '../../../client/common/platform/types';
-import { assertDoesNotExist, DOES_NOT_EXIST, FSFixture, SUPPORTS_SYMLINKS } from './utils';
+import { assertDoesNotExist, DOES_NOT_EXIST, FSFixture, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS } from './utils';
 
 // Note: all functional tests that do not trigger the VS Code "fs" API
 // are found in filesystem.functional.test.ts.
@@ -48,7 +48,7 @@ suite('FileSystem', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('for symlinks, gets the info for the linked file', async function() {
+        test('for symlinks, gets the info for the linked file', async function () {
             if (!SUPPORTS_SYMLINKS) {
                 // tslint:disable-next-line:no-invalid-this
                 this.skip();
@@ -63,7 +63,11 @@ suite('FileSystem', () => {
             expect(stat).to.deep.equal(expected);
         });
 
-        test('gets the info for a socket', async () => {
+        test('gets the info for a socket', async function () {
+            if (!SUPPORTS_SOCKETS) {
+                // tslint:disable-next-line:no-invalid-this
+                return this.skip();
+            }
             const sock = await fix.createSocket('x/spam.sock');
             const old = await fsextra.stat(sock);
             const expected = convertStat(old, FileType.Unknown);
