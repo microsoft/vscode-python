@@ -334,8 +334,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-    const terminalShellType = terminalHelper
-    .identifyTerminalShell();
+    const terminalShellType = terminalHelper.identifyTerminalShell();
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
