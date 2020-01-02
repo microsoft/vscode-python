@@ -110,7 +110,7 @@ function activatePythonExtensionScript() {
     const initializationPromise = initialize();
     const promise = Promise.race([initializationPromise, failed]);
     // tslint:disable-next-line: no-console
-    promise.catch(e => console.error(e)).finally(() => clearTimeout(timer!)).ignoreErrors();
+    promise.finally(() => clearTimeout(timer!)).catch(e => console.error(e));
     return initializationPromise;
 }
 
