@@ -334,7 +334,8 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
     // be able to partially populate as much as possible instead
     // (through granular try-catch statements).
     const terminalHelper = serviceContainer.get<ITerminalHelper>(ITerminalHelper);
-    const terminalShellType = terminalHelper.identifyTerminalShell();
+    const terminalShellType = terminalHelper
+    .identifyTerminalShell();
     const condaLocator = serviceContainer.get<ICondaService>(ICondaService);
     const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     const workspaceService = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
@@ -378,7 +379,7 @@ async function getActivationTelemetryProps(serviceContainer: IServiceContainer):
 
 function handleError(ex: Error) {
     notifyUser("Extension activation failed, run the 'Developer: Toggle Developer Tools' command for more information.");
-    traceError("extension activation failed", ex);
+    traceError('extension activation failed', ex);
     sendErrorTelemetry(ex).ignoreErrors();
 }
 
