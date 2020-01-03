@@ -1443,13 +1443,13 @@
                 "python.experiments.optInto": {
                     "type": "array",
                     "default": [],
-                    "description": "Carries experiment names user requested to opt into manually",
+                    "description": "Carries experiment names to opt into",
                     "scope": "application"
                 },
                 "python.experiments.optOutFrom": {
                     "type": "array",
                     "default": [],
-                    "description": "Carries experiment names user requested to opt out of manually",
+                    "description": "Carries experiment names to opt out of",
                     "scope": "application"
                 },
                 "python.dataScience.allowImportFromNotebook": {
