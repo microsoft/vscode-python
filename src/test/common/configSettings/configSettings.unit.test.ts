@@ -170,7 +170,9 @@ suite('Python Settings', async () => {
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any
         expected.experiments = {
-            enabled
+            enabled,
+            optInto: [],
+            optOutFrom: []
         };
         initializeConfig(expected);
         config
@@ -278,7 +280,9 @@ suite('Python Settings', async () => {
         expected.pythonPath = 'python3';
         // tslint:disable-next-line:no-any
         expected.experiments = {
-            enabled: false
+            enabled: false,
+            optInto: [],
+            optOutFrom: []
         };
         initializeConfig(expected);
         config

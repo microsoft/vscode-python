@@ -44,6 +44,14 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     public userExperiments: ABExperiments = [];
     /**
+     * Experiments user requested to opt into manually
+     */
+    public _experimentsOptedInto: string[];
+    /**
+     * Experiments user requested to opt out from manually
+     */
+    public _experimentsOptedOutFrom: string[];
+    /**
      * Keeps track of the experiments to be used in the current session
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
@@ -61,10 +69,6 @@ export class ExperimentsManager implements IExperimentsManager {
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     /**
      * Returns `true` if experiments are enabled, else `false`.
-     *
-     * @private
-     * @type {boolean}
-     * @memberof ExperimentsManager
      */
     private readonly enabled: boolean;
     /**
@@ -88,7 +92,10 @@ export class ExperimentsManager implements IExperimentsManager {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
-        this.enabled = configurationService.getSettings(undefined).experiments.enabled;
+        const settings = configurationService.getSettings(undefined);
+        this.enabled = settings.experiments.enabled;
+        this._experimentsOptedInto = settings.experiments.optInto;
+        this._experimentsOptedOutFrom = settings.experiments.optOutFrom;
     }
 
     @swallowExceptions('Failed to activate experiments')
@@ -127,7 +134,10 @@ export class ExperimentsManager implements IExperimentsManager {
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
                 try {
-                    if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                    if (this._experimentsOptedOutFrom.find(exp => experiment.name === exp)) {
+                        continue;
+                    }
+                    if (this._experimentsOptedInto.find(exp => experiment.name === exp) || this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
                         this.userExperiments.push(experiment);
                     }
                 } catch (ex) {

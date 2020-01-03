@@ -1440,6 +1440,18 @@
                     "description": "Enables/disables A/B tests.",
                     "scope": "application"
                 },
+                "python.experiments.optInto": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Carries experiment names user requested to opt into manually",
+                    "scope": "application"
+                },
+                "python.experiments.optOutFrom": {
+                    "type": "array",
+                    "default": [],
+                    "description": "Carries experiment names user requested to opt out of manually",
+                    "scope": "application"
+                },
                 "python.dataScience.allowImportFromNotebook": {
                     "type": "boolean",
                     "default": true,

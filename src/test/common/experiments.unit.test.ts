@@ -62,6 +62,8 @@ suite('A/B experiments', () => {
         experiments = TypeMoq.Mock.ofType<IExperiments>();
         const settings = mock(PythonSettings);
         when(settings.experiments).thenReturn(experiments.object);
+        experiments.setup(e => e.optInto).returns(() => []);
+        experiments.setup(e => e.optOutFrom).returns(() => []);
         when(configurationService.getSettings(undefined)).thenReturn(instance(settings));
         fs = mock(FileSystem);
         when(persistentStateFactory.createGlobalPersistentState(isDownloadedStorageValidKey, false, anything())).thenReturn(isDownloadedStorageValid.object);
@@ -796,7 +798,27 @@ suite('A/B experiments', () => {
             expectedResult: []
         },
         {
-            testName: 'User experiments list contains the experiment if and only if user is in experiment range',
+            testName: 'User experiments list does not contains the experiment if user has opted out of experiment even though user is in experiment range',
+            experimentStorageValue: [
+                { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+            ],
+            hash: 8187,
+            experimentsOptedOutFrom: ['experiment1'],
+            expectedResult: []
+        },
+        {
+            testName: 'User experiments list contains the experiment if user has opted into the experiment even though user is not in experiment range',
+            experimentStorageValue: [
+                { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+            ],
+            hash: 8187,
+            experimentsOptedInto: ['experiment1'],
+            expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
+        },
+        {
+            testName: 'Otherwise user experiments list contains the experiment if user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
                 { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
@@ -806,15 +828,23 @@ suite('A/B experiments', () => {
         }
     ];
 
-    testsForPopulateUserExperiments.forEach(testParams => {
-        test(testParams.testName, async () => {
-            experimentStorage.setup(n => n.value).returns(() => testParams.experimentStorageValue);
-            when(appEnvironment.machineId).thenReturn('101');
-            if (testParams.hash) {
-                when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
-            }
-            expManager.populateUserExperiments();
-            assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
+    suite('Function populateUserExperiments', async () => {
+        testsForPopulateUserExperiments.forEach(testParams => {
+            test(testParams.testName, async () => {
+                experimentStorage.setup(n => n.value).returns(() => testParams.experimentStorageValue);
+                when(appEnvironment.machineId).thenReturn('101');
+                if (testParams.hash) {
+                    when(crypto.createHash(anything(), 'number', anything())).thenReturn(testParams.hash);
+                }
+                if (testParams.experimentsOptedInto) {
+                    expManager._experimentsOptedInto = testParams.experimentsOptedInto;
+                }
+                if (testParams.experimentsOptedOutFrom) {
+                    expManager._experimentsOptedOutFrom = testParams.experimentsOptedOutFrom;
+                }
+                expManager.populateUserExperiments();
+                assert.deepEqual(expManager.userExperiments, testParams.expectedResult);
+            });
         });
     });
 
