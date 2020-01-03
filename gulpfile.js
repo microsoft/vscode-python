@@ -111,12 +111,6 @@ gulp.task('checkNativeDependencies', done => {
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
 gulp.task('compile-webviews', async () => {
-    //await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '0'});
-    //await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '1'});
-    //await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '2'});
-    //await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '3'});
-    //await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], {});
-    //await spawnAsync('cross-env', ['NODE_OPTIONS=--max_old_space_size=9096', 'npm', 'run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], {});
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '0' });
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '1' });
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '2' });
@@ -179,9 +173,7 @@ async function updateBuildNumber(args) {
 async function buildWebPack(webpackConfigName, args, env) {
     // Remember to perform a case insensitive search.
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
-    //const stdOut = await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', ...args, ...['--mode', 'production']], env);
     const stdOut = await spawnAsync('npm', ['run', 'webpack', '--', ...args, ...['--mode', 'production']], env);
-    //await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '3' });
     const stdOutLines = stdOut
         .split(os.EOL)
         .map(item => item.trim())
