@@ -37,11 +37,10 @@ suite('Attach to process - process provider', () => {
     test('The Linux process list command should be called if the platform is Linux', async () => {
         when(platformService.isMac).thenReturn(false);
         when(platformService.isLinux).thenReturn(true);
-        const psOutput = `
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
-1 launchd                                            launchd\n\
-41 syslogd                                            syslogd\n\
-146 kextd                                              kextd\n\
+        const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+1 launchd                                            launchd
+41 syslogd                                            syslogd
+146 kextd                                              kextd
 `;
         const expectedOutput: IAttachItem[] = [
             {
@@ -73,11 +72,10 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
 
     test('The macOS process list command should be called if the platform is macOS', async () => {
         when(platformService.isMac).thenReturn(true);
-        const psOutput = `
-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
-1 launchd                                            launchd\n\
-41 syslogd                                            syslogd\n\
-146 kextd                                              kextd\n\
+        const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+1 launchd                                            launchd
+41 syslogd                                            syslogd
+146 kextd                                              kextd
 `;
         const expectedOutput: IAttachItem[] = [
             {
@@ -108,20 +106,19 @@ aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
     });
 
     test('The Windows process list command should be called if the platform is Windows', async () => {
-        const windowsOutput = `
-CommandLine=\r\n\
-Name=System\r\n\
-ProcessId=4\r\n\
-\r\n\
-\r\n\
-CommandLine=sihost.exe\r\n\
-Name=sihost.exe\r\n\
-ProcessId=5728\r\n\
-\r\n\
-\r\n\
-CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r\n\
-Name=svchost.exe\r\n\
-ProcessId=5912\r\n\
+        const windowsOutput = `CommandLine=\r
+Name=System\r
+ProcessId=4\r
+\r
+\r
+CommandLine=sihost.exe\r
+Name=sihost.exe\r
+ProcessId=5728\r
+\r
+\r
+CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r
+Name=svchost.exe\r
+ProcessId=5912\r
 `;
         const expectedOutput: IAttachItem[] = [
             {
@@ -172,11 +169,10 @@ ProcessId=5912\r\n\
         });
 
         test('Items returned by getAttachItems should be sorted alphabetically', async () => {
-            const psOutput = `
-    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
-    1 launchd                                            launchd\n\
-    41 syslogd                                            syslogd\n\
-    146 kextd                                              kextd\n\
+            const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    1 launchd                                            launchd
+    41 syslogd                                            syslogd
+    146 kextd                                              kextd
 `;
             const expectedOutput: IAttachItem[] = [
                 {
@@ -206,13 +202,12 @@ ProcessId=5912\r\n\
         });
 
         test('Python processes should be at the top of the list returned by getAttachItems', async () => {
-            const psOutput = `
-    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
-     1 launchd                                            launchd\n\
-    41 syslogd                                            syslogd\n\
-    96 python                                             python\n\
-   146 kextd                                              kextd\n\
- 31896 python                                             python script.py\n\
+            const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+     1 launchd                                            launchd
+    41 syslogd                                            syslogd
+    96 python                                             python
+   146 kextd                                              kextd
+ 31896 python                                             python script.py
 `;
             const expectedOutput: IAttachItem[] = [
                 {
@@ -263,20 +258,19 @@ ProcessId=5912\r\n\
         });
 
         test('Items returned by getAttachItems should be sorted alphabetically', async () => {
-            const windowsOutput = `
-CommandLine=\r\n\
-Name=System\r\n\
-ProcessId=4\r\n\
-\r\n\
-\r\n\
-CommandLine=\r\n\
-Name=svchost.exe\r\n\
-ProcessId=5372\r\n\
-\r\n\
-\r\n\
-CommandLine=sihost.exe\r\n\
-Name=sihost.exe\r\n\
-ProcessId=5728\r\n\
+            const windowsOutput = `CommandLine=\r
+Name=System\r
+ProcessId=4\r
+\r
+\r
+CommandLine=\r
+Name=svchost.exe\r
+ProcessId=5372\r
+\r
+\r
+CommandLine=sihost.exe\r
+Name=sihost.exe\r
+ProcessId=5728\r
 `;
             const expectedOutput: IAttachItem[] = [
                 {
@@ -306,35 +300,34 @@ ProcessId=5728\r\n\
         });
 
         test('Python processes should be at the top of the list returned by getAttachItems', async () => {
-            const windowsOutput = `
-CommandLine=\r\n\
-Name=System\r\n\
-ProcessId=4\r\n\
-\r\n\
-\r\n\
-CommandLine=\r\n\
-Name=svchost.exe\r\n\
-ProcessId=5372\r\n\
-\r\n\
-\r\n\
-CommandLine=sihost.exe\r\n\
-Name=sihost.exe\r\n\
-ProcessId=5728\r\n\
-\r\n\
-\r\n\
-CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r\n\
-Name=svchost.exe\r\n\
-ProcessId=5912\r\n\
-\r\n\
-\r\n\
-CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r\n\
-Name=python.exe\r\n\
-ProcessId=6028\r\n\
-\r\n\
-\r\n\
-CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py\r\n\
-Name=python.exe\r\n\
-ProcessId=8026\r\n\
+            const windowsOutput = `CommandLine=\r
+Name=System\r
+ProcessId=4\r
+\r
+\r
+CommandLine=\r
+Name=svchost.exe\r
+ProcessId=5372\r
+\r
+\r
+CommandLine=sihost.exe\r
+Name=sihost.exe\r
+ProcessId=5728\r
+\r
+\r
+CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r
+Name=svchost.exe\r
+ProcessId=5912\r
+\r
+\r
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r
+Name=python.exe\r
+ProcessId=6028\r
+\r
+\r
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py\r
+Name=python.exe\r
+ProcessId=8026\r
             `;
             const expectedOutput: IAttachItem[] = [
                 {
