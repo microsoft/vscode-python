@@ -447,16 +447,19 @@ stages:
             VMImageName: 'macos-10.13'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
+            NeedsIPythonReqs: true
         'Linux-Py3.7':
             PythonVersion: '3.7'
             VMImageName: 'ubuntu-16.04'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
+            NeedsIPythonReqs: true
         'Win-Py3.7':
             PythonVersion: '3.7'
             VMImageName: 'vs2017-win2016'
             TestsToRun: 'testSmoke'
             NeedsPythonTestReqs: true
+            NeedsIPythonReqs: true
 
     pool:
       vmImage: $(VMImageName)
