@@ -54,6 +54,10 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
                         sendTelemetryEvent(EventName.DEBUGGER_ATTACH_TO_LOCAL_PROCESS);
                     }
 
+                    if (configuration.debugAdapterPath) {
+                        return new DebugAdapterExecutable(pythonPath, [configuration.debugAdapterPath, ...logArgs]);
+                    }
+
                     if (await this.useNewPtvsd(pythonPath)) {
                         sendTelemetryEvent(EventName.DEBUG_ADAPTER_USING_WHEELS_PATH, undefined, { usingWheels: true });
                         return new DebugAdapterExecutable(pythonPath, [path.join(ptvsdPathToUse, 'wheels', 'ptvsd', 'adapter'), ...logArgs]);
