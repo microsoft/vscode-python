@@ -114,11 +114,9 @@ suite('Multiroot Environment Variables Provider', () => {
         expect(vars).to.have.property('PYTHONPATH', '../workspace5', 'PYTHONPATH value is invalid');
 
         Object.keys(processVariables).forEach(variable => {
-            if (vars[variable] && processVariables[variable]) {
-                expect(vars).to.have.property(variable);
-                // On CI, it was seen that processVariable[variable] can contain spaces at the end, which causes tests to fail. So trim the strings before comparing.
-                expect(vars[variable]?.trim()).to.equal(processVariables[variable]?.trim(), 'Value of the variable is incorrect');
-            }
+            expect(vars).to.have.property(variable);
+            // On CI, it was seen that processVariable[variable] can contain spaces at the end, which causes tests to fail. So trim the strings before comparing.
+            expect(vars[variable]?.trim()).to.equal(processVariables[variable]?.trim(), 'Value of the variable is incorrect');
         });
     });
 
