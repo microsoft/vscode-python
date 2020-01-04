@@ -14,6 +14,7 @@ common.nodeModulesToExternalize.forEach(moduleName => {
 const config = {
     mode: 'production',
     target: 'node',
+    context: constants.ExtensionRootDir,
     entry: entryItems,
     devtool: 'source-map',
     node: {

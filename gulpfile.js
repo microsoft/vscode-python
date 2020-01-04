@@ -111,20 +111,20 @@ gulp.task('checkNativeDependencies', done => {
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
 gulp.task('compile-webviews', async () => {
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '0' });
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '1' });
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '2' });
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', 'webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '3' });
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '0' });
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '1' });
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '2' });
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '3' });
 });
 
 gulp.task('webpack', async () => {
     // Build node_modules and DS stuff.
     // Unwrap the array used to build each webpack.
-    await buildWebPack('production', [], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '0' });
-    await buildWebPack('production', [], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '1' });
-    await buildWebPack('production', [], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '2' });
-    await buildWebPack('production', [], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '3' });
-    await buildWebPack('production', [], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '4' });
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '0' });
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '1' });
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '2' });
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '3' });
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096', 'BUNDLE_INDEX': '4' });
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.

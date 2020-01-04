@@ -897,7 +897,7 @@ for _ in range(50):
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 // Give focus
-                const update = waitForUpdate(wrapper, NativeEditor, 1);
+                let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
                 simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                 await update;
@@ -905,9 +905,20 @@ for _ in range(50):
                 // The first cell should be focused.
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
 
-                // Type in something with brackets
+                // Add cell
                 await addCell(wrapper, ioc, '', false);
+                assert.equal(wrapper.find('NativeCell').length, 4);
+
+                // Give focus
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                clickCell(2);
+                simulateKeyPressOnCell(3, { code: 'Enter', editorInfo: undefined });
+                await update;
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
+
                 const editorEnzyme = getNativeFocusedEditor(wrapper);
+
+                // Type in something with brackets
                 typeCode(editorEnzyme, 'a(');
 
                 // Verify cell content

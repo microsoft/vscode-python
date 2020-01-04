@@ -702,9 +702,10 @@ for _ in range(50):
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             assert.notEqual(docManager.activeTextEditor, undefined);
             if (docManager.activeTextEditor) {
+                // Ignore white space.
                 assert.equal(
-                    docManager.activeTextEditor.document.getText(),
-                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na\n\n`
+                    docManager.activeTextEditor.document.getText().trim(),
+                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na`
                 );
             }
         },
@@ -734,9 +735,10 @@ for _ in range(50):
             const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
             assert.notEqual(docManager.activeTextEditor, undefined);
             if (docManager.activeTextEditor) {
+                // Ignore whitespace
                 assert.equal(
-                    docManager.activeTextEditor.document.getText(),
-                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na\n\n`
+                    docManager.activeTextEditor.document.getText().trim(),
+                    `# This file contains only the code required to produce the results of the gathered cell.\n${defaultCellMarker}\na=1\na`
                 );
             }
         },

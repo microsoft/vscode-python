@@ -5,7 +5,7 @@
 
 const merge = require('webpack-merge');
 const datascience = require('./webpack.datascience-ui.config.js');
-const extensionDependencies = require('./build/webpack/webpack.extension.dependencies.config.js').default;
+const extensionDependencies = require('./webpack.extension.dependencies.config.js').default;
 
 const configurations = [
     // history-react
@@ -26,18 +26,17 @@ const configurations = [
     }),
     merge(extensionDependencies, {
         mode: 'production',
-        devtool: 'source-map',
+        devtool: 'source-map'
     })
 ];
 
 // Dirty temporary hack.
 // If the environment variable BUNDLE_INDEX is defined, then return just one item in the array.
 // Refer issue for further details (https://github.com/microsoft/vscode-python/issues/9055)
-if (process.env.BUNDLE_INDEX){
+if (process.env.BUNDLE_INDEX) {
     console.info(`Using Optimized Build, Bundle Index ${process.env.BUNDLE_INDEX}`);
     module.exports = [configurations[parseInt(process.env.BUNDLE_INDEX, 10)]];
 } else {
     console.info('Not using Optimized Build');
     module.exports = configurations;
 }
-
