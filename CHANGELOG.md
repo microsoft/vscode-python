@@ -102,7 +102,7 @@
    ([#8895](https://github.com/Microsoft/vscode-python/issues/8895))
 1. Set `python.workspaceSymbols.enabled` to false by default.
    ([#9046](https://github.com/Microsoft/vscode-python/issues/9046))
-1. Add ability to pick a remote kernel
+1. Add ability to pick a remote kernel.
    ([#3763](https://github.com/Microsoft/vscode-python/issues/3763))
 1. Do not set "redirectOutput": true by default when not specified in launch.json, unless "console" is "internalConsole".
    ([#8865](https://github.com/Microsoft/vscode-python/issues/8865))
