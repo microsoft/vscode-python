@@ -196,7 +196,12 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
 
         // We're only interested in `python -m jupyter kernelspec list --json`
         const interpreter = await this.interpreter();
-        if (!interpreter || this.moduleName.toLowerCase() !== 'jupyter' || this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase() || args.join(' ').toLowerCase() !== 'list --json') {
+        if (
+            !interpreter ||
+            this.moduleName.toLowerCase() !== 'jupyter' ||
+            this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase() ||
+            args.join(' ').toLowerCase() !== 'list --json'
+        ) {
             if (exception) {
                 throw exception;
             }
@@ -215,7 +220,6 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
             return output;
         }
     }
-
 }
 
 // tslint:disable-next-line: max-classes-per-file
