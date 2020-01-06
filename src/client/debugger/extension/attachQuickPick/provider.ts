@@ -20,18 +20,20 @@ export class AttachProcessProvider implements IAttachProcessProvider {
 
     public getAttachItems(): Promise<IAttachItem[]> {
         return this._getInternalProcessEntries().then(processEntries => {
-            processEntries.sort((a, b) => {
-                const compareStrings = (aLower: string, bLower: string): number => {
+            processEntries.sort(({ label: aLabel, detail: aDetail }, { label: bLabel, detail: bDetail }) => {
+                const compare = (aString: string, bString: string): number => {
+                    // localeCompare is significantly slower than < and > (2000 ms vs 80 ms for 10,000 elements)
+                    // We can change to localeCompare if this becomes an issue
+                    const aLower = aString.toLowerCase();
+                    const bLower = bString.toLowerCase();
+
                     if (aLower === bLower) {
                         return 0;
                     }
 
-                    // localeCompare is significantly slower than < and > (2000 ms vs 80 ms for 10,000 elements)
-                    // We can change to localeCompare if this becomes an issue
                     return aLower < bLower ? -1 : 1;
                 };
-                const aLabel = a.label.toLowerCase();
-                const bLabel = b.label.toLowerCase();
+
                 const aPython = aLabel.startsWith('python');
                 const bPython = bLabel.startsWith('python');
 
@@ -43,13 +45,10 @@ export class AttachProcessProvider implements IAttachProcessProvider {
                         return 1;
                     }
 
-                    const aCmdLine = a.detail!.toLowerCase();
-                    const bCmdLine = b.detail!.toLowerCase();
-
-                    return aPython ? compareStrings(aCmdLine, bCmdLine) : compareStrings(bCmdLine, aCmdLine);
+                    return aPython ? compare(aDetail!, bDetail!) : compare(aDetail!, bDetail!);
                 }
 
-                return compareStrings(aLabel, bLabel);
+                return compare(aLabel, bLabel);
             });
 
             return processEntries;
