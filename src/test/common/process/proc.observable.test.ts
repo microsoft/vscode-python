@@ -291,4 +291,20 @@ suite('ProcessService', () => {
             done
         );
     });
+
+    test('execObservable should write input to process stdin', done => {
+        const inputText = 'some text\n';
+        const procService = new ProcessService(new BufferDecoder());
+        const result = procService.execObservable(pythonPath, ['-c', 'import sys; sys.stdout.write(sys.stdin.read())'], { input: inputText });
+
+        expect(result).not.to.be.an('undefined', 'result is undefined.');
+        // validate that the input was written by examining the echoed content
+        result.out.subscribe(
+            output => {
+                expect(output.out).to.be.equal(inputText);
+            },
+            done,
+            done
+        );
+    });
 });

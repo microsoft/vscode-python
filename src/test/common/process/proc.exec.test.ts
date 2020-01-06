@@ -193,6 +193,16 @@ suite('ProcessService Observable', () => {
         expect(outputs).to.deep.equal(expectedOutput, 'Output values are incorrect');
     });
 
+    test('exec should write input to process stdin', async () => {
+        const inputText = 'some text\n';
+        const procService = new ProcessService(new BufferDecoder());
+        const result = await procService.exec(pythonPath, ['-c', 'import sys; sys.stdout.write(sys.stdin.read())'], { input: inputText });
+
+        expect(result).not.to.be.an('undefined', 'result is undefined.');
+        // validate that the input was written by examining the echoed content
+        expect(result.stdout).to.be.equal(inputText);
+    });
+
     test('exec should throw an error with stderr output', async () => {
         const procService = new ProcessService(new BufferDecoder());
         const pythonCode = ['import sys', 'sys.stderr.write("a")', 'sys.stderr.flush()'];
