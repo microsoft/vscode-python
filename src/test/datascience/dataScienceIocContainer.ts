@@ -559,6 +559,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
+
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
@@ -584,6 +585,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         }
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);
@@ -867,7 +869,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
                     this.postMessageToWebPanel(msg);
                 },
                 // tslint:disable-next-line:no-any no-empty
-                setState: (_msg: any) => {},
+                setState: (_msg: any) => { },
                 // tslint:disable-next-line:no-any no-empty
                 getState: () => {
                     return {};
