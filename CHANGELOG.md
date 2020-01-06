@@ -1,10 +1,10 @@
 # Changelog
 
-## 2019.12.0-rc (12 December 2019)
+## 2020.1.0 (6 January 2020)
 
 ### Enhancements
 
-1. Enable reload feature for debugging web apps.
+1. Added experiment for reloading feature of debugging web apps.
    ([#3473](https://github.com/Microsoft/vscode-python/issues/3473))
 1. Activate conda environment using path when name is not available.
    ([#3834](https://github.com/Microsoft/vscode-python/issues/3834))
@@ -39,6 +39,10 @@
    ([#8866](https://github.com/Microsoft/vscode-python/issues/8866))
 1. Updated `ptvsd` debugger to version v5.0.0a9.
    ([#8930](https://github.com/Microsoft/vscode-python/issues/8930))
+1. Add ability to select an existing remote `kernel`.
+   ([#4644](https://github.com/Microsoft/vscode-python/issues/4644))
+1. Notify user when starting jupyter times out and added `Jupyter` output panel to display output from Jupyter.
+   ([#9068](https://github.com/Microsoft/vscode-python/issues/9068))
 
 ### Fixes
 
@@ -98,6 +102,28 @@
    ([#8895](https://github.com/Microsoft/vscode-python/issues/8895))
 1. Set `python.workspaceSymbols.enabled` to false by default.
    ([#9046](https://github.com/Microsoft/vscode-python/issues/9046))
+1. Add ability to pick a remote kernel.
+   ([#3763](https://github.com/Microsoft/vscode-python/issues/3763))
+1. Do not set "redirectOutput": true by default when not specified in launch.json, unless "console" is "internalConsole".
+   ([#8865](https://github.com/Microsoft/vscode-python/issues/8865))
+1. Fix slowdown in Notebook editor caused by using global storage for too much data.
+   ([#8961](https://github.com/Microsoft/vscode-python/issues/8961))
+1. 'y' and 'm' keys toggle cell type but also add a 'y' or 'm' to the cell.
+   ([#9078](https://github.com/Microsoft/vscode-python/issues/9078))
+1. Remove unnecessary matplotlib import from first cell.
+   ([#9099](https://github.com/Microsoft/vscode-python/issues/9099))
+1. Two 'default' options in the select a Jupyter server URI picker.
+   ([#9101](https://github.com/Microsoft/vscode-python/issues/9101))
+1. Plot viewer never opens.
+   ([#9114](https://github.com/Microsoft/vscode-python/issues/9114))
+1. Fix color contrast for kernel selection control.
+   ([#9138](https://github.com/Microsoft/vscode-python/issues/9138))
+1. Disconnect between displayed server and connected server in Kernel selection UI.
+   ([#9151](https://github.com/Microsoft/vscode-python/issues/9151))
+1. Eliminate extra storage space from global storage on first open of a notebook that had already written to storage.
+   ([#9159](https://github.com/Microsoft/vscode-python/issues/9159))
+1. Change kernel selection MRU to just save connection time and don't try to connect when popping the list. Plus add unit tests for it.
+   ([#9171](https://github.com/Microsoft/vscode-python/issues/9171))
 
 ### Code Health
 
