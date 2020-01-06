@@ -293,7 +293,13 @@ suite('Import Sort Provider', () => {
 
         const expectedArgs = ['-', '--diff', '1', '2'];
         processService
-            .setup(p => p.exec(TypeMoq.It.isValue('CUSTOM_ISORT'), TypeMoq.It.isValue(expectedArgs), TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: path.sep })))
+            .setup(p =>
+                p.exec(
+                    TypeMoq.It.isValue('CUSTOM_ISORT'),
+                    TypeMoq.It.isValue(expectedArgs),
+                    TypeMoq.It.isValue({ throwOnStdErr: true, token: undefined, input: 'Hello', cwd: path.sep })
+                )
+            )
             .returns(() => Promise.resolve({ stdout: 'DIFF' }))
             .verifiable(TypeMoq.Times.once());
         const expectedEdit = new WorkspaceEdit();
