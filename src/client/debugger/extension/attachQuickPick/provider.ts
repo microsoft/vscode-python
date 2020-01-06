@@ -45,7 +45,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
                         return 1;
                     }
 
-                    return aPython ? compare(aDetail!, bDetail!) : compare(aDetail!, bDetail!);
+                    return aPython ? compare(aDetail!, bDetail!) : compare(bDetail!, aDetail!);
                 }
 
                 return compare(aLabel, bLabel);
