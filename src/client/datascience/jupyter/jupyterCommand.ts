@@ -36,7 +36,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         this.interpreterPromise = interpreterService.getInterpreterDetails(this.exe).catch(_e => undefined);
     }
 
-    public interpreter() : Promise<PythonInterpreter | undefined> {
+    public interpreter(): Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
     }
 
@@ -56,7 +56,7 @@ class ProcessJupyterCommand implements IJupyterCommand {
         return launcher.exec(this.exe, newArgs, newOptions);
     }
 
-    private fixupEnv(_env?: NodeJS.ProcessEnv) : Promise<NodeJS.ProcessEnv | undefined> {
+    private fixupEnv(_env?: NodeJS.ProcessEnv): Promise<NodeJS.ProcessEnv | undefined> {
         if (this.activationHelper) {
             return this.activationHelper.getActivatedEnvironmentVariables(undefined);
         }
@@ -85,18 +85,18 @@ class InterpreterJupyterCommand implements IJupyterCommand {
 
                     try {
                         const output = await svc.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'jupyter_nbInstalled.py')], {});
-                        if (output.stdout.toLowerCase().includes('available')){
+                        if (output.stdout.toLowerCase().includes('available')) {
                             return svc;
                         }
-                    } catch (ex){
+                    } catch (ex) {
                         traceError('Checking whether notebook is importable failed', ex);
                     }
                 }
             }
-            return pythonExecutionFactory.createActivatedEnvironment({interpreter: this._interpreter});
+            return pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter });
         });
     }
-    public interpreter() : Promise<PythonInterpreter | undefined> {
+    public interpreter(): Promise<PythonInterpreter | undefined> {
         return this.interpreterPromise;
     }
 
@@ -169,27 +169,40 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
      * @memberof InterpreterJupyterKernelSpecCommand
      */
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
+        let exception: Error | undefined;
+        let output: ExecutionResult<string> = { stdout: '' };
         try {
-            return super.exec(args, options);
+            output = await super.exec(args, options);
         } catch (ex) {
-            // We're only interested in `python -m jupyter kernelspec list --json`
-            if (this.moduleName.toLowerCase() !== 'jupyter' || this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase() || args.join(' ').toLowerCase() !== 'list --json'){
-                throw ex;
+            exception = ex;
+        }
+
+        if (!output.stderr && !exception) {
+            return output;
+        }
+
+        // We're only interested in `python -m jupyter kernelspec list --json`
+        const interpreter = await this.interpreter();
+        if (!interpreter || this.moduleName.toLowerCase() !== 'jupyter' || this.args.join(' ').toLowerCase() !== `-m jupyter ${JupyterCommands.KernelSpecCommand}`.toLowerCase() || args.join(' ').toLowerCase() !== 'list --json') {
+            if (exception) {
+                throw exception;
             }
-            const interpreter = await this.interpreter();
-            if (!interpreter){
-                throw ex;
+            return output;
+        }
+        try {
+            // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
+            const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({ interpreter });
+            return activatedEnv.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')], { ...options, throwOnStdErr: true });
+        } catch (innerEx) {
+            traceError('Failed to get a list of the kernelspec using python script', innerEx);
+            // Rethrow original exception.
+            if (exception) {
+                throw exception;
             }
-            try {
-                const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({interpreter});
-                return activatedEnv.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles','datascience', 'getJupyterKernels.py')], {...options, throwOnStdErr: true});
-            } catch (innerEx){
-                traceError('Failed to get a list of the kernelspec using python script', innerEx);
-                // Rethrow original exception.
-                throw ex;
-            }
+            return output;
         }
     }
+
 }
 
 // tslint:disable-next-line: max-classes-per-file
@@ -197,8 +210,8 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
 export class JupyterCommandFactory implements IJupyterCommandFactory {
 
     constructor(
-        @inject(IPythonExecutionFactory) private readonly executionFactory : IPythonExecutionFactory,
-        @inject(IEnvironmentActivationService) private readonly activationHelper : IEnvironmentActivationService,
+        @inject(IPythonExecutionFactory) private readonly executionFactory: IPythonExecutionFactory,
+        @inject(IEnvironmentActivationService) private readonly activationHelper: IEnvironmentActivationService,
         @inject(IProcessServiceFactory) private readonly processServiceFactory: IProcessServiceFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
     ) {
@@ -206,9 +219,9 @@ export class JupyterCommandFactory implements IJupyterCommandFactory {
     }
 
     public createInterpreterCommand(command: JupyterCommands, moduleName: string, args: string[], interpreter: PythonInterpreter, isActiveInterpreter: boolean): IJupyterCommand {
-        if (command === JupyterCommands.NotebookCommand){
+        if (command === JupyterCommands.NotebookCommand) {
             return new InterpreterJupyterNotebookCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
-        } else if (command === JupyterCommands.KernelSpecCommand){
+        } else if (command === JupyterCommands.KernelSpecCommand) {
             return new InterpreterJupyterKernelSpecCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
         }
         return new InterpreterJupyterCommand(moduleName, args, this.executionFactory, interpreter, isActiveInterpreter);
