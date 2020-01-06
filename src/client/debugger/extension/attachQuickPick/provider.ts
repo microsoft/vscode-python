@@ -34,8 +34,8 @@ export class AttachProcessProvider implements IAttachProcessProvider {
                     return aLower < bLower ? -1 : 1;
                 };
 
-                const aPython = aLabel.startsWith('python');
-                const bPython = bLabel.startsWith('python');
+                const aPython = aLabel.indexOf('python') !== -1;
+                const bPython = bLabel.indexOf('python') !== -1;
 
                 if (aPython || bPython) {
                     if (aPython && !bPython) {
