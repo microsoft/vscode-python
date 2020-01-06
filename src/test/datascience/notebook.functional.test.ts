@@ -210,7 +210,7 @@ suite('DataScience notebook tests', () => {
     }
 
     function runTest(name: string, func: (_this: Mocha.Context) => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
-        test(name, async function () {
+        test(name, async function() {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
@@ -1184,7 +1184,7 @@ plt.show()`,
         });
     }
 
-    test('Notebook launch failure', async function () {
+    test('Notebook launch failure', async function() {
         if (!ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
@@ -1215,7 +1215,7 @@ plt.show()`,
     });
 
     // tslint:disable-next-line: no-function-expression
-    runTest('Notebook launch retry', async function (_this: Mocha.Context) {
+    runTest('Notebook launch retry', async function(_this: Mocha.Context) {
         // Skipping for now. Renable to test idle timeouts
         _this.skip();
         ioc.getSettings().datascience.jupyterLaunchRetries = 1;
