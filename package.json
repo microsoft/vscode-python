@@ -2930,7 +2930,7 @@
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
-        "nyc": "^14.1.1",
+        "nyc": "^15.0.0",
         "prettier": "^1.19.1",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
