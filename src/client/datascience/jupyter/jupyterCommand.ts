@@ -141,6 +141,7 @@ export class InterpreterJupyterNotebookCommand extends InterpreterJupyterCommand
  * @class InterpreterJupyterKernelSpecCommand
  * @implements {IJupyterCommand}
  */
+// tslint:disable-next-line: max-classes-per-file
 export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterCommand {
     constructor(moduleName: string, args: string[], pythonExecutionFactory: IPythonExecutionFactory, interpreter: PythonInterpreter, isActiveInterpreter: boolean) {
         super(moduleName, args, pythonExecutionFactory, interpreter, isActiveInterpreter);
