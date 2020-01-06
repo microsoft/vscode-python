@@ -104,7 +104,6 @@ steps:
     # We need these almost always.
     - bash: |
           npm install -g vsce
-          npm install -g npx
       displayName: "Install vsce & npx"
       condition: and(succeeded(), eq('${{ parameters.installVSCEorNPX }}', 'true'))
 
