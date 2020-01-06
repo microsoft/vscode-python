@@ -798,6 +798,23 @@ suite('A/B experiments', () => {
             expectedResult: []
         },
         {
+            testName: 'User experiments list does contain the experiment if user has requested to opt in a control group but is not in experiment range',
+            experimentStorageValue: [{ name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }],
+            hash: 8187,
+            experimentsOptedInto: ['experiment2 - control'],
+            expectedResult: []
+        },
+        {
+            testName: 'User experiments list contains the experiment if user has requested to opt out of a control group but user is in experiment range',
+            experimentStorageValue: [
+                { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }
+            ],
+            hash: 8187,
+            experimentsOptedOutFrom: ['experiment1 - control'],
+            expectedResult: [{ name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 }]
+        },
+        {
             testName: 'User experiments list does not contains the experiment if user has opted out of experiment even though user is in experiment range',
             experimentStorageValue: [
                 { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
@@ -816,6 +833,17 @@ suite('A/B experiments', () => {
             hash: 8187,
             experimentsOptedInto: ['experiment1'],
             expectedResult: [{ name: 'experiment1', salt: 'salt', min: 79, max: 94 }]
+        },
+        {
+            testName: 'User experiments list does not contain the experiment if user has both opted in and out of an experiment',
+            experimentStorageValue: [
+                { name: 'experiment1', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2', salt: 'salt', min: 19, max: 30 }
+            ],
+            hash: 8187,
+            experimentsOptedInto: ['experiment1'],
+            experimentsOptedOutFrom: ['experiment1'],
+            expectedResult: []
         },
         {
             testName: 'Otherwise user experiments list contains the experiment if user is in experiment range',

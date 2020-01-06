@@ -131,13 +131,14 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @traceDecorators.error('Failed to populate user experiments')
     public populateUserExperiments(): void {
+        this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
                 try {
-                    if (this._experimentsOptedOutFrom.find(exp => experiment.name === exp)) {
+                    if (this._experimentsOptedOutFrom.includes(experiment.name)) {
                         continue;
                     }
-                    if (this._experimentsOptedInto.find(exp => experiment.name === exp) || this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                    if (this._experimentsOptedInto.includes(experiment.name) || this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
                         this.userExperiments.push(experiment);
                     }
                 } catch (ex) {
@@ -279,5 +280,23 @@ export class ExperimentsManager implements IExperimentsManager {
             traceError('Effort to download experiments within timeout failed with error', ex);
             return false;
         }
+    }
+
+    /**
+     * You can only opt in or out of experiment groups, not control groups. So remove requests for control groups.
+     */
+    private cleanUpExperimentsOptList(): void {
+        for (let i = 0; i < this._experimentsOptedInto.length; i += 1) {
+            if (this._experimentsOptedInto[i].endsWith('control')) {
+                this._experimentsOptedInto[i] = '';
+            }
+        }
+        for (let i = 0; i < this._experimentsOptedOutFrom.length; i += 1) {
+            if (this._experimentsOptedOutFrom[i].endsWith('control')) {
+                this._experimentsOptedOutFrom[i] = '';
+            }
+        }
+        this._experimentsOptedInto = this._experimentsOptedInto.filter(exp => exp !== '');
+        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter(exp => exp !== '');
     }
 }

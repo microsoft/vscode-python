@@ -1443,13 +1443,35 @@
                 "python.experiments.optInto": {
                     "type": "array",
                     "default": [],
-                    "description": "Carries experiment names to opt into",
+                    "items": {
+                        "enum": [
+                            "LS - enabled",
+                            "AlwaysDisplayTestExplorer - experiment",
+                            "ShowExtensionSurveyPrompt - enabled",
+                            "DebugAdapterFactory - experiment",
+                            "PtvsdWheels37 - experiment",
+                            "Reload - experiment",
+                            "AA_testing - experiment"
+                        ]
+                    },
+                    "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
                     "scope": "application"
                 },
                 "python.experiments.optOutFrom": {
                     "type": "array",
                     "default": [],
-                    "description": "Carries experiment names to opt out of",
+                    "items": {
+                        "enum": [
+                            "LS - enabled",
+                            "AlwaysDisplayTestExplorer - experiment",
+                            "ShowExtensionSurveyPrompt - enabled",
+                            "DebugAdapterFactory - experiment",
+                            "PtvsdWheels37 - experiment",
+                            "Reload - experiment",
+                            "AA_testing - experiment"
+                        ]
+                    },
+                    "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
                     "scope": "application"
                 },
                 "python.dataScience.allowImportFromNotebook": {
