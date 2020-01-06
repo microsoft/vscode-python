@@ -92,7 +92,8 @@ export namespace PsProcessParser {
                 label: executable,
                 description: pid,
                 detail: cmdline,
-                id: pid
+                id: pid,
+                processName: executable
             };
         }
     }

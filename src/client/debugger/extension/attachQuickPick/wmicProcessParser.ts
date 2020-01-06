@@ -13,7 +13,8 @@ export namespace WmicProcessParser {
         label: '',
         description: '',
         detail: '',
-        id: ''
+        id: '',
+        processName: ''
     };
 
     // Perf numbers on Win10:
@@ -60,6 +61,7 @@ export namespace WmicProcessParser {
 
             if (key === wmicNameTitle) {
                 currentItem.label = value;
+                currentItem.processName = value;
             } else if (key === wmicPidTitle) {
                 currentItem.description = value;
                 currentItem.id = value;

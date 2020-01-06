@@ -40,31 +40,36 @@ ProcessId=6028\r\n\
                 label: 'System',
                 description: '4',
                 detail: '',
-                id: '4'
+                id: '4',
+                processName: 'System'
             },
             {
                 label: 'svchost.exe',
                 description: '5372',
                 detail: '',
-                id: '5372'
+                id: '5372',
+                processName: 'svchost.exe'
             },
             {
                 label: 'sihost.exe',
                 description: '5728',
                 detail: 'sihost.exe',
-                id: '5728'
+                id: '5728',
+                processName: 'sihost.exe'
             },
             {
                 label: 'svchost.exe',
                 description: '5912',
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
-                id: '5912'
+                id: '5912',
+                processName: 'svchost.exe'
             },
             {
                 label: 'python.exe',
                 description: '6028',
                 detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
-                id: '6028'
+                id: '6028',
+                processName: 'python.exe'
             }
         ];
 
@@ -106,31 +111,36 @@ ProcessId=6028\r\n\
                 label: 'System',
                 description: '4',
                 detail: '',
-                id: '4'
+                id: '4',
+                processName: 'System'
             },
             {
                 label: 'svchost.exe',
                 description: '5372',
                 detail: '',
-                id: '5372'
+                id: '5372',
+                processName: 'svchost.exe'
             },
             {
                 label: 'sihost.exe',
                 description: '5728',
                 detail: 'sihost.exe',
-                id: '5728'
+                id: '5728',
+                processName: 'sihost.exe'
             },
             {
                 label: 'svchost.exe',
                 description: '5912',
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
-                id: '5912'
+                id: '5912',
+                processName: 'svchost.exe'
             },
             {
                 label: 'python.exe',
                 description: '6028',
                 detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
-                id: '6028'
+                id: '6028',
+                processName: 'python.exe'
             }
         ];
 
@@ -161,19 +171,22 @@ ProcessId=6028\r\n\
                 label: 'System',
                 description: '4',
                 detail: '',
-                id: '4'
+                id: '4',
+                processName: 'System'
             },
             {
                 label: 'conhost.exe',
                 description: '5912',
                 detail: 'C:\\WINDOWS\\system32\\conhost.exe',
-                id: '5912'
+                id: '5912',
+                processName: 'conhost.exe'
             },
             {
                 label: 'python.exe',
                 description: '6028',
                 detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
-                id: '6028'
+                id: '6028',
+                processName: 'python.exe'
             }
         ];
 

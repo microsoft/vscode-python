@@ -9,6 +9,7 @@ export type ProcessListCommand = { command: string; args: string[] };
 
 export interface IAttachItem extends QuickPickItem {
     id: string;
+    processName: string;
 }
 
 export interface IAttachProcessProvider {
