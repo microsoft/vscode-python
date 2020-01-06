@@ -1451,7 +1451,8 @@
                             "DebugAdapterFactory - experiment",
                             "PtvsdWheels37 - experiment",
                             "Reload - experiment",
-                            "AA_testing - experiment"
+                            "AA_testing - experiment",
+                            "All"
                         ]
                     },
                     "description": "List of experiment to opt into. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",
@@ -1468,7 +1469,8 @@
                             "DebugAdapterFactory - experiment",
                             "PtvsdWheels37 - experiment",
                             "Reload - experiment",
-                            "AA_testing - experiment"
+                            "AA_testing - experiment",
+                            "All"
                         ]
                     },
                     "description": "List of experiment to opt out of. If empty, user is assigned the default experiment groups. See https://github.com/microsoft/vscode-python/wiki/Experiments for more details.",

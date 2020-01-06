@@ -135,11 +135,11 @@ export class ExperimentsManager implements IExperimentsManager {
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
                 try {
-                    if (this._experimentsOptedOutFrom.includes(experiment.name)) {
+                    if (this._experimentsOptedOutFrom.includes('All') || this._experimentsOptedOutFrom.includes(experiment.name)) {
                         sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedOutOf: experiment.name });
                         continue;
                     }
-                    if (this._experimentsOptedInto.includes(experiment.name)) {
+                    if (this._experimentsOptedInto.includes('All') || this._experimentsOptedInto.includes(experiment.name)) {
                         sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedInto: experiment.name });
                         this.userExperiments.push(experiment);
                     } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {

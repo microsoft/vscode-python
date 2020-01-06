@@ -798,7 +798,30 @@ suite('A/B experiments', () => {
             expectedResult: []
         },
         {
-            testName: 'User experiments list does contain the experiment if user has requested to opt in a control group but is not in experiment range',
+            testName: 'User experiments list does not contain any experiments if user has requested to opt out of all experiments',
+            experimentStorageValue: [
+                { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+            ],
+            hash: 8187,
+            experimentsOptedOutFrom: ['All'],
+            expectedResult: []
+        },
+        {
+            testName: 'User experiments list contains all experiments if user has requested to opt into all experiments',
+            experimentStorageValue: [
+                { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+            ],
+            hash: 8187,
+            experimentsOptedInto: ['All'],
+            expectedResult: [
+                { name: 'experiment1 - control', salt: 'salt', min: 79, max: 94 },
+                { name: 'experiment2 - control', salt: 'salt', min: 80, max: 90 }
+            ]
+        },
+        {
+            testName: 'User experiments list contains the experiment if user has requested to opt in a control group but is not in experiment range',
             experimentStorageValue: [{ name: 'experiment2 - control', salt: 'salt', min: 19, max: 30 }],
             hash: 8187,
             experimentsOptedInto: ['experiment2 - control'],
