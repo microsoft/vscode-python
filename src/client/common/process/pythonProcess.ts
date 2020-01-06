@@ -7,7 +7,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
-import { traceError } from '../logger';
+import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
@@ -39,6 +39,18 @@ export class PythonExecutionService implements IPythonExecutionService {
             // https://github.com/microsoft/vscode-python/issues/7760
             const { command, args } = this.getExecutionInfo([file]);
 
+            // First check command
+            try {
+                const output = await this.procService.exec(command, ['--version'], { mergeStdOutErr: true });
+                if (output) {
+                    traceInfo(`Find interpreter command ${command} exists`);
+                }
+            } catch (ex) {
+                traceError(`Failed to parse interpreter information, ${command} --version failed with `, ex);
+                return;
+            }
+
+            // Then get the interpreter information.
             const jsonValue = await new Promise<string>((resolve, reject) => {
                 const timer = setTimeout(() => resolve('--timed out --'), 15000);
                 this.procService
@@ -60,6 +72,7 @@ export class PythonExecutionService implements IPythonExecutionService {
                 traceError(`Failed to parse interpreter information for '${command} ${args}' with JSON ${jsonValue}`, ex);
                 return;
             }
+            traceInfo(`Found interpreter for ${command} ${args}`);
             const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
             return {
                 architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
