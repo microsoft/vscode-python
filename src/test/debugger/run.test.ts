@@ -18,7 +18,7 @@ const debugFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'py
 const debuggerType = DebuggerTypeName;
 suite('Run without Debugging', () => {
     let debugClient: DebugClient;
-    setup(async function () {
+    setup(async function() {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -31,7 +31,7 @@ suite('Run without Debugging', () => {
         try {
             await debugClient.stop().catch(noop);
             // tslint:disable-next-line:no-empty
-        } catch (ex) { }
+        } catch (ex) {}
         await sleep(1000);
     });
     function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = true): LaunchRequestArguments {

@@ -19,7 +19,7 @@ export class ErrorBoundary extends React.Component<{}, IErrorState> {
         const stack = errorInfo.componentStack;
 
         // Display fallback UI
-        this.setState({ hasError: true, errorMessage: `${error} at \n  ${stack}`});
+        this.setState({ hasError: true, errorMessage: `${error} at \n  ${stack}` });
     }
 
     public render() {
@@ -33,5 +33,4 @@ export class ErrorBoundary extends React.Component<{}, IErrorState> {
         }
         return this.props.children;
     }
-
 }

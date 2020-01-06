@@ -44,7 +44,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         await this.getTerminalService(resource).sendText(code);
     }
     public async initializeRepl(resource?: Uri) {
-        if (this.replActive && await this.replActive!) {
+        if (this.replActive && (await this.replActive!)) {
             await this._terminalService!.show();
             return;
         }
@@ -84,9 +84,11 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
     private getTerminalService(resource?: Uri): ITerminalService {
         if (!this._terminalService) {
             this._terminalService = this.terminalServiceFactory.getTerminalService(resource, this.terminalTitle);
-            this.disposables.push(this._terminalService.onDidCloseTerminal(() => {
-                this.replActive = undefined;
-            }));
+            this.disposables.push(
+                this._terminalService.onDidCloseTerminal(() => {
+                    this.replActive = undefined;
+                })
+            );
         }
         return this._terminalService;
     }

@@ -44,15 +44,16 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
     public async promptToReload(): Promise<void> {
         const selection = await this.appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload());
         sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, { selection: selection ? 'Reload' : undefined });
-        if (!selection) {
-            return;
-        }
         if (selection === Common.reload()) {
             this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }
     }
 
-    private async promptAndUpdate(message: string, hasPromptBeenShownAlreadyState: IPersistentState<boolean>, telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT) {
+    private async promptAndUpdate(
+        message: string,
+        hasPromptBeenShownAlreadyState: IPersistentState<boolean>,
+        telemetryEventKey: EventName.INSIDERS_PROMPT | EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT
+    ) {
         const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
         const selection = await this.appShell.showInformationMessage(message, ...prompts);

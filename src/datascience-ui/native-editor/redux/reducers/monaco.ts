@@ -56,7 +56,7 @@ function handleStarted(arg: MonacoReducerArg): IMonacoState {
 }
 
 function finishTokenizer<T>(buffer: ArrayBuffer, tmJson: string, arg: MonacoReducerArg<T>) {
-    initializeTokenizer(buffer, tmJson, (e) => {
+    initializeTokenizer(buffer, tmJson, e => {
         if (e) {
             logMessage(`ERROR from onigasm: ${e}`);
         }
@@ -173,8 +173,7 @@ const reducerMap: IMonacoActionMapping = {
     [CommonActionType.UNMOUNT]: handleUnmount
 };
 
-export function generateMonacoReducer(testMode: boolean, postOffice: PostOffice):
-    Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
+export function generateMonacoReducer(testMode: boolean, postOffice: PostOffice): Reducer<IMonacoState, QueuableAction<IMonacoActionMapping>> {
     // First create our default state.
     const defaultState: IMonacoState = {
         onigasmData: undefined,
@@ -185,7 +184,5 @@ export function generateMonacoReducer(testMode: boolean, postOffice: PostOffice)
     };
 
     // Then combine that with our map of state change message to reducer
-    return combineReducers<IMonacoState, IMonacoActionMapping>(
-        defaultState,
-        reducerMap);
+    return combineReducers<IMonacoState, IMonacoActionMapping>(defaultState, reducerMap);
 }

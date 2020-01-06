@@ -22,7 +22,6 @@ interface ISyncData {
 
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
-
     private activeInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
@@ -43,7 +42,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.postOffice = new PostOffice(LiveShare.InteractiveWindowProviderService, liveShare);
 
         // Listen for peer changes
-        this.postOffice.peerCountChanged((n) => this.onPeerCountChanged(n));
+        this.postOffice.peerCountChanged(n => this.onPeerCountChanged(n));
 
         // Listen for messages so we force a create on both sides.
         this.postOffice.registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this).ignoreErrors();
@@ -160,7 +159,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.activeInteractiveWindowExecuteHandler = undefined;
             }
         }
-    }
+    };
 
     private async synchronizeCreate(): Promise<void> {
         // Create a new pending wait if necessary
@@ -179,6 +178,5 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     private onInteractiveWindowExecute = (code: string) => {
         this.executedCode.fire(code);
-    }
-
+    };
 }

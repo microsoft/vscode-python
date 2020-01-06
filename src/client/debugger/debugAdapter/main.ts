@@ -9,6 +9,7 @@ if ((Reflect as any).metadata === undefined) {
     require('reflect-metadata');
 }
 
+import * as fsextra from 'fs-extra';
 import { Socket } from 'net';
 import { EOL } from 'os';
 import * as path from 'path';
@@ -20,7 +21,6 @@ import { DebugProtocol } from 'vscode-debugprotocol';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
 import '../../common/extensions';
 import { isNotInstalledError } from '../../common/helpers';
-import { IFileSystem } from '../../common/platform/types';
 import { ICurrentProcess, IDisposable, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred, sleep } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -47,7 +47,7 @@ export class PythonDebugger extends DebugSession {
     public debugServer?: BaseDebugServer;
     public client = createDeferred<Socket>();
     private supportsRunInTerminalRequest: boolean = false;
-    constructor(private readonly serviceContainer: IServiceContainer) {
+    constructor(private readonly serviceContainer: IServiceContainer, private readonly fileExistsSync = fsextra.existsSync) {
         super(false);
     }
     public shutdown(): void {
@@ -103,11 +103,9 @@ export class PythonDebugger extends DebugSession {
                 const message = this.getUserFriendlyAttachErrorMessage(ex) || 'Attach Failed';
                 this.sendErrorResponse(response, { format: message, id: 1 }, undefined, undefined, ErrorDestination.User);
             });
-
     }
     protected launchRequest(response: DebugProtocol.LaunchResponse, args: LaunchRequestArguments): void {
-        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
-        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !fs.fileExistsSync(args.program)) {
+        if ((typeof args.module !== 'string' || args.module.length === 0) && args.program && !this.fileExistsSync(args.program)) {
             return this.sendErrorResponse(response, { format: `File does not exist. "${args.program}"`, id: 1 }, undefined, undefined, ErrorDestination.User);
         }
 
@@ -148,14 +146,14 @@ export class PythonDebugger extends DebugSession {
     private getConnectionTimeout(args: LaunchRequestArguments) {
         // The timeout can be overridden, but won't be documented unless we see the need for it.
         // This is just a fail safe mechanism, if the current timeout isn't enough (let study the current behaviour before exposing this setting).
-        const connectionTimeout = typeof (args as any).timeout === 'number' ? (args as any).timeout as number : DEBUGGER_CONNECT_TIMEOUT;
+        const connectionTimeout = typeof (args as any).timeout === 'number' ? ((args as any).timeout as number) : DEBUGGER_CONNECT_TIMEOUT;
         return Math.max(connectionTimeout, MIN_DEBUGGER_CONNECT_TIMEOUT);
     }
     private getUserFriendlyLaunchErrorMessage(launchArgs: LaunchRequestArguments, error: any): string | undefined {
         if (!error) {
             return;
         }
-        const errorMsg = typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
+        const errorMsg = typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
         if (isNotInstalledError(error)) {
             return `Failed to launch the Python Process, please validate the path '${launchArgs.pythonPath}'`;
         } else {
@@ -169,7 +167,7 @@ export class PythonDebugger extends DebugSession {
         if (error.code === 'ECONNREFUSED' || error.errno === 'ECONNREFUSED') {
             return `Failed to attach (${error.message})`;
         } else {
-            return typeof error === 'string' ? error : ((error.message && error.message.length > 0) ? error.message : '');
+            return typeof error === 'string' ? error : error.message && error.message.length > 0 ? error.message : '';
         }
     }
 }
@@ -256,7 +254,11 @@ class DebugManager implements Disposable {
         try {
             const disposables = this.serviceContainer.get<IDisposable[]>(IDisposableRegistry);
             disposables.forEach(d => {
-                try { d.dispose(); } catch { noop(); }
+                try {
+                    d.dispose();
+                } catch {
+                    noop();
+                }
             });
         } catch {
             noop();
@@ -336,7 +338,7 @@ class DebugManager implements Disposable {
                 await sleep(100);
                 logger.verbose('Kill process now');
                 killProcessTree(this.ptvsdProcessId!);
-            } catch { }
+            } catch {}
             this.ptvsdProcessId = undefined;
         }
 
@@ -351,7 +353,7 @@ class DebugManager implements Disposable {
             // Dispose last, we don't want to dispose the protocol loggers too early.
             this.disposables.forEach(disposable => disposable.dispose());
         }
-    }
+    };
     private sendMessage(message: DebugProtocol.ProtocolMessage, outputStream: Socket | PassThrough | NodeJS.WriteStream): void {
         this.protocolMessageWriter.write(outputStream, message);
         this.protocolMessageWriter.write(this.throughOutputStream, message);
@@ -414,12 +416,12 @@ class DebugManager implements Disposable {
         }
 
         // Get ready for PTVSD to communicate directly with VS Code.
-        (this.inputStream as any as NodeJS.ReadStream).unpipe(this.debugSessionInputStream);
+        ((this.inputStream as any) as NodeJS.ReadStream).unpipe(this.debugSessionInputStream);
         this.debugSessionOutputStream.unpipe(this.outputStream);
 
         // Do not pipe. When restarting the debugger, the socket gets closed,
         // In which case, VSC will see this and shutdown the debugger completely.
-        (this.inputStream as any as NodeJS.ReadStream).on('data', data => {
+        ((this.inputStream as any) as NodeJS.ReadStream).on('data', data => {
             this.socket.write(data);
         });
         this.socket.on('data', (data: string | Buffer) => {
@@ -432,7 +434,7 @@ class DebugManager implements Disposable {
 
         // Send the initialize request and wait for it to reply back with the initialized event
         this.sendMessage(await this.initializeRequest, this.socket);
-    }
+    };
     private onRequestInitialize = (request: DebugProtocol.InitializeRequest) => {
         this.hasShutdown = false;
         this.terminatedEventSent = false;
@@ -440,17 +442,17 @@ class DebugManager implements Disposable {
         this.restart = false;
         this.disconnectRequest = undefined;
         this.initializeRequestDeferred.resolve(request);
-    }
+    };
     private onRequestLaunch = (request: DebugProtocol.LaunchRequest) => {
         this.launchOrAttach = 'launch';
         this.loggingEnabled = (request.arguments as LaunchRequestArguments).logToFile === true;
         this.launchRequestDeferred.resolve(request);
-    }
+    };
     private onRequestAttach = (request: DebugProtocol.AttachRequest) => {
         this.launchOrAttach = 'attach';
         this.loggingEnabled = (request.arguments as AttachRequestArguments).logToFile === true;
         this.attachRequestDeferred.resolve(request);
-    }
+    };
     private onRequestDisconnect = (request: DebugProtocol.DisconnectRequest) => {
         this.disconnectRequest = request;
         if (this.launchOrAttach === 'attach') {
@@ -464,13 +466,13 @@ class DebugManager implements Disposable {
         // When VS Code sends a disconnect request, PTVSD replies back with a response.
         // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         setTimeout(this.shutdown, 500);
-    }
+    };
     private onEventTerminated = async () => {
         logger.verbose('onEventTerminated');
         this.terminatedEventSent = true;
         // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         setTimeout(this.shutdown, 300);
-    }
+    };
     private onResponseDisconnect = async () => {
         this.disconnectResponseSent = true;
         logger.verbose('onResponseDisconnect');
@@ -478,7 +480,7 @@ class DebugManager implements Disposable {
         // Wait for sometime, until the messages are sent out (remember, we're just intercepting streams here).
         // Also its possible PTVSD might run to completion.
         setTimeout(this.shutdown, 100);
-    }
+    };
 }
 
 async function startDebugger() {
@@ -500,9 +502,9 @@ async function startDebugger() {
     }
 }
 
-process.stdin.on('error', () => { });
-process.stdout.on('error', () => { });
-process.stderr.on('error', () => { });
+process.stdin.on('error', () => {});
+process.stdout.on('error', () => {});
+process.stderr.on('error', () => {});
 
 process.on('uncaughtException', (err: Error) => {
     logger.error(`Uncaught Exception: ${err && err.message ? err.message : ''}`);

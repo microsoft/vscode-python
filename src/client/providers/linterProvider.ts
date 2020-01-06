@@ -4,10 +4,7 @@
 'use strict';
 
 import * as path from 'path';
-import {
-    ConfigurationChangeEvent, Disposable,
-    ExtensionContext, TextDocument, Uri, workspace
-} from 'vscode';
+import { ConfigurationChangeEvent, Disposable, ExtensionContext, TextDocument, Uri, workspace } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { isTestExecution } from '../common/constants';
 import '../common/extensions';
@@ -85,14 +82,16 @@ export class LinterProvider implements Disposable {
             return;
         }
 
-        this.linterManager.getActiveLinters(false, document.uri)
-            .then((linters) => {
+        this.linterManager
+            .getActiveLinters(false, document.uri)
+            .then(linters => {
                 const fileName = path.basename(document.uri.fsPath).toLowerCase();
-                const watchers = linters.filter((info) => info.configFileNames.indexOf(fileName) >= 0);
+                const watchers = linters.filter(info => info.configFileNames.indexOf(fileName) >= 0);
                 if (watchers.length > 0) {
                     setTimeout(() => this.engine.lintOpenPythonFiles(), 1000);
                 }
-            }).ignoreErrors();
+            })
+            .ignoreErrors();
     }
 
     private onDocumentClosed(document: TextDocument) {

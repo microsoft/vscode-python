@@ -9,7 +9,7 @@ import { Editor } from './editor';
 import { CursorPos, IFont } from './mainState';
 
 export interface IMarkdownProps {
-    markdown : string;
+    markdown: string;
     codeTheme: string;
     testMode: boolean;
     monacoTheme: string | undefined;
@@ -51,7 +51,7 @@ export class Markdown extends React.Component<IMarkdownProps> {
                     content={this.props.markdown}
                     outermostParentClass={this.props.outermostParentClass}
                     monacoTheme={this.props.monacoTheme}
-                    language='markdown'
+                    language="markdown"
                     editorOptions={this.props.editorOptions}
                     openLink={this.props.openLink}
                     ref={this.editorRef}
@@ -77,5 +77,5 @@ export class Markdown extends React.Component<IMarkdownProps> {
 
     private onModelChanged = (changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel) => {
         this.props.onChange(changes, model.id);
-    }
+    };
 }

@@ -122,10 +122,10 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
 // tslint:disable-next-line:no-any function-name
 export function captureTelemetry<P extends IEventNamePropertyMapping, E extends keyof P>(eventName: E, properties?: P[E], captureDuration: boolean = true, failureEventName?: E) {
     // tslint:disable-next-line:no-function-expression no-any
-    return function (_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
+    return function(_target: Object, _propertyKey: string, descriptor: TypedPropertyDescriptor<any>) {
         const originalMethod = descriptor.value;
         // tslint:disable-next-line:no-function-expression no-any
-        descriptor.value = function (...args: any[]) {
+        descriptor.value = function(...args: any[]) {
             if (!captureDuration) {
                 sendTelemetryEvent(eventName, undefined, properties);
                 // tslint:disable-next-line:no-invalid-this
@@ -1095,6 +1095,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     /**
+     * Telemetry event sent when user specified None to the language server and jediEnabled is false.
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
+    /**
      * Telemetry sent from Language Server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
@@ -1592,4 +1596,60 @@ export interface IEventNamePropertyMapping {
         hasCustomShell: undefined | boolean;
         hasShellInEnv: undefined | boolean;
     };
+    /**
+     * Telemetry event sent when getting environment variables for an activated environment has failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
+        /**
+         * Whether the activation commands contain the name `conda`.
+         *
+         * @type {boolean}
+         */
+        isPossiblyCondaEnv: boolean;
+        /**
+         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
+         *
+         * @type {TerminalShellType}
+         */
+        terminal: TerminalShellType;
+    };
+    /**
+     * Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
+     *
+     * @type {{
+     *         kernelSpecFound: boolean;
+     *         interpreterFound: boolean;
+     *     }}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.FindKernelForLocalConnection]: {
+        /**
+         * Whether a kernel spec was found.
+         *
+         * @type {boolean}
+         */
+        kernelSpecFound: boolean;
+        /**
+         * Whether an interpreter was found.
+         *
+         * @type {boolean}
+         */
+        interpreterFound: boolean;
+        /**
+         * Whether user was prompted to select a kernel spec.
+         *
+         * @type {boolean}
+         */
+        promptedToSelect?: boolean;
+    };
+    /**
+     * Telemetry event sent when starting a session for a local connection failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.StartSessionFailedJupyter]: undefined | never;
 }

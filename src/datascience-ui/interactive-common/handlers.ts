@@ -13,8 +13,30 @@ export function handleLinkClick(ev: MouseEvent, linkClick: (href: string) => voi
                 anchor = inner[0];
             }
         }
-        if (anchor && anchor.href && !anchor.href.startsWith('vscode')) {
+        if (!anchor || !anchor.href || anchor.href.startsWith('vscode')) {
+            return;
+        }
+        if (!anchor.href.startsWith('blob:')) {
             linkClick(anchor.href);
         }
+
+        // We an have an image (as a blob) and the reference is blob://null:<someguid>
+        // We need to get the blob, for that make a http request and the response will be the Blob
+        // Next convert the blob into something that can be sent to the client side.
+        // Just send an inlined base64 image to `linkClick`, such as `data:image/png;base64,xxxxx`
+        const xhr = new XMLHttpRequest();
+        xhr.open('GET', anchor.href, true);
+        xhr.responseType = 'blob';
+        xhr.onload = () => {
+            const blob = xhr.response;
+            const reader = new FileReader();
+            reader.readAsDataURL(blob);
+            reader.onload = () => {
+                if (typeof reader.result === 'string') {
+                    linkClick(reader.result);
+                }
+            };
+        };
+        xhr.send();
     }
 }

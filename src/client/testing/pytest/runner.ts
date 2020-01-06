@@ -5,10 +5,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import {
-    ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner,
-    IXUnitParser, LaunchOptions, TestRunOptions, Tests
-} from '../common/types';
+import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IXUnitParser, LaunchOptions, TestRunOptions, Tests } from '../common/types';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
 const JunitXmlArg = '--junitxml';
@@ -93,5 +90,4 @@ export class TestManagerRunner implements ITestManagerRunner {
         }
         return this.fs.createTemporaryFile('.xml');
     }
-
 }

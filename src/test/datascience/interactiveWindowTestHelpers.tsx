@@ -12,8 +12,13 @@ import { InteractivePanel } from '../../datascience-ui/history-react/interactive
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, mountWebView } from './testHelpers';
 
-// tslint:disable-next-line: no-any
-export function getInteractiveCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export function getInteractiveCellResults(
+    // tslint:disable-next-line: no-any
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    expectedRenders: number,
+    updater: () => Promise<void>
+    // tslint:disable-next-line: no-any
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     return getCellResults(wrapper, InteractivePanel, 'InteractiveCell', expectedRenders, updater);
 }
 
@@ -40,8 +45,15 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
     });
 }
 
-// tslint:disable-next-line: no-any
-export async function addCode(ioc: DataScienceIocContainer, wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export async function addCode(
+    ioc: DataScienceIocContainer,
+    // tslint:disable-next-line: no-any
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    code: string,
+    expectedRenderCount: number = 4,
+    expectError: boolean = false
+    // tslint:disable-next-line: no-any
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Adding code should cause 5 renders to happen.
     // 1) Input
     // 2) Status ready

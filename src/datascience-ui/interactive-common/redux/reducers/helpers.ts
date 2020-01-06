@@ -47,9 +47,9 @@ export namespace Helpers {
 
     export function updateOrAdd<T>(arg: CommonReducerArg<T, ICell>, generateVM: (cell: ICell, mainState: IMainState) => ICellViewModel): IMainState {
         // First compute new execution count.
-        const newExecutionCount = arg.payload.data.execution_count ?
-            Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10)) :
-            arg.prevState.currentExecutionCount;
+        const newExecutionCount = arg.payload.data.execution_count
+            ? Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10))
+            : arg.prevState.currentExecutionCount;
         if (newExecutionCount !== arg.prevState.currentExecutionCount && arg.prevState.variablesVisible) {
             // We also need to update our variable explorer when the execution count changes
             // Use the ref here to maintain var explorer independence
@@ -57,9 +57,7 @@ export namespace Helpers {
         }
 
         const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
-            return c.cell.id === arg.payload.id &&
-                c.cell.line === arg.payload.line &&
-                arePathsSame(c.cell.file, arg.payload.file);
+            return c.cell.id === arg.payload.id && c.cell.line === arg.payload.line && arePathsSame(c.cell.file, arg.payload.file);
         });
         if (index >= 0) {
             // This means the cell existed already so it was actual executed code.
@@ -96,9 +94,7 @@ export namespace Helpers {
         } else {
             // This is an entirely new cell (it may have started out as finished)
             const newVM = generateVM(arg.payload, arg.prevState);
-            const newVMs = [
-                ...arg.prevState.cellVMs,
-                newVM];
+            const newVMs = [...arg.prevState.cellVMs, newVM];
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,

@@ -22,10 +22,7 @@ import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput'
 import { DebuggerTypeName, PTVSD_PATH } from '../../client/debugger/constants';
 import { PythonDebugConfigurationService } from '../../client/debugger/extension/configuration/debugConfigurationService';
 import { AttachConfigurationResolver } from '../../client/debugger/extension/configuration/resolvers/attach';
-import {
-    IDebugConfigurationProviderFactory,
-    IDebugConfigurationResolver
-} from '../../client/debugger/extension/configuration/types';
+import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from '../../client/debugger/extension/configuration/types';
 import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '../../client/debugger/types';
 import { IServiceContainer } from '../../client/ioc/types';
 import { PYTHON_PATH, sleep } from '../common';
@@ -39,7 +36,7 @@ suite('Debugging - Attach Debugger', () => {
     let debugClient: DebugClient;
     let proc: ChildProcess;
 
-    setup(async function () {
+    setup(async function() {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             this.skip();
         }
@@ -50,12 +47,12 @@ suite('Debugging - Attach Debugger', () => {
         // Wait for a second before starting another test (sometimes, sockets take a while to get closed).
         await sleep(1000);
         try {
-            await debugClient.stop().catch(() => { });
-        } catch (ex) { }
+            await debugClient.stop().catch(() => {});
+        } catch (ex) {}
         if (proc) {
             try {
                 proc.kill();
-            } catch { }
+            } catch {}
         }
     });
     async function testAttachingToRemoteProcess(localRoot: string, remoteRoot: string, isLocalHostWindows: boolean) {
@@ -101,29 +98,26 @@ suite('Debugging - Attach Debugger', () => {
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
-        experiments
-            .setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment))
-            .returns(() => true);
-        experiments
-            .setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment))
-            .returns(() => true);
+        experiments.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
+        experiments.setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment)).returns(() => true);
 
         const launchResolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
-        const attachResolver = new AttachConfigurationResolver(workspaceService.object, documentManager.object, platformService.object, configurationService.object, experiments.object);
+        const attachResolver = new AttachConfigurationResolver(
+            workspaceService.object,
+            documentManager.object,
+            platformService.object,
+            configurationService.object,
+            experiments.object
+        );
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
         const fs = mock(FileSystem);
         const multistepFactory = mock(MultiStepInputFactory);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory,
-            instance(multistepFactory), instance(fs));
+        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory), instance(fs));
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);
 
-        await Promise.all([
-            initializePromise,
-            attachPromise,
-            debugClient.waitForEvent('initialized')
-        ]);
+        await Promise.all([initializePromise, attachPromise, debugClient.waitForEvent('initialized')]);
 
         const stdOutPromise = debugClient.assertOutput('stdout', 'this is stdout');
         const stdErrPromise = debugClient.assertOutput('stderr', 'this is stderr');
@@ -140,16 +134,19 @@ suite('Debugging - Attach Debugger', () => {
         const breakpointStoppedPromise = debugClient.assertStoppedLocation('breakpoint', breakpointLocation);
 
         await Promise.all([
-            breakpointPromise, exceptionBreakpointPromise,
-            debugClient.configurationDoneRequest(), debugClient.threadsRequest(),
-            stdOutPromise, stdErrPromise,
+            breakpointPromise,
+            exceptionBreakpointPromise,
+            debugClient.configurationDoneRequest(),
+            debugClient.threadsRequest(),
+            stdOutPromise,
+            stdErrPromise,
             breakpointStoppedPromise
         ]);
 
         await continueDebugging(debugClient);
         await exited;
     }
-    test('Confirm we are able to attach to a running program', async function () {
+    test('Confirm we are able to attach to a running program', async function() {
         // Skipping to get nightly build to pass. Opened this issue:
         // https://github.com/microsoft/vscode-python/issues/7411
         this.skip();

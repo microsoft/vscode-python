@@ -19,8 +19,8 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
         @inject(IPlatformService) private readonly platform: IPlatformService,
-        @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) private winRegInterpreterLocator: IInterpreterLocatorService) {
-
+        @inject(IInterpreterLocatorService) @named(WINDOWS_REGISTRY_SERVICE) private winRegInterpreterLocator: IInterpreterLocatorService
+    ) {
         super(AutoSelectionRule.windowsRegistry, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
@@ -30,6 +30,6 @@ export class WindowsRegistryInterpretersAutoSelectionRule extends BaseRuleServic
         const interpreters = await this.winRegInterpreterLocator.getInterpreters(resource);
         const bestInterpreter = this.helper.getBestInterpreter(interpreters);
         traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
-        return await this.setGlobalInterpreter(bestInterpreter, manager) ? NextAction.exit : NextAction.runNextRule;
+        return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;
     }
 }

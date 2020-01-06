@@ -5,14 +5,19 @@
 import { Container } from 'inversify';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import {
-    IApplicationShell, IDocumentManager, IWorkspaceService
-} from '../../client/common/application/types';
+import { IApplicationShell, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { PersistentStateFactory } from '../../client/common/persistentState';
 import { IFileSystem } from '../../client/common/platform/types';
 import {
-    GLOBAL_MEMENTO, IConfigurationService, IInstaller,
-    ILintingSettings, IMemento, IPersistentStateFactory, IPythonSettings, Product, WORKSPACE_MEMENTO
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    IInstaller,
+    ILintingSettings,
+    IMemento,
+    IPersistentStateFactory,
+    IPythonSettings,
+    Product,
+    WORKSPACE_MEMENTO
 } from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/types';
@@ -21,9 +26,7 @@ import { ServiceContainer } from '../../client/ioc/container';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
 import { LinterManager } from '../../client/linters/linterManager';
-import {
-    IAvailableLinterActivator, ILinterManager, ILintingEngine
-} from '../../client/linters/types';
+import { IAvailableLinterActivator, ILinterManager, ILintingEngine } from '../../client/linters/types';
 import { LinterProvider } from '../../client/providers/linterProvider';
 import { initialize } from '../initialize';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -55,7 +58,9 @@ suite('Linting - Provider', () => {
         context = TypeMoq.Mock.ofType<vscode.ExtensionContext>();
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
-        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, _reject) => resolve(true)));
+        fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(
+            () => new Promise<boolean>((resolve, _reject) => resolve(true))
+        );
         fs.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
         serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
 
@@ -176,7 +181,7 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => uri);
         document.setup(x => x.isClosed).returns(() => closed);
 
-        docManager.setup(x => x.textDocuments).returns(() => closed ? [] : [document.object]);
+        docManager.setup(x => x.textDocuments).returns(() => (closed ? [] : [document.object]));
         // tslint:disable-next-line:prefer-const no-unused-variable
         // tslint:disable-next-line:no-unused-expression
         new LinterProvider(context.object, serviceContainer);

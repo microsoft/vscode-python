@@ -32,7 +32,7 @@ suite('Debugging - Configuration Provider Flask', () => {
         input = mock<MultiStepInput<DebugConfigurationState>>(MultiStepInput);
         provider = new TestFlaskLaunchDebugConfigurationProvider(instance(fs));
     });
-    test('getApplicationPath should return undefined if file doesn\'t exist', async () => {
+    test("getApplicationPath should return undefined if file doesn't exist", async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
         const appPyPath = path.join(folder.uri.fsPath, 'app.py');
         when(fs.fileExists(appPyPath)).thenResolve(false);
@@ -69,11 +69,7 @@ suite('Debugging - Configuration Provider Flask', () => {
                 FLASK_ENV: 'development',
                 FLASK_DEBUG: '0'
             },
-            args: [
-                'run',
-                '--no-debugger',
-                '--no-reload'
-            ],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true
         };
 
@@ -98,11 +94,7 @@ suite('Debugging - Configuration Provider Flask', () => {
                 FLASK_ENV: 'development',
                 FLASK_DEBUG: '0'
             },
-            args: [
-                'run',
-                '--no-debugger',
-                '--no-reload'
-            ],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true
         };
 
@@ -127,11 +119,7 @@ suite('Debugging - Configuration Provider Flask', () => {
                 FLASK_ENV: 'development',
                 FLASK_DEBUG: '0'
             },
-            args: [
-                'run',
-                '--no-debugger',
-                '--no-reload'
-            ],
+            args: ['run', '--no-debugger', '--no-reload'],
             jinja: true
         };
 

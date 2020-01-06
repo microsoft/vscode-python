@@ -54,6 +54,7 @@
         "onCommand:python.viewLanguageServerOutput",
         "onCommand:python.viewTestOutput",
         "onCommand:python.viewOutput",
+        "onCommand:python.datascience.viewJupyterOutput",
         "onCommand:python.selectAndRunTestMethod",
         "onCommand:python.selectAndDebugTestMethod",
         "onCommand:python.selectAndRunTestFile",
@@ -237,6 +238,11 @@
                     "light": "resources/light/repl.svg",
                     "dark": "resources/dark/repl.svg"
                 }
+            },
+            {
+                "command": "python.datascience.viewJupyterOutput",
+                "title": "%python.command.python.datascience.viewJupyterOutput.title%",
+                "category": "Python"
             },
             {
                 "command": "python.viewLanguageServerOutput",
@@ -1086,6 +1092,9 @@
                 ],
                 "program": "./out/client/debugger/debugAdapter/main.js",
                 "runtime": "node",
+                "variables": {
+                    "pickProcess": "python.pickLocalProcess"
+                },
                 "configurationSnippets": [],
                 "configurationAttributes": {
                     "launch": {
@@ -1252,12 +1261,12 @@
                             },
                             "console": {
                                 "enum": [
-                                    "none",
+                                    "internalConsole",
                                     "integratedTerminal",
                                     "externalTerminal"
                                 ],
                                 "description": "Where to launch the debug target: internal console, integrated terminal, or external terminal.",
-                                "default": "none"
+                                "default": "internalConsole"
                             },
                             "cwd": {
                                 "type": "string",
@@ -1363,8 +1372,19 @@
                                 "default": true
                             },
                             "processId": {
-                                "type": "number",
-                                "description": "ID of the local process to attach to."
+                                "anyOf": [
+                                    {
+                                        "enum": [
+                                            "${command:pickProcess}"
+                                        ],
+                                        "description": "Use process picker to select a process to attach, or Process ID as integer.",
+                                        "default": "${command:pickProcess}"
+                                    },
+                                    {
+                                        "type": "integer",
+                                        "description": "ID of the local process to attach to."
+                                    }
+                                ]
                             }
                         }
                     }
@@ -1851,6 +1871,17 @@
                     "type": "string",
                     "default": "",
                     "description": "Path to directory containing the Jedi library (this path will contain the 'Jedi' sub directory).",
+                    "scope": "resource"
+                },
+                "python.languageServer": {
+                    "type": "string",
+                    "enum": [
+                        "Jedi",
+                        "Microsoft",
+                        "None"
+                    ],
+                    "default": "Microsoft",
+                    "description": "Defines type of the language server.",
                     "scope": "resource"
                 },
                 "python.analysis.openFilesOnly": {
@@ -2668,11 +2699,11 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
-        "compile-webviews-watch": "npx npx -n --max_old_space_size=9096 webpack --config webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "npx npx -n --max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "checkDependencies": "gulp checkDependencies",
-        "dump-datascience-webpack-stats": "npx -n --max_old_space_size=9096 webpack --config webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
+        "dump-datascience-webpack-stats": "npx -n --max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
-        "compile-webviews-verbose": "npx webpack --config webpack.datascience-ui.config.js",
+        "compile-webviews-verbose": "npx webpack --config ./build/webpack/webpack.datascience-ui.config.js",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
@@ -2821,7 +2852,7 @@
         "@types/request": "^2.47.0",
         "@types/semver": "^5.5.0",
         "@types/shortid": "^0.0.29",
-        "@types/sinon": "^7.0.13",
+        "@types/sinon": "^7.5.1",
         "@types/stack-trace": "0.0.29",
         "@types/temp": "^0.8.32",
         "@types/tmp": "0.0.33",
@@ -2861,6 +2892,8 @@
         "electron-download": "^4.1.1",
         "enzyme": "^3.7.0",
         "enzyme-adapter-react-16": "^1.6.0",
+        "eslint-config-prettier": "^6.9.0",
+        "eslint-plugin-prettier": "^3.1.2",
         "event-stream": "3.3.4",
         "expose-loader": "^0.7.5",
         "extract-zip": "^1.6.7",
@@ -2886,6 +2919,7 @@
         "less": "^3.9.0",
         "less-loader": "^5.0.0",
         "loader-utils": "^1.1.0",
+        "lolex": "^5.1.2",
         "mocha": "^6.1.4",
         "mocha-junit-reporter": "^1.17.0",
         "mocha-multi-reporters": "^1.1.7",
@@ -2895,6 +2929,7 @@
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
         "nyc": "^14.1.1",
+        "prettier": "^1.19.1",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
@@ -2910,7 +2945,7 @@
         "sass-loader": "^7.1.0",
         "serialize-javascript": "^2.1.2",
         "shortid": "^2.2.8",
-        "sinon": "^7.3.2",
+        "sinon": "^8.0.1",
         "source-map-support": "^0.5.12",
         "style-loader": "^0.23.1",
         "styled-jsx": "^3.1.0",
@@ -2922,8 +2957,10 @@
         "ts-mockito": "^2.3.1",
         "ts-node": "^8.3.0",
         "tsconfig-paths-webpack-plugin": "^3.2.0",
+        "tslint-config-prettier": "^1.18.0",
         "tslint-eslint-rules": "^5.1.0",
         "tslint-microsoft-contrib": "^5.0.3",
+        "tslint-plugin-prettier": "^2.1.0",
         "typed-react-markdown": "^0.1.0",
         "typemoq": "^2.1.0",
         "typescript": "^3.7.2",

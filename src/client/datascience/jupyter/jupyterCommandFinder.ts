@@ -8,20 +8,8 @@ import { IApplicationShell, IWorkspaceService } from '../../common/application/t
 import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import {
-    IProcessService,
-    IProcessServiceFactory,
-    IPythonExecutionFactory,
-    IPythonExecutionService,
-    SpawnOptions
-} from '../../common/process/types';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    ILogger,
-    IPersistentState,
-    IPersistentStateFactory
-} from '../../common/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
+import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -152,7 +140,10 @@ export class JupyterCommandFinderImpl {
 
         // If the module is found on this interpreter, then we found it.
         if (interpreter && !Cancellation.isCanceled(cancelToken)) {
-            const [result, activeInterpreter] = await Promise.all([this.doesModuleExist(command, interpreter, cancelToken), this.interpreterService.getActiveInterpreter(undefined)]);
+            const [result, activeInterpreter] = await Promise.all([
+                this.doesModuleExist(command, interpreter, cancelToken),
+                this.interpreterService.getActiveInterpreter(undefined)
+            ]);
             findResult = result!;
             const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
             if (findResult.status === ModuleExistsStatus.FoundJupyter) {
@@ -522,13 +513,15 @@ export class JupyterCommandFinder extends JupyterCommandFinderImpl {
         } else if (command === JupyterCommands.NotebookCommand) {
             // Otherwise wrap the result so we can check for a failure.
             this.findNotebookCommandPromise = createDeferred<IFindCommandResult>();
-            return this.findBestNotebookCommand(token).then(r => {
-                this.findNotebookCommandPromise?.resolve(r);
-                return r;
-            }).catch(e => {
-                this.findNotebookCommandPromise?.reject(e);
-                throw e;
-            });
+            return this.findBestNotebookCommand(token)
+                .then(r => {
+                    this.findNotebookCommandPromise?.resolve(r);
+                    return r;
+                })
+                .catch(e => {
+                    this.findNotebookCommandPromise?.reject(e);
+                    throw e;
+                });
         } else {
             return super.findBestCommand(command, token);
         }

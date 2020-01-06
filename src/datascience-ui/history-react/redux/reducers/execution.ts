@@ -17,7 +17,6 @@ import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
 
 export namespace Execution {
-
     export function undo(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.undoStack.length > 0) {
             // Pop one off of our undo stack and update our redo

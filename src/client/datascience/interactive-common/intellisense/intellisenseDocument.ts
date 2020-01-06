@@ -12,7 +12,6 @@ import { Identifiers } from '../../constants';
 import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from './wordHelper';
 
 class IntellisenseLine implements TextLine {
-
     private _range: Range;
     private _rangeWithLineBreak: Range;
     private _firstNonWhitespaceIndex: number | undefined;
@@ -65,7 +64,6 @@ export interface ICellData {
 }
 
 export class IntellisenseDocument implements TextDocument {
-
     private _uri: Uri;
     private _version: number = 0;
     private _lines: IntellisenseLine[] = [];
@@ -166,19 +164,13 @@ export class IntellisenseDocument implements TextDocument {
         if (!regexp) {
             // use default when custom-regexp isn't provided
             regexp = DefaultWordPattern;
-
         } else if (regExpLeadsToEndlessLoop(regexp)) {
             // use default when custom-regexp is bad
             console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
             regexp = DefaultWordPattern;
         }
 
-        const wordAtText = getWordAtText(
-            position.character + 1,
-            ensureValidWordDefinition(regexp),
-            this._lines[position.line].text,
-            0
-        );
+        const wordAtText = getWordAtText(position.character + 1, ensureValidWordDefinition(regexp), this._lines[position.line].text, 0);
 
         if (wordAtText) {
             return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);
@@ -224,9 +216,11 @@ export class IntellisenseDocument implements TextDocument {
             });
 
             // Contents are easy, just load all of the code in a row
-            this._contents = normalized.map(c => c.code).reduce((p, c) => {
-                return `${p}${c}`;
-            });
+            this._contents = normalized
+                .map(c => c.code)
+                .reduce((p, c) => {
+                    return `${p}${c}`;
+                });
 
             // Cell ranges are slightly more complicated
             let prev: number = 0;
@@ -280,8 +274,7 @@ export class IntellisenseDocument implements TextDocument {
         const fromPosition = this.positionAt(fromOffset);
 
         // Save the range for this cell ()
-        this._cellRanges.splice(this._cellRanges.length - 1, 0,
-            { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCurrentCode.length });
+        this._cellRanges.splice(this._cellRanges.length - 1, 0, { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCurrentCode.length });
 
         // Update our entire contents and recompute our lines
         this._contents = `${before}${newCode}${after}`;
@@ -329,8 +322,7 @@ export class IntellisenseDocument implements TextDocument {
             this._cellRanges[i].fullEnd += newCode.length;
             this._cellRanges[i].currentEnd += newCode.length;
         }
-        this._cellRanges.splice(insertIndex, 0,
-            { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
+        this._cellRanges.splice(insertIndex, 0, { id, start: fromOffset, fullEnd: fromOffset + newCode.length, currentEnd: fromOffset + newCode.length });
 
         return [
             {
@@ -525,7 +517,7 @@ export class IntellisenseDocument implements TextDocument {
     }
 
     public getCellData(cellId: string) {
-        const range = this._cellRanges.find((cellRange) => cellRange.id === cellId);
+        const range = this._cellRanges.find(cellRange => cellRange.id === cellId);
         if (range) {
             return {
                 offset: range.start,

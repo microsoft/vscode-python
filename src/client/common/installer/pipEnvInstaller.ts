@@ -31,9 +31,9 @@ export class PipEnvInstaller extends ModuleInstaller {
         this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
-        if (isResource(resource)){
+        if (isResource(resource)) {
             const interpreters = await this.pipenv.getInterpreters(resource);
-            return interpreters && interpreters.length > 0;
+            return interpreters.length > 0;
         } else {
             return resource.type === InterpreterType.Pipenv;
         }

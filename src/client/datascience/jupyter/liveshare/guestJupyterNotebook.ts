@@ -15,14 +15,15 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import { ICell, IJupyterKernel, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
 
-export class GuestJupyterNotebook
-    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
+export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>().event;
     private responseQueue: ResponseQueue = new ResponseQueue();
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
 
@@ -33,7 +34,6 @@ export class GuestJupyterNotebook
         private _resource: Uri,
         private _owner: INotebookServer,
         private startTime: number
-
     ) {
         super(liveShare);
     }
@@ -85,12 +85,13 @@ export class GuestJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            (error) => {
+            error => {
                 deferred.reject(error);
             },
             () => {
                 deferred.resolve(output);
-            });
+            }
+        );
 
         if (cancelToken) {
             this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
@@ -115,11 +116,13 @@ export class GuestJupyterNotebook
 
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
-        this.waitForService().then(s => {
-            if (s) {
-                s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
-            }
-        }).ignoreErrors();
+        this.waitForService()
+            .then(s => {
+                if (s) {
+                    s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
+                }
+            })
+            .ignoreErrors();
         return this.responseQueue.waitForObservable(code, id);
     }
 
@@ -133,7 +136,7 @@ export class GuestJupyterNotebook
         const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
         const response = await this.sendRequest(LiveShareCommands.interrupt, [interruptTimeout]);
-        return (response as InterruptResult);
+        return response as InterruptResult;
     }
 
     public async waitForServiceName(): Promise<string> {
@@ -148,7 +151,7 @@ export class GuestJupyterNotebook
         const service = await this.waitForService();
         if (service) {
             const result = await service.request(LiveShareCommands.getSysInfo, []);
-            return (result as ICell);
+            return result as ICell;
         }
     }
 
@@ -193,11 +196,11 @@ export class GuestJupyterNotebook
         noop();
     }
 
-    public getKernelSpec(): IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec> | undefined {
+    public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
         return;
     }
 
-    public setKernelSpec(_spec: IJupyterKernelSpec | IJupyterKernel & Partial<IJupyterKernelSpec>): Promise<void> {
+    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
         return Promise.resolve();
     }
 
@@ -208,7 +211,7 @@ export class GuestJupyterNotebook
         if (args.hasOwnProperty('type')) {
             this.responseQueue.push(args as IServerResponse);
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private async sendRequest(command: string, args: any[]): Promise<any> {
@@ -217,5 +220,4 @@ export class GuestJupyterNotebook
             return service.request(command, args);
         }
     }
-
 }

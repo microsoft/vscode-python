@@ -10,11 +10,7 @@ import { LanguageServerExtensionActivator } from '../../../client/activation/lan
 import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
-import {
-    ILanguageServerDownloader,
-    ILanguageServerFolderService,
-    ILanguageServerManager
-} from '../../../client/activation/types';
+import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { PythonSettings } from '../../../client/common/configSettings';
@@ -96,8 +92,7 @@ suite('Language Server - Activator', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(true);
-        when(lsFolderService.getLanguageServerFolderName(anything()))
-            .thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything())).thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(true);
 
         await activator.start(undefined);
@@ -116,11 +111,9 @@ suite('Language Server - Activator', () => {
         when(workspaceService.hasWorkspaceFolders).thenReturn(false);
         when(manager.start(undefined, undefined)).thenResolve();
         when(settings.downloadLanguageServer).thenReturn(true);
-        when(lsFolderService.getLanguageServerFolderName(anything()))
-            .thenResolve(languageServerFolder);
+        when(lsFolderService.getLanguageServerFolderName(anything())).thenResolve(languageServerFolder);
         when(fs.fileExists(mscorlib)).thenResolve(false);
-        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined))
-            .thenReturn(deferred.promise);
+        when(lsDownloader.downloadLanguageServer(languageServerFolderPath, undefined)).thenReturn(deferred.promise);
 
         const promise = activator.start(undefined);
         await sleep(1);

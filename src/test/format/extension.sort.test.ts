@@ -66,7 +66,16 @@ suite('Sorting', () => {
         const edits = edit.entries()[0][1];
         assert.equal(edits.filter(value => value.newText === EOL && value.range.isEqual(new Range(2, 0, 2, 0))).length, 1, 'EOL not found');
         assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(3, 0, 4, 0))).length, 1, '"" not found');
-        assert.equal(edits.filter(value => value.newText === `from rope.base import libutils${EOL}from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}from rope.refactor.rename import Rename${EOL}` && value.range.isEqual(new Range(6, 0, 6, 0))).length, 1, 'Text not found');
+        assert.equal(
+            edits.filter(
+                value =>
+                    value.newText ===
+                        `from rope.base import libutils${EOL}from rope.refactor.extract import ExtractMethod, ExtractVariable${EOL}from rope.refactor.rename import Rename${EOL}` &&
+                    value.range.isEqual(new Range(6, 0, 6, 0))
+            ).length,
+            1,
+            'Text not found'
+        );
         assert.equal(edits.filter(value => value.newText === '' && value.range.isEqual(new Range(13, 0, 18, 0))).length, 1, '"" not found');
     });
 

@@ -81,7 +81,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             assert.deepEqual(files, []);
             verify(workspace.getWorkspaceFolder(resource)).once();
         });
-        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function () {
+        test(`When there is a workspace folder, then return the user settings file & workspace file ${resourceTitle}`, async function() {
             if (!resource) {
                 return this.skip();
             }
@@ -93,7 +93,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             assert.deepEqual(files, ['user.json', path.join(Uri.file('folder1').fsPath, '.vscode', 'settings.json')]);
             verify(workspace.getWorkspaceFolder(resource)).once();
         });
-        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function () {
+        test(`When there is a workspace folder & no user file, then workspace file ${resourceTitle}`, async function() {
             if (!resource) {
                 return this.skip();
             }
@@ -158,7 +158,7 @@ suite('Application Diagnostics - Check Test Settings', () => {
             verify(fs.readFile(__filename)).once();
         });
     });
-    test('File should not be fixed if there\'s an error in reading the file', async () => {
+    test("File should not be fixed if there's an error in reading the file", async () => {
         when(fs.readFile(__filename)).thenReject(new Error('Kaboom'));
 
         const needsToBeFixed = await diagnosticService.doesFileNeedToBeFixed(__filename);
@@ -185,8 +185,10 @@ suite('Application Diagnostics - Check Test Settings', () => {
         },
         {
             testTitle: 'Should not make any changes to the file',
-            contents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
-            expectedContents: '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
+            contents:
+                '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.unitTest.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}',
+            expectedContents:
+                '{"python.pythonPath":"1234", "python.unittest.unitTestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestArgs":[], "python.testing.pytestPath":[]}'
         },
         {
             testTitle: 'Should replace python.jediEnabled.',

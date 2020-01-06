@@ -27,12 +27,7 @@ suite('Terminal Auto Activation', () => {
         activator = mock(TerminalActivator);
         activeResourceService = mock(ActiveResourceService);
 
-        terminalAutoActivation = new TerminalAutoActivation(
-            instance(terminalManager),
-            [],
-            instance(activator),
-            instance(activeResourceService)
-        );
+        terminalAutoActivation = new TerminalAutoActivation(instance(terminalManager), [], instance(activator), instance(activeResourceService));
     });
 
     test('New Terminals should be activated', async () => {

@@ -10,7 +10,8 @@ import { IInterpreterComparer, IInterpreterQuickPickItem, IInterpreterSelector, 
 export class InterpreterSelector implements IInterpreterSelector {
     private disposables: Disposable[] = [];
 
-    constructor(@inject(IInterpreterService) private readonly interpreterManager: IInterpreterService,
+    constructor(
+        @inject(IInterpreterService) private readonly interpreterManager: IInterpreterService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IDocumentManager) private readonly documentManager: IDocumentManager,
@@ -19,8 +20,8 @@ export class InterpreterSelector implements IInterpreterSelector {
         @inject(IPythonPathUpdaterServiceManager) private readonly pythonPathUpdaterService: IPythonPathUpdaterServiceManager,
         @inject(IShebangCodeLensProvider) private readonly shebangCodeLensProvider: IShebangCodeLensProvider,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(ICommandManager) private readonly commandManager: ICommandManager) {
-    }
+        @inject(ICommandManager) private readonly commandManager: ICommandManager
+    ) {}
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());
     }

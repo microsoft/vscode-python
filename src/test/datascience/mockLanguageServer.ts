@@ -71,7 +71,12 @@ export class MockLanguageServer implements ILanguageServer {
         this.resolveNotificationPromise();
         return null;
     }
-    public provideCompletionItems(_document: TextDocument, _position: Position, _token: CancellationToken, _context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
+    public provideCompletionItems(
+        _document: TextDocument,
+        _position: Position,
+        _token: CancellationToken,
+        _context: CompletionContext
+    ): ProviderResult<CompletionItem[] | CompletionList> {
         this.resolveNotificationPromise();
         return null;
     }

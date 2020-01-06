@@ -11,11 +11,7 @@ export enum CommandSource {
 }
 export const TEST_OUTPUT_CHANNEL = 'TEST_OUTPUT_CHANNEL';
 
-export const UNIT_TEST_PRODUCTS: UnitTestProduct[] = [
-    Product.pytest,
-    Product.unittest,
-    Product.nosetest
-];
+export const UNIT_TEST_PRODUCTS: UnitTestProduct[] = [Product.pytest, Product.unittest, Product.nosetest];
 export const NOSETEST_PROVIDER: TestProvider = 'nosetest';
 export const PYTEST_PROVIDER: TestProvider = 'pytest';
 export const UNITTEST_PROVIDER: TestProvider = 'unittest';

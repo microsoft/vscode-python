@@ -24,8 +24,15 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
     ) {
         super(workspaceService, documentManager, platformService, configurationService);
     }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: AttachRequestArguments, _token?: CancellationToken): Promise<AttachRequestArguments | undefined> {
-        if (!(this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment)) && debugConfiguration.processId !== undefined) {
+    public async resolveDebugConfiguration(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: AttachRequestArguments,
+        _token?: CancellationToken
+    ): Promise<AttachRequestArguments | undefined> {
+        if (
+            !(this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment)) &&
+            debugConfiguration.processId !== undefined
+        ) {
             throw Error(Diagnostics.processId());
         }
         const workspaceFolder = this.getWorkspaceFolder(folder);
@@ -66,9 +73,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         if (debugConfiguration.subProcess === true) {
             this.debugOption(debugOptions, DebugOptions.SubProcess);
         }
-        if (debugConfiguration.pyramid
-            && debugOptions.indexOf(DebugOptions.Jinja) === -1
-            && debugConfiguration.jinja !== false) {
+        if (debugConfiguration.pyramid && debugOptions.indexOf(DebugOptions.Jinja) === -1 && debugConfiguration.jinja !== false) {
             this.debugOption(debugOptions, DebugOptions.Jinja);
         }
         if (debugConfiguration.redirectOutput || debugConfiguration.redirectOutput === undefined) {
@@ -100,13 +105,7 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         this.sendTelemetry('attach', debugConfiguration);
     }
 
-    private resolvePathMappings(
-        pathMappings: PathMapping[],
-        host: string,
-        localRoot?: string,
-        remoteRoot?: string,
-        workspaceFolder?: Uri
-    ) {
+    private resolvePathMappings(pathMappings: PathMapping[], host: string, localRoot?: string, remoteRoot?: string, workspaceFolder?: Uri) {
         // This is for backwards compatibility.
         if (localRoot && remoteRoot) {
             pathMappings.push({
@@ -116,13 +115,8 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
         }
         // If attaching to local host, then always map local root and remote roots.
         if (this.isLocalHost(host)) {
-            pathMappings = this.fixUpPathMappings(
-                pathMappings,
-                workspaceFolder ? workspaceFolder.fsPath : ''
-            );
+            pathMappings = this.fixUpPathMappings(pathMappings, workspaceFolder ? workspaceFolder.fsPath : '');
         }
-        return pathMappings.length > 0
-            ? pathMappings
-            : undefined;
+        return pathMappings.length > 0 ? pathMappings : undefined;
     }
 }

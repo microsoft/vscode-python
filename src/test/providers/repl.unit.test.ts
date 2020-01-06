@@ -36,7 +36,7 @@ suite('REPL Provider', () => {
         try {
             replProvider.dispose();
             // tslint:disable-next-line:no-empty
-        } catch { }
+        } catch {}
     });
 
     test('Ensure command is registered', () => {
@@ -58,10 +58,12 @@ suite('REPL Provider', () => {
         const resource = Uri.parse('a');
         const disposable = TypeMoq.Mock.ofType<Disposable>();
         let commandHandler: undefined | (() => void);
-        commandManager.setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_cmd, callback) => {
-            commandHandler = callback;
-            return disposable.object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(TypeMoq.It.isValue(Commands.Start_REPL), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((_cmd, callback) => {
+                commandHandler = callback;
+                return disposable.object;
+            });
         activeResourceService
             .setup(a => a.getActiveResource())
             .returns(() => resource)

@@ -46,9 +46,9 @@ suite('DataScience Error Handler Functional Tests', () => {
             }
         ];
 
-        jupyterExecution.setup(jup => jup.getUsableJupyterPython())
-            .returns(() => Promise.resolve(undefined));
-        channels.setup(ch => ch.getInstallationChannels())
+        jupyterExecution.setup(jup => jup.getUsableJupyterPython()).returns(() => Promise.resolve(undefined));
+        channels
+            .setup(ch => ch.getInstallationChannels())
             .returns(() => Promise.resolve(installers))
             .verifiable(TypeMoq.Times.once());
 

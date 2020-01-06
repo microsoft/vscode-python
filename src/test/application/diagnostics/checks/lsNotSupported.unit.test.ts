@@ -11,7 +11,14 @@ import { LSNotSupportedDiagnosticService } from '../../../../client/application/
 import { CommandOption, IDiagnosticsCommandFactory } from '../../../../client/application/diagnostics/commands/types';
 import { DiagnosticCodes } from '../../../../client/application/diagnostics/constants';
 import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '../../../../client/application/diagnostics/promptHandler';
-import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticFilterService, IDiagnosticHandlerService, IDiagnosticsService } from '../../../../client/application/diagnostics/types';
+import {
+    DiagnosticScope,
+    IDiagnostic,
+    IDiagnosticCommand,
+    IDiagnosticFilterService,
+    IDiagnosticHandlerService,
+    IDiagnosticsService
+} from '../../../../client/application/diagnostics/types';
 import { IWorkspaceService } from '../../../../client/common/application/types';
 import { IServiceContainer } from '../../../../client/ioc/types';
 
@@ -31,41 +38,53 @@ suite('Application Diagnostics - Checks LS not supported', () => {
         lsCompatibility = TypeMoq.Mock.ofType<ILanguageServerCompatibilityService>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticFilterService))).returns(() => filterService.object);
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticsCommandFactory))).returns(() => commandFactory.object);
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IDiagnosticHandlerService), TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId))).returns(() => messageHandler.object);
+        serviceContainer
+            .setup(s => s.get(TypeMoq.It.isValue(IDiagnosticHandlerService), TypeMoq.It.isValue(DiagnosticCommandPromptHandlerServiceId)))
+            .returns(() => messageHandler.object);
         const workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>();
-        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService)))
-            .returns(() => workspaceService.object);
-        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny()))
-            .returns(() => undefined);
+        serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IWorkspaceService))).returns(() => workspaceService.object);
+        workspaceService.setup(w => w.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => undefined);
 
-        diagnosticService = new class extends LSNotSupportedDiagnosticService {
+        diagnosticService = new (class extends LSNotSupportedDiagnosticService {
             public _clear() {
                 while (BaseDiagnosticsService.handledDiagnosticCodeKeys.length > 0) {
                     BaseDiagnosticsService.handledDiagnosticCodeKeys.shift();
                 }
             }
-        }(serviceContainer.object, lsCompatibility.object, messageHandler.object, []);
+        })(serviceContainer.object, lsCompatibility.object, messageHandler.object, []);
         (diagnosticService as any)._clear();
     });
 
     test('Should display two options in message displayed with 2 commands', async () => {
         let options: MessageCommandPrompt | undefined;
         const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
-        diagnostic.setup(d => d.code)
+        diagnostic
+            .setup(d => d.code)
             .returns(() => DiagnosticCodes.LSNotSupportedDiagnostic)
             .verifiable(TypeMoq.Times.atLeastOnce());
         const launchBrowserCommand = TypeMoq.Mock.ofType<IDiagnosticCommand>();
-        commandFactory.setup(f => f.createCommand(TypeMoq.It.isAny(),
-            TypeMoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })))
+        commandFactory
+            .setup(f =>
+                f.createCommand(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isObjectWith<CommandOption<'launch', string>>({ type: 'launch' })
+                )
+            )
             .returns(() => launchBrowserCommand.object)
             .verifiable(TypeMoq.Times.once());
         const alwaysIgnoreCommand = TypeMoq.Mock.ofType<IDiagnosticCommand>();
-        commandFactory.setup(f => f.createCommand(TypeMoq.It.isAny(),
-            TypeMoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore', options: DiagnosticScope.Global })))
+        commandFactory
+            .setup(f =>
+                f.createCommand(
+                    TypeMoq.It.isAny(),
+                    TypeMoq.It.isObjectWith<CommandOption<'ignore', DiagnosticScope>>({ type: 'ignore', options: DiagnosticScope.Global })
+                )
+            )
             .returns(() => alwaysIgnoreCommand.object)
             .verifiable(TypeMoq.Times.once());
-        messageHandler.setup(m => m.handle(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .callback((_, opts: MessageCommandPrompt) => options = opts)
+        messageHandler
+            .setup(m => m.handle(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .callback((_, opts: MessageCommandPrompt) => (options = opts))
             .verifiable(TypeMoq.Times.once());
 
         await diagnosticService.handle([diagnostic.object]);
@@ -79,16 +98,16 @@ suite('Application Diagnostics - Checks LS not supported', () => {
     test('Should not display a message if the diagnostic code has been ignored', async () => {
         const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
 
-        filterService.setup(f => f.shouldIgnoreDiagnostic(TypeMoq.It.isValue(DiagnosticCodes.LSNotSupportedDiagnostic)))
+        filterService
+            .setup(f => f.shouldIgnoreDiagnostic(TypeMoq.It.isValue(DiagnosticCodes.LSNotSupportedDiagnostic)))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
-        diagnostic.setup(d => d.code)
+        diagnostic
+            .setup(d => d.code)
             .returns(() => DiagnosticCodes.LSNotSupportedDiagnostic)
             .verifiable(TypeMoq.Times.atLeastOnce());
-        commandFactory.setup(f => f.createCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .verifiable(TypeMoq.Times.never());
-        messageHandler.setup(m => m.handle(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .verifiable(TypeMoq.Times.never());
+        commandFactory.setup(f => f.createCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
+        messageHandler.setup(m => m.handle(TypeMoq.It.isAny(), TypeMoq.It.isAny())).verifiable(TypeMoq.Times.never());
 
         await diagnosticService.handle([diagnostic.object]);
 
@@ -100,7 +119,8 @@ suite('Application Diagnostics - Checks LS not supported', () => {
 
     test('LSNotSupportedDiagnosticService can handle LSNotSupported diagnostics', async () => {
         const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
-        diagnostic.setup(d => d.code)
+        diagnostic
+            .setup(d => d.code)
             .returns(() => DiagnosticCodes.LSNotSupportedDiagnostic)
             .verifiable(TypeMoq.Times.atLeastOnce());
         const canHandle = await diagnosticService.canHandle(diagnostic.object);
@@ -109,7 +129,8 @@ suite('Application Diagnostics - Checks LS not supported', () => {
     });
     test('LSNotSupportedDiagnosticService can not handle non-LSNotSupported diagnostics', async () => {
         const diagnostic = TypeMoq.Mock.ofType<IDiagnostic>();
-        diagnostic.setup(d => d.code)
+        diagnostic
+            .setup(d => d.code)
             .returns(() => 'Something Else' as any)
             .verifiable(TypeMoq.Times.atLeastOnce());
         const canHandle = await diagnosticService.canHandle(diagnostic.object);

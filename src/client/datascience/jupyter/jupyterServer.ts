@@ -11,7 +11,16 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } 
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
-import { IConnection, IJupyterSession, IJupyterSessionManager, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../types';
+import {
+    IConnection,
+    IJupyterSession,
+    IJupyterSessionManager,
+    IJupyterSessionManagerFactory,
+    INotebook,
+    INotebookExecutionLogger,
+    INotebookServer,
+    INotebookServerLaunchInfo
+} from '../types';
 
 // This code is based on the examples here:
 // https://www.npmjs.com/package/@jupyterlab/services
@@ -48,7 +57,7 @@ export class JupyterServerBase implements INotebookServer {
 
         // Listen to the process going down
         if (this.launchInfo && this.launchInfo.connectionInfo) {
-            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
+            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected(c => {
                 traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
                 this.serverExitCode = c;
                 this.shutdown().ignoreErrors();
@@ -60,8 +69,7 @@ export class JupyterServerBase implements INotebookServer {
         // Try creating a session just to ensure we're connected. Callers of this function check to make sure jupyter
         // is running and connectable.
         let session: IJupyterSession | undefined;
-        // tslint:disable-next-line: no-any
-        session = await this.sessionManager.startNew(launchInfo.kernelSpec as any, cancelToken);
+        session = await this.sessionManager.startNew(launchInfo.kernelSpec, cancelToken);
         const idleTimeout = this.configService.getSettings().datascience.jupyterLaunchTimeout;
         // The wait for idle should throw if we can't connect.
         await session.waitForIdle(idleTimeout);
@@ -179,7 +187,8 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _loggers: INotebookExecutionLogger[],
-        _cancelToken?: CancellationToken): Promise<INotebook> {
+        _cancelToken?: CancellationToken
+    ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
     }
 

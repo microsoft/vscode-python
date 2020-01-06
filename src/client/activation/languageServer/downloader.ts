@@ -15,11 +15,7 @@ import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import {
-    ILanguageServerDownloader, ILanguageServerFolderService,
-    ILanguageServerOutputChannel,
-    IPlatformData
-} from '../types';
+import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../types';
 
 // tslint:disable:no-require-imports no-any
 
@@ -41,8 +37,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
     }
 
     public async getDownloadInfo(resource: Resource) {
-        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource)
-            .then(item => item!);
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then(item => item!);
 
         let uri = info.uri;
         if (uri.startsWith('https:')) {
@@ -67,17 +62,12 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(LanguageService.downloadFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
-            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload())
-                .ignoreErrors();
+            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToDownload()).ignoreErrors();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to download (platform)' }, err);
             throw new Error(err);
         } finally {
             const usedSSL = downloadUri.startsWith('https:');
-            sendTelemetryEvent(
-                EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED,
-                timer.elapsedTime,
-                { success, lsVersion, usedSSL }
-            );
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_DOWNLOADED, timer.elapsedTime, { success, lsVersion, usedSSL });
         }
 
         timer.reset();
@@ -87,16 +77,11 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
             this.output.appendLine(LanguageService.extractionFailedOutputMessage());
             this.output.appendLine(err);
             success = false;
-            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract())
-                .ignoreErrors();
+            this.showMessageAndOptionallyShowOutput(LanguageService.lsFailedToExtract()).ignoreErrors();
             sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_ERROR, undefined, { error: 'Failed to extract (platform)' }, err);
             throw new Error(err);
         } finally {
-            sendTelemetryEvent(
-                EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED,
-                timer.elapsedTime,
-                { success, lsVersion }
-            );
+            sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_EXTRACTED, timer.elapsedTime, { success, lsVersion });
             await this.fs.deleteFile(localTempFilePath);
         }
     }
@@ -126,39 +111,44 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         const deferred = createDeferred();
 
         const title = 'Extracting files... ';
-        await window.withProgress({
-            location: ProgressLocation.Window
-        }, (progress) => {
-            // tslint:disable-next-line:no-require-imports no-var-requires
-            const StreamZip = require('node-stream-zip');
-            const zip = new StreamZip({
-                file: tempFilePath,
-                storeEntries: true
-            });
-
-            let totalFiles = 0;
-            let extractedFiles = 0;
-            zip.on('ready', async () => {
-                totalFiles = zip.entriesCount;
-                if (!await this.fs.directoryExists(destinationFolder)) {
-                    await this.fs.createDirectory(destinationFolder);
-                }
-                zip.extract(null, destinationFolder, (err: any) => {
-                    if (err) {
-                        deferred.reject(err);
-                    } else {
-                        deferred.resolve();
-                    }
-                    zip.close();
+        await window.withProgress(
+            {
+                location: ProgressLocation.Window
+            },
+            progress => {
+                // tslint:disable-next-line:no-require-imports no-var-requires
+                const StreamZip = require('node-stream-zip');
+                const zip = new StreamZip({
+                    file: tempFilePath,
+                    storeEntries: true
                 });
-            }).on('extract', () => {
-                extractedFiles += 1;
-                progress.report({ message: `${title}${Math.round(100 * extractedFiles / totalFiles)}%` });
-            }).on('error', (e: any) => {
-                deferred.reject(e);
-            });
-            return deferred.promise;
-        });
+
+                let totalFiles = 0;
+                let extractedFiles = 0;
+                zip.on('ready', async () => {
+                    totalFiles = zip.entriesCount;
+                    if (!(await this.fs.directoryExists(destinationFolder))) {
+                        await this.fs.createDirectory(destinationFolder);
+                    }
+                    zip.extract(null, destinationFolder, (err: any) => {
+                        if (err) {
+                            deferred.reject(err);
+                        } else {
+                            deferred.resolve();
+                        }
+                        zip.close();
+                    });
+                })
+                    .on('extract', () => {
+                        extractedFiles += 1;
+                        progress.report({ message: `${title}${Math.round((100 * extractedFiles) / totalFiles)}%` });
+                    })
+                    .on('error', (e: any) => {
+                        deferred.reject(e);
+                    });
+                return deferred.promise;
+            }
+        );
 
         // Set file to executable (nothing happens in Windows, as chmod has no definition there)
         const executablePath = path.join(destinationFolder, this.platformData.engineExecutableName);

@@ -45,7 +45,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             plotDir,
             [path.join(plotDir, 'index_bundle.js')],
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One);
+            ViewColumn.One
+        );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebPanel(process.cwd()).catch(traceError);
     }
@@ -73,7 +74,7 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             // Send a message with our data
             this.postMessage(PlotViewerMessages.SendPlot, imageHtml).ignoreErrors();
         }
-    }
+    };
 
     public dispose() {
         super.dispose();
@@ -161,13 +162,10 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
                         await this.fileSystem.writeFile(file.fsPath, payload.svg);
                         break;
                 }
-
             }
-
         } catch (e) {
             traceError(e);
             this.applicationShell.showErrorMessage(localize.DataScience.exportImageFailed().format(e));
         }
     }
-
 }

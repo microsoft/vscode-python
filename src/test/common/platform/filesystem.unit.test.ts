@@ -1,130 +1,91 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { expect, use } from 'chai';
-import * as fs from 'fs-extra';
-import * as path from 'path';
+// tslint:disable:max-func-body-length
+
+import { expect } from 'chai';
 import * as TypeMoq from 'typemoq';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { IFileSystem, IPlatformService, TemporaryFile } from '../../../client/common/platform/types';
-// tslint:disable:no-require-imports no-var-requires
-const assertArrays = require('chai-arrays');
-use(require('chai-as-promised'));
-use(assertArrays);
+import { IPlatformService } from '../../../client/common/platform/types';
+import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { OSType } from '../../../client/common/utils/platform';
 
-// tslint:disable-next-line:max-func-body-length
 suite('FileSystem', () => {
     let platformService: TypeMoq.IMock<IPlatformService>;
-    let fileSystem: IFileSystem;
-    const fileToAppendTo = path.join(__dirname, 'created_for_testing_dummy.txt');
+    let fileSystem: FileSystem;
     setup(() => {
-        platformService = TypeMoq.Mock.ofType<IPlatformService>();
+        platformService = TypeMoq.Mock.ofType<IPlatformService>(undefined, TypeMoq.MockBehavior.Strict);
         fileSystem = new FileSystem(platformService.object);
-        cleanTestFiles();
     });
-    teardown(cleanTestFiles);
-    function cleanTestFiles() {
-        if (fs.existsSync(fileToAppendTo)) {
-            fs.unlinkSync(fileToAppendTo);
-        }
-    }
-    test('ReadFile returns contents of a file', async () => {
-        const file = __filename;
-        const expectedContents = await fs.readFile(file).then(buffer => buffer.toString());
-        const content = await fileSystem.readFile(file);
-
-        expect(content).to.be.equal(expectedContents);
-    });
-
-    test('ReadFile throws an exception if file does not exist', async () => {
-        const readPromise = fs.readFile('xyz', { encoding: 'utf8' });
-        await expect(readPromise).to.be.rejectedWith();
-    });
-
-    function caseSensitivityFileCheck(isWindows: boolean, isOsx: boolean, isLinux: boolean) {
-        platformService.setup(p => p.isWindows).returns(() => isWindows);
-        platformService.setup(p => p.isMac).returns(() => isOsx);
-        platformService.setup(p => p.isLinux).returns(() => isLinux);
-        const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
-        const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
-        const path3 = 'c:\\USERS\\Peter Smith\\my documents\\test.exe';
-
-        if (isWindows) {
-            expect(fileSystem.arePathsSame(path1, path2)).to.be.equal(true, 'file paths do not match (windows)');
-        } else {
-            expect(fileSystem.arePathsSame(path1, path2)).to.be.equal(false, 'file match (non windows)');
-        }
-
-        expect(fileSystem.arePathsSame(path1, path1)).to.be.equal(true, '1. file paths do not match');
-        expect(fileSystem.arePathsSame(path2, path2)).to.be.equal(true, '2. file paths do not match');
-        expect(fileSystem.arePathsSame(path1, path3)).to.be.equal(false, '2. file paths do not match');
+    function verifyAll() {
+        platformService.verifyAll();
     }
 
-    test('Case sensitivity is ignored when comparing file names on windows', async () => {
-        caseSensitivityFileCheck(true, false, false);
-    });
+    suite('path-related', () => {
+        const caseInsensitive = [OSType.Windows];
 
-    test('Case sensitivity is not ignored when comparing file names on osx', async () => {
-        caseSensitivityFileCheck(false, true, false);
-    });
+        suite('arePathsSame', () => {
+            getNamesAndValues<OSType>(OSType).forEach(item => {
+                const osType = item.value;
 
-    test('Case sensitivity is not ignored when comparing file names on linux', async () => {
-        caseSensitivityFileCheck(false, false, true);
-    });
-    test('Check existence of files synchronously', async () => {
-        expect(fileSystem.fileExistsSync(__filename)).to.be.equal(true, 'file not found');
-    });
+                function setPlatform(numCalls = 1) {
+                    platformService
+                        .setup(p => p.isWindows)
+                        .returns(() => osType === OSType.Windows)
+                        .verifiable(TypeMoq.Times.exactly(numCalls));
+                }
 
-    test('Test appending to file', async () => {
-        const dataToAppend = `Some Data\n${new Date().toString()}\nAnd another line`;
-        fileSystem.appendFileSync(fileToAppendTo, dataToAppend);
-        const fileContents = await fileSystem.readFile(fileToAppendTo);
-        expect(fileContents).to.be.equal(dataToAppend);
-    });
-    test('Test searching for files', async () => {
-        const searchPattern = `${path.basename(__filename, __filename.substring(__filename.length - 3))}.*`;
-        const files = await fileSystem.search(path.join(__dirname, searchPattern));
-        expect(files).to.be.array();
-        expect(files.length).to.be.at.least(1);
-        const expectedFileName = __filename.replace(/\\/g, '/');
-        const fileName = files[0].replace(/\\/g, '/');
-        expect(fileName).to.equal(expectedFileName);
-    });
-    test('Ensure creating a temporary file results in a unique temp file path', async () => {
-        const tempFile = await fileSystem.createTemporaryFile('.tmp');
-        const tempFile2 = await fileSystem.createTemporaryFile('.tmp');
-        expect(tempFile.filePath).to.not.equal(tempFile2.filePath, 'Temp files must be unique, implementation of createTemporaryFile is off.');
-    });
-    test('Ensure writing to a temp file is supported via file stream', async () => {
-        await fileSystem.createTemporaryFile('.tmp').then((tf: TemporaryFile) => {
-            expect(tf).to.not.equal(undefined, 'Error trying to create a temporary file');
-            const writeStream = fileSystem.createWriteStream(tf.filePath);
-            writeStream.write('hello', 'utf8', (err: Error | null | undefined) => {
-                expect(err).to.equal(undefined, `Failed to write to a temp file, error is ${err}`);
-            });
-        }, (failReason) => {
-            expect(failReason).to.equal('No errors occurred', `Failed to create a temporary file with error ${failReason}`);
-        });
-    });
-    test('Ensure chmod works against a temporary file', async () => {
-        await fileSystem.createTemporaryFile('.tmp').then(async (fl: TemporaryFile) => {
-            await fileSystem.chmod(fl.filePath, '7777').then(
-                (_success: void) => {
-                    // cannot check for success other than we got here, chmod in Windows won't have any effect on the file itself.
-                },
-                (failReason) => {
-                    expect(failReason).to.equal('There was no error using chmod', `Failed to perform chmod operation successfully, got error ${failReason}`);
+                test(`True if paths are identical (type: ${item.name})`, () => {
+                    setPlatform(2);
+                    const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                    const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
+
+                    const areSame11 = fileSystem.arePathsSame(path1, path1);
+                    const areSame22 = fileSystem.arePathsSame(path2, path2);
+
+                    expect(areSame11).to.be.equal(true, '1. file paths do not match');
+                    expect(areSame22).to.be.equal(true, '2. file paths do not match');
+                    verifyAll();
                 });
+
+                test(`False if paths are completely different (type: ${item.name})`, () => {
+                    setPlatform();
+                    const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                    const path2 = 'c:\\users\\Peter Smith\\my documents\\test.exe';
+
+                    const areSame = fileSystem.arePathsSame(path1, path2);
+
+                    expect(areSame).to.be.equal(false, 'file paths do not match');
+                    verifyAll();
+                });
+
+                if (caseInsensitive.includes(osType)) {
+                    test(`True if paths only differ by case (type: ${item.name})`, () => {
+                        setPlatform();
+                        const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                        const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
+
+                        const areSame = fileSystem.arePathsSame(path1, path2);
+
+                        expect(areSame).to.be.equal(true, 'file paths match');
+                        verifyAll();
+                    });
+                } else {
+                    test(`False if paths only differ by case (type: ${item.name})`, () => {
+                        setPlatform();
+                        const path1 = 'c:\\users\\Peter Smith\\my documents\\test.txt';
+                        const path2 = 'c:\\USERS\\Peter Smith\\my documents\\test.TXT';
+
+                        const areSame = fileSystem.arePathsSame(path1, path2);
+
+                        expect(areSame).to.be.equal(false, 'file paths do not match');
+                        verifyAll();
+                    });
+                }
+
+                // Missing tests:
+                // * exercize normalization
+            });
         });
-    });
-    test('Getting hash for non existent file should throw error', async () => {
-        const promise = fileSystem.getFileHash('some unknown file');
-
-        await expect(promise).to.eventually.be.rejected;
-    });
-    test('Getting hash for a file should return non-empty string', async () => {
-        const hash = await fileSystem.getFileHash(__filename);
-
-        expect(hash).to.be.length.greaterThan(0);
     });
 });

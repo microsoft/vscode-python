@@ -34,13 +34,19 @@ export const actionCreators = {
     gatherCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.GATHER_CELL, payload: { cellId } }),
     clickCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.CLICK_CELL, payload: { cellId } }),
     doubleClickCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.DOUBLE_CLICK_CELL, payload: { cellId } }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({ type: CommonActionType.EDIT_CELL, payload: { cellId, changes, modelId } }),
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({
+        type: CommonActionType.EDIT_CELL,
+        payload: { cellId, changes, modelId }
+    }),
     submitInput: (code: string, cellId: string): CommonAction<ICodeAction> => ({ type: CommonActionType.SUBMIT_INPUT, payload: { code, cellId } }),
     toggleVariableExplorer: (): CommonAction<never | undefined> => ({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER }),
     expandAll: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXPAND_ALL }),
     collapseAll: (): CommonAction<never | undefined> => ({ type: CommonActionType.COLLAPSE_ALL }),
     export: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXPORT }),
-    showDataViewer: (variableName: string, columnSize: number): CommonAction<IShowDataViewerAction> => ({ type: CommonActionType.SHOW_DATA_VIEWER, payload: { variableName, columnSize } }),
+    showDataViewer: (variableName: string, columnSize: number): CommonAction<IShowDataViewerAction> => ({
+        type: CommonActionType.SHOW_DATA_VIEWER,
+        payload: { variableName, columnSize }
+    }),
     editorLoaded: (): CommonAction<never | undefined> => ({ type: CommonActionType.EDITOR_LOADED }),
     scroll: (isAtBottom: boolean): CommonAction<IScrollAction> => ({ type: CommonActionType.SCROLL, payload: { isAtBottom } }),
     unfocus: (cellId: string | undefined): CommonAction<ICellAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId } }),

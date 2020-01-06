@@ -25,7 +25,7 @@ export class EnablementTracker implements IExtensionSingleActivationService {
         this.disposables.push(this.workspaceService.onDidChangeConfiguration(this.onDidChangeConfiguration, this));
     }
     public onDidChangeConfiguration(args: ConfigurationChangeEvent) {
-        const resourcesToCheck: (Resource)[] = [undefined];
+        const resourcesToCheck: Resource[] = [undefined];
         if (Array.isArray(this.workspaceService.workspaceFolders)) {
             this.workspaceService.workspaceFolders.forEach(item => resourcesToCheck.push(item.uri));
         }

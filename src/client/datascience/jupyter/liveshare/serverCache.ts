@@ -16,14 +16,13 @@ export class ServerCache implements IAsyncDisposable {
     private cache: Map<string, Promise<INotebookServer | undefined>> = new Map<string, Promise<INotebookServer | undefined>>();
     private emptyKey = uuid();
 
-    constructor(
-        private configService: IConfigurationService,
-        private workspace: IWorkspaceService,
-        private fileSystem: IFileSystem
-    ) { }
+    constructor(private configService: IConfigurationService, private workspace: IWorkspaceService, private fileSystem: IFileSystem) {}
 
-    public async getOrCreate(createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
-        options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+    public async getOrCreate(
+        createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
         const key = this.generateKey(fixedOptions);
         let createPromise: Promise<INotebookServer | undefined> | undefined;
@@ -38,25 +37,27 @@ export class ServerCache implements IAsyncDisposable {
             createPromise = newCreatePromise;
         }
 
-        return createPromise.then((server: INotebookServer | undefined) => {
-            if (!server) {
-                this.cache.delete(key);
-                return undefined;
-            }
+        return createPromise
+            .then((server: INotebookServer | undefined) => {
+                if (!server) {
+                    this.cache.delete(key);
+                    return undefined;
+                }
 
-            // Change the dispose on it so we
-            // can detach from the server when it goes away.
-            const oldDispose = server.dispose.bind(server);
-            server.dispose = () => {
-                this.cache.delete(key);
-                return oldDispose();
-            };
+                // Change the dispose on it so we
+                // can detach from the server when it goes away.
+                const oldDispose = server.dispose.bind(server);
+                server.dispose = () => {
+                    this.cache.delete(key);
+                    return oldDispose();
+                };
 
-            return server;
-        }).catch(e => {
-            this.cache.delete(key);
-            throw e;
-        });
+                return server;
+            })
+            .catch(e => {
+                this.cache.delete(key);
+                throw e;
+            });
     }
 
     public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
@@ -68,10 +69,12 @@ export class ServerCache implements IAsyncDisposable {
     }
 
     public async dispose(): Promise<void> {
-        await Promise.all([...this.cache.values()].map(async serverPromise => {
-            const server = await serverPromise;
-            await server?.dispose();
-        }));
+        await Promise.all(
+            [...this.cache.values()].map(async serverPromise => {
+                const server = await serverPromise;
+                await server?.dispose();
+            })
+        );
         this.cache.clear();
     }
 
@@ -134,5 +137,4 @@ export class ServerCache implements IAsyncDisposable {
         }
         return workingDir;
     }
-
 }

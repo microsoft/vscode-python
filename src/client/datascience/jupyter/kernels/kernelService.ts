@@ -25,6 +25,7 @@ import { JupyterCommands, Telemetry } from '../../constants';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { JupyterCommandFinder } from '../jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
+import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const NamedRegexp = require('named-js-regexp');
@@ -116,8 +117,8 @@ export class KernelService {
      * @returns {(Promise<PythonInterpreter | undefined>)}
      * @memberof KernelService
      */
-    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
-        if (kernelSpec.language.toLowerCase() !== PYTHON_LANGUAGE) {
+    public async findMatchingInterpreter(kernelSpec: IJupyterKernelSpec | LiveKernelModel, cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
+        if (kernelSpec.language && kernelSpec.language?.toLowerCase() !== PYTHON_LANGUAGE) {
             return;
         }
         const activeInterpreterPromise = this.interpreterService.getActiveInterpreter(undefined);
@@ -255,11 +256,12 @@ export class KernelService {
         }
 
         let kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
-        for (let counter = 0; counter < 5; counter += 1){
+        // Wait for at least 5s. We know launching a python (conda env) process on windows can sometimes take around 4s.
+        for (let counter = 0; counter < 10; counter += 1) {
             if (Cancellation.isCanceled(cancelToken)) {
                 return;
             }
-            if (kernel){
+            if (kernel) {
                 break;
             }
             traceWarning('Waiting for 500ms for registered kernel to get detected');
@@ -385,5 +387,5 @@ export class KernelService {
             // This is failing for some folks. In that case return nothing
             return [];
         }
-    }
+    };
 }

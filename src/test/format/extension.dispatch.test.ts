@@ -70,10 +70,17 @@ suite('Formatting - Dispatcher', () => {
         newlineProvider.verifyAll();
     });
 
-    function setupProvider(document: TextDocument, position: Position, ch: string, options: FormattingOptions, cancellationToken: CancellationToken,
-        result: ProviderResult<TextEdit[]>): TypeMoq.IMock<OnTypeFormattingEditProvider> {
+    function setupProvider(
+        document: TextDocument,
+        position: Position,
+        ch: string,
+        options: FormattingOptions,
+        cancellationToken: CancellationToken,
+        result: ProviderResult<TextEdit[]>
+    ): TypeMoq.IMock<OnTypeFormattingEditProvider> {
         const provider = TypeMoq.Mock.ofType<OnTypeFormattingEditProvider>();
-        provider.setup(p => p.provideOnTypeFormattingEdits(document, position, ch, options, cancellationToken))
+        provider
+            .setup(p => p.provideOnTypeFormattingEdits(document, position, ch, options, cancellationToken))
             .returns(() => result)
             .verifiable(TypeMoq.Times.once());
         return provider;

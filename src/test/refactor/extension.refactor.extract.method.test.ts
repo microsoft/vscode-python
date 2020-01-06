@@ -46,7 +46,7 @@ suite('Method Extraction', () => {
         commands.executeCommand = oldExecuteCommand;
         try {
             await fs.unlink(refactorTargetFile);
-        } catch { }
+        } catch {}
         await closeActiveWindows();
     });
     function initializeDI() {
@@ -117,7 +117,14 @@ suite('Method Extraction', () => {
 
             const newMethodRefLine = textDocument.lineAt(editor.selection.start);
             assert.equal(ch.output.length, 0, 'Output channel is not empty');
-            assert.equal(textDocument.lineAt(newMethodRefLine.lineNumber + 2).text.trim().indexOf('def newmethod'), 0, 'New Method not created');
+            assert.equal(
+                textDocument
+                    .lineAt(newMethodRefLine.lineNumber + 2)
+                    .text.trim()
+                    .indexOf('def newmethod'),
+                0,
+                'New Method not created'
+            );
             assert.equal(newMethodRefLine.text.trim().startsWith('self.newmethod'), true, 'New Method not being used');
         } catch (error) {
             if (!shouldError) {

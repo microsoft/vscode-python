@@ -132,5 +132,5 @@ export class MockDocumentManager implements IDocumentManager {
         // Create a new document with the contents of the doc passed in
         this.addDocument(doc.getText(), path.join(EXTENSION_ROOT_DIR, 'baz.py'));
         return Promise.resolve(true);
-    }
+    };
 }

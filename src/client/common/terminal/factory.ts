@@ -15,14 +15,14 @@ import { ITerminalService, ITerminalServiceFactory } from './types';
 export class TerminalServiceFactory implements ITerminalServiceFactory {
     private terminalServices: Map<string, TerminalService>;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IFileSystem) private fs: IFileSystem,
-        @inject(IInterpreterService) private interpreterService: IInterpreterService) {
-
+        @inject(IInterpreterService) private interpreterService: IInterpreterService
+    ) {
         this.terminalServices = new Map<string, TerminalService>();
     }
     public getTerminalService(resource?: Uri, title?: string): ITerminalService {
-
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         const id = this.getTerminalId(terminalTitle, resource);
         if (!this.terminalServices.has(id)) {

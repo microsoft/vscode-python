@@ -26,7 +26,6 @@ export declare function acquireVsCodeApi(): IVsCodeApi;
 
 // tslint:disable-next-line: no-unnecessary-class
 export class PostOffice implements IDisposable {
-
     private registered: boolean = false;
     private vscodeApi: IVsCodeApi | undefined;
     private handlers: IMessageHandler[] = [];
@@ -84,7 +83,7 @@ export class PostOffice implements IDisposable {
             const customConsole = {
                 ...originalConsole,
                 // tslint:disable-next-line: no-any no-function-expression
-                log: function (message?: any, ..._optionalParams: any[]) {
+                log: function(message?: any, ..._optionalParams: any[]) {
                     try {
                         originalConsole.log.apply(arguments);
                         vscodeApi?.postMessage({ type: 'console_log', payload: message });
@@ -93,7 +92,7 @@ export class PostOffice implements IDisposable {
                     }
                 },
                 // tslint:disable-next-line: no-any no-function-expression
-                info: function (message?: any, ..._optionalParams: any[]) {
+                info: function(message?: any, ..._optionalParams: any[]) {
                     try {
                         originalConsole.info.apply(arguments);
                         vscodeApi?.postMessage({ type: 'console_info', payload: message });
@@ -102,24 +101,22 @@ export class PostOffice implements IDisposable {
                     }
                 },
                 // tslint:disable-next-line: no-any no-function-expression
-                error: function (message?: any, ..._optionalParams: any[]) {
+                error: function(message?: any, ..._optionalParams: any[]) {
                     try {
                         originalConsole.error.apply(arguments);
                         vscodeApi?.postMessage({ type: 'console_error', payload: message });
                     } catch {
                         noop();
                     }
-
                 },
                 // tslint:disable-next-line: no-any no-function-expression
-                warn: function (message?: any, ..._optionalParams: any[]) {
+                warn: function(message?: any, ..._optionalParams: any[]) {
                     try {
                         originalConsole.warn.apply(arguments);
                         vscodeApi?.postMessage({ type: 'console_warn', payload: message });
                     } catch {
                         noop();
                     }
-
                 }
             };
             // tslint:disable-next-line: no-any

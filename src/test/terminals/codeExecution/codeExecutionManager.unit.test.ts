@@ -27,18 +27,29 @@ suite('Terminal - Code Execution Manager', () => {
         fileSystem.setup(f => f.readFile(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         shiftEnterBanner = TypeMoq.Mock.ofType<IPythonExtensionBanner>();
-        shiftEnterBanner.setup(b => b.showBanner()).returns(() => {
-            return Promise.resolve();
-        });
-        workspace.setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => {
-            return {
-                dispose: () => void 0
-            };
-        });
+        shiftEnterBanner
+            .setup(b => b.showBanner())
+            .returns(() => {
+                return Promise.resolve();
+            });
+        workspace
+            .setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => {
+                return {
+                    dispose: () => void 0
+                };
+            });
         documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         commandManager = TypeMoq.Mock.ofType<ICommandManager>(undefined, TypeMoq.MockBehavior.Strict);
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
-        executionManager = new CodeExecutionManager(commandManager.object, documentManager.object, disposables, fileSystem.object, shiftEnterBanner.object, serviceContainer.object);
+        executionManager = new CodeExecutionManager(
+            commandManager.object,
+            documentManager.object,
+            disposables,
+            fileSystem.object,
+            shiftEnterBanner.object,
+            serviceContainer.object
+        );
     });
     teardown(() => {
         disposables.forEach(disposable => {
@@ -52,7 +63,8 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure commands are registered', async () => {
         const registered: string[] = [];
-        commandManager.setup(c => c.registerCommand)
+        commandManager
+            .setup(c => c.registerCommand)
             .returns(() => {
                 return (command: string, _callback: (...args: any[]) => any, _thisArg?: any) => {
                     registered.push(command);
@@ -63,24 +75,21 @@ suite('Terminal - Code Execution Manager', () => {
         executionManager.registerCommands();
 
         const sorted = registered.sort();
-        expect(sorted).to.deep.equal([
-            Commands.Exec_In_Terminal,
-            Commands.Exec_In_Terminal_Icon,
-            Commands.Exec_Selection_In_Django_Shell,
-            Commands.Exec_Selection_In_Terminal
-        ]);
+        expect(sorted).to.deep.equal([Commands.Exec_In_Terminal, Commands.Exec_In_Terminal_Icon, Commands.Exec_Selection_In_Django_Shell, Commands.Exec_Selection_In_Terminal]);
     });
 
     test('Ensure executeFileInterTerminal will do nothing if no file is avialble', async () => {
         let commandHandler: undefined | (() => Promise<void>);
-        commandManager.setup(c => c.registerCommand as any).returns(() => {
-            return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
-                if (command === Commands.Exec_In_Terminal) {
-                    commandHandler = callback;
-                }
-                return { dispose: () => void 0 };
-            };
-        });
+        commandManager
+            .setup(c => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === Commands.Exec_In_Terminal) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
         executionManager.registerCommands();
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -94,14 +103,16 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure executeFileInterTerminal will use provided file', async () => {
         let commandHandler: undefined | ((file: Uri) => Promise<void>);
-        commandManager.setup(c => c.registerCommand as any).returns(() => {
-            return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
-                if (command === Commands.Exec_In_Terminal) {
-                    commandHandler = callback;
-                }
-                return { dispose: () => void 0 };
-            };
-        });
+        commandManager
+            .setup(c => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === Commands.Exec_In_Terminal) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
         executionManager.registerCommands();
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -120,14 +131,16 @@ suite('Terminal - Code Execution Manager', () => {
 
     test('Ensure executeFileInterTerminal will use active file', async () => {
         let commandHandler: undefined | ((file: Uri) => Promise<void>);
-        commandManager.setup(c => c.registerCommand as any).returns(() => {
-            return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
-                if (command === Commands.Exec_In_Terminal) {
-                    commandHandler = callback;
-                }
-                return { dispose: () => void 0 };
-            };
-        });
+        commandManager
+            .setup(c => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === Commands.Exec_In_Terminal) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
         executionManager.registerCommands();
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -145,14 +158,16 @@ suite('Terminal - Code Execution Manager', () => {
 
     async function testExecutionOfSelectionWithoutAnyActiveDocument(commandId: string, executionSericeId: string) {
         let commandHandler: undefined | (() => Promise<void>);
-        commandManager.setup(c => c.registerCommand as any).returns(() => {
-            return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
-                if (command === commandId) {
-                    commandHandler = callback;
-                }
-                return { dispose: () => void 0 };
-            };
-        });
+        commandManager
+            .setup(c => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === commandId) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
         executionManager.registerCommands();
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -177,14 +192,16 @@ suite('Terminal - Code Execution Manager', () => {
 
     async function testExecutionOfSlectionWithoutAnythingSelected(commandId: string, executionServiceId: string) {
         let commandHandler: undefined | (() => Promise<void>);
-        commandManager.setup(c => c.registerCommand as any).returns(() => {
-            return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
-                if (command === commandId) {
-                    commandHandler = callback;
-                }
-                return { dispose: () => void 0 };
-            };
-        });
+        commandManager
+            .setup(c => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === commandId) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
         executionManager.registerCommands();
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -194,7 +211,11 @@ suite('Terminal - Code Execution Manager', () => {
         helper.setup(h => h.getSelectedTextToExecute).returns(() => () => Promise.resolve(''));
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId))).returns(() => executionService.object);
-        documentManager.setup(d => d.activeTextEditor).returns(() => { return {} as any; });
+        documentManager
+            .setup(d => d.activeTextEditor)
+            .returns(() => {
+                return {} as any;
+            });
 
         await commandHandler!();
         executionService.verify(async e => e.execute(TypeMoq.It.isAny()), TypeMoq.Times.never());
@@ -210,14 +231,16 @@ suite('Terminal - Code Execution Manager', () => {
 
     async function testExecutionOfSelectionIsSentToTerminal(commandId: string, executionServiceId: string) {
         let commandHandler: undefined | (() => Promise<void>);
-        commandManager.setup(c => c.registerCommand as any).returns(() => {
-            return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
-                if (command === commandId) {
-                    commandHandler = callback;
-                }
-                return { dispose: () => void 0 };
-            };
-        });
+        commandManager
+            .setup(c => c.registerCommand as any)
+            .returns(() => {
+                return (command: string, callback: (...args: any[]) => any, _thisArg?: any) => {
+                    if (command === commandId) {
+                        commandHandler = callback;
+                    }
+                    return { dispose: () => void 0 };
+                };
+            });
         executionManager.registerCommands();
 
         expect(commandHandler).not.to.be.an('undefined', 'Command handler not initialized');
@@ -227,7 +250,10 @@ suite('Terminal - Code Execution Manager', () => {
         const helper = TypeMoq.Mock.ofType<ICodeExecutionHelper>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionHelper))).returns(() => helper.object);
         helper.setup(h => h.getSelectedTextToExecute).returns(() => () => Promise.resolve(textSelected));
-        helper.setup(h => h.normalizeLines).returns(() => () => Promise.resolve(textSelected)).verifiable(TypeMoq.Times.once());
+        helper
+            .setup(h => h.normalizeLines)
+            .returns(() => () => Promise.resolve(textSelected))
+            .verifiable(TypeMoq.Times.once());
         const executionService = TypeMoq.Mock.ofType<ICodeExecutionService>();
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(ICodeExecutionService), TypeMoq.It.isValue(executionServiceId))).returns(() => executionService.object);
         const document = TypeMoq.Mock.ofType<TextDocument>();

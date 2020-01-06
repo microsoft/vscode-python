@@ -11,7 +11,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 
 @injectable()
 export class PyEnvActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
         return true;
@@ -34,5 +34,4 @@ export class PyEnvActivationCommandProvider implements ITerminalActivationComman
 
         return [`pyenv shell ${interpreter.envName.toCommandArgument()}`];
     }
-
 }

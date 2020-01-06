@@ -23,10 +23,7 @@ export class TerminalService implements ITerminalService, Disposable {
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        private resource?: Uri,
-        private title: string = 'Python') {
-
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, private resource?: Uri, private title: string = 'Python') {
         const disposableRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposableRegistry.push(this);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
@@ -80,7 +77,7 @@ export class TerminalService implements ITerminalService, Disposable {
     private async sendTelemetry() {
         const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(this.resource).pythonPath;
         const interpreterInfo = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
-        const pythonVersion = (interpreterInfo && interpreterInfo.version) ? interpreterInfo.version.raw : undefined;
+        const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
         const interpreterType = interpreterInfo ? interpreterInfo.type : undefined;
         captureTelemetry(EventName.TERMINAL_CREATE, { terminal: this.terminalShellType, pythonVersion, interpreterType });
     }

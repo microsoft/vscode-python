@@ -1,32 +1,35 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
-const Lint = require("tslint");
-const ts = require("typescript");
-const util = require("../util");
-const baseRuleWalker_1 = require("./baseRuleWalker");
+
+const path = require('path');
+const Lint = require('tslint');
+const ts = require('typescript');
+const util = require('../util');
+const baseRuleWalker = require('./baseRuleWalker');
 const methodNames = [
     // From IApplicationShell (vscode.window):
-    'showErrorMessage', 'showInformationMessage',
-    'showWarningMessage', 'setStatusBarMessage',
+    'showErrorMessage',
+    'showInformationMessage',
+    'showWarningMessage',
+    'setStatusBarMessage',
     // From IOutputChannel (vscode.OutputChannel):
-    'appendLine', 'appendLine'
+    'appendLine',
+    'appendLine'
 ];
 // tslint:ignore-next-line:no-suspicious-comments
 // TODO: Ideally we would not ignore any files.
 const ignoredFiles = util.getListOfFiles('unlocalizedFiles.json');
 const ignoredPrefix = path.normalize('src/test');
 const failureMessage = 'Messages must be localized in the Python Extension (use src/client/common/utils/localize.ts)';
-class NoStringLiteralsInMessages extends baseRuleWalker_1.BaseRuleWalker {
+class NoStringLiteralsInMessages extends baseRuleWalker.BaseRuleWalker {
     visitCallExpression(node) {
         if (!this.shouldIgnoreNode(node)) {
             node.arguments
                 .filter(arg => ts.isStringLiteral(arg) || ts.isTemplateLiteral(arg))
                 .forEach(arg => {
-                this.addFailureAtNode(arg, failureMessage);
-            });
+                    this.addFailureAtNode(arg, failureMessage);
+                });
         }
         super.visitCallExpression(node);
     }

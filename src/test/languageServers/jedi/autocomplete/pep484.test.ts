@@ -17,10 +17,10 @@ const filePep484 = path.join(autoCompPath, 'pep484.py');
 suite('Autocomplete PEP 484', () => {
     let isPython2: boolean;
     let ioc: UnitTestIocContainer;
-    suiteSetup(async function () {
+    suiteSetup(async function() {
         await initialize();
         initializeDI();
-        isPython2 = await ioc.getPythonMajorVersion(rootWorkspaceUri!) === 2;
+        isPython2 = (await ioc.getPythonMajorVersion(rootWorkspaceUri!)) === 2;
         if (isPython2) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();

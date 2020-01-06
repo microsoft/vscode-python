@@ -35,9 +35,7 @@ suite('Linting - Pylint', () => {
 
     setup(() => {
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
-        fileSystem
-            .setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString()))
-            .returns((a, b) => a === b);
+        fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a, b) => a === b);
 
         platformService = TypeMoq.Mock.ofType<IPlatformService>();
         platformService.setup(x => x.isWindows).returns(() => false);
@@ -129,18 +127,14 @@ suite('Linting - Pylint', () => {
     test('pylintrc between file and workspace root', async () => {
         const root = '/user/a';
         const midFolder = '/user/a/b';
-        fileSystem
-            .setup(x => x.fileExists(path.join(midFolder, pylintrc)))
-            .returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(path.join(midFolder, pylintrc))).returns(() => Promise.resolve(true));
 
         const result = await Pylint.hasConfigurationFileInWorkspace(fileSystem.object, basePath, root);
         expect(result).to.be.equal(true, `'${pylintrc}' not detected in the workspace tree.`);
     });
 
     test('minArgs - pylintrc between the file and the workspace root', async () => {
-        fileSystem
-            .setup(x => x.fileExists(path.join('/user/a/b', pylintrc)))
-            .returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(path.join('/user/a/b', pylintrc))).returns(() => Promise.resolve(true));
 
         await testPylintArguments('/user/a/b/c', '/user/a', false);
     });
@@ -151,18 +145,14 @@ suite('Linting - Pylint', () => {
 
     test('minArgs - pylintrc next to the file', async () => {
         const fileFolder = '/user/a/b/c';
-        fileSystem
-            .setup(x => x.fileExists(path.join(fileFolder, pylintrc)))
-            .returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(path.join(fileFolder, pylintrc))).returns(() => Promise.resolve(true));
 
         await testPylintArguments(fileFolder, '/user/a', false);
     });
 
     test('minArgs - pylintrc at the workspace root', async () => {
         const root = '/user/a';
-        fileSystem
-            .setup(x => x.fileExists(path.join(root, pylintrc)))
-            .returns(() => Promise.resolve(true));
+        fileSystem.setup(x => x.fileExists(path.join(root, pylintrc))).returns(() => Promise.resolve(true));
 
         await testPylintArguments('/user/a/b/c', root, false);
     });
@@ -199,8 +189,10 @@ suite('Linting - Pylint', () => {
         config.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => settings.object);
 
         await pylinter.lint(document.object, new CancellationTokenSource().token);
-        expect(execInfo!.args.findIndex(x => x.indexOf('--disable=all') >= 0),
-            'Minimal args passed to pylint while pylintrc exists.').to.be.eq(expectedMinArgs ? 0 : -1);
+        expect(
+            execInfo!.args.findIndex(x => x.indexOf('--disable=all') >= 0),
+            'Minimal args passed to pylint while pylintrc exists.'
+        ).to.be.eq(expectedMinArgs ? 0 : -1);
     }
     test('Negative column numbers should be treated 0', async () => {
         const fileFolder = '/user/a/b/c';
@@ -215,13 +207,13 @@ suite('Linting - Pylint', () => {
 
         workspace.setup(x => x.getWorkspaceFolder(TypeMoq.It.isAny())).returns(() => wsf.object);
 
-        const linterOutput = ['No config file found, using default configuration',
+        const linterOutput = [
+            'No config file found, using default configuration',
             '************* Module test',
             '1,1,convention,C0111:Missing module docstring',
-            '3,-1,error,E1305:Too many arguments for format string'].join(os.EOL);
-        execService
-            .setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
-            .returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
+            '3,-1,error,E1305:Too many arguments for format string'
+        ].join(os.EOL);
+        execService.setup(x => x.exec(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: linterOutput, stderr: '' }));
 
         const lintSettings = new MockLintingSettings();
         lintSettings.pylintUseMinimalCheckers = false;

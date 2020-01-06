@@ -10,11 +10,10 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { traceInfo } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
-import { StopWatch } from '../../../common/utils/stopWatch';
-import { sendTelemetryEvent } from '../../../telemetry';
-import { Identifiers, LiveShare, LiveShareCommands, RegExpValues, Telemetry } from '../../constants';
+import { Identifiers, LiveShare, LiveShareCommands, RegExpValues } from '../../constants';
 import {
     IDataScience,
     IJupyterSession,
@@ -33,9 +32,7 @@ import { IRoleBasedObject } from './roleBasedFactory';
 // tslint:disable-next-line: no-require-imports
 // tslint:disable:no-any
 
-export class HostJupyterServer
-    extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService)
-    implements IRoleBasedObject, INotebookServer {
+export class HostJupyterServer extends LiveShareParticipantHost(JupyterServerBase, LiveShare.JupyterServerSharedService) implements IRoleBasedObject, INotebookServer {
     private disposed = false;
     private portToForward = 0;
     private sharedPort: vscode.Disposable | undefined;
@@ -48,7 +45,8 @@ export class HostJupyterServer
         sessionManager: IJupyterSessionManagerFactory,
         private workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
-        private appService: IApplicationShell
+        private appService: IApplicationShell,
+        private fs: IFileSystem
     ) {
         super(liveShare, asyncRegistry, disposableRegistry, configService, sessionManager, loggers);
     }
@@ -86,9 +84,9 @@ export class HostJupyterServer
                 service.onRequest(LiveShareCommands.disposeServer, (_args: any[], _cancellation: CancellationToken) => this.dispose());
                 service.onRequest(LiveShareCommands.createNotebook, async (args: any[], cancellation: CancellationToken) => {
                     const uri = vscode.Uri.parse(args[0]);
-                    const resource = (uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme) ? this.finishedApi!.convertSharedUriToLocal(uri) : uri;
+                    const resource = uri.scheme && uri.scheme !== Identifiers.InteractiveWindowIdentityScheme ? this.finishedApi!.convertSharedUriToLocal(uri) : uri;
                     // Don't return the notebook. We don't want it to be serialized. We just want its live share server to be started.
-                    const notebook = await this.createNotebook(resource, cancellation) as HostJupyterNotebook;
+                    const notebook = (await this.createNotebook(resource, cancellation)) as HostJupyterNotebook;
                     await notebook.onAttach(api);
                 });
 
@@ -139,8 +137,8 @@ export class HostJupyterServer
         disposableRegistry: IDisposableRegistry,
         configService: IConfigurationService,
         loggers: INotebookExecutionLogger[],
-        cancelToken?: CancellationToken): Promise<INotebook> {
-
+        cancelToken?: CancellationToken
+    ): Promise<INotebook> {
         // See if already exists.
         const existing = await this.getNotebook(resource);
         if (existing) {
@@ -162,7 +160,7 @@ export class HostJupyterServer
         }
 
         // Start a session (or use the existing one)
-        const session = possibleSession || await sessionManager.startNew(launchInfo.kernelSpec, cancelToken);
+        const session = possibleSession || (await sessionManager.startNew(launchInfo.kernelSpec, cancelToken));
         traceInfo(`Started session ${this.id}`);
 
         if (session) {
@@ -178,14 +176,14 @@ export class HostJupyterServer
                 resource,
                 this.getDisposedError.bind(this),
                 this.workspaceService,
-                this.appService);
+                this.appService,
+                this.fs
+            );
 
             // Wait for it to be ready
             traceInfo(`Waiting for idle (session) ${this.id}`);
-            const stopWatch = new StopWatch();
             const idleTimeout = configService.getSettings().datascience.jupyterLaunchTimeout;
             await notebook.waitForIdle(idleTimeout);
-            sendTelemetryEvent(Telemetry.WaitForIdleJupyter, stopWatch.elapsedTime);
 
             // Run initial setup
             await notebook.initialize(cancelToken);
@@ -214,5 +212,4 @@ export class HostJupyterServer
     private onSync(): Promise<any> {
         return Promise.resolve(true);
     }
-
 }

@@ -7,15 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import {
-    CancellationToken,
-    CancellationTokenSource,
-    Event,
-    EventEmitter,
-    SignatureHelpContext,
-    TextDocumentContentChangeEvent,
-    Uri
-} from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter, SignatureHelpContext, TextDocumentContentChangeEvent, Uri } from 'vscode';
 
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -44,18 +36,12 @@ import {
     IRemoveCell,
     ISwapCells
 } from '../interactiveWindowTypes';
-import {
-    convertStringsToSuggestions,
-    convertToMonacoCompletionList,
-    convertToMonacoHover,
-    convertToMonacoSignatureHelp
-} from './conversion';
+import { convertStringsToSuggestions, convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
 @injectable()
 export class IntellisenseProvider implements IInteractiveWindowListener {
-
     private documentPromise: Deferred<IntellisenseDocument> | undefined;
     private temporaryFile: TemporaryFile | undefined;
     private postEmitter: EventEmitter<{ message: string; payload: any }> = new EventEmitter<{ message: string; payload: any }>();
@@ -74,8 +60,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
         @inject(IInterpreterService) private interpreterService: IInterpreterService,
         @inject(ILanguageServerCache) private languageServerCache: ILanguageServerCache
-    ) {
-    }
+    ) {}
 
     public dispose() {
         if (this.temporaryFile) {
@@ -204,7 +189,8 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
                 const dummyFilePath = path.join(dir, HiddenFileFormatString.format(uuid().replace(/-/g, '')));
                 this.documentPromise.resolve(new IntellisenseDocument(dummyFilePath));
             } else {
-                this.fileSystem.createTemporaryFile('.py')
+                this.fileSystem
+                    .createTemporaryFile('.py')
                     .then(t => {
                         this.temporaryFile = t;
                         const dummyFilePath = this.temporaryFile.filePath;
@@ -219,7 +205,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         return this.documentPromise.promise;
     }
 
-    protected async provideCompletionItems(position: monacoEditor.Position, context: monacoEditor.languages.CompletionContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
+    protected async provideCompletionItems(
+        position: monacoEditor.Position,
+        context: monacoEditor.languages.CompletionContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionList> {
         const languageServer = await this.getLanguageServer();
         const document = await this.getDocument();
         if (languageServer && document) {
@@ -250,7 +241,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             contents: []
         };
     }
-    protected async provideSignatureHelp(position: monacoEditor.Position, context: monacoEditor.languages.SignatureHelpContext, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.SignatureHelp> {
+    protected async provideSignatureHelp(
+        position: monacoEditor.Position,
+        context: monacoEditor.languages.SignatureHelpContext,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.SignatureHelp> {
         const languageServer = await this.getLanguageServer();
         const document = await this.getDocument();
         if (languageServer && document) {
@@ -317,10 +313,12 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         // Combine all of the results together.
         this.postTimedResponse(
-            [this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
-            this.provideJupyterCompletionItems(request.position, request.context, request.cellId, cancelSource.token)],
+            [
+                this.provideCompletionItems(request.position, request.context, request.cellId, cancelSource.token),
+                this.provideJupyterCompletionItems(request.position, request.context, request.cellId, cancelSource.token)
+            ],
             InteractiveWindowMessages.ProvideCompletionItemsResponse,
-            (c) => {
+            c => {
                 const list = this.combineCompletions(c);
                 return { list, requestId: request.requestId };
             }
@@ -330,19 +328,21 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private handleHoverRequest(request: IProvideHoverRequest) {
         const cancelSource = new CancellationTokenSource();
         this.cancellationSources.set(request.requestId, cancelSource);
-        this.postTimedResponse(
-            [this.provideHover(request.position, request.cellId, cancelSource.token)],
-            InteractiveWindowMessages.ProvideHoverResponse,
-            (h) => {
-                if (h && h[0]) {
-                    return { hover: h[0]!, requestId: request.requestId };
-                } else {
-                    return { hover: { contents: [] }, requestId: request.requestId };
-                }
-            });
+        this.postTimedResponse([this.provideHover(request.position, request.cellId, cancelSource.token)], InteractiveWindowMessages.ProvideHoverResponse, h => {
+            if (h && h[0]) {
+                return { hover: h[0]!, requestId: request.requestId };
+            } else {
+                return { hover: { contents: [] }, requestId: request.requestId };
+            }
+        });
     }
 
-    private async provideJupyterCompletionItems(position: monacoEditor.Position, _context: monacoEditor.languages.CompletionContext, cellId: string, cancelToken: CancellationToken): Promise<monacoEditor.languages.CompletionList> {
+    private async provideJupyterCompletionItems(
+        position: monacoEditor.Position,
+        _context: monacoEditor.languages.CompletionContext,
+        cellId: string,
+        cancelToken: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionList> {
         try {
             const activeNotebook = await this.getNotebook();
             const document = await this.getDocument();
@@ -390,7 +390,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             suggestions: [],
             incomplete: false
         };
-
     }
 
     private postTimedResponse<R, M extends IInteractiveWindowMapping, T extends keyof M>(promises: Promise<R>[], message: T, formatResponse: (val: (R | null)[]) => M[T]) {
@@ -433,13 +432,14 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         this.postTimedResponse(
             [this.provideSignatureHelp(request.position, request.context, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ProvideSignatureHelpResponse,
-            (s) => {
+            s => {
                 if (s && s[0]) {
                     return { signatureHelp: s[0]!, requestId: request.requestId };
                 } else {
                     return { signatureHelp: { signatures: [], activeParameter: 0, activeSignature: 0 }, requestId: request.requestId };
                 }
-            });
+            }
+        );
     }
 
     private async addCell(request: IAddCell): Promise<void> {
@@ -504,12 +504,16 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     private async loadAllCells(payload: ILoadAllCells) {
         const document = await this.getDocument();
         if (document) {
-            const changes = document.loadAllCells(payload.cells.filter(c => c.data.cell_type === 'code').map(cell => {
-                return {
-                    code: concatMultilineStringInput(cell.data.source),
-                    id: cell.id
-                };
-            }));
+            const changes = document.loadAllCells(
+                payload.cells
+                    .filter(c => c.data.cell_type === 'code')
+                    .map(cell => {
+                        return {
+                            code: concatMultilineStringInput(cell.data.source),
+                            id: cell.id
+                        };
+                    })
+            );
 
             await this.handleChanges(document, changes);
         }
@@ -541,5 +545,4 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         return undefined;
     }
-
 }

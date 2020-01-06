@@ -13,12 +13,7 @@ import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IConnection,
-    IJupyterExecution,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
 import { KernelSelector } from '../kernels/kernelSelector';
 import { NotebookStarter } from '../notebookStarter';
@@ -29,9 +24,7 @@ import { ServerCache } from './serverCache';
 // tslint:disable:no-any
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
-export class HostJupyterExecution
-    extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
-    implements IRoleBasedObject, IJupyterExecution {
+export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService) implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
@@ -46,7 +39,8 @@ export class HostJupyterExecution
         notebookStarter: NotebookStarter,
         appShell: IApplicationShell,
         jupyterOutputChannel: IOutputChannel,
-        serviceContainer: IServiceContainer) {
+        serviceContainer: IServiceContainer
+    ) {
         super(
             liveShare,
             interpreterService,
@@ -58,7 +52,8 @@ export class HostJupyterExecution
             notebookStarter,
             appShell,
             jupyterOutputChannel,
-            serviceContainer);
+            serviceContainer
+        );
         this.serverCache = new ServerCache(configService, workspace, fileSys);
         asyncRegistry.push(this);
     }
@@ -102,8 +97,7 @@ export class HostJupyterExecution
         await super.onDetach(api);
 
         // clear our cached servers if our role is no longer host or none
-        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ?
-            vsls.Role.Host : vsls.Role.Guest;
+        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ? vsls.Role.Host : vsls.Role.Guest;
         if (newRole !== vsls.Role.Host) {
             await this.serverCache.dispose();
         }
@@ -117,12 +111,12 @@ export class HostJupyterExecution
     private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
-    }
+    };
 
     private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
-    }
+    };
 
     private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {
         // Connect to the local server. THe local server should have started the port forwarding already
@@ -140,15 +134,17 @@ export class HostJupyterExecution
                     hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
-                    disconnected: (_l) => { return { dispose: noop }; },
+                    disconnected: _l => {
+                        return { dispose: noop };
+                    },
                     dispose: noop
                 };
             }
         }
-    }
+    };
 
     private onRemoteGetUsableJupyterPython = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.getUsableJupyterPython(cancellation);
-    }
+    };
 }

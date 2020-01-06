@@ -116,17 +116,17 @@ $$
 This expression $\\sqrt{3x-1}+(1+x)^2$ is an example of a TeX inline equation in a [Markdown-formatted](https://daringfireball.net/projects/markdown/) sentence.
 `;
 
-    test('Latex - Equations don\'t have \$\$', () => {
+    test("Latex - Equations don't have $$", () => {
         const result = fixLatexEquations(markdown1);
         expect(result).to.be.equal(output1, 'Result is incorrect');
     });
 
-    test('Latex - Equations have \$', () => {
+    test('Latex - Equations have $', () => {
         const result = fixLatexEquations(markdown2);
         expect(result).to.be.equal(markdown2, 'Result is incorrect');
     });
 
-    test('Latex - Multiple equations don\'t have \$\$', () => {
+    test("Latex - Multiple equations don't have $$", () => {
         const result = fixLatexEquations(markdown3);
         expect(result).to.be.equal(output3, 'Result is incorrect');
     });
@@ -144,7 +144,7 @@ This expression $\\sqrt{3x-1}+(1+x)^2$ is an example of a TeX inline equation in
         expect(result).to.be.equal(invalid, 'Result should not have changed');
     });
 
-    test('Latex - \$\$ already present', () => {
+    test('Latex - $$ already present', () => {
         const result = fixLatexEquations(markdown4);
         expect(result).to.be.equal(markdown4, 'Result should not have changed');
     });

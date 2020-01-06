@@ -11,7 +11,7 @@ import { ITerminalActivationCommandProvider, TerminalShellType } from '../types'
 
 @injectable()
 export abstract class BaseActivationCommandProvider implements ITerminalActivationCommandProvider {
-    constructor(protected readonly serviceContainer: IServiceContainer) { }
+    constructor(protected readonly serviceContainer: IServiceContainer) {}
 
     public abstract isShellSupported(targetShell: TerminalShellType): boolean;
     public getActivationCommands(resource: Uri | undefined, targetShell: TerminalShellType): Promise<string[] | undefined> {

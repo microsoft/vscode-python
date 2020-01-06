@@ -12,7 +12,14 @@ import { InsidersBuildInstaller, StableBuildInstaller } from './extensionBuildIn
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
+import {
+    CTagsProductPathService,
+    DataScienceProductPathService,
+    FormatterProductPathService,
+    LinterProductPathService,
+    RefactoringLibraryProductPathService,
+    TestFrameworkProductPathService
+} from './productPath';
 import { ProductService } from './productService';
 import { IExtensionBuildInstaller, IInstallationChannelManager, IModuleInstaller, INSIDERS_INSTALLER, IProductPathService, IProductService, STABLE_INSTALLER } from './types';
 

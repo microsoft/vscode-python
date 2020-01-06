@@ -27,11 +27,7 @@ import {
 export class PythonExecutionService implements IPythonExecutionService {
     private readonly fileSystem: IFileSystem;
 
-    constructor(
-        serviceContainer: IServiceContainer,
-        private readonly procService: IProcessService,
-        protected readonly pythonPath: string
-    ) {
+    constructor(serviceContainer: IServiceContainer, private readonly procService: IProcessService, protected readonly pythonPath: string) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
@@ -43,8 +39,9 @@ export class PythonExecutionService implements IPythonExecutionService {
             // https://github.com/microsoft/vscode-python/issues/7569
             // https://github.com/microsoft/vscode-python/issues/7760
             const { command, args } = this.getExecutionInfo([file]);
-            const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 5000)
-                .then(output => output ? output.stdout.trim() : '--timed out--'); // --timed out-- should cause an exception
+            const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 5000).then(output =>
+                output ? output.stdout.trim() : '--timed out--'
+            ); // --timed out-- should cause an exception
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {
@@ -53,14 +50,14 @@ export class PythonExecutionService implements IPythonExecutionService {
                 traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
                 return;
             }
-                const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
-                return {
-                    architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                    path: this.pythonPath,
-                    version: parsePythonVersion(versionValue),
-                    sysVersion: json.sysVersion,
-                    sysPrefix: json.sysPrefix
-                };
+            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+            return {
+                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
+                path: this.pythonPath,
+                version: parsePythonVersion(versionValue),
+                sysVersion: json.sysVersion,
+                sysPrefix: json.sysPrefix
+            };
         } catch (ex) {
             traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
         }
@@ -77,8 +74,10 @@ export class PythonExecutionService implements IPythonExecutionService {
     }
     public async isModuleInstalled(moduleName: string): Promise<boolean> {
         const { command, args } = this.getExecutionInfo(['-c', `import ${moduleName}`]);
-        return this.procService.exec(command, args, { throwOnStdErr: true })
-            .then(() => true).catch(() => false);
+        return this.procService
+            .exec(command, args, { throwOnStdErr: true })
+            .then(() => true)
+            .catch(() => false);
     }
 
     public getExecutionInfo(args: string[]): PythonExecutionInfo {

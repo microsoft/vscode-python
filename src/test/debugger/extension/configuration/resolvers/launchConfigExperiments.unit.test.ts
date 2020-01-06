@@ -171,7 +171,7 @@ suite('Debugging - Config Resolver Launch Experiments', () => {
         const subProcModified = inExperiment && knownWebFramework && !testConfig.subProcess;
 
         // Text used for the generated test title.
-        const textModify = (argsModified || subProcModified) ? 'modifying' : 'skip modifying';
+        const textModify = argsModified || subProcModified ? 'modifying' : 'skip modifying';
         const textExperiment = inExperiment ? 'in' : 'NOT in';
         const textSubProc = subProcModified ? 'subProcess modified' : 'subProcess NOT modified';
         const textArgs = argsModified ? 'args modified' : 'args NOT modified';

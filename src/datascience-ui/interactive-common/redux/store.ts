@@ -40,7 +40,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             isAtBottom: true,
             font: {
                 size: 14,
-                family: 'Consolas, \'Courier New\', monospace'
+                family: "Consolas, 'Courier New', monospace"
             },
             codeTheme: Identifiers.GeneratedThemeName,
             activateCount: 0,
@@ -62,9 +62,7 @@ function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseThe
     const defaultState = generateDefaultState(skipDefault, testMode, baseTheme, editable);
 
     // Then combine that with our map of state change message to reducer
-    return combineReducers<IMainState, M>(
-        defaultState,
-        reducerMap);
+    return combineReducers<IMainState, M>(defaultState, reducerMap);
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
@@ -74,16 +72,20 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const afterState = store.getState();
 
         // If cell vm count changed or selected cell changed, send the message
-        if (prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
+        if (
+            prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
             prevState.main.selectedCellId !== afterState.main.selectedCellId ||
             prevState.main.undoStack.length !== afterState.main.undoStack.length ||
-            prevState.main.redoStack.length !== afterState.main.redoStack.length) {
-            store.dispatch(createPostableAction(InteractiveWindowMessages.SendInfo, {
-                cellCount: afterState.main.cellVMs.length,
-                undoCount: afterState.main.undoStack.length,
-                redoCount: afterState.main.redoStack.length,
-                selectedCell: afterState.main.selectedCellId
-            }));
+            prevState.main.redoStack.length !== afterState.main.redoStack.length
+        ) {
+            store.dispatch(
+                createPostableAction(InteractiveWindowMessages.SendInfo, {
+                    cellCount: afterState.main.cellVMs.length,
+                    undoCount: afterState.main.undoStack.length,
+                    redoCount: afterState.main.redoStack.length,
+                    selectedCell: afterState.main.selectedCellId
+                })
+            );
         }
         return res;
     };
@@ -159,7 +161,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             const rootState = { ...state } as any;
             if ('main' in rootState && typeof rootState.main === 'object') {
                 // tslint:disable-next-line: no-any
-                const main = rootState.main = { ...rootState.main } as any as Partial<IMainState>;
+                const main = (rootState.main = ({ ...rootState.main } as any) as Partial<IMainState>);
                 main.rootCss = reduceLogMessage;
                 main.rootStyle = reduceLogMessage;
                 // tslint:disable-next-line: no-any
@@ -182,8 +184,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
             return action;
         }
     });
-    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode)
-        ? logger : undefined;
+    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode) ? logger : undefined;
 
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
@@ -229,9 +230,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const middleware = createMiddleWare(testMode);
 
     // Use this reducer and middle ware to create a store
-    const store = Redux.createStore(
-        rootReducer,
-        Redux.applyMiddleware(...middleware));
+    const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
 
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.

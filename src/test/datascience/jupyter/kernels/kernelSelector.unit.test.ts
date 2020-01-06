@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import * as sinon from 'sinon';
-import { anything, instance, mock, verify, when } from 'ts-mockito';
+import { anything, capture, instance, mock, verify, when } from 'ts-mockito';
 import { CancellationToken } from 'vscode-jsonrpc';
+
 import { ApplicationShell } from '../../../../client/common/application/applicationShell';
 import { IApplicationShell } from '../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
@@ -20,7 +18,8 @@ import { JupyterSessionManager } from '../../../../client/datascience/jupyter/ju
 import { KernelSelectionProvider } from '../../../../client/datascience/jupyter/kernels/kernelSelections';
 import { KernelSelector } from '../../../../client/datascience/jupyter/kernels/kernelSelector';
 import { KernelService } from '../../../../client/datascience/jupyter/kernels/kernelService';
-import { IJupyterSessionManager } from '../../../../client/datascience/types';
+import { IKernelSpecQuickPickItem, LiveKernelModel } from '../../../../client/datascience/jupyter/kernels/types';
+import { IJupyterKernelSpec, IJupyterSessionManager } from '../../../../client/datascience/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 
@@ -57,13 +56,7 @@ suite('Data Science - KernelSelector', () => {
         appShell = mock(ApplicationShell);
         installer = mock(ProductInstaller);
         interpreterService = mock(InterpreterService);
-        kernelSelector = new KernelSelector(
-            instance(kernelSelectionProvider),
-            instance(appShell),
-            instance(kernelService),
-            instance(interpreterService),
-            instance(installer)
-        );
+        kernelSelector = new KernelSelector(instance(kernelSelectionProvider), instance(appShell), instance(kernelService), instance(interpreterService), instance(installer));
     });
     teardown(() => sinon.restore());
     suite('Select Remote Kernel', () => {
@@ -100,6 +93,80 @@ suite('Data Science - KernelSelector', () => {
             verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
             verify(appShell.showQuickPick(anything(), anything(), anything())).once();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).once();
+        });
+    });
+    suite('Hide kernels from Remote & Local Kernel', () => {
+        test('Should hide kernel from remote sessions', async () => {
+            const kernelModels: LiveKernelModel[] = [
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1', session: {} as any },
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2', session: {} as any },
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3', session: {} as any },
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4', session: {} as any }
+            ];
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+                return {
+                    label: '',
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                };
+            });
+
+            when(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).thenResolve(quickPickItems);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
+
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
+            const kernel = await kernelSelector.selectRemoteKernel(instance(sessionManager));
+
+            assert.isEmpty(kernel);
+            verify(kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager), anything())).once();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
+            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
+            assert.deepEqual(
+                suggestions,
+                quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
+            );
+        });
+        test('Should hide kernel from local sessions', async () => {
+            const kernelModels: LiveKernelModel[] = [
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '1one', numberOfConnections: 1, id: 'id1', display_name: '1', session: {} as any },
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '2two', numberOfConnections: 1, id: 'id2', display_name: '2', session: {} as any },
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '3three', numberOfConnections: 1, id: 'id3', display_name: '3', session: {} as any },
+                // tslint:disable-next-line: no-any
+                { lastActivityTime: new Date(), name: '4four', numberOfConnections: 1, id: 'id4', display_name: '4', session: {} as any }
+            ];
+            const quickPickItems: IKernelSpecQuickPickItem[] = kernelModels.map(kernelModel => {
+                return {
+                    label: '',
+                    selection: { kernelModel, kernelSpec: undefined, interpreter: undefined }
+                };
+            });
+
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).thenResolve(quickPickItems);
+            when(appShell.showQuickPick(anything(), anything(), anything())).thenResolve(undefined);
+
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ id: 'id2' } as any);
+            // tslint:disable-next-line: no-any
+            kernelSelector.addKernelToIgnoreList({ clientId: 'id4' } as any);
+            const kernel = await kernelSelector.selectLocalKernel(instance(sessionManager));
+
+            assert.isEmpty(kernel);
+            verify(kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager), anything())).once();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).once();
+            const suggestions = capture(appShell.showQuickPick).first()[0] as IKernelSpecQuickPickItem[];
+            assert.deepEqual(
+                suggestions,
+                quickPickItems.filter(item => !['id2', 'id4'].includes(item.selection?.kernelModel?.id || ''))
+            );
         });
     });
     suite('Select Local Kernel', () => {
@@ -183,8 +250,11 @@ suite('Data Science - KernelSelector', () => {
         let nbMetadataKernelSpec: nbformat.IKernelspecMetadata = {} as any;
         // tslint:disable-next-line: no-any
         let nbMetadata: nbformat.INotebookMetadata = {} as any;
-        // tslint:disable-next-line: no-any
-        let selectLocalKernelStub: sinon.SinonStub<[(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?], Promise<any>>;
+        let selectLocalKernelStub: sinon.SinonStub<
+            [(IJupyterSessionManager | undefined)?, (CancellationToken | undefined)?, (IJupyterKernelSpec | LiveKernelModel)?],
+            // tslint:disable-next-line: no-any
+            Promise<any>
+        >;
         setup(() => {
             nbMetadataKernelSpec = {
                 display_name: interpreter.displayName!,
@@ -267,6 +337,128 @@ suite('Data Science - KernelSelector', () => {
             assert.isOk(selectLocalKernelStub.notCalled);
             verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
             verify(kernelService.searchAndRegisterKernel(interpreter, anything())).once();
+            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
+            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).never();
+            verify(kernelService.registerKernel(anything(), anything())).never();
+        });
+        test('Remote search works', async () => {
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
+            when(kernelService.getKernelSpecs(anything(), anything())).thenResolve([
+                {
+                    name: 'bar',
+                    display_name: 'foo',
+                    language: 'CSharp',
+                    path: '/foo/dotnet',
+                    argv: []
+                },
+                {
+                    name: 'foo',
+                    display_name: 'foo',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                }
+            ]);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForRemoteConnection(instance(sessionManager), undefined);
+
+            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the python kernel spec');
+            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(selectLocalKernelStub.notCalled);
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+            verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
+            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
+            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).never();
+            verify(kernelService.registerKernel(anything(), anything())).never();
+        });
+        test('Remote search prefers same name as long as it is python', async () => {
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
+            when(kernelService.getKernelSpecs(anything(), anything())).thenResolve([
+                {
+                    name: 'bar',
+                    display_name: 'foo',
+                    language: 'CSharp',
+                    path: '/foo/dotnet',
+                    argv: []
+                },
+                {
+                    name: 'foo',
+                    display_name: 'zip',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                },
+                {
+                    name: 'foo',
+                    display_name: 'foo',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                }
+            ]);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForRemoteConnection(instance(sessionManager), { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
+
+            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
+            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(selectLocalKernelStub.notCalled);
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+            verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
+            verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
+            verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
+            verify(appShell.showQuickPick(anything(), anything(), anything())).never();
+            verify(kernelService.registerKernel(anything(), anything())).never();
+        });
+        test('Remote search prefers same version', async () => {
+            when(installer.isInstalled(Product.ipykernel, interpreter)).thenResolve(false);
+            when(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).thenResolve(undefined);
+            when(kernelService.getKernelSpecs(anything(), anything())).thenResolve([
+                {
+                    name: 'bar',
+                    display_name: 'fod',
+                    language: 'CSharp',
+                    path: '/foo/dotnet',
+                    argv: []
+                },
+                {
+                    name: 'python2',
+                    display_name: 'zip',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                },
+                {
+                    name: 'python3',
+                    display_name: 'foo',
+                    language: 'Python',
+                    path: '/foo/python',
+                    argv: []
+                }
+            ]);
+            when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);
+            when(kernelService.searchAndRegisterKernel(interpreter, anything())).thenResolve(kernelSpec);
+            when(kernelSelectionProvider.getKernelSelectionsForLocalSession(anything(), anything())).thenResolve();
+
+            const kernel = await kernelSelector.getKernelForRemoteConnection(instance(sessionManager), { orig_nbformat: 4, kernelspec: { display_name: 'foo', name: 'foo' } });
+
+            assert.ok(kernel.kernelSpec, 'No kernel spec found for remote');
+            assert.equal(kernel.kernelSpec?.display_name, 'foo', 'Did not find the preferred python kernel spec');
+            assert.isOk(kernel.interpreter === interpreter);
+            assert.isOk(selectLocalKernelStub.notCalled);
+            verify(appShell.showInformationMessage(anything(), anything(), anything())).never();
+            verify(kernelService.searchAndRegisterKernel(interpreter, anything())).never();
             verify(kernelService.findMatchingKernelSpec(nbMetadataKernelSpec, instance(sessionManager), anything())).never();
             verify(kernelService.findMatchingInterpreter(kernelSpec, anything())).never();
             verify(appShell.showQuickPick(anything(), anything(), anything())).never();

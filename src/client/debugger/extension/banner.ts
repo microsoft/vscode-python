@@ -7,8 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Disposable } from 'vscode';
 import { IApplicationShell, IDebugService } from '../../common/application/types';
 import '../../common/extensions';
-import { IBrowserService, IDisposableRegistry,
-    ILogger, IPersistentStateFactory, IRandom } from '../../common/types';
+import { IBrowserService, IDisposableRegistry, ILogger, IPersistentStateFactory, IRandom } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { DebuggerTypeName } from '../constants';
 import { IDebuggerBanner } from './types';
@@ -28,9 +27,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     private disabledInCurrentSession?: boolean;
     private userSelected?: boolean;
 
-    constructor(
-        @inject(IServiceContainer) private serviceContainer: IServiceContainer
-    ) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public initialize() {
         if (this.initialized) {
@@ -68,7 +65,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         if (!this.isEnabled() || this.disabledInCurrentSession) {
             return false;
         }
-        if (! await this.passedThreshold()) {
+        if (!(await this.passedThreshold())) {
             return false;
         }
         return this.isUserSelected();
@@ -82,12 +79,11 @@ export class DebuggerBanner implements IDebuggerBanner {
         const later = 'Remind me later';
         const response = await appShell.showInformationMessage(msg, yes, no, later);
         switch (response) {
-            case yes:
-                {
-                    await this.action();
-                    await this.disable();
-                    break;
-                }
+            case yes: {
+                await this.action();
+                await this.disable();
+                break;
+            }
             case no: {
                 await this.disable();
                 break;
@@ -114,7 +110,7 @@ export class DebuggerBanner implements IDebuggerBanner {
 
         const factory = this.serviceContainer.get<IPersistentStateFactory>(IPersistentStateFactory);
         const key = PersistentStateKeys.UserSelected;
-        const state = factory.createGlobalPersistentState<boolean|undefined>(key, undefined);
+        const state = factory.createGlobalPersistentState<boolean | undefined>(key, undefined);
         let selected = state.value;
         if (selected === undefined) {
             const runtime = this.serviceContainer.get<IRandom>(IRandom);
@@ -129,10 +125,7 @@ export class DebuggerBanner implements IDebuggerBanner {
     // persistent counter
 
     private async passedThreshold(): Promise<boolean> {
-        const [threshold, debuggerCounter] = await Promise.all([
-            this.getDebuggerLaunchThresholdCounter(),
-            this.getGetDebuggerLaunchCounter()
-        ]);
+        const [threshold, debuggerCounter] = await Promise.all([this.getDebuggerLaunchThresholdCounter(), this.getGetDebuggerLaunchCounter()]);
         return debuggerCounter >= threshold;
     }
 
@@ -169,8 +162,7 @@ export class DebuggerBanner implements IDebuggerBanner {
         const disposable = debuggerService.onDidTerminateDebugSession(async e => {
             if (e.type === DebuggerTypeName) {
                 const logger = this.serviceContainer.get<ILogger>(ILogger);
-                await this.onDidTerminateDebugSession()
-                    .catch(ex => logger.logError('Error in debugger Banner', ex));
+                await this.onDidTerminateDebugSession().catch(ex => logger.logError('Error in debugger Banner', ex));
             }
         });
         this.serviceContainer.get<Disposable[]>(IDisposableRegistry).push(disposable);

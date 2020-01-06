@@ -62,11 +62,11 @@ suite('Interpreters - Cacheable Locator Service', () => {
         test('Interpreters must be retrieved once, then cached', async () => {
             const expectedInterpreters = [1, 2] as any;
             const mockedLocatorForVerification = mock(MockLocator);
-            const locator = new class extends Locator {
+            const locator = new (class extends Locator {
                 protected async addHandlersForInterpreterWatchers(_cacheKey: string, _resource: Resource): Promise<void> {
                     noop();
                 }
-            }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
+            })('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
 
             when(mockedLocatorForVerification.getInterpretersImplementation()).thenResolve(expectedInterpreters);
             when(mockedLocatorForVerification.getCacheKey()).thenReturn('xyz');
@@ -91,11 +91,11 @@ suite('Interpreters - Cacheable Locator Service', () => {
             }
             const watcher: IInterpreterWatcher = mock(Watcher);
 
-            const locator = new class extends Locator {
+            const locator = new (class extends Locator {
                 protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [instance(watcher)];
                 }
-            }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
+            })('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
 
             await locator.getInterpreters();
 
@@ -117,11 +117,11 @@ suite('Interpreters - Cacheable Locator Service', () => {
             }
             const watcher = new Watcher();
 
-            const locator = new class extends Locator {
+            const locator = new (class extends Locator {
                 protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [watcher];
                 }
-            }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
+            })('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
 
             when(mockedLocatorForVerification.getInterpretersImplementation()).thenResolve(expectedInterpreters);
             when(mockedLocatorForVerification.getCacheKey()).thenReturn('xyz');
@@ -149,14 +149,14 @@ suite('Interpreters - Cacheable Locator Service', () => {
         });
         test('Ensure locating event is raised', async () => {
             const mockedLocatorForVerification = mock(MockLocator);
-            const locator = new class extends Locator {
+            const locator = new (class extends Locator {
                 protected async getInterpreterWatchers(_resource: Resource): Promise<IInterpreterWatcher[]> {
                     return [];
                 }
-            }('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
+            })('dummy', instance(serviceContainer), instance(mockedLocatorForVerification));
 
             let locatingEventRaised = false;
-            locator.onLocating(() => locatingEventRaised = true);
+            locator.onLocating(() => (locatingEventRaised = true));
 
             when(mockedLocatorForVerification.getInterpretersImplementation()).thenResolve([1, 2] as any);
             when(mockedLocatorForVerification.getCacheKey()).thenReturn('xyz');

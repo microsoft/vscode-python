@@ -18,7 +18,7 @@ suite('Decoder', () => {
         expect(decodedValue).equal(value, 'Decoded string is incorrect');
     });
 
-    test('Test decoding cp932 strings', function () {
+    test('Test decoding cp932 strings', function() {
         if (!encodingExists('cp866')) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -32,5 +32,4 @@ suite('Decoder', () => {
         decodedValue = decoder.decode([buffer], 'cp866');
         expect(decodedValue).equal(value, 'Decoded string is incorrect');
     });
-
 });

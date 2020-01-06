@@ -25,6 +25,7 @@
 1. [Visual Studio Code](https://code.visualstudio.com/)
 1. The following VS Code extensions:
     * [TSLint](https://marketplace.visualstudio.com/items?itemName=ms-vscode.vscode-typescript-tslint-plugin)
+    * [Prettier](https://marketplace.visualstudio.com/items?itemName=esbenp.prettier-vscode)
     * [EditorConfig for VS Code](https://marketplace.visualstudio.com/items?itemName=EditorConfig.EditorConfig)
 1. Have an issue which has a "needs PR" label (feel free to indicate you would like to provide a PR for the issue so others don't work on it as well)
 

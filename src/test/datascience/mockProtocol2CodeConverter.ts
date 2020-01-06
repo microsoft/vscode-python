@@ -66,12 +66,16 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     }
     public asCompletionItem(item: proto.CompletionItem): protocolCompletionItem {
         const result = new protocolCompletionItem(item.label);
-        if (item.detail) { result.detail = item.detail; }
+        if (item.detail) {
+            result.detail = item.detail;
+        }
         if (item.documentation) {
             result.documentation = item.documentation.toString();
             result.documentationFormat = '$string';
         }
-        if (item.filterText) { result.filterText = item.filterText; }
+        if (item.filterText) {
+            result.filterText = item.filterText;
+        }
         const insertText = this.asCompletionInsertText(item);
         if (insertText) {
             result.insertText = insertText.text;
@@ -85,15 +89,27 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
                 result.originalItemKind = original;
             }
         }
-        if (item.sortText) { result.sortText = item.sortText; }
-        if (item.additionalTextEdits) { result.additionalTextEdits = this.asTextEdits(item.additionalTextEdits); }
-        if (this.isStringArray(item.commitCharacters)) { result.commitCharacters = item.commitCharacters.slice(); }
-        if (item.command) { result.command = this.asCommand(item.command); }
+        if (item.sortText) {
+            result.sortText = item.sortText;
+        }
+        if (item.additionalTextEdits) {
+            result.additionalTextEdits = this.asTextEdits(item.additionalTextEdits);
+        }
+        if (this.isStringArray(item.commitCharacters)) {
+            result.commitCharacters = item.commitCharacters.slice();
+        }
+        if (item.command) {
+            result.command = this.asCommand(item.command);
+        }
         if (item.deprecated === true || item.deprecated === false) {
             result.deprecated = item.deprecated;
         }
-        if (item.preselect === true || item.preselect === false) { result.preselect = item.preselect; }
-        if (item.data !== undefined) { result.data = item.data; }
+        if (item.preselect === true || item.preselect === false) {
+            result.preselect = item.preselect;
+        }
+        if (item.data !== undefined) {
+            result.data = item.data;
+        }
         return result;
     }
     public asTextEdit(edit: null | undefined): undefined;
@@ -135,7 +151,9 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
     public asDeclarationResult(item: proto.Declaration): code.Location | code.Location[];
     public asDeclarationResult(item: proto.LocationLink[]): code.LocationLink[];
     public asDeclarationResult(item: null | undefined): undefined;
-    public asDeclarationResult(item: proto.Location | proto.Location[] | proto.LocationLink[] | null | undefined): code.Location | code.Location[] | code.LocationLink[] | undefined;
+    public asDeclarationResult(
+        item: proto.Location | proto.Location[] | proto.LocationLink[] | null | undefined
+    ): code.Location | code.Location[] | code.LocationLink[] | undefined;
     public asDeclarationResult(_item: any): any {
         throw new Error('Method not implemented.');
     }
@@ -300,5 +318,4 @@ export class MockProtocol2CodeConverter implements Protocol2CodeConverter {
             return undefined;
         }
     }
-
 }

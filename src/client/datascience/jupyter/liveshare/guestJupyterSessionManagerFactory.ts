@@ -6,7 +6,6 @@ import { IConnection, IJupyterSessionManager, IJupyterSessionManagerFactory } fr
 import { GuestJupyterSessionManager } from './guestJupyterSessionManager';
 
 export class GuestJupyterSessionManagerFactory implements IJupyterSessionManagerFactory {
-
     public constructor(private realSessionManager: IJupyterSessionManagerFactory) {
         noop();
     }
@@ -14,5 +13,4 @@ export class GuestJupyterSessionManagerFactory implements IJupyterSessionManager
     public async create(connInfo: IConnection, failOnPassword?: boolean): Promise<IJupyterSessionManager> {
         return new GuestJupyterSessionManager(await this.realSessionManager.create(connInfo, failOnPassword));
     }
-
 }

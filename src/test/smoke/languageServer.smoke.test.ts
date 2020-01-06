@@ -15,25 +15,14 @@ import { sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { openFileAndWaitForLS } from './common';
 
-const fileDefinitions = path.join(
-    EXTENSION_ROOT_DIR_FOR_TESTS,
-    'src',
-    'testMultiRootWkspc',
-    'smokeTests',
-    'definitions.py'
-);
+const fileDefinitions = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'definitions.py');
 
 suite('Smoke Test: Language Server', () => {
     suiteSetup(async function() {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
-        await updateSetting(
-            'linting.ignorePatterns',
-            ['**/dir1/**'],
-            vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder
-        );
+        await updateSetting('linting.ignorePatterns', ['**/dir1/**'], vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
         await initialize();
     });
     setup(async () => {
@@ -42,12 +31,7 @@ suite('Smoke Test: Language Server', () => {
     });
     suiteTeardown(async () => {
         await closeActiveWindows();
-        await updateSetting(
-            'linting.ignorePatterns',
-            undefined,
-            vscode.workspace.workspaceFolders![0].uri,
-            vscode.ConfigurationTarget.WorkspaceFolder
-        );
+        await updateSetting('linting.ignorePatterns', undefined, vscode.workspace.workspaceFolders![0].uri, vscode.ConfigurationTarget.WorkspaceFolder);
     });
     teardown(closeActiveWindows);
 
@@ -56,11 +40,7 @@ suite('Smoke Test: Language Server', () => {
         const textDocument = await openFileAndWaitForLS(fileDefinitions);
         let tested = false;
         for (let i = 0; i < 5; i += 1) {
-            const locations = await vscode.commands.executeCommand<vscode.Location[]>(
-                'vscode.executeDefinitionProvider',
-                textDocument.uri,
-                startPosition
-            );
+            const locations = await vscode.commands.executeCommand<vscode.Location[]>('vscode.executeDefinitionProvider', textDocument.uri, startPosition);
             if (locations && locations.length > 0) {
                 expect(locations![0].uri.fsPath).to.contain(path.basename(fileDefinitions));
                 tested = true;

@@ -21,13 +21,13 @@ import { PythonExecutionService } from '../../../client/common/process/pythonPro
 import { IProcessLogger, IPythonDaemonExecutionService, IPythonExecutionService, ObservableExecutionResult, Output, PythonVersionInfo } from '../../../client/common/process/types';
 import { IDisposable } from '../../../client/common/types';
 import { sleep } from '../../../client/common/utils/async';
-import { createTemporaryFile } from '../../../client/common/utils/fs';
 import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { PythonDaemonModule } from '../../../client/datascience/constants';
 import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
+import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
 // tslint:disable: max-func-body-length
@@ -55,8 +55,8 @@ suite('Daemon - Python Daemon Pool', () => {
                 .trim();
         }
     });
-    setup(async function () {
-        if (isPythonVersion('2.7')){
+    setup(async function() {
+        if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
@@ -131,9 +131,9 @@ suite('Daemon - Python Daemon Pool', () => {
         await assert.eventually.equal(pythonDaemonPool.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
 
-    test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
-    test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
-    test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'pip' module is installed", async () => testModuleInstalled('pip', true));
+    test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
+    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`

@@ -31,7 +31,7 @@ suite('Shell Detector', () => {
         [OSType.Unknown]: TerminalShellType.other
     };
     const sandbox = sinon.createSandbox();
-    setup(() => platformService = mock(PlatformService));
+    setup(() => (platformService = mock(PlatformService)));
     teardown(() => sandbox.restore());
 
     getNamesAndValues<OSType>(OSType).forEach(os => {
@@ -149,8 +149,7 @@ suite('Shell Detector', () => {
             when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
             when(detector3.identify(anything(), anything())).thenReturn(undefined);
             when(detector4.identify(anything(), anything())).thenReturn(undefined);
-            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2),
-            instance(detector3), instance(detector4)]);
+            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2), instance(detector3), instance(detector4)]);
 
             const shell = shellDetector.identifyTerminalShell();
 
@@ -175,8 +174,7 @@ suite('Shell Detector', () => {
             when(detector2.identify(anything(), anything())).thenReturn(detectedShell);
             when(detector3.identify(anything(), anything())).thenReturn(TerminalShellType.other);
             when(detector4.identify(anything(), anything())).thenReturn(TerminalShellType.other);
-            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2),
-            instance(detector3), instance(detector4)]);
+            const shellDetector = new ShellDetector(instance(platformService), [instance(detector1), instance(detector2), instance(detector3), instance(detector4)]);
 
             const shell = shellDetector.identifyTerminalShell();
 

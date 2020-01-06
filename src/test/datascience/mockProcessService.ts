@@ -4,14 +4,7 @@
 import { Observable } from 'rxjs/Observable';
 
 import { Cancellation, CancellationError } from '../../client/common/cancellation';
-import {
-    ExecutionResult,
-    IProcessService,
-    ObservableExecutionResult,
-    Output,
-    ShellOptions,
-    SpawnOptions
-} from '../../client/common/process/types';
+import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, ShellOptions, SpawnOptions } from '../../client/common/process/types';
 import { noop, sleep } from '../core';
 
 export class MockProcessService implements IProcessService {
@@ -35,7 +28,7 @@ export class MockProcessService implements IProcessService {
             if (this.timeDelay) {
                 try {
                     const localTime = this.timeDelay;
-                    await Cancellation.race((_t) => sleep(localTime), options.token);
+                    await Cancellation.race(_t => sleep(localTime), options.token);
                 } catch (exc) {
                     if (exc instanceof CancellationError) {
                         return this.defaultExecutionResult([file, ...args]);
@@ -84,7 +77,9 @@ export class MockProcessService implements IProcessService {
     }
 
     private defaultObservable(args: string[]): ObservableExecutionResult<string> {
-        const output = new Observable<Output<string>>(subscriber => { subscriber.next({ out: `Invalid call to ${args.join(' ')}`, source: 'stderr' }); });
+        const output = new Observable<Output<string>>(subscriber => {
+            subscriber.next({ out: `Invalid call to ${args.join(' ')}`, source: 'stderr' });
+        });
         return {
             proc: undefined,
             out: output,
@@ -95,5 +90,4 @@ export class MockProcessService implements IProcessService {
     private defaultExecutionResult(args: string[]): Promise<ExecutionResult<string>> {
         return Promise.resolve({ stderr: `Invalid call to ${args.join(' ')}`, stdout: '' });
     }
-
 }

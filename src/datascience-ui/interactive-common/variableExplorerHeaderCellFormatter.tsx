@@ -14,7 +14,11 @@ interface IVariableExplorerHeaderCellFormatterProps {
 export class VariableExplorerHeaderCellFormatter extends React.Component<IVariableExplorerHeaderCellFormatterProps> {
     public render() {
         if (this.props.column) {
-            return(<div role='columnheader'><span>{this.props.column.name}</span></div>);
+            return (
+                <div role="columnheader">
+                    <span>{this.props.column.name}</span>
+                </div>
+            );
         }
     }
 }

@@ -176,7 +176,7 @@ export class ExperimentsManager implements IExperimentsManager {
      * @param salt The experiment salt value
      */
     public isUserInRange(min: number, max: number, salt: string): boolean {
-        if (typeof (this.appEnvironment.machineId) !== 'string') {
+        if (typeof this.appEnvironment.machineId !== 'string') {
             throw new Error('Machine ID should be a string');
         }
         let hash: number;
@@ -214,7 +214,7 @@ export class ExperimentsManager implements IExperimentsManager {
         }
 
         // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
-        if (await this.doBestEffortToPopulateExperiments() === true) {
+        if ((await this.doBestEffortToPopulateExperiments()) === true) {
             return;
         }
 

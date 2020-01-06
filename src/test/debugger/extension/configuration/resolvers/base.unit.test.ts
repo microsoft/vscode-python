@@ -24,7 +24,11 @@ import { AttachRequestArguments, DebugOptions, LaunchRequestArguments } from '..
 
 suite('Debugging - Config Resolver', () => {
     class BaseResolver extends BaseConfigurationResolver<AttachRequestArguments | LaunchRequestArguments> {
-        public resolveDebugConfiguration(_folder: WorkspaceFolder | undefined, _debugConfiguration: DebugConfiguration, _token?: CancellationToken): Promise<AttachRequestArguments | LaunchRequestArguments | undefined> {
+        public resolveDebugConfiguration(
+            _folder: WorkspaceFolder | undefined,
+            _debugConfiguration: DebugConfiguration,
+            _token?: CancellationToken
+        ): Promise<AttachRequestArguments | LaunchRequestArguments | undefined> {
             throw new Error('Not Implemented');
         }
         public getWorkspaceFolder(folder: WorkspaceFolder | undefined): Uri | undefined {
@@ -56,12 +60,7 @@ suite('Debugging - Config Resolver', () => {
         documentManager = mock(DocumentManager);
         platformService = mock(PlatformService);
         configurationService = mock(ConfigurationService);
-        resolver = new BaseResolver(
-            instance(workspaceService),
-            instance(documentManager),
-            instance(platformService),
-            instance(configurationService)
-        );
+        resolver = new BaseResolver(instance(workspaceService), instance(documentManager), instance(platformService), instance(configurationService));
     });
 
     test('Program should return filepath of active editor if file is python', () => {
@@ -69,9 +68,16 @@ suite('Debugging - Config Resolver', () => {
         const editor = typemoq.Mock.ofType<TextEditor>();
         const doc = typemoq.Mock.ofType<TextDocument>();
 
-        editor.setup(e => e.document).returns(() => doc.object).verifiable(typemoq.Times.once());
-        doc.setup(d => d.languageId).returns(() => PYTHON_LANGUAGE).verifiable(typemoq.Times.once());
-        doc.setup(d => d.fileName).returns(() => expectedFileName).verifiable(typemoq.Times.once());
+        editor
+            .setup(e => e.document)
+            .returns(() => doc.object)
+            .verifiable(typemoq.Times.once());
+        doc.setup(d => d.languageId)
+            .returns(() => PYTHON_LANGUAGE)
+            .verifiable(typemoq.Times.once());
+        doc.setup(d => d.fileName)
+            .returns(() => expectedFileName)
+            .verifiable(typemoq.Times.once());
         when(documentManager.activeTextEditor).thenReturn(editor.object);
 
         const program = resolver.getProgram();
@@ -82,8 +88,13 @@ suite('Debugging - Config Resolver', () => {
         const editor = typemoq.Mock.ofType<TextEditor>();
         const doc = typemoq.Mock.ofType<TextDocument>();
 
-        editor.setup(e => e.document).returns(() => doc.object).verifiable(typemoq.Times.once());
-        doc.setup(d => d.languageId).returns(() => 'C#').verifiable(typemoq.Times.once());
+        editor
+            .setup(e => e.document)
+            .returns(() => doc.object)
+            .verifiable(typemoq.Times.once());
+        doc.setup(d => d.languageId)
+            .returns(() => 'C#')
+            .verifiable(typemoq.Times.once());
         when(documentManager.activeTextEditor).thenReturn(editor.object);
 
         const program = resolver.getProgram();
@@ -108,19 +119,18 @@ suite('Debugging - Config Resolver', () => {
     [
         { title: 'Should get directory of active program when there are not workspace folders', workspaceFolders: undefined },
         { title: 'Should get directory of active program when there are 0 workspace folders', workspaceFolders: [] }
-    ]
-        .forEach(item => {
-            test(item.title, () => {
-                const programPath = path.join('one', 'two', 'three.xyz');
+    ].forEach(item => {
+        test(item.title, () => {
+            const programPath = path.join('one', 'two', 'three.xyz');
 
-                resolver.getProgram = () => programPath;
-                when(workspaceService.workspaceFolders).thenReturn(item.workspaceFolders);
+            resolver.getProgram = () => programPath;
+            when(workspaceService.workspaceFolders).thenReturn(item.workspaceFolders);
 
-                const uri = resolver.getWorkspaceFolder(undefined);
+            const uri = resolver.getWorkspaceFolder(undefined);
 
-                expect(uri!.fsPath).to.be.deep.equal(Uri.file(path.dirname(programPath)).fsPath);
-            });
+            expect(uri!.fsPath).to.be.deep.equal(Uri.file(path.dirname(programPath)).fsPath);
         });
+    });
     test('Should return uri of workspace folder if there is only one workspace folder', () => {
         const expectedUri = Uri.parse('mock');
         const folder: WorkspaceFolder = { index: 0, uri: expectedUri, name: 'mock' };
@@ -187,14 +197,13 @@ suite('Debugging - Config Resolver', () => {
         expect(config.pythonPath).to.equal(pythonPath);
     });
     const localHostTestMatrix: Record<string, boolean> = { localhost: true, '127.0.0.1': true, '::1': true, '127.0.0.2': false, '156.1.2.3': false, '::2': false };
-    Object.keys(localHostTestMatrix)
-        .forEach(key => {
-            test(`Local host = ${localHostTestMatrix[key]} for ${key}`, () => {
-                const isLocalHost = resolver.isLocalHost(key);
+    Object.keys(localHostTestMatrix).forEach(key => {
+        test(`Local host = ${localHostTestMatrix[key]} for ${key}`, () => {
+            const isLocalHost = resolver.isLocalHost(key);
 
-                expect(isLocalHost).to.equal(localHostTestMatrix[key]);
-            });
+            expect(isLocalHost).to.equal(localHostTestMatrix[key]);
         });
+    });
     test('Is debugging flask=true', () => {
         const config = { module: 'flask' };
         const isFlask = resolver.isDebuggingFlask(config as any);

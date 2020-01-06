@@ -1,9 +1,0 @@
-.DS_Store
-out
-dist
-**/node_modules
-.nyc_output
-npm-debug.log
-bin/**
-obj/**
-tmp/**

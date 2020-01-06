@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 import * as Cors from '@koa/cors';
-import * as fs from 'fs-extra';
 import * as http from 'http';
 import * as Koa from 'koa';
 import * as compress from 'koa-compress';
@@ -11,6 +10,7 @@ import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { Identifiers } from '../../../datascience/constants';
 import { SharedMessages } from '../../../datascience/messages';
+import { IFileSystem } from '../../platform/types';
 
 interface IState {
     cwd: string;
@@ -23,7 +23,7 @@ export class WebPanelServer {
     private server: http.Server | undefined;
     private state = new Map<string, IState>();
 
-    constructor(private port: number, private token: string) {
+    constructor(private port: number, private token: string, private fs: IFileSystem) {
         this.app.use(Cors());
         this.app.use(compress());
         this.app.use(logger());
@@ -108,9 +108,8 @@ export class WebPanelServer {
             // Here is where we'd likely support loading split bundles.
             default:
                 break;
-
         }
-        ctx.body = fs.createReadStream(filePath);
+        ctx.body = this.fs.createReadStream(filePath);
     }
 
     // Debugging tips:
@@ -125,14 +124,14 @@ export class WebPanelServer {
 
     // tslint:disable: no-any
     private generateReactHtml(query: any) {
-        const scripts = query.scripts ? Array.isArray(query.scripts) ? query.Scripts : [query.scripts] : [''];
+        const scripts = query.scripts ? (Array.isArray(query.scripts) ? query.Scripts : [query.scripts]) : [''];
 
         return `<!doctype html>
         <html lang="en">
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http:;">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
@@ -169,6 +168,22 @@ export class WebPanelServer {
 
                 let state = ${state ? `JSON.parse("${JSON.stringify(state)}")` : undefined};
                 window.console.log('acquired vscode api');
+
+                // Special case, because we don't have a way to get the vscode api more than once,
+                // hook up some global handlers here.
+                document.addEventListener('keydown', (e) => {
+                    // Forward this message to the inner most frame that VS code owns.
+                    originalPostMessage({ command: 'did-keydown', data: {
+                        key: e.key,
+                        keyCode: e.keyCode,
+                        code: e.code,
+                        shiftKey: e.shiftKey,
+                        altKey: e.altKey,
+                        ctrlKey: e.ctrlKey,
+                        metaKey: e.metaKey,
+                        repeat: e.repeat
+                    }}, '*');
+                })
 
                 return () => {
                     if (acquired) {

@@ -1,23 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, TextEditor, Uri, ViewColumn } from 'vscode';
+import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
 import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
-import { DataScience } from '../datascience';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
-import { ICell, ICodeCssGenerator, IDataScience, IDataScienceErrorHandler, IDataViewerProvider, IInteractiveWindow, IInteractiveWindowInfo, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterDebugger, IJupyterExecution, IJupyterVariables, INotebookEditorProvider, INotebookExporter, INotebookServerOptions, IStatusProvider, IThemeFinder } from '../types';
+import {
+    ICell,
+    ICodeCssGenerator,
+    IDataScienceErrorHandler,
+    IDataViewerProvider,
+    IInteractiveWindow,
+    IInteractiveWindowInfo,
+    IInteractiveWindowListener,
+    IInteractiveWindowProvider,
+    IJupyterDebugger,
+    IJupyterExecution,
+    IJupyterVariables,
+    INotebookEditorProvider,
+    INotebookExporter,
+    INotebookServerOptions,
+    IStatusProvider,
+    IThemeFinder
+} from '../types';
 
 const historyReactDir = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react');
 
@@ -42,7 +58,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(ICommandManager) commandManager: ICommandManager,
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -50,9 +66,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IJupyterVariables) jupyterVariables: IJupyterVariables,
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
-        @inject(IDataScience) dataScience: DataScience,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento
     ) {
         super(
             listeners,
@@ -74,12 +90,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             jupyterVariables,
             jupyterDebugger,
             editorProvider,
-            dataScience,
             errorHandler,
+            commandManager,
+            globalStorage,
             historyReactDir,
             [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
-            ViewColumn.Two);
+            ViewColumn.Two
+        );
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
@@ -209,9 +227,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.interactiveWindowProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
-            }).ignoreErrors();
+            this.interactiveWindowProvider
+                .getOrCreateActive()
+                .then(_v => {
+                    this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
+                        code: info.code,
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        id: info.id,
+                        originator: this.id,
+                        debug: false
+                    });
+                })
+                .ignoreErrors();
         }
     }
 
@@ -264,17 +292,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private export(cells: ICell[]) {
         // Should be an array of cells
         if (cells && this.applicationShell) {
-
             const filtersKey = localize.DataScience.exportDialogFilter();
             const filtersObject: Record<string, string[]> = {};
             filtersObject[filtersKey] = ['ipynb'];
 
             // Bring up the open file dialog box
-            this.applicationShell.showSaveDialog(
-                {
+            this.applicationShell
+                .showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
                     filters: filtersObject
-                }).then(async (uri: Uri | undefined) => {
+                })
+                .then(async (uri: Uri | undefined) => {
                     if (uri) {
                         await this.exportToFile(cells, uri.fsPath);
                     }
@@ -289,5 +317,4 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.export(cells);
         }
     }
-
 }

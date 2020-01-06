@@ -22,7 +22,7 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
-    ) { }
+    ) {}
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));

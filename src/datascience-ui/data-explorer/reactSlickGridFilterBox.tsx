@@ -12,13 +12,12 @@ interface IFilterProps {
 }
 
 export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
-
     constructor(props: IFilterProps) {
         super(props);
     }
 
     public render() {
-        return <input type='text' tabIndex={0} aria-label={this.props.column.name} className='filter-box' onChange={this.updateInputValue}/>;
+        return <input type="text" tabIndex={0} aria-label={this.props.column.name} className="filter-box" onChange={this.updateInputValue} />;
     }
 
     private updateInputValue = (evt: React.SyntheticEvent) => {
@@ -26,6 +25,5 @@ export class ReactSlickGridFilterBox extends React.Component<IFilterProps> {
         if (element) {
             this.props.onChange(element.value, this.props.column);
         }
-    }
-
+    };
 }

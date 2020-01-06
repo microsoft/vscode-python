@@ -31,12 +31,14 @@ suite('Unit Tests - Picker (execution of commands)', () => {
                     const workspaceUri = Uri.file(__filename);
 
                     const testFunction = 'some test Function';
-                    const testFunctions = [{
-                        name: 'some_name',
-                        nameToRun: 'some_name_to_run',
-                        time: 0,
-                        resource: workspaceUri
-                    }];
+                    const testFunctions = [
+                        {
+                            name: 'some_name',
+                            nameToRun: 'some_name_to_run',
+                            time: 0,
+                            resource: workspaceUri
+                        }
+                    ];
                     const selection = { type: item.value, fn: { testFunction }, fns: testFunctions };
 
                     // Getting the value of CommandSource.commandPalette in getNamesAndValues(CommandSource)
@@ -118,10 +120,12 @@ suite('Testing - TestDisplay', () => {
     let testDisplay: TestDisplay;
 
     function fullPathInTests(collectedTests: Tests, fullpath?: string): Tests {
-        collectedTests.testFiles = [{
-            fullPath: fullpath ? fullpath : 'path/to/testfile',
-            ...anything()
-        }];
+        collectedTests.testFiles = [
+            {
+                fullPath: fullpath ? fullpath : 'path/to/testfile',
+                ...anything()
+            }
+        ];
         return collectedTests;
     }
 
@@ -130,10 +134,8 @@ suite('Testing - TestDisplay', () => {
         mockedServiceContainer = mock(ServiceContainer);
         mockedTestCollectionStorage = mock(TestCollectionStorageService);
         mockedAppShell = mock(ApplicationShell);
-        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService))
-            .thenReturn(instance(mockedTestCollectionStorage));
-        when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell))
-            .thenReturn(instance(mockedAppShell));
+        when(mockedServiceContainer.get<ITestCollectionStorageService>(ITestCollectionStorageService)).thenReturn(instance(mockedTestCollectionStorage));
+        when(mockedServiceContainer.get<IApplicationShell>(IApplicationShell)).thenReturn(instance(mockedAppShell));
 
         testDisplay = new TestDisplay(instance(mockedServiceContainer), instance(mockedCommandManager));
     });

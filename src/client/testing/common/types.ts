@@ -1,7 +1,4 @@
-import {
-    CancellationToken, DebugConfiguration, DiagnosticCollection,
-    Disposable, Event, OutputChannel, Uri
-} from 'vscode';
+import { CancellationToken, DebugConfiguration, DiagnosticCollection, Disposable, Event, OutputChannel, Uri } from 'vscode';
 import { ITestingSettings, Product } from '../../common/types';
 import { DebuggerTypeName } from '../../debugger/constants';
 import { ConsoleType } from '../../debugger/types';
@@ -298,7 +295,7 @@ export interface ITestDebugConfig extends DebugConfiguration {
     // converted to DebugOptions:
     stopOnEntry?: boolean;
     showReturnValue?: boolean;
-    redirectOutput?: boolean;  // default: true
+    redirectOutput?: boolean; // default: true
     debugStdLib?: boolean;
     justMyCode?: boolean;
     subProcess?: boolean;

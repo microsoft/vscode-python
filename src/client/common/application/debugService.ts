@@ -4,7 +4,19 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { Breakpoint, BreakpointsChangeEvent, debug, DebugAdapterDescriptorFactory, DebugConfiguration, DebugConsole, DebugSession, DebugSessionCustomEvent, Disposable, Event, WorkspaceFolder } from 'vscode';
+import {
+    Breakpoint,
+    BreakpointsChangeEvent,
+    debug,
+    DebugAdapterDescriptorFactory,
+    DebugConfiguration,
+    DebugConsole,
+    DebugSession,
+    DebugSessionCustomEvent,
+    Disposable,
+    Event,
+    WorkspaceFolder
+} from 'vscode';
 import { IDebugService } from './types';
 
 @injectable()
@@ -51,7 +63,7 @@ export class DebugService implements IDebugService {
     public removeBreakpoints(breakpoints: Breakpoint[]): void {
         debug.removeBreakpoints(breakpoints);
     }
-    public registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable{
+    public registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable {
         return debug.registerDebugAdapterDescriptorFactory(debugType, factory);
     }
 }

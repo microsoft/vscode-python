@@ -1,4 +1,4 @@
-# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega
+# To run this file either conda or pip install the following: jupyter, numpy, matplotlib, pandas, tqdm, bokeh, vega_datasets, altair, vega, plotly
 
 # %% Basic Imports
 import numpy as np
@@ -68,3 +68,8 @@ alt.Chart(iris).mark_point().encode(
     y='petalWidth',
     color='species'
 )
+
+# %% Plotly
+import plotly.graph_objects as go
+fig = go.Figure(data=go.Bar(y=[2, 3, 1, 5]))
+fig.show()

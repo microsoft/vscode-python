@@ -72,9 +72,7 @@ suite('Data Science - Native Editor Provider', () => {
             .setup(e => e.show())
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.exactly(invocationCount));
-        editor
-            .setup(e => e.file)
-            .returns(() => file);
+        editor.setup(e => e.file).returns(() => file);
 
         return new NativeEditorProvider(
             instance(svcContainer),
@@ -119,7 +117,7 @@ suite('Data Science - Native Editor Provider', () => {
     test('Open the notebook editor when an ipynb file is opened', async () => {
         await testAutomaticallyOpeningNotebookEditorWhenOpeningFiles(Uri.file('some file.ipynb'), true);
     });
-    async function openSameIPynbFile(openAnotherRandomFile: boolean){
+    async function openSameIPynbFile(openAnotherRandomFile: boolean) {
         const notebookEditor = createNotebookProvider(true);
 
         // Open a text document.

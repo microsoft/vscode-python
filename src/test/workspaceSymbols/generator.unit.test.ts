@@ -42,8 +42,7 @@ suite('Workspace Symbols Generator', () => {
         factory.setup(f => f.create(typemoq.It.isAny())).returns(() => Promise.resolve(instance(processService)));
         when(configurationService.getSettings(anything())).thenReturn(pythonSettings.object);
         const outputChannel = typemoq.Mock.ofType<IOutputChannel>();
-        generator = new Generator(folderUri, outputChannel.object, instance(shell),
-            instance(fs), factory.object, instance(configurationService));
+        generator = new Generator(folderUri, outputChannel.object, instance(shell), instance(fs), factory.object, instance(configurationService));
     });
     test('should be disabled', () => {
         const workspaceSymbols = { enabled: false } as any;
@@ -66,8 +65,10 @@ suite('Workspace Symbols Generator', () => {
     test('Throw error when generating tags', async () => {
         const ctagsPath = 'CTAG_PATH';
         const workspaceSymbols = {
-            enabled: true, tagFilePath: '1234',
-            exclusionPatterns: [], ctagsPath
+            enabled: true,
+            tagFilePath: '1234',
+            exclusionPatterns: [],
+            ctagsPath
         } as any;
         pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
         when(fs.directoryExists(anything())).thenResolve(true);
@@ -79,8 +80,7 @@ suite('Workspace Symbols Generator', () => {
                 }
             }
         };
-        when(processService.execObservable(ctagsPath, anything(), anything()))
-            .thenReturn(observable as any);
+        when(processService.execObservable(ctagsPath, anything(), anything())).thenReturn(observable as any);
 
         const promise = generator.generateWorkspaceTags();
         await expect(promise).to.eventually.be.rejectedWith('KABOOM');
@@ -89,8 +89,10 @@ suite('Workspace Symbols Generator', () => {
     test('Does not throw error when generating tags', async () => {
         const ctagsPath = 'CTAG_PATH';
         const workspaceSymbols = {
-            enabled: true, tagFilePath: '1234',
-            exclusionPatterns: [], ctagsPath
+            enabled: true,
+            tagFilePath: '1234',
+            exclusionPatterns: [],
+            ctagsPath
         } as any;
         pythonSettings.setup(p => p.workspaceSymbols).returns(() => workspaceSymbols);
         when(fs.directoryExists(anything())).thenResolve(true);
@@ -102,8 +104,7 @@ suite('Workspace Symbols Generator', () => {
                 }
             }
         };
-        when(processService.execObservable(ctagsPath, anything(), anything()))
-            .thenReturn(observable as any);
+        when(processService.execObservable(ctagsPath, anything(), anything())).thenReturn(observable as any);
 
         await generator.generateWorkspaceTags();
         verify(shell.setStatusBarMessage(anything(), anything())).once();

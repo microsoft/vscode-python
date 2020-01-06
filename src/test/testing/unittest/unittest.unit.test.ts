@@ -20,13 +20,19 @@ import { TestsStatusUpdaterService } from '../../../client/testing/common/servic
 import { TestsHelper } from '../../../client/testing/common/testUtils';
 import { TestResultResetVisitor } from '../../../client/testing/common/testVisitors/resultResetVisitor';
 import {
-    FlattenedTestFunction, FlattenedTestSuite, ITestResultsService,
-    ITestsHelper, ITestsStatusUpdaterService, TestFile, TestFolder,
-    TestFunction, Tests, TestStatus, TestSuite
+    FlattenedTestFunction,
+    FlattenedTestSuite,
+    ITestResultsService,
+    ITestsHelper,
+    ITestsStatusUpdaterService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    Tests,
+    TestStatus,
+    TestSuite
 } from '../../../client/testing/common/types';
-import {
-    IArgumentsHelper, IArgumentsService, ITestManagerRunner, TestDataItemType
-} from '../../../client/testing/types';
+import { IArgumentsHelper, IArgumentsService, ITestManagerRunner, TestDataItemType } from '../../../client/testing/types';
 import { TestManager } from '../../../client/testing/unittest/main';
 import { TestManagerRunner } from '../../../client/testing/unittest/runner';
 import { ArgumentsService } from '../../../client/testing/unittest/services/argsService';
@@ -42,7 +48,6 @@ suite('Unit Tests - unittest - run failed tests', () => {
     let testManagerRunner: ITestManagerRunner;
     let tests: Tests;
     function createTestData() {
-
         const folder1 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
         const folder2 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);
         const folder3 = createMockTestDataItem<TestFolder>(TestDataItemType.folder);

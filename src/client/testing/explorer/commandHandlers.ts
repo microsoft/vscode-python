@@ -11,9 +11,7 @@ import { IDisposable } from '../../common/types';
 import { swallowExceptions } from '../../common/utils/decorators';
 import { CommandSource } from '../common/constants';
 import { getTestDataItemType } from '../common/testUtils';
-import {
-    TestFile, TestFolder, TestFunction, TestsToRun, TestSuite
-} from '../common/types';
+import { TestFile, TestFolder, TestFunction, TestsToRun, TestSuite } from '../common/types';
 import { ITestExplorerCommandHandler } from '../navigation/types';
 import { ITestDataItemResource, TestDataItem, TestDataItemType } from '../types';
 
@@ -27,10 +25,7 @@ const testNavigationCommandMapping: { [key: string]: NavigationCommands } = {
 @injectable()
 export class TestExplorerCommandHandler implements ITestExplorerCommandHandler {
     private readonly disposables: IDisposable[] = [];
-    constructor(
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager,
-        @inject(ITestDataItemResource) private readonly testResource: ITestDataItemResource
-    ) { }
+    constructor(@inject(ICommandManager) private readonly cmdManager: ICommandManager, @inject(ITestDataItemResource) private readonly testResource: ITestDataItemResource) {}
     public register(): void {
         this.disposables.push(this.cmdManager.registerCommand(Commands.runTestNode, this.onRunTestNode, this));
         this.disposables.push(this.cmdManager.registerCommand(Commands.debugTestNode, this.onDebugTestNode, this));

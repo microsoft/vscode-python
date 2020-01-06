@@ -11,7 +11,7 @@ import { Editor } from './editor';
 import { CursorPos, IFont } from './mainState';
 
 export interface ICodeProps {
-    code : string;
+    code: string;
     codeTheme: string;
     testMode: boolean;
     readOnly: boolean;
@@ -63,7 +63,7 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     content={this.props.code}
                     outermostParentClass={this.props.outermostParentClass}
                     monacoTheme={this.props.monacoTheme}
-                    language='python'
+                    language="python"
                     editorOptions={this.props.editorOptions}
                     openLink={this.props.openLink}
                     ref={this.editorRef}
@@ -77,7 +77,9 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
                     useQuickEdit={this.props.useQuickEdit}
                     font={this.props.font}
                 />
-                <div className={waterMarkClass} role='textbox' onClick={this.clickWatermark}>{this.getWatermarkString()}</div>
+                <div className={waterMarkClass} role="textbox" onClick={this.clickWatermark}>
+                    {this.getWatermarkString()}
+                </div>
             </div>
         );
     }
@@ -98,16 +100,16 @@ export class Code extends React.Component<ICodeProps, ICodeState> {
         ev.stopPropagation();
         // Give focus to the editor
         this.giveFocus(CursorPos.Current);
-    }
+    };
 
-    private getWatermarkString = () : string => {
+    private getWatermarkString = (): string => {
         return getLocString('DataScience.inputWatermark', 'Type code here and press shift-enter to run');
-    }
+    };
 
     private onModelChanged = (changes: monacoEditor.editor.IModelContentChange[], model: monacoEditor.editor.ITextModel) => {
         if (!this.props.readOnly && model) {
-            this.setState({allowWatermark:  model.getValueLength() === 0});
+            this.setState({ allowWatermark: model.getValueLength() === 0 });
         }
         this.props.onChange(changes, model.id);
-    }
+    };
 }

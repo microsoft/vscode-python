@@ -35,7 +35,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
         const grandParentDirName = path.basename(path.dirname(path.dirname(pythonPath)));
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+        if (workspaceUri && (await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath))) {
             // In pipenv, return the folder name of the workspace.
             return path.basename(workspaceUri.fsPath);
         }
@@ -80,7 +80,7 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const defaultWorkspaceUri = this.workspaceService.hasWorkspaceFolders ? this.workspaceService.workspaceFolders![0].uri : undefined;
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
         const workspaceUri = workspaceFolder ? workspaceFolder.uri : defaultWorkspaceUri;
-        if (workspaceUri && await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath)) {
+        if (workspaceUri && (await this.pipEnvService.isRelatedPipEnvironment(workspaceUri.fsPath, pythonPath))) {
             return true;
         }
         return false;
@@ -93,20 +93,20 @@ export class VirtualEnvironmentManager implements IVirtualEnvironmentManager {
         const currentProccess = this.serviceContainer.get<ICurrentProcess>(ICurrentProcess);
         const pyenvRoot = currentProccess.env.PYENV_ROOT;
         if (pyenvRoot) {
-            return this.pyEnvRoot = pyenvRoot;
+            return (this.pyEnvRoot = pyenvRoot);
         }
 
         try {
             const processService = await this.processServiceFactory.create(resource);
             const output = await processService.exec('pyenv', ['root']);
             if (output.stdout.trim().length > 0) {
-                return this.pyEnvRoot = output.stdout.trim();
+                return (this.pyEnvRoot = output.stdout.trim());
             }
         } catch {
             noop();
         }
         const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
-        return this.pyEnvRoot = path.join(pathUtils.home, '.pyenv');
+        return (this.pyEnvRoot = path.join(pathUtils.home, '.pyenv'));
     }
     public async isVirtualEnvironment(pythonPath: string) {
         const provider = this.getTerminalActivationProviderForVirtualEnvs();

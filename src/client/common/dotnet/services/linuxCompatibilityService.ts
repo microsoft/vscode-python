@@ -10,7 +10,7 @@ import { IOSDotNetCompatibilityService } from '../types';
 
 @injectable()
 export class LinuxDotNetCompatibilityService implements IOSDotNetCompatibilityService {
-    constructor(@inject(IPlatformService) private readonly platformService: IPlatformService) { }
+    constructor(@inject(IPlatformService) private readonly platformService: IPlatformService) {}
     @traceDecorators.verbose('Checking support of .NET')
     public async isSupported() {
         if (!this.platformService.is64bit) {

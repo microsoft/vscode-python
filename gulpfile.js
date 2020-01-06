@@ -111,20 +111,20 @@ gulp.task('checkNativeDependencies', done => {
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
 gulp.task('compile-webviews', async () => {
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '0'});
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '1'});
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '2'});
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', 'webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '3'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '0'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '1'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '2'});
+    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '3'});
 });
 
 gulp.task('webpack', async () => {
     // Build node_modules and DS stuff.
     // Unwrap the array used to build each webpack.
-    await buildWebPack('production', [], {'BUNDLE_INDEX': '0'});
-    await buildWebPack('production', [], {'BUNDLE_INDEX': '1'});
-    await buildWebPack('production', [], {'BUNDLE_INDEX': '2'});
-    await buildWebPack('production', [], {'BUNDLE_INDEX': '3'});
-    await buildWebPack('production', [], {'BUNDLE_INDEX': '4'});
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '0'});
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '1'});
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '2'});
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '3'});
+    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '4'});
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
@@ -283,7 +283,7 @@ gulp.task('installNewPtvsd', async () => {
     }
 
     // Install source only version of new PTVSD for use with all other python versions.
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a9']
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a10']
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)
         .catch(ex => {

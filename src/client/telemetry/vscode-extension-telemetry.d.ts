@@ -19,11 +19,15 @@ declare module 'vscode-extension-telemetry' {
          * @param {object} measures An associative array of numbers
          */
         // tslint:disable-next-line:member-access
-        public sendTelemetryEvent(eventName: string, properties?: {
-            [key: string]: string;
-        }, measures?: {
-            [key: string]: number;
-            // tslint:disable-next-line:no-empty
-        }): void;
+        public sendTelemetryEvent(
+            eventName: string,
+            properties?: {
+                [key: string]: string;
+            },
+            measures?: {
+                [key: string]: number;
+                // tslint:disable-next-line:no-empty
+            }
+        ): void;
     }
 }

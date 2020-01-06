@@ -21,7 +21,7 @@ export class StableBuildInstaller implements IExtensionBuildInstaller {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(ICommandManager) private readonly cmdManager: ICommandManager
-    ) { }
+    ) {}
 
     @traceDecorators.error('Installing stable build of extension failed')
     public async install(): Promise<void> {
@@ -37,7 +37,8 @@ export class InsidersBuildInstaller implements IExtensionBuildInstaller {
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(ICommandManager) private readonly cmdManager: ICommandManager) { }
+        @inject(ICommandManager) private readonly cmdManager: ICommandManager
+    ) {}
 
     @traceDecorators.error('Installing insiders build of extension failed')
     public async install(): Promise<void> {

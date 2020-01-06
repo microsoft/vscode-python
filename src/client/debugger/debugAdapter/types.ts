@@ -20,8 +20,7 @@ export interface ILocalDebugLauncherScriptProvider extends IDebugLauncherScriptP
     getLauncherArgs(options: LocalDebugOptions): string[];
 }
 
-export interface IRemoteDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<RemoteDebugOptions> {
-}
+export interface IRemoteDebugLauncherScriptProvider extends IDebugLauncherScriptProvider<RemoteDebugOptions> {}
 
 export const IProtocolParser = Symbol('IProtocolParser');
 export interface IProtocolParser extends Disposable {

@@ -10,9 +10,7 @@ import { ShowExtensionSurveyPrompt } from '../common/experimentGroups';
 import '../common/extensions';
 import { traceDecorators } from '../common/logger';
 import { IPlatformService } from '../common/platform/types';
-import {
-    IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom
-} from '../common/types';
+import { IBrowserService, IExperimentsManager, IPersistentStateFactory, IRandom } from '../common/types';
 import { Common, ExtensionSurveyBanner, LanguageService } from '../common/utils/localize';
 import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
@@ -38,7 +36,8 @@ export class ExtensionSurveyPrompt implements IExtensionSingleActivationService 
         @inject(IApplicationEnvironment) private appEnvironment: IApplicationEnvironment,
         @inject(IPlatformService) private platformService: IPlatformService,
         @optional() private sampleSizePerOneHundredUsers: number = 10,
-        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY) { }
+        @optional() private waitTimeToShowSurvey: number = WAIT_TIME_TO_SHOW_SURVEY
+    ) {}
 
     public async activate(): Promise<void> {
         if (!this.experiments.inExperiment(ShowExtensionSurveyPrompt.enabled)) {

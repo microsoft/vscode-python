@@ -16,6 +16,7 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const SwitchJupyterKernel = 'python.datascience.switchKernel';
     export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
     export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';
     export const RunToLine = 'python.datascience.runtoline';
@@ -58,6 +59,7 @@ export namespace Commands {
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
+    export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
 }
 
 export namespace CodeLensCommands {
@@ -107,7 +109,6 @@ export namespace RegExpValues {
     export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
     export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
     export const StyleTagRegex = /\<style[\s\S]*\<\/style\>/m;
-
 }
 
 export enum Telemetry {
@@ -154,6 +155,7 @@ export enum Telemetry {
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
+    StartSessionFailedJupyter = 'DATASCIENCE.START_SESSION_FAILED_JUPYTER',
     ConnectRemoteSelfCertFailedJupyter = 'DATASCIENCE.CONNECTREMOTESELFCERTFAILEDJUPYTER',
     RegisterAndUseInterpreterAsKernel = 'DATASCIENCE.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
     UseInterpreterAsKernel = 'DATASCIENCE.USE_INTERPRETER_AS_KERNEL',
@@ -222,7 +224,8 @@ export enum Telemetry {
     RegisterInterpreterAsKernel = 'DATASCIENCE.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
-    OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE'
+    OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
+    FindKernelForLocalConnection = 'DATASCIENCE.FIND_KERNEL_FOR_LOCAL_CONNECTION'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -320,7 +323,7 @@ export namespace Identifiers {
 }
 
 export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', "\tos.chdir(os.path.join(os.getcwd(), '{2}'))", '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;

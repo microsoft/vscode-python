@@ -7,7 +7,9 @@ import { assert } from 'chai';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { PathUtils } from '../../../../client/common/platform/pathUtils';
 import { IFileSystem } from '../../../../client/common/platform/types';
+import { IPathUtils } from '../../../../client/common/types';
 import * as localize from '../../../../client/common/utils/localize';
 import { Architecture } from '../../../../client/common/utils/platform';
 import { JupyterSessionManager } from '../../../../client/datascience/jupyter/jupyterSessionManager';
@@ -24,6 +26,7 @@ suite('Data Science - KernelSelections', () => {
     let kernelSelectionProvider: KernelSelectionProvider;
     let kernelService: KernelService;
     let interpreterSelector: IInterpreterSelector;
+    let pathUtils: IPathUtils;
     let fs: IFileSystem;
     let sessionManager: IJupyterSessionManager;
     const activePython1KernelModel = { lastActivityTime: new Date(2011, 11, 10, 12, 15, 0, 0), numberOfConnections: 10, name: 'py1' };
@@ -40,21 +43,21 @@ suite('Data Science - KernelSelections', () => {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p1', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello1' },
             path: 'p1',
-            detail: '',
+            detail: '<user friendly path>',
             description: ''
         },
         {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p2', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello2' },
             path: 'p1',
-            detail: '',
+            detail: '<user friendly path>',
             description: ''
         },
         {
             label: 'Hello1',
             interpreter: { architecture: Architecture.Unknown, path: 'p3', sysPrefix: '', sysVersion: '', type: InterpreterType.Conda, displayName: 'Hello3' },
             path: 'p1',
-            detail: '',
+            detail: '<user friendly path>',
             description: ''
         }
     ];
@@ -64,11 +67,16 @@ suite('Data Science - KernelSelections', () => {
         sessionManager = mock(JupyterSessionManager);
         kernelService = mock(KernelService);
         fs = mock(FileSystem);
-        kernelSelectionProvider = new KernelSelectionProvider(instance(kernelService), instance(interpreterSelector), instance(fs));
+        pathUtils = mock(PathUtils);
+        when(pathUtils.getDisplayName(anything())).thenReturn('<user friendly path>');
+        when(pathUtils.getDisplayName(anything(), anything())).thenReturn('<user friendly path>');
+        kernelSelectionProvider = new KernelSelectionProvider(instance(kernelService), instance(interpreterSelector), instance(fs), instance(pathUtils));
     });
 
     test('Should return an empty list for remote kernels if there are none', async () => {
+        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve([]);
+        when(sessionManager.getRunningSessions()).thenResolve([]);
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
 
@@ -76,8 +84,19 @@ suite('Data Science - KernelSelections', () => {
     });
     test('Should return a list with the proper details in the quick pick for remote connections (excluding non-python kernels)', async () => {
         const activeKernels: IJupyterKernel[] = [activePython1KernelModel, activeJuliaKernelModel];
-
+        const sessions = activeKernels.map(item => {
+            return {
+                id: 'sessionId',
+                name: 'someSession',
+                // tslint:disable-next-line: no-any
+                kernel: item as any,
+                type: '',
+                path: ''
+            };
+        });
+        when(kernelService.getKernelSpecs(instance(sessionManager), anything())).thenResolve([]);
         when(sessionManager.getRunningKernels()).thenResolve(activeKernels);
+        when(sessionManager.getRunningSessions()).thenResolve(sessions);
         when(sessionManager.getKernelSpecs()).thenResolve(allSpecs);
 
         // Quick pick must contain
@@ -87,14 +106,32 @@ suite('Data Science - KernelSelections', () => {
         const expectedItems: IKernelSpecQuickPickItem[] = [
             {
                 label: python1KernelSpecModel.display_name,
-                selection: { interpreter: undefined, kernelModel: { ...activePython1KernelModel, ...python1KernelSpecModel }, kernelSpec: undefined },
+                // tslint:disable-next-line: no-any
+                selection: {
+                    interpreter: undefined,
+                    kernelModel: {
+                        ...activePython1KernelModel,
+                        ...python1KernelSpecModel,
+                        session: {
+                            id: 'sessionId',
+                            name: 'someSession',
+                            // tslint:disable-next-line: no-any
+                            kernel: activeKernels[0] as any,
+                            type: '',
+                            path: ''
+                            // tslint:disable-next-line: no-any
+                        } as any
+                    },
+                    kernelSpec: undefined
+                },
+                detail: '<user friendly path>',
                 description: localize.DataScience.jupyterSelectURIRunningDetailFormat().format(
                     activePython1KernelModel.lastActivityTime.toLocaleString(),
                     activePython1KernelModel.numberOfConnections.toString()
                 )
             }
         ];
-        expectedItems.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        expectedItems.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
         const items = await kernelSelectionProvider.getKernelSelectionsForRemoteSession(instance(sessionManager));
 
@@ -114,6 +151,7 @@ suite('Data Science - KernelSelections', () => {
         const expectedKernelItems: IKernelSpecQuickPickItem[] = [python1KernelSpecModel, python3KernelSpecModel].map(item => {
             return {
                 label: item.display_name,
+                detail: '<user friendly path>',
                 selection: { interpreter: undefined, kernelModel: undefined, kernelSpec: item }
             };
         });
@@ -121,13 +159,13 @@ suite('Data Science - KernelSelections', () => {
             return {
                 ...item,
                 label: item.label,
-                detail: '',
+                detail: '<user friendly path>',
                 description: '',
                 selection: { kernelModel: undefined, interpreter: item.interpreter, kernelSpec: undefined }
             };
         });
         const expectedList = [...expectedKernelItems, ...expectedInterpreterItems];
-        expectedList.sort((a, b) => a.label === b.label ? 0 : (a.label > b.label ? 1 : -1));
+        expectedList.sort((a, b) => (a.label === b.label ? 0 : a.label > b.label ? 1 : -1));
 
         const items = await kernelSelectionProvider.getKernelSelectionsForLocalSession(instance(sessionManager));
 

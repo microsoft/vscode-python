@@ -59,9 +59,7 @@ class DelayedReadMemoryStream extends Readable {
         return 1024 * 10;
     }
     private readCounter = 0;
-    constructor(private readonly totalKb: number,
-        private readonly delayMs: number,
-        private readonly kbPerIteration: number) {
+    constructor(private readonly totalKb: number, private readonly delayMs: number, private readonly kbPerIteration: number) {
         super();
     }
     public _read() {
@@ -69,8 +67,8 @@ class DelayedReadMemoryStream extends Readable {
         setTimeout(() => this.sendMesage(), this.delayMs);
     }
     public sendMesage() {
-        const i = this.readCounter += 1;
-        if (i > (this.totalKb / this.kbPerIteration)) {
+        const i = (this.readCounter += 1);
+        if (i > this.totalKb / this.kbPerIteration) {
             this.push(null);
         } else {
             this.push(Buffer.from('a'.repeat(this.kbPerIteration), 'ascii'));
@@ -203,8 +201,7 @@ suite('File Downloader', () => {
             expect(progressReportStub.args[4][0].message).to.equal(getProgressMessage(50, 100));
 
             function getProgressMessage(downloadedKb: number, percentage: number) {
-                return Http.downloadingFileProgress().format('Downloading-something',
-                    downloadedKb.toFixed(), totalKb.toFixed(), percentage.toString());
+                return Http.downloadingFileProgress().format('Downloading-something', downloadedKb.toFixed(), totalKb.toFixed(), percentage.toString());
             }
         });
     });

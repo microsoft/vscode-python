@@ -21,28 +21,39 @@ export class SvgList extends React.Component<ISvgListProps> {
 
     public render() {
         return (
-            <div className='svg-list-container'>
-                <div className='svg-list'>
-                {this.renderImages()}
-                </div>
+            <div className="svg-list-container">
+                <div className="svg-list">{this.renderImages()}</div>
             </div>
         );
     }
 
     private renderImages() {
         return this.props.images.map((image, index) => {
-            const className = `svg-list-item${(this.props.currentImage === index) ? ' svg-list-item-selected' : ''}${this.props.themeMatplotlibBackground ? '' : ' svg-list-white-background'}`;
-            const ariaLabel = index === this.props.currentImage ? getLocString('DataScience.selectedImageListLabel', 'Selected Image') : getLocString('DataScience.selectedImageLabel', 'Image');
-            const ariaPressed =  index === this.props.currentImage ? 'true' : 'false';
+            const className = `svg-list-item${this.props.currentImage === index ? ' svg-list-item-selected' : ''}${
+                this.props.themeMatplotlibBackground ? '' : ' svg-list-white-background'
+            }`;
+            const ariaLabel =
+                index === this.props.currentImage ? getLocString('DataScience.selectedImageListLabel', 'Selected Image') : getLocString('DataScience.selectedImageLabel', 'Image');
+            const ariaPressed = index === this.props.currentImage ? 'true' : 'false';
             const clickHandler = () => this.props.imageClicked(index);
             const keyDownHandler = (e: React.KeyboardEvent<HTMLDivElement>) => this.onKeyDown(e, index);
             return (
-                // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
-                // tslint:disable-next-line: react-this-binding-issue
-                <div className={className} tabIndex={0} role='button' aria-label={ariaLabel} aria-pressed={ariaPressed} onClick={clickHandler} onKeyDown={keyDownHandler} key={index}>
-                    <div className='svg-list-item-image'>
-                        <SvgLoader svgXML={image}>
-                        </SvgLoader>
+                <div
+                    className={className}
+                    tabIndex={0}
+                    role="button"
+                    aria-label={ariaLabel}
+                    aria-pressed={ariaPressed}
+                    // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
+                    // tslint:disable-next-line: react-this-binding-issue
+                    onClick={clickHandler}
+                    // See the comments here: https://github.com/Microsoft/tslint-microsoft-contrib/issues/676
+                    // tslint:disable-next-line: react-this-binding-issue
+                    onKeyDown={keyDownHandler}
+                    key={index}
+                >
+                    <div className="svg-list-item-image">
+                        <SvgLoader svgXML={image}></SvgLoader>
                     </div>
                 </div>
             );
@@ -54,5 +65,5 @@ export class SvgList extends React.Component<ISvgListProps> {
         if (event.key === 'Enter' || event.key === ' ') {
             this.props.imageClicked(index);
         }
-    }
+    };
 }

@@ -21,7 +21,8 @@ const store = createStore(
     // tslint:disable-next-line: no-typeof-undefined
     typeof acquireVsCodeApi !== 'undefined',
     baseTheme,
-    false);
+    false
+);
 
 // Wire up a connected react control for our InteractiveEditor
 const ConnectedInteractiveEditor = getConnectedInteractiveEditor();
@@ -30,7 +31,7 @@ const ConnectedInteractiveEditor = getConnectedInteractiveEditor();
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
     <Provider store={store}>
-        <ConnectedInteractiveEditor/>
+        <ConnectedInteractiveEditor />
     </Provider>,
-  document.getElementById('root') as HTMLElement
+    document.getElementById('root') as HTMLElement
 );

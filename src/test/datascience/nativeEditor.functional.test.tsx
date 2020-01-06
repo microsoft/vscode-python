@@ -8,8 +8,6 @@ import { ReactWrapper } from 'enzyme';
 import { EventEmitter } from 'events';
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import { Provider } from 'react-redux';
-import * as Redux from 'redux';
 import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
@@ -17,7 +15,6 @@ import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
 import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
-import { createTemporaryFile } from '../../client/common/utils/fs';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
@@ -26,18 +23,39 @@ import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } 
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
-import { IStore } from '../../datascience-ui/interactive-common/redux/store';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { IKeyboardEvent } from '../../datascience-ui/react-common/event';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { IMonacoEditorState, MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { waitForCondition } from '../common';
+import { createTemporaryFile } from '../utils/fs';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { defaultDataScienceSettings } from './helpers';
 import { MockDocumentManager } from './mockDocumentManager';
 import { addCell, closeNotebook, createNewEditor, getNativeCellResults, mountNativeWebView, openEditor, runMountedTest, setupWebview } from './nativeEditorTestHelpers';
 import { waitForUpdate } from './reactHelpers';
-import { addContinuousMockData, addMockData, CellPosition, createKeyboardEventForCell, defaultDataScienceSettings, escapePath, findButton, getLastOutputCell, getNativeFocusedEditor, getOutputCell, injectCode, isCellFocused, isCellMarkdown, isCellSelected, srcDirectory, typeCode, verifyCellIndex, verifyHtmlOnCell, waitForMessage, waitForMessageResponse } from './testHelpers';
+import {
+    addContinuousMockData,
+    addMockData,
+    CellPosition,
+    createKeyboardEventForCell,
+    escapePath,
+    findButton,
+    getLastOutputCell,
+    getNativeFocusedEditor,
+    getOutputCell,
+    injectCode,
+    isCellFocused,
+    isCellMarkdown,
+    isCellSelected,
+    srcDirectory,
+    typeCode,
+    verifyCellIndex,
+    verifyHtmlOnCell,
+    waitForMessage,
+    waitForMessageResponse
+} from './testHelpers';
 
 use(chaiAsPromised);
 
@@ -59,13 +77,16 @@ suite('DataScience Native Editor', () => {
             ioc.registerDataScienceTypes();
 
             const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((_e) => Promise.resolve(''));
+            appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns(_e => Promise.resolve(''));
             appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-            appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-            appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, _a2: any, _a3: string, a4: string) => Promise.resolve(a4));
+            appShell
+                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+            appShell
+                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((_a1: string, _a2: any, _a3: string, a4: string) => Promise.resolve(a4));
             appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => Promise.resolve(Uri.file('foo.ipynb')));
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
-
         });
 
         teardown(async () => {
@@ -87,29 +108,37 @@ suite('DataScience Native Editor', () => {
         //      asyncDump();
         // });
 
-        runMountedTest('Simple text', async (wrapper) => {
-            // Create an editor so something is listening to messages
-            await createNewEditor(ioc);
+        runMountedTest(
+            'Simple text',
+            async wrapper => {
+                // Create an editor so something is listening to messages
+                await createNewEditor(ioc);
 
-            // Add a cell into the UI and wait for it to render
-            await addCell(wrapper, ioc, 'a=1\na');
+                // Add a cell into the UI and wait for it to render
+                await addCell(wrapper, ioc, 'a=1\na');
 
-            verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
-        }, () => { return ioc; });
+                verifyHtmlOnCell(wrapper, 'NativeCell', '<span>1</span>', 1);
+            },
+            () => {
+                return ioc;
+            }
+        );
 
-        runMountedTest('Mime Types', async (wrapper) => {
-            // Create an editor so something is listening to messages
-            await createNewEditor(ioc);
+        runMountedTest(
+            'Mime Types',
+            async wrapper => {
+                // Create an editor so something is listening to messages
+                await createNewEditor(ioc);
 
-            const badPanda = `import pandas as pd
+                const badPanda = `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
-            const goodPanda = `import pandas as pd
+                const goodPanda = `import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`;
-            const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
-            const matPlotLibResults = 'img';
-            const spinningCursor = `import sys
+                const matPlotLib = 'import matplotlib.pyplot as plt\r\nimport numpy as np\r\nx = np.linspace(0,20,100)\r\nplt.plot(x, np.sin(x))\r\nplt.show()';
+                const matPlotLibResults = 'img';
+                const spinningCursor = `import sys
 import time
 def spinning_cursor():
     while True:
@@ -121,249 +150,296 @@ for _ in range(50):
     sys.stdout.flush()
     time.sleep(0.1)
     sys.stdout.write('\\r')`;
-            const alternating = `from IPython.display import display\r\nprint('foo')\r\ndisplay('foo')\r\nprint('bar')\r\ndisplay('bar')`;
-            const alternatingResults = ['foo', 'foo' , 'bar', 'bar'];
+                const alternating = `from IPython.display import display\r\nprint('foo')\r\ndisplay('foo')\r\nprint('bar')\r\ndisplay('bar')`;
+                const alternatingResults = ['foo\n', 'foo', 'bar\n', 'bar'];
 
-            const clearalternating = `from IPython.display import display, clear_output\r\nprint('foo')\r\ndisplay('foo')\r\nclear_output(True)\r\nprint('bar')\r\ndisplay('bar')`;
-            const clearalternatingResults = ['foo', 'foo' , '',  'bar', 'bar'];
+                const clearalternating = `from IPython.display import display, clear_output\r\nprint('foo')\r\ndisplay('foo')\r\nclear_output(True)\r\nprint('bar')\r\ndisplay('bar')`;
+                const clearalternatingResults = ['foo\n', 'foo', '', 'bar\n', 'bar'];
 
-            addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
-            addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
-            addMockData(ioc, matPlotLib, matPlotLibResults, 'text/html');
-            addMockData(ioc, clearalternating, alternatingResults, ['text/plain', 'stream', 'text/plain', 'stream']);
-            addMockData(ioc, alternating, clearalternatingResults, ['text/plain', 'stream', 'clear_true', 'text/plain', 'stream']);
-            const cursors = ['|', '/', '-', '\\'];
-            let cursorPos = 0;
-            let loops = 3;
-            addContinuousMockData(ioc, spinningCursor, async (_c) => {
-                const result = `${cursors[cursorPos]}\r`;
-                cursorPos += 1;
-                if (cursorPos >= cursors.length) {
-                    cursorPos = 0;
-                    loops -= 1;
-                }
-                return Promise.resolve({ result: result, haveMore: loops > 0 });
-            });
+                addMockData(ioc, badPanda, `pandas has no attribute 'read'`, 'text/html', 'error');
+                addMockData(ioc, goodPanda, `<td>A table</td>`, 'text/html');
+                addMockData(ioc, matPlotLib, matPlotLibResults, 'text/html');
+                addMockData(ioc, alternating, alternatingResults, ['text/plain', 'stream', 'text/plain', 'stream']);
+                addMockData(ioc, clearalternating, clearalternatingResults, ['text/plain', 'stream', 'clear_true', 'text/plain', 'stream']);
+                const cursors = ['|', '/', '-', '\\'];
+                let cursorPos = 0;
+                let loops = 3;
+                addContinuousMockData(ioc, spinningCursor, async _c => {
+                    const result = `${cursors[cursorPos]}\r`;
+                    cursorPos += 1;
+                    if (cursorPos >= cursors.length) {
+                        cursorPos = 0;
+                        loops -= 1;
+                    }
+                    return Promise.resolve({ result: result, haveMore: loops > 0 });
+                });
 
-            await addCell(wrapper, ioc, badPanda, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
+                await addCell(wrapper, ioc, badPanda, true);
+                verifyHtmlOnCell(wrapper, 'NativeCell', `has no attribute 'read'`, CellPosition.Last);
 
-            await addCell(wrapper, ioc, goodPanda, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
+                await addCell(wrapper, ioc, goodPanda, true);
+                verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
-            await addCell(wrapper, ioc, matPlotLib, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
+                await addCell(wrapper, ioc, matPlotLib, true);
+                verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
 
-            await addCell(wrapper, ioc, spinningCursor, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
+                await addCell(wrapper, ioc, spinningCursor, true);
+                verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);
 
-            await addCell(wrapper, ioc, alternating, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', /.*foo.*foo.*bar.*bar/m, CellPosition.Last);
-            await addCell(wrapper, ioc, clearalternating, true);
-            verifyHtmlOnCell(wrapper, 'NativeCell', /.*bar.*bar/m, CellPosition.Last);
-        }, () => { return ioc; });
-
-        runMountedTest('Click buttons', async (wrapper) => {
-            // Goto source should cause the visible editor to be picked as long as its filename matches
-            const showedEditor = createDeferred();
-            const textEditors: TextEditor[] = [];
-            const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
-            const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
-            const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
-            dummyDocument.setup(d => d.fileName).returns(() => Uri.file('foo.py').fsPath);
-            visibleEditor.setup(v => v.show()).returns(() => showedEditor.resolve());
-            visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny())).returns(noop);
-            visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
-            textEditors.push(visibleEditor.object);
-            docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
-            ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
-            // Create an editor so something is listening to messages
-            await createNewEditor(ioc);
-
-            // Get a cell into the list
-            await addCell(wrapper, ioc, 'a=1\na');
-
-            // find the buttons on the cell itself
-            let cell = getLastOutputCell(wrapper, 'NativeCell');
-            let ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
-            let deleteButton = ImageButtons.at(5);
-
-            // Make sure delete works
-            let afterDelete = await getNativeCellResults(wrapper, 1, async () => {
-                deleteButton.simulate('click');
-                return Promise.resolve();
-            });
-            assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
-
-            // Secondary delete should NOT delete the cell as there should ALWAYS be at
-            // least one cell in the file.
-            cell = getLastOutputCell(wrapper, 'NativeCell');
-            ImageButtons = cell.find(ImageButton);
-            assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
-            deleteButton = ImageButtons.at(5);
-
-            afterDelete = await getNativeCellResults(wrapper, 1, async () => {
-                deleteButton.simulate('click');
-                return Promise.resolve();
-            });
-            assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
-        }, () => { return ioc; });
-
-        runMountedTest('Select Jupyter Server', async (_wrapper) => {
-            // tslint:disable-next-line: no-console
-            console.log('Test skipped until user can change jupyter server selection again');
-            // let selectorCalled = false;
-
-            // ioc.datascience.setup(ds => ds.selectJupyterURI()).returns(() => {
-            //     selectorCalled = true;
-            //     return Promise.resolve();
-            // });
-
-            // await createNewEditor(ioc);
-            // const editor = wrapper.find(NativeEditor);
-            // const kernelSelectionUI = editor.find(KernelSelection);
-            // const buttons = kernelSelectionUI.find('div');
-            // buttons!.at(1).simulate('click');
-
-            // assert.equal(selectorCalled, true, 'Server Selector should have been called');
-        }, () => { return ioc; });
-
-        runMountedTest('Select Jupyter Kernel', async (_wrapper) => {
-            // tslint:disable-next-line: no-console
-            console.log('Tests skipped, as we need better tests');
-            // let selectorCalled = false;
-
-            // ioc.datascience.setup(ds => ds.selectLocalJupyterKernel()).returns(() => {
-            //     selectorCalled = true;
-            //     const spec: KernelSpecInterpreter = {};
-            //     return Promise.resolve(spec);
-            // });
-
-            // await createNewEditor(ioc);
-            // // Create an editor so something is listening to messages
-            // await createNewEditor(ioc);
-
-            // // Add a cell into the UI and wait for it to render
-            // await addCell(wrapper, ioc, 'a=1\na');
-
-            // const editor = wrapper.find(NativeEditor);
-            // const kernelSelectionUI = editor.find(KernelSelection);
-            // const buttons = kernelSelectionUI.find('div');
-            // buttons!.at(4).simulate('click');
-
-            // assert.equal(selectorCalled, true, 'Kernel Selector should have been called');
-        }, () => { return ioc; });
-
-        runMountedTest('Convert to python', async (wrapper) => {
-            // Export should cause the export dialog to come up. Remap appshell so we can check
-            const dummyDisposable = {
-                dispose: () => { return; }
-            };
-            let saveCalled = false;
-            const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-            appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
-            appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-            appShell.setup(a => a.showSaveDialog(TypeMoq.It.isAny())).returns(() => {
-                saveCalled = true;
-                return Promise.resolve(undefined);
-            });
-            appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-            ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
-
-            // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
-            await createNewEditor(ioc);
-            await addCell(wrapper, ioc, 'a=1\na');
-
-            // Export should cause exportCalled to change to true
-            const saveButton = findButton(wrapper, NativeEditor, 8);
-            await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
-            assert.equal(saveCalled, true, 'Save should have been called');
-
-            // Click export and wait for a document to change
-            const activeTextEditorChange = createDeferred();
-            const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
-            docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
-            const exportButton = findButton(wrapper, NativeEditor, 9);
-            await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
-
-            // This can be slow, hence wait for a max of 60.
-            await waitForPromise(activeTextEditorChange.promise, 60_000);
-
-            // Verify the new document is valid python
-            const newDoc = docManager.activeTextEditor;
-            assert.ok(newDoc, 'New doc not created');
-            assert.ok(newDoc!.document.getText().includes('a=1'), 'Export did not create a python file');
-
-        }, () => { return ioc; });
-
-        runMountedTest('RunAllCells', async (wrapper) => {
-            addMockData(ioc, 'b=2\nb', 2);
-            addMockData(ioc, 'c=3\nc', 3);
-
-            const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
-            {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
-            {id: 'NotebookImport#2', data: {source: 'c=3\nc'}} ];
-            const runAllCells =  baseFile.map(cell => {
-                return createFileCell(cell, cell.data);
-            });
-            const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
-            await openEditor(ioc, JSON.stringify(notebook));
-
-            const runAllButton = findButton(wrapper, NativeEditor, 0);
-            // The render method needs to be executed 3 times for three cells.
-            const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
-            await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-            await threeCellsUpdated;
-
-            verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
-            verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
-        }, () => { return ioc; });
-
-        runMountedTest('Startup and shutdown', async (wrapper) => {
-            // Stub the `stat` method to return a dummy value.
-            try {
-                sinon.stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat').resolves({mtime: 0} as any);
-            } catch (e) {
-                // tslint:disable-next-line: no-console
-                console.log(`Stub failure ${e}`);
+                await addCell(wrapper, ioc, alternating, true);
+                verifyHtmlOnCell(wrapper, 'NativeCell', /.*foo\n.*foo.*bar\n.*bar/m, CellPosition.Last);
+                await addCell(wrapper, ioc, clearalternating, true);
+                verifyHtmlOnCell(wrapper, 'NativeCell', /.*bar\n.*bar/m, CellPosition.Last);
+            },
+            () => {
+                return ioc;
             }
+        );
 
-            addMockData(ioc, 'b=2\nb', 2);
-            addMockData(ioc, 'c=3\nc', 3);
+        runMountedTest(
+            'Click buttons',
+            async wrapper => {
+                // Goto source should cause the visible editor to be picked as long as its filename matches
+                const showedEditor = createDeferred();
+                const textEditors: TextEditor[] = [];
+                const docManager = TypeMoq.Mock.ofType<IDocumentManager>();
+                const visibleEditor = TypeMoq.Mock.ofType<TextEditor>();
+                const dummyDocument = TypeMoq.Mock.ofType<TextDocument>();
+                dummyDocument.setup(d => d.fileName).returns(() => Uri.file('foo.py').fsPath);
+                visibleEditor.setup(v => v.show()).returns(() => showedEditor.resolve());
+                visibleEditor.setup(v => v.revealRange(TypeMoq.It.isAny())).returns(noop);
+                visibleEditor.setup(v => v.document).returns(() => dummyDocument.object);
+                textEditors.push(visibleEditor.object);
+                docManager.setup(a => a.visibleTextEditors).returns(() => textEditors);
+                ioc.serviceManager.rebindInstance<IDocumentManager>(IDocumentManager, docManager.object);
+                // Create an editor so something is listening to messages
+                await createNewEditor(ioc);
 
-            const baseFile = [ {id: 'NotebookImport#0', data: {source: 'a=1\na'}},
-            {id: 'NotebookImport#1', data: {source: 'b=2\nb'}},
-            {id: 'NotebookImport#2', data: {source: 'c=3\nc'}} ];
-            const runAllCells =  baseFile.map(cell => {
-                return createFileCell(cell, cell.data);
-            });
-            const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
-            let editor = await openEditor(ioc, JSON.stringify(notebook));
+                // Get a cell into the list
+                await addCell(wrapper, ioc, 'a=1\na');
 
-            // Run everything
-            let runAllButton = findButton(wrapper, NativeEditor, 0);
-            await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-            await waitForUpdate(wrapper, NativeEditor, 15);
+                // find the buttons on the cell itself
+                let cell = getLastOutputCell(wrapper, 'NativeCell');
+                let ImageButtons = cell.find(ImageButton);
+                assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
+                let deleteButton = ImageButtons.at(5);
 
-            // Close editor. Should still have the server up
-            await closeNotebook(editor, wrapper);
-            const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-            const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
-            const server = await jupyterExecution.getServer(await editorProvider.getNotebookOptions());
-            assert.ok(server, 'Server was destroyed on notebook shutdown');
+                // Make sure delete works
+                let afterDelete = await getNativeCellResults(wrapper, 1, async () => {
+                    deleteButton.simulate('click');
+                    return Promise.resolve();
+                });
+                assert.equal(afterDelete.length, 1, `Delete should remove a cell`);
 
-            // Reopen, and rerun
-            const newWrapper = await setupWebview(ioc);
-            assert.ok(newWrapper, 'Could not mount a second time');
-            editor = await openEditor(ioc, JSON.stringify(notebook));
-            runAllButton = findButton(newWrapper!, NativeEditor, 0);
-            await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
-            await waitForUpdate(newWrapper!, NativeEditor, 15);
-            verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
-        },
-        () => {
+                // Secondary delete should NOT delete the cell as there should ALWAYS be at
+                // least one cell in the file.
+                cell = getLastOutputCell(wrapper, 'NativeCell');
+                ImageButtons = cell.find(ImageButton);
+                assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
+                deleteButton = ImageButtons.at(5);
+
+                afterDelete = await getNativeCellResults(wrapper, 1, async () => {
+                    deleteButton.simulate('click');
+                    return Promise.resolve();
+                });
+                assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'Select Jupyter Server',
+            async _wrapper => {
+                // tslint:disable-next-line: no-console
+                console.log('Test skipped until user can change jupyter server selection again');
+                // let selectorCalled = false;
+
+                // ioc.datascience.setup(ds => ds.selectJupyterURI()).returns(() => {
+                //     selectorCalled = true;
+                //     return Promise.resolve();
+                // });
+
+                // await createNewEditor(ioc);
+                // const editor = wrapper.find(NativeEditor);
+                // const kernelSelectionUI = editor.find(KernelSelection);
+                // const buttons = kernelSelectionUI.find('div');
+                // buttons!.at(1).simulate('click');
+
+                // assert.equal(selectorCalled, true, 'Server Selector should have been called');
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'Select Jupyter Kernel',
+            async _wrapper => {
+                // tslint:disable-next-line: no-console
+                console.log('Tests skipped, as we need better tests');
+                // let selectorCalled = false;
+
+                // ioc.datascience.setup(ds => ds.selectLocalJupyterKernel()).returns(() => {
+                //     selectorCalled = true;
+                //     const spec: KernelSpecInterpreter = {};
+                //     return Promise.resolve(spec);
+                // });
+
+                // await createNewEditor(ioc);
+                // // Create an editor so something is listening to messages
+                // await createNewEditor(ioc);
+
+                // // Add a cell into the UI and wait for it to render
+                // await addCell(wrapper, ioc, 'a=1\na');
+
+                // const editor = wrapper.find(NativeEditor);
+                // const kernelSelectionUI = editor.find(KernelSelection);
+                // const buttons = kernelSelectionUI.find('div');
+                // buttons!.at(4).simulate('click');
+
+                // assert.equal(selectorCalled, true, 'Kernel Selector should have been called');
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'Convert to python',
+            async wrapper => {
+                // Export should cause the export dialog to come up. Remap appshell so we can check
+                const dummyDisposable = {
+                    dispose: () => {
+                        return;
+                    }
+                };
+                let saveCalled = false;
+                const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+                appShell
+                    .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                    .returns(e => {
+                        throw e;
+                    });
+                appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+                appShell
+                    .setup(a => a.showSaveDialog(TypeMoq.It.isAny()))
+                    .returns(() => {
+                        saveCalled = true;
+                        return Promise.resolve(undefined);
+                    });
+                appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+                ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
+
+                // Make sure to create the interactive window after the rebind or it gets the wrong application shell.
+                await createNewEditor(ioc);
+                await addCell(wrapper, ioc, 'a=1\na');
+
+                // Export should cause exportCalled to change to true
+                const saveButton = findButton(wrapper, NativeEditor, 8);
+                await waitForMessageResponse(ioc, () => saveButton!.simulate('click'));
+                assert.equal(saveCalled, true, 'Save should have been called');
+
+                // Click export and wait for a document to change
+                const activeTextEditorChange = createDeferred();
+                const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
+                docManager.onDidChangeActiveTextEditor(() => activeTextEditorChange.resolve());
+                const exportButton = findButton(wrapper, NativeEditor, 9);
+                await waitForMessageResponse(ioc, () => exportButton!.simulate('click'));
+
+                // This can be slow, hence wait for a max of 60.
+                await waitForPromise(activeTextEditorChange.promise, 60_000);
+
+                // Verify the new document is valid python
+                const newDoc = docManager.activeTextEditor;
+                assert.ok(newDoc, 'New doc not created');
+                assert.ok(newDoc!.document.getText().includes('a=1'), 'Export did not create a python file');
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'RunAllCells',
+            async wrapper => {
+                addMockData(ioc, 'b=2\nb', 2);
+                addMockData(ioc, 'c=3\nc', 3);
+
+                const baseFile = [
+                    { id: 'NotebookImport#0', data: { source: 'a=1\na' } },
+                    { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
+                    { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
+                ];
+                const runAllCells = baseFile.map(cell => {
+                    return createFileCell(cell, cell.data);
+                });
+                const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
+                await openEditor(ioc, JSON.stringify(notebook));
+
+                const runAllButton = findButton(wrapper, NativeEditor, 0);
+                // The render method needs to be executed 3 times for three cells.
+                const threeCellsUpdated = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered, { numberOfTimes: 3 });
+                await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+                await threeCellsUpdated;
+
+                verifyHtmlOnCell(wrapper, 'NativeCell', `1`, 0);
+                verifyHtmlOnCell(wrapper, 'NativeCell', `2`, 1);
+                verifyHtmlOnCell(wrapper, 'NativeCell', `3`, 2);
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'Startup and shutdown',
+            async wrapper => {
+                // Stub the `stat` method to return a dummy value.
+                try {
+                    sinon.stub(ioc.serviceContainer.get<IFileSystem>(IFileSystem), 'stat').resolves({ mtime: 0 } as any);
+                } catch (e) {
+                    // tslint:disable-next-line: no-console
+                    console.log(`Stub failure ${e}`);
+                }
+
+                addMockData(ioc, 'b=2\nb', 2);
+                addMockData(ioc, 'c=3\nc', 3);
+
+                const baseFile = [
+                    { id: 'NotebookImport#0', data: { source: 'a=1\na' } },
+                    { id: 'NotebookImport#1', data: { source: 'b=2\nb' } },
+                    { id: 'NotebookImport#2', data: { source: 'c=3\nc' } }
+                ];
+                const runAllCells = baseFile.map(cell => {
+                    return createFileCell(cell, cell.data);
+                });
+                const notebook = await ioc.get<INotebookExporter>(INotebookExporter).translateToNotebook(runAllCells, undefined);
+                let editor = await openEditor(ioc, JSON.stringify(notebook));
+
+                // Run everything
+                let runAllButton = findButton(wrapper, NativeEditor, 0);
+                await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+                await waitForUpdate(wrapper, NativeEditor, 15);
+
+                // Close editor. Should still have the server up
+                await closeNotebook(editor, wrapper);
+                const jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+                const editorProvider = ioc.serviceManager.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const server = await jupyterExecution.getServer(await editorProvider.getNotebookOptions());
+                assert.ok(server, 'Server was destroyed on notebook shutdown');
+
+                // Reopen, and rerun
+                const newWrapper = await setupWebview(ioc);
+                assert.ok(newWrapper, 'Could not mount a second time');
+                editor = await openEditor(ioc, JSON.stringify(notebook));
+                runAllButton = findButton(newWrapper!, NativeEditor, 0);
+                await waitForMessageResponse(ioc, () => runAllButton!.simulate('click'));
+                await waitForUpdate(newWrapper!, NativeEditor, 15);
+                verifyHtmlOnCell(newWrapper!, 'NativeCell', `1`, 0);
+            },
+            () => {
                 // Disable the warning displayed by nodejs when there are too many listeners.
                 EventEmitter.defaultMaxListeners = 15;
                 return ioc;
@@ -514,7 +590,7 @@ for _ in range(50):
             metadata: {},
             outputs: [],
             source: []
-           });
+        });
         const addedJSONFile = JSON.stringify(addedJSON, null, ' ');
 
         let notebookFile: {
@@ -563,6 +639,7 @@ for _ in range(50):
         });
 
         function clickCell(cellIndex: number) {
+            wrapper.update();
             wrapper
                 .find(NativeCell)
                 .at(cellIndex)
@@ -573,6 +650,7 @@ for _ in range(50):
         function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
             const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
             const id = `NotebookImport#${cellIndex}`;
+            wrapper.update();
             wrapper
                 .find(NativeCell)
                 .at(cellIndex)
@@ -620,19 +698,23 @@ for _ in range(50):
 
         suite('Keyboard Shortcuts', () => {
             const originalPlatform = window.navigator.platform;
-            Object.defineProperty(window.navigator, 'platform', ((value: string) => {
-                return {
-                    get: () => value,
-                    set: (v: string) => value = v
-                };
-            })(originalPlatform));
+            Object.defineProperty(
+                window.navigator,
+                'platform',
+                ((value: string) => {
+                    return {
+                        get: () => value,
+                        set: (v: string) => (value = v)
+                    };
+                })(originalPlatform)
+            );
             setup(async function() {
                 (window.navigator as any).platform = originalPlatform;
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
             });
-            teardown(() => (window.navigator as any).platform = originalPlatform);
+            teardown(() => ((window.navigator as any).platform = originalPlatform));
             test('Traverse cells by using ArrowUp and ArrowDown, k and j', async () => {
                 const keyCodesAndPositions = [
                     // When we press arrow down in the first cell, then second cell gets selected.
@@ -693,9 +775,10 @@ for _ in range(50):
                 }
             });
 
-            test('Pressing \'Enter\' on a selected cell, results in focus being set to the code', async () => {
+            test("Pressing 'Enter' on a selected cell, results in focus being set to the code", async () => {
                 // For some reason we cannot allow setting focus to monaco editor.
                 // Tests are known to fall over if allowed.
+                wrapper.update();
                 const editor = wrapper
                     .find(NativeCell)
                     .at(1)
@@ -712,7 +795,7 @@ for _ in range(50):
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
             });
 
-            test('Pressing \'Escape\' on a focused cell results in the cell being selected', async () => {
+            test("Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
                 // First focus the cell.
                 let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
@@ -733,7 +816,7 @@ for _ in range(50):
                 assert.equal(isCellFocused(wrapper, 'NativeCell', 1), false);
             });
 
-            test('Pressing \'Shift+Enter\' on a selected cell executes the cell and advances to the next cell', async () => {
+            test("Pressing 'Shift+Enter' on a selected cell executes the cell and advances to the next cell", async () => {
                 let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
                 simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
@@ -779,7 +862,7 @@ for _ in range(50):
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 3));
             });
 
-            test('Pressing \'Ctrl+Enter\' on a selected cell executes the cell and cell selection is not changed', async () => {
+            test("Pressing 'Ctrl+Enter' on a selected cell executes the cell and cell selection is not changed", async () => {
                 const update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 clickCell(1);
                 simulateKeyPressOnCell(1, { code: 'Enter', ctrlKey: true, editorInfo: undefined });
@@ -792,8 +875,9 @@ for _ in range(50):
                 assert.ok(isCellSelected(wrapper, 'NativeCell', 1));
             });
 
-            test('Pressing \'Alt+Enter\' on a selected cell adds a new cell below it', async () => {
+            test("Pressing 'Alt+Enter' on a selected cell adds a new cell below it", async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 const update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
@@ -808,11 +892,12 @@ for _ in range(50):
             });
 
             test('Auto brackets work', async () => {
+                wrapper.update();
                 // Initially 3 cells.
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 // Give focus
-                const update = waitForUpdate(wrapper, NativeEditor, 1);
+                let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
                 simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                 await update;
@@ -820,9 +905,20 @@ for _ in range(50):
                 // The first cell should be focused.
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
 
-                // Type in something with brackets
+                // Add cell
                 await addCell(wrapper, ioc, '', false);
+                assert.equal(wrapper.find('NativeCell').length, 4);
+
+                // Give focus
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                clickCell(2);
+                simulateKeyPressOnCell(3, { code: 'Enter', editorInfo: undefined });
+                await update;
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
+
                 const editorEnzyme = getNativeFocusedEditor(wrapper);
+
+                // Type in something with brackets
                 typeCode(editorEnzyme, 'a(');
 
                 // Verify cell content
@@ -833,8 +929,9 @@ for _ in range(50):
                 }
             });
 
-            test('Pressing \'d\' on a selected cell twice deletes the cell', async () => {
+            test("Pressing 'd' on a selected cell twice deletes the cell", async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 clickCell(2);
@@ -845,8 +942,9 @@ for _ in range(50):
                 assert.equal(wrapper.find('NativeCell').length, 2);
             });
 
-            test('Pressing \'a\' on a selected cell adds a cell at the current position', async () => {
+            test("Pressing 'a' on a selected cell adds a cell at the current position", async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 // const secondCell = wrapper.find('NativeCell').at(1);
@@ -865,8 +963,9 @@ for _ in range(50):
                 verifyCellIndex(wrapper, 'div[id="NotebookImport#2"]', 3);
             });
 
-            test('Pressing \'b\' on a selected cell adds a cell after the current position', async () => {
+            test("Pressing 'b' on a selected cell adds a cell after the current position", async () => {
                 // Initially 3 cells.
+                wrapper.update();
                 assert.equal(wrapper.find('NativeCell').length, 3);
 
                 clickCell(1);
@@ -910,7 +1009,7 @@ for _ in range(50):
                 verifyHtmlOnCell(wrapper, 'NativeCell', '<span>3</span>', 2);
             });
 
-            test('Toggle line numbers using the \'l\' key', async () => {
+            test("Toggle line numbers using the 'l' key", async () => {
                 clickCell(1);
 
                 const monacoEditorComponent = wrapper
@@ -932,7 +1031,7 @@ for _ in range(50):
                 assert.equal(optionsUpdated.lastCall.args[0].lineNumbers, 'off');
             });
 
-            test('Toggle markdown and code modes using \'y\' and \'m\' keys', async () => {
+            test("Toggle markdown and code modes using 'y' and 'm' keys", async () => {
                 clickCell(1);
 
                 // Switch to markdown
@@ -992,7 +1091,7 @@ for _ in range(50):
                 assert.equal('foo', monacoEditor.state.editor!.getValue(), 'Changing cell type lost input');
             });
 
-            test('Test undo using the key \'z\'', async () => {
+            test("Test undo using the key 'z'", async () => {
                 clickCell(0);
 
                 // Add, then undo, keep doing at least 3 times and confirm it works as expected.
@@ -1065,7 +1164,7 @@ for _ in range(50):
                 }
             });
 
-            test('Test save using the key \'ctrl+s\' on Windows', async () => {
+            test("Test save using the key 'ctrl+s' on Windows", async () => {
                 (window.navigator as any).platform = 'Win';
                 clickCell(0);
 
@@ -1084,7 +1183,7 @@ for _ in range(50):
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
             });
 
-            test('Test save using the key \'ctrl+s\' on Mac', async () => {
+            test("Test save using the key 'ctrl+s' on Mac", async () => {
                 (window.navigator as any).platform = 'Mac';
                 clickCell(0);
 
@@ -1102,7 +1201,7 @@ for _ in range(50):
                 assert.ok(editor!.isDirty, 'Editor be dirty as nothing got saved');
             });
 
-            test('Test save using the key \'cmd+s\' on a Mac', async () => {
+            test("Test save using the key 'cmd+s' on a Mac", async () => {
                 (window.navigator as any).platform = 'Mac';
 
                 clickCell(0);
@@ -1121,7 +1220,7 @@ for _ in range(50):
 
                 assert.ok(!editor!.isDirty, 'Editor should not be dirty after saving');
             });
-            test('Test save using the key \'cmd+s\' on a Windows', async () => {
+            test("Test save using the key 'cmd+s' on a Windows", async () => {
                 (window.navigator as any).platform = 'Win';
 
                 clickCell(0);
@@ -1144,7 +1243,6 @@ for _ in range(50):
 
         suite('Auto Save', () => {
             let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
-            let store: Redux.Store<IStore, Redux.AnyAction>;
             setup(async function() {
                 initIoc();
 
@@ -1154,33 +1252,8 @@ for _ in range(50):
 
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
-
-                store = wrapper.find(Provider).props().store;
-
             });
             teardown(() => sinon.restore());
-
-            /**
-             * Wait for notebook to be marked as dirty (within a timeout of 5s).
-             *
-             * @param {boolean} [dirty=true]
-             * @returns {Promise<void>}
-             */
-            async function waitForNotebookToBeDirty(): Promise<void> {
-                // Wait for the state to get updated.
-                await waitForCondition(async () => store.getState().main.dirty === true, 5_000, `Timeout waiting for dirty state to get updated to true`);
-            }
-
-            /**
-             * Wait for notebook to be marked as clean (within a timeout of 5s).
-             *
-             * @param {boolean} [dirty=true]
-             * @returns {Promise<void>}
-             */
-            async function waitForNotebookToBeClean(): Promise<void> {
-                // Wait for the state to get updated.
-                await waitForCondition(async () => store.getState().main.dirty === false, 5_000, `Timeout waiting for dirty state to get updated to false`);
-            }
 
             /**
              * Make some kind of a change to the notebook.
@@ -1205,14 +1278,16 @@ for _ in range(50):
                  */
                 async function makeChangesAndConfirmFileIsUpdated() {
                     const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                    const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                    const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                     await modifyNotebook();
-                    await waitForNotebookToBeDirty();
+                    await dirtyPromise;
 
                     // At this point a message should be sent to extension asking it to save.
                     // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                    await cleanPromise;
 
-                    await waitForNotebookToBeClean();
                     // Confirm file has been updated as well.
                     const newFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                     assert.notEqual(newFileContents, notebookFileContents);
@@ -1230,14 +1305,16 @@ for _ in range(50):
                 when(ioc.mockedWorkspaceConfig.get<number>('autoSaveDelay', anything())).thenReturn(2_000);
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath);
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                await cleanPromise;
 
-                await waitForNotebookToBeClean();
                 // Confirm file is not the same. There should be a single cell that's been added
                 const newFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
                 assert.notEqual(newFileContents, notebookFileContents);
@@ -1255,8 +1332,11 @@ for _ in range(50):
                 ioc.forceSettingsChanged(ioc.getSettings().pythonPath, { ...defaultDataScienceSettings(), showCellInputCode: false });
                 await promise;
 
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, { timeoutMs: 5_000 });
+
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Now that the notebook is dirty, change the active editor.
                 const docManager = ioc.get<IDocumentManager>(IDocumentManager) as MockDocumentManager;
@@ -1266,16 +1346,18 @@ for _ in range(50):
                 windowStateChangeHandlers.forEach(item => item({ focused: true }));
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
+                await expect(cleanPromise).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-            });
+            }).timeout(10_000);
 
             async function testAutoSavingWhenEditorFocusChanges(newEditor: TextEditor | undefined) {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when active editor changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onFocusChange');
@@ -1287,8 +1369,8 @@ for _ in range(50):
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                await cleanPromise;
 
-                await waitForNotebookToBeClean();
                 // Confirm file has been updated as well.
                 assert.notEqual(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
             }
@@ -1300,9 +1382,11 @@ for _ in range(50):
 
             test('Should not auto save notebook when active editor changes', async () => {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, { timeoutMs: 5_000 });
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when window state changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onWindowChange');
@@ -1314,16 +1398,18 @@ for _ in range(50):
                 docManager.didChangeActiveTextEditorEmitter.fire();
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
+                await expect(cleanPromise).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-            });
+            }).timeout(10_000);
 
             async function testAutoSavingWithChangesToWindowState(focused: boolean) {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean);
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when active editor changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onWindowChange');
@@ -1334,8 +1420,8 @@ for _ in range(50):
 
                 // At this point a message should be sent to extension asking it to save.
                 // After the save, the extension should send a message to react letting it know that it was saved successfully.
+                await cleanPromise;
 
-                await waitForNotebookToBeClean();
                 // Confirm file has been updated as well.
                 assert.notEqual(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
             }
@@ -1345,9 +1431,11 @@ for _ in range(50):
 
             test('Should not auto save notebook when window state changes', async () => {
                 const notebookFileContents = await fs.readFile(notebookFile.filePath, 'utf8');
+                const dirtyPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookDirty);
+                const cleanPromise = waitForMessage(ioc, InteractiveWindowMessages.NotebookClean, { timeoutMs: 5_000 });
 
                 await modifyNotebook();
-                await waitForNotebookToBeDirty();
+                await dirtyPromise;
 
                 // Configure notebook to save when active editor changes.
                 when(ioc.mockedWorkspaceConfig.get('autoSave', 'off')).thenReturn('onFocusChange');
@@ -1359,10 +1447,10 @@ for _ in range(50):
                 windowStateChangeHandlers.forEach(item => item({ focused: true }));
 
                 // Confirm the message is not clean, trying to wait for it to get saved will timeout (i.e. rejected).
-                await expect(waitForNotebookToBeClean()).to.eventually.be.rejected;
+                await expect(cleanPromise).to.eventually.be.rejected;
                 // Confirm file has not been updated as well.
                 assert.equal(await fs.readFile(notebookFile.filePath, 'utf8'), notebookFileContents);
-            });
+            }).timeout(10_000);
         });
 
         suite('Update Metadata', () => {
@@ -1382,19 +1470,14 @@ for _ in range(50):
                             outputs: [
                                 {
                                     data: {
-                                        'text/plain': [
-                                            '1'
-                                        ]
+                                        'text/plain': ['1']
                                     },
                                     output_type: 'execute_result',
                                     execution_count: 1,
                                     metadata: {}
                                 }
                             ],
-                            source: [
-                                'a=1\n',
-                                'a'
-                            ]
+                            source: ['a=1\n', 'a']
                         },
                         {
                             cell_type: 'code',
@@ -1403,19 +1486,14 @@ for _ in range(50):
                             outputs: [
                                 {
                                     data: {
-                                        'text/plain': [
-                                            '2'
-                                        ]
+                                        'text/plain': ['2']
                                     },
                                     output_type: 'execute_result',
                                     execution_count: 2,
                                     metadata: {}
                                 }
                             ],
-                            source: [
-                                'b=2\n',
-                                'b'
-                            ]
+                            source: ['b=2\n', 'b']
                         },
                         {
                             cell_type: 'code',
@@ -1424,19 +1502,14 @@ for _ in range(50):
                             outputs: [
                                 {
                                     data: {
-                                        'text/plain': [
-                                            '3'
-                                        ]
+                                        'text/plain': ['3']
                                     },
                                     output_type: 'execute_result',
                                     execution_count: 3,
                                     metadata: {}
                                 }
                             ],
-                            source: [
-                                'c=3\n',
-                                'c'
-                            ]
+                            source: ['c=3\n', 'c']
                         }
                     ],
                     metadata: {

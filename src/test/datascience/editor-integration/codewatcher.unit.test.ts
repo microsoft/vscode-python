@@ -47,11 +47,11 @@ suite('DataScience Code Watcher Unit Tests', () => {
     let debugLocationTracker: TypeMoq.IMock<IDebugLocationTracker>;
     let cellHashProvider: TypeMoq.IMock<ICellHashProvider>;
     const contexts: Map<string, boolean> = new Map<string, boolean>();
-    const pythonSettings = new class extends PythonSettings {
+    const pythonSettings = new (class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
         }
-    }(undefined, new MockAutoSelectionService());
+    })(undefined, new MockAutoSelectionService());
     const disposables: Disposable[] = [];
 
     setup(() => {
@@ -103,7 +103,20 @@ suite('DataScience Code Watcher Unit Tests', () => {
         fileSystem.setup(f => f.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
 
         const codeLensFactory = new CodeLensFactory(configService.object, cellHashProvider.object, fileSystem.object);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLensFactory));
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher)))
+            .returns(
+                () =>
+                    new CodeWatcher(
+                        interactiveWindowProvider.object,
+                        fileSystem.object,
+                        configService.object,
+                        documentManager.object,
+                        helper.object,
+                        dataScienceErrorHandler.object,
+                        codeLensFactory
+                    )
+            );
 
         // Setup our error handler
         dataScienceErrorHandler = TypeMoq.Mock.ofType<IDataScienceErrorHandler>();
@@ -117,16 +130,26 @@ suite('DataScience Code Watcher Unit Tests', () => {
         // Setup config service
         configService.setup(c => c.getSettings()).returns(() => pythonSettings);
 
-        commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((c, n, v) => {
-            if (c === 'setContext') {
-                contexts.set(n, v);
-            }
-            return Promise.resolve();
-        });
+        commandManager
+            .setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((c, n, v) => {
+                if (c === 'setContext') {
+                    contexts.set(n, v);
+                }
+                return Promise.resolve();
+            });
 
         const codeLens = new CodeLensFactory(configService.object, cellHashProvider.object, fileSystem.object);
 
-        codeWatcher = new CodeWatcher(interactiveWindowProvider.object, fileSystem.object, configService.object, documentManager.object, helper.object, dataScienceErrorHandler.object, codeLens);
+        codeWatcher = new CodeWatcher(
+            interactiveWindowProvider.object,
+            fileSystem.object,
+            configService.object,
+            documentManager.object,
+            helper.object,
+            dataScienceErrorHandler.object,
+            codeLens
+        );
     });
 
     function createTypeMoq<T>(tag: string): TypeMoq.IMock<T> {
@@ -218,8 +241,7 @@ suite('DataScience Code Watcher Unit Tests', () => {
     test('Add a file with multiple marks to a code watcher', () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `first line
+        const inputText = `first line
 second line
 
 #%%
@@ -249,8 +271,7 @@ fourth line`;
     test('Add a file with custom marks to a code watcher', () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `first line
+        const inputText = `first line
 second line
 
 # <foobar>
@@ -287,8 +308,7 @@ fourth line
     test('Make sure invalid regex from a user still work', () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `first line
+        const inputText = `first line
 second line
 
 # <codecell>
@@ -332,13 +352,20 @@ fourth line
         codeWatcher.setDocument(document.object);
 
         // Set up our expected call to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(testString),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.is((ed: TextEditor) => {
-                return textEditor.object === ed;
-            }),
-            TypeMoq.It.isAny())).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue(testString),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command
         await codeWatcher.runCell(testRange);
@@ -351,25 +378,25 @@ fourth line
     test('Test the RunFileInteractive command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
 
-        document.setup(doc => doc.getText()).returns(() => inputText).verifiable(TypeMoq.Times.exactly(1));
+        document
+            .setup(doc => doc.getText())
+            .returns(() => inputText)
+            .verifiable(TypeMoq.Times.exactly(1));
 
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
         // RunFileInteractive should run the entire file in one block, not cell by cell like RunAllCells
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(inputText),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(inputText), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runFileInteractive();
 
@@ -381,8 +408,7 @@ testing2`;
     test('Test the RunAllCells command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `testing0
+        const inputText = `testing0
 #%%
 testing1
 #%%
@@ -392,19 +418,15 @@ testing2`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('testing0\n#%%\ntesting1'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue('testing0\n#%%\ntesting1'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(3),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(3), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCells();
 
@@ -416,8 +438,7 @@ testing2`;
     test('Test the RunCurrentCell command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2`;
@@ -426,14 +447,20 @@ testing2`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
-            TypeMoq.It.is((ed: TextEditor) => {
-                return textEditor.object === ed;
-            }),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting2'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(2),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.selection).returns(() => new Selection(2, 0, 2, 0));
@@ -448,19 +475,16 @@ testing2`;
     test('Test the RunCellAndAllBelow command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2
 #%%
 testing3`;
-        const targetText1 =
-            `#%%
+        const targetText1 = `#%%
 testing2`;
 
-        const targetText2 =
-            `#%%
+        const targetText2 = `#%%
 testing3`;
 
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
@@ -468,19 +492,15 @@ testing3`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText1), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(4),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText2), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(4), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runCellAndAllBelow(2, 0);
 
@@ -492,21 +512,18 @@ testing3`;
     test('Test the RunAllCellsAbove command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `testing0
+        const inputText = `testing0
 #%%
 testing1
 #%%
 testing2
 #%%
 testing3`;
-        const targetText1 =
-            `testing0
+        const targetText1 = `testing0
 #%%
 testing1`;
 
-        const targetText2 =
-            `#%%
+        const targetText2 = `#%%
 testing2`;
 
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
@@ -514,19 +531,15 @@ testing2`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(1),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText1), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(1), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(3),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText2), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(3), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runAllCellsAbove(4, 0);
 
@@ -538,15 +551,13 @@ testing2`;
     test('Test the RunToLine command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2
 #%%
 testing3`;
-        const targetText =
-            `#%%
+        const targetText = `#%%
 testing1`;
 
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
@@ -554,12 +565,10 @@ testing1`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         await codeWatcher.runToLine(2);
 
@@ -571,8 +580,7 @@ testing1`;
     test('Test the RunToLine command with nothing on the lines', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `
+        const inputText = `
 
 print('testing')`;
 
@@ -581,13 +589,14 @@ print('testing')`;
         codeWatcher.setDocument(document.object);
 
         // If adding empty lines nothing should be added and history should not be started
-        interactiveWindowProvider.setup(h => h.getOrCreateActive()).returns(() => Promise.resolve(activeInteractiveWindow.object)).verifiable(TypeMoq.Times.never());
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isAny(),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isAnyNumber(),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.never());
+        interactiveWindowProvider
+            .setup(h => h.getOrCreateActive())
+            .returns(() => Promise.resolve(activeInteractiveWindow.object))
+            .verifiable(TypeMoq.Times.never());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isAny(), TypeMoq.It.isValue(fileName), TypeMoq.It.isAnyNumber(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.never());
 
         await codeWatcher.runToLine(2);
 
@@ -600,15 +609,13 @@ print('testing')`;
     test('Test the RunFromLine command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2
 #%%
 testing3`;
-        const targetText =
-            `#%%
+        const targetText = `#%%
 testing2
 #%%
 testing3`;
@@ -618,12 +625,10 @@ testing3`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         // Try our RunCell command with the first selection point
         await codeWatcher.runFromLine(2);
@@ -636,28 +641,39 @@ testing3`;
     test('Test the RunSelection command', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
 
         codeWatcher.setDocument(document.object);
-        helper.setup(h => h.getSelectedTextToExecute(TypeMoq.It.is((ed: TextEditor) => {
-            return textEditor.object === ed;
-        }))).returns(() => Promise.resolve('testing2'));
+        helper
+            .setup(h =>
+                h.getSelectedTextToExecute(
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    })
+                )
+            )
+            .returns(() => Promise.resolve('testing2'));
         helper.setup(h => h.normalizeLines(TypeMoq.It.isAny())).returns(() => Promise.resolve('testing2'));
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('testing2'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(3),
-            TypeMoq.It.is((ed: TextEditor) => {
-                return textEditor.object === ed;
-            }),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('testing2'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(3),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         textEditor.setup(te => te.document).returns(() => document.object);
@@ -674,8 +690,7 @@ testing2`;
     test('Test the RunCellAndAdvance command with next cell', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2`;
@@ -684,14 +699,20 @@ testing2`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting1'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.is((ed: TextEditor) => {
-                return textEditor.object === ed;
-            }),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h =>
+                h.addCode(
+                    TypeMoq.It.isValue('#%%\ntesting1'),
+                    TypeMoq.It.isValue(fileName),
+                    TypeMoq.It.isValue(0),
+                    TypeMoq.It.is((ed: TextEditor) => {
+                        return textEditor.object === ed;
+                    }),
+                    TypeMoq.It.isAny()
+                )
+            )
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.once());
 
         // For this test we need to set up a document selection point
         const selection = new Selection(0, 0, 0, 0);
@@ -730,7 +751,16 @@ testing2`;
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce());
         document.setup(doc => doc.getText()).returns(() => inputText);
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
-        const codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, debugLocationTracker.object, documentManager.object, configService.object, commandManager.object, disposables, debugService.object, fileSystem.object);
+        const codeLensProvider = new DataScienceCodeLensProvider(
+            serviceContainer.object,
+            debugLocationTracker.object,
+            documentManager.object,
+            configService.object,
+            commandManager.object,
+            disposables,
+            debugService.object,
+            fileSystem.object
+        );
 
         let result = codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
         expect(result, 'result not okay').to.be.ok;
@@ -754,25 +784,21 @@ testing2`;
         expect(result, 'result not okay').to.be.ok;
         codeLens = result as CodeLens[];
         expect(codeLens.length).to.equal(3, 'Code lens wrong length - final');
-
     });
 
     test('Test the RunAllCellsAbove command with an error', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2
 #%%
 testing3`;
-        const targetText1 =
-            `#%%
+        const targetText1 = `#%%
 testing1`;
 
-        const targetText2 =
-            `#%%
+        const targetText2 = `#%%
 testing2`;
 
         const document = createDocument(inputText, fileName, version, TypeMoq.Times.atLeastOnce(), true);
@@ -780,19 +806,15 @@ testing2`;
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText1),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText1), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
 
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue(targetText2),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.never());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue(targetText2), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.never());
 
         await codeWatcher.runAllCellsAbove(4, 0);
 
@@ -804,8 +826,7 @@ testing2`;
     test('Test the RunAllCells command with an error', async () => {
         const fileName = Uri.file('test.py').fsPath;
         const version = 1;
-        const inputText =
-            `#%%
+        const inputText = `#%%
 testing1
 #%%
 testing2`; // Command tests override getText, so just need the ranges here
@@ -814,19 +835,15 @@ testing2`; // Command tests override getText, so just need the ranges here
         codeWatcher.setDocument(document.object);
 
         // Set up our expected calls to add code
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting1'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(0),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting1'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(0), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(false))
+            .verifiable(TypeMoq.Times.once());
 
-        activeInteractiveWindow.setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'),
-            TypeMoq.It.isValue(fileName),
-            TypeMoq.It.isValue(2),
-            TypeMoq.It.isAny(),
-            TypeMoq.It.isAny()
-        )).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.never());
+        activeInteractiveWindow
+            .setup(h => h.addCode(TypeMoq.It.isValue('#%%\ntesting2'), TypeMoq.It.isValue(fileName), TypeMoq.It.isValue(2), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(true))
+            .verifiable(TypeMoq.Times.never());
 
         await codeWatcher.runAllCells();
 

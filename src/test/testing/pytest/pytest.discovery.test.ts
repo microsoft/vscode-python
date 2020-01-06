@@ -9,7 +9,13 @@ import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { ExecutionFactoryCreateWithEnvironmentOptions, IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    IBufferDecoder,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
@@ -43,18 +49,20 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     @injectable()
     class ExecutionFactory extends PythonExecutionFactory {
-        constructor(@inject(IServiceContainer) private readonly _serviceContainer: IServiceContainer,
+        constructor(
+            @inject(IServiceContainer) private readonly _serviceContainer: IServiceContainer,
             @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
             @inject(ICondaService) condaService: ICondaService,
             @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
-            @inject(IBufferDecoder) decoder: IBufferDecoder) {
+            @inject(IBufferDecoder) decoder: IBufferDecoder
+        ) {
             super(_serviceContainer, activationHelper, processServiceFactory, _configService, condaService, decoder, windowsStoreInterpreter);
         }
         public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
             const pythonPath = options.interpreter ? options.interpreter.path : this._configService.getSettings(options.resource).pythonPath;
-            const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+            const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
             return new PythonExecutionService(this._serviceContainer, procService, pythonPath);
         }
     }
@@ -90,7 +98,7 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     }
 
     async function injectTestDiscoveryOutput(output: string) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExec((_file, args, _options, callback) => {
             if (args.indexOf('discover') >= 0 && args.indexOf('pytest') >= 0) {
                 callback({
@@ -101,90 +109,93 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
     }
 
     test('Discover Tests (single test file)', async () => {
-        await injectTestDiscoveryOutput(JSON.stringify([
-            {
-                rootid: '.',
-                root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/single',
-                parents: [
-                    {
-                        id: './test_root.py',
-                        kind: 'file',
-                        name: 'test_root.py',
-                        relpath: './test_root.py',
-                        parentid: '.'
-                    },
-                    {
-                        id: './test_root.py::Test_Root_test1',
-                        kind: 'suite',
-                        name: 'Test_Root_test1',
-                        parentid: './test_root.py'
-                    },
-                    {
-                        id: './tests',
-                        kind: 'folder',
-                        name: 'tests',
-                        relpath: './tests',
-                        parentid: '.'
-                    },
-                    {
-                        id: './tests/test_one.py',
-                        kind: 'file',
-                        name: 'test_one.py',
-                        relpath: './tests/test_one.py',
-                        parentid: './tests'
-                    },
-                    {
-                        id: './tests/test_one.py::Test_test1',
-                        kind: 'suite',
-                        name: 'Test_test1',
-                        parentid: './tests/test_one.py'
-                    }
-                ],
-                tests: [
-                    {
-                        id: './test_root.py::Test_Root_test1::test_Root_A',
-                        name: 'test_Root_A',
-                        source: './test_root.py:6',
-                        markers: [],
-                        parentid: './test_root.py::Test_Root_test1'
-                    },
-                    {
-                        id: './test_root.py::Test_Root_test1::test_Root_B',
-                        name: 'test_Root_B',
-                        source: './test_root.py:9',
-                        markers: [],
-                        parentid: './test_root.py::Test_Root_test1'
-                    },
-                    {
-                        id: './test_root.py::Test_Root_test1::test_Root_c',
-                        name: 'test_Root_c',
-                        source: './test_root.py:12',
-                        markers: [],
-                        parentid: './test_root.py::Test_Root_test1'
-                    },
-                    {
-                        id: './tests/test_one.py::Test_test1::test_A',
-                        name: 'test_A',
-                        source: 'tests/test_one.py:6',
-                        markers: [],
-                        parentid: './tests/test_one.py::Test_test1'
-                    },
-                    {
-                        id: './tests/test_one.py::Test_test1::test_B',
-                        name: 'test_B',
-                        source: 'tests/test_one.py:9',
-                        markers: [],
-                        parentid: './tests/test_one.py::Test_test1'
-                    },
-                    {
-                        id: './tests/test_one.py::Test_test1::test_c',
-                        name: 'test_c',
-                        source: 'tests/test_one.py:12',
-                        markers: [],
-                        parentid: './tests/test_one.py::Test_test1'
-                    }
-                ]
-            }]));
+        await injectTestDiscoveryOutput(
+            JSON.stringify([
+                {
+                    rootid: '.',
+                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/single',
+                    parents: [
+                        {
+                            id: './test_root.py',
+                            kind: 'file',
+                            name: 'test_root.py',
+                            relpath: './test_root.py',
+                            parentid: '.'
+                        },
+                        {
+                            id: './test_root.py::Test_Root_test1',
+                            kind: 'suite',
+                            name: 'Test_Root_test1',
+                            parentid: './test_root.py'
+                        },
+                        {
+                            id: './tests',
+                            kind: 'folder',
+                            name: 'tests',
+                            relpath: './tests',
+                            parentid: '.'
+                        },
+                        {
+                            id: './tests/test_one.py',
+                            kind: 'file',
+                            name: 'test_one.py',
+                            relpath: './tests/test_one.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_one.py::Test_test1',
+                            kind: 'suite',
+                            name: 'Test_test1',
+                            parentid: './tests/test_one.py'
+                        }
+                    ],
+                    tests: [
+                        {
+                            id: './test_root.py::Test_Root_test1::test_Root_A',
+                            name: 'test_Root_A',
+                            source: './test_root.py:6',
+                            markers: [],
+                            parentid: './test_root.py::Test_Root_test1'
+                        },
+                        {
+                            id: './test_root.py::Test_Root_test1::test_Root_B',
+                            name: 'test_Root_B',
+                            source: './test_root.py:9',
+                            markers: [],
+                            parentid: './test_root.py::Test_Root_test1'
+                        },
+                        {
+                            id: './test_root.py::Test_Root_test1::test_Root_c',
+                            name: 'test_Root_c',
+                            source: './test_root.py:12',
+                            markers: [],
+                            parentid: './test_root.py::Test_Root_test1'
+                        },
+                        {
+                            id: './tests/test_one.py::Test_test1::test_A',
+                            name: 'test_A',
+                            source: 'tests/test_one.py:6',
+                            markers: [],
+                            parentid: './tests/test_one.py::Test_test1'
+                        },
+                        {
+                            id: './tests/test_one.py::Test_test1::test_B',
+                            name: 'test_B',
+                            source: 'tests/test_one.py:9',
+                            markers: [],
+                            parentid: './tests/test_one.py::Test_test1'
+                        },
+                        {
+                            id: './tests/test_one.py::Test_test1::test_c',
+                            name: 'test_c',
+                            source: 'tests/test_one.py:12',
+                            markers: [],
+                            parentid: './tests/test_one.py::Test_test1'
+                        }
+                    ]
+                }
+            ])
+        );
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_SINGLE_TEST_FILE_PATH);
         const tests = await testManager.discoverTests(CommandSource.ui, true, true);
@@ -196,385 +207,396 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 6, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 2, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_one.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_root.py'), true, 'Test File not found');
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_one.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_root.py'),
+            true,
+            'Test File not found'
+        );
     });
 
     test('Discover Tests (pattern = test_)', async () => {
-        await injectTestDiscoveryOutput(JSON.stringify([{
-            rootid: '.',
-            root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
-            parents: [
+        await injectTestDiscoveryOutput(
+            JSON.stringify([
                 {
-                    id: './test_root.py',
-                    relpath: './test_root.py',
-                    kind: 'file',
-                    name: 'test_root.py',
-                    parentid: '.'
-                },
-                {
-                    id: './test_root.py::Test_Root_test1',
-                    kind: 'suite',
-                    name: 'Test_Root_test1',
-                    parentid: './test_root.py'
-                },
-                {
-                    id: './tests',
-                    relpath: './tests',
-                    kind: 'folder',
-                    name: 'tests',
-                    parentid: '.'
-                },
-                {
-                    id: './tests/test_another_pytest.py',
-                    relpath: './tests/test_another_pytest.py',
-                    kind: 'file',
-                    name: 'test_another_pytest.py',
-                    parentid: './tests'
-                },
-                {
-                    id: './tests/test_another_pytest.py::test_parametrized_username',
-                    kind: 'function',
-                    name: 'test_parametrized_username',
-                    parentid: './tests/test_another_pytest.py'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py',
-                    relpath: './tests/test_foreign_nested_tests.py',
-                    kind: 'file',
-                    name: 'test_foreign_nested_tests.py',
-                    parentid: './tests'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests',
-                    kind: 'suite',
-                    name: 'TestNestedForeignTests',
-                    parentid: './tests/test_foreign_nested_tests.py'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere',
-                    kind: 'suite',
-                    name: 'TestInheritingHere',
-                    parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests',
-                    kind: 'suite',
-                    name: 'TestExtraNestedForeignTests',
-                    parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
-                },
-                {
-                    id: './tests/test_pytest.py',
-                    relpath: './tests/test_pytest.py',
-                    kind: 'file',
-                    name: 'test_pytest.py',
-                    parentid: './tests'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp',
-                    kind: 'suite',
-                    name: 'Test_CheckMyApp',
-                    parentid: './tests/test_pytest.py'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA',
-                    kind: 'suite',
-                    name: 'Test_NestedClassA',
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A',
-                    kind: 'suite',
-                    name: 'Test_nested_classB_Of_A',
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
-                },
-                {
-                    id: './tests/test_pytest.py::test_parametrized_username',
-                    kind: 'function',
-                    name: 'test_parametrized_username',
-                    parentid: './tests/test_pytest.py'
-                },
-                {
-                    id: './tests/test_unittest_one.py',
-                    relpath: './tests/test_unittest_one.py',
-                    kind: 'file',
-                    name: 'test_unittest_one.py',
-                    parentid: './tests'
-                },
-                {
-                    id: './tests/test_unittest_one.py::Test_test1',
-                    kind: 'suite',
-                    name: 'Test_test1',
-                    parentid: './tests/test_unittest_one.py'
-                },
-                {
-                    id: './tests/test_unittest_two.py',
-                    relpath: './tests/test_unittest_two.py',
-                    kind: 'file',
-                    name: 'test_unittest_two.py',
-                    parentid: './tests'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2',
-                    kind: 'suite',
-                    name: 'Test_test2',
-                    parentid: './tests/test_unittest_two.py'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2a',
-                    kind: 'suite',
-                    name: 'Test_test2a',
-                    parentid: './tests/test_unittest_two.py'
-                },
-                {
-                    id: './tests/unittest_three_test.py',
-                    relpath: './tests/unittest_three_test.py',
-                    kind: 'file',
-                    name: 'unittest_three_test.py',
-                    parentid: './tests'
-                },
-                {
-                    id: './tests/unittest_three_test.py::Test_test3',
-                    kind: 'suite',
-                    name: 'Test_test3',
-                    parentid: './tests/unittest_three_test.py'
+                    rootid: '.',
+                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
+                    parents: [
+                        {
+                            id: './test_root.py',
+                            relpath: './test_root.py',
+                            kind: 'file',
+                            name: 'test_root.py',
+                            parentid: '.'
+                        },
+                        {
+                            id: './test_root.py::Test_Root_test1',
+                            kind: 'suite',
+                            name: 'Test_Root_test1',
+                            parentid: './test_root.py'
+                        },
+                        {
+                            id: './tests',
+                            relpath: './tests',
+                            kind: 'folder',
+                            name: 'tests',
+                            parentid: '.'
+                        },
+                        {
+                            id: './tests/test_another_pytest.py',
+                            relpath: './tests/test_another_pytest.py',
+                            kind: 'file',
+                            name: 'test_another_pytest.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_another_pytest.py::test_parametrized_username',
+                            kind: 'function',
+                            name: 'test_parametrized_username',
+                            parentid: './tests/test_another_pytest.py'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py',
+                            relpath: './tests/test_foreign_nested_tests.py',
+                            kind: 'file',
+                            name: 'test_foreign_nested_tests.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests',
+                            kind: 'suite',
+                            name: 'TestNestedForeignTests',
+                            parentid: './tests/test_foreign_nested_tests.py'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere',
+                            kind: 'suite',
+                            name: 'TestInheritingHere',
+                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests',
+                            kind: 'suite',
+                            name: 'TestExtraNestedForeignTests',
+                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
+                        },
+                        {
+                            id: './tests/test_pytest.py',
+                            relpath: './tests/test_pytest.py',
+                            kind: 'file',
+                            name: 'test_pytest.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp',
+                            kind: 'suite',
+                            name: 'Test_CheckMyApp',
+                            parentid: './tests/test_pytest.py'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA',
+                            kind: 'suite',
+                            name: 'Test_NestedClassA',
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A',
+                            kind: 'suite',
+                            name: 'Test_nested_classB_Of_A',
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
+                        },
+                        {
+                            id: './tests/test_pytest.py::test_parametrized_username',
+                            kind: 'function',
+                            name: 'test_parametrized_username',
+                            parentid: './tests/test_pytest.py'
+                        },
+                        {
+                            id: './tests/test_unittest_one.py',
+                            relpath: './tests/test_unittest_one.py',
+                            kind: 'file',
+                            name: 'test_unittest_one.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_unittest_one.py::Test_test1',
+                            kind: 'suite',
+                            name: 'Test_test1',
+                            parentid: './tests/test_unittest_one.py'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py',
+                            relpath: './tests/test_unittest_two.py',
+                            kind: 'file',
+                            name: 'test_unittest_two.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2',
+                            kind: 'suite',
+                            name: 'Test_test2',
+                            parentid: './tests/test_unittest_two.py'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2a',
+                            kind: 'suite',
+                            name: 'Test_test2a',
+                            parentid: './tests/test_unittest_two.py'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py',
+                            relpath: './tests/unittest_three_test.py',
+                            kind: 'file',
+                            name: 'unittest_three_test.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py::Test_test3',
+                            kind: 'suite',
+                            name: 'Test_test3',
+                            parentid: './tests/unittest_three_test.py'
+                        }
+                    ],
+                    tests: [
+                        {
+                            id: './test_root.py::Test_Root_test1::test_Root_A',
+                            name: 'test_Root_A',
+                            source: './test_root.py:6',
+                            markers: [],
+                            parentid: './test_root.py::Test_Root_test1'
+                        },
+                        {
+                            id: './test_root.py::Test_Root_test1::test_Root_B',
+                            name: 'test_Root_B',
+                            source: './test_root.py:9',
+                            markers: [],
+                            parentid: './test_root.py::Test_Root_test1'
+                        },
+                        {
+                            id: './test_root.py::Test_Root_test1::test_Root_c',
+                            name: 'test_Root_c',
+                            source: './test_root.py:12',
+                            markers: [],
+                            parentid: './test_root.py::Test_Root_test1'
+                        },
+                        {
+                            id: './tests/test_another_pytest.py::test_username',
+                            name: 'test_username',
+                            source: 'tests/test_another_pytest.py:12',
+                            markers: [],
+                            parentid: './tests/test_another_pytest.py'
+                        },
+                        {
+                            id: './tests/test_another_pytest.py::test_parametrized_username[one]',
+                            name: 'test_parametrized_username[one]',
+                            source: 'tests/test_another_pytest.py:15',
+                            markers: [],
+                            parentid: './tests/test_another_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './tests/test_another_pytest.py::test_parametrized_username[two]',
+                            name: 'test_parametrized_username[two]',
+                            source: 'tests/test_another_pytest.py:15',
+                            markers: [],
+                            parentid: './tests/test_another_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './tests/test_another_pytest.py::test_parametrized_username[three]',
+                            name: 'test_parametrized_username[three]',
+                            source: 'tests/test_another_pytest.py:15',
+                            markers: [],
+                            parentid: './tests/test_another_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
+                            name: 'test_super_deep_foreign',
+                            source: 'tests/external.py:2',
+                            markers: [],
+                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
+                            name: 'test_foreign_test',
+                            source: 'tests/external.py:4',
+                            markers: [],
+                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
+                            name: 'test_nested_normal',
+                            source: 'tests/test_foreign_nested_tests.py:5',
+                            markers: [],
+                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
+                        },
+                        {
+                            id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::test_normal',
+                            name: 'test_normal',
+                            source: 'tests/test_foreign_nested_tests.py:7',
+                            markers: [],
+                            parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::test_simple_check',
+                            name: 'test_simple_check',
+                            source: 'tests/test_pytest.py:6',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::test_complex_check',
+                            name: 'test_complex_check',
+                            source: 'tests/test_pytest.py:9',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB',
+                            name: 'test_nested_class_methodB',
+                            source: 'tests/test_pytest.py:13',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
+                            name: 'test_d',
+                            source: 'tests/test_pytest.py:16',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
+                            name: 'test_nested_class_methodC',
+                            source: 'tests/test_pytest.py:18',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::test_simple_check2',
+                            name: 'test_simple_check2',
+                            source: 'tests/test_pytest.py:21',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './tests/test_pytest.py::Test_CheckMyApp::test_complex_check2',
+                            name: 'test_complex_check2',
+                            source: 'tests/test_pytest.py:23',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './tests/test_pytest.py::test_username',
+                            name: 'test_username',
+                            source: 'tests/test_pytest.py:35',
+                            markers: [],
+                            parentid: './tests/test_pytest.py'
+                        },
+                        {
+                            id: './tests/test_pytest.py::test_parametrized_username[one]',
+                            name: 'test_parametrized_username[one]',
+                            source: 'tests/test_pytest.py:38',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './tests/test_pytest.py::test_parametrized_username[two]',
+                            name: 'test_parametrized_username[two]',
+                            source: 'tests/test_pytest.py:38',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './tests/test_pytest.py::test_parametrized_username[three]',
+                            name: 'test_parametrized_username[three]',
+                            source: 'tests/test_pytest.py:38',
+                            markers: [],
+                            parentid: './tests/test_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './tests/test_unittest_one.py::Test_test1::test_A',
+                            name: 'test_A',
+                            source: 'tests/test_unittest_one.py:6',
+                            markers: [],
+                            parentid: './tests/test_unittest_one.py::Test_test1'
+                        },
+                        {
+                            id: './tests/test_unittest_one.py::Test_test1::test_B',
+                            name: 'test_B',
+                            source: 'tests/test_unittest_one.py:9',
+                            markers: [],
+                            parentid: './tests/test_unittest_one.py::Test_test1'
+                        },
+                        {
+                            id: './tests/test_unittest_one.py::Test_test1::test_c',
+                            name: 'test_c',
+                            source: 'tests/test_unittest_one.py:12',
+                            markers: [],
+                            parentid: './tests/test_unittest_one.py::Test_test1'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2::test_A2',
+                            name: 'test_A2',
+                            source: 'tests/test_unittest_two.py:3',
+                            markers: [],
+                            parentid: './tests/test_unittest_two.py::Test_test2'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2::test_B2',
+                            name: 'test_B2',
+                            source: 'tests/test_unittest_two.py:6',
+                            markers: [],
+                            parentid: './tests/test_unittest_two.py::Test_test2'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2::test_C2',
+                            name: 'test_C2',
+                            source: 'tests/test_unittest_two.py:9',
+                            markers: [],
+                            parentid: './tests/test_unittest_two.py::Test_test2'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2::test_D2',
+                            name: 'test_D2',
+                            source: 'tests/test_unittest_two.py:12',
+                            markers: [],
+                            parentid: './tests/test_unittest_two.py::Test_test2'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2a::test_222A2',
+                            name: 'test_222A2',
+                            source: 'tests/test_unittest_two.py:17',
+                            markers: [],
+                            parentid: './tests/test_unittest_two.py::Test_test2a'
+                        },
+                        {
+                            id: './tests/test_unittest_two.py::Test_test2a::test_222B2',
+                            name: 'test_222B2',
+                            source: 'tests/test_unittest_two.py:20',
+                            markers: [],
+                            parentid: './tests/test_unittest_two.py::Test_test2a'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py::Test_test3::test_A',
+                            name: 'test_A',
+                            source: 'tests/unittest_three_test.py:4',
+                            markers: [],
+                            parentid: './tests/unittest_three_test.py::Test_test3'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py::Test_test3::test_B',
+                            name: 'test_B',
+                            source: 'tests/unittest_three_test.py:7',
+                            markers: [],
+                            parentid: './tests/unittest_three_test.py::Test_test3'
+                        }
+                    ]
                 }
-            ],
-            tests: [
-                {
-                    id: './test_root.py::Test_Root_test1::test_Root_A',
-                    name: 'test_Root_A',
-                    source: './test_root.py:6',
-                    markers: [],
-                    parentid: './test_root.py::Test_Root_test1'
-                },
-                {
-                    id: './test_root.py::Test_Root_test1::test_Root_B',
-                    name: 'test_Root_B',
-                    source: './test_root.py:9',
-                    markers: [],
-                    parentid: './test_root.py::Test_Root_test1'
-                },
-                {
-                    id: './test_root.py::Test_Root_test1::test_Root_c',
-                    name: 'test_Root_c',
-                    source: './test_root.py:12',
-                    markers: [],
-                    parentid: './test_root.py::Test_Root_test1'
-                },
-                {
-                    id: './tests/test_another_pytest.py::test_username',
-                    name: 'test_username',
-                    source: 'tests/test_another_pytest.py:12',
-                    markers: [],
-                    parentid: './tests/test_another_pytest.py'
-                },
-                {
-                    id: './tests/test_another_pytest.py::test_parametrized_username[one]',
-                    name: 'test_parametrized_username[one]',
-                    source: 'tests/test_another_pytest.py:15',
-                    markers: [],
-                    parentid: './tests/test_another_pytest.py::test_parametrized_username'
-                },
-                {
-                    id: './tests/test_another_pytest.py::test_parametrized_username[two]',
-                    name: 'test_parametrized_username[two]',
-                    source: 'tests/test_another_pytest.py:15',
-                    markers: [],
-                    parentid: './tests/test_another_pytest.py::test_parametrized_username'
-                },
-                {
-                    id: './tests/test_another_pytest.py::test_parametrized_username[three]',
-                    name: 'test_parametrized_username[three]',
-                    source: 'tests/test_another_pytest.py:15',
-                    markers: [],
-                    parentid: './tests/test_another_pytest.py::test_parametrized_username'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests::test_super_deep_foreign',
-                    name: 'test_super_deep_foreign',
-                    source: 'tests/external.py:2',
-                    markers: [],
-                    parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::TestExtraNestedForeignTests'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_foreign_test',
-                    name: 'test_foreign_test',
-                    source: 'tests/external.py:4',
-                    markers: [],
-                    parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere::test_nested_normal',
-                    name: 'test_nested_normal',
-                    source: 'tests/test_foreign_nested_tests.py:5',
-                    markers: [],
-                    parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::TestInheritingHere'
-                },
-                {
-                    id: './tests/test_foreign_nested_tests.py::TestNestedForeignTests::test_normal',
-                    name: 'test_normal',
-                    source: 'tests/test_foreign_nested_tests.py:7',
-                    markers: [],
-                    parentid: './tests/test_foreign_nested_tests.py::TestNestedForeignTests'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::test_simple_check',
-                    name: 'test_simple_check',
-                    source: 'tests/test_pytest.py:6',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::test_complex_check',
-                    name: 'test_complex_check',
-                    source: 'tests/test_pytest.py:9',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB',
-                    name: 'test_nested_class_methodB',
-                    source: 'tests/test_pytest.py:13',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
-                    name: 'test_d',
-                    source: 'tests/test_pytest.py:16',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
-                    name: 'test_nested_class_methodC',
-                    source: 'tests/test_pytest.py:18',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::test_simple_check2',
-                    name: 'test_simple_check2',
-                    source: 'tests/test_pytest.py:21',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp'
-                },
-                {
-                    id: './tests/test_pytest.py::Test_CheckMyApp::test_complex_check2',
-                    name: 'test_complex_check2',
-                    source: 'tests/test_pytest.py:23',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::Test_CheckMyApp'
-                },
-                {
-                    id: './tests/test_pytest.py::test_username',
-                    name: 'test_username',
-                    source: 'tests/test_pytest.py:35',
-                    markers: [],
-                    parentid: './tests/test_pytest.py'
-                },
-                {
-                    id: './tests/test_pytest.py::test_parametrized_username[one]',
-                    name: 'test_parametrized_username[one]',
-                    source: 'tests/test_pytest.py:38',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::test_parametrized_username'
-                },
-                {
-                    id: './tests/test_pytest.py::test_parametrized_username[two]',
-                    name: 'test_parametrized_username[two]',
-                    source: 'tests/test_pytest.py:38',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::test_parametrized_username'
-                },
-                {
-                    id: './tests/test_pytest.py::test_parametrized_username[three]',
-                    name: 'test_parametrized_username[three]',
-                    source: 'tests/test_pytest.py:38',
-                    markers: [],
-                    parentid: './tests/test_pytest.py::test_parametrized_username'
-                },
-                {
-                    id: './tests/test_unittest_one.py::Test_test1::test_A',
-                    name: 'test_A',
-                    source: 'tests/test_unittest_one.py:6',
-                    markers: [],
-                    parentid: './tests/test_unittest_one.py::Test_test1'
-                },
-                {
-                    id: './tests/test_unittest_one.py::Test_test1::test_B',
-                    name: 'test_B',
-                    source: 'tests/test_unittest_one.py:9',
-                    markers: [],
-                    parentid: './tests/test_unittest_one.py::Test_test1'
-                },
-                {
-                    id: './tests/test_unittest_one.py::Test_test1::test_c',
-                    name: 'test_c',
-                    source: 'tests/test_unittest_one.py:12',
-                    markers: [],
-                    parentid: './tests/test_unittest_one.py::Test_test1'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2::test_A2',
-                    name: 'test_A2',
-                    source: 'tests/test_unittest_two.py:3',
-                    markers: [],
-                    parentid: './tests/test_unittest_two.py::Test_test2'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2::test_B2',
-                    name: 'test_B2',
-                    source: 'tests/test_unittest_two.py:6',
-                    markers: [],
-                    parentid: './tests/test_unittest_two.py::Test_test2'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2::test_C2',
-                    name: 'test_C2',
-                    source: 'tests/test_unittest_two.py:9',
-                    markers: [],
-                    parentid: './tests/test_unittest_two.py::Test_test2'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2::test_D2',
-                    name: 'test_D2',
-                    source: 'tests/test_unittest_two.py:12',
-                    markers: [],
-                    parentid: './tests/test_unittest_two.py::Test_test2'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2a::test_222A2',
-                    name: 'test_222A2',
-                    source: 'tests/test_unittest_two.py:17',
-                    markers: [],
-                    parentid: './tests/test_unittest_two.py::Test_test2a'
-                },
-                {
-                    id: './tests/test_unittest_two.py::Test_test2a::test_222B2',
-                    name: 'test_222B2',
-                    source: 'tests/test_unittest_two.py:20',
-                    markers: [],
-                    parentid: './tests/test_unittest_two.py::Test_test2a'
-                },
-                {
-                    id: './tests/unittest_three_test.py::Test_test3::test_A',
-                    name: 'test_A',
-                    source: 'tests/unittest_three_test.py:4',
-                    markers: [],
-                    parentid: './tests/unittest_three_test.py::Test_test3'
-                },
-                {
-                    id: './tests/unittest_three_test.py::Test_test3::test_B',
-                    name: 'test_B',
-                    source: 'tests/unittest_three_test.py:7',
-                    markers: [],
-                    parentid: './tests/unittest_three_test.py::Test_test3'
-                }
-            ]
-        }
-        ]));
+            ])
+        );
         await updateSetting('testing.pytestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
@@ -587,61 +609,90 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 7, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 33, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 11, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_foreign_nested_tests.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_one.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_two.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'unittest_three_test.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_pytest.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_another_pytest.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_root.py'), true, 'Test File not found');
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_foreign_nested_tests.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_unittest_one.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_unittest_two.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'unittest_three_test.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_pytest.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_another_pytest.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_root.py'),
+            true,
+            'Test File not found'
+        );
     });
 
     test('Discover Tests (pattern = _test)', async () => {
-        await injectTestDiscoveryOutput(JSON.stringify([
-            {
-                rootid: '.',
-                root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
-                parents: [
-                    {
-                        id: './tests',
-                        kind: 'folder',
-                        name: 'tests',
-                        relpath: './tests',
-                        parentid: '.'
-                    },
-                    {
-                        id: './tests/unittest_three_test.py',
-                        kind: 'file',
-                        name: 'unittest_three_test.py',
-                        relpath: './tests/unittest_three_test.py',
-                        parentid: './tests'
-                    },
-                    {
-                        id: './tests/unittest_three_test.py::Test_test3',
-                        kind: 'suite',
-                        name: 'Test_test3',
-                        parentid: './tests/unittest_three_test.py'
-                    }
-                ],
-                tests: [
-                    {
-                        id: './tests/unittest_three_test.py::Test_test3::test_A',
-                        name: 'test_A',
-                        source: 'tests/unittest_three_test.py:4',
-                        markers: [],
-                        parentid: './tests/unittest_three_test.py::Test_test3'
-                    },
-                    {
-                        id: './tests/unittest_three_test.py::Test_test3::test_B',
-                        name: 'test_B',
-                        source: 'tests/unittest_three_test.py:7',
-                        markers: [],
-                        parentid: './tests/unittest_three_test.py::Test_test3'
-                    }
-                ]
-            }
-        ]
-        ));
+        await injectTestDiscoveryOutput(
+            JSON.stringify([
+                {
+                    rootid: '.',
+                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/standard',
+                    parents: [
+                        {
+                            id: './tests',
+                            kind: 'folder',
+                            name: 'tests',
+                            relpath: './tests',
+                            parentid: '.'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py',
+                            kind: 'file',
+                            name: 'unittest_three_test.py',
+                            relpath: './tests/unittest_three_test.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py::Test_test3',
+                            kind: 'suite',
+                            name: 'Test_test3',
+                            parentid: './tests/unittest_three_test.py'
+                        }
+                    ],
+                    tests: [
+                        {
+                            id: './tests/unittest_three_test.py::Test_test3::test_A',
+                            name: 'test_A',
+                            source: 'tests/unittest_three_test.py:4',
+                            markers: [],
+                            parentid: './tests/unittest_three_test.py::Test_test3'
+                        },
+                        {
+                            id: './tests/unittest_three_test.py::Test_test3::test_B',
+                            name: 'test_B',
+                            source: 'tests/unittest_three_test.py:7',
+                            markers: [],
+                            parentid: './tests/unittest_three_test.py::Test_test3'
+                        }
+                    ]
+                }
+            ])
+        );
         await updateSetting('testing.pytestArgs', ['-k=_test.py'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
@@ -654,170 +705,175 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 1, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 2, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 1, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'unittest_three_test.py'), true, 'Test File not found');
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'unittest_three_test.py'),
+            true,
+            'Test File not found'
+        );
     });
 
     test('Discover Tests (with config)', async () => {
-        await injectTestDiscoveryOutput(JSON.stringify([
-            {
-                rootid: '.',
-                root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs',
-                parents: [
-                    {
-                        id: './other',
-                        relpath: './other',
-                        kind: 'folder',
-                        name: 'other',
-                        parentid: '.'
-                    },
-                    {
-                        id: './other/test_pytest.py',
-                        relpath: './other/test_pytest.py',
-                        kind: 'file',
-                        name: 'test_pytest.py',
-                        parentid: './other'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp',
-                        kind: 'suite',
-                        name: 'Test_CheckMyApp',
-                        parentid: './other/test_pytest.py'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA',
-                        kind: 'suite',
-                        name: 'Test_NestedClassA',
-                        parentid: './other/test_pytest.py::Test_CheckMyApp'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A',
-                        kind: 'suite',
-                        name: 'Test_nested_classB_Of_A',
-                        parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
-                    },
-                    {
-                        id: './other/test_pytest.py::test_parametrized_username',
-                        kind: 'function',
-                        name: 'test_parametrized_username',
-                        parentid: './other/test_pytest.py'
-                    },
-                    {
-                        id: './other/test_unittest_one.py',
-                        relpath: './other/test_unittest_one.py',
-                        kind: 'file',
-                        name: 'test_unittest_one.py',
-                        parentid: './other'
-                    },
-                    {
-                        id: './other/test_unittest_one.py::Test_test1',
-                        kind: 'suite',
-                        name: 'Test_test1',
-                        parentid: './other/test_unittest_one.py'
-                    }
-                ],
-                tests: [
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::test_simple_check',
-                        name: 'test_simple_check',
-                        source: 'other/test_pytest.py:6',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::test_complex_check',
-                        name: 'test_complex_check',
-                        source: 'other/test_pytest.py:9',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB',
-                        name: 'test_nested_class_methodB',
-                        source: 'other/test_pytest.py:13',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
-                        name: 'test_d',
-                        source: 'other/test_pytest.py:16',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
-                        name: 'test_nested_class_methodC',
-                        source: 'other/test_pytest.py:18',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::test_simple_check2',
-                        name: 'test_simple_check2',
-                        source: 'other/test_pytest.py:21',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp'
-                    },
-                    {
-                        id: './other/test_pytest.py::Test_CheckMyApp::test_complex_check2',
-                        name: 'test_complex_check2',
-                        source: 'other/test_pytest.py:23',
-                        markers: [],
-                        parentid: './other/test_pytest.py::Test_CheckMyApp'
-                    },
-                    {
-                        id: './other/test_pytest.py::test_username',
-                        name: 'test_username',
-                        source: 'other/test_pytest.py:35',
-                        markers: [],
-                        parentid: './other/test_pytest.py'
-                    },
-                    {
-                        id: './other/test_pytest.py::test_parametrized_username[one]',
-                        name: 'test_parametrized_username[one]',
-                        source: 'other/test_pytest.py:38',
-                        markers: [],
-                        parentid: './other/test_pytest.py::test_parametrized_username'
-                    },
-                    {
-                        id: './other/test_pytest.py::test_parametrized_username[two]',
-                        name: 'test_parametrized_username[two]',
-                        source: 'other/test_pytest.py:38',
-                        markers: [],
-                        parentid: './other/test_pytest.py::test_parametrized_username'
-                    },
-                    {
-                        id: './other/test_pytest.py::test_parametrized_username[three]',
-                        name: 'test_parametrized_username[three]',
-                        source: 'other/test_pytest.py:38',
-                        markers: [],
-                        parentid: './other/test_pytest.py::test_parametrized_username'
-                    },
-                    {
-                        id: './other/test_unittest_one.py::Test_test1::test_A',
-                        name: 'test_A',
-                        source: 'other/test_unittest_one.py:6',
-                        markers: [],
-                        parentid: './other/test_unittest_one.py::Test_test1'
-                    },
-                    {
-                        id: './other/test_unittest_one.py::Test_test1::test_B',
-                        name: 'test_B',
-                        source: 'other/test_unittest_one.py:9',
-                        markers: [],
-                        parentid: './other/test_unittest_one.py::Test_test1'
-                    },
-                    {
-                        id: './other/test_unittest_one.py::Test_test1::test_c',
-                        name: 'test_c',
-                        source: 'other/test_unittest_one.py:12',
-                        markers: [],
-                        parentid: './other/test_unittest_one.py::Test_test1'
-                    }
-                ]
-            }
-        ]
-        ));
+        await injectTestDiscoveryOutput(
+            JSON.stringify([
+                {
+                    rootid: '.',
+                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/unitestsWithConfigs',
+                    parents: [
+                        {
+                            id: './other',
+                            relpath: './other',
+                            kind: 'folder',
+                            name: 'other',
+                            parentid: '.'
+                        },
+                        {
+                            id: './other/test_pytest.py',
+                            relpath: './other/test_pytest.py',
+                            kind: 'file',
+                            name: 'test_pytest.py',
+                            parentid: './other'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp',
+                            kind: 'suite',
+                            name: 'Test_CheckMyApp',
+                            parentid: './other/test_pytest.py'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA',
+                            kind: 'suite',
+                            name: 'Test_NestedClassA',
+                            parentid: './other/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A',
+                            kind: 'suite',
+                            name: 'Test_nested_classB_Of_A',
+                            parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
+                        },
+                        {
+                            id: './other/test_pytest.py::test_parametrized_username',
+                            kind: 'function',
+                            name: 'test_parametrized_username',
+                            parentid: './other/test_pytest.py'
+                        },
+                        {
+                            id: './other/test_unittest_one.py',
+                            relpath: './other/test_unittest_one.py',
+                            kind: 'file',
+                            name: 'test_unittest_one.py',
+                            parentid: './other'
+                        },
+                        {
+                            id: './other/test_unittest_one.py::Test_test1',
+                            kind: 'suite',
+                            name: 'Test_test1',
+                            parentid: './other/test_unittest_one.py'
+                        }
+                    ],
+                    tests: [
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::test_simple_check',
+                            name: 'test_simple_check',
+                            source: 'other/test_pytest.py:6',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::test_complex_check',
+                            name: 'test_complex_check',
+                            source: 'other/test_pytest.py:9',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodB',
+                            name: 'test_nested_class_methodB',
+                            source: 'other/test_pytest.py:13',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A::test_d',
+                            name: 'test_d',
+                            source: 'other/test_pytest.py:16',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::Test_nested_classB_Of_A'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA::test_nested_class_methodC',
+                            name: 'test_nested_class_methodC',
+                            source: 'other/test_pytest.py:18',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp::Test_NestedClassA'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::test_simple_check2',
+                            name: 'test_simple_check2',
+                            source: 'other/test_pytest.py:21',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './other/test_pytest.py::Test_CheckMyApp::test_complex_check2',
+                            name: 'test_complex_check2',
+                            source: 'other/test_pytest.py:23',
+                            markers: [],
+                            parentid: './other/test_pytest.py::Test_CheckMyApp'
+                        },
+                        {
+                            id: './other/test_pytest.py::test_username',
+                            name: 'test_username',
+                            source: 'other/test_pytest.py:35',
+                            markers: [],
+                            parentid: './other/test_pytest.py'
+                        },
+                        {
+                            id: './other/test_pytest.py::test_parametrized_username[one]',
+                            name: 'test_parametrized_username[one]',
+                            source: 'other/test_pytest.py:38',
+                            markers: [],
+                            parentid: './other/test_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './other/test_pytest.py::test_parametrized_username[two]',
+                            name: 'test_parametrized_username[two]',
+                            source: 'other/test_pytest.py:38',
+                            markers: [],
+                            parentid: './other/test_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './other/test_pytest.py::test_parametrized_username[three]',
+                            name: 'test_parametrized_username[three]',
+                            source: 'other/test_pytest.py:38',
+                            markers: [],
+                            parentid: './other/test_pytest.py::test_parametrized_username'
+                        },
+                        {
+                            id: './other/test_unittest_one.py::Test_test1::test_A',
+                            name: 'test_A',
+                            source: 'other/test_unittest_one.py:6',
+                            markers: [],
+                            parentid: './other/test_unittest_one.py::Test_test1'
+                        },
+                        {
+                            id: './other/test_unittest_one.py::Test_test1::test_B',
+                            name: 'test_B',
+                            source: 'other/test_unittest_one.py:9',
+                            markers: [],
+                            parentid: './other/test_unittest_one.py::Test_test1'
+                        },
+                        {
+                            id: './other/test_unittest_one.py::Test_test1::test_c',
+                            name: 'test_c',
+                            source: 'other/test_unittest_one.py:12',
+                            markers: [],
+                            parentid: './other/test_unittest_one.py::Test_test1'
+                        }
+                    ]
+                }
+            ])
+        );
         await updateSetting('testing.pytestArgs', [], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH_WITH_CONFIGS);
@@ -830,48 +886,58 @@ suite('Unit Tests - pytest - discovery with mocked process output', () => {
         assert.equal(tests.testFiles.length, 2, 'Incorrect number of test files');
         assert.equal(tests.testFunctions.length, 14, 'Incorrect number of test functions');
         assert.equal(tests.testSuites.length, 4, 'Incorrect number of test suites');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_unittest_one.py'), true, 'Test File not found');
-        assert.equal(tests.testFiles.some(t => t.name === 'test_pytest.py'), true, 'Test File not found');
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_unittest_one.py'),
+            true,
+            'Test File not found'
+        );
+        assert.equal(
+            tests.testFiles.some(t => t.name === 'test_pytest.py'),
+            true,
+            'Test File not found'
+        );
     });
 
     test('Setting cwd should return tests', async () => {
-        await injectTestDiscoveryOutput(JSON.stringify([
-            {
-                rootid: '.',
-                root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/cwd/src',
-                parents: [
-                    {
-                        id: './tests',
-                        kind: 'folder',
-                        name: 'tests',
-                        relpath: './tests',
-                        parentid: '.'
-                    },
-                    {
-                        id: './tests/test_cwd.py',
-                        kind: 'file',
-                        name: 'test_cwd.py',
-                        relpath: './tests/test_cwd.py',
-                        parentid: './tests'
-                    },
-                    {
-                        id: './tests/test_cwd.py::Test_Current_Working_Directory',
-                        kind: 'suite',
-                        name: 'Test_Current_Working_Directory',
-                        parentid: './tests/test_cwd.py'
-                    }
-                ],
-                tests: [
-                    {
-                        id: './tests/test_cwd.py::Test_Current_Working_Directory::test_cwd',
-                        name: 'test_cwd',
-                        source: 'tests/test_cwd.py:6',
-                        markers: [],
-                        parentid: './tests/test_cwd.py::Test_Current_Working_Directory'
-                    }
-                ]
-            }
-        ]));
+        await injectTestDiscoveryOutput(
+            JSON.stringify([
+                {
+                    rootid: '.',
+                    root: '/Users/donjayamanne/.vscode-insiders/extensions/pythonVSCode/src/test/pythonFiles/testFiles/cwd/src',
+                    parents: [
+                        {
+                            id: './tests',
+                            kind: 'folder',
+                            name: 'tests',
+                            relpath: './tests',
+                            parentid: '.'
+                        },
+                        {
+                            id: './tests/test_cwd.py',
+                            kind: 'file',
+                            name: 'test_cwd.py',
+                            relpath: './tests/test_cwd.py',
+                            parentid: './tests'
+                        },
+                        {
+                            id: './tests/test_cwd.py::Test_Current_Working_Directory',
+                            kind: 'suite',
+                            name: 'Test_Current_Working_Directory',
+                            parentid: './tests/test_cwd.py'
+                        }
+                    ],
+                    tests: [
+                        {
+                            id: './tests/test_cwd.py::Test_Current_Working_Directory::test_cwd',
+                            name: 'test_cwd',
+                            source: 'tests/test_cwd.py:6',
+                            markers: [],
+                            parentid: './tests/test_cwd.py::Test_Current_Working_Directory'
+                        }
+                    ]
+                }
+            ])
+        );
         await updateSetting('testing.pytestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
         const factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
         const testManager = factory('pytest', rootWorkspaceUri!, unitTestTestFilesCwdPath);

@@ -15,7 +15,6 @@ export namespace vscMockHtmlContent {
     }
 
     export class MarkdownString implements IMarkdownString {
-
         value: string;
         isTrusted?: boolean;
 
@@ -58,8 +57,7 @@ export namespace vscMockHtmlContent {
         if (thing instanceof MarkdownString) {
             return true;
         } else if (thing && typeof thing === 'object') {
-            return typeof (<IMarkdownString>thing).value === 'string'
-                && (typeof (<IMarkdownString>thing).isTrusted === 'boolean' || (<IMarkdownString>thing).isTrusted === void 0);
+            return typeof (<IMarkdownString>thing).value === 'string' && (typeof (<IMarkdownString>thing).isTrusted === 'boolean' || (<IMarkdownString>thing).isTrusted === void 0);
         }
         return false;
     }

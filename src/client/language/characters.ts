@@ -14,9 +14,9 @@ export function isIdentifierStartChar(ch: number) {
         case 0x1885:
         case 0x1886:
         case 0x2118:
-        case 0x212E:
-        case 0x309B:
-        case 0x309C:
+        case 0x212e:
+        case 0x309b:
+        case 0x309c:
             return true;
         default:
             break;
@@ -45,18 +45,18 @@ export function isIdentifierChar(ch: number) {
 
     switch (ch) {
         // Characters with the Other_ID_Continue property
-        case 0x00B7:
+        case 0x00b7:
         case 0x0387:
         case 0x1369:
-        case 0x136A:
-        case 0x136B:
-        case 0x136C:
-        case 0x136D:
-        case 0x136E:
-        case 0x136F:
+        case 0x136a:
+        case 0x136b:
+        case 0x136c:
+        case 0x136d:
+        case 0x136e:
+        case 0x136f:
         case 0x1370:
         case 0x1371:
-        case 0x19DA:
+        case 0x19da:
             return true;
         default:
             break;
@@ -76,7 +76,7 @@ export function isIdentifierChar(ch: number) {
 }
 
 export function isWhiteSpace(ch: number): boolean {
-    return ch <= Char.Space || ch === 0x200B; // Unicode whitespace
+    return ch <= Char.Space || ch === 0x200b; // Unicode whitespace
 }
 
 export function isLineBreak(ch: number): boolean {
@@ -84,11 +84,11 @@ export function isLineBreak(ch: number): boolean {
 }
 
 export function isNumber(ch: number): boolean {
-    return ch >= Char._0 && ch <= Char._9 || ch === Char.Underscore;
+    return (ch >= Char._0 && ch <= Char._9) || ch === Char.Underscore;
 }
 
 export function isDecimal(ch: number): boolean {
-    return ch >= Char._0 && ch <= Char._9 || ch === Char.Underscore;
+    return (ch >= Char._0 && ch <= Char._9) || ch === Char.Underscore;
 }
 
 export function isHex(ch: number): boolean {
@@ -96,7 +96,7 @@ export function isHex(ch: number): boolean {
 }
 
 export function isOctal(ch: number): boolean {
-    return ch >= Char._0 && ch <= Char._7 || ch === Char.Underscore;
+    return (ch >= Char._0 && ch <= Char._7) || ch === Char.Underscore;
 }
 
 export function isBinary(ch: number): boolean {

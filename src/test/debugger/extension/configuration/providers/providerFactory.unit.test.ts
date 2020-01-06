@@ -17,7 +17,7 @@ suite('Debugging - Configuration Provider Factory', () => {
     setup(() => {
         mappedProviders = new Map<DebugConfigurationType, IDebugConfigurationProvider>();
         getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach(item => {
-            mappedProviders.set(item.value, item.value as any as IDebugConfigurationProvider);
+            mappedProviders.set(item.value, (item.value as any) as IDebugConfigurationProvider);
         });
         factory = new DebugConfigurationProviderFactory(
             mappedProviders.get(DebugConfigurationType.launchFlask)!,
@@ -25,11 +25,12 @@ suite('Debugging - Configuration Provider Factory', () => {
             mappedProviders.get(DebugConfigurationType.launchModule)!,
             mappedProviders.get(DebugConfigurationType.launchFile)!,
             mappedProviders.get(DebugConfigurationType.launchPyramid)!,
-            mappedProviders.get(DebugConfigurationType.remoteAttach)!
+            mappedProviders.get(DebugConfigurationType.remoteAttach)!,
+            mappedProviders.get(DebugConfigurationType.pidAttach)!
         );
     });
     getNamesAndValues<DebugConfigurationType>(DebugConfigurationType).forEach(item => {
-        test(`Configuration Provider for ${item.name}`, function () {
+        test(`Configuration Provider for ${item.name}`, function() {
             if (item.value === DebugConfigurationType.default) {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();

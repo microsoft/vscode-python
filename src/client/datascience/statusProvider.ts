@@ -37,23 +37,23 @@ class StatusItem implements Disposable {
                 this.deferred.resolve();
             }
         }
-    }
+    };
 
     public promise = (): Promise<void> => {
         return this.deferred.promise;
-    }
+    };
 
     public reject = () => {
         this.deferred.reject();
         this.dispose();
-    }
+    };
 }
 
 @injectable()
 export class StatusProvider implements IStatusProvider {
     private statusCount: number = 0;
 
-    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) { }
+    constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell) {}
 
     public set(message: string, showInWebView: boolean, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Disposable {
         // Start our progress
@@ -82,7 +82,14 @@ export class StatusProvider implements IStatusProvider {
         return statusItem;
     }
 
-    public async waitWithStatus<T>(promise: () => Promise<T>, message: string, showInWebView: boolean, timeout?: number, cancel?: () => void, panel?: IInteractiveBase): Promise<T> {
+    public async waitWithStatus<T>(
+        promise: () => Promise<T>,
+        message: string,
+        showInWebView: boolean,
+        timeout?: number,
+        cancel?: () => void,
+        panel?: IInteractiveBase
+    ): Promise<T> {
         // Create a status item and wait for our promise to either finish or reject
         const status = this.set(message, showInWebView, timeout, cancel, panel);
         let result: T;
@@ -101,7 +108,7 @@ export class StatusProvider implements IStatusProvider {
             }
         }
         this.statusCount += 1;
-    }
+    };
 
     private decrementCount = (panel?: IInteractiveBase) => {
         const updatedCount = this.statusCount - 1;
@@ -111,5 +118,5 @@ export class StatusProvider implements IStatusProvider {
             }
         }
         this.statusCount = Math.max(updatedCount, 0);
-    }
+    };
 }

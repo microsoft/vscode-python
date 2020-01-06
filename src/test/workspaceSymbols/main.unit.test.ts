@@ -32,7 +32,11 @@ use(chaiAsPromised);
 // tslint:disable: no-any
 // tslint:disable-next-line: max-func-body-length
 suite('Workspace symbols main', () => {
-    const mockDisposable = { dispose: () => { return; } };
+    const mockDisposable = {
+        dispose: () => {
+            return;
+        }
+    };
     const ctagsPath = 'CTAG_PATH';
     const observable = {
         out: {
@@ -80,8 +84,7 @@ suite('Workspace symbols main', () => {
         when(fileSystem.directoryExists(anything())).thenResolve(true);
         when(fileSystem.fileExists(anything())).thenResolve(false);
         when(processServiceFactory.create()).thenResolve(instance(processService));
-        when(processService.execObservable(ctagsPath, anything(), anything()))
-            .thenReturn(observable as any);
+        when(processService.execObservable(ctagsPath, anything(), anything())).thenReturn(observable as any);
         when(applicationShell.setStatusBarMessage(anyString(), anything())).thenCall((text: string) => {
             shellOutput += text;
             return mockDisposable;
@@ -110,7 +113,7 @@ suite('Workspace symbols main', () => {
         assert.equal(shellOutput, '');
     });
 
-    test('Should not rebuild on start if we don\'t have a workspace folder', () => {
+    test("Should not rebuild on start if we don't have a workspace folder", () => {
         when(workspaceService.workspaceFolders).thenReturn([]);
         when(configurationService.getSettings(anything())).thenReturn({ workspaceSymbols: { rebuildOnStart: false } } as any);
 

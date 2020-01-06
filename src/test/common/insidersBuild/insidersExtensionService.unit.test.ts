@@ -43,7 +43,15 @@ suite('Insiders Extension Service - Handle channel', () => {
         serviceContainer = mock(ServiceContainer);
         insidersPrompt = mock(InsidersExtensionPrompt);
         insidersInstaller = mock(InsidersBuildInstaller);
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        insidersExtensionService = new InsidersExtensionService(
+            instance(extensionChannelService),
+            instance(insidersPrompt),
+            instance(appEnvironment),
+            instance(cmdManager),
+            instance(serviceContainer),
+            instance(insidersInstaller),
+            []
+        );
     });
 
     teardown(() => {
@@ -57,13 +65,9 @@ suite('Insiders Extension Service - Handle channel', () => {
             .setup(c => c.shouldLookForInsidersBuild(false))
             .returns(() => Promise.resolve(false))
             .verifiable(TypeMoq.Times.once());
-        when(
-            insidersInstaller.install()
-        ).thenResolve(undefined);
+        when(insidersInstaller.install()).thenResolve(undefined);
         await insidersExtensionService.handleChannel('off');
-        verify(
-            insidersInstaller.install()
-        ).never();
+        verify(insidersInstaller.install()).never();
         channelRule.verifyAll();
     });
 
@@ -74,19 +78,11 @@ suite('Insiders Extension Service - Handle channel', () => {
             .setup(c => c.shouldLookForInsidersBuild(false))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
-        when(
-            insidersInstaller.install()
-        ).thenResolve(undefined);
-        when(
-            insidersPrompt.promptToReload()
-        ).thenResolve(undefined);
+        when(insidersInstaller.install()).thenResolve(undefined);
+        when(insidersPrompt.promptToReload()).thenResolve(undefined);
         await insidersExtensionService.handleChannel('weekly');
-        verify(
-            insidersInstaller.install()
-        ).once();
-        verify(
-            insidersPrompt.promptToReload()
-        ).once();
+        verify(insidersInstaller.install()).once();
+        verify(insidersPrompt.promptToReload()).once();
         channelRule.verifyAll();
     });
 });
@@ -123,7 +119,15 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => Promise.resolve());
         handleEdgeCases.callsFake(() => Promise.resolve(true));
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        insidersExtensionService = new InsidersExtensionService(
+            instance(extensionChannelService),
+            instance(insidersPrompt),
+            instance(appEnvironment),
+            instance(cmdManager),
+            instance(serviceContainer),
+            instance(insidersInstaller),
+            []
+        );
         when(extensionChannelService.getChannel()).thenReturn('daily');
         when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
 
@@ -141,7 +145,15 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => Promise.resolve());
         handleEdgeCases.callsFake(() => Promise.resolve(false));
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        insidersExtensionService = new InsidersExtensionService(
+            instance(extensionChannelService),
+            instance(insidersPrompt),
+            instance(appEnvironment),
+            instance(cmdManager),
+            instance(serviceContainer),
+            instance(insidersInstaller),
+            []
+        );
         when(extensionChannelService.getChannel()).thenReturn('daily');
         when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
 
@@ -160,7 +172,15 @@ suite('Insiders Extension Service - Activation', () => {
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => handleChannelsDeferred.promise);
         handleEdgeCases.callsFake(() => Promise.resolve(false));
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        insidersExtensionService = new InsidersExtensionService(
+            instance(extensionChannelService),
+            instance(insidersPrompt),
+            instance(appEnvironment),
+            instance(cmdManager),
+            instance(serviceContainer),
+            instance(insidersInstaller),
+            []
+        );
         when(extensionChannelService.getChannel()).thenReturn('daily');
         when(extensionChannelService.isChannelUsingDefaultConfiguration).thenReturn(false);
 
@@ -246,46 +266,29 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         hasUserBeenAskedToOptInAgain?: boolean;
     };
 
-    function setState(
-        info: TestInfo,
-        checkPromptEnroll: boolean,
-        checkPromptReEnroll: boolean,
-        checkDisable: boolean
-    ) {
+    function setState(info: TestInfo, checkPromptEnroll: boolean, checkPromptReEnroll: boolean, checkDisable: boolean) {
         if (info.vscodeChannel) {
-            appEnvironment
-                .setup(e => e.channel)
-                .returns(() => info.vscodeChannel!);
+            appEnvironment.setup(e => e.channel).returns(() => info.vscodeChannel!);
         }
         if (info.extensionChannel) {
-            appEnvironment
-                .setup(e => e.extensionChannel)
-                .returns(() => info.extensionChannel!);
+            appEnvironment.setup(e => e.extensionChannel).returns(() => info.extensionChannel!);
         }
 
         if (checkDisable) {
-            extensionChannelService
-                .setup(ec => ec.updateChannel('off'))
-                .returns(() => Promise.resolve());
+            extensionChannelService.setup(ec => ec.updateChannel('off')).returns(() => Promise.resolve());
         }
         if (info.hasUserBeenNotified !== undefined) {
-            when(hasUserBeenNotifiedState.value)
-                .thenReturn(info.hasUserBeenNotified!);
+            when(hasUserBeenNotifiedState.value).thenReturn(info.hasUserBeenNotified!);
         }
         if (info.hasUserBeenAskedToOptInAgain !== undefined) {
-            when(hasUserBeenAskedToOptInAgainState.value)
-                .thenReturn(info.hasUserBeenAskedToOptInAgain!);
+            when(hasUserBeenAskedToOptInAgainState.value).thenReturn(info.hasUserBeenAskedToOptInAgain!);
         }
 
         if (checkPromptEnroll) {
-            insidersPrompt
-                .setup(p => p.promptToInstallInsiders())
-                .returns(() => Promise.resolve());
+            insidersPrompt.setup(p => p.promptToInstallInsiders()).returns(() => Promise.resolve());
         }
         if (checkPromptReEnroll) {
-            insidersPrompt
-                .setup(p => p.promptToEnrollBackToInsiders())
-                .returns(() => Promise.resolve());
+            insidersPrompt.setup(p => p.promptToEnrollBackToInsiders()).returns(() => Promise.resolve());
         }
     }
 
@@ -308,10 +311,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
             test(testName, async () => {
                 setState(testParams, false, true, false);
 
-                await insidersExtensionService.handleEdgeCases(
-                    testParams.installChannel,
-                    testParams.isChannelUsingDefaultConfiguration!
-                );
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel, testParams.isChannelUsingDefaultConfiguration!);
 
                 verifyAll();
                 verify(hasUserBeenNotifiedState.value).never();
@@ -354,14 +354,15 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         });
 
         testsForHandleEdgeCaseII.forEach(testParams => {
-            const testName = `Insiders Install Prompt is displayed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            const testName = `Insiders Install Prompt is displayed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${
+                testParams.extensionChannel
+            }', install channel = '${testParams.installChannel}', ${
+                !testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'
+            }, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
             test(testName, async () => {
                 setState(testParams, true, false, false);
 
-                await insidersExtensionService.handleEdgeCases(
-                    testParams.installChannel,
-                    testParams.isChannelUsingDefaultConfiguration!
-                );
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel, testParams.isChannelUsingDefaultConfiguration!);
 
                 verifyAll();
                 verify(hasUserBeenNotifiedState.value).once();
@@ -396,13 +397,17 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         });
 
         testsForHandleEdgeCaseIII.forEach(testParams => {
-            const testName = `Insiders channel is set to off when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            const testName = `Insiders channel is set to off when vscode channel = '${testParams.vscodeChannel}', extension channel = '${
+                testParams.extensionChannel
+            }', install channel = '${testParams.installChannel}', ${
+                !testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'
+            }, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
             test(testName, async () => {
                 setState(testParams, false, false, true);
 
                 await insidersExtensionService.handleEdgeCases(
                     testParams.installChannel,
-                    false  // isDefault
+                    false // isDefault
                 );
 
                 verifyAll();
@@ -484,14 +489,15 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         });
 
         testsForHandleEdgeCaseIV.forEach(testParams => {
-            const testName = `No operation is performed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${testParams.extensionChannel}', install channel = '${testParams.installChannel}', ${!testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'}, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
+            const testName = `No operation is performed when vscode channel = '${testParams.vscodeChannel}', extension channel = '${
+                testParams.extensionChannel
+            }', install channel = '${testParams.installChannel}', ${
+                !testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'
+            }, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
             test(testName, async () => {
                 setState(testParams, false, false, false);
 
-                await insidersExtensionService.handleEdgeCases(
-                    testParams.installChannel,
-                    testParams.isChannelUsingDefaultConfiguration || testParams.installChannel === 'off'
-                );
+                await insidersExtensionService.handleEdgeCases(testParams.installChannel, testParams.isChannelUsingDefaultConfiguration || testParams.installChannel === 'off');
 
                 verifyAll();
                 if (testParams.hasUserBeenNotified === undefined) {
@@ -530,7 +536,15 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         channelChangeEvent = new EventEmitter<ExtensionChannels>();
         handleChannel = sinon.stub(InsidersExtensionService.prototype, 'handleChannel');
         handleChannel.callsFake(() => Promise.resolve());
-        insidersExtensionService = new InsidersExtensionService(instance(extensionChannelService), instance(insidersPrompt), instance(appEnvironment), instance(cmdManager), instance(serviceContainer), instance(insidersInstaller), []);
+        insidersExtensionService = new InsidersExtensionService(
+            instance(extensionChannelService),
+            instance(insidersPrompt),
+            instance(appEnvironment),
+            instance(cmdManager),
+            instance(serviceContainer),
+            instance(insidersInstaller),
+            []
+        );
     });
 
     teardown(() => {
@@ -566,10 +580,22 @@ suite('Insiders Extension Service - Function registerCommandsAndHandlers()', () 
         let switchTooffHandler!: Function;
         let switchToInsidersDailyHandler!: Function;
         let switchToweeklyHandler!: Function;
-        when(extensionChannelService.onDidChannelChange).thenReturn(cb => { channelChangedHandler = cb; return disposable1.object; });
-        when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenCall((_, cb) => { switchTooffHandler = cb; return disposable2.object; });
-        when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenCall((_, cb) => { switchToInsidersDailyHandler = cb; return disposable3.object; });
-        when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenCall((_, cb) => { switchToweeklyHandler = cb; return disposable4.object; });
+        when(extensionChannelService.onDidChannelChange).thenReturn(cb => {
+            channelChangedHandler = cb;
+            return disposable1.object;
+        });
+        when(cmdManager.registerCommand(Commands.SwitchOffInsidersChannel, anything())).thenCall((_, cb) => {
+            switchTooffHandler = cb;
+            return disposable2.object;
+        });
+        when(cmdManager.registerCommand(Commands.SwitchToInsidersDaily, anything())).thenCall((_, cb) => {
+            switchToInsidersDailyHandler = cb;
+            return disposable3.object;
+        });
+        when(cmdManager.registerCommand(Commands.SwitchToInsidersWeekly, anything())).thenCall((_, cb) => {
+            switchToweeklyHandler = cb;
+            return disposable4.object;
+        });
 
         insidersExtensionService.registerCommandsAndHandlers();
 

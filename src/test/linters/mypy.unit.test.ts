@@ -30,30 +30,39 @@ suite('Linting - MyPy', () => {
     test('regex', async () => {
         const lines = output.split('\n');
         const tests: [string, ILintMessage][] = [
-            [lines[1], {
-                code: undefined,
-                message: 'Incompatible types in assignment (expression has type "str", variable has type "int")',
-                column: 0,
-                line: 10,
-                type: 'error',
-                provider: 'mypy'
-            } as ILintMessage],
-            [lines[2], {
-                code: undefined,
-                message: 'Name \'not_declared_var\' is not defined',
-                column: 0,
-                line: 11,
-                type: 'error',
-                provider: 'mypy'
-            } as ILintMessage],
-            [lines[3], {
-                code: undefined,
-                message: 'Expression has type "Any"',
-                column: 21,
-                line: 12,
-                type: 'error',
-                provider: 'mypy'
-            } as ILintMessage]
+            [
+                lines[1],
+                {
+                    code: undefined,
+                    message: 'Incompatible types in assignment (expression has type "str", variable has type "int")',
+                    column: 0,
+                    line: 10,
+                    type: 'error',
+                    provider: 'mypy'
+                } as ILintMessage
+            ],
+            [
+                lines[2],
+                {
+                    code: undefined,
+                    message: "Name 'not_declared_var' is not defined",
+                    column: 0,
+                    line: 11,
+                    type: 'error',
+                    provider: 'mypy'
+                } as ILintMessage
+            ],
+            [
+                lines[3],
+                {
+                    code: undefined,
+                    message: 'Expression has type "Any"',
+                    column: 21,
+                    line: 12,
+                    type: 'error',
+                    provider: 'mypy'
+                } as ILintMessage
+            ]
         ];
         for (const [line, expected] of tests) {
             const msg = parseLine(line, REGEX, 'mypy');
@@ -98,7 +107,7 @@ suite('Test Linter', () => {
     test('Get cwd based on document', async () => {
         const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
         const cwd = path.join('a', 'b', 'c');
-        const doc = { uri: fileUri } as any as TextDocument;
+        const doc = ({ uri: fileUri } as any) as TextDocument;
         getWorkspaceRootPathStub.callsFake(() => cwd);
         runStub.callsFake(() => Promise.resolve([]));
 
@@ -110,7 +119,7 @@ suite('Test Linter', () => {
     test('Pass relative path of document to linter', async () => {
         const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
         const cwd = path.join('a', 'b', 'c');
-        const doc = { uri: fileUri } as any as TextDocument;
+        const doc = ({ uri: fileUri } as any) as TextDocument;
         getWorkspaceRootPathStub.callsFake(() => cwd);
         runStub.callsFake(() => Promise.resolve([]));
 
@@ -122,7 +131,7 @@ suite('Test Linter', () => {
     test('Return empty messages', async () => {
         const fileUri = Uri.file(path.join('a', 'b', 'c', 'd', 'e', 'filename.py'));
         const cwd = path.join('a', 'b', 'c');
-        const doc = { uri: fileUri } as any as TextDocument;
+        const doc = ({ uri: fileUri } as any) as TextDocument;
         getWorkspaceRootPathStub.callsFake(() => cwd);
         runStub.callsFake(() => Promise.resolve([]));
 

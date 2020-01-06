@@ -3,13 +3,13 @@
 'use strict';
 import '../../extensions';
 
-import * as fs from 'fs-extra';
 import * as uuid from 'uuid/v4';
 import { Uri, Webview, WebviewPanel, window } from 'vscode';
 
 import { Identifiers } from '../../../datascience/constants';
 import { InteractiveWindowMessages } from '../../../datascience/interactive-common/interactiveWindowTypes';
 import { SharedMessages } from '../../../datascience/messages';
+import { IFileSystem } from '../../platform/types';
 import { IDisposableRegistry } from '../../types';
 import * as localize from '../../utils/localize';
 import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
@@ -20,16 +20,17 @@ import { IWebPanel, IWebPanelOptions, WebPanelMessage } from '../types';
 const RemappedPort = 9890;
 
 export class WebPanel implements IWebPanel {
-
     private panel: WebviewPanel | undefined;
     private loadPromise: Promise<void>;
     private id = uuid();
 
     constructor(
+        private fs: IFileSystem,
         private disposableRegistry: IDisposableRegistry,
         private port: number | undefined,
         private token: string | undefined,
-        private options: IWebPanelOptions) {
+        private options: IWebPanelOptions
+    ) {
         this.panel = window.createWebviewPanel(
             options.title.toLowerCase().replace(' ', ''),
             options.title,
@@ -39,7 +40,8 @@ export class WebPanel implements IWebPanel {
                 retainContextWhenHidden: true,
                 localResourceRoots: [Uri.file(this.options.rootPath)],
                 portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
-            });
+            }
+        );
         this.loadPromise = this.load();
     }
 
@@ -86,30 +88,33 @@ export class WebPanel implements IWebPanel {
     // tslint:disable-next-line:no-any
     private async load() {
         if (this.panel) {
-            const localFilesExist = await Promise.all(this.options.scripts.map(s => fs.pathExists(s)));
+            const localFilesExist = await Promise.all(this.options.scripts.map(s => this.fs.fileExists(s)));
             if (localFilesExist.every(exists => exists === true)) {
-
                 // Call our special function that sticks this script inside of an html page
                 // and translates all of the paths to vscode-resource URIs
-                this.panel.webview.html = this.options.startHttpServer ?
-                    this.generateServerReactHtml(this.panel.webview) :
-                    this.generateLocalReactHtml(this.panel.webview);
+                this.panel.webview.html = this.options.startHttpServer ? this.generateServerReactHtml(this.panel.webview) : this.generateLocalReactHtml(this.panel.webview);
 
                 // Reset when the current panel is closed
-                this.disposableRegistry.push(this.panel.onDidDispose(() => {
-                    this.panel = undefined;
-                    this.options.listener.dispose().ignoreErrors();
-                }));
+                this.disposableRegistry.push(
+                    this.panel.onDidDispose(() => {
+                        this.panel = undefined;
+                        this.options.listener.dispose().ignoreErrors();
+                    })
+                );
 
-                this.disposableRegistry.push(this.panel.webview.onDidReceiveMessage(message => {
-                    // Pass the message onto our listener
-                    this.options.listener.onMessage(message.type, message.payload);
-                }));
+                this.disposableRegistry.push(
+                    this.panel.webview.onDidReceiveMessage(message => {
+                        // Pass the message onto our listener
+                        this.options.listener.onMessage(message.type, message.payload);
+                    })
+                );
 
-                this.disposableRegistry.push(this.panel.onDidChangeViewState((_e) => {
-                    // Pass the state change onto our listener
-                    this.options.listener.onChangeViewState(this);
-                }));
+                this.disposableRegistry.push(
+                    this.panel.onDidChangeViewState(_e => {
+                        // Pass the state change onto our listener
+                        this.options.listener.onChangeViewState(this);
+                    })
+                );
 
                 // Set initial state
                 this.options.listener.onChangeViewState(this);
@@ -131,7 +136,7 @@ export class WebPanel implements IWebPanel {
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http:;">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
@@ -165,7 +170,7 @@ export class WebPanel implements IWebPanel {
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http:;">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
@@ -195,6 +200,10 @@ export class WebPanel implements IWebPanel {
                             if (ev.data.data.type && ev.data.data.type === '${InteractiveWindowMessages.Started}') {
                                 copyStylesToHostFrame();
                             }
+                        } else if (ev.data && ev.data.command === 'did-keydown') {
+                            window.console.log('keydown-passthrough');
+                            const keyboardEvent = new KeyboardEvent('keydown', {...ev.data.data, bubbles: true, cancelable: true, view: window});
+                            document.dispatchEvent(keyboardEvent);
                         } else if (!isFromFrame) {
                             window.console.log('posting to frame');
                             window.console.log(ev.data.type);
@@ -209,7 +218,9 @@ export class WebPanel implements IWebPanel {
                     });
                     document.addEventListener('DOMContentLoaded', () => {
                         styleObserver.observe(document.documentElement, { attributes: true, attributeFilter: ['style'] });
-                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${encodeURIComponent(this.options.cwd)}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${this.token}&baseTheme=' + document.body.className;
+                        const newSrc = 'http://localhost:${RemappedPort}/${this.id}?scripts=${encoded.join('%')}&cwd=${encodeURIComponent(
+            this.options.cwd
+        )}&rootPath=${encodeURIComponent(this.options.rootPath)}&token=${this.token}&baseTheme=' + document.body.className;
                         const hostFrame = document.getElementById('hostframe');
                         if (hostFrame) {
                             hostFrame.src = newSrc;

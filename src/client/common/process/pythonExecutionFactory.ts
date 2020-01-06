@@ -78,7 +78,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         // No daemon support in Python 2.7.
         const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
-        if (interpreter?.version && interpreter.version.major < 3){
+        if (interpreter?.version && interpreter.version.major < 3) {
             return activatedProcPromise!;
         }
 
@@ -90,7 +90,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
                 this.activationHelper.getActivatedEnvironmentVariables(options.resource, interpreter, true)
             ]);
 
-            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, {...options, pythonPath}, activatedProc!, activatedEnvVars);
+            const daemon = new PythonDaemonExecutionServicePool(logger, disposables, { ...options, pythonPath }, activatedProc!, activatedEnvVars);
             await daemon.initialize();
             disposables.push(daemon);
             return daemon;

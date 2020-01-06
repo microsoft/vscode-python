@@ -18,11 +18,13 @@ const languageClientName = 'Python Tools';
 
 @injectable()
 export class BaseLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(ILanguageClientFactory) @named(LanguageClientFactory.downloaded) private readonly downloadedFactory: ILanguageClientFactory,
+    constructor(
+        @inject(ILanguageClientFactory) @named(LanguageClientFactory.downloaded) private readonly downloadedFactory: ILanguageClientFactory,
         @inject(ILanguageClientFactory) @named(LanguageClientFactory.simple) private readonly simpleFactory: ILanguageClientFactory,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
-        @inject(IEnvironmentActivationService) private readonly environmentActivationService: IEnvironmentActivationService) { }
+        @inject(IEnvironmentActivationService) private readonly environmentActivationService: IEnvironmentActivationService
+    ) {}
     public async createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const settings = this.configurationService.getSettings(resource);
         const factory = settings.downloadLanguageServer ? this.downloadedFactory : this.simpleFactory;
@@ -48,9 +50,16 @@ export class BaseLanguageClientFactory implements ILanguageClientFactory {
  */
 @injectable()
 export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(IPlatformData) private readonly platformData: IPlatformData,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) { }
-    public async createLanguageClient(resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient> {
+    constructor(
+        @inject(IPlatformData) private readonly platformData: IPlatformData,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {}
+    public async createLanguageClient(
+        resource: Resource,
+        _interpreter: PythonInterpreter | undefined,
+        clientOptions: LanguageClientOptions,
+        env?: NodeJS.ProcessEnv
+    ): Promise<LanguageClient> {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineExecutableName);
         const options = { stdio: 'pipe', env };
@@ -72,9 +81,16 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
  */
 @injectable()
 export class SimpleLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(IPlatformData) private readonly platformData: IPlatformData,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService) { }
-    public async createLanguageClient(resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions, env?: NodeJS.ProcessEnv): Promise<LanguageClient> {
+    constructor(
+        @inject(IPlatformData) private readonly platformData: IPlatformData,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {}
+    public async createLanguageClient(
+        resource: Resource,
+        _interpreter: PythonInterpreter | undefined,
+        clientOptions: LanguageClientOptions,
+        env?: NodeJS.ProcessEnv
+    ): Promise<LanguageClient> {
         const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
         const options = { stdio: 'pipe', env };
         const serverModule = path.join(EXTENSION_ROOT_DIR, languageServerFolder, this.platformData.engineDllName);

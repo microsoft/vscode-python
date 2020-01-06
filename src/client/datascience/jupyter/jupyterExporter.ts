@@ -19,15 +19,13 @@ import { CellState, ICell, IJupyterExecution, INotebookExporter } from '../types
 
 @injectable()
 export class JupyterExporter implements INotebookExporter {
-
     constructor(
         @inject(IJupyterExecution) private jupyterExecution: IJupyterExecution,
         @inject(IWorkspaceService) private workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private configService: IConfigurationService,
         @inject(IFileSystem) private fileSystem: IFileSystem,
         @inject(IPlatformService) private readonly platform: IPlatformService
-    ) {
-    }
+    ) {}
 
     public dispose() {
         noop();
@@ -76,7 +74,11 @@ export class JupyterExporter implements INotebookExporter {
         const changeDirectory = await this.calculateDirectoryChange(file, cells);
 
         if (changeDirectory) {
-            const exportChangeDirectory = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.exportChangeDirectoryComment(), CodeSnippits.ChangeDirectoryCommentIdentifier, changeDirectory);
+            const exportChangeDirectory = CodeSnippits.ChangeDirectory.join(os.EOL).format(
+                localize.DataScience.exportChangeDirectoryComment(),
+                CodeSnippits.ChangeDirectoryCommentIdentifier,
+                changeDirectory
+            );
 
             const cell: ICell = {
                 data: {
@@ -96,7 +98,7 @@ export class JupyterExporter implements INotebookExporter {
         } else {
             return cells;
         }
-    }
+    };
 
     // When we export we want to our change directory back to the first real file that we saw run from any workspace folder
     private firstWorkspaceFolder = async (cells: ICell[]): Promise<string | undefined> => {
@@ -104,7 +106,7 @@ export class JupyterExporter implements INotebookExporter {
             const filename = cell.file;
 
             // First check that this is an absolute file that exists (we add in temp files to run system cell)
-            if (path.isAbsolute(filename) && await this.fileSystem.fileExists(filename)) {
+            if (path.isAbsolute(filename) && (await this.fileSystem.fileExists(filename))) {
                 // We've already check that workspace folders above
                 for (const folder of this.workspaceService.workspaceFolders!) {
                     if (filename.toLowerCase().startsWith(folder.uri.fsPath.toLowerCase())) {
@@ -115,7 +117,7 @@ export class JupyterExporter implements INotebookExporter {
         }
 
         return undefined;
-    }
+    };
 
     private calculateDirectoryChange = async (notebookFile: string, cells: ICell[]): Promise<string | undefined> => {
         // Make sure we don't already have a cell with a ChangeDirectory comment in it.
@@ -146,14 +148,17 @@ export class JupyterExporter implements INotebookExporter {
         } else {
             return undefined;
         }
-    }
+    };
 
     private pruneCells = (cells: ICell[], cellMatcher: CellMatcher): nbformat.IBaseCell[] => {
         // First filter out sys info cells. Jupyter doesn't understand these
-        return cells.filter(c => c.data.cell_type !== 'messages')
-            // Then prune each cell down to just the cell data.
-            .map(c => this.pruneCell(c, cellMatcher));
-    }
+        return (
+            cells
+                .filter(c => c.data.cell_type !== 'messages')
+                // Then prune each cell down to just the cell data.
+                .map(c => this.pruneCell(c, cellMatcher))
+        );
+    };
 
     private pruneCell = (cell: ICell, cellMatcher: CellMatcher): nbformat.IBaseCell => {
         // Remove the #%% of the top of the source if there is any. We don't need
@@ -161,7 +166,7 @@ export class JupyterExporter implements INotebookExporter {
         const copy = { ...cell.data };
         copy.source = this.pruneSource(cell.data.source, cellMatcher);
         return copy;
-    }
+    };
 
     private pruneSource = (source: nbformat.MultilineString, cellMatcher: CellMatcher): nbformat.MultilineString => {
         // Remove the comments on the top if there.
@@ -170,18 +175,21 @@ export class JupyterExporter implements INotebookExporter {
                 return source.slice(1);
             }
         } else {
-            const array = source.toString().split('\n').map(s => `${s}\n`);
+            const array = source
+                .toString()
+                .split('\n')
+                .map(s => `${s}\n`);
             if (array.length > 0 && cellMatcher.isCell(array[0])) {
                 return array.slice(1);
             }
         }
 
         return source;
-    }
+    };
 
     private extractPythonMainVersion = async (): Promise<number> => {
         // Use the active interpreter
         const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
         return usableInterpreter && usableInterpreter.version ? usableInterpreter.version.major : 3;
-    }
+    };
 }

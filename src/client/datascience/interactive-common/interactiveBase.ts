@@ -3,23 +3,16 @@
 'use strict';
 import '../../common/extensions';
 
-import * as fs from 'fs-extra';
 import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { ConfigurationTarget, Event, EventEmitter, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
-import {
-    IApplicationShell,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { CancellationError } from '../../common/cancellation';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -32,9 +25,9 @@ import { IInterpreterService, PythonInterpreter } from '../../interpreter/contra
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
 import { CellMatcher } from '../cellMatcher';
-import { Identifiers, Settings, Telemetry } from '../constants';
+import { addToUriList } from '../common';
+import { Commands, Identifiers, Telemetry } from '../constants';
 import { ColumnWarningSize } from '../data-viewing/types';
-import { DataScience } from '../datascience';
 import {
     IAddedSysInfo,
     ICopyCode,
@@ -50,7 +43,7 @@ import {
 import { JupyterInstallError } from '../jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../jupyter/jupyterSelfCertsError';
 import { JupyterKernelPromiseFailedError } from '../jupyter/kernels/jupyterKernelPromiseFailedError';
-import { KernelSpecInterpreter } from '../jupyter/kernels/kernelSelector';
+import { LiveKernelModel } from '../jupyter/kernels/types';
 import { CssMessages } from '../messages';
 import {
     CellState,
@@ -64,6 +57,7 @@ import {
     IInteractiveWindowListener,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterKernelSpec,
     IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesResponse,
@@ -85,13 +79,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private restartingKernel: boolean = false;
     private potentiallyUnfinishedStatus: Disposable[] = [];
     private addSysInfoPromise: Deferred<boolean> | undefined;
-    private notebook: INotebook | undefined;
+    private _notebook: INotebook | undefined;
     private _id: string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
     private variableRequestStopWatch: StopWatch | undefined;
     private variableRequestPendingCount: number = 0;
     private loadPromise: Promise<void> | undefined;
     private setDarkPromise: Deferred<boolean> | undefined;
+    public get notebook(): INotebook | undefined {
+        return this._notebook;
+    }
 
     constructor(
         @unmanaged() private readonly listeners: IInteractiveWindowListener[],
@@ -113,8 +110,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         @unmanaged() private jupyterVariables: IJupyterVariables,
         @unmanaged() private jupyterDebugger: IJupyterDebugger,
         @unmanaged() protected ipynbProvider: INotebookEditorProvider,
-        @unmanaged() private dataScience: DataScience,
         @unmanaged() protected errorHandler: IDataScienceErrorHandler,
+        @unmanaged() protected readonly commandManager: ICommandManager,
+        @unmanaged() protected globalStorage: Memento,
         @unmanaged() rootPath: string,
         @unmanaged() scripts: string[],
         @unmanaged() title: string,
@@ -130,7 +128,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             rootPath,
             scripts,
             title,
-            viewColumn);
+            viewColumn
+        );
 
         // Create our unique id. We use this to skip messages we send to other interactive windows
         this._id = uuid();
@@ -140,14 +139,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.disposables.push(handler);
 
         // If our execution changes its liveshare session, we need to close our server
-        this.jupyterExecution.sessionChanged(() => this.loadPromise = this.reloadAfterShutdown());
+        this.jupyterExecution.sessionChanged(() => (this.loadPromise = this.reloadAfterShutdown()));
 
         // For each listener sign up for their post events
-        this.listeners.forEach(l => l.postMessage((e) => this.postMessageInternal(e.message, e.payload)));
+        this.listeners.forEach(l => l.postMessage(e => this.postMessageInternal(e.message, e.payload)));
 
         // Tell each listener our identity. Can't do it here though as were in the constructor for the base class
         setTimeout(() => {
-            this.getNotebookIdentity().then(uri => this.listeners.forEach(l => l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() }))).ignoreErrors();
+            this.getNotebookIdentity()
+                .then(uri => this.listeners.forEach(l => l.onMessage(InteractiveWindowMessages.NotebookIdentity, { resource: uri.toString() })))
+                .ignoreErrors();
         }, 0);
     }
 
@@ -287,15 +288,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         switch (message) {
             case CssMessages.GetCssRequest:
                 // Update the notebook if we have one:
-                if (this.notebook) {
-                    this.isDark().then(d => this.notebook ? this.notebook.setMatplotLibStyle(d) : Promise.resolve()).ignoreErrors();
+                if (this._notebook) {
+                    this.isDark()
+                        .then(d => (this._notebook ? this._notebook.setMatplotLibStyle(d) : Promise.resolve()))
+                        .ignoreErrors();
                 }
                 break;
 
             default:
                 break;
         }
-
     }
 
     public dispose() {
@@ -329,7 +331,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     @captureTelemetry(Telemetry.RestartKernel)
     public async restartKernel(): Promise<void> {
-        if (this.notebook && !this.restartingKernel) {
+        if (this._notebook && !this.restartingKernel) {
             if (this.shouldAskForRestart()) {
                 // Ask the user if they want us to restart or not.
                 const message = localize.DataScience.restartKernelMessage();
@@ -352,14 +354,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     @captureTelemetry(Telemetry.Interrupt)
     public async interruptKernel(): Promise<void> {
-        if (this.notebook && !this.restartingKernel) {
+        if (this._notebook && !this.restartingKernel) {
             const status = this.statusProvider.set(localize.DataScience.interruptKernelStatus(), true, undefined, undefined, this);
 
             const settings = this.configuration.getSettings();
             const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
             try {
-                const result = await this.notebook.interruptKernel(interruptTimeout);
+                const result = await this._notebook.interruptKernel(interruptTimeout);
                 status.dispose();
 
                 // We timed out, ask the user if they want to restart instead.
@@ -443,19 +445,19 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // This will get called during an execution, so we need to have
         // a notebook ready.
         await this.ensureServerActive();
-        if (this.notebook) {
-            this.notebook.clear(id);
+        if (this._notebook) {
+            this._notebook.clear(id);
         }
     }
 
     protected async setLaunchingFile(file: string): Promise<void> {
-        if (file !== Identifiers.EmptyFileName && this.notebook) {
-            await this.notebook.setLaunchingFile(file);
+        if (file !== Identifiers.EmptyFileName && this._notebook) {
+            await this._notebook.setLaunchingFile(file);
         }
     }
 
     protected getNotebook(): INotebook | undefined {
-        return this.notebook;
+        return this._notebook;
     }
 
     // tslint:disable-next-line: max-func-body-length
@@ -501,22 +503,22 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await this.addSysInfo(SysInfoReason.Start);
             }
 
-            if (this.notebook) {
+            if (this._notebook) {
                 // Before we try to execute code make sure that we have an initial directory set
                 // Normally set via the workspace, but we might not have one here if loading a single loose file
                 await this.setLaunchingFile(file);
 
                 if (debug) {
                     // Attach our debugger
-                    await this.jupyterDebugger.startDebugging(this.notebook);
+                    await this.jupyterDebugger.startDebugging(this._notebook);
                 }
 
                 // If the file isn't unknown, set the active kernel's __file__ variable to point to that same file.
                 if (file !== Identifiers.EmptyFileName) {
-                    await this.notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
+                    await this._notebook.execute(`__file__ = '${file.replace(/\\/g, '\\\\')}'`, file, line, uuid(), undefined, true);
                 }
 
-                const observable = this.notebook.executeObservable(code, file, line, id, false);
+                const observable = this._notebook.executeObservable(code, file, line, id, false);
 
                 // Indicate we executed some code
                 this.executeEvent.fire(code);
@@ -531,7 +533,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                             result = result && cells.find(c => c.state === CellState.error) === undefined;
                         }
                     },
-                    (error) => {
+                    error => {
                         status.dispose();
                         if (!(error instanceof CancellationError)) {
                             this.applicationShell.showErrorMessage(error.toString());
@@ -540,7 +542,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     () => {
                         // Indicate executing until this cell is done.
                         status.dispose();
-                    });
+                    }
+                );
 
                 // Wait for the cell to finish
                 await finishedAddingCode.promise;
@@ -552,8 +555,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             status.dispose();
 
             if (debug) {
-                if (this.notebook) {
-                    await this.jupyterDebugger.stopDebugging(this.notebook);
+                if (this._notebook) {
+                    await this.jupyterDebugger.stopDebugging(this._notebook);
                 }
             }
         }
@@ -634,7 +637,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     protected exportToFile = async (cells: ICell[], file: string) => {
         // Take the list of cells, convert them to a notebook json format and write to disk
-        if (this.notebook) {
+        if (this._notebook) {
             let directoryChange;
             const settings = this.configuration.getSettings();
             if (settings.datascience.changeDirOnImportExport) {
@@ -651,7 +654,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 const openQuestion2 = (await this.jupyterExecution.isSpawnSupported()) ? localize.DataScience.exportOpenQuestion() : undefined;
                 this.showInformationMessage(localize.DataScience.exportDialogComplete().format(file), openQuestion1, openQuestion2).then(async (str: string | undefined) => {
                     try {
-                        if (str === openQuestion2 && openQuestion2 && this.notebook) {
+                        if (str === openQuestion2 && openQuestion2 && this._notebook) {
                             // If the user wants to, open the notebook they just generated.
                             await this.jupyterExecution.spawnNotebook(file);
                         } else if (str === openQuestion1) {
@@ -666,13 +669,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 this.applicationShell.showInformationMessage(localize.DataScience.exportDialogFailed().format(exc));
             }
         }
-    }
+    };
 
     protected setStatus = (message: string, showInWebView: boolean): Disposable => {
         const result = this.statusProvider.set(message, showInWebView, undefined, undefined, this);
         this.potentiallyUnfinishedStatus.push(result);
         return result;
-    }
+    };
 
     protected async addSysInfo(reason: SysInfoReason): Promise<void> {
         if (!this.addSysInfoPromise || reason !== SysInfoReason.Start) {
@@ -694,8 +697,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // For a restart, tell our window to reset
             if (reason === SysInfoReason.Restart || reason === SysInfoReason.New) {
                 this.postMessage(InteractiveWindowMessages.RestartKernel).ignoreErrors();
-                if (this.notebook) {
-                    this.jupyterDebugger.onRestart(this.notebook);
+                if (this._notebook) {
+                    this.jupyterDebugger.onRestart(this._notebook);
                 }
             }
 
@@ -738,8 +741,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async startServerImpl(): Promise<void> {
         // Status depends upon if we're about to connect to existing server or not.
-        const status = (await this.jupyterExecution.getServer(await this.getNotebookOptions())) ?
-            this.setStatus(localize.DataScience.connectingToJupyter(), true) : this.setStatus(localize.DataScience.startingJupyter(), true);
+        const status = (await this.jupyterExecution.getServer(await this.getNotebookOptions()))
+            ? this.setStatus(localize.DataScience.connectingToJupyter(), true)
+            : this.setStatus(localize.DataScience.startingJupyter(), true);
 
         // Check to see if we support ipykernel or not
         try {
@@ -749,7 +753,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 status.dispose();
 
                 // Indicate failing.
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()), localize.DataScience.pythonInteractiveHelpLink());
+                throw new JupyterInstallError(
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                );
             }
             // Then load the jupyter server
             await this.createNotebook();
@@ -822,7 +829,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (await this.checkColumnSize(request.columnSize)) {
-                await this.dataExplorerProvider.create(request.variableName, this.notebook!);
+                await this.dataExplorerProvider.create(request.variableName, this._notebook!);
             }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());
@@ -833,7 +840,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private onAddedSysInfo(sysInfo: IAddedSysInfo) {
         // See if this is from us or not.
         if (sysInfo.id !== this.id) {
-
             // Not from us, must come from a different interactive window. Add to our
             // own to keep in sync
             if (sysInfo.sysInfoCell) {
@@ -846,8 +852,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         // Make sure this is valid
         if (args && args.id && args.file && args.originator !== this.id) {
             // On a reexecute clear the previous execution
-            if (this.notebook) {
-                this.notebook.clear(args.id);
+            if (this._notebook) {
+                this._notebook.clear(args.id);
             }
 
             // Indicate this in our telemetry.
@@ -891,20 +897,20 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         const status = this.statusProvider.set(localize.DataScience.restartingKernelStatus(), true, undefined, undefined, this);
 
         try {
-            if (this.notebook) {
-                await this.notebook.restartKernel(this.generateDataScienceExtraSettings().jupyterInterruptTimeout);
+            if (this._notebook) {
+                await this._notebook.restartKernel(this.generateDataScienceExtraSettings().jupyterInterruptTimeout);
                 await this.addSysInfo(SysInfoReason.Restart);
 
                 // Compute if dark or not.
                 const knownDark = await this.isDark();
 
                 // Before we run any cells, update the dark setting
-                await this.notebook.setMatplotLibStyle(knownDark);
+                await this._notebook.setMatplotLibStyle(knownDark);
             }
         } catch (exc) {
             // If we get a kernel promise failure, then restarting timed out. Just shutdown and restart the entire server
-            if (exc instanceof JupyterKernelPromiseFailedError && this.notebook) {
-                await this.notebook.dispose();
+            if (exc instanceof JupyterKernelPromiseFailedError && this._notebook) {
+                await this._notebook.dispose();
                 await this.createNotebook();
                 await this.addSysInfo(SysInfoReason.Restart);
             } else {
@@ -920,15 +926,15 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private logTelemetry = (event: Telemetry) => {
         sendTelemetryEvent(event);
-    }
+    };
 
     private async stopServer(): Promise<void> {
         if (this.loadPromise) {
             await this.loadPromise;
             this.loadPromise = undefined;
-            if (this.notebook) {
-                const server = this.notebook;
-                this.notebook = undefined;
+            if (this._notebook) {
+                const server = this._notebook;
+                this._notebook = undefined;
                 await server.dispose();
             }
         }
@@ -940,7 +946,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } catch {
             // We just switched from host to guest mode. Don't really care
             // if closing the host server kills it.
-            this.notebook = undefined;
+            this._notebook = undefined;
         }
         return this.startServer();
     }
@@ -955,7 +961,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async gotoCodeInternal(file: string, line: number) {
         let editor: TextEditor | undefined;
 
-        if (await fs.pathExists(file)) {
+        if (await this.fileSystem.fileExists(file)) {
             editor = await this.documentManager.showTextDocument(Uri.file(file), { viewColumn: ViewColumn.One });
         } else {
             // File URI isn't going to work. Look through the active text documents
@@ -976,8 +982,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         let editor = this.documentManager.activeTextEditor;
         if (!editor || editor.document.languageId !== PYTHON_LANGUAGE) {
             // Find the first visible python editor
-            const pythonEditors = this.documentManager.visibleTextEditors.filter(
-                e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
+            const pythonEditors = this.documentManager.visibleTextEditors.filter(e => e.document.languageId === PYTHON_LANGUAGE || e.document.isUntitled);
 
             if (pythonEditors.length > 0) {
                 editor = pythonEditors[0];
@@ -1006,7 +1011,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 newCode = `${defaultCellMarker}${os.EOL}${source}${os.EOL}`;
             }
 
-            await editor.edit((editBuilder) => {
+            await editor.edit(editBuilder => {
                 editBuilder.insert(new Position(line, 0), newCode);
             });
             editor.revealRange(new Range(revealLine, 0, revealLine + source.split('\n').length + 3, 0));
@@ -1034,8 +1039,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             const knownDark = await this.isDark();
 
             // Before we run any cells, update the dark setting
-            if (this.notebook) {
-                await this.notebook.setMatplotLibStyle(knownDark);
+            if (this._notebook) {
+                await this._notebook.setMatplotLibStyle(knownDark);
             }
 
             this.setDarkPromise.resolve(true);
@@ -1057,31 +1062,49 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         // Then create a new notebook
         if (server) {
-            this.notebook = await server.createNotebook(await this.getNotebookIdentity());
+            this._notebook = await server.createNotebook(await this.getNotebookIdentity());
         }
 
-        if (this.notebook) {
+        if (this._notebook) {
             const uri: Uri = await this.getNotebookIdentity();
             this.postMessage(InteractiveWindowMessages.NotebookExecutionActivated, uri.toString()).ignoreErrors();
 
             const statusChangeHandler = async (status: ServerStatus) => {
-                if (this.notebook) {
-                    const settings = this.configuration.getSettings();
-                    const kernelSpec = this.notebook.getKernelSpec();
+                if (this._notebook) {
+                    const kernelSpec = this._notebook.getKernelSpec();
 
                     if (kernelSpec) {
+                        const connectionInfo = this._notebook.server.getConnectionInfo();
+                        let localizedUri = '';
+
+                        // Determine the connection URI of the connected server to display
+                        if (connectionInfo) {
+                            if (connectionInfo.localLaunch) {
+                                localizedUri = localize.DataScience.localJupyterServer();
+                            } else {
+                                if (connectionInfo.token) {
+                                    localizedUri = `${connectionInfo.baseUrl}?token=${connectionInfo.token}`;
+                                } else {
+                                    localizedUri = connectionInfo.baseUrl;
+                                }
+
+                                // Log this remote URI into our MRU list
+                                addToUriList(this.globalStorage, localizedUri, Date.now());
+                            }
+                        }
+
                         const name = kernelSpec.display_name || kernelSpec.name;
 
                         await this.postMessage(InteractiveWindowMessages.UpdateKernel, {
                             jupyterServerStatus: status,
-                            localizedUri: settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch ?
-                                localize.DataScience.localJupyterServer() : settings.datascience.jupyterServerURI,
+                            localizedUri,
                             displayName: name
                         });
                     }
                 }
             };
-            this.notebook.onSessionStatusChanged(statusChangeHandler);
+            this._notebook.onSessionStatusChanged(statusChangeHandler);
+            this._notebook.onKernelChanged(this.kernelChangeHandler);
         }
 
         traceInfo('Connected to jupyter server.');
@@ -1090,16 +1113,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private generateSysInfoCell = async (reason: SysInfoReason): Promise<ICell | undefined> => {
         // Execute the code 'import sys\r\nsys.version' and 'import sys\r\nsys.executable' to get our
         // version and executable
-        if (this.notebook) {
+        if (this._notebook) {
             const message = await this.generateSysInfoMessage(reason);
 
             // The server handles getting this data.
-            const sysInfo = await this.notebook.getSysInfo();
+            const sysInfo = await this._notebook.getSysInfo();
             if (sysInfo) {
                 // Connection string only for our initial start, not restart or interrupt
                 let connectionString: string = '';
                 if (reason === SysInfoReason.Start) {
-                    connectionString = this.generateConnectionInfoString(this.notebook.server.getConnectionInfo());
+                    connectionString = this.generateConnectionInfoString(this._notebook.server.getConnectionInfo());
                 }
 
                 // Update our sys info with our locally applied data.
@@ -1114,7 +1137,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 return sysInfo;
             }
         }
-    }
+    };
 
     private async generateSysInfoMessage(reason: SysInfoReason): Promise<string> {
         switch (reason) {
@@ -1167,7 +1190,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                         const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
                         const notebookError = await this.jupyterExecution.getNotebookError();
                         if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
-                            this.applicationShell.showWarningMessage(localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName, notebookError));
+                            this.applicationShell.showWarningMessage(
+                                localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName, notebookError)
+                            );
                         }
                     }
                 }
@@ -1181,7 +1206,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 const displayName = activeInterpreter.displayName ? activeInterpreter.displayName : activeInterpreter.path;
                 throw new Error(localize.DataScience.jupyterNotSupportedBecauseOfEnvironment().format(displayName, e.toString()));
             } else {
-                throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()), localize.DataScience.pythonInteractiveHelpLink());
+                throw new JupyterInstallError(
+                    localize.DataScience.jupyterNotSupported().format(await this.jupyterExecution.getNotebookError()),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                );
             }
         }
     }
@@ -1190,7 +1218,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         this.variableRequestStopWatch = new StopWatch();
 
         // Request our new list of variables
-        const vars: IJupyterVariable[] = this.notebook ? await this.jupyterVariables.getVariables(this.notebook) : [];
+        const vars: IJupyterVariable[] = this._notebook ? await this.jupyterVariables.getVariables(this._notebook) : [];
         const variablesResponse: IJupyterVariablesResponse = { executionCount: requestExecutionCount, variables: vars };
 
         // Tag all of our jupyter variables with the execution count of the request
@@ -1203,7 +1231,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
         if (excludeString) {
             const excludeArray = excludeString.split(';');
-            variablesResponse.variables = variablesResponse.variables.filter((value) => {
+            variablesResponse.variables = variablesResponse.variables.filter(value => {
                 return excludeArray.indexOf(value.type) === -1;
             });
         }
@@ -1214,10 +1242,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     // tslint:disable-next-line: no-any
     private async requestVariableValue(payload?: any): Promise<void> {
-        if (payload && this.notebook) {
+        if (payload && this._notebook) {
             const targetVar = payload as IJupyterVariable;
             // Request our variable value
-            const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar, this.notebook);
+            const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar, this._notebook);
             this.postMessage(InteractiveWindowMessages.GetVariableValueResponse, varValue).ignoreErrors();
 
             // Send our fetch time if appropriate.
@@ -1228,7 +1256,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             } else {
                 this.variableRequestPendingCount = Math.max(0, this.variableRequestPendingCount - 1);
             }
-
         }
     }
 
@@ -1241,16 +1268,19 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             // Log the state in our Telemetry
             sendTelemetryEvent(Telemetry.VariableExplorerToggled, undefined, { open: openValue });
         }
-    }
+    };
 
     private requestTmLanguage() {
         // Get the contents of the appropriate tmLanguage file.
         traceInfo('Request for tmlanguage file.');
-        this.themeFinder.findTmLanguage(PYTHON_LANGUAGE).then(s => {
-            this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
-        }).catch(_e => {
-            this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
-        });
+        this.themeFinder
+            .findTmLanguage(PYTHON_LANGUAGE)
+            .then(s => {
+                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, s).ignoreErrors();
+            })
+            .catch(_e => {
+                this.postMessage(InteractiveWindowMessages.LoadTmLanguageResponse, undefined).ignoreErrors();
+            });
     }
 
     private async requestOnigasm(): Promise<void> {
@@ -1259,14 +1289,14 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         traceInfo(`Request for onigasm file at ${filePath}`);
         if (this.fileSystem) {
             if (await this.fileSystem.fileExists(filePath)) {
-                const contents = await fs.readFile(filePath);
+                const contents = await this.fileSystem.readData(filePath);
                 this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
             } else {
                 // During development it's actually in the node_modules folder
                 filePath = path.join(EXTENSION_ROOT_DIR, 'node_modules', 'onigasm', 'lib', 'onigasm.wasm');
                 traceInfo(`Backup request for onigasm file at ${filePath}`);
                 if (await this.fileSystem.fileExists(filePath)) {
-                    const contents = await fs.readFile(filePath);
+                    const contents = await this.fileSystem.readData(filePath);
                     this.postMessage(InteractiveWindowMessages.LoadOnigasmAssemblyResponse, contents).ignoreErrors();
                 } else {
                     traceWarning('Onigasm file not found. Colorization will not be available.');
@@ -1281,34 +1311,16 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async selectServer() {
-        await this.dataScience.selectJupyterURI();
+        await this.commandManager.executeCommand(Commands.SelectJupyterURI);
     }
 
     private async selectKernel() {
-        const settings = this.configuration.getSettings();
-
-        let kernel: KernelSpecInterpreter | undefined;
-
-        if (settings.datascience.jupyterServerURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
-            kernel = await this.dataScience.selectLocalJupyterKernel();
-        } else if (this.notebook) {
-            const connInfo = this.notebook.server.getConnectionInfo();
-
-            if (connInfo) {
-                kernel = await this.dataScience.selectRemoteJupyterKernel(connInfo);
-            }
+        if (!this._notebook) {
+            return;
         }
-
-        if (kernel && (kernel.kernelSpec || kernel.kernelModel) && this.notebook) {
-            if (kernel.interpreter) {
-                this.notebook.setInterpreter(kernel.interpreter);
-            }
-
-            // Change the kernel. A status update should fire that changes our display
-            await this.notebook.setKernelSpec(kernel.kernelSpec || kernel.kernelModel!);
-
-            // Add in a new sys info
-            await this.addSysInfo(SysInfoReason.New);
-        }
+        await this.commandManager.executeCommand(Commands.SwitchJupyterKernel, this._notebook);
+    }
+    private async kernelChangeHandler(_kernel: IJupyterKernelSpec | LiveKernelModel) {
+        await this.addSysInfo(SysInfoReason.New);
     }
 }

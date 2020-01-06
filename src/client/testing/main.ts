@@ -407,7 +407,8 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
             ),
             commandManager.registerCommand(
                 constants.Commands.Tests_Run_Parametrized,
-                (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri, testFunctions: TestFunction[], debug: boolean) => this.runParametrizedTests(cmdSource, resource, testFunctions, debug)
+                (_, cmdSource: CommandSource = CommandSource.commandPalette, resource: Uri, testFunctions: TestFunction[], debug: boolean) =>
+                    this.runParametrizedTests(cmdSource, resource, testFunctions, debug)
             ),
             commandManager.registerCommand(constants.Commands.Tests_Stop, (_, resource: Uri) => this.stopTests(resource)),
             commandManager.registerCommand(constants.Commands.Tests_ViewOutput, (_, cmdSource: CommandSource = CommandSource.commandPalette) => this.viewOutput(cmdSource)),

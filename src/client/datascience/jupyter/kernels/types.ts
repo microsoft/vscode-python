@@ -3,9 +3,12 @@
 
 'use strict';
 
+import { Session } from '@jupyterlab/services';
 import { CancellationToken, QuickPickItem } from 'vscode';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { IJupyterKernel, IJupyterKernelSpec } from '../../types';
+
+export type LiveKernelModel = IJupyterKernel & Partial<IJupyterKernelSpec> & { session: Session.IModel };
 
 export interface IKernelSpecQuickPickItem extends QuickPickItem {
     /**
@@ -21,7 +24,7 @@ export interface IKernelSpecQuickPickItem extends QuickPickItem {
      * @memberof IKernelSpecQuickPickItem
      */
     selection:
-        | { kernelModel: IJupyterKernel & Partial<IJupyterKernelSpec>; kernelSpec: undefined; interpreter: undefined }
+        | { kernelModel: LiveKernelModel; kernelSpec: undefined; interpreter: undefined }
         | { kernelModel: undefined; kernelSpec: IJupyterKernelSpec; interpreter: undefined }
         | { kernelModel: undefined; kernelSpec: undefined; interpreter: PythonInterpreter };
 }

@@ -1,8 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-const common_1 = require("../common");
+
+const common = require('../common');
 function replaceModule(contents, moduleName, quotes) {
     const stringToSearch = `${quotes}${moduleName}${quotes}`;
     const stringToReplaceWith = `${quotes}./node_modules/${moduleName}${quotes}`;
@@ -10,10 +9,10 @@ function replaceModule(contents, moduleName, quotes) {
 }
 // tslint:disable:no-default-export no-invalid-this
 function default_1(source) {
-    common_1.nodeModulesToReplacePaths.forEach(moduleName => {
+    common.nodeModulesToReplacePaths.forEach(moduleName => {
         if (source.indexOf(moduleName) > 0) {
             source = replaceModule(source, moduleName, '"');
-            source = replaceModule(source, moduleName, '\'');
+            source = replaceModule(source, moduleName, "'");
         }
     });
     return source;

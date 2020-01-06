@@ -14,11 +14,10 @@ import { ILaunchDebugConfigurationResolverExperiment } from '../types';
 
 @injectable()
 export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigurationResolverExperiment {
-    constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) { }
+    constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) {}
 
     public modifyConfigurationBasedOnExperiment(debugConfiguration: LaunchRequestArguments): void {
-        if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) &&
-            this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+        if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) && this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             if (this.experimentsManager.inExperiment(WebAppReload.experiment)) {
                 if (this.isWebAppConfiguration(debugConfiguration)) {
                     traceInfo(`Configuration used for Web App Reload experiment (before):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
@@ -39,7 +38,6 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
                     traceInfo(`Configuration used for Web App Reload experiment (after):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
                     sendTelemetryEvent(EventName.PYTHON_WEB_APP_RELOAD, undefined, { subProcessModified, argsModified });
                 }
-
             } else {
                 this.experimentsManager.sendTelemetryIfInExperiment(WebAppReload.control);
             }

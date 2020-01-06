@@ -31,7 +31,13 @@ suite('Application Diagnostics - Register classes in IOC Container', () => {
         registerTypes(instance(serviceManager));
 
         verify(serviceManager.addSingleton<IDiagnosticFilterService>(IDiagnosticFilterService, DiagnosticFilterService));
-        verify(serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerService, DiagnosticCommandPromptHandlerServiceId));
+        verify(
+            serviceManager.addSingleton<IDiagnosticHandlerService<MessageCommandPrompt>>(
+                IDiagnosticHandlerService,
+                DiagnosticCommandPromptHandlerService,
+                DiagnosticCommandPromptHandlerServiceId
+            )
+        );
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, EnvironmentPathVariableDiagnosticsService, EnvironmentPathVariableDiagnosticsServiceId));
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidLaunchJsonDebuggerService, InvalidLaunchJsonDebuggerServiceId));
         verify(serviceManager.addSingleton<IDiagnosticsService>(IDiagnosticsService, InvalidPythonInterpreterService, InvalidPythonInterpreterServiceId));

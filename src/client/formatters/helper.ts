@@ -10,12 +10,15 @@ import { FormatterId, FormatterSettingsPropertyNames, IFormatterHelper } from '.
 
 @injectable()
 export class FormatterHelper implements IFormatterHelper {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     public translateToId(formatter: Product): FormatterId {
         switch (formatter) {
-            case Product.autopep8: return 'autopep8';
-            case Product.black: return 'black';
-            case Product.yapf: return 'yapf';
+            case Product.autopep8:
+                return 'autopep8';
+            case Product.black:
+                return 'black';
+            case Product.yapf:
+                return 'yapf';
             default: {
                 throw new Error(`Unrecognized Formatter '${formatter}'`);
             }
@@ -33,7 +36,7 @@ export class FormatterHelper implements IFormatterHelper {
         const names = this.getSettingsPropertyNames(formatter);
 
         const execPath = settings.formatting[names.pathName] as string;
-        let args: string[] = Array.isArray(settings.formatting[names.argsName]) ? settings.formatting[names.argsName] as string[] : [];
+        let args: string[] = Array.isArray(settings.formatting[names.argsName]) ? (settings.formatting[names.argsName] as string[]) : [];
         args = args.concat(customArgs);
 
         let moduleName: string | undefined;

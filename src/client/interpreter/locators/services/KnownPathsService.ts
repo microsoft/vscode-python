@@ -2,9 +2,8 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
-import { IPlatformService } from '../../../common/platform/types';
+import { IFileSystem, IPlatformService } from '../../../common/platform/types';
 import { ICurrentProcess, IPathUtils } from '../../../common/types';
-import { fsExistsAsync } from '../../../common/utils/fs';
 import { IServiceContainer } from '../../../ioc/types';
 import { IInterpreterHelper, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../contracts';
 import { lookForInterpretersInDirectory } from '../helpers';
@@ -30,7 +29,7 @@ export class KnownPathsService extends CacheableLocatorService {
      * Called by VS Code to indicate it is done with the resource.
      */
     // tslint:disable-next-line:no-empty
-    public dispose() { }
+    public dispose() {}
 
     /**
      * Return the located interpreters.
@@ -73,14 +72,14 @@ export class KnownPathsService extends CacheableLocatorService {
      * Return the interpreters in the given directory.
      */
     private getInterpretersInDirectory(dir: string) {
-        return fsExistsAsync(dir)
-            .then(exists => exists ? lookForInterpretersInDirectory(dir) : Promise.resolve<string[]>([]));
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        return fs.directoryExists(dir).then(exists => (exists ? lookForInterpretersInDirectory(dir, fs) : Promise.resolve<string[]>([])));
     }
 }
 
 @injectable()
 export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInterpreters {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
     /**
      * Return the paths where Python interpreters might be found.
      */
@@ -89,17 +88,15 @@ export class KnownSearchPathsForInterpreters implements IKnownSearchPathsForInte
         const platformService = this.serviceContainer.get<IPlatformService>(IPlatformService);
         const pathUtils = this.serviceContainer.get<IPathUtils>(IPathUtils);
 
-        const searchPaths = currentProcess.env[platformService.pathVariableName]!
-            .split(pathUtils.delimiter)
+        const searchPaths = currentProcess.env[platformService.pathVariableName]!.split(pathUtils.delimiter)
             .map(p => p.trim())
             .filter(p => p.length > 0);
 
         if (!platformService.isWindows) {
-            ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin']
-                .forEach(p => {
-                    searchPaths.push(p);
-                    searchPaths.push(path.join(pathUtils.home, p));
-                });
+            ['/usr/local/bin', '/usr/bin', '/bin', '/usr/sbin', '/sbin', '/usr/local/sbin'].forEach(p => {
+                searchPaths.push(p);
+                searchPaths.push(path.join(pathUtils.home, p));
+            });
             // Add support for paths such as /Users/xxx/anaconda/bin.
             if (process.env.HOME) {
                 searchPaths.push(path.join(pathUtils.home, 'anaconda', 'bin'));

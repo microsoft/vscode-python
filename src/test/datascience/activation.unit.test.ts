@@ -42,7 +42,7 @@ suite('Data Science - Activation', () => {
         await activator.activate();
     });
 
-    async function testCreatingDaemonWhenOpeningANotebook(){
+    async function testCreatingDaemonWhenOpeningANotebook() {
         const notebook = mock(NativeEditor);
         const interpreter = ({ path: 'MY_PY' } as any) as PythonInterpreter;
 

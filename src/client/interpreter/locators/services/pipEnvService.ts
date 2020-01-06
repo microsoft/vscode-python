@@ -102,9 +102,7 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
             const version = await this.invokePipenv('--version', cwd);
             if (version === undefined) {
                 const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-                appShell.showWarningMessage(
-                    `Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`
-                );
+                appShell.showWarningMessage(`Workspace contains Pipfile but '${this.executable}' was not found. Make sure '${this.executable}' is on the PATH.`);
                 return;
             }
             // The --py command will fail if the virtual environment has not been setup yet.
@@ -160,13 +158,10 @@ export class PipEnvService extends CacheableLocatorService implements IPipEnvSer
                 LC_ALL: currentProc.env.LC_ALL,
                 LANG: currentProc.env.LANG
             };
-            enviromentVariableValues[platformService.pathVariableName] =
-                currentProc.env[platformService.pathVariableName];
+            enviromentVariableValues[platformService.pathVariableName] = currentProc.env[platformService.pathVariableName];
 
             this.logger.logWarning('Error in invoking PipEnv', error);
-            this.logger.logWarning(
-                `Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`
-            );
+            this.logger.logWarning(`Relevant Environment Variables ${JSON.stringify(enviromentVariableValues, undefined, 4)}`);
         }
     }
 }

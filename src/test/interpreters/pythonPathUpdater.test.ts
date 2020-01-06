@@ -29,10 +29,12 @@ suite('Python Path Settings Updater', () => {
             const updater = updaterServiceFactory.getGlobalPythonPathConfigurationService();
             const pythonPath = `xGlobalPythonPath${new Date().getMilliseconds()}`;
             const workspaceConfig = setupConfigProvider();
-            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => {
-                // tslint:disable-next-line:no-any
-                return { globalValue: pythonPath } as any;
-            });
+            workspaceConfig
+                .setup(w => w.inspect(TypeMoq.It.isValue('pythonPath')))
+                .returns(() => {
+                    // tslint:disable-next-line:no-any
+                    return { globalValue: pythonPath } as any;
+                });
 
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
@@ -56,10 +58,12 @@ suite('Python Path Settings Updater', () => {
             const updater = updaterServiceFactory.getWorkspaceFolderPythonPathConfigurationService(workspaceFolder);
             const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
             const workspaceConfig = setupConfigProvider(workspaceFolder);
-            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => {
-                // tslint:disable-next-line:no-any
-                return { workspaceFolderValue: pythonPath } as any;
-            });
+            workspaceConfig
+                .setup(w => w.inspect(TypeMoq.It.isValue('pythonPath')))
+                .returns(() => {
+                    // tslint:disable-next-line:no-any
+                    return { workspaceFolderValue: pythonPath } as any;
+                });
 
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
@@ -73,7 +77,10 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)), TypeMoq.Times.once());
+            workspaceConfig.verify(
+                w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)),
+                TypeMoq.Times.once()
+            );
         });
         test('Python Path should be truncated for worspace-relative paths', async () => {
             const workspaceFolderPath = path.join('user', 'desktop', 'development');
@@ -85,7 +92,10 @@ suite('Python Path Settings Updater', () => {
             workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => undefined);
 
             await updater.updatePythonPath(pythonPath);
-            workspaceConfig.verify(w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)), TypeMoq.Times.once());
+            workspaceConfig.verify(
+                w => w.update(TypeMoq.It.isValue('pythonPath'), TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(ConfigurationTarget.WorkspaceFolder)),
+                TypeMoq.Times.once()
+            );
         });
     });
     suite('Workspace (multiroot scenario)', () => {
@@ -96,10 +106,12 @@ suite('Python Path Settings Updater', () => {
             const updater = updaterServiceFactory.getWorkspacePythonPathConfigurationService(workspaceFolder);
             const pythonPath = `xWorkspaceFolderPythonPath${new Date().getMilliseconds()}`;
             const workspaceConfig = setupConfigProvider(workspaceFolder);
-            workspaceConfig.setup(w => w.inspect(TypeMoq.It.isValue('pythonPath'))).returns(() => {
-                // tslint:disable-next-line:no-any
-                return { workspaceValue: pythonPath } as any;
-            });
+            workspaceConfig
+                .setup(w => w.inspect(TypeMoq.It.isValue('pythonPath')))
+                .returns(() => {
+                    // tslint:disable-next-line:no-any
+                    return { workspaceValue: pythonPath } as any;
+                });
 
             await updater.updatePythonPath(pythonPath);
             workspaceConfig.verify(w => w.update(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());

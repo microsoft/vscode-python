@@ -9,9 +9,7 @@ import { IAsyncDisposable } from '../../../common/types';
 import { ClassType } from '../../../ioc/types';
 import { ILiveShareHasRole, ILiveShareParticipant } from './types';
 
-export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {
-
-}
+export interface IRoleBasedObject extends IAsyncDisposable, ILiveShareParticipant {}
 
 // tslint:disable:no-any
 export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends ClassType<T>> implements ILiveShareHasRole {
@@ -44,7 +42,6 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
     }
 
     private async createBasedOnRole(): Promise<T> {
-
         // Figure out our role to compute the object to create. Default is host. This
         // allows for the host object to keep existing if we suddenly start a new session.
         // For a guest, starting a new session resets the entire workspace.
@@ -78,10 +75,9 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
         // If the session changes, tell the listener
         if (api && this.firstTime) {
             this.firstTime = false;
-            api.onDidChangeSession((_a) => {
+            api.onDidChangeSession(_a => {
                 // Dispose the object if the role changes
-                const newRole = api !== null && api.session && api.session.role === vsls.Role.Guest ?
-                    vsls.Role.Guest : vsls.Role.Host;
+                const newRole = api !== null && api.session && api.session.role === vsls.Role.Guest ? vsls.Role.Guest : vsls.Role.Host;
                 if (newRole !== role) {
                     obj.dispose().ignoreErrors();
                 }
@@ -96,7 +92,7 @@ export class RoleBasedFactory<T extends IRoleBasedObject, CtorType extends Class
                     this.sessionChangedEmitter.fire();
                 }
             });
-            api.onDidChangePeers((e) => {
+            api.onDidChangePeers(e => {
                 if (!objDisposed) {
                     obj.onPeerChange(e).ignoreErrors();
                 }
