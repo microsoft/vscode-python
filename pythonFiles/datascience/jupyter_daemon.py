@@ -28,13 +28,13 @@ class PythonDaemon(BasePythonDaemon):
         args = [] if args is None else args
 
         if module_name == "jupyter":
-            # When checking if `kernelspec` subcommand is available, use subprocess.
-            # I.e. just because we can import kernelspec doesn't mean module is installed.
-            if args[0] == "kernelspec" and self._is_module_installed("jupyter_client.kernelspec") and args[1] != "--version":
+            if args[0] == "kernelspec" and self._is_module_installed("jupyter_client.kernelspec"):
                 if args == ["kernelspec", "list", "--json"]:
                     return self._execute_and_capture_output(self._print_kernel_list_json)
                 elif args == ["kernelspec", "list"]:
                     return self._execute_and_capture_output(self._print_kernel_list)
+                elif args == ["kernelspec", "--version"]:
+                    return self._execute_and_capture_output(self._print_kernelspec_version)
             if args[0] == "nbconvert" and self._is_module_installed("nbconvert") and args[-1] != "--version":
                 return self._execute_and_capture_output(lambda : self._convert(args))
             if args[0] == "notebook" and args[1] == "--version":
@@ -83,6 +83,15 @@ class PythonDaemon(BasePythonDaemon):
             self._start_notebook(args, cwd, env)
         else:
             return super().m_exec_module_observable(module_name, args, cwd, env)
+
+    def _print_kernelspec_version(self):
+        import jupyter_client
+
+        # Check whether kernelspec module exists.
+        import jupyter_client.kernelspec
+
+        sys.stdout.write(jupyter_client.__version__)
+        sys.stdout.flush()
 
     def _print_kernel_list(self):
         self.log.info("listing kernels")
