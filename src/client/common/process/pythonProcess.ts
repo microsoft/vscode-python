@@ -9,7 +9,6 @@ import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
 import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { waitForPromise } from '../utils/async';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
 import {
@@ -39,15 +38,26 @@ export class PythonExecutionService implements IPythonExecutionService {
             // https://github.com/microsoft/vscode-python/issues/7569
             // https://github.com/microsoft/vscode-python/issues/7760
             const { command, args } = this.getExecutionInfo([file]);
-            const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 15000).then(output =>
-                output ? output.stdout.trim() : '--timed out--'
-            ); // --timed out-- should cause an exception
+
+            const jsonValue = await new Promise<string>((resolve, reject) => {
+                const timer = setTimeout(() => resolve('--timed out --'), 15000);
+                this.procService
+                    .exec(command, args, { mergeStdOutErr: true })
+                    .then(o => {
+                        clearTimeout(timer);
+                        resolve(o.stdout);
+                    })
+                    .catch(ex => {
+                        clearTimeout(timer);
+                        reject(ex);
+                    });
+            }); // --timed out-- should cause an exception
 
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {
                 json = JSON.parse(jsonValue);
             } catch (ex) {
-                traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
+                traceError(`Failed to parse interpreter information for '${command} ${args}' with JSON ${jsonValue}`, ex);
                 return;
             }
             const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
