@@ -113,8 +113,9 @@ export class AttachConfigurationResolver extends BaseConfigurationResolver<Attac
                 remoteRoot: remoteRoot
             });
         }
-        // If attaching to local host, then always map local root and remote roots.
-        if (this.isLocalHost(host)) {
+        // If attaching to local host, then always map local root and remote roots. And using the old ptvsd.
+        if (this.isLocalHost(host) &&
+            !(this.experiments.inExperiment(DebugAdapterNewPtvsd.experiment) && this.experiments.inExperiment(DebugAdapterDescriptorFactory.experiment))) {
             pathMappings = this.fixUpPathMappings(pathMappings, workspaceFolder ? workspaceFolder.fsPath : '');
         }
         return pathMappings.length > 0 ? pathMappings : undefined;
