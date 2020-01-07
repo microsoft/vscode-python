@@ -101,7 +101,7 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 
 ### Running System Tests
 
-Note: System tests are those in files with extension `.test.ts` but which are not `.unit.test.ts`.
+Note: System tests are those in files with extension `.test*.ts` but which are not `.unit.test.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
