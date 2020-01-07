@@ -8,11 +8,13 @@
 import { expect } from 'chai';
 import * as os from 'os';
 import * as path from 'path';
+// prettier-ignore
 import {
     Executables,
     FileSystemPaths,
     FileSystemPathUtils
 } from '../../../client/common/platform/fs-paths';
+// prettier-ignore
 import {
     fixPath, FSFixture, OSX, SUPPORTS_SYMLINKS, WINDOWS as IS_WINDOWS
 } from './utils';
@@ -111,6 +113,7 @@ suite('FileSystem - Paths', () => {
         test('parts get joined by path.sep', () => {
             const expected = path.join('x', 'y', 'z', 'spam.py');
 
+            // prettier-ignore
             const result = paths.join(
                 'x',
                 path.sep === '\\' ? 'y\\z' : 'y/z',

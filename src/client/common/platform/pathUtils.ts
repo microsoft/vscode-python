@@ -5,6 +5,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
 import { OSType } from '../utils/platform';
+// prettier-ignore
 import {
     Executables,
     FileSystemPaths,
@@ -16,11 +17,13 @@ const untildify = require('untildify');
 @injectable()
 export class PathUtils implements IPathUtils {
     private readonly utils: FileSystemPathUtils;
+    // prettier-ignore
     constructor(
         @inject(IsWindows) isWindows: boolean
     ) {
         // We cannot just use FileSystemPathUtils.withDefaults() because
         // of the isWindows arg.
+        // prettier-ignore
         this.utils = new FileSystemPathUtils(
             untildify('~'),
             FileSystemPaths.withDefaults(),

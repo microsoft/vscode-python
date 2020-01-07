@@ -4,6 +4,7 @@
 import * as fs from 'fs-extra';
 import * as nodepath from 'path';
 import { getOSType, OSType } from '../utils/platform';
+// prettier-ignore
 import {
     IExecutables,
     IFileSystemPaths
@@ -22,6 +23,7 @@ interface INodePath {
 
 // The file path operations used by the extension.
 export class FileSystemPaths {
+    // prettier-ignore
     constructor(
         private readonly isCaseInsensitive: boolean,
         private readonly raw: INodePath
@@ -29,12 +31,14 @@ export class FileSystemPaths {
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
+    // prettier-ignore
     public static withDefaults(
         isCaseInsensitive?: boolean
     ): FileSystemPaths {
         if (isCaseInsensitive === undefined) {
-            isCaseInsensitive = (getOSType() === OSType.Windows);
+            isCaseInsensitive = getOSType() === OSType.Windows;
         }
+        // prettier-ignore
         return new FileSystemPaths(
             isCaseInsensitive,
             nodepath
@@ -63,6 +67,7 @@ export class FileSystemPaths {
 
     public normCase(filename: string): string {
         filename = this.raw.normalize(filename);
+        // prettier-ignore
         return this.isCaseInsensitive
             ? filename.toUpperCase()
             : filename;
@@ -74,6 +79,7 @@ export class FileSystemPaths {
 // In particular this class provides all the tools needed to find
 // executables, including through an environment variable.
 export class Executables {
+    // prettier-ignore
     constructor(
         public readonly delimiter: string,
         private readonly osType: OSType
@@ -82,6 +88,7 @@ export class Executables {
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
     public static withDefaults(): Executables {
+        // prettier-ignore
         return new Executables(
             nodepath.delimiter,
             getOSType()
@@ -89,6 +96,7 @@ export class Executables {
     }
 
     public get envVar(): string {
+        // prettier-ignore
         return this.osType === OSType.Windows
             ? 'Path'
             : 'PATH';
@@ -102,6 +110,7 @@ interface IRawPaths {
 
 // A collection of high-level utilities related to filesystem paths.
 export class FileSystemPathUtils {
+    // prettier-ignore
     constructor(
         public readonly home: string,
         public readonly paths: IFileSystemPaths,
@@ -111,12 +120,14 @@ export class FileSystemPathUtils {
     // Create a new object using common-case default values.
     // We do not use an alternate constructor because defaults in the
     // constructor runs counter to our typical approach.
+    // prettier-ignore
     public static withDefaults(
         paths?: IFileSystemPaths
     ): FileSystemPathUtils {
         if (paths === undefined) {
             paths = FileSystemPaths.withDefaults();
         }
+        // prettier-ignore
         return new FileSystemPathUtils(
             untildify('~'),
             paths,

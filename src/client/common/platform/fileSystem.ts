@@ -12,6 +12,7 @@ import { promisify } from 'util';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
+// prettier-ignore
 import {
     FileStat, FileType,
     IFileSystem, IFileSystemPaths, IPlatformService,
@@ -84,9 +85,11 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
 export class FileSystem implements IFileSystem {
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
+    // prettier-ignore
     constructor(
         @inject(IPlatformService) platformService: IPlatformService
     ) {
+        // prettier-ignore
         this.paths = FileSystemPaths.withDefaults(
             platformService.isWindows
         );

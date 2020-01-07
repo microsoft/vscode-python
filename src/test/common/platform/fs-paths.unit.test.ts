@@ -30,6 +30,7 @@ suite('FileSystem - Path Utils', () => {
     let utils: FileSystemPathUtils;
     setup(() => {
         deps = TypeMoq.Mock.ofType<IUtilsDeps>(undefined, TypeMoq.MockBehavior.Strict);
+        // prettier-ignore
         utils = new FileSystemPathUtils(
             'my-home',
             deps.object,
@@ -49,6 +50,7 @@ suite('FileSystem - Path Utils', () => {
                 const osType = item.value;
 
                 function setNormCase(filename: string, numCalls = 1): string {
+                    // prettier-ignore
                     const norm = (osType === OSType.Windows)
                         ? path.normalize(filename).toUpperCase()
                         : filename;
@@ -58,6 +60,7 @@ suite('FileSystem - Path Utils', () => {
                     return filename;
                 }
 
+                // prettier-ignore
                 [
                     'c:\\users\\Peter Smith\\my documents\\test.txt',
 
