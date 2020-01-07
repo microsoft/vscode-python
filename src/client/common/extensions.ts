@@ -44,7 +44,7 @@ declare interface String {
  * By default lines are trimmed and empty lines are removed.
  * @param {SplitLinesOptions=} splitOptions - Options used for splitting the string.
  */
-String.prototype.splitLines = function (this: string, splitOptions: { trim: boolean; removeEmptyEntries: boolean } = { removeEmptyEntries: true, trim: true }): string[] {
+String.prototype.splitLines = function(this: string, splitOptions: { trim: boolean; removeEmptyEntries: boolean } = { removeEmptyEntries: true, trim: true }): string[] {
     let lines = this.split(/\r?\n/g);
     if (splitOptions && splitOptions.trim) {
         lines = lines.map(line => line.trim());
@@ -60,18 +60,18 @@ String.prototype.splitLines = function (this: string, splitOptions: { trim: bool
  * E.g. if an argument contains a space, then it will be enclosed within double quotes.
  * @param {String} value.
  */
-String.prototype.toCommandArgument = function (this: string): string {
+String.prototype.toCommandArgument = function(this: string): string {
     if (!this) {
         return this;
     }
-    return (this.indexOf(' ') >= 0 && !this.startsWith('"') && !this.endsWith('"')) ? `"${this}"` : this.toString();
+    return this.indexOf(' ') >= 0 && !this.startsWith('"') && !this.endsWith('"') ? `"${this}"` : this.toString();
 };
 
 /**
  * Appropriately formats a a file path so it can be used as an argument for a command in a shell.
  * E.g. if an argument contains a space, then it will be enclosed within double quotes.
  */
-String.prototype.fileToCommandArgument = function (this: string): string {
+String.prototype.fileToCommandArgument = function(this: string): string {
     if (!this) {
         return this;
     }
@@ -82,7 +82,7 @@ String.prototype.fileToCommandArgument = function (this: string): string {
  * String.trimQuotes implementation
  * Removes leading and trailing quotes from a string
  */
-String.prototype.trimQuotes = function (this: string): string {
+String.prototype.trimQuotes = function(this: string): string {
     if (!this) {
         return this;
     }
@@ -100,14 +100,14 @@ declare interface Promise<T> {
 /**
  * Explicitly tells that promise should be run asynchonously.
  */
-Promise.prototype.ignoreErrors = function <T>(this: Promise<T>) {
+Promise.prototype.ignoreErrors = function<T>(this: Promise<T>) {
     // tslint:disable-next-line:no-empty
-    this.catch(() => { });
+    this.catch(() => {});
 };
 
 if (!String.prototype.format) {
-    String.prototype.format = function (this: string) {
+    String.prototype.format = function(this: string) {
         const args = arguments;
-        return this.replace(/{(\d+)}/g, (match, number) => args[number] === undefined ? match : args[number]);
+        return this.replace(/{(\d+)}/g, (match, number) => (args[number] === undefined ? match : args[number]));
     };
 }

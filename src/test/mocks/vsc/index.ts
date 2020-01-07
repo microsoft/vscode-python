@@ -15,7 +15,7 @@ export * from './uri';
 
 export namespace vscMock {
     export class Disposable {
-        constructor(private callOnDispose: Function) { }
+        constructor(private callOnDispose: Function) {}
         public dispose(): any {
             if (this.callOnDispose) {
                 this.callOnDispose();
@@ -46,7 +46,7 @@ export namespace vscMock {
                     this.emitter.removeListener('evt', bound);
                 }
             } as any) as Disposable;
-        }
+        };
     }
 
     export class CancellationToken extends EventEmitter<any> implements vscode.CancellationToken {
@@ -153,7 +153,7 @@ export namespace vscMock {
         public static readonly SourceOrganizeImports: CodeActionKind = new CodeActionKind('source.organize.imports');
         public static readonly SourceFixAll: CodeActionKind = new CodeActionKind('source.fix.all');
 
-        private constructor(private _value: string) { }
+        private constructor(private _value: string) {}
 
         public append(parts: string): CodeActionKind {
             return new CodeActionKind(`${this._value}.${parts}`);
@@ -178,10 +178,10 @@ export namespace vscMock {
     }
 
     export class DebugAdapterServer {
-        constructor(public readonly port: number, public readonly host?: string) { }
+        constructor(public readonly port: number, public readonly host?: string) {}
     }
     export class DebugAdapterExecutable {
-        constructor(public readonly command: string, public readonly args: string[] = [], public readonly options?: DebugAdapterExecutableOptions) { }
+        constructor(public readonly command: string, public readonly args: string[] = [], public readonly options?: DebugAdapterExecutableOptions) {}
     }
 
     export enum FileType {

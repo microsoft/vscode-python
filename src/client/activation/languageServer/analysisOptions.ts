@@ -25,7 +25,8 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     private interpreter: PythonInterpreter | undefined;
     private output: IOutputChannel;
     private readonly didChange = new EventEmitter<void>();
-    constructor(@inject(IExtensionContext) private readonly context: IExtensionContext,
+    constructor(
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IConfigurationService) private readonly configuration: IConfigurationService,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
@@ -169,9 +170,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
         const pythonSettings = this.configuration.getSettings(this.resource);
         const paths = pythonSettings && pythonSettings.linting ? pythonSettings.linting.ignorePatterns : undefined;
         if (paths && Array.isArray(paths)) {
-            paths
-                .filter(p => p && p.length > 0)
-                .forEach(p => list.push(p));
+            paths.filter(p => p && p.length > 0).forEach(p => list.push(p));
         }
     }
     protected getTypeshedPaths(): string[] {
@@ -182,8 +181,7 @@ export class LanguageServerAnalysisOptions implements ILanguageServerAnalysisOpt
     }
     protected getCacheFolderPath(): string | null {
         const settings = this.configuration.getSettings(this.resource);
-        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0
-            ? settings.analysis.cacheFolderPath : null;
+        return settings.analysis.cacheFolderPath && settings.analysis.cacheFolderPath.length > 0 ? settings.analysis.cacheFolderPath : null;
     }
     protected async onSettingsChangedHandler(e?: ConfigurationChangeEvent): Promise<void> {
         if (e && !e.affectsConfiguration('python', this.resource)) {

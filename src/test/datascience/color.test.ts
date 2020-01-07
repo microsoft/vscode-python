@@ -9,6 +9,8 @@ import { Extensions } from '../../client/common/application/extensions';
 import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { Logger } from '../../client/common/logger';
+import { FileSystem } from '../../client/common/platform/fileSystem';
+import { PlatformService } from '../../client/common/platform/platformService';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
@@ -32,18 +34,22 @@ suite('Theme colors', () => {
         extensions = new Extensions();
         currentProcess = new CurrentProcess();
         logger = new Logger();
-        themeFinder = new ThemeFinder(extensions, currentProcess, logger);
+        const fs = new FileSystem(new PlatformService());
+        themeFinder = new ThemeFinder(extensions, currentProcess, logger, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
-        workspaceConfig.setup(ws => ws.has(TypeMoq.It.isAnyString()))
+        workspaceConfig
+            .setup(ws => ws.has(TypeMoq.It.isAnyString()))
             .returns(() => {
                 return false;
             });
-        workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString()))
+        workspaceConfig
+            .setup(ws => ws.get(TypeMoq.It.isAnyString()))
             .returns(() => {
                 return undefined;
             });
-        workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+        workspaceConfig
+            .setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
             .returns((_s, d) => {
                 return d;
             });
@@ -79,7 +85,7 @@ suite('Theme colors', () => {
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
         workspaceService.setup(c => c.getConfiguration(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => workspaceConfig.object);
 
-        cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, logger);
+        cssGenerator = new CodeCssGenerator(workspaceService.object, themeFinder, configService.object, logger, fs);
     });
 
     function runTest(themeName: string, isDark: boolean, shouldExist: boolean) {
@@ -90,16 +96,23 @@ suite('Theme colors', () => {
                 const actuallyDark = await themeFinder.isThemeDark(themeName);
                 assert.equal(actuallyDark, isDark, `Theme ${themeName} darkness is not ${isDark}`);
                 workspaceConfig.reset();
-                workspaceConfig.setup(ws => ws.get<string>(TypeMoq.It.isValue('colorTheme'))).returns(() => {
-                    return themeName;
-                });
-                workspaceConfig.setup(ws => ws.get<string>(TypeMoq.It.isValue('fontFamily'))).returns(() => {
-                    return 'Arial';
-                });
-                workspaceConfig.setup(ws => ws.get<number>(TypeMoq.It.isValue('fontSize'))).returns(() => {
-                    return 16;
-                });
-                workspaceConfig.setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
+                workspaceConfig
+                    .setup(ws => ws.get<string>(TypeMoq.It.isValue('colorTheme')))
+                    .returns(() => {
+                        return themeName;
+                    });
+                workspaceConfig
+                    .setup(ws => ws.get<string>(TypeMoq.It.isValue('fontFamily')))
+                    .returns(() => {
+                        return 'Arial';
+                    });
+                workspaceConfig
+                    .setup(ws => ws.get<number>(TypeMoq.It.isValue('fontSize')))
+                    .returns(() => {
+                        return 16;
+                    });
+                workspaceConfig
+                    .setup(ws => ws.get(TypeMoq.It.isAnyString(), TypeMoq.It.isAny()))
                     .returns((_s, d) => {
                         return d;
                     });
@@ -144,7 +157,8 @@ suite('Theme colors', () => {
         mockThemeFinder.setup(m => m.isThemeDark(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
         mockThemeFinder.setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
 
-        cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, logger);
+        const fs = new FileSystem(new PlatformService());
+        cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, logger, fs);
 
         const colors = await cssGenerator.generateThemeCss(false, 'Kimbie Dark');
         assert.ok(colors, 'Cannot find theme colors for Kimbie Dark');
@@ -156,5 +170,4 @@ suite('Theme colors', () => {
         assert.equal(matches!.length, 2, 'Wrong number of matches for for string color');
         assert.ok(matches![1].includes('#'), 'String color not found');
     });
-
 });

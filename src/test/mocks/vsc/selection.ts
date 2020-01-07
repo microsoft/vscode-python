@@ -92,9 +92,7 @@ export namespace vscMockSelection {
          * Test if equals other selection.
          */
         public equalsSelection(other: ISelection): boolean {
-            return (
-                Selection.selectionsEqual(this, other)
-            );
+            return Selection.selectionsEqual(this, other);
         }
 
         /**
@@ -166,7 +164,7 @@ export namespace vscMockSelection {
          * `a` equals `b`.
          */
         public static selectionsArrEqual(a: ISelection[], b: ISelection[]): boolean {
-            if (a && !b || !a && b) {
+            if ((a && !b) || (!a && b)) {
                 return false;
             }
             if (!a && !b) {
@@ -188,11 +186,11 @@ export namespace vscMockSelection {
          */
         public static isISelection(obj: any): obj is ISelection {
             return (
-                obj
-                && (typeof obj.selectionStartLineNumber === 'number')
-                && (typeof obj.selectionStartColumn === 'number')
-                && (typeof obj.positionLineNumber === 'number')
-                && (typeof obj.positionColumn === 'number')
+                obj &&
+                typeof obj.selectionStartLineNumber === 'number' &&
+                typeof obj.selectionStartColumn === 'number' &&
+                typeof obj.positionLineNumber === 'number' &&
+                typeof obj.positionColumn === 'number'
             );
         }
 
@@ -200,7 +198,6 @@ export namespace vscMockSelection {
          * Create with a direction.
          */
         public static createWithDirection(startLineNumber: number, startColumn: number, endLineNumber: number, endColumn: number, direction: SelectionDirection): Selection {
-
             if (direction === SelectionDirection.LTR) {
                 return new Selection(startLineNumber, startColumn, endLineNumber, endColumn);
             }

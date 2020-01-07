@@ -12,7 +12,7 @@ import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
 /*
  * Do not introduce any breaking changes to this API.
  * This is the public API for other extensions to interact with this extension.
-*/
+ */
 
 export interface IExtensionApi {
     /**
@@ -39,7 +39,7 @@ export interface IExtensionApi {
 export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory) {
     return {
         // 'ready' will propagate the exception, but we must log it here first.
-        ready: ready.catch((ex) => {
+        ready: ready.catch(ex => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),

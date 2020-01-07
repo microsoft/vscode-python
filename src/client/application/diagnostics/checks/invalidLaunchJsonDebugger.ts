@@ -18,24 +18,14 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../types';
 
 const messages = {
-    [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]:
-        Diagnostics.invalidDebuggerTypeDiagnostic(),
-    [DiagnosticCodes.JustMyCodeDiagnostic]:
-        Diagnostics.justMyCodeDiagnostic(),
-    [DiagnosticCodes.ConsoleTypeDiagnostic]:
-        Diagnostics.consoleTypeDiagnostic()
+    [DiagnosticCodes.InvalidDebuggerTypeDiagnostic]: Diagnostics.invalidDebuggerTypeDiagnostic(),
+    [DiagnosticCodes.JustMyCodeDiagnostic]: Diagnostics.justMyCodeDiagnostic(),
+    [DiagnosticCodes.ConsoleTypeDiagnostic]: Diagnostics.consoleTypeDiagnostic()
 };
 
 export class InvalidLaunchJsonDebuggerDiagnostic extends BaseDiagnostic {
     constructor(code: DiagnosticCodes.InvalidDebuggerTypeDiagnostic | DiagnosticCodes.JustMyCodeDiagnostic | DiagnosticCodes.ConsoleTypeDiagnostic, resource: Resource) {
-        super(
-            code,
-            messages[code],
-            DiagnosticSeverity.Error,
-            DiagnosticScope.WorkspaceFolder,
-            resource,
-            'always'
-        );
+        super(code, messages[code], DiagnosticSeverity.Error, DiagnosticScope.WorkspaceFolder, resource, 'always');
     }
 }
 
@@ -52,7 +42,12 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
         @named(DiagnosticCommandPromptHandlerServiceId)
         private readonly messageService: IDiagnosticHandlerService<MessageCommandPrompt>
     ) {
-        super([DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic], serviceContainer, disposableRegistry, true);
+        super(
+            [DiagnosticCodes.InvalidDebuggerTypeDiagnostic, DiagnosticCodes.JustMyCodeDiagnostic, DiagnosticCodes.ConsoleTypeDiagnostic],
+            serviceContainer,
+            disposableRegistry,
+            true
+        );
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         if (!this.workspaceService.hasWorkspaceFolders) {
@@ -69,9 +64,7 @@ export class InvalidLaunchJsonDebuggerService extends BaseDiagnosticsService {
             return;
         }
 
-        await Promise.all(
-            this.workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(code, workspaceFolder))
-        );
+        await Promise.all(this.workspaceService.workspaceFolders!.map(workspaceFolder => this.fixLaunchJsonInWorkspace(code, workspaceFolder)));
     }
     private async diagnoseWorkspace(workspaceFolder: WorkspaceFolder, resource: Resource) {
         const launchJson = this.getLaunchJsonFile(workspaceFolder);

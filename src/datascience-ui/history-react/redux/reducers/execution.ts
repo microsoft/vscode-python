@@ -17,7 +17,6 @@ import { InteractiveReducerArg } from '../mapping';
 import { Creation } from './creation';
 
 export namespace Execution {
-
     export function undo(arg: InteractiveReducerArg): IMainState {
         if (arg.prevState.undoStack.length > 0) {
             // Pop one off of our undo stack and update our redo
@@ -99,8 +98,8 @@ export namespace Execution {
             }
 
             // Update input controls (always show expanded since we just edited it.)
-            newCell = createCellVM(newCell.cell, arg.prevState.settings, false);
-            const collapseInputs = arg.prevState.settings.collapseCellInputCodeByDefault;
+            newCell = createCellVM(newCell.cell, arg.prevState.settings, false, false);
+            const collapseInputs = arg.prevState.settings ? arg.prevState.settings.collapseCellInputCodeByDefault : false;
             newCell = Creation.alterCellVM(newCell, arg.prevState.settings, true, !collapseInputs);
             newCell.useQuickEdit = false;
 

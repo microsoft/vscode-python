@@ -53,21 +53,20 @@ suite('Linter Info - Pylint', () => {
 
         expect(linterInfo.isEnabled()).to.be.false;
     });
-    const testsForisEnabled =
-        [
-            {
-                testName: 'When workspaceFolder setting is provided',
-                inspection: { workspaceFolderValue: true }
-            },
-            {
-                testName: 'When workspace setting is provided',
-                inspection: { workspaceValue: true }
-            },
-            {
-                testName: 'When global setting is provided',
-                inspection: { globalValue: true }
-            }
-        ];
+    const testsForisEnabled = [
+        {
+            testName: 'When workspaceFolder setting is provided',
+            inspection: { workspaceFolderValue: true }
+        },
+        {
+            testName: 'When workspace setting is provided',
+            inspection: { workspaceValue: true }
+        },
+        {
+            testName: 'When global setting is provided',
+            inspection: { globalValue: true }
+        }
+    ];
 
     suite('Test is enabled when using Language Server and Pylint is configured', () => {
         testsForisEnabled.forEach(testParams => {

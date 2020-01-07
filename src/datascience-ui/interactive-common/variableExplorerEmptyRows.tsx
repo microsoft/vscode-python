@@ -9,9 +9,5 @@ import { getLocString } from '../react-common/locReactSide';
 export const VariableExplorerEmptyRowsView = () => {
     const message = getLocString('DataScience.noRowsInVariableExplorer', 'No variables defined');
 
-    return (
-        <div id='variable-explorer-empty-rows'>
-            {message}
-        </div>
-    );
+    return <div id="variable-explorer-empty-rows">{message}</div>;
 };

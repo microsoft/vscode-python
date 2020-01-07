@@ -39,3 +39,6 @@ tmp/**
 test-results.xml
 uitests/out/**
 !build/
+debug*.log
+ptvsd*.log
+pydevd*.log

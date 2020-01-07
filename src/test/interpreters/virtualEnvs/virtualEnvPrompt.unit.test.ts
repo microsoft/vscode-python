@@ -79,7 +79,7 @@ suite('Virtual Environment Prompt', () => {
         verify(appShell.showInformationMessage(anything(), ...prompts)).once();
     });
 
-    test('If user selects \'Yes\', python path is updated', async () => {
+    test("If user selects 'Yes', python path is updated", async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.doNotShowAgain()];
@@ -96,7 +96,7 @@ suite('Virtual Environment Prompt', () => {
         verify(pythonPathUpdaterService.updatePythonPath(interpreter1.path, ConfigurationTarget.WorkspaceFolder, 'ui', resource)).once();
     });
 
-    test('If user selects \'No\', no operation is performed', async () => {
+    test("If user selects 'No', no operation is performed", async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.doNotShowAgain()];
@@ -105,7 +105,10 @@ suite('Virtual Environment Prompt', () => {
         notificationPromptEnabled.setup(n => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[1] as any);
         when(pythonPathUpdaterService.updatePythonPath(interpreter1.path, ConfigurationTarget.WorkspaceFolder, 'ui', resource)).thenResolve();
-        notificationPromptEnabled.setup(n => n.updateValue(false)).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.never());
+        notificationPromptEnabled
+            .setup(n => n.updateValue(false))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.never());
 
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 
@@ -115,7 +118,7 @@ suite('Virtual Environment Prompt', () => {
         notificationPromptEnabled.verifyAll();
     });
 
-    test('If user selects \'Do not show again\', prompt is disabled', async () => {
+    test("If user selects 'Do not show again', prompt is disabled", async () => {
         const resource = Uri.file('a');
         const interpreter1 = { path: 'path/to/interpreter1' };
         const prompts = [InteractiveShiftEnterBanner.bannerLabelYes(), InteractiveShiftEnterBanner.bannerLabelNo(), Common.doNotShowAgain()];
@@ -123,7 +126,10 @@ suite('Virtual Environment Prompt', () => {
         when(persistentStateFactory.createWorkspacePersistentState(anything(), true)).thenReturn(notificationPromptEnabled.object);
         notificationPromptEnabled.setup(n => n.value).returns(() => true);
         when(appShell.showInformationMessage(anything(), ...prompts)).thenResolve(prompts[2] as any);
-        notificationPromptEnabled.setup(n => n.updateValue(false)).returns(() => Promise.resolve()).verifiable(TypeMoq.Times.once());
+        notificationPromptEnabled
+            .setup(n => n.updateValue(false))
+            .returns(() => Promise.resolve())
+            .verifiable(TypeMoq.Times.once());
 
         await environmentPrompt.notifyUser(interpreter1 as any, resource);
 

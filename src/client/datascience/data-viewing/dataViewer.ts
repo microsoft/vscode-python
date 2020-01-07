@@ -49,7 +49,11 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             dataExplorereDir,
             [path.join(dataExplorereDir, 'index_bundle.js')],
             localize.DataScience.dataExplorerTitle(),
-            ViewColumn.One);
+            ViewColumn.One
+        );
+
+        // Load the web panel using our current directory as we don't expect to load any other files
+        super.loadWebPanel(process.cwd()).catch(traceError);
     }
 
     public async showVariable(variable: IJupyterVariable, notebook: INotebook): Promise<void> {

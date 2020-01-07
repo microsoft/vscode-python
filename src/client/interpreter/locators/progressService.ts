@@ -18,8 +18,7 @@ export class InterpreterLocatorProgressService implements IInterpreterLocatorPro
     private readonly refreshing = new EventEmitter<void>();
     private readonly refreshed = new EventEmitter<void>();
     private readonly locators: IInterpreterLocatorService[] = [];
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]) {
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer, @inject(IDisposableRegistry) private readonly disposables: Disposable[]) {
         this.locators = serviceContainer.getAll<IInterpreterLocatorService>(IInterpreterLocatorService);
     }
 

@@ -12,7 +12,7 @@ export interface IEmptyRowsProps {
 }
 
 export const ProgressBar = (props: IEmptyRowsProps) => {
-    const percent = props.current / props.total * 100;
+    const percent = (props.current / props.total) * 100;
     const percentText = `${Math.round(percent)}%`;
     const style: React.CSSProperties = {
         width: percentText
@@ -20,9 +20,11 @@ export const ProgressBar = (props: IEmptyRowsProps) => {
     const message = getLocString('DataScience.fetchingDataViewer', 'Fetching data ...');
 
     return (
-        <div className='progress-container'>
+        <div className="progress-container">
             {message}
-            <div className='progress-bar' style={style}>{percentText}</div>
+            <div className="progress-bar" style={style}>
+                {percentText}
+            </div>
         </div>
     );
 };

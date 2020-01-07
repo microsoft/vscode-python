@@ -37,7 +37,7 @@ export class DocumentManager implements IDocumentManager {
     public get onDidChangeActiveTextEditor(): Event<TextEditor | undefined> {
         return window.onDidChangeActiveTextEditor;
     }
-    public get onDidChangeTextDocument() : Event<TextDocumentChangeEvent> {
+    public get onDidChangeTextDocument(): Event<TextDocumentChangeEvent> {
         return workspace.onDidChangeTextDocument;
     }
     public get onDidChangeVisibleTextEditors(): Event<TextEditor[]> {

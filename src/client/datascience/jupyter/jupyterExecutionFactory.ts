@@ -1,49 +1,39 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import { CancellationToken, Event, EventEmitter } from 'vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
-import {
-    IAsyncDisposable,
-    IAsyncDisposableRegistry,
-    IConfigurationService,
-    IDisposableRegistry,
-    ILogger
-} from '../../common/types';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
-import {
-    IJupyterExecution,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerOptions
-} from '../types';
+import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
+import { IJupyterExecution, INotebookServer, INotebookServerOptions } from '../types';
+import { KernelSelector } from './kernels/kernelSelector';
 import { GuestJupyterExecution } from './liveshare/guestJupyterExecution';
 import { HostJupyterExecution } from './liveshare/hostJupyterExecution';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
+import { NotebookStarter } from './notebookStarter';
 
-interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {
-}
+interface IJupyterExecutionInterface extends IRoleBasedObject, IJupyterExecution {}
 
 // tslint:disable:callable-types
 type JupyterExecutionClassType = {
-    new(liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
+    new (
+        liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
+        appShell: IApplicationShell,
+        jupyterOutputChannel: IOutputChannel,
         serviceContainer: IServiceContainer
     ): IJupyterExecutionInterface;
 };
@@ -51,40 +41,41 @@ type JupyterExecutionClassType = {
 
 @injectable()
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
-
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
 
-    constructor(@inject(ILiveShareApi) liveShare: ILiveShareApi,
-        @inject(IPythonExecutionFactory) pythonFactory: IPythonExecutionFactory,
+    constructor(
+        @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
         @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
-        @inject(IJupyterSessionManagerFactory) sessionManagerFactory: IJupyterSessionManagerFactory,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
-        @inject(IServiceContainer) serviceContainer: IServiceContainer) {
+        @inject(KernelSelector) kernelSelector: KernelSelector,
+        @inject(NotebookStarter) notebookStarter: NotebookStarter,
+        @inject(IApplicationShell) appShell: IApplicationShell,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) jupyterOutputChannel: IOutputChannel,
+        @inject(IServiceContainer) serviceContainer: IServiceContainer
+    ) {
         asyncRegistry.push(this);
         this.executionFactory = new RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>(
             liveShare,
             HostJupyterExecution,
             GuestJupyterExecution,
             liveShare,
-            pythonFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
             asyncRegistry,
             fileSystem,
-            sessionManagerFactory,
             workspace,
             configuration,
-            activationHelper,
+            kernelSelector,
+            notebookStarter,
+            appShell,
+            jupyterOutputChannel,
             serviceContainer
         );
         this.executionFactory.sessionChanged(() => this.onSessionChanged());
@@ -118,14 +109,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     public async isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();
         return execution.isImportSupported(cancelToken);
-    }
-    public async isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isKernelCreateSupported(cancelToken);
-    }
-    public async isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        const execution = await this.executionFactory.get();
-        return execution.isKernelSpecSupported(cancelToken);
     }
     public async isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         const execution = await this.executionFactory.get();

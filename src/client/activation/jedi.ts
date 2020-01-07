@@ -93,9 +93,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
         }
 
         const testManagementService = this.serviceManager.get<ITestManagementService>(ITestManagementService);
-        testManagementService
-            .activate(this.symbolProvider)
-            .catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
+        testManagementService.activate(this.symbolProvider).catch(ex => this.serviceManager.get<ILogger>(ILogger).logError('Failed to activate Unit Tests', ex));
     }
 
     public deactivate() {
@@ -104,7 +102,8 @@ export class JediExtensionActivator implements ILanguageServerActivator {
     }
 
     public activate() {
-        if (this.registrations.length === 0 &&
+        if (
+            this.registrations.length === 0 &&
             this.renameProvider &&
             this.definitionProvider &&
             this.hoverProvider &&
@@ -112,60 +111,29 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             this.completionProvider &&
             this.codeLensProvider &&
             this.symbolProvider &&
-            this.signatureProvider) {
-
+            this.signatureProvider
+        ) {
             // Make sure commands are in the registration list that gets disposed when the language server is disconnected from the
             // IDE.
             this.registrations.push(commands.registerCommand('python.goToPythonObject', () => this.objectDefinitionProvider!.goToObjectDefinition()));
-            this.registrations.push(
-                languages.registerRenameProvider(this.documentSelector, this.renameProvider)
-            );
+            this.registrations.push(languages.registerRenameProvider(this.documentSelector, this.renameProvider));
             this.registrations.push(languages.registerDefinitionProvider(this.documentSelector, this.definitionProvider));
-            this.registrations.push(
-                languages.registerHoverProvider(this.documentSelector, this.hoverProvider)
-            );
-            this.registrations.push(
-                languages.registerReferenceProvider(this.documentSelector, this.referenceProvider)
-            );
-            this.registrations.push(
-                languages.registerCompletionItemProvider(
-                    this.documentSelector,
-                    this.completionProvider,
-                    '.'
-                )
-            );
-            this.registrations.push(
-                languages.registerCodeLensProvider(
-                    this.documentSelector,
-                    this.codeLensProvider
-                )
-            );
+            this.registrations.push(languages.registerHoverProvider(this.documentSelector, this.hoverProvider));
+            this.registrations.push(languages.registerReferenceProvider(this.documentSelector, this.referenceProvider));
+            this.registrations.push(languages.registerCompletionItemProvider(this.documentSelector, this.completionProvider, '.'));
+            this.registrations.push(languages.registerCodeLensProvider(this.documentSelector, this.codeLensProvider));
             const onTypeDispatcher = new OnTypeFormattingDispatcher({
                 '\n': new OnEnterFormatter(),
                 ':': new BlockFormatProviders()
             });
             const onTypeTriggers = onTypeDispatcher.getTriggerCharacters();
             if (onTypeTriggers) {
-                this.registrations.push(
-                    languages.registerOnTypeFormattingEditProvider(
-                        PYTHON,
-                        onTypeDispatcher,
-                        onTypeTriggers.first,
-                        ...onTypeTriggers.more
-                    )
-                );
+                this.registrations.push(languages.registerOnTypeFormattingEditProvider(PYTHON, onTypeDispatcher, onTypeTriggers.first, ...onTypeTriggers.more));
             }
             this.registrations.push(languages.registerDocumentSymbolProvider(this.documentSelector, this.symbolProvider));
             const pythonSettings = this.serviceManager.get<IConfigurationService>(IConfigurationService).getSettings();
             if (pythonSettings.devOptions.indexOf('DISABLE_SIGNATURE') === -1) {
-                this.registrations.push(
-                    languages.registerSignatureHelpProvider(
-                        this.documentSelector,
-                        this.signatureProvider,
-                        '(',
-                        ','
-                    )
-                );
+                this.registrations.push(languages.registerSignatureHelpProvider(this.documentSelector, this.signatureProvider, '(', ','));
             }
         }
     }
@@ -190,7 +158,12 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             return this.referenceProvider.provideReferences(document, position, context, token);
         }
     }
-    public provideCompletionItems(document: TextDocument, position: Position, token: CancellationToken, _context: CompletionContext): ProviderResult<CompletionItem[] | CompletionList> {
+    public provideCompletionItems(
+        document: TextDocument,
+        position: Position,
+        token: CancellationToken,
+        _context: CompletionContext
+    ): ProviderResult<CompletionItem[] | CompletionList> {
         if (this.completionProvider) {
             return this.completionProvider.provideCompletionItems(document, position, token);
         }

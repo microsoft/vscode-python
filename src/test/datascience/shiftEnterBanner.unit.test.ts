@@ -7,13 +7,7 @@ import rewiremock from 'rewiremock';
 import * as typemoq from 'typemoq';
 
 import { IApplicationShell } from '../../client/common/application/types';
-import {
-    IConfigurationService,
-    IDataScienceSettings,
-    IPersistentState,
-    IPersistentStateFactory,
-    IPythonSettings
-} from '../../client/common/types';
+import { IConfigurationService, IDataScienceSettings, IPersistentState, IPersistentStateFactory, IPythonSettings } from '../../client/common/types';
 import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveShiftEnterBanner, InteractiveShiftEnterStateKeys } from '../../client/datascience/shiftEnterBanner';
 import { IJupyterExecution } from '../../client/datascience/types';
@@ -58,7 +52,7 @@ suite('Interactive Shift Enter Banner', () => {
         clearTelemetryReporter();
     });
 
-    test('Shift Enter Banner with Jupyter available', async() => {
+    test('Shift Enter Banner with Jupyter available', async () => {
         const shiftBanner = loadBanner(appShell, jupyterExecution, config, true, true, true, true, true, 'Yes');
         await shiftBanner.showBanner();
 
@@ -69,7 +63,7 @@ suite('Interactive Shift Enter Banner', () => {
         expect(Reporter.eventNames).to.deep.equal([Telemetry.ShiftEnterBannerShown, Telemetry.EnableInteractiveShiftEnter]);
     });
 
-    test('Shift Enter Banner without Jupyter available', async() => {
+    test('Shift Enter Banner without Jupyter available', async () => {
         const shiftBanner = loadBanner(appShell, jupyterExecution, config, true, false, false, true, false, 'Yes');
         await shiftBanner.showBanner();
 
@@ -80,7 +74,7 @@ suite('Interactive Shift Enter Banner', () => {
         expect(Reporter.eventNames).to.deep.equal([]);
     });
 
-    test('Shift Enter Banner don\'t check Jupyter when disabled', async() => {
+    test("Shift Enter Banner don't check Jupyter when disabled", async () => {
         const shiftBanner = loadBanner(appShell, jupyterExecution, config, false, false, false, false, false, 'Yes');
         await shiftBanner.showBanner();
 
@@ -91,7 +85,7 @@ suite('Interactive Shift Enter Banner', () => {
         expect(Reporter.eventNames).to.deep.equal([]);
     });
 
-    test('Shift Enter Banner changes setting', async() => {
+    test('Shift Enter Banner changes setting', async () => {
         const shiftBanner = loadBanner(appShell, jupyterExecution, config, false, false, false, false, true, 'Yes');
         await shiftBanner.enableInteractiveShiftEnter();
 
@@ -100,7 +94,7 @@ suite('Interactive Shift Enter Banner', () => {
         config.verifyAll();
     });
 
-    test('Shift Enter Banner say no', async() => {
+    test('Shift Enter Banner say no', async () => {
         const shiftBanner = loadBanner(appShell, jupyterExecution, config, true, true, true, true, true, 'No');
         await shiftBanner.showBanner();
 
@@ -128,12 +122,14 @@ function loadBanner(
     const persistService: typemoq.IMock<IPersistentStateFactory> = typemoq.Mock.ofType<IPersistentStateFactory>();
     const enabledState: typemoq.IMock<IPersistentState<boolean>> = typemoq.Mock.ofType<IPersistentState<boolean>>();
     enabledState.setup(a => a.value).returns(() => stateEnabled);
-    persistService.setup(a => a.createGlobalPersistentState(typemoq.It.isValue(InteractiveShiftEnterStateKeys.ShowBanner),
-        typemoq.It.isValue(true))).returns(() => {
+    persistService
+        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(InteractiveShiftEnterStateKeys.ShowBanner), typemoq.It.isValue(true)))
+        .returns(() => {
             return enabledState.object;
         });
-    persistService.setup(a => a.createGlobalPersistentState(typemoq.It.isValue(InteractiveShiftEnterStateKeys.ShowBanner),
-        typemoq.It.isValue(false))).returns(() => {
+    persistService
+        .setup(a => a.createGlobalPersistentState(typemoq.It.isValue(InteractiveShiftEnterStateKeys.ShowBanner), typemoq.It.isValue(false)))
+        .returns(() => {
             return enabledState.object;
         });
 
@@ -146,22 +142,25 @@ function loadBanner(
     config.setup(c => c.getSettings(typemoq.It.isAny())).returns(() => pythonSettings.object);
 
     // Config Jupyter
-    jupyterExecution.setup(j => j.isNotebookSupported()).returns(() => {
-        return Promise.resolve(jupyterFound);
-    }).verifiable(executionCalled ? typemoq.Times.once() : typemoq.Times.never());
+    jupyterExecution
+        .setup(j => j.isNotebookSupported())
+        .returns(() => {
+            return Promise.resolve(jupyterFound);
+        })
+        .verifiable(executionCalled ? typemoq.Times.once() : typemoq.Times.never());
 
     const yes = 'Yes';
     const no = 'No';
 
     // Config AppShell
-    appShell.setup(a => a.showInformationMessage(typemoq.It.isAny(),
-        typemoq.It.isValue(yes),
-        typemoq.It.isValue(no)))
+    appShell
+        .setup(a => a.showInformationMessage(typemoq.It.isAny(), typemoq.It.isValue(yes), typemoq.It.isValue(no)))
         .returns(() => Promise.resolve(questionResponse))
         .verifiable(bannerShown ? typemoq.Times.once() : typemoq.Times.never());
 
     // Config settings
-    config.setup(c => c.updateSetting(typemoq.It.isValue('dataScience.sendSelectionToInteractiveWindow'), typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+    config
+        .setup(c => c.updateSetting(typemoq.It.isValue('dataScience.sendSelectionToInteractiveWindow'), typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
         .returns(() => Promise.resolve())
         .verifiable(configCalled ? typemoq.Times.once() : typemoq.Times.never());
 

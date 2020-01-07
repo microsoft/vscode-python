@@ -17,13 +17,7 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../type
 
 export class LSNotSupportedDiagnostic extends BaseDiagnostic {
     constructor(message: string, resource: Resource) {
-        super(
-            DiagnosticCodes.LSNotSupportedDiagnostic,
-            message,
-            DiagnosticSeverity.Warning,
-            DiagnosticScope.Global,
-            resource
-        );
+        super(DiagnosticCodes.LSNotSupportedDiagnostic, message, DiagnosticSeverity.Warning, DiagnosticScope.Global, resource);
     }
 }
 

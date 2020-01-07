@@ -15,21 +15,20 @@ import { IFormatterHelper } from './types';
 export abstract class BaseFormatter {
     protected readonly outputChannel: vscode.OutputChannel;
     protected readonly workspace: IWorkspaceService;
-    private readonly fs: IFileSystem;
     private readonly helper: IFormatterHelper;
 
-    constructor(
-        public Id: string,
-        private product: Product,
-        protected serviceContainer: IServiceContainer
-    ) {
+    constructor(public Id: string, private product: Product, protected serviceContainer: IServiceContainer) {
         this.outputChannel = serviceContainer.get<vscode.OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.helper = serviceContainer.get<IFormatterHelper>(IFormatterHelper);
-        this.fs = serviceContainer.get<IFileSystem>(IFileSystem);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
     }
 
-    public abstract formatDocument(document: vscode.TextDocument, options: vscode.FormattingOptions, token: vscode.CancellationToken, range?: vscode.Range): Thenable<vscode.TextEdit[]>;
+    public abstract formatDocument(
+        document: vscode.TextDocument,
+        options: vscode.FormattingOptions,
+        token: vscode.CancellationToken,
+        range?: vscode.Range
+    ): Thenable<vscode.TextEdit[]>;
     protected getDocumentPath(document: vscode.TextDocument, fallbackPath: string) {
         if (path.basename(document.uri.fsPath) === document.uri.fsPath) {
             return fallbackPath;
@@ -47,7 +46,13 @@ export abstract class BaseFormatter {
         }
         return vscode.Uri.file(__dirname);
     }
-    protected async provideDocumentFormattingEdits(document: vscode.TextDocument, _options: vscode.FormattingOptions, token: vscode.CancellationToken, args: string[], cwd?: string): Promise<vscode.TextEdit[]> {
+    protected async provideDocumentFormattingEdits(
+        document: vscode.TextDocument,
+        _options: vscode.FormattingOptions,
+        token: vscode.CancellationToken,
+        args: string[],
+        cwd?: string
+    ): Promise<vscode.TextEdit[]> {
         if (typeof cwd !== 'string' || cwd.length === 0) {
             cwd = this.getWorkspaceUri(document).fsPath;
         }
@@ -64,7 +69,8 @@ export abstract class BaseFormatter {
         const executionInfo = this.helper.getExecutionInfo(this.product, args, document.uri);
         executionInfo.args.push(tempFile);
         const pythonToolsExecutionService = this.serviceContainer.get<IPythonToolExecutionService>(IPythonToolExecutionService);
-        const promise = pythonToolsExecutionService.exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)
+        const promise = pythonToolsExecutionService
+            .exec(executionInfo, { cwd, throwOnStdErr: false, token }, document.uri)
             .then(output => output.stdout)
             .then(data => {
                 if (this.checkCancellation(document.fileName, tempFile, token)) {
@@ -77,7 +83,7 @@ export abstract class BaseFormatter {
                     return [] as vscode.TextEdit[];
                 }
                 // tslint:disable-next-line:no-empty
-                this.handleError(this.Id, error, document.uri).catch(() => { });
+                this.handleError(this.Id, error, document.uri).catch(() => {});
                 return [] as vscode.TextEdit[];
             })
             .then(edits => {
@@ -108,14 +114,14 @@ export abstract class BaseFormatter {
     }
 
     private async createTempFile(document: vscode.TextDocument): Promise<string> {
-        return document.isDirty
-            ? getTempFileWithDocumentContents(document, this.fs)
-            : document.fileName;
+        const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+        return document.isDirty ? getTempFileWithDocumentContents(document, fs) : document.fileName;
     }
 
     private deleteTempFile(originalFile: string, tempFile: string): Promise<void> {
         if (originalFile !== tempFile) {
-            return this.fs.deleteFile(tempFile);
+            const fs = this.serviceContainer.get<IFileSystem>(IFileSystem);
+            return fs.deleteFile(tempFile);
         }
         return Promise.resolve();
     }

@@ -11,10 +11,7 @@ import { CodeExecutionHelper } from '../../client/terminals/codeExecution/helper
 import { ReplProvider } from '../../client/terminals/codeExecution/repl';
 import { TerminalCodeExecutionProvider } from '../../client/terminals/codeExecution/terminalCodeExecution';
 import { registerTypes } from '../../client/terminals/serviceRegistry';
-import {
-    ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService,
-    ITerminalAutoActivation
-} from '../../client/terminals/types';
+import { ICodeExecutionHelper, ICodeExecutionManager, ICodeExecutionService, ITerminalAutoActivation } from '../../client/terminals/types';
 
 suite('Terminal - Service Registry', () => {
     test('Ensure all services get registered', () => {
@@ -29,19 +26,27 @@ suite('Terminal - Service Registry', () => {
             [ICodeExecutionService, TerminalCodeExecutionProvider, 'standard']
         ].forEach(args => {
             if (args.length === 2) {
-                services.setup(s => s.addSingleton(
-                    // tslint:disable-next-line:no-any
-                    typemoq.It.isValue(args[0] as any),
-                    typemoq.It.is(value => args[1] === value))
-                ).verifiable(typemoq.Times.once());
+                services
+                    .setup(s =>
+                        s.addSingleton(
+                            // tslint:disable-next-line:no-any
+                            typemoq.It.isValue(args[0] as any),
+                            typemoq.It.is(value => args[1] === value)
+                        )
+                    )
+                    .verifiable(typemoq.Times.once());
             } else {
-                services.setup(s => s.addSingleton(
-                    // tslint:disable-next-line:no-any
-                    typemoq.It.isValue(args[0] as any),
-                    typemoq.It.is(value => args[1] === value),
-                    // tslint:disable-next-line:no-any
-                    typemoq.It.isValue(args[2] as any))
-                ).verifiable(typemoq.Times.once());
+                services
+                    .setup(s =>
+                        s.addSingleton(
+                            // tslint:disable-next-line:no-any
+                            typemoq.It.isValue(args[0] as any),
+                            typemoq.It.is(value => args[1] === value),
+                            // tslint:disable-next-line:no-any
+                            typemoq.It.isValue(args[2] as any)
+                        )
+                    )
+                    .verifiable(typemoq.Times.once());
             }
         });
 

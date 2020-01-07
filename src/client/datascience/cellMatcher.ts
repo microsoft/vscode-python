@@ -12,16 +12,20 @@ export class CellMatcher {
     private markdownMatchRegEx: RegExp;
     private codeExecRegEx: RegExp;
     private markdownExecRegEx: RegExp;
+    private defaultCellMarker: string;
+    private defaultCellMarkerExec: RegExp;
 
     constructor(settings?: IDataScienceSettings) {
         this.codeMatchRegEx = this.createRegExp(settings ? settings.codeRegularExpression : undefined, RegExpValues.PythonCellMarker);
         this.markdownMatchRegEx = this.createRegExp(settings ? settings.markdownRegularExpression : undefined, RegExpValues.PythonMarkdownCellMarker);
         this.codeExecRegEx = new RegExp(`${this.codeMatchRegEx.source}(.*)`);
         this.markdownExecRegEx = new RegExp(`${this.markdownMatchRegEx.source}(.*)`);
+        this.defaultCellMarker = settings?.defaultCellMarker ? settings.defaultCellMarker : '# %%';
+        this.defaultCellMarkerExec = this.createRegExp(`${this.defaultCellMarker}(.*)`, /# %%(.*)/);
     }
 
     public isCell(code: string): boolean {
-        return this.codeMatchRegEx.test(code) || this.markdownMatchRegEx.test(code);
+        return this.isCode(code) || this.isMarkdown(code);
     }
 
     public isMarkdown(code: string): boolean {
@@ -29,7 +33,7 @@ export class CellMatcher {
     }
 
     public isCode(code: string): boolean {
-        return this.codeMatchRegEx.test(code);
+        return this.codeMatchRegEx.test(code) || code.trim() === this.defaultCellMarker;
     }
 
     public getCellType(code: string): string {
@@ -48,7 +52,10 @@ export class CellMatcher {
 
     public exec(code: string): string | undefined {
         let result: RegExpExecArray | null = null;
-        if (this.codeMatchRegEx.test(code)) {
+        if (this.defaultCellMarkerExec.test(code)) {
+            this.defaultCellMarkerExec.lastIndex = -1;
+            result = this.defaultCellMarkerExec.exec(code);
+        } else if (this.codeMatchRegEx.test(code)) {
             this.codeExecRegEx.lastIndex = -1;
             result = this.codeExecRegEx.exec(code);
         } else if (this.markdownMatchRegEx.test(code)) {

@@ -26,7 +26,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     private readonly autoSelectedInterpreterByWorkspace = new Map<string, PythonInterpreter | undefined>();
     private globallyPreferredInterpreter!: IPersistentState<PythonInterpreter | undefined>;
     private readonly rules: IInterpreterAutoSelectionRule[] = [];
-    constructor(@inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
+    constructor(
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.systemWide) systemInterpreter: IInterpreterAutoSelectionRule,
@@ -36,8 +37,8 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.settings) private readonly userDefinedInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSelectionRule) @named(AutoSelectionRule.workspaceVirtualEnvs) workspaceInterpreter: IInterpreterAutoSelectionRule,
         @inject(IInterpreterAutoSeletionProxyService) proxy: IInterpreterAutoSeletionProxyService,
-        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper) {
-
+        @inject(IInterpreterHelper) private readonly interpreterHelper: IInterpreterHelper
+    ) {
         // It is possible we area always opening the same workspace folder, but we still need to determine and cache
         // the best available interpreters based on other rules (cache for furture use).
         this.rules.push(...[winRegInterpreter, currentPathInterpreter, systemInterpreter, cachedPaths, userDefinedInterpreter, workspaceInterpreter]);
@@ -102,8 +103,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     public async setWorkspaceInterpreter(resource: Uri, interpreter: PythonInterpreter | undefined) {
         // We can only update the stored interpreter once we have done the necessary
         // work of auto selecting the interpreters.
-        if (!this.autoSelectedWorkspacePromises.has(this.getWorkspacePathKey(resource)) ||
-            !this.autoSelectedWorkspacePromises.get(this.getWorkspacePathKey(resource))!.completed) {
+        if (!this.autoSelectedWorkspacePromises.has(this.getWorkspacePathKey(resource)) || !this.autoSelectedWorkspacePromises.get(this.getWorkspacePathKey(resource))!.completed) {
             return;
         }
 
@@ -114,7 +114,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     }
     protected async clearWorkspaceStoreIfInvalid(resource: Resource) {
         const stateStore = this.getWorkspaceState(resource);
-        if (stateStore && stateStore.value && !await this.fs.fileExists(stateStore.value.path)) {
+        if (stateStore && stateStore.value && !(await this.fs.fileExists(stateStore.value.path))) {
             sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, { interpreterMissing: true });
             await stateStore.updateValue(undefined);
         }
@@ -123,10 +123,13 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
         const workspaceFolderPath = this.getWorkspacePathKey(resource);
         if (workspaceFolderPath === workspacePathNameForGlobalWorkspaces) {
             // Update store only if this version is better.
-            if (this.globallyPreferredInterpreter.value &&
+            if (
+                this.globallyPreferredInterpreter.value &&
                 this.globallyPreferredInterpreter.value.version &&
-                interpreter && interpreter.version &&
-                compare(this.globallyPreferredInterpreter.value.version.raw, interpreter.version.raw) > 0) {
+                interpreter &&
+                interpreter.version &&
+                compare(this.globallyPreferredInterpreter.value.version.raw, interpreter.version.raw) > 0
+            ) {
                 return;
             }
 
@@ -153,7 +156,7 @@ export class InterpreterAutoSelectionService implements IInterpreterAutoSelectio
     }
     private async clearStoreIfFileIsInvalid() {
         this.globallyPreferredInterpreter = this.stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(preferredGlobalInterpreter, undefined);
-        if (this.globallyPreferredInterpreter.value && !await this.fs.fileExists(this.globallyPreferredInterpreter.value.path)) {
+        if (this.globallyPreferredInterpreter.value && !(await this.fs.fileExists(this.globallyPreferredInterpreter.value.path))) {
             await this.globallyPreferredInterpreter.updateValue(undefined);
         }
     }

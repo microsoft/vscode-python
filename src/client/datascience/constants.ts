@@ -6,6 +6,8 @@ import { IS_WINDOWS } from '../common/platform/constants';
 import { NativeCommandType } from './interactive-common/interactiveWindowTypes';
 
 export const DefaultTheme = 'Default Light+';
+// Identifier for the output panel that will display the output from the Jupyter Server.
+export const JUPYTER_OUTPUT_CHANNEL = 'JUPYTER_OUTPUT_CHANNEL';
 
 // Python Module to be used when instantiating the Python Daemon.
 export const PythonDaemonModule = 'datascience.jupyter_daemon';
@@ -14,6 +16,7 @@ export namespace Commands {
     export const RunAllCells = 'python.datascience.runallcells';
     export const RunAllCellsAbove = 'python.datascience.runallcellsabove';
     export const RunCellAndAllBelow = 'python.datascience.runcellandallbelow';
+    export const SwitchJupyterKernel = 'python.datascience.switchKernel';
     export const RunAllCellsAbovePalette = 'python.datascience.runallcellsabove.palette';
     export const RunCellAndAllBelowPalette = 'python.datascience.runcurrentcellandallbelow.palette';
     export const RunToLine = 'python.datascience.runtoline';
@@ -56,6 +59,7 @@ export namespace Commands {
     export const RunCurrentCellAndAddBelow = 'python.datascience.runcurrentcellandaddbelow';
     export const ScrollToCell = 'python.datascience.scrolltocell';
     export const CreateNewNotebook = 'python.datascience.createnewnotebook';
+    export const ViewJupyterOutput = 'python.datascience.viewJupyterOutput';
 }
 
 export namespace CodeLensCommands {
@@ -105,7 +109,6 @@ export namespace RegExpValues {
     export const SvgWidthRegex = /(\<svg.*width=\")(.*?)\"/;
     export const SvgSizeTagRegex = /\<svg.*tag=\"sizeTag=\{(.*),\s*(.*)\}\"/;
     export const StyleTagRegex = /\<style[\s\S]*\<\/style\>/m;
-
 }
 
 export enum Telemetry {
@@ -135,11 +138,12 @@ export enum Telemetry {
     /**
      * Whether auto save feature in VS Code is enabled or not.
      */
-    AutoSaveEnabled = 'DATASCIENCE.AUTO_SAVE_ENABLED',
     ShowHistoryPane = 'DATASCIENCE.SHOW_HISTORY_PANE',
     ExpandAll = 'DATASCIENCE.EXPAND_ALL',
     CollapseAll = 'DATASCIENCE.COLLAPSE_ALL',
     SelectJupyterURI = 'DATASCIENCE.SELECT_JUPYTER_URI',
+    SelectLocalJupyterKernel = 'DATASCIENCE.SELECT_LOCAL_JUPYTER_KERNEL',
+    SelectRemoteJupyuterKernel = 'DATASCIENCE.SELECT_REMOTE_JUPYTER_KERNEL',
     SetJupyterURIToLocal = 'DATASCIENCE.SET_JUPYTER_URI_LOCAL',
     SetJupyterURIToUserSpecified = 'DATASCIENCE.SET_JUPYTER_URI_USER_SPECIFIED',
     Interrupt = 'DATASCIENCE.INTERRUPT',
@@ -151,7 +155,13 @@ export enum Telemetry {
     ConnectRemoteJupyter = 'DATASCIENCE.CONNECTREMOTEJUPYTER',
     ConnectFailedJupyter = 'DATASCIENCE.CONNECTFAILEDJUPYTER',
     ConnectRemoteFailedJupyter = 'DATASCIENCE.CONNECTREMOTEFAILEDJUPYTER',
+    StartSessionFailedJupyter = 'DATASCIENCE.START_SESSION_FAILED_JUPYTER',
     ConnectRemoteSelfCertFailedJupyter = 'DATASCIENCE.CONNECTREMOTESELFCERTFAILEDJUPYTER',
+    RegisterAndUseInterpreterAsKernel = 'DATASCIENCE.REGISTER_AND_USE_INTERPRETER_AS_KERNEL',
+    UseInterpreterAsKernel = 'DATASCIENCE.USE_INTERPRETER_AS_KERNEL',
+    UseExistingKernel = 'DATASCIENCE.USE_EXISTING_KERNEL',
+    SwitchToInterpreterAsKernel = 'DATASCIENCE.SWITCH_TO_INTERPRETER_AS_KERNEL',
+    SwitchToExistingKernel = 'DATASCIENCE.SWITCH_TO_EXISTING_KERNEL',
     SelfCertsMessageEnabled = 'DATASCIENCE.SELFCERTSMESSAGEENABLED',
     SelfCertsMessageClose = 'DATASCIENCE.SELFCERTSMESSAGECLOSE',
     RemoteAddCode = 'DATASCIENCE.LIVESHARE.ADDCODE',
@@ -207,12 +217,15 @@ export enum Telemetry {
     NotebookOpenCount = 'DATASCIENCE.NATIVE.NOTEBOOK_OPEN_COUNT',
     NotebookOpenTime = 'DS_INTERNAL.NATIVE.NOTEBOOK_OPEN_TIME',
     SessionIdleTimeout = 'DATASCIENCE.JUPYTER_IDLE_TIMEOUT',
+    JupyterStartTimeout = 'DATASCIENCE.JUPYTER_START_TIMEOUT',
     NotebookExecutionActivated = 'DATASCIENCE.NOTEBOOK.EXECUTION.ACTIVATED',
     JupyterNotInstalledErrorShown = 'DATASCIENCE.JUPYTER_NOT_INSTALLED_ERROR_SHOWN',
     JupyterCommandSearch = 'DATASCIENCE.JUPYTER_COMMAND_SEARCH',
     RegisterInterpreterAsKernel = 'DATASCIENCE.JUPYTER_REGISTER_INTERPRETER_AS_KERNEL',
     UserInstalledJupyter = 'DATASCIENCE.USER_INSTALLED_JUPYTER',
-    UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER'
+    UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
+    OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
+    FindKernelForLocalConnection = 'DATASCIENCE.FIND_KERNEL_FOR_LOCAL_CONNECTION'
 }
 
 export enum NativeKeyboardCommandTelemetry {
@@ -310,19 +323,19 @@ export namespace Identifiers {
 }
 
 export namespace CodeSnippits {
-    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', '\tos.chdir(os.path.join(os.getcwd(), \'{2}\'))', '\tprint(os.getcwd())', 'except:', '\tpass', ''];
+    export const ChangeDirectory = ['{0}', '{1}', 'import os', 'try:', "\tos.chdir(os.path.join(os.getcwd(), '{2}'))", '\tprint(os.getcwd())', 'except:', '\tpass', ''];
     export const ChangeDirectoryCommentIdentifier = '# ms-python.python added'; // Not translated so can compare.
     export const ImportIPython = '{0}\nfrom IPython import get_ipython\n\n{1}';
     export const MatplotLibInitSvg = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'svg', 'png'`;
     export const MatplotLibInitPng = `import matplotlib\n%matplotlib inline\n${Identifiers.MatplotLibDefaultParams} = dict(matplotlib.rcParams)\n%config InlineBackend.figure_formats = 'png'`;
+    export const ConfigSvg = `%config InlineBackend.figure_formats = 'svg', 'png'`;
+    export const ConfigPng = `%config InlineBackend.figure_formats = 'png'`;
 }
 
 export enum JupyterCommands {
     NotebookCommand = 'notebook',
     ConvertCommand = 'nbconvert',
-    KernelSpecCommand = 'kernelspec',
-    KernelCreateCommand = 'ipykernel'
-
+    KernelSpecCommand = 'kernelspec'
 }
 
 export namespace LiveShare {
@@ -342,8 +355,6 @@ export namespace LiveShare {
 export namespace LiveShareCommands {
     export const isNotebookSupported = 'isNotebookSupported';
     export const isImportSupported = 'isImportSupported';
-    export const isKernelCreateSupported = 'isKernelCreateSupported';
-    export const isKernelSpecSupported = 'isKernelSpecSupported';
     export const connectToNotebookServer = 'connectToNotebookServer';
     export const getUsableJupyterPython = 'getUsableJupyterPython';
     export const executeObservable = 'executeObservable';

@@ -27,6 +27,7 @@ import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
+import { ModuleExistsStatus } from '../../client/datascience/jupyter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
 import {
@@ -41,12 +42,7 @@ import {
     INotebookImporter,
     InterruptResult
 } from '../../client/datascience/types';
-import {
-    IInterpreterService,
-    IKnownSearchPathsForInterpreters,
-    InterpreterType,
-    PythonInterpreter
-} from '../../client/interpreter/contracts';
+import { IInterpreterService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
@@ -119,7 +115,8 @@ suite('DataScience notebook tests', () => {
                 assert.fail(`Unexpected error: ${error}`);
             }
             assert.ok(data, `No data object on the cell`);
-            if (data) { // For linter
+            if (data) {
+                // For linter
                 assert.ok(data.hasOwnProperty('text/plain'), `Cell mime type not correct`);
                 assert.ok((data as any)['text/plain'], `Cell mime type not correct`);
                 return (data as any)['text/plain'];
@@ -127,11 +124,18 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    async function verifySimple(notebook: INotebook | undefined, code: string, expectedValue: any): Promise<void> {
+    async function verifySimple(notebook: INotebook | undefined, code: string, expectedValue: any, pathVerify = false): Promise<void> {
         const cells = await notebook!.execute(code, path.join(srcDirectory(), 'foo.py'), 2, uuid());
         assert.equal(cells.length, 1, `Wrong number of cells returned`);
         const data = extractDataOutput(cells[0]);
-        assert.equal(data, expectedValue, 'Cell value does not match');
+        if (pathVerify) {
+            // For a path comparison normalize output and add single quotes on expected value
+            const normalizedOutput = path.normalize(data).toUpperCase();
+            const normalizedTarget = `'${path.normalize(expectedValue).toUpperCase()}'`;
+            assert.equal(normalizedOutput, normalizedTarget, 'Cell path values does not match');
+        } else {
+            assert.equal(data, expectedValue, 'Cell value does not match');
+        }
     }
 
     async function verifyError(notebook: INotebook | undefined, code: string, errorString: string): Promise<void> {
@@ -162,7 +166,8 @@ suite('DataScience notebook tests', () => {
             const data = cell.outputs[0].data;
             const text = cell.outputs[0].text;
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
-            if (data) { // For linter
+            if (data) {
+                // For linter
                 assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
                 assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
                 verifyValue((data as any)[mimeType]);
@@ -205,7 +210,7 @@ suite('DataScience notebook tests', () => {
     }
 
     function runTest(name: string, func: (_this: Mocha.Context) => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
-        test(name, async function () {
+        test(name, async function() {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
                 rebindFunc();
@@ -223,15 +228,33 @@ suite('DataScience notebook tests', () => {
         });
     }
 
-    async function createNotebook(useDefaultConfig: boolean, expectFailure?: boolean, usingDarkTheme?: boolean, purpose?: string): Promise<INotebook | undefined> {
+    async function createNotebook(
+        useDefaultConfig: boolean,
+        expectFailure?: boolean,
+        usingDarkTheme?: boolean,
+        purpose?: string,
+        workingDir?: string,
+        launchingFile?: string
+    ): Promise<INotebook | undefined> {
         // Catch exceptions. Throw a specific assertion if the promise fails
         try {
-            const testDir = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
-            const server = await jupyterExecution.connectToNotebookServer({ usingDarkTheme, useDefaultConfig, workingDir: testDir, purpose: purpose ? purpose : '1' });
+            const server = await jupyterExecution.connectToNotebookServer({
+                usingDarkTheme,
+                useDefaultConfig,
+                workingDir: workingDir ? workingDir : ioc.getSettings().datascience.notebookFileRoot,
+                purpose: purpose ? purpose : '1'
+            });
             if (expectFailure) {
                 assert.ok(false, `Expected server to not be created`);
             }
-            return server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+            if (server) {
+                const notebook = await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity));
+                // If specified set our launch file
+                if (launchingFile) {
+                    await notebook.setLaunchingFile(launchingFile);
+                }
+                return notebook;
+            }
         } catch (exc) {
             if (!expectFailure) {
                 assert.ok(false, `Expected server to be created, but got ${exc}`);
@@ -246,6 +269,12 @@ suite('DataScience notebook tests', () => {
             } else {
                 ioc.mockJupyter.addCell(code, result, mimeType);
             }
+        }
+    }
+
+    function changeMockWorkingDirectory(workingDir: string) {
+        if (ioc.mockJupyter) {
+            ioc.mockJupyter.changeWorkingDirectory(workingDir);
         }
     }
 
@@ -268,7 +297,10 @@ suite('DataScience notebook tests', () => {
             const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
             const keyFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jkey.key');
 
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], { env: process.env, throwOnStdErr: false });
+            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`, `--certfile=${pemFile}`, `--keyfile=${keyFile}`], {
+                env: process.env,
+                throwOnStdErr: false
+            });
             disposables.push(exeResult);
 
             exeResult.out.subscribe((output: Output<string>) => {
@@ -295,51 +327,66 @@ suite('DataScience notebook tests', () => {
     });
 
     // Connect to a server that doesn't have a token or password, customers use this and we regressed it once
-    runTest('Remote No Auth', async () => {
-        const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
+    runTest(
+        'Remote No Auth',
+        async () => {
+            const python = await getNotebookCapableInterpreter(ioc, processFactory);
+            const procService = await processFactory.create();
 
-        if (procService && python) {
-            const connectionFound = createDeferred();
-            const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteNoAuth.py');
-            const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
-            disposables.push(exeResult);
+            if (procService && python) {
+                const connectionFound = createDeferred();
+                const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'remoteNoAuth.py');
+                const exeResult = procService.execObservable(python.path, ['-m', 'jupyter', 'notebook', `--config=${configFile}`], { env: process.env, throwOnStdErr: false });
+                disposables.push(exeResult);
 
-            exeResult.out.subscribe((output: Output<string>) => {
-                traceInfo(`remote jupyter output: ${output.out}`);
-                const connectionURL = getIPConnectionInfo(output.out);
-                if (connectionURL) {
-                    connectionFound.resolve(connectionURL);
+                exeResult.out.subscribe((output: Output<string>) => {
+                    traceInfo(`remote jupyter output: ${output.out}`);
+                    const connectionURL = getIPConnectionInfo(output.out);
+                    if (connectionURL) {
+                        connectionFound.resolve(connectionURL);
+                    }
+                });
+
+                const connString = await connectionFound.promise;
+                const uri = connString as string;
+
+                // We have a connection string here, so try to connect jupyterExecution to the notebook server
+                const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
+                const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+                if (!notebook) {
+                    assert.fail('Failed to connect to remote password server');
+                } else {
+                    await verifySimple(notebook, `a=1${os.EOL}a`, 1);
                 }
-            });
-
-            const connString = await connectionFound.promise;
-            const uri = connString as string;
-
-            // We have a connection string here, so try to connect jupyterExecution to the notebook server
-            const server = await jupyterExecution.connectToNotebookServer({ uri, useDefaultConfig: true, purpose: '' });
-            const notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
-            if (!notebook) {
-                assert.fail('Failed to connect to remote password server');
-            } else {
-                await verifySimple(notebook, `a=1${os.EOL}a`, 1);
+                // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
+                await server!.dispose();
             }
-            // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
-            await server!.dispose();
+        },
+        undefined,
+        () => {
+            const dummyDisposable = {
+                dispose: () => {
+                    return;
+                }
+            };
+            const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
+            appShell
+                .setup(a => a.showErrorMessage(TypeMoq.It.isAnyString()))
+                .returns(e => {
+                    throw e;
+                });
+            appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+            appShell
+                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
+            appShell
+                .setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+                .returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
+            appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
+            appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
+            ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
         }
-    }, undefined, () => {
-        const dummyDisposable = {
-            dispose: () => { return; }
-        };
-        const appShell = TypeMoq.Mock.ofType<IApplicationShell>();
-        appShell.setup(a => a.showErrorMessage(TypeMoq.It.isAnyString())).returns((e) => { throw e; });
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string) => Promise.resolve(a2));
-        appShell.setup(a => a.showInformationMessage(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((_a1: string, a2: string, _a3: string, _a4: string) => Promise.resolve(a2));
-        appShell.setup(a => a.showInputBox(TypeMoq.It.isAny())).returns(() => Promise.resolve(''));
-        appShell.setup(a => a.setStatusBarMessage(TypeMoq.It.isAny())).returns(() => dummyDisposable);
-        ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, appShell.object);
-    });
+    );
 
     runTest('Remote Password', async () => {
         const python = await getNotebookCapableInterpreter(ioc, processFactory);
@@ -419,7 +466,7 @@ suite('DataScience notebook tests', () => {
         class FailedProcess extends JupyterExecutionFactory {
             public isNotebookSupported = (): Promise<boolean> => {
                 return Promise.resolve(false);
-            }
+            };
         }
         ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
         jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
@@ -482,9 +529,17 @@ suite('DataScience notebook tests', () => {
         // Get a bunch of test cells (use our test cells from the react controls)
         const testFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience');
         const testState = generateTestState(testFolderPath);
-        const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => { return cellVM.cell; });
+        const cells = testState.cellVMs.map((cellVM: ICellViewModel, _index: number) => {
+            return cellVM.cell;
+        });
 
         // Translate this into a notebook
+
+        // Make sure we have a change dir happening
+        const settings = { ...ioc.getSettings().datascience };
+        settings.changeDirOnImportExport = true;
+        ioc.forceSettingsChanged(ioc.getSettings().pythonPath, settings);
+
         const exporter = ioc.serviceManager.get<INotebookExporter>(INotebookExporter);
         const newFolderPath = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'WorkspaceDir', 'WorkspaceSubDir', 'foo.ipynb');
         const notebook = await exporter.translateToNotebook(cells, newFolderPath);
@@ -525,6 +580,20 @@ suite('DataScience notebook tests', () => {
         }
     });
 
+    runTest('Verify manual working directory', async () => {
+        // Instead of default, manually set a working directory
+        const notebook = await createNotebook(true, undefined, undefined, undefined, EXTENSION_ROOT_DIR);
+        await verifySimple(notebook, 'import os\nos.getcwd()', EXTENSION_ROOT_DIR, true);
+    });
+
+    // tslint:disable-next-line:no-invalid-template-strings
+    runTest('Verify ${fileDirname} working directory', async () => {
+        // Verify that the default ${fileDirname} setting sets the working directory to the file path
+        changeMockWorkingDirectory(`'${srcDirectory()}'`);
+        const notebook = await createNotebook(true, undefined, undefined, undefined, undefined, path.join(srcDirectory(), 'foo.py'));
+        await verifySimple(notebook, 'import os\nos.getcwd()', srcDirectory(), true);
+    });
+
     runTest('Change Interpreter', async () => {
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
 
@@ -544,7 +613,7 @@ suite('DataScience notebook tests', () => {
                 sysVersion: '1.0.0.0',
                 sysPrefix: 'Python',
                 type: InterpreterType.Unknown,
-                architecture: Architecture.x64,
+                architecture: Architecture.x64
             };
 
             // Add interpreter into mock jupyter service and set it as active
@@ -587,11 +656,9 @@ suite('DataScience notebook tests', () => {
 
             console.log('Verifying restart');
             await verifyError(server, 'a', `name 'a' is not defined`);
-
         } catch (exc) {
             assert.ok(exc instanceof JupyterKernelPromiseFailedError, `Restarting did not timeout correctly for ${exc}`);
         }
-
     });
 
     class TaggedCancellationTokenSource extends CancellationTokenSource {
@@ -604,18 +671,18 @@ suite('DataScience notebook tests', () => {
 
     async function testCancelableCall<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, timeout: number): Promise<boolean> {
         const tokenSource = new TaggedCancellationTokenSource(messageFormat.format(timeout.toString()));
-        let canceled = false;
-        const disp = setTimeout((_s) => {
-            canceled = true;
-            tokenSource.cancel();
-        }, timeout, tokenSource.tag);
+        const disp = setTimeout(
+            _s => {
+                tokenSource.cancel();
+            },
+            timeout,
+            tokenSource.tag
+        );
 
         try {
             // tslint:disable-next-line:no-string-literal
             (tokenSource.token as any)['tag'] = messageFormat.format(timeout.toString());
             await method(tokenSource.token);
-            // We might get here before the cancel finishes
-            assert.ok(!canceled, messageFormat.format(timeout.toString()));
         } catch (exc) {
             // This should happen. This means it was canceled.
             assert.ok(exc instanceof CancellationError, `Non cancellation error found : ${exc.stack}`);
@@ -628,7 +695,7 @@ suite('DataScience notebook tests', () => {
     }
 
     async function testCancelableMethod<T>(method: (t: CancellationToken) => Promise<T>, messageFormat: string, short?: boolean): Promise<boolean> {
-        const timeouts = short ? [10, 20, 30, 100] : [100, 200, 300, 1000];
+        const timeouts = short ? [10, 20, 30, 100] : [300, 400, 500, 1000];
         // tslint:disable-next-line:prefer-for-of
         for (let i = 0; i < timeouts.length; i += 1) {
             await testCancelableCall(method, messageFormat, timeouts[i]);
@@ -668,7 +735,6 @@ suite('DataScience notebook tests', () => {
 
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.getUsableJupyterPython(t), 'Cancel did not cancel getusable after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isNotebookSupported(t), 'Cancel did not cancel isNotebook after {0}ms', true));
-        assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isKernelCreateSupported(t), 'Cancel did not cancel isKernel after {0}ms', true));
         assert.ok(await testCancelableMethod((t: CancellationToken) => jupyterExecution.isImportSupported(t), 'Cancel did not cancel isImport after {0}ms', true));
     });
 
@@ -678,16 +744,23 @@ suite('DataScience notebook tests', () => {
         const finishedPromise = createDeferred();
         let error;
         const observable = notebook!.executeObservable(code, Uri.file('foo.py').fsPath, 0, uuid(), false);
-        observable.subscribe(c => {
-            if (c.length > 0 && c[0].state === CellState.error) {
-                finishedBefore = !interrupted;
+        observable.subscribe(
+            c => {
+                if (c.length > 0 && c[0].state === CellState.error) {
+                    finishedBefore = !interrupted;
+                    finishedPromise.resolve();
+                }
+                if (c.length > 0 && c[0].state === CellState.finished) {
+                    finishedBefore = !interrupted;
+                    finishedPromise.resolve();
+                }
+            },
+            err => {
+                error = err;
                 finishedPromise.resolve();
-            }
-            if (c.length > 0 && c[0].state === CellState.finished) {
-                finishedBefore = !interrupted;
-                finishedPromise.resolve();
-            }
-        }, (err) => { error = err; finishedPromise.resolve(); }, () => finishedPromise.resolve());
+            },
+            () => finishedPromise.resolve()
+        );
 
         // Then interrupt
         interrupted = true;
@@ -697,17 +770,16 @@ suite('DataScience notebook tests', () => {
         await waitForPromise(finishedPromise.promise, sleepMs);
         assert.equal(finishedBefore, false, 'Finished before the interruption');
         assert.equal(error, undefined, 'Error thrown during interrupt');
-        assert.ok(finishedPromise.completed ||
-            result === InterruptResult.TimedOut ||
-            result === InterruptResult.Restarted,
-            `Timed out before interrupt for result: ${result}: ${code}`);
+        assert.ok(
+            finishedPromise.completed || result === InterruptResult.TimedOut || result === InterruptResult.Restarted,
+            `Timed out before interrupt for result: ${result}: ${code}`
+        );
 
         return result;
     }
 
     runTest('Interrupt kernel', async () => {
-        const returnable =
-            `import signal
+        const returnable = `import signal
 import _thread
 import time
 
@@ -723,8 +795,7 @@ while keep_going:
   print(".")
   time.sleep(.1)`;
         const fourSecondSleep = `import time${os.EOL}time.sleep(4)${os.EOL}print("foo")`;
-        const kill =
-            `import signal
+        const kill = `import signal
 import time
 import os
 
@@ -745,7 +816,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((_t) => sleep(100), cancelToken);
+                await Cancellation.race(_t => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -760,7 +831,7 @@ while keep_going:
             // This one goes forever until a cancellation happens
             let haveMore = true;
             try {
-                await Cancellation.race((_t) => sleep(100), cancelToken);
+                await Cancellation.race(_t => sleep(100), cancelToken);
             } catch {
                 haveMore = false;
             }
@@ -787,113 +858,104 @@ while keep_going:
         await interruptExecute(server, kill, 1000, 1000);
     });
 
-    testMimeTypes(
-        [
-            {
-                markdownRegEx: undefined,
-                code:
-                    `a=1
+    testMimeTypes([
+        {
+            markdownRegEx: undefined,
+            code: `a=1
 a`,
-                mimeType: 'text/plain',
-                cellType: 'code',
-                result: 1,
-                verifyValue: (d) => assert.equal(d, 1, 'Plain text invalid')
-            },
-            {
-                markdownRegEx: undefined,
-                code:
-                    `import pandas as pd
+            mimeType: 'text/plain',
+            cellType: 'code',
+            result: 1,
+            verifyValue: d => assert.equal(d, 1, 'Plain text invalid')
+        },
+        {
+            markdownRegEx: undefined,
+            code: `import pandas as pd
 df = pd.read("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
-                mimeType: 'text/html',
-                result: `pd has no attribute 'read'`,
-                cellType: 'error',
-                // tslint:disable-next-line:quotemark
-                verifyValue: (d) => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
-            },
-            {
-                markdownRegEx: undefined,
-                code:
-                    `import pandas as pd
+            mimeType: 'text/html',
+            result: `pd has no attribute 'read'`,
+            cellType: 'error',
+            // tslint:disable-next-line:quotemark
+            verifyValue: d => assert.ok((d as string).includes("has no attribute 'read'"), 'Unexpected error result')
+        },
+        {
+            markdownRegEx: undefined,
+            code: `import pandas as pd
 df = pd.read_csv("${escapePath(path.join(srcDirectory(), 'DefaultSalesReport.csv'))}")
 df.head()`,
-                mimeType: 'text/html',
-                result: `<td>A table</td>`,
-                cellType: 'code',
-                verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
-            },
-            {
-                markdownRegEx: undefined,
-                code:
-                    `#%% [markdown]#
+            mimeType: 'text/html',
+            result: `<td>A table</td>`,
+            cellType: 'code',
+            verifyValue: d => assert.ok(d.toString().includes('</td>'), 'Table not found')
+        },
+        {
+            markdownRegEx: undefined,
+            code: `#%% [markdown]#
 # #HEADER`,
-                mimeType: 'text/plain',
-                cellType: 'markdown',
-                result: '#HEADER',
-                verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
-            },
-            {
-                markdownRegEx: '\\s*#\\s*<markdowncell>',
-                code:
-                    `# <markdowncell>
+            mimeType: 'text/plain',
+            cellType: 'markdown',
+            result: '#HEADER',
+            verifyValue: d => assert.equal(d, ' #HEADER', 'Markdown incorrect')
+        },
+        {
+            markdownRegEx: '\\s*#\\s*<markdowncell>',
+            code: `# <markdowncell>
 # #HEADER`,
-                mimeType: 'text/plain',
-                cellType: 'markdown',
-                result: '#HEADER',
-                verifyValue: (d) => assert.equal(d, ' #HEADER', 'Markdown incorrect')
-            },
-            {
-                // Test relative directories too.
-                markdownRegEx: undefined,
-                code:
-                    `import pandas as pd
+            mimeType: 'text/plain',
+            cellType: 'markdown',
+            result: '#HEADER',
+            verifyValue: d => assert.equal(d, ' #HEADER', 'Markdown incorrect')
+        },
+        {
+            // Test relative directories too.
+            markdownRegEx: undefined,
+            code: `import pandas as pd
 df = pd.read_csv("./DefaultSalesReport.csv")
 df.head()`,
-                mimeType: 'text/html',
-                cellType: 'code',
-                result: `<td>A table</td>`,
-                verifyValue: (d) => assert.ok(d.toString().includes('</td>'), 'Table not found')
-            },
-            {
-                // Important to test as multiline cell magics only work if they are the first item in the cell
-                markdownRegEx: undefined,
-                code:
-                    `#%%
+            mimeType: 'text/html',
+            cellType: 'code',
+            result: `<td>A table</td>`,
+            verifyValue: d => assert.ok(d.toString().includes('</td>'), 'Table not found')
+        },
+        {
+            // Important to test as multiline cell magics only work if they are the first item in the cell
+            markdownRegEx: undefined,
+            code: `#%%
 %%bash
 echo 'hello'`,
-                mimeType: 'text/plain',
-                cellType: 'code',
-                result: 'hello',
-                verifyValue: (_d) => noop() // Anything is fine as long as it tries it.
-            },
-            {
-                // Test shell command should work on PC / Mac / Linux
-                markdownRegEx: undefined,
-                code:
-                    `!echo world`,
-                mimeType: 'text/plain',
-                cellType: 'code',
-                result: 'world',
-                verifyValue: (d) => assert.ok(d.includes('world'), 'Cell command incorrect')
-            },
-            {
-                // Plotly
-                markdownRegEx: undefined,
-                code:
-                    `import matplotlib.pyplot as plt
+            mimeType: 'text/plain',
+            cellType: 'code',
+            result: 'hello',
+            verifyValue: _d => noop() // Anything is fine as long as it tries it.
+        },
+        {
+            // Test shell command should work on PC / Mac / Linux
+            markdownRegEx: undefined,
+            code: `!echo world`,
+            mimeType: 'text/plain',
+            cellType: 'code',
+            result: 'world',
+            verifyValue: d => assert.ok(d.includes('world'), 'Cell command incorrect')
+        },
+        {
+            // Plotly
+            markdownRegEx: undefined,
+            code: `import matplotlib.pyplot as plt
 import matplotlib as mpl
 import numpy as np
 import pandas as pd
 x = np.linspace(0, 20, 100)
 plt.plot(x, np.sin(x))
 plt.show()`,
-                result: `00000`,
-                mimeType: 'image/svg+xml',
-                cellType: 'code',
-                verifyValue: (_d) => { return; }
+            result: `00000`,
+            mimeType: 'image/svg+xml',
+            cellType: 'code',
+            verifyValue: _d => {
+                return;
             }
-        ]
-    );
+        }
+    ]);
 
     async function generateNonDefaultConfig() {
         const usable = await getNotebookCapableInterpreter(ioc, processFactory);
@@ -1057,25 +1119,28 @@ plt.show()`,
         }
     }
 
-    runTest('Server death', async () => {
-        if (ioc.mockJupyter) {
-            // Only run this test for mocks. We need to mock the server dying.
-            addMockData(`a=1${os.EOL}a`, 1);
-            const server = await createNotebook(true);
-            assert.ok(server, 'Server died before running');
+    runTest(
+        'Server death',
+        async () => {
+            if (ioc.mockJupyter) {
+                // Only run this test for mocks. We need to mock the server dying.
+                addMockData(`a=1${os.EOL}a`, 1);
+                const server = await createNotebook(true);
+                assert.ok(server, 'Server died before running');
 
-            // Sleep for 100 ms so it crashes
-            await sleep(100);
+                // Sleep for 100 ms so it crashes
+                await sleep(100);
 
-            try {
-                await verifySimple(server, `a=1${os.EOL}a`, 1);
-                assert.ok(false, 'Exception should have been thrown');
-            } catch {
-                noop();
+                try {
+                    await verifySimple(server, `a=1${os.EOL}a`, 1);
+                    assert.ok(false, 'Exception should have been thrown');
+                } catch {
+                    noop();
+                }
             }
-
-        }
-    }, new DyingProcess(100));
+        },
+        new DyingProcess(100)
+    );
 
     runTest('Execution logging', async () => {
         const cellInputs: string[] = [];
@@ -1094,9 +1159,9 @@ plt.show()`,
         const server = await createNotebook(true);
         assert.ok(server, 'Server not created in logging case');
         await server!.execute(`a=1${os.EOL}a`, path.join(srcDirectory(), 'foo.py'), 2, uuid());
-        assert.equal(cellInputs.length, 3, 'Not enough cell inputs');
+        assert.equal(cellInputs.length, 2, 'Not enough cell inputs');
         assert.ok(outputs.length >= 1, 'Not enough cell outputs');
-        assert.equal(cellInputs[2], 'a=1\na', 'Cell inputs not captured');
+        assert.equal(cellInputs[1], 'a=1\na', 'Cell inputs not captured');
         assert.equal(outputs[outputs.length - 1], '1', 'Cell outputs not captured');
     });
 
@@ -1117,23 +1182,19 @@ plt.show()`,
                 stderr: 'Not supported'
             });
         });
-
     }
 
-    test('Notebook launch failure', async function () {
-        jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
-        processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
+    test('Notebook launch failure', async function() {
         if (!ioc.mockJupyter) {
             // tslint:disable-next-line: no-invalid-this
             this.skip();
         } else {
             const application = mock(ApplicationShell);
-            when(application.withProgress(anything(), anything())).thenCall((_, cb: (_: any, token: any) => Promise<any>) => {
-                return new Promise((resolve, reject) => {
-                    cb({ report: noop }, new CancellationTokenSource().token).then(resolve).catch(reject);
-                });
-            });
+            when(application.withProgress(anything(), anything())).thenResolve({ status: ModuleExistsStatus.NotFound } as any);
             ioc.serviceManager.rebindInstance<IApplicationShell>(IApplicationShell, instance(application));
+
+            jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+            processFactory = ioc.serviceManager.get<IProcessServiceFactory>(IProcessServiceFactory);
 
             // Change notebook command to fail with some goofy output
             await disableJupyter(ioc.workingInterpreter.path);
@@ -1146,7 +1207,7 @@ plt.show()`,
                 await jupyterExecution.connectToNotebookServer({ usingDarkTheme: false, useDefaultConfig: true, workingDir: testDir, purpose: '1' });
             } catch (e) {
                 threw = true;
-                assert.ok(e.message.includes('Not supported'), 'Wrong error thrown when notebook is created');
+                assert.ok(e.message.includes('Not supported'), `Wrong error thrown when notebook is created. Error is ${e.message}`);
             }
 
             assert.ok(threw, 'No exception thrown during notebook creation');
@@ -1154,7 +1215,7 @@ plt.show()`,
     });
 
     // tslint:disable-next-line: no-function-expression
-    runTest('Notebook launch retry', async function (_this: Mocha.Context) {
+    runTest('Notebook launch retry', async function(_this: Mocha.Context) {
         // Skipping for now. Renable to test idle timeouts
         _this.skip();
         ioc.getSettings().datascience.jupyterLaunchRetries = 1;

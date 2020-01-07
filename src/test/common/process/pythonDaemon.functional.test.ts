@@ -12,7 +12,6 @@ import * as os from 'os';
 import * as path from 'path';
 import { instance, mock } from 'ts-mockito';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PythonDaemonExecutionService } from '../../../client/common/process/pythonDaemon';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
 import { IPythonExecutionService, PythonVersionInfo } from '../../../client/common/process/types';
@@ -21,6 +20,7 @@ import { Architecture } from '../../../client/common/utils/platform';
 import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { isPythonVersion, PYTHON_PATH } from '../../common';
+import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
 // tslint:disable-next-line: max-func-body-length
@@ -34,7 +34,6 @@ suite('Daemon', () => {
     let pythonDaemon: PythonDaemonExecutionService;
     let pythonExecutionService: IPythonExecutionService;
     let disposables: IDisposable[] = [];
-    let fsUtils: FileSystem;
     suiteSetup(() => {
         // When running locally.
         if (PYTHON_PATH.toLowerCase() === 'python') {
@@ -42,10 +41,9 @@ suite('Daemon', () => {
                 .stdout.toString()
                 .trim();
         }
-        fsUtils = new FileSystem();
     });
-    setup(async function () {
-        if (isPythonVersion('2.7')){
+    setup(async function() {
+        if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
@@ -68,8 +66,8 @@ suite('Daemon', () => {
     });
 
     async function createPythonFile(source: string): Promise<string> {
-        const tmpFile = await fsUtils.createTemporaryFile('.py');
-        disposables.push({ dispose: () => tmpFile.dispose() });
+        const tmpFile = await createTemporaryFile('.py');
+        disposables.push({ dispose: () => tmpFile.cleanupCallback() });
         await fs.writeFile(tmpFile.filePath, source, { encoding: 'utf8' });
         return tmpFile.filePath;
     }
@@ -119,9 +117,9 @@ suite('Daemon', () => {
         await assert.eventually.equal(pythonDaemon.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
 
-    test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
-    test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
-    test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'pip' module is installed", async () => testModuleInstalled('pip', true));
+    test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
+    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`
@@ -241,7 +239,10 @@ suite('Daemon', () => {
         await new Promise((resolve, reject) => {
             output.out.subscribe(out => outputsReceived.push(out.out.trim()), reject, resolve);
         });
-        assert.deepEqual(outputsReceived.filter(item => item.length > 0), ['0', '1', '2', '3', '4']);
+        assert.deepEqual(
+            outputsReceived.filter(item => item.length > 0),
+            ['0', '1', '2', '3', '4']
+        );
     }).timeout(10_000);
 
     test('Execute a file and throw exception if stderr is not empty', async () => {

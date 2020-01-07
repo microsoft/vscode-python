@@ -18,12 +18,13 @@ import { IDebugConfigurationProviderFactory, IDebugConfigurationResolver } from 
 
 @injectable()
 export class PythonDebugConfigurationService implements IDebugConfigurationService {
-    constructor(@inject(IDebugConfigurationResolver) @named('attach') private readonly attachResolver: IDebugConfigurationResolver<AttachRequestArguments>,
+    constructor(
+        @inject(IDebugConfigurationResolver) @named('attach') private readonly attachResolver: IDebugConfigurationResolver<AttachRequestArguments>,
         @inject(IDebugConfigurationResolver) @named('launch') private readonly launchResolver: IDebugConfigurationResolver<LaunchRequestArguments>,
         @inject(IDebugConfigurationProviderFactory) private readonly providerFactory: IDebugConfigurationProviderFactory,
         @inject(IMultiStepInputFactory) private readonly multiStepFactory: IMultiStepInputFactory,
-        @inject(IFileSystem) private readonly fs: IFileSystem) {
-    }
+        @inject(IFileSystem) private readonly fs: IFileSystem
+    ) {}
     public async provideDebugConfigurations(folder: WorkspaceFolder | undefined, token?: CancellationToken): Promise<DebugConfiguration[] | undefined> {
         const config: Partial<DebugConfigurationArguments> = {};
         const state = { config, folder, token };
@@ -38,11 +39,15 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
             return [state.config as DebugConfiguration];
         }
     }
-    public async resolveDebugConfiguration(folder: WorkspaceFolder | undefined, debugConfiguration: DebugConfiguration, token?: CancellationToken): Promise<DebugConfiguration | undefined> {
+    public async resolveDebugConfiguration(
+        folder: WorkspaceFolder | undefined,
+        debugConfiguration: DebugConfiguration,
+        token?: CancellationToken
+    ): Promise<DebugConfiguration | undefined> {
         if (debugConfiguration.request === 'attach') {
             return this.attachResolver.resolveDebugConfiguration(folder, debugConfiguration as AttachRequestArguments, token);
         } else if (debugConfiguration.request === 'test') {
-            throw Error('Please use the command \'Python: Debug Unit Tests\'');
+            throw Error("Please use the command 'Python: Debug Unit Tests'");
         } else {
             if (Object.keys(debugConfiguration).length === 0) {
                 const configs = await this.provideDebugConfigurations(folder, token);
@@ -59,33 +64,40 @@ export class PythonDebugConfigurationService implements IDebugConfigurationServi
         const jsonStr = await this.fs.readFile(jsFilePath);
         return JSON.parse(jsonStr) as DebugConfiguration[];
     }
-    protected async  pickDebugConfiguration(
-        input: IMultiStepInput<DebugConfigurationState>,
-        state: DebugConfigurationState
-    ): Promise<InputStep<DebugConfigurationState> | void> {
+    protected async pickDebugConfiguration(input: IMultiStepInput<DebugConfigurationState>, state: DebugConfigurationState): Promise<InputStep<DebugConfigurationState> | void> {
         type DebugConfigurationQuickPickItem = QuickPickItem & { type: DebugConfigurationType };
         const items: DebugConfigurationQuickPickItem[] = [
             {
                 label: DebugConfigStrings.file.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFile,
                 description: DebugConfigStrings.file.selectConfiguration.description()
-            }, {
+            },
+            {
                 label: DebugConfigStrings.module.selectConfiguration.label(),
                 type: DebugConfigurationType.launchModule,
                 description: DebugConfigStrings.module.selectConfiguration.description()
-            }, {
+            },
+            {
                 label: DebugConfigStrings.attach.selectConfiguration.label(),
                 type: DebugConfigurationType.remoteAttach,
                 description: DebugConfigStrings.attach.selectConfiguration.description()
-            }, {
+            },
+            {
+                label: DebugConfigStrings.attachPid.selectConfiguration.label(),
+                type: DebugConfigurationType.pidAttach,
+                description: DebugConfigStrings.attachPid.selectConfiguration.description()
+            },
+            {
                 label: DebugConfigStrings.django.selectConfiguration.label(),
                 type: DebugConfigurationType.launchDjango,
                 description: DebugConfigStrings.django.selectConfiguration.description()
-            }, {
+            },
+            {
                 label: DebugConfigStrings.flask.selectConfiguration.label(),
                 type: DebugConfigurationType.launchFlask,
                 description: DebugConfigStrings.flask.selectConfiguration.description()
-            }, {
+            },
+            {
                 label: DebugConfigStrings.pyramid.selectConfiguration.label(),
                 type: DebugConfigurationType.launchPyramid,
                 description: DebugConfigStrings.pyramid.selectConfiguration.description()

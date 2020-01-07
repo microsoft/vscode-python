@@ -15,21 +15,17 @@ export class ProcessLogger implements IProcessLogger {
     constructor(
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils
-    ) { }
+    ) {}
 
     public logProcess(file: string, args: string[], options?: SpawnOptions) {
-        if (
-            !isTestExecution() &&
-            isCI &&
-            process.env.UITEST_DISABLE_PROCESS_LOGGING
-        ) {
+        if (!isTestExecution() && isCI && process.env.UITEST_DISABLE_PROCESS_LOGGING) {
             // Added to disable logging of process execution commands during UI Tests.
             // Used only during UI Tests (hence this setting need not be exposed as a valid setting).
             return;
         }
         const argsList = args.reduce((accumulator, current, index) => {
             let formattedArg = this.pathUtils.getDisplayName(current).toCommandArgument();
-            if (current[0] === '\'' || current[0] === '"') {
+            if (current[0] === "'" || current[0] === '"') {
                 formattedArg = `${current[0]}${this.pathUtils.getDisplayName(current.substr(1))}`;
             }
 

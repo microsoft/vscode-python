@@ -19,17 +19,19 @@ import { ChildProcessLaunchData, IChildProcessAttachService, IDebugSessionEventH
  */
 @injectable()
 export class ChildProcessAttachEventHandler implements IDebugSessionEventHandlers {
-    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) { }
+    constructor(@inject(IChildProcessAttachService) private readonly childProcessAttachService: IChildProcessAttachService) {}
 
     @swallowExceptions('Handle child process launch')
     public async handleCustomEvent(event: DebugSessionCustomEvent): Promise<void> {
-        if (!event) { return; }
+        if (!event) {
+            return;
+        }
 
         let data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration);
         if (event.event === PTVSDEvents.ChildProcessLaunched) {
             data = event.body! as ChildProcessLaunchData;
         } else if (event.event === PTVSDEvents.AttachToSubprocess) {
-            data = event.body! as (AttachRequestArguments & DebugConfiguration);
+            data = event.body! as AttachRequestArguments & DebugConfiguration;
         } else {
             return;
         }

@@ -14,7 +14,7 @@ const NOSE_WANT_FILE_SUFFIX_WITHOUT_EXT = '? True';
 
 @injectable()
 export class TestsParser implements ITestsParser {
-    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) { }
+    constructor(@inject(ITestsHelper) private testsHelper: ITestsHelper) {}
     public parse(content: string, options: ParserOptions): Tests {
         let testFiles = this.getTestFiles(content, options);
         // Exclude tests that don't have any functions or test suites.
@@ -26,8 +26,7 @@ export class TestsParser implements ITestsParser {
         let logOutputLines: string[] = [''];
         const testFiles: TestFile[] = [];
         content.split(/\r?\n/g).forEach((line, index, lines) => {
-            if ((line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) ||
-                index === lines.length - 1) {
+            if ((line.startsWith(NOSE_WANT_FILE_PREFIX) && line.endsWith(NOSE_WANT_FILE_SUFFIX)) || index === lines.length - 1) {
                 // process the previous lines.
                 this.parseNoseTestModuleCollectionResult(options.cwd, logOutputLines, testFiles);
                 logOutputLines = [''];
@@ -66,6 +65,7 @@ export class TestsParser implements ITestsParser {
         }
     }
 
+    // tslint:disable-next-line: max-func-body-length
     private parseNoseTestModuleCollectionResult(rootDirectory: string, lines: string[], testFiles: TestFile[]) {
         let currentPackage: string = '';
         let fileName = '';
@@ -86,22 +86,35 @@ export class TestsParser implements ITestsParser {
                 const fullyQualifiedName = path.isAbsolute(fileName) ? fileName : path.resolve(rootDirectory, fileName);
                 testFile = {
                     resource,
-                    functions: [], suites: [], name: fileName, nameToRun: fileName,
-                    xmlName: currentPackage, time: 0, functionsFailed: 0, functionsPassed: 0,
+                    functions: [],
+                    suites: [],
+                    name: fileName,
+                    nameToRun: fileName,
+                    xmlName: currentPackage,
+                    time: 0,
+                    functionsFailed: 0,
+                    functionsPassed: 0,
                     fullPath: fullyQualifiedName
                 };
                 testFiles.push(testFile);
                 return;
             }
 
-            if (line.startsWith('nose.selector: DEBUG: wantClass <class \'')) {
-                const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass <class \'', '\'>? True');
+            if (line.startsWith("nose.selector: DEBUG: wantClass <class '")) {
+                const name = extractBetweenDelimiters(line, "nose.selector: DEBUG: wantClass <class '", "'>? True");
                 const clsName = path.extname(name).substring(1);
                 const testSuite: TestSuite = {
                     resource,
-                    name: clsName, nameToRun: `${fileName}:${clsName}`,
-                    functions: [], suites: [], xmlName: name, time: 0, isUnitTest: false,
-                    isInstance: false, functionsFailed: 0, functionsPassed: 0
+                    name: clsName,
+                    nameToRun: `${fileName}:${clsName}`,
+                    functions: [],
+                    suites: [],
+                    xmlName: name,
+                    time: 0,
+                    isUnitTest: false,
+                    isInstance: false,
+                    functionsFailed: 0,
+                    functionsPassed: 0
                 };
                 testFile.suites.push(testSuite);
                 return;
@@ -110,9 +123,16 @@ export class TestsParser implements ITestsParser {
                 const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantClass ', '? True');
                 const testSuite: TestSuite = {
                     resource,
-                    name: path.extname(name).substring(1), nameToRun: `${fileName}:.${name}`,
-                    functions: [], suites: [], xmlName: name, time: 0, isUnitTest: false,
-                    isInstance: false, functionsFailed: 0, functionsPassed: 0
+                    name: path.extname(name).substring(1),
+                    nameToRun: `${fileName}:.${name}`,
+                    functions: [],
+                    suites: [],
+                    xmlName: name,
+                    time: 0,
+                    isUnitTest: false,
+                    isInstance: false,
+                    functionsFailed: 0,
+                    functionsPassed: 0
                 };
                 testFile.suites.push(testSuite);
                 return;
@@ -123,8 +143,11 @@ export class TestsParser implements ITestsParser {
                 const clsName = path.basename(name, path.extname(name));
                 const fn: TestFunction = {
                     resource,
-                    name: fnName, nameToRun: `${fileName}:${clsName}.${fnName}`,
-                    time: 0, functionsFailed: 0, functionsPassed: 0
+                    name: fnName,
+                    nameToRun: `${fileName}:${clsName}.${fnName}`,
+                    time: 0,
+                    functionsFailed: 0,
+                    functionsPassed: 0
                 };
 
                 const cls = testFile.suites.find(suite => suite.name === clsName);
@@ -137,8 +160,11 @@ export class TestsParser implements ITestsParser {
                 const name = extractBetweenDelimiters(line, 'nose.selector: DEBUG: wantFunction <function ', ' at ');
                 const fn: TestFunction = {
                     resource,
-                    name: name, nameToRun: `${fileName}:${name}`,
-                    time: 0, functionsFailed: 0, functionsPassed: 0
+                    name: name,
+                    nameToRun: `${fileName}:${name}`,
+                    time: 0,
+                    functionsFailed: 0,
+                    functionsPassed: 0
                 };
                 testFile.functions.push(fn);
                 return;

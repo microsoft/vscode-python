@@ -2,67 +2,49 @@
 // Licensed under the MIT License.
 'use strict';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, Event, EventEmitter } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 'vscode';
 
-import { nbformat } from '@jupyterlab/coreutils';
-import { ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
-import { traceInfo } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../common/types';
+import { traceError, traceInfo } from '../../common/logger';
+import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
+import { noop } from '../../common/utils/misc';
+import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, Telemetry } from '../constants';
-import {
-    IConnection,
-    IJupyterExecution,
-    IJupyterKernelSpec,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerLaunchInfo,
-    INotebookServerOptions
-} from '../types';
+import { Commands, JupyterCommands, Telemetry } from '../constants';
+import { IConnection, IJupyterExecution, IJupyterSessionManagerFactory, INotebookServer, INotebookServerLaunchInfo, INotebookServerOptions } from '../types';
 import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
+import { JupyterSessionStartError } from './jupyterSession';
 import { createRemoteConnectionInfo } from './jupyterUtils';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
-import { KernelService } from './kernels/kernelService';
+import { KernelSelector, KernelSpecInterpreter } from './kernels/kernelSelector';
 import { NotebookStarter } from './notebookStarter';
 
 export class JupyterExecutionBase implements IJupyterExecution {
-
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private disposed: boolean = false;
     private readonly commandFinder: JupyterCommandFinder;
-    private readonly kernelService: KernelService;
-    private readonly notebookStarter: NotebookStarter;
 
     constructor(
         _liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         private readonly interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         private readonly logger: ILogger,
         private readonly disposableRegistry: IDisposableRegistry,
-        asyncRegistry: IAsyncDisposableRegistry,
-        fileSystem: IFileSystem,
-        private readonly sessionManagerFactory: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
+        private readonly kernelSelector: KernelSelector,
+        private readonly notebookStarter: NotebookStarter,
+        private readonly appShell: IApplicationShell,
+        private readonly jupyterOutputChannel: IOutputChannel,
         private readonly serviceContainer: IServiceContainer
     ) {
         this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
-        this.kernelService = new KernelService(this, this.commandFinder, asyncRegistry,
-            processServiceFactory, interpreterService, fileSystem, activationHelper);
-        this.notebookStarter = new NotebookStarter(executionFactory, this.commandFinder,
-            this.kernelService, fileSystem, serviceContainer);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -113,61 +95,106 @@ export class JupyterExecutionBase implements IJupyterExecution {
         return Cancellation.race(() => this.isCommandSupported(JupyterCommands.ConvertCommand), cancelToken);
     }
 
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        // See if we can find the command ipykernel
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelCreateCommand), cancelToken);
-    }
-
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        // See if we can find the command kernelspec
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.KernelSpecCommand), cancelToken);
-    }
-
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // Supported if we can run a notebook
         return this.isNotebookSupported(cancelToken);
     }
 
-    //tslint:disable:cyclomatic-complexity
+    //tslint:disable:cyclomatic-complexity max-func-body-length
     public connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         // Return nothing if we cancel
+        // tslint:disable-next-line: max-func-body-length
         return Cancellation.race(async () => {
             let result: INotebookServer | undefined;
-            let startInfo: { connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined } | undefined;
+            let connection: IConnection | undefined;
+            let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
+            let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
-            const interpreter = await this.interpreterService.getActiveInterpreter();
+            const kernelSpecCancelSource = new CancellationTokenSource();
+            if (cancelToken) {
+                cancelToken.onCancellationRequested(() => {
+                    kernelSpecCancelSource.cancel();
+                });
+            }
+            const isLocalConnection = !options || !options.uri;
+
+            if (isLocalConnection) {
+                // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
+                // We can do this in parallel, while starting the server (faster).
+                traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
+                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(undefined, options?.metadata, kernelSpecCancelSource.token);
+            }
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
             let tryCount = 0;
             const maxTries = this.configuration.getSettings().datascience.jupyterLaunchRetries;
+            const stopWatch = new StopWatch();
             while (tryCount < maxTries) {
                 try {
                     // Start or connect to the process
-                    startInfo = await this.startOrConnect(options, cancelToken);
+                    [connection, kernelSpecInterpreter] = await Promise.all([this.startOrConnect(options, cancelToken), kernelSpecInterpreterPromise]);
                     // Create a server that we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
+                    // In a remote situation, figure out a kernel spec too.
+                    if (!kernelSpecInterpreter.kernelSpec && connection) {
+                        const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
+                        const sessionManager = await sessionManagerFactory.create(connection);
+                        kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(sessionManager, options?.metadata, cancelToken);
+                    }
+
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
-                        connectionInfo: startInfo.connection,
-                        currentInterpreter: interpreter,
-                        kernelSpec: startInfo.kernelSpec,
+                        connectionInfo: connection!,
+                        interpreter: kernelSpecInterpreter.interpreter,
+                        kernelSpec: kernelSpecInterpreter.kernelSpec,
                         workingDir: options ? options.workingDir : undefined,
                         uri: options ? options.uri : undefined,
                         purpose: options ? options.purpose : uuid(),
                         enableDebugging: options ? options.enableDebugging : false
                     };
 
-                    traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
-                    await result.connect(launchInfo, cancelToken);
-                    traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
+                    // tslint:disable-next-line: no-constant-condition
+                    while (true) {
+                        try {
+                            traceInfo(`Connecting to process for ${options ? options.purpose : 'unknown type of'} server`);
+                            await result.connect(launchInfo, cancelToken);
+                            traceInfo(`Connection complete for ${options ? options.purpose : 'unknown type of'} server`);
+                            break;
+                        } catch (ex) {
+                            traceError('Failed to connect to server', ex);
+                            if (ex instanceof JupyterSessionStartError && isLocalConnection) {
+                                // Keep retrying, until it works or user cancels.
+                                // Sometimes if a bad kernel is selected, starting a session can fail.
+                                // In such cases we need to let the user know about this and prompt them to select another kernel.
+                                const message = localize.DataScience.sessionStartFailedWithKernel().format(
+                                    launchInfo.kernelSpec?.display_name || launchInfo.kernelSpec?.name || '',
+                                    Commands.ViewJupyterOutput
+                                );
+                                const selectKernel = localize.DataScience.selectDifferentKernel();
+                                const cancel = localize.Common.cancel();
+                                const selection = await this.appShell.showErrorMessage(message, selectKernel, cancel);
+                                if (selection === selectKernel) {
+                                    const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
+                                    const sessionManager = await sessionManagerFactory.create(connection);
+                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken, launchInfo.kernelSpec);
+                                    if (Object.keys(kernelInterpreter).length > 0) {
+                                        launchInfo.interpreter = kernelInterpreter.interpreter;
+                                        launchInfo.kernelSpec = kernelInterpreter.kernelSpec || kernelInterpreter.kernelModel;
+                                        continue;
+                                    }
+                                }
+                            }
+                            throw ex;
+                        }
+                    }
 
-                    sendTelemetryEvent(launchInfo.uri ? Telemetry.ConnectRemoteJupyter : Telemetry.ConnectLocalJupyter);
+                    sendTelemetryEvent(isLocalConnection ? Telemetry.ConnectLocalJupyter : Telemetry.ConnectRemoteJupyter);
                     return result;
                 } catch (err) {
                     // Cleanup after ourselves. server may be running partially.
                     if (result) {
-                        traceInfo('Killing server because of error');
+                        traceInfo(`Killing server because of error ${err}`);
                         await result.dispose();
                     }
                     if (err instanceof JupyterWaitForIdleError && tryCount < maxTries) {
@@ -175,28 +202,44 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         // ourselves and propagate the failure outwards.
                         traceInfo('Retry because of wait for idle problem.');
                         sendTelemetryEvent(Telemetry.SessionIdleTimeout);
+
+                        // Close existing connection.
+                        connection?.dispose();
                         tryCount += 1;
-                    } else if (startInfo) {
+                    } else if (connection) {
+                        kernelSpecCancelSource.cancel();
+
                         // Something else went wrong
-                        if (options && options.uri) {
+                        if (!isLocalConnection) {
                             sendTelemetryEvent(Telemetry.ConnectRemoteFailedJupyter);
 
                             // Check for the self signed certs error specifically
                             if (err.message.indexOf('reason: self signed certificate') >= 0) {
                                 sendTelemetryEvent(Telemetry.ConnectRemoteSelfCertFailedJupyter);
-                                throw new JupyterSelfCertsError(startInfo.connection.baseUrl);
+                                throw new JupyterSelfCertsError(connection.baseUrl);
                             } else {
-                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(startInfo.connection.baseUrl, err));
+                                throw new Error(localize.DataScience.jupyterNotebookRemoteConnectFailed().format(connection.baseUrl, err));
                             }
                         } else {
                             sendTelemetryEvent(Telemetry.ConnectFailedJupyter);
-                            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(startInfo.connection.baseUrl, err));
+                            throw new Error(localize.DataScience.jupyterNotebookConnectFailed().format(connection.baseUrl, err));
                         }
                     } else {
+                        kernelSpecCancelSource.cancel();
                         throw err;
                     }
                 }
             }
+
+            // If we're here, then starting jupyter timeout.
+            // Kill any existing connections.
+            connection?.dispose();
+            sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, { timeout: stopWatch.elapsedTime });
+            this.appShell.showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel()).then(selection => {
+                if (selection === localize.Common.openOutputPanel()) {
+                    this.jupyterOutputChannel.show();
+                }
+            }, noop);
         }, cancelToken);
     }
 
@@ -244,19 +287,14 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
     }
 
-    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
-        let connection: IConnection | undefined;
-        let kernelSpec: IJupyterKernelSpec | undefined;
-
+    private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<IConnection> {
         // If our uri is undefined or if it's set to local launch we need to launch a server locally
         if (!options || !options.uri) {
             traceInfo(`Launching ${options ? options.purpose : 'unknown type of'} server`);
             const useDefaultConfig = options && options.useDefaultConfig ? true : false;
-            const metadata = options?.metadata;
-            const launchResults = await this.startNotebookServer({ useDefaultConfig, metadata }, cancelToken);
-            if (launchResults) {
-                connection = launchResults.connection;
-                kernelSpec = launchResults.kernelSpec;
+            const connection = await this.startNotebookServer(useDefaultConfig, cancelToken);
+            if (connection) {
+                return connection;
             } else {
                 // Throw a cancellation error if we were canceled.
                 Cancellation.throwIfCanceled(cancelToken);
@@ -266,34 +304,17 @@ export class JupyterExecutionBase implements IJupyterExecution {
             }
         } else {
             // If we have a URI spec up a connection info for it
-            connection = createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
-            kernelSpec = undefined;
+            return createRemoteConnectionInfo(options.uri, this.configuration.getSettings().datascience);
         }
-
-        // If we don't have a kernel spec yet, check using our current connection
-        if (!kernelSpec && connection.localLaunch) {
-            traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-            const sessionManager = await this.sessionManagerFactory.create(connection);
-            kernelSpec = await this.kernelService.getMatchingKernelSpec(sessionManager, cancelToken);
-            await sessionManager.dispose();
-        }
-
-        // If still not found, log an error (this seems possible for some people, so use the default)
-        if (!kernelSpec && connection.localLaunch) {
-            this.logger.logError(localize.DataScience.jupyterKernelSpecNotFound());
-        }
-
-        // Return the data we found.
-        return { connection, kernelSpec };
     }
 
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
-    private async startNotebookServer(options: { useDefaultConfig: boolean; metadata?: nbformat.INotebookMetadata }, cancelToken?: CancellationToken): Promise<{ connection: IConnection; kernelSpec: IJupyterKernelSpec | undefined }> {
+    private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
         // First we find a way to start a notebook server
         const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
         this.checkNotebookCommand(notebookCommand);
-        return this.notebookStarter.start(options, cancelToken);
+        return this.notebookStarter.start(useDefaultConfig, cancelToken);
     }
 
     private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
@@ -304,7 +325,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         }
 
         return undefined;
-    }
+    };
 
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
@@ -323,5 +344,5 @@ export class JupyterExecutionBase implements IJupyterExecution {
             this.logger.logWarning(err);
             return false;
         }
-    }
+    };
 }

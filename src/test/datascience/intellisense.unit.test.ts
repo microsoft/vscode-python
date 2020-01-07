@@ -11,16 +11,8 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { IConfigurationService } from '../../client/common/types';
 import { Identifiers } from '../../client/datascience/constants';
 import { IntellisenseProvider } from '../../client/datascience/interactive-common/intellisense/intellisenseProvider';
-import {
-    IInteractiveWindowMapping,
-    InteractiveWindowMessages
-} from '../../client/datascience/interactive-common/interactiveWindowTypes';
-import {
-    ICell,
-    IInteractiveWindowListener,
-    IInteractiveWindowProvider,
-    IJupyterExecution
-} from '../../client/datascience/types';
+import { IInteractiveWindowMapping, InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ICell, IInteractiveWindowListener, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { IInterpreterService } from '../../client/interpreter/contracts';
 import { createEmptyCell, generateTestCells } from '../../datascience-ui/interactive-common/mainState';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
@@ -51,11 +43,11 @@ suite('DataScience Intellisense Unit Tests', () => {
     let fileSystem: TypeMoq.IMock<IFileSystem>;
     let jupyterExecution: TypeMoq.IMock<IJupyterExecution>;
     let interactiveWindowProvider: TypeMoq.IMock<IInteractiveWindowProvider>;
-    const pythonSettings = new class extends PythonSettings {
+    const pythonSettings = new (class extends PythonSettings {
         public fireChangeEvent() {
             this.changed.fire();
         }
-    }(undefined, new MockAutoSelectionService());
+    })(undefined, new MockAutoSelectionService());
 
     setup(() => {
         languageServerCache = new MockLanguageServerCache();
@@ -405,5 +397,4 @@ df
 `;
         expect(getDocumentContents()).to.be.eq(afterSwap, 'Swap cell failed');
     });
-
 });

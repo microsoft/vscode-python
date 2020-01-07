@@ -3,11 +3,21 @@
 'use strict';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
-import { IMainState } from '../../mainState';
+import { IMainState, IServerState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
 import { CommonReducerArg } from './types';
 
 export namespace Kernel {
+    export function selectKernel<T>(arg: CommonReducerArg<T>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectKernel));
+
+        return arg.prevState;
+    }
+    export function selectJupyterURI<T>(arg: CommonReducerArg<T>): IMainState {
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.SelectJupyterServer));
+
+        return arg.prevState;
+    }
     export function restartKernel<T>(arg: CommonReducerArg<T>): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.RestartKernel));
 
@@ -20,6 +30,17 @@ export namespace Kernel {
 
         // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
         return arg.prevState;
+    }
+
+    export function updateStatus<T>(arg: CommonReducerArg<T, IServerState>): IMainState {
+        return {
+            ...arg.prevState,
+            kernel: {
+                localizedUri: arg.payload.localizedUri,
+                jupyterServerStatus: arg.payload.jupyterServerStatus,
+                displayName: arg.payload.displayName
+            }
+        };
     }
 
     export function handleRestarted<T>(arg: CommonReducerArg<T>) {

@@ -2,10 +2,10 @@
 // Licensed under the MIT License.
 'use strict';
 import { Observable } from 'rxjs/Observable';
-import { Uri } from 'vscode';
+import { Event, EventEmitter, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
+import { ServerStatus } from '../../../../datascience-ui/interactive-common/mainState';
 import { ILiveShareApi } from '../../../common/application/types';
 import { CancellationError } from '../../../common/cancellation';
 import { traceInfo } from '../../../common/logger';
@@ -15,23 +15,18 @@ import * as localize from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    ICell,
-    IJupyterKernelSpec,
-    INotebook,
-    INotebookCompletion,
-    INotebookExecutionLogger,
-    INotebookServer,
-    InterruptResult
-} from '../../types';
+import { ICell, IJupyterKernelSpec, INotebook, INotebookCompletion, INotebookExecutionLogger, INotebookServer, InterruptResult } from '../../types';
+import { LiveKernelModel } from '../kernels/types';
 import { LiveShareParticipantDefault, LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ResponseQueue } from './responseQueue';
 import { IExecuteObservableResponse, ILiveShareParticipant, IServerResponse } from './types';
 
-export class GuestJupyterNotebook
-    extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
+export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveShareParticipantDefault, LiveShare.JupyterNotebookSharedService)
     implements INotebook, ILiveShareParticipant {
+    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>().event;
     private responseQueue: ResponseQueue = new ResponseQueue();
+    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
+
     constructor(
         liveShare: ILiveShareApi,
         private disposableRegistry: IDisposableRegistry,
@@ -39,7 +34,6 @@ export class GuestJupyterNotebook
         private _resource: Uri,
         private _owner: INotebookServer,
         private startTime: number
-
     ) {
         super(liveShare);
     }
@@ -57,6 +51,9 @@ export class GuestJupyterNotebook
     }
 
     public dispose(): Promise<void> {
+        if (this.onStatusChangedEvent) {
+            this.onStatusChangedEvent.dispose();
+        }
         return this.shutdown();
     }
 
@@ -67,6 +64,13 @@ export class GuestJupyterNotebook
     public clear(_id: string): void {
         // We don't do anything as we don't cache results in this class.
         noop();
+    }
+
+    public get onSessionStatusChanged(): Event<ServerStatus> {
+        if (!this.onStatusChangedEvent) {
+            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
+        }
+        return this.onStatusChangedEvent.event;
     }
 
     public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
@@ -81,12 +85,13 @@ export class GuestJupyterNotebook
             (cells: ICell[]) => {
                 output = cells;
             },
-            (error) => {
+            error => {
                 deferred.reject(error);
             },
             () => {
                 deferred.resolve(output);
-            });
+            }
+        );
 
         if (cancelToken) {
             this.disposableRegistry.push(cancelToken.onCancellationRequested(() => deferred.reject(new CancellationError())));
@@ -111,11 +116,13 @@ export class GuestJupyterNotebook
 
     public executeObservable(code: string, file: string, line: number, id: string): Observable<ICell[]> {
         // Mimic this to the other side and then wait for a response
-        this.waitForService().then(s => {
-            if (s) {
-                s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
-            }
-        }).ignoreErrors();
+        this.waitForService()
+            .then(s => {
+                if (s) {
+                    s.notify(LiveShareCommands.executeObservable, { code, file, line, id });
+                }
+            })
+            .ignoreErrors();
         return this.responseQueue.waitForObservable(code, id);
     }
 
@@ -129,7 +136,7 @@ export class GuestJupyterNotebook
         const interruptTimeout = settings.datascience.jupyterInterruptTimeout;
 
         const response = await this.sendRequest(LiveShareCommands.interrupt, [interruptTimeout]);
-        return (response as InterruptResult);
+        return response as InterruptResult;
     }
 
     public async waitForServiceName(): Promise<string> {
@@ -144,7 +151,7 @@ export class GuestJupyterNotebook
         const service = await this.waitForService();
         if (service) {
             const result = await service.request(LiveShareCommands.getSysInfo, []);
-            return (result as ICell);
+            return result as ICell;
         }
     }
 
@@ -181,12 +188,20 @@ export class GuestJupyterNotebook
         }
     }
 
-    public getMatchingInterpreter(): Promise<PythonInterpreter | undefined> {
-        return Promise.resolve(undefined);
+    public getMatchingInterpreter(): PythonInterpreter | undefined {
+        return;
     }
 
-    public getKernelSpec(): Promise<IJupyterKernelSpec | undefined> {
-        return Promise.resolve(undefined);
+    public setInterpreter(_spec: PythonInterpreter) {
+        noop();
+    }
+
+    public getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined {
+        return;
+    }
+
+    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
+        return Promise.resolve();
     }
 
     private onServerResponse = (args: Object) => {
@@ -196,7 +211,7 @@ export class GuestJupyterNotebook
         if (args.hasOwnProperty('type')) {
             this.responseQueue.push(args as IServerResponse);
         }
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private async sendRequest(command: string, args: any[]): Promise<any> {
@@ -205,5 +220,4 @@ export class GuestJupyterNotebook
             return service.request(command, args);
         }
     }
-
 }

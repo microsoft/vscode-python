@@ -24,7 +24,7 @@ suite('DataScience Interactive Window variable explorer tests', () => {
     let ioc: DataScienceIocContainer;
     let createdNotebook = false;
 
-    suiteSetup(function () {
+    suiteSetup(function() {
         // These test require python, so only run with a non-mocked jupyter
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
         if (!isRollingBuild) {
@@ -64,7 +64,13 @@ suite('DataScience Interactive Window variable explorer tests', () => {
         return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
     }
 
-    async function addCodeImpartial(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, code: string, waitForVariables: boolean = true, expectedRenderCount: number = 4, expectError: boolean = false): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+    async function addCodeImpartial(
+        wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+        code: string,
+        waitForVariables: boolean = true,
+        expectedRenderCount: number = 4,
+        expectError: boolean = false
+    ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
         const variablesUpdated = waitForVariables ? waitForVariablesUpdated() : Promise.resolve();
         const nodes = wrapper.find('InteractivePanel');
         if (nodes.length > 0) {
@@ -84,98 +90,114 @@ suite('DataScience Interactive Window variable explorer tests', () => {
         }
     }
 
-    runDoubleTest('Variable explorer - Exclude', async (wrapper) => {
-        const basicCode: string = `import numpy as np
+    runDoubleTest(
+        'Variable explorer - Exclude',
+        async wrapper => {
+            const basicCode: string = `import numpy as np
 import pandas as pd
 value = 'hello world'`;
-        const basicCode2: string = `value2 = 'hello world 2'`;
+            const basicCode2: string = `value2 = 'hello world 2'`;
 
-        openVariableExplorer(wrapper);
+            openVariableExplorer(wrapper);
 
-        await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true);
+            await addCodeImpartial(wrapper, 'a=1\na');
+            await addCodeImpartial(wrapper, basicCode, true);
 
-        // We should show a string and show an int, the modules should be hidden
-        let targetVariables: IJupyterVariable[] = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
+            // We should show a string and show an int, the modules should be hidden
+            let targetVariables: IJupyterVariable[] = [
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
 
-        // Update our exclude list to exclude strings
-        ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
+            // Update our exclude list to exclude strings
+            ioc.getSettings().datascience.variableExplorerExclude = `${ioc.getSettings().datascience.variableExplorerExclude};str`;
 
-        // Add another string and check our vars, strings should be hidden
-        await addCodeImpartial(wrapper, basicCode2, true);
+            // Add another string and check our vars, strings should be hidden
+            await addCodeImpartial(wrapper, basicCode2, true);
 
-        targetVariables = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
+            targetVariables = [{ name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false }];
+            verifyVariables(wrapper, targetVariables);
+        },
+        () => {
+            return ioc;
+        }
+    );
 
-    runDoubleTest('Variable explorer - Update', async (wrapper) => {
-        const basicCode: string = `value = 'hello world'`;
-        const basicCode2: string = `value2 = 'hello world 2'`;
+    runDoubleTest(
+        'Variable explorer - Update',
+        async wrapper => {
+            const basicCode: string = `value = 'hello world'`;
+            const basicCode2: string = `value2 = 'hello world 2'`;
 
-        openVariableExplorer(wrapper);
+            openVariableExplorer(wrapper);
 
-        await addCodeImpartial(wrapper, 'a=1\na');
+            await addCodeImpartial(wrapper, 'a=1\na');
 
-        // Check that we have just the 'a' variable
-        let targetVariables: IJupyterVariable[] = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-        ];
-        verifyVariables(wrapper, targetVariables);
+            // Check that we have just the 'a' variable
+            let targetVariables: IJupyterVariable[] = [{ name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false }];
+            verifyVariables(wrapper, targetVariables);
 
-        // Add another variable and check it
-        await addCodeImpartial(wrapper, basicCode, true);
+            // Add another variable and check it
+            await addCodeImpartial(wrapper, basicCode, true);
 
-        targetVariables = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
+            targetVariables = [
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
 
-        // Add a second variable and check it
-        await addCodeImpartial(wrapper, basicCode2, true);
+            // Add a second variable and check it
+            await addCodeImpartial(wrapper, basicCode2, true);
 
-        targetVariables = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'value2', value: "'hello world 2'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
+            targetVariables = [
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'value2', value: "'hello world 2'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
+        },
+        () => {
+            return ioc;
+        }
+    );
 
     // Test our display of basic types. We render 8 rows by default so only 8 values per test
-    runDoubleTest('Variable explorer - Types A', async (wrapper) => {
-        const basicCode: string = `myList = [1, 2, 3]
+    runDoubleTest(
+        'Variable explorer - Types A',
+        async wrapper => {
+            const basicCode: string = `myList = [1, 2, 3]
 mySet = set([42])
 myDict = {'a': 1}`;
 
-        openVariableExplorer(wrapper);
+            openVariableExplorer(wrapper);
 
-        await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true);
+            await addCodeImpartial(wrapper, 'a=1\na');
+            await addCodeImpartial(wrapper, basicCode, true);
 
-        const targetVariables: IJupyterVariable[] = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'myDict', value: "{'a': 1}", supportsDataExplorer: true, type: 'dict', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'myList', value: '[1, 2, 3]', supportsDataExplorer: true, type: 'list', size: 54, shape: '', count: 0, truncated: false},
-            // Set can vary between python versions, so just don't both to check the value, just see that we got it
-            {name: 'mySet', value: undefined, supportsDataExplorer: true, type: 'set', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
+            const targetVariables: IJupyterVariable[] = [
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'myDict', value: "{'a': 1}", supportsDataExplorer: true, type: 'dict', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'myList', value: '[1, 2, 3]', supportsDataExplorer: true, type: 'list', size: 54, shape: '', count: 0, truncated: false },
+                // Set can vary between python versions, so just don't both to check the value, just see that we got it
+                { name: 'mySet', value: undefined, supportsDataExplorer: true, type: 'set', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
+        },
+        () => {
+            return ioc;
+        }
+    );
 
-    runDoubleTest('Variable explorer - Basic B', async (wrapper) => {
-        const basicCode: string = `import numpy as np
+    runDoubleTest(
+        'Variable explorer - Basic B',
+        async wrapper => {
+            const basicCode: string = `import numpy as np
 import pandas as pd
 myComplex = complex(1, 1)
 myInt = 99999999
@@ -186,71 +208,99 @@ mySeries = myDataframe[0]
 myTuple = 1,2,3,4,5,6,7,8,9
 `;
 
-        openVariableExplorer(wrapper);
+            openVariableExplorer(wrapper);
 
-        await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true);
+            await addCodeImpartial(wrapper, 'a=1\na');
+            await addCodeImpartial(wrapper, basicCode, true);
 
-        const targetVariables: IJupyterVariable[] = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'myComplex', value: '(1+1j)', supportsDataExplorer: false, type: 'complex', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'myDataframe', value: `0
+            const targetVariables: IJupyterVariable[] = [
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'myComplex', value: '(1+1j)', supportsDataExplorer: false, type: 'complex', size: 54, shape: '', count: 0, truncated: false },
+                {
+                    name: 'myDataframe',
+                    value: `0
 0 1.0
 1 2.0
-2 3.0`, supportsDataExplorer: true, type: 'DataFrame', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'myFloat', value: '9999.9999', supportsDataExplorer: false, type: 'float', size: 58, shape: '', count: 0, truncated: false},
-            {name: 'myInt', value: '99999999', supportsDataExplorer: false, type: 'int', size: 56, shape: '', count: 0, truncated: false},
-            {name: 'mynpArray', value: 'array([1., 2., 3.])', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable:no-trailing-whitespace
-            {name: 'mySeries', value: `0 1.0
+2 3.0`,
+                    supportsDataExplorer: true,
+                    type: 'DataFrame',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                { name: 'myFloat', value: '9999.9999', supportsDataExplorer: false, type: 'float', size: 58, shape: '', count: 0, truncated: false },
+                { name: 'myInt', value: '99999999', supportsDataExplorer: false, type: 'int', size: 56, shape: '', count: 0, truncated: false },
+                { name: 'mynpArray', value: 'array([1., 2., 3.])', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable:no-trailing-whitespace
+                {
+                    name: 'mySeries',
+                    value: `0 1.0
 1 2.0
 2 3.0
-Name: 0, dtype: float64`, supportsDataExplorer: true, type: 'Series', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false}
-        ];
-        verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
+Name: 0, dtype: float64`,
+                    supportsDataExplorer: true,
+                    type: 'Series',
+                    size: 54,
+                    shape: '',
+                    count: 0,
+                    truncated: false
+                },
+                { name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
+        },
+        () => {
+            return ioc;
+        }
+    );
 
-    runDoubleTest('Variable explorer - Sorting', async (wrapper) => {
-        const basicCode: string = `b = 2
+    runDoubleTest(
+        'Variable explorer - Sorting',
+        async wrapper => {
+            const basicCode: string = `b = 2
 c = 3
 stra = 'a'
 strb = 'b'
 strc = 'c'`;
 
-        openVariableExplorer(wrapper);
+            openVariableExplorer(wrapper);
 
-        await addCodeImpartial(wrapper, 'a=1\na');
-        await addCodeImpartial(wrapper, basicCode, true);
+            await addCodeImpartial(wrapper, 'a=1\na');
+            await addCodeImpartial(wrapper, basicCode, true);
 
-        let targetVariables: IJupyterVariable[] = [
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-        ];
-        verifyVariables(wrapper, targetVariables);
+            let targetVariables: IJupyterVariable[] = [
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
 
-        sortVariableExplorer(wrapper, 'value', 'DESC');
+            sortVariableExplorer(wrapper, 'value', 'DESC');
 
-        targetVariables = [
-            {name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            {name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-            // tslint:disable-next-line:quotemark
-            {name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false},
-        ];
-        verifyVariables(wrapper, targetVariables);
-    }, () => { return ioc; });
+            targetVariables = [
+                { name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
+                // tslint:disable-next-line:quotemark
+                { name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+            ];
+            verifyVariables(wrapper, targetVariables);
+        },
+        () => {
+            return ioc;
+        }
+    );
 });
 
 // Open up our variable explorer which also triggers a data fetch
@@ -259,7 +309,7 @@ function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
     if (nodes.length > 0) {
         const store = nodes.at(0).props().store;
         if (store) {
-            store.dispatch(({type: CommonActionType.TOGGLE_VARIABLE_EXPLORER}));
+            store.dispatch({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER });
         }
     }
 }

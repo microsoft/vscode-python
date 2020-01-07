@@ -46,12 +46,11 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         outputChannel = typemoq.Mock.ofType<IOutputChannel>();
         logger = typemoq.Mock.ofType<ILogger>();
 
-        serviceContainer.setup(d => d.getAll(typemoq.It.isValue(IDiagnosticsService)))
+        serviceContainer
+            .setup(d => d.getAll(typemoq.It.isValue(IDiagnosticsService)))
             .returns(() => [envHealthCheck.object, lsNotSupportedCheck.object, pythonInterpreterCheck.object]);
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL)))
-            .returns(() => outputChannel.object);
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(ILogger)))
-            .returns(() => logger.object);
+        serviceContainer.setup(d => d.get(typemoq.It.isValue(IOutputChannel), typemoq.It.isValue(STANDARD_OUTPUT_CHANNEL))).returns(() => outputChannel.object);
+        serviceContainer.setup(d => d.get(typemoq.It.isValue(ILogger))).returns(() => logger.object);
 
         appDiagnostics = new ApplicationDiagnostics(serviceContainer.object, outputChannel.object);
     });
@@ -65,8 +64,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         const sourceMapService = typemoq.Mock.ofType<ISourceMapSupportService>();
         sourceMapService.setup(s => s.register()).verifiable(typemoq.Times.once());
 
-        serviceContainer.setup(d => d.get(typemoq.It.isValue(ISourceMapSupportService), typemoq.It.isAny()))
-            .returns(() => sourceMapService.object);
+        serviceContainer.setup(d => d.get(typemoq.It.isValue(ISourceMapSupportService), typemoq.It.isAny())).returns(() => sourceMapService.object);
 
         appDiagnostics.register();
 
@@ -74,13 +72,16 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
     });
 
     test('Performing Pre Startup Health Check must diagnose all validation checks', async () => {
-        envHealthCheck.setup(e => e.diagnose(typemoq.It.isAny()))
+        envHealthCheck
+            .setup(e => e.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
-        lsNotSupportedCheck.setup(p => p.diagnose(typemoq.It.isAny()))
+        lsNotSupportedCheck
+            .setup(p => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
-        pythonInterpreterCheck.setup(p => p.diagnose(typemoq.It.isAny()))
+        pythonInterpreterCheck
+            .setup(p => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
 
@@ -100,22 +101,28 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             resource: undefined,
             invokeHandler: 'default'
         } as any;
-        envHealthCheck.setup(e => e.diagnose(typemoq.It.isAny()))
+        envHealthCheck
+            .setup(e => e.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([diagnostic]))
             .verifiable(typemoq.Times.once());
-        envHealthCheck.setup(p => p.handle(typemoq.It.isValue([diagnostic])))
+        envHealthCheck
+            .setup(p => p.handle(typemoq.It.isValue([diagnostic])))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
-        lsNotSupportedCheck.setup(p => p.diagnose(typemoq.It.isAny()))
+        lsNotSupportedCheck
+            .setup(p => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([diagnostic]))
             .verifiable(typemoq.Times.once());
-        lsNotSupportedCheck.setup(p => p.handle(typemoq.It.isValue([diagnostic])))
+        lsNotSupportedCheck
+            .setup(p => p.handle(typemoq.It.isValue([diagnostic])))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
-        pythonInterpreterCheck.setup(p => p.diagnose(typemoq.It.isAny()))
+        pythonInterpreterCheck
+            .setup(p => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([diagnostic]))
             .verifiable(typemoq.Times.once());
-        pythonInterpreterCheck.setup(p => p.handle(typemoq.It.isValue([diagnostic])))
+        pythonInterpreterCheck
+            .setup(p => p.handle(typemoq.It.isValue([diagnostic])))
             .returns(() => Promise.resolve())
             .verifiable(typemoq.Times.once());
 
@@ -129,7 +136,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
 
     test('Diagnostics Returned by Pre Startup Health Checks must be logged', async () => {
         const diagnostics: IDiagnostic[] = [];
-        for (let i = 0; i <= (Math.random() * 10); i += 1) {
+        for (let i = 0; i <= Math.random() * 10; i += 1) {
             const diagnostic: IDiagnostic = {
                 code: `Error${i}` as any,
                 message: `Error${i}`,
@@ -140,7 +147,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             };
             diagnostics.push(diagnostic);
         }
-        for (let i = 0; i <= (Math.random() * 10); i += 1) {
+        for (let i = 0; i <= Math.random() * 10; i += 1) {
             const diagnostic: IDiagnostic = {
                 code: `Warning${i}` as any,
                 message: `Warning${i}`,
@@ -151,7 +158,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             };
             diagnostics.push(diagnostic);
         }
-        for (let i = 0; i <= (Math.random() * 10); i += 1) {
+        for (let i = 0; i <= Math.random() * 10; i += 1) {
             const diagnostic: IDiagnostic = {
                 code: `Info${i}` as any,
                 message: `Info${i}`,
@@ -167,34 +174,32 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
             const message = `Diagnostic Code: ${diagnostic.code}, Message: ${diagnostic.message}`;
             switch (diagnostic.severity) {
                 case DiagnosticSeverity.Error: {
-                    logger.setup(l => l.logError(message))
-                        .verifiable(typemoq.Times.once());
-                    outputChannel.setup(o => o.appendLine(message))
-                        .verifiable(typemoq.Times.once());
+                    logger.setup(l => l.logError(message)).verifiable(typemoq.Times.once());
+                    outputChannel.setup(o => o.appendLine(message)).verifiable(typemoq.Times.once());
                     break;
                 }
                 case DiagnosticSeverity.Warning: {
-                    logger.setup(l => l.logWarning(message))
-                        .verifiable(typemoq.Times.once());
-                    outputChannel.setup(o => o.appendLine(message))
-                        .verifiable(typemoq.Times.once());
+                    logger.setup(l => l.logWarning(message)).verifiable(typemoq.Times.once());
+                    outputChannel.setup(o => o.appendLine(message)).verifiable(typemoq.Times.once());
                     break;
                 }
                 default: {
-                    logger.setup(l => l.logInformation(message))
-                        .verifiable(typemoq.Times.once());
+                    logger.setup(l => l.logInformation(message)).verifiable(typemoq.Times.once());
                     break;
                 }
             }
         }
 
-        envHealthCheck.setup(e => e.diagnose(typemoq.It.isAny()))
+        envHealthCheck
+            .setup(e => e.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve(diagnostics))
             .verifiable(typemoq.Times.once());
-        lsNotSupportedCheck.setup(p => p.diagnose(typemoq.It.isAny()))
+        lsNotSupportedCheck
+            .setup(p => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
-        pythonInterpreterCheck.setup(p => p.diagnose(typemoq.It.isAny()))
+        pythonInterpreterCheck
+            .setup(p => p.diagnose(typemoq.It.isAny()))
             .returns(() => Promise.resolve([]))
             .verifiable(typemoq.Times.once());
 
@@ -214,8 +219,7 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         const foreGroundDeferred = createDeferred<IDiagnostic[]>();
         const backgroundGroundDeferred = createDeferred<IDiagnostic[]>();
 
-        when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService))
-            .thenReturn([instance(foreGroundService), instance(backGroundService)]);
+        when(svcContainer.getAll<IDiagnosticsService>(IDiagnosticsService)).thenReturn([instance(foreGroundService), instance(backGroundService)]);
         when(foreGroundService.runInBackground).thenReturn(false);
         when(backGroundService.runInBackground).thenReturn(true);
 
@@ -242,5 +246,4 @@ suite('Application Diagnostics - ApplicationDiagnostics', () => {
         verify(foreGroundService.diagnose(anything())).once();
         verify(backGroundService.diagnose(anything())).once();
     });
-
 });

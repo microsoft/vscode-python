@@ -24,20 +24,13 @@ suite('CodeAction Provider', () => {
     });
 
     test('Ensure it always returns a source.organizeImports CodeAction', async () => {
-        const codeActions = await codeActionsProvider.provideCodeActions(
-            document.object,
-            range.object,
-            context.object,
-            token.object
-        );
+        const codeActions = await codeActionsProvider.provideCodeActions(document.object, range.object, context.object, token.object);
 
         if (!codeActions) {
             throw Error(`codeActionsProvider.provideCodeActions did not return an array (it returned ${codeActions})`);
         }
 
-        const organizeImportsCodeAction = codeActions.filter(
-            codeAction => codeAction.kind === CodeActionKind.SourceOrganizeImports
-        );
+        const organizeImportsCodeAction = codeActions.filter(codeAction => codeAction.kind === CodeActionKind.SourceOrganizeImports);
         expect(organizeImportsCodeAction).to.have.length(1);
         expect(organizeImportsCodeAction[0].kind).to.eq(CodeActionKind.SourceOrganizeImports);
     });

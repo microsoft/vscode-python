@@ -22,7 +22,6 @@ interface ISyncData {
 
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
-
     private activeInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
@@ -43,7 +42,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.postOffice = new PostOffice(LiveShare.InteractiveWindowProviderService, liveShare);
 
         // Listen for peer changes
-        this.postOffice.peerCountChanged((n) => this.onPeerCountChanged(n));
+        this.postOffice.peerCountChanged(n => this.onPeerCountChanged(n));
 
         // Listen for messages so we force a create on both sides.
         this.postOffice.registerCallback(LiveShareCommands.interactiveWindowCreate, this.onRemoteCreate, this).ignoreErrors();
@@ -84,7 +83,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         const useDefaultConfig: boolean | undefined = settings.datascience.useDefaultConfigForJupyter;
 
         // For the local case pass in our URI as undefined, that way connect doesn't have to check the setting
-        if (serverURI === Settings.JupyterServerLocalLaunch) {
+        if (serverURI.toLowerCase() === Settings.JupyterServerLocalLaunch) {
             serverURI = undefined;
         }
 
@@ -109,7 +108,6 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(handler);
         this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
-        await this.activeInteractiveWindow.ready;
         return this.activeInteractiveWindow;
     }
 
@@ -161,7 +159,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.activeInteractiveWindowExecuteHandler = undefined;
             }
         }
-    }
+    };
 
     private async synchronizeCreate(): Promise<void> {
         // Create a new pending wait if necessary
@@ -180,6 +178,5 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
 
     private onInteractiveWindowExecute = (code: string) => {
         this.executedCode.fire(code);
-    }
-
+    };
 }

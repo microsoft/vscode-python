@@ -14,9 +14,11 @@ import { Channel, IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
-    constructor(@inject(IPlatformService) private readonly platform: IPlatformService,
+    constructor(
+        @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ICurrentProcess) private readonly process: ICurrentProcess) { }
+        @inject(ICurrentProcess) private readonly process: ICurrentProcess
+    ) {}
 
     public get userSettingsFile(): string | undefined {
         const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';

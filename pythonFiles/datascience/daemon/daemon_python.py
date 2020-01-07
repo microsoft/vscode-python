@@ -203,11 +203,14 @@ class PythonDaemon(MethodDispatcher):
         }
 
     def m_is_module_installed(self, module_name=None):
+        return {"exists": self._is_module_installed(module_name)}
+
+    def _is_module_installed(self, module_name=None):
         try:
             importlib.import_module(module_name)
-            return {"exists": True}
+            return True
         except Exception:
-            return {"exists": False}
+            return False
 
     @classmethod
     def start_daemon(cls, logging_queue_handler=None):

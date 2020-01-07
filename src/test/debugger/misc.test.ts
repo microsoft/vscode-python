@@ -19,11 +19,10 @@ const EXPERIMENTAL_DEBUG_ADAPTER = path.join(__dirname, '..', '..', 'client', 'd
 const testAdapterFilePath = EXPERIMENTAL_DEBUG_ADAPTER;
 const debuggerType = DebuggerTypeName;
 suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
-
     let debugClient: DebugClient;
     // All tests in this suite are failed
     // Check https://github.com/Microsoft/vscode-python/issues/4067
-    setup(async function () {
+    setup(async function() {
         return this.skip();
 
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
@@ -41,7 +40,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
         try {
             await debugClient.stop().catch(noop);
             // tslint:disable-next-line:no-empty
-        } catch (ex) { }
+        } catch (ex) {}
         await sleep(1000);
     });
     /**
@@ -54,7 +53,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
     function buildLaunchArgs(pythonFile: string, stopOnEntry: boolean = false, showReturnValue: boolean = true): LaunchRequestArguments {
         const env = { PYTHONPATH: PTVSD_PATH };
         // tslint:disable-next-line:no-unnecessary-local-variable
-        const options = {
+        const options = ({
             program: path.join(debugFilesPath, pythonFile),
             cwd: debugFilesPath,
             stopOnEntry,
@@ -66,13 +65,13 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
             envFile: '',
             logToFile: false,
             type: debuggerType
-        } as any as LaunchRequestArguments;
+        } as any) as LaunchRequestArguments;
 
         return options;
     }
 
     // Check https://github.com/Microsoft/vscode-python/issues/4067
-    test('Should run program to the end', async function () {
+    test('Should run program to the end', async function() {
         return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),
@@ -82,7 +81,7 @@ suite(`Standard Debugging - Misc tests: ${debuggerType}`, () => {
         ]);
     });
     // Check https://github.com/Microsoft/vscode-python/issues/4067
-    test('test stderr output for Python', async function () {
+    test('test stderr output for Python', async function() {
         return this.skip();
         await Promise.all([
             debugClient.configurationSequence(),

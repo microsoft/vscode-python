@@ -3,13 +3,14 @@
 
 'use strict';
 
-import { expect } from 'chai';
+import { assert, expect } from 'chai';
+import * as sinon from 'sinon';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { TextDocument, Uri } from 'vscode';
 import { ExtensionActivationManager } from '../../client/activation/activationManager';
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { IExtensionActivationService } from '../../client/activation/types';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { IApplicationDiagnostics } from '../../client/application/types';
 import { ActiveResourceService } from '../../client/common/application/activeResource';
 import { IActiveResourceService, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
@@ -56,7 +57,8 @@ suite('Language Server Activation - ActivationManager', () => {
         activationService1 = mock(LanguageServerExtensionActivationService);
         activationService2 = mock(LanguageServerExtensionActivationService);
         managerTest = new ExtensionActivationManagerTest(
-            [instance(activationService1), instance(activationService2)], [],
+            [instance(activationService1), instance(activationService2)],
+            [],
             documentManager.object,
             instance(interpreterService),
             autoSelection.object,
@@ -72,7 +74,10 @@ suite('Language Server Activation - ActivationManager', () => {
         when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
-        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        documentManager
+            .setup(d => d.onDidOpenTextDocument)
+            .returns(() => eventDef)
+            .verifiable(typemoq.Times.once());
 
         await managerTest.initialize();
 
@@ -97,7 +102,10 @@ suite('Language Server Activation - ActivationManager', () => {
         when(workspaceService.workspaceFolders).thenReturn([1 as any, 2 as any]);
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const eventDef = () => disposable2.object;
-        documentManager.setup(d => d.onDidOpenTextDocument).returns(() => eventDef).verifiable(typemoq.Times.once());
+        documentManager
+            .setup(d => d.onDidOpenTextDocument)
+            .returns(() => eventDef)
+            .verifiable(typemoq.Times.once());
         disposable.setup(d => d.dispose());
         disposable2.setup(d => d.dispose());
 
@@ -203,7 +211,69 @@ suite('Language Server Activation - ActivationManager', () => {
         verify(activationService1.activate(resource)).once();
         verify(activationService2.activate(resource)).once();
     });
-    test('Handler docOpenedHandler is disposed in case no. of workspace folders decreases to one', async () => {
+
+    test("The same workspace isn't activated more than once", async () => {
+        const resource = Uri.parse('two');
+        when(activationService1.activate(resource)).thenResolve();
+        when(activationService2.activate(resource)).thenResolve();
+        when(interpreterService.getInterpreters(anything())).thenResolve();
+        autoSelection
+            .setup(a => a.autoSelectInterpreter(resource))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        appDiagnostics
+            .setup(a => a.performPreStartupHealthCheck(resource))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+
+        await managerTest.activateWorkspace(resource);
+        await managerTest.activateWorkspace(resource);
+
+        verify(activationService1.activate(resource)).once();
+        verify(activationService2.activate(resource)).once();
+        autoSelection.verifyAll();
+        appDiagnostics.verifyAll();
+    });
+
+    test('If doc opened is not python, return', async () => {
+        const doc = {
+            uri: Uri.parse('doc'),
+            languageId: 'NOT PYTHON'
+        };
+
+        managerTest.onDocOpened(doc as any);
+        verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).never();
+    });
+
+    test('If we have opened a doc that does not belong to workspace, then do nothing', async () => {
+        const doc = {
+            uri: Uri.parse('doc'),
+            languageId: PYTHON_LANGUAGE
+        };
+        when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('');
+        when(workspaceService.hasWorkspaceFolders).thenReturn(true);
+
+        managerTest.onDocOpened(doc as any);
+
+        verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
+        verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
+    });
+
+    test('If workspace corresponding to the doc has already been activated, then do nothing', async () => {
+        const doc = {
+            uri: Uri.parse('doc'),
+            languageId: PYTHON_LANGUAGE
+        };
+        when(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).thenReturn('key');
+        managerTest.activatedWorkspaces.add('key');
+
+        managerTest.onDocOpened(doc as any);
+
+        verify(workspaceService.getWorkspaceFolderIdentifier(doc.uri, anything())).once();
+        verify(workspaceService.getWorkspaceFolder(doc.uri)).never();
+    });
+
+    test('List of activated workspaces is updated & Handler docOpenedHandler is disposed in case no. of workspace folders decreases to one', async () => {
         const disposable1 = typemoq.Mock.ofType<IDisposable>();
         const disposable2 = typemoq.Mock.ofType<IDisposable>();
         let docOpenedHandler!: (e: TextDocument) => Promise<void>;
@@ -212,7 +282,10 @@ suite('Language Server Activation - ActivationManager', () => {
         const document = typemoq.Mock.ofType<TextDocument>();
         document.setup(d => d.uri).returns(() => documentUri);
 
-        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => { workspaceFoldersChangedHandler = cb; return disposable1.object; });
+        when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(cb => {
+            workspaceFoldersChangedHandler = cb;
+            return disposable1.object;
+        });
         documentManager
             .setup(w => w.onDidOpenTextDocument(typemoq.It.isAny(), typemoq.It.isAny()))
             .callback(cb => (docOpenedHandler = cb))
@@ -223,6 +296,13 @@ suite('Language Server Activation - ActivationManager', () => {
         const folder1 = { name: 'one', uri: Uri.parse('one'), index: 1 };
         const folder2 = { name: 'two', uri: resource, index: 2 };
         when(workspaceService.workspaceFolders).thenReturn([folder1, folder2]);
+
+        when(workspaceService.getWorkspaceFolderIdentifier(folder1.uri, anything())).thenReturn('one');
+        when(workspaceService.getWorkspaceFolderIdentifier(folder2.uri, anything())).thenReturn('two');
+        // Assume the two workspaces are already activated, so their keys will be present in `activatedWorkspaces` set
+        managerTest.activatedWorkspaces.add('one');
+        managerTest.activatedWorkspaces.add('two');
+
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         // Add workspaceFoldersChangedHandler
         managerTest.addHandlers();
@@ -246,5 +326,84 @@ suite('Language Server Activation - ActivationManager', () => {
 
         verify(workspaceService.workspaceFolders).atLeast(1);
         verify(workspaceService.hasWorkspaceFolders).twice();
+        disposable2.verifyAll();
+
+        assert.deepEqual(Array.from(managerTest.activatedWorkspaces.keys()), ['one']);
+    });
+});
+
+suite('Language Server Activation - activate()', () => {
+    let workspaceService: IWorkspaceService;
+    let appDiagnostics: typemoq.IMock<IApplicationDiagnostics>;
+    let autoSelection: typemoq.IMock<IInterpreterAutoSelectionService>;
+    let interpreterService: IInterpreterService;
+    let activeResourceService: IActiveResourceService;
+    let documentManager: typemoq.IMock<IDocumentManager>;
+    let activationService1: IExtensionActivationService;
+    let activationService2: IExtensionActivationService;
+    let singleActivationService: typemoq.IMock<IExtensionSingleActivationService>;
+    let initialize: sinon.SinonStub<any>;
+    let activateWorkspace: sinon.SinonStub<any>;
+    let managerTest: ExtensionActivationManager;
+    const resource = Uri.parse('a');
+    setup(() => {
+        workspaceService = mock(WorkspaceService);
+        activeResourceService = mock(ActiveResourceService);
+        appDiagnostics = typemoq.Mock.ofType<IApplicationDiagnostics>();
+        autoSelection = typemoq.Mock.ofType<IInterpreterAutoSelectionService>();
+        interpreterService = mock(InterpreterService);
+        documentManager = typemoq.Mock.ofType<IDocumentManager>();
+        activationService1 = mock(LanguageServerExtensionActivationService);
+        activationService2 = mock(LanguageServerExtensionActivationService);
+        singleActivationService = typemoq.Mock.ofType<IExtensionSingleActivationService>();
+        initialize = sinon.stub(ExtensionActivationManager.prototype, 'initialize');
+        initialize.resolves();
+        activateWorkspace = sinon.stub(ExtensionActivationManager.prototype, 'activateWorkspace');
+        activateWorkspace.resolves();
+        managerTest = new ExtensionActivationManager(
+            [instance(activationService1), instance(activationService2)],
+            [singleActivationService.object],
+            documentManager.object,
+            instance(interpreterService),
+            autoSelection.object,
+            appDiagnostics.object,
+            instance(workspaceService),
+            instance(activeResourceService)
+        );
+    });
+
+    teardown(() => {
+        sinon.restore();
+    });
+
+    test('Execution goes as expected if there are no errors', async () => {
+        singleActivationService
+            .setup(s => s.activate())
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        autoSelection
+            .setup(a => a.autoSelectInterpreter(undefined))
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        when(activeResourceService.getActiveResource()).thenReturn(resource);
+        await managerTest.activate();
+        assert.ok(initialize.calledOnce);
+        assert.ok(activateWorkspace.calledOnce);
+        singleActivationService.verifyAll();
+        autoSelection.verifyAll();
+    });
+
+    test('Throws error if execution fails', async () => {
+        singleActivationService
+            .setup(s => s.activate())
+            .returns(() => Promise.resolve())
+            .verifiable(typemoq.Times.once());
+        autoSelection
+            .setup(a => a.autoSelectInterpreter(undefined))
+            .returns(() => Promise.reject(new Error('Kaboom')))
+            .verifiable(typemoq.Times.once());
+        when(activeResourceService.getActiveResource()).thenReturn(resource);
+        const promise = managerTest.activate();
+        await expect(promise).to.eventually.be.rejectedWith('Kaboom');
     });
 });

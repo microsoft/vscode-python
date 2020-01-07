@@ -24,9 +24,11 @@ export enum NextAction {
 export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
     protected nextRule?: IInterpreterAutoSelectionRule;
     private readonly stateStore: IPersistentState<PythonInterpreter | undefined>;
-    constructor(@unmanaged() protected readonly ruleName: AutoSelectionRule,
+    constructor(
+        @unmanaged() protected readonly ruleName: AutoSelectionRule,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory) {
+        @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory
+    ) {
         this.stateStore = stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(`InterpreterAutoSeletionRule-${this.ruleName}`, undefined);
     }
     public setNextRule(rule: IInterpreterAutoSelectionRule): void {
@@ -69,7 +71,7 @@ export abstract class BaseRuleService implements IInterpreterAutoSelectionRule {
         return false;
     }
     protected async clearCachedInterpreterIfInvalid(resource: Resource) {
-        if (!this.stateStore.value || await this.fs.fileExists(this.stateStore.value.path)) {
+        if (!this.stateStore.value || (await this.fs.fileExists(this.stateStore.value.path))) {
             return;
         }
         sendTelemetryEvent(EventName.PYTHON_INTERPRETER_AUTO_SELECTION, {}, { rule: this.ruleName, interpreterMissing: true });

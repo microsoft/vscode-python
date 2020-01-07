@@ -13,7 +13,20 @@ import { IPlatformService } from '../../../client/common/platform/types';
 import { IDisposableRegistry } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
-import { CONDA_ENV_FILE_SERVICE, CONDA_ENV_SERVICE, CURRENT_PATH_SERVICE, GLOBAL_VIRTUAL_ENV_SERVICE, IInterpreterLocatorHelper, IInterpreterLocatorService, InterpreterType, KNOWN_PATH_SERVICE, PIPENV_SERVICE, PythonInterpreter, WINDOWS_REGISTRY_SERVICE, WORKSPACE_VIRTUAL_ENV_SERVICE } from '../../../client/interpreter/contracts';
+import {
+    CONDA_ENV_FILE_SERVICE,
+    CONDA_ENV_SERVICE,
+    CURRENT_PATH_SERVICE,
+    GLOBAL_VIRTUAL_ENV_SERVICE,
+    IInterpreterLocatorHelper,
+    IInterpreterLocatorService,
+    InterpreterType,
+    KNOWN_PATH_SERVICE,
+    PIPENV_SERVICE,
+    PythonInterpreter,
+    WINDOWS_REGISTRY_SERVICE,
+    WORKSPACE_VIRTUAL_ENV_SERVICE
+} from '../../../client/interpreter/contracts';
 import { PythonInterpreterLocatorService } from '../../../client/interpreter/locators';
 import { IInterpreterFilter } from '../../../client/interpreter/locators/types';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -80,9 +93,7 @@ suite('Interpreters - Locators Index', () => {
                         .returns(() => Promise.resolve([interpreter]))
                         .verifiable(TypeMoq.Times.once());
 
-                    serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
-                        .returns(() => typeLocator.object);
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))).returns(() => typeLocator.object);
 
                     return {
                         type: typeName,
@@ -140,9 +151,7 @@ suite('Interpreters - Locators Index', () => {
                         .returns(() => Promise.resolve([interpreter]))
                         .verifiable(TypeMoq.Times.once());
 
-                    serviceContainer
-                        .setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName)))
-                        .returns(() => typeLocator.object);
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterLocatorService), TypeMoq.It.isValue(typeName))).returns(() => typeLocator.object);
 
                     return {
                         type: typeName,

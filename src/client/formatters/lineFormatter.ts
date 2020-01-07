@@ -11,17 +11,28 @@ import { Tokenizer } from '../language/tokenizer';
 import { ITextRangeCollection, IToken, TokenType } from '../language/types';
 
 const keywordsWithSpaceBeforeBrace = [
-    'and', 'as', 'assert', 'await',
+    'and',
+    'as',
+    'assert',
+    'await',
     'del',
-    'except', 'elif',
-    'for', 'from',
+    'except',
+    'elif',
+    'for',
+    'from',
     'global',
-    'if', 'import', 'in', 'is',
+    'if',
+    'import',
+    'in',
+    'is',
     'lambda',
-    'nonlocal', 'not',
+    'nonlocal',
+    'not',
     'or',
-    'raise', 'return',
-    'while', 'with',
+    'raise',
+    'return',
+    'while',
+    'with',
     'yield'
 ];
 
@@ -83,7 +94,7 @@ export class LineFormatter {
                 case TokenType.Colon:
                     // x: 1 if not in slice, x[1:y] if inside the slice.
                     this.builder.append(':');
-                    if (!this.braceCounter.isOpened(TokenType.OpenBracket) && (next && next.type !== TokenType.Colon)) {
+                    if (!this.braceCounter.isOpened(TokenType.OpenBracket) && next && next.type !== TokenType.Colon) {
                         // Not inside opened [[ ... ] sequence.
                         this.builder.softAppendSpace();
                     }
@@ -334,10 +345,13 @@ export class LineFormatter {
             }
             // 'def IDENT('
             const first = lineTokens.getItemAt(0);
-            if (lineTokens.count >= 3 &&
-                first.length === 3 && line.text.substr(first.start, first.length) === 'def' &&
+            if (
+                lineTokens.count >= 3 &&
+                first.length === 3 &&
+                line.text.substr(first.start, first.length) === 'def' &&
                 lineTokens.getItemAt(1).type === TokenType.Identifier &&
-                lineTokens.getItemAt(2).type === TokenType.OpenBrace) {
+                lineTokens.getItemAt(2).type === TokenType.OpenBrace
+            ) {
                 start = line.range.start;
                 break;
             }

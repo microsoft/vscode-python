@@ -13,7 +13,6 @@ import { IStringDictionary, ISystemVariables } from './types';
 /* tslint:disable:rule1 no-any no-unnecessary-callback-wrapper jsdoc-format no-for-in prefer-const no-increment-decrement */
 
 abstract class AbstractSystemVariables implements ISystemVariables {
-
     public resolve(value: string): string;
     public resolve(value: string[]): string[];
     public resolve(value: IStringDictionary<string>): IStringDictionary<string>;
@@ -108,11 +107,13 @@ export class SystemVariables extends AbstractSystemVariables {
         this._filePath = file ? file.fsPath : undefined;
         if (documentManager && documentManager.activeTextEditor) {
             this._lineNumber = documentManager.activeTextEditor.selection.anchor.line + 1;
-            this._selectedText = documentManager.activeTextEditor.document.getText(new Range(documentManager.activeTextEditor.selection.start, documentManager.activeTextEditor.selection.end));
+            this._selectedText = documentManager.activeTextEditor.document.getText(
+                new Range(documentManager.activeTextEditor.selection.start, documentManager.activeTextEditor.selection.end)
+            );
         }
         this._execPath = process.execPath;
         Object.keys(process.env).forEach(key => {
-            (this as any as Record<string, string | undefined>)[`env:${key}`] = (this as any as Record<string, string | undefined>)[`env.${key}`] = process.env[key];
+            ((this as any) as Record<string, string | undefined>)[`env:${key}`] = ((this as any) as Record<string, string | undefined>)[`env.${key}`] = process.env[key];
         });
     }
 

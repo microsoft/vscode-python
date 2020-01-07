@@ -6,9 +6,7 @@ import { IServiceManager } from '../ioc/types';
 import { AvailableLinterActivator } from './linterAvailability';
 import { LinterManager } from './linterManager';
 import { LintingEngine } from './lintingEngine';
-import {
-    IAvailableLinterActivator, ILinterManager, ILintingEngine
-} from './types';
+import { IAvailableLinterActivator, ILinterManager, ILintingEngine } from './types';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILintingEngine>(ILintingEngine, LintingEngine);

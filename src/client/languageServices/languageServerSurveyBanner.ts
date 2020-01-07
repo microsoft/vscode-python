@@ -7,10 +7,7 @@ import { inject, injectable } from 'inversify';
 import { FolderVersionPair, ILanguageServerFolderService } from '../activation/types';
 import { IApplicationShell } from '../common/application/types';
 import '../common/extensions';
-import {
-    IBrowserService, IPersistentStateFactory,
-    IPythonExtensionBanner
-} from '../common/types';
+import { IBrowserService, IPersistentStateFactory, IPythonExtensionBanner } from '../common/types';
 import * as localize from '../common/utils/localize';
 import { getRandomBetween } from '../common/utils/random';
 
@@ -45,7 +42,8 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
         @inject(IBrowserService) private browserService: IBrowserService,
         @inject(ILanguageServerFolderService) private lsService: ILanguageServerFolderService,
         showAfterMinimumEventsCount: number = 100,
-        showBeforeMaximumEventsCount: number = 500) {
+        showBeforeMaximumEventsCount: number = 500
+    ) {
         this.minCompletionsBeforeShow = showAfterMinimumEventsCount;
         this.maxCompletionsBeforeShow = showBeforeMaximumEventsCount;
         this.initialize();
@@ -79,12 +77,11 @@ export class LanguageServerSurveyBanner implements IPythonExtensionBanner {
 
         const response = await this.appShell.showInformationMessage(this.bannerMessage, ...this.bannerLabels);
         switch (response) {
-            case this.bannerLabels[LSSurveyLabelIndex.Yes]:
-                {
-                    await this.launchSurvey();
-                    await this.disable();
-                    break;
-                }
+            case this.bannerLabels[LSSurveyLabelIndex.Yes]: {
+                await this.launchSurvey();
+                await this.disable();
+                break;
+            }
             case this.bannerLabels[LSSurveyLabelIndex.No]: {
                 await this.disable();
                 break;

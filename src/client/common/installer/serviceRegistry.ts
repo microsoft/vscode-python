@@ -4,7 +4,7 @@
 
 import { IServiceManager } from '../../ioc/types';
 import { IWebPanelProvider } from '../application/types';
-import { WebPanelProvider } from '../application/webPanelProvider';
+import { WebPanelProvider } from '../application/webPanels/webPanelProvider';
 import { ProductType } from '../types';
 import { InstallationChannelManager } from './channelManager';
 import { CondaInstaller } from './condaInstaller';
@@ -12,7 +12,14 @@ import { InsidersBuildInstaller, StableBuildInstaller } from './extensionBuildIn
 import { PipEnvInstaller } from './pipEnvInstaller';
 import { PipInstaller } from './pipInstaller';
 import { PoetryInstaller } from './poetryInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from './productPath';
+import {
+    CTagsProductPathService,
+    DataScienceProductPathService,
+    FormatterProductPathService,
+    LinterProductPathService,
+    RefactoringLibraryProductPathService,
+    TestFrameworkProductPathService
+} from './productPath';
 import { ProductService } from './productService';
 import { IExtensionBuildInstaller, IInstallationChannelManager, IModuleInstaller, INSIDERS_INSTALLER, IProductPathService, IProductService, STABLE_INSTALLER } from './types';
 

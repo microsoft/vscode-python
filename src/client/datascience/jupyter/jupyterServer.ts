@@ -1,13 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
-
 import { ILiveShareApi } from '../../common/application/types';
+import '../../common/extensions';
 import { traceError, traceInfo } from '../../common/logger';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
@@ -59,7 +57,7 @@ export class JupyterServerBase implements INotebookServer {
 
         // Listen to the process going down
         if (this.launchInfo && this.launchInfo.connectionInfo) {
-            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected((c) => {
+            this.connectionInfoDisconnectHandler = this.launchInfo.connectionInfo.disconnected(c => {
                 traceError(localize.DataScience.jupyterServerCrashed().format(c.toString()));
                 this.serverExitCode = c;
                 this.shutdown().ignoreErrors();
@@ -189,18 +187,12 @@ export class JupyterServerBase implements INotebookServer {
         _disposableRegistry: IDisposableRegistry,
         _configService: IConfigurationService,
         _loggers: INotebookExecutionLogger[],
-        _cancelToken?: CancellationToken): Promise<INotebook> {
+        _cancelToken?: CancellationToken
+    ): Promise<INotebook> {
         throw new Error('You forgot to override createNotebookInstance');
     }
 
     private async destroyKernelSpec() {
-        try {
-            if (this.launchInfo && this.launchInfo.kernelSpec) {
-                await this.launchInfo.kernelSpec.dispose(); // This should delete any old kernel specs
-            }
-        } catch {
-            noop();
-        }
         if (this.launchInfo) {
             this.launchInfo.kernelSpec = undefined;
         }

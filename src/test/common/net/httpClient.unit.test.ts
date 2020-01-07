@@ -87,7 +87,7 @@ suite('Http Client', () => {
 
         [
             {
-                name: 'If strict is set to false, and jsonc parsing returns error codes, then log errors and don\'t throw, return json',
+                name: "If strict is set to false, and jsonc parsing returns error codes, then log errors and don't throw, return json",
                 returnedArgs: [undefined, { statusCode: 200 }, '[{ "strictJSON" : false,, }]'],
                 strict: false,
                 expectedJSON: [{ strictJSON: false }]

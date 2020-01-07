@@ -1,27 +1,18 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
-import { inject, injectable, multiInject } from 'inversify';
+import { inject, injectable, multiInject, named } from 'inversify';
 import * as path from 'path';
-import { Event, EventEmitter, TextEditor, Uri, ViewColumn } from 'vscode';
-
-import {
-    IApplicationShell,
-    ICommandManager,
-    IDocumentManager,
-    ILiveShareApi,
-    IWebPanelProvider,
-    IWorkspaceService
-} from '../../common/application/types';
+import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscode';
+import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import '../../common/extensions';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposableRegistry, IPersistentStateFactory } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
@@ -51,6 +42,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private closedEvent: EventEmitter<IInteractiveWindow> = new EventEmitter<IInteractiveWindow>();
     private waitingForExportCells: boolean = false;
     private trackedJupyterStart: boolean = false;
+    private lastFile: string | undefined;
 
     constructor(
         @multiInject(IInteractiveWindowListener) listeners: IInteractiveWindowListener[],
@@ -66,7 +58,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IJupyterExecution) jupyterExecution: IJupyterExecution,
         @inject(IFileSystem) fileSystem: IFileSystem,
         @inject(IConfigurationService) configuration: IConfigurationService,
-        @inject(ICommandManager) private commandManager: ICommandManager,
+        @inject(ICommandManager) commandManager: ICommandManager,
         @inject(INotebookExporter) jupyterExporter: INotebookExporter,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IInteractiveWindowProvider) private interactiveWindowProvider: IInteractiveWindowProvider,
@@ -75,7 +67,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IJupyterDebugger) jupyterDebugger: IJupyterDebugger,
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
-        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory
+        @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento
     ) {
         super(
             listeners,
@@ -98,17 +91,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             jupyterDebugger,
             editorProvider,
             errorHandler,
+            commandManager,
+            globalStorage,
             historyReactDir,
             [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
-            ViewColumn.Two);
+            ViewColumn.Two
+        );
+
+        // Send a telemetry event to indicate window is opening
+        sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
+
         // Start the server as soon as we open
         this.startServer().ignoreErrors();
-    }
-
-    public get ready(): Promise<void> {
-        // We need this to ensure the interactive window is up and ready to receive messages.
-        return this.startServer();
     }
 
     public dispose() {
@@ -127,7 +122,23 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         return Promise.resolve();
     }
 
-    public addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+    public async show(): Promise<void> {
+        // When showing we have to load the web panel. Make sure
+        // we use the last file sent through add code.
+        await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+        return super.show();
+    }
+
+    public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
+        // Save the last file we ran with.
+        this.lastFile = file;
+
+        // Make sure our web panel opens.
+        await this.show();
+
+        // Tell the webpanel about the new directory.
+        this.updateCwd(path.dirname(file));
+
         // Call the internal method.
         return this.submitCode(code, file, line, undefined, editor, false);
     }
@@ -216,9 +227,19 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.submitCode(info.code, Identifiers.EmptyFileName, 0, info.id, undefined).ignoreErrors();
 
             // Activate the other side, and send as if came from a file
-            this.interactiveWindowProvider.getOrCreateActive().then(_v => {
-                this.shareMessage(InteractiveWindowMessages.RemoteAddCode, { code: info.code, file: Identifiers.EmptyFileName, line: 0, id: info.id, originator: this.id, debug: false });
-            }).ignoreErrors();
+            this.interactiveWindowProvider
+                .getOrCreateActive()
+                .then(_v => {
+                    this.shareMessage(InteractiveWindowMessages.RemoteAddCode, {
+                        code: info.code,
+                        file: Identifiers.EmptyFileName,
+                        line: 0,
+                        id: info.id,
+                        originator: this.id,
+                        debug: false
+                    });
+                })
+                .ignoreErrors();
         }
     }
 
@@ -259,7 +280,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected startServer(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
-        if (!this.trackedJupyterStart){
+        if (!this.trackedJupyterStart) {
             this.trackedJupyterStart = true;
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
@@ -271,17 +292,17 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private export(cells: ICell[]) {
         // Should be an array of cells
         if (cells && this.applicationShell) {
-
             const filtersKey = localize.DataScience.exportDialogFilter();
             const filtersObject: Record<string, string[]> = {};
             filtersObject[filtersKey] = ['ipynb'];
 
             // Bring up the open file dialog box
-            this.applicationShell.showSaveDialog(
-                {
+            this.applicationShell
+                .showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
                     filters: filtersObject
-                }).then(async (uri: Uri | undefined) => {
+                })
+                .then(async (uri: Uri | undefined) => {
                     if (uri) {
                         await this.exportToFile(cells, uri.fsPath);
                     }
@@ -296,5 +317,4 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             this.export(cells);
         }
     }
-
 }

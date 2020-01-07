@@ -100,8 +100,8 @@ export const allTestDetails: ITestDetails[] = [
         sourceTestName: 'test_parametrized_username',
         testDefRange: new vscode.Range(15, 4, 15, 30),
         issueRange: new vscode.Range(16, 4, 16, 64),
-        issueLineText: 'assert non_parametrized_username in [\'one\', \'two\', \'threes\']',
-        message: 'AssertionError: assert \'three\' in [\'one\', \'two\', \'threes\']',
+        issueLineText: "assert non_parametrized_username in ['one', 'two', 'threes']",
+        message: "AssertionError: assert 'three' in ['one', 'two', 'threes']",
         imported: false,
         status: TestStatus.Fail
     },
@@ -255,8 +255,8 @@ export const allTestDetails: ITestDetails[] = [
         sourceTestName: 'test_parametrized_username',
         testDefRange: new vscode.Range(38, 4, 38, 30),
         issueRange: new vscode.Range(39, 4, 39, 64),
-        issueLineText: 'assert non_parametrized_username in [\'one\', \'two\', \'threes\']',
-        message: 'AssertionError: assert \'three\' in [\'one\', \'two\', \'threes\']',
+        issueLineText: "assert non_parametrized_username in ['one', 'two', 'threes']",
+        message: "AssertionError: assert 'three' in ['one', 'two', 'threes']",
         imported: false,
         status: TestStatus.Fail
     },
@@ -323,7 +323,7 @@ export const allTestDetails: ITestDetails[] = [
         sourceTestName: 'test_C2',
         testDefRange: new vscode.Range(9, 8, 9, 15),
         issueRange: new vscode.Range(10, 8, 10, 41),
-        issueLineText: 'self.assertEqual(1,2,\'Not equal\')',
+        issueLineText: "self.assertEqual(1,2,'Not equal')",
         message: 'AssertionError: 1 != 2 : Not equal',
         imported: false,
         status: TestStatus.Fail
@@ -406,27 +406,33 @@ export const testScenarios: ITestScenarioDetails[] = [
         discoveryOutput: 'one.output',
         runOutput: 'one.xml',
         testsToRun: undefined as any,
-        testDetails: allTestDetails.filter(() => { return true; })
+        testDetails: allTestDetails.filter(() => {
+            return true;
+        })
     },
     {
         scenarioName: 'Run Specific Test File',
         discoveryOutput: 'three.output',
         runOutput: 'three.xml',
         testsToRun: {
-            testFile: [{
-                fullPath: path.join(UNITTEST_TEST_FILES_PATH, 'tests', 'test_another_pytest.py'),
-                name: 'tests/test_another_pytest.py',
-                nameToRun: 'tests/test_another_pytest.py',
-                xmlName: 'tests/test_another_pytest.py',
-                functions: [],
-                suites: [],
-                time: 0
-            }],
+            testFile: [
+                {
+                    fullPath: path.join(UNITTEST_TEST_FILES_PATH, 'tests', 'test_another_pytest.py'),
+                    name: 'tests/test_another_pytest.py',
+                    nameToRun: 'tests/test_another_pytest.py',
+                    xmlName: 'tests/test_another_pytest.py',
+                    functions: [],
+                    suites: [],
+                    time: 0
+                }
+            ],
             testFolder: [],
             testFunction: [],
             testSuite: []
         },
-        testDetails: allTestDetails.filter(td => { return td.fileName === path.join('tests', 'test_another_pytest.py'); })
+        testDetails: allTestDetails.filter(td => {
+            return td.fileName === path.join('tests', 'test_another_pytest.py');
+        })
     },
     {
         scenarioName: 'Run Specific Test Suite',
@@ -434,7 +440,9 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'four.xml',
         testsToRun: undefined as any,
         testSuiteIndex: 0,
-        testDetails: allTestDetails.filter(td => { return td.className === 'test_root.Test_Root_test1'; })
+        testDetails: allTestDetails.filter(td => {
+            return td.className === 'test_root.Test_Root_test1';
+        })
     },
     {
         scenarioName: 'Run Specific Test Function',
@@ -442,14 +450,18 @@ export const testScenarios: ITestScenarioDetails[] = [
         runOutput: 'five.xml',
         testsToRun: undefined as any,
         testFunctionIndex: 0,
-        testDetails: allTestDetails.filter(td => { return td.testName === 'test_Root_A'; })
+        testDetails: allTestDetails.filter(td => {
+            return td.testName === 'test_Root_A';
+        })
     },
     {
         scenarioName: 'Run Failed Tests',
         discoveryOutput: 'two.output',
         runOutput: 'two.xml',
         testsToRun: undefined as any,
-        testDetails: allTestDetails.filter(_td => { return true; }),
+        testDetails: allTestDetails.filter(_td => {
+            return true;
+        }),
         shouldRunFailed: true,
         failedRunOutput: 'two.again.xml'
     }

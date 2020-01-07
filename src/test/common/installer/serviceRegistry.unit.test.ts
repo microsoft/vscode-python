@@ -5,17 +5,32 @@
 
 import { instance, mock, verify } from 'ts-mockito';
 import { IWebPanelProvider } from '../../../client/common/application/types';
-import { WebPanelProvider } from '../../../client/common/application/webPanelProvider';
+import { WebPanelProvider } from '../../../client/common/application/webPanels/webPanelProvider';
 import { InstallationChannelManager } from '../../../client/common/installer/channelManager';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
 import { InsidersBuildInstaller, StableBuildInstaller } from '../../../client/common/installer/extensionBuildInstaller';
 import { PipEnvInstaller } from '../../../client/common/installer/pipEnvInstaller';
 import { PipInstaller } from '../../../client/common/installer/pipInstaller';
 import { PoetryInstaller } from '../../../client/common/installer/poetryInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../../client/common/installer/productPath';
+import {
+    CTagsProductPathService,
+    DataScienceProductPathService,
+    FormatterProductPathService,
+    LinterProductPathService,
+    RefactoringLibraryProductPathService,
+    TestFrameworkProductPathService
+} from '../../../client/common/installer/productPath';
 import { ProductService } from '../../../client/common/installer/productService';
 import { registerTypes } from '../../../client/common/installer/serviceRegistry';
-import { IExtensionBuildInstaller, IInstallationChannelManager, IModuleInstaller, INSIDERS_INSTALLER, IProductPathService, IProductService, STABLE_INSTALLER } from '../../../client/common/installer/types';
+import {
+    IExtensionBuildInstaller,
+    IInstallationChannelManager,
+    IModuleInstaller,
+    INSIDERS_INSTALLER,
+    IProductPathService,
+    IProductService,
+    STABLE_INSTALLER
+} from '../../../client/common/installer/types';
 import { ProductType } from '../../../client/common/types';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceManager } from '../../../client/ioc/types';

@@ -58,9 +58,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     }
 
     public render() {
-
         if (this.props.cellVM.cell.data.cell_type === 'messages') {
-            return <InformationMessages messages={this.props.cellVM.cell.data.messages}/>;
+            return <InformationMessages messages={this.props.cellVM.cell.data.messages} />;
         } else {
             return this.renderNormalCell();
         }
@@ -112,15 +111,15 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
     private toggleInputBlock = () => {
         const cellId: string = this.getCell().id;
         this.props.toggleInputBlock(cellId);
-    }
+    };
 
     private getCell = () => {
         return this.props.cellVM.cell;
-    }
+    };
 
     private isCodeCell = () => {
         return this.props.cellVM.cell.data.cell_type === 'code';
-    }
+    };
 
     private renderNormalCell() {
         const allowsPlainInput = this.props.settings.showCellInputCode || this.props.cellVM.directInput || this.props.cellVM.editable;
@@ -132,11 +131,19 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         // Only render if we are allowed to.
         if (shouldRender) {
             return (
-                <div className={cellWrapperClass} role={this.props.role} ref={this.wrapperRef} tabIndex={0} onKeyDown={this.onKeyDown} onClick={this.onMouseClick} onDoubleClick={this.onMouseDoubleClick}>
+                <div
+                    className={cellWrapperClass}
+                    role={this.props.role}
+                    ref={this.wrapperRef}
+                    tabIndex={0}
+                    onKeyDown={this.onKeyDown}
+                    onClick={this.onMouseClick}
+                    onDoubleClick={this.onMouseDoubleClick}
+                >
                     <div className={cellOuterClass}>
                         {this.renderControls()}
-                        <div className='content-div'>
-                            <div className='cell-result-container'>
+                        <div className="content-div">
+                            <div className="cell-result-container">
                                 {this.renderInput()}
                                 <CellOutput
                                     cellVM={this.props.cellVM}
@@ -166,22 +173,32 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         const hasNoSource = !cell || !cell.file || cell.file === Identifiers.EmptyFileName;
 
         return (
-            <div className='cell-toolbar' key={0}>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={gatherCode} hidden={!this.props.settings.enableGather} tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')} >
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GatherCode} />
+            <div className="cell-toolbar" key={0}>
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={gatherCode}
+                    hidden={!this.props.settings.enableGather}
+                    tooltip={getLocString('DataScience.gatherCodeTooltip', 'Gather code')}
+                >
+                    <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.GatherCode} />
                 </ImageButton>
                 <ImageButton baseTheme={this.props.baseTheme} onClick={gotoCode} tooltip={getLocString('DataScience.gotoCodeButtonTooltip', 'Go to code')} hidden={hasNoSource}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.GoToSourceCode} />
+                    <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.GoToSourceCode} />
                 </ImageButton>
-                <ImageButton baseTheme={this.props.baseTheme} onClick={copyCode} tooltip={getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file')} hidden={!hasNoSource}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Copy} />
+                <ImageButton
+                    baseTheme={this.props.baseTheme}
+                    onClick={copyCode}
+                    tooltip={getLocString('DataScience.copyBackToSourceButtonTooltip', 'Paste code into file')}
+                    hidden={!hasNoSource}
+                >
+                    <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Copy} />
                 </ImageButton>
                 <ImageButton baseTheme={this.props.baseTheme} onClick={deleteCode} tooltip={getLocString('DataScience.deleteButtonTooltip', 'Remove Cell')}>
-                    <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+                    <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Cancel} />
                 </ImageButton>
             </div>
         );
-    }
+    };
 
     private onMouseClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         // When we receive a click, propagate upwards. Might change our state
@@ -189,7 +206,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             ev.stopPropagation();
             this.props.clickCell(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private onMouseDoubleClick = (ev: React.MouseEvent<HTMLDivElement>) => {
         // When we receive double click, propagate upwards. Might change our state
@@ -197,28 +214,36 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             ev.stopPropagation();
             this.props.doubleClickCell(this.props.cellVM.cell.id);
         }
-    }
+    };
 
     private renderControls = () => {
         const busy = this.props.cellVM.cell.state === CellState.init || this.props.cellVM.cell.state === CellState.executing;
-        const collapseVisible = (this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell());
-        const executionCount = this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count ?
-            this.props.cellVM.cell.data.execution_count.toString() : '-';
+        const collapseVisible = this.props.cellVM.inputBlockCollapseNeeded && this.props.cellVM.inputBlockShow && !this.props.cellVM.editable && this.isCodeCell();
+        const executionCount =
+            this.props.cellVM && this.props.cellVM.cell && this.props.cellVM.cell.data && this.props.cellVM.cell.data.execution_count
+                ? this.props.cellVM.cell.data.execution_count.toString()
+                : '-';
         const isEditOnlyCell = this.props.cellVM.cell.id === Identifiers.EditCellId;
         const toolbar = isEditOnlyCell ? null : this.renderNormalToolbar();
 
         return (
-            <div className='controls-div'>
-                <ExecutionCount isBusy={busy} count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount} visible={this.isCodeCell()} />
-                <CollapseButton theme={this.props.baseTheme}
+            <div className="controls-div">
+                <ExecutionCount
+                    isBusy={busy}
+                    count={isEditOnlyCell && this.props.editExecutionCount ? this.props.editExecutionCount : executionCount}
+                    visible={this.isCodeCell()}
+                />
+                <CollapseButton
+                    theme={this.props.baseTheme}
                     visible={collapseVisible}
                     open={this.props.cellVM.inputBlockOpen}
                     onClick={this.toggleInputBlock}
-                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')} />
+                    tooltip={getLocString('DataScience.collapseInputTooltip', 'Collapse input block')}
+                />
                 {toolbar}
             </div>
         );
-    }
+    };
 
     private renderInput = () => {
         if (this.isCodeCell()) {
@@ -244,7 +269,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             );
         }
         return null;
-    }
+    };
 
     private isEditCell(): boolean {
         return this.getCell().id === Identifiers.EditCellId;
@@ -252,23 +277,23 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
 
     private onUnfocused = () => {
         this.props.unfocus(this.getCell().id);
-    }
+    };
 
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string) => {
         this.props.editCell(cellId, changes, modelId);
-    }
+    };
 
     private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {
         this.props.codeCreated(cellId, modelId);
-    }
+    };
 
     private hasOutput = () => {
         return this.getCell().state === CellState.finished || this.getCell().state === CellState.error || this.getCell().state === CellState.executing;
-    }
+    };
 
     private getCodeCell = () => {
         return this.props.cellVM.cell.data as nbformat.ICodeCell;
-    }
+    };
 
     private shouldRenderResults(): boolean {
         return this.isCodeCell() && this.hasOutput() && this.getCodeCell().outputs && this.getCodeCell().outputs.length > 0 && !this.props.cellVM.hideOutput;
@@ -289,7 +314,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
             };
             this.onEditCellKeyDown(Identifiers.EditCellId, e);
         }
-    }
+    };
 
     private onEditCellKeyDown = (_cellId: string, e: IKeyboardEvent) => {
         if (e.code === 'Escape') {
@@ -297,7 +322,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         } else if (e.code === 'Enter' && e.shiftKey) {
             this.editCellSubmit(e);
         }
-    }
+    };
 
     private editCellSubmit(e: IKeyboardEvent) {
         if (e.editorInfo && e.editorInfo.contents) {
@@ -325,7 +350,7 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         }
     }
 
-    private findTabStop(direction: number, element: Element) : HTMLElement | undefined {
+    private findTabStop(direction: number, element: Element): HTMLElement | undefined {
         if (element) {
             const allFocusable = document.querySelectorAll('input, button, select, textarea, a[href]');
             if (allFocusable) {
@@ -344,17 +369,14 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
                 nextTabStop.focus();
             }
         }
-    }
+    };
 
     private openLink = (uri: monacoEditor.Uri) => {
         this.props.linkClick(uri.toString());
-    }
+    };
 }
 
 // Main export, return a redux connected editor
 export function getConnectedInteractiveCell() {
-    return connect(
-        null,
-        actionCreators
-    )(InteractiveCell);
+    return connect(null, actionCreators)(InteractiveCell);
 }

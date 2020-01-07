@@ -12,50 +12,23 @@ import { parsePosition, parseRange } from '../../../client/common/utils/text';
 suite('parseRange()', () => {
     test('valid strings', async () => {
         const tests: [string, Range][] = [
-            ['1:5-3:5', new Range(
-                new Position(1, 5),
-                new Position(3, 5)
-            )],
-            ['1:5-3:3', new Range(
-                new Position(1, 5),
-                new Position(3, 3)
-            )],
-            ['1:3-3:5', new Range(
-                new Position(1, 3),
-                new Position(3, 5)
-            )],
-            ['1-3:5', new Range(
-                new Position(1, 0),
-                new Position(3, 5)
-            )],
-            ['1-3', new Range(
-                new Position(1, 0),
-                new Position(3, 0)
-            )],
-            ['1-1', new Range(
-                new Position(1, 0),
-                new Position(1, 0)
-            )],
-            ['1', new Range(
-                new Position(1, 0),
-                new Position(1, 0)
-            )],
-            ['1:3-', new Range(
-                new Position(1, 3),
-                new Position(0, 0)  // ???
-            )],
-            ['1:3', new Range(
-                new Position(1, 3),
-                new Position(1, 3)
-            )],
-            ['', new Range(
-                new Position(0, 0),
-                new Position(0, 0)
-            )],
-            ['3-1', new Range(
-                new Position(3, 0),
-                new Position(1, 0)
-            )]
+            ['1:5-3:5', new Range(new Position(1, 5), new Position(3, 5))],
+            ['1:5-3:3', new Range(new Position(1, 5), new Position(3, 3))],
+            ['1:3-3:5', new Range(new Position(1, 3), new Position(3, 5))],
+            ['1-3:5', new Range(new Position(1, 0), new Position(3, 5))],
+            ['1-3', new Range(new Position(1, 0), new Position(3, 0))],
+            ['1-1', new Range(new Position(1, 0), new Position(1, 0))],
+            ['1', new Range(new Position(1, 0), new Position(1, 0))],
+            [
+                '1:3-',
+                new Range(
+                    new Position(1, 3),
+                    new Position(0, 0) // ???
+                )
+            ],
+            ['1:3', new Range(new Position(1, 3), new Position(1, 3))],
+            ['', new Range(new Position(0, 0), new Position(0, 0))],
+            ['3-1', new Range(new Position(3, 0), new Position(1, 0))]
         ];
         for (const [raw, expected] of tests) {
             const result = parseRange(raw);
@@ -64,12 +37,7 @@ suite('parseRange()', () => {
         }
     });
     test('valid numbers', async () => {
-        const tests: [number, Range][] = [
-            [1, new Range(
-                new Position(1, 0),
-                new Position(1, 0)
-            )]
-        ];
+        const tests: [number, Range][] = [[1, new Range(new Position(1, 0), new Position(1, 0))]];
         for (const [raw, expected] of tests) {
             const result = parseRange(raw);
 
@@ -118,9 +86,7 @@ suite('parsePosition()', () => {
         }
     });
     test('valid numbers', async () => {
-        const tests: [number, Position][] = [
-            [1, new Position(1, 0)]
-        ];
+        const tests: [number, Position][] = [[1, new Position(1, 0)]];
         for (const [raw, expected] of tests) {
             const result = parsePosition(raw);
 
@@ -128,11 +94,7 @@ suite('parsePosition()', () => {
         }
     });
     test('bad strings', async () => {
-        const tests: string[] = [
-            '1:2:3',
-            '1:a',
-            'a'
-        ];
+        const tests: string[] = ['1:2:3', '1:a', 'a'];
         for (const raw of tests) {
             expect(() => parsePosition(raw)).to.throw();
         }

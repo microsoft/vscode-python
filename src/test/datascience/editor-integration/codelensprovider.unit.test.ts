@@ -43,7 +43,16 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         commandManager.setup(c => c.executeCommand(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve());
         debugService.setup(d => d.activeDebugSession).returns(() => undefined);
 
-        codeLensProvider = new DataScienceCodeLensProvider(serviceContainer.object, debugLocationTracker.object, documentManager.object, configurationService.object, commandManager.object, disposables, debugService.object, fileSystem.object);
+        codeLensProvider = new DataScienceCodeLensProvider(
+            serviceContainer.object,
+            debugLocationTracker.object,
+            documentManager.object,
+            configurationService.object,
+            commandManager.object,
+            disposables,
+            debugService.object,
+            fileSystem.object
+        );
     });
 
     test('Initialize Code Lenses one document', () => {
@@ -53,8 +62,14 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         document.setup(d => d.version).returns(() => 1);
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
-        targetCodeWatcher.setup(tc => tc.getCodeLenses()).returns(() => []).verifiable(TypeMoq.Times.once());
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.once());
+        targetCodeWatcher
+            .setup(tc => tc.getCodeLenses())
+            .returns(() => [])
+            .verifiable(TypeMoq.Times.once());
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher)))
+            .returns(() => targetCodeWatcher.object)
+            .verifiable(TypeMoq.Times.once());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
@@ -70,10 +85,16 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         document.setup(d => d.version).returns(() => 1);
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
-        targetCodeWatcher.setup(tc => tc.getCodeLenses()).returns(() => []).verifiable(TypeMoq.Times.exactly(2));
+        targetCodeWatcher
+            .setup(tc => tc.getCodeLenses())
+            .returns(() => [])
+            .verifiable(TypeMoq.Times.exactly(2));
         targetCodeWatcher.setup(tc => tc.getFileName()).returns(() => 'test.py');
         targetCodeWatcher.setup(tc => tc.getVersion()).returns(() => 1);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.once());
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher)))
+            .returns(() => targetCodeWatcher.object)
+            .verifiable(TypeMoq.Times.once());
         documentManager.setup(d => d.textDocuments).returns(() => [document.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);
@@ -99,10 +120,16 @@ suite('DataScienceCodeLensProvider Unit Tests', () => {
         document3.setup(d => d.version).returns(() => 2);
 
         const targetCodeWatcher = TypeMoq.Mock.ofType<ICodeWatcher>();
-        targetCodeWatcher.setup(tc => tc.getCodeLenses()).returns(() => []).verifiable(TypeMoq.Times.exactly(3));
+        targetCodeWatcher
+            .setup(tc => tc.getCodeLenses())
+            .returns(() => [])
+            .verifiable(TypeMoq.Times.exactly(3));
         targetCodeWatcher.setup(tc => tc.getFileName()).returns(() => 'test.py');
         targetCodeWatcher.setup(tc => tc.getVersion()).returns(() => 1);
-        serviceContainer.setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher))).returns(() => targetCodeWatcher.object).verifiable(TypeMoq.Times.exactly(3));
+        serviceContainer
+            .setup(c => c.get(TypeMoq.It.isValue(ICodeWatcher)))
+            .returns(() => targetCodeWatcher.object)
+            .verifiable(TypeMoq.Times.exactly(3));
         documentManager.setup(d => d.textDocuments).returns(() => [document.object, document2.object, document3.object]);
 
         codeLensProvider.provideCodeLenses(document.object, tokenSource.token);

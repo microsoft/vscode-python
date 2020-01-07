@@ -52,7 +52,12 @@ function title(resource?: Uri, interpreter?: PythonInterpreter) {
     return `${resource ? 'With a resource' : 'Without a resource'}${interpreter ? ' and an interpreter' : ''}`;
 }
 
-async function verifyCreateActivated(factory: PythonExecutionFactory, activationHelper: IEnvironmentActivationService, resource?: Uri, interpreter?: PythonInterpreter): Promise<IPythonExecutionService> {
+async function verifyCreateActivated(
+    factory: PythonExecutionFactory,
+    activationHelper: IEnvironmentActivationService,
+    resource?: Uri,
+    interpreter?: PythonInterpreter
+): Promise<IPythonExecutionService> {
     when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve();
 
     const service = await factory.createActivatedEnvironment({ resource, interpreter });
@@ -92,18 +97,29 @@ suite('Process - PythonExecutionFactory', () => {
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
-                processService.setup(p => p.on('exec', () => { return; })).returns(() => processService.object);
+                processService
+                    .setup(p =>
+                        p.on('exec', () => {
+                            return;
+                        })
+                    )
+                    .returns(() => processService.object);
                 processService.setup((p: any) => p.then).returns(() => undefined);
                 interpreterService = mock(InterpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: {major: 3}} as any);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: { major: 3 } } as any);
                 const serviceContainer = mock(ServiceContainer);
                 when(serviceContainer.get<IDisposableRegistry>(IDisposableRegistry)).thenReturn([]);
                 when(serviceContainer.get<IProcessLogger>(IProcessLogger)).thenReturn(processLogger);
                 when(serviceContainer.get<IInterpreterService>(IInterpreterService)).thenReturn(instance(interpreterService));
-                factory = new PythonExecutionFactory(instance(serviceContainer),
-                    instance(activationHelper), instance(processFactory),
-                    instance(configService), instance(condaService),
-                    instance(bufferDecoder), instance(windowsStoreInterpreter));
+                factory = new PythonExecutionFactory(
+                    instance(serviceContainer),
+                    instance(activationHelper),
+                    instance(processFactory),
+                    instance(configService),
+                    instance(condaService),
+                    instance(bufferDecoder),
+                    instance(windowsStoreInterpreter)
+                );
             });
             teardown(() => sinon.restore());
             test('Ensure PythonExecutionService is created', async () => {
@@ -131,7 +147,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -150,7 +166,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const service = await verifyCreateActivated(factory, activationHelper, resource, interpreter);
@@ -162,7 +178,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const mockExecService = 'something';
                 factory.create = async (_options: ExecutionFactoryCreationOptions) => {
                     createInvoked = true;
-                    return Promise.resolve(mockExecService as any as IPythonExecutionService);
+                    return Promise.resolve((mockExecService as any) as IPythonExecutionService);
                 };
 
                 const pythonSettings = mock(PythonSettings);
@@ -179,7 +195,7 @@ suite('Process - PythonExecutionFactory', () => {
                 assert.equal(createInvoked, false);
             });
 
-            test('Ensure `create` returns a WindowsStorePythonProcess instance if it\'s a windows store intepreter path', async () => {
+            test("Ensure `create` returns a WindowsStorePythonProcess instance if it's a windows store intepreter path", async () => {
                 const pythonPath = 'path/to/python';
                 const pythonSettings = mock(PythonSettings);
 
@@ -354,7 +370,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);
@@ -365,13 +381,13 @@ suite('Process - PythonExecutionFactory', () => {
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
                 reset(interpreterService);
-                when(interpreterService.getInterpreterDetails(anything())).thenResolve({version: parse('2.7.14')} as any);
+                when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: parse('2.7.14') } as any);
                 factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(0);
@@ -386,8 +402,8 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon1 = await factory.createDaemon({});
-                const daemon2 = await factory.createDaemon({});
+                const daemon1 = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
+                const daemon2 = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon1).to.equal(daemon2);
             });
@@ -401,10 +417,10 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon1 = await factory.createDaemon({});
+                const daemon1 = await factory.createDaemon({ resource });
 
                 when(pythonSettings.pythonPath).thenReturn('HELLO2');
-                const daemon2 = await factory.createDaemon({});
+                const daemon2 = await factory.createDaemon({ resource });
 
                 expect(daemon1).to.not.equal(daemon2);
             });
@@ -418,13 +434,16 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const [daemon1, daemon2] = await Promise.all([factory.createDaemon({}), factory.createDaemon({})]);
+                const [daemon1, daemon2] = await Promise.all([
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path }),
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path })
+                ]);
 
                 expect(daemon1).to.equal(daemon2);
             });
             test('Failure to create Daemon Service should return PythonExecutionService', async () => {
                 const pythonSettings = mock(PythonSettings);
-                const pythonExecService = { dummy: 1 } as any as IPythonExecutionService;
+                const pythonExecService = ({ dummy: 1 } as any) as IPythonExecutionService;
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
@@ -433,7 +452,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.reject(new Error('Kaboom')));
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);

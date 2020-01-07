@@ -33,7 +33,7 @@ interface IVariableExplorerProps {
 }
 
 interface IVariableExplorerState {
-    gridColumns: {key: string; name: string}[];
+    gridColumns: { key: string; name: string }[];
     gridHeight: number;
     height: number;
     fontSize: number;
@@ -73,7 +73,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+                headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
             {
                 key: 'type',
@@ -81,7 +81,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+                headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
             {
                 key: 'size',
@@ -89,7 +89,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 type: 'string',
                 width: 120,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.numeric} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+                headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
             {
                 key: 'value',
@@ -97,7 +97,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 type: 'string',
                 width: 300,
                 formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.string} />,
-                headerRenderer: <VariableExplorerHeaderCellFormatter/>
+                headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
             {
                 key: 'buttons',
@@ -109,18 +109,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} />
             }
         ];
-        this.state = { gridColumns: columns,
-                       gridHeight: 200,
-                       height: 0,
-                       fontSize: 14,
-                       sortColumn: 'name',
-                       sortDirection: 'NONE'};
+        this.state = { gridColumns: columns, gridHeight: 200, height: 0, fontSize: 14, sortColumn: 'name', sortDirection: 'NONE' };
 
         this.divRef = React.createRef<HTMLDivElement>();
 
         // Memoize is different between the tests running and webpack. figure out which one
         // tslint:disable-next-line: no-any
-        let memoize_func : any | undefined;
+        let memoize_func: any | undefined;
         if (memoize instanceof Function) {
             memoize_func = memoize;
         } else {
@@ -140,16 +135,19 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         };
 
         return (
-            <div className='variable-explorer' ref={this.divRef} style={fontSizeStyle}>
-                <div className='variable-explorer-menu-bar'>
-                    <label className='inputLabel variable-explorer-label'>{getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}</label>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.closeVariableExplorer} className='variable-explorer-close-button' tooltip={getLocString('DataScience.close', 'Close')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Cancel} />
+            <div className="variable-explorer" ref={this.divRef} style={fontSizeStyle}>
+                <div className="variable-explorer-menu-bar">
+                    <label className="inputLabel variable-explorer-label">{getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}</label>
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={this.props.closeVariableExplorer}
+                        className="variable-explorer-close-button"
+                        tooltip={getLocString('DataScience.close', 'Close')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Cancel} />
                     </ImageButton>
                 </div>
-                <div className={contentClassName}>
-                    {this.renderGrid()}
-                </div>
+                <div className={contentClassName}>{this.renderGrid()}</div>
             </div>
         );
     }
@@ -162,17 +160,17 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             // Make sure to check for update here so we don't update loop
             // tslint:disable-next-line: use-isnan
             if (newFontSize && newFontSize !== NaN && this.state.fontSize !== newFontSize) {
-                this.setState({fontSize: newFontSize});
+                this.setState({ fontSize: newFontSize });
             }
         }
-    }
+    };
 
     public sortRows = (sortColumn: string | number, sortDirection: string) => {
         this.setState({
             sortColumn,
             sortDirection
         });
-    }
+    };
 
     private renderGrid() {
         // Compute our grid rows using a memoized version of the sortColumn, sortDirection, and variables
@@ -183,18 +181,22 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             if (index >= 0 && index < gridRows.length) {
                 return gridRows[index];
             }
-            return {buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0}, name: '', type: '', size: '', value: ''};
+            return { buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0 }, name: '', type: '', size: '', value: '' };
         };
 
         if (this.props.debugging) {
             return (
-                <span className='span-debug-message'>{getLocString('DataScience.variableExplorerDisabledDuringDebugging', 'Please see the Debug Side Bar\'s VARIABLES section.')}</span>
+                <span className="span-debug-message">
+                    {getLocString('DataScience.variableExplorerDisabledDuringDebugging', "Please see the Debug Side Bar's VARIABLES section.")}
+                </span>
             );
         } else {
             return (
-                <div id='variable-explorer-data-grid' role='table' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <div id="variable-explorer-data-grid" role="table" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     <AdazzleReactDataGrid
-                        columns={this.state.gridColumns.map(c => { return { ...defaultColumnProperties, ...c }; })}
+                        columns={this.state.gridColumns.map(c => {
+                            return { ...defaultColumnProperties, ...c };
+                        })}
                         // tslint:disable-next-line: react-this-binding-issue
                         rowGetter={getRow}
                         rowsCount={gridRows.length}
@@ -234,7 +236,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         });
     }
 
-    private generateDummyVariables() : IGridRow[] {
+    private generateDummyVariables(): IGridRow[] {
         return [
             {
                 name: 'foo',
@@ -250,7 +252,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         ];
     }
 
-    private getColumnType(key: string | number) : string | undefined {
+    private getColumnType(key: string | number): string | undefined {
         let column;
         if (typeof key === 'string') {
             //tslint:disable-next-line:no-any
@@ -269,7 +271,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private getColumnCountFromShape(shape: string | undefined) : number {
+    private getColumnCountFromShape(shape: string | undefined): number {
         if (shape) {
             // Try to match on the second value if there is one
             const matches = RegExpValues.ShapeSplitterRegEx.exec(shape);
@@ -293,31 +295,31 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
         // Use a special comparer for string columns as we can't compare too much of a string
         // or it will take too long
-        const comparer = isStringColumn ?
-            //tslint:disable-next-line:no-any
-            (a: any, b: any): number => {
-                const aVal = a[sortColumn] as string;
-                const bVal = b[sortColumn] as string;
-                const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)).toUpperCase() : aVal;
-                const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)).toUpperCase() : bVal;
-                const result = aStr > bStr ? -1 : 1;
-                return invert ? -1 * result : result;
-            } :
-            //tslint:disable-next-line:no-any
-            (a: any, b: any): number => {
-                const aVal = this.getComparisonValue(a, sortColumn);
-                const bVal = this.getComparisonValue(b, sortColumn);
-                const result = aVal > bVal ? -1 : 1;
-                return invert ? -1 * result : result;
-            };
+        const comparer = isStringColumn
+            ? //tslint:disable-next-line:no-any
+              (a: any, b: any): number => {
+                  const aVal = a[sortColumn] as string;
+                  const bVal = b[sortColumn] as string;
+                  const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)).toUpperCase() : aVal;
+                  const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)).toUpperCase() : bVal;
+                  const result = aStr > bStr ? -1 : 1;
+                  return invert ? -1 * result : result;
+              }
+            : //tslint:disable-next-line:no-any
+              (a: any, b: any): number => {
+                  const aVal = this.getComparisonValue(a, sortColumn);
+                  const bVal = this.getComparisonValue(b, sortColumn);
+                  const result = aVal > bVal ? -1 : 1;
+                  return invert ? -1 * result : result;
+              };
 
         return gridRows.sort(comparer);
-    }
+    };
 
     // Get the numerical comparison value for a column
     private getComparisonValue(gridRow: IGridRow, sortColumn: string | number): number {
         // tslint:disable-next-line: no-any
-        return (sortColumn === 'size') ? this.sizeColumnComparisonValue(gridRow) : (gridRow as any)[sortColumn];
+        return sortColumn === 'size' ? this.sizeColumnComparisonValue(gridRow) : (gridRow as any)[sortColumn];
     }
 
     // The size column needs special casing
@@ -344,9 +346,8 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
 
     private rowDoubleClick = (_rowIndex: number, row: IGridRow) => {
         // On row double click, see if data explorer is supported and open it if it is
-        if (row.buttons && row.buttons.supportsDataExplorer !== undefined
-            && row.buttons.name && row.buttons.supportsDataExplorer) {
+        if (row.buttons && row.buttons.supportsDataExplorer !== undefined && row.buttons.name && row.buttons.supportsDataExplorer) {
             this.props.showDataExplorer(row.buttons.name, row.buttons.numberOfColumns);
         }
-    }
+    };
 }

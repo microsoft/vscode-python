@@ -6,7 +6,6 @@ import '../../../common/extensions';
 import { Position, Range, TextLine } from 'vscode';
 
 export class IntellisenseLine implements TextLine {
-
     private _range: Range;
     private _rangeWithLineBreak: Range;
     private _firstNonWhitespaceIndex: number | undefined;

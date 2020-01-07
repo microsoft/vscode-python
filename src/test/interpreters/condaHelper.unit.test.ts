@@ -25,7 +25,7 @@ suite('Interpreters display name from Conda Environments', () => {
         const displayName = condaHelper.getDisplayName(info);
         assert.equal(displayName, 'Anaconda 4.4.0 (64-bit)', 'Incorrect display name');
     });
-    test('Must return info without prefixing with word \'Python\'', () => {
+    test("Must return info without prefixing with word 'Python'", () => {
         const info: CondaInfo = {
             python_version: '3.6.1.final.10',
             'sys.version': '3.6.1 |Anaconda 4.4.0 (64-bit)| (default, May 11 2017, 13:25:24) [MSC v.1900 64 bit (AMD64)]'

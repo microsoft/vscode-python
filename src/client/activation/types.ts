@@ -63,9 +63,10 @@ export interface IExtensionActivationService {
     activate(resource: Resource): Promise<void>;
 }
 
-export enum LanguageServerActivator {
+export enum LanguageServerType {
     Jedi = 'Jedi',
-    DotNet = 'DotNet'
+    Microsoft = 'Microsoft',
+    None = 'None'
 }
 
 // tslint:disable-next-line: interface-name
@@ -79,19 +80,18 @@ export interface LanguageServerCommandHandler {
     clearAnalysisCache(): void;
 }
 
-export interface ILanguageServer extends
-    RenameProvider,
-    DefinitionProvider,
-    HoverProvider,
-    ReferenceProvider,
-    CompletionItemProvider,
-    CodeLensProvider,
-    DocumentSymbolProvider,
-    SignatureHelpProvider,
-    Partial<DocumentHandler>,
-    Partial<LanguageServerCommandHandler>,
-    IDisposable {
-}
+export interface ILanguageServer
+    extends RenameProvider,
+        DefinitionProvider,
+        HoverProvider,
+        ReferenceProvider,
+        CompletionItemProvider,
+        CodeLensProvider,
+        DocumentSymbolProvider,
+        SignatureHelpProvider,
+        Partial<DocumentHandler>,
+        Partial<LanguageServerCommandHandler>,
+        IDisposable {}
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {

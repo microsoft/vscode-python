@@ -19,9 +19,11 @@ import { TestDataItem, TestDataItemType } from '../types';
 export class FailedTestHandler implements IExtensionSingleActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
     private readonly failedItems: TestDataItem[] = [];
-    constructor(@inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
+    constructor(
+        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ICommandManager) private readonly commandManager: ICommandManager,
-        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService) {
+        @inject(ITestCollectionStorageService) private readonly storage: ITestCollectionStorageService
+    ) {
         disposableRegistry.push(this);
     }
     public dispose() {
@@ -31,8 +33,7 @@ export class FailedTestHandler implements IExtensionSingleActivationService, IDi
         this.storage.onDidChange(this.onDidChangeTestData, this, this.disposables);
     }
     public onDidChangeTestData(args: { uri: Uri; data?: TestDataItem }): void {
-        if (args.data && (args.data.status === TestStatus.Error || args.data.status === TestStatus.Fail) &&
-            getTestDataItemType(args.data) === TestDataItemType.function) {
+        if (args.data && (args.data.status === TestStatus.Error || args.data.status === TestStatus.Fail) && getTestDataItemType(args.data) === TestDataItemType.function) {
             this.failedItems.push(args.data);
             this.revealFailedNodes().ignoreErrors();
         }

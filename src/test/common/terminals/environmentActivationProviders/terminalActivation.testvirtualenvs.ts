@@ -8,6 +8,7 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
+import { PlatformService } from '../../../../client/common/platform/platformService';
 import { PYTHON_VIRTUAL_ENVS_LOCATION } from '../../../ciConstants';
 import { PYTHON_PATH, restorePythonPathInWorkspaceRoot, setPythonPathInWorkspaceRoot, updateSetting, waitForCondition } from '../../../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../../../constants';
@@ -19,10 +20,12 @@ suite('Activation of Environments in Terminal', () => {
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
     let outputFile = '';
     let outputFileCounter = 0;
-    const fileSystem = new FileSystem();
+    const fileSystem = new FileSystem(new PlatformService());
     const outputFilesCreated: string[] = [];
-    const envsLocation = PYTHON_VIRTUAL_ENVS_LOCATION !== undefined ?
-        path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION) : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
+    const envsLocation =
+        PYTHON_VIRTUAL_ENVS_LOCATION !== undefined
+            ? path.join(EXTENSION_ROOT_DIR_FOR_TESTS, PYTHON_VIRTUAL_ENVS_LOCATION)
+            : path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'tmp', 'envPaths.json');
     const waitTimeForActivation = 5000;
     type EnvPath = {
         condaExecPath: string;
@@ -84,12 +87,7 @@ suite('Activation of Environments in Terminal', () => {
      * @param consoleInitWaitMs How long to wait for the console to initialize.
      * @param logFileCreationWaitMs How long to wait for the output file to be produced.
      */
-    async function openTerminalAndAwaitCommandContent(
-        consoleInitWaitMs: number,
-        pythonFile: string,
-        logFile: string,
-        logFileCreationWaitMs: number
-    ): Promise<string> {
+    async function openTerminalAndAwaitCommandContent(consoleInitWaitMs: number, pythonFile: string, logFile: string, logFileCreationWaitMs: number): Promise<string> {
         const terminal = vscode.window.createTerminal();
         await sleep(consoleInitWaitMs);
         terminal.sendText(`python ${pythonFile} ${logFile}`, true);

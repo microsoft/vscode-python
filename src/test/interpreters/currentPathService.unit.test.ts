@@ -55,8 +55,7 @@ suite('Interpreters CurrentPath Service', () => {
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentStateFactory.object);
         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IConfigurationService), TypeMoq.It.isAny())).returns(() => configurationService.object);
         pythonInPathCommandProvider = new PythonInPathCommandProvider(platformService.object);
-        currentPathService = new CurrentPathService(interpreterHelper.object, procServiceFactory.object,
-            pythonInPathCommandProvider, serviceContainer.object);
+        currentPathService = new CurrentPathService(interpreterHelper.object, procServiceFactory.object, pythonInPathCommandProvider, serviceContainer.object);
     });
 
     [true, false].forEach(isWindows => {
@@ -64,20 +63,44 @@ suite('Interpreters CurrentPath Service', () => {
             // Specific test for 1305
             const version = new SemVer('1.0.0');
             platformService.setup(p => p.isWindows).returns(() => isWindows);
-            platformService.setup(p => p.osType).returns(() => isWindows ? OSType.Windows : OSType.Linux);
+            platformService.setup(p => p.osType).returns(() => (isWindows ? OSType.Windows : OSType.Linux));
             interpreterHelper.setup(v => v.getInterpreterInformation(TypeMoq.It.isAny())).returns(() => Promise.resolve({ version }));
 
             const execArgs = ['-c', 'import sys;print(sys.executable)'];
             pythonSettings.setup(p => p.pythonPath).returns(() => 'root:Python');
-            processService.setup(p => p.exec(TypeMoq.It.isValue('root:Python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/root:python' })).verifiable(TypeMoq.Times.once());
-            processService.setup(p => p.exec(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python1' })).verifiable(TypeMoq.Times.once());
-            processService.setup(p => p.exec(TypeMoq.It.isValue('python2'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python2' })).verifiable(TypeMoq.Times.once());
-            processService.setup(p => p.exec(TypeMoq.It.isValue('python3'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny())).returns(() => Promise.resolve({ stdout: 'c:/python3' })).verifiable(TypeMoq.Times.once());
+            processService
+                .setup(p => p.exec(TypeMoq.It.isValue('root:Python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({ stdout: 'c:/root:python' }))
+                .verifiable(TypeMoq.Times.once());
+            processService
+                .setup(p => p.exec(TypeMoq.It.isValue('python'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({ stdout: 'c:/python1' }))
+                .verifiable(TypeMoq.Times.once());
+            processService
+                .setup(p => p.exec(TypeMoq.It.isValue('python2'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({ stdout: 'c:/python2' }))
+                .verifiable(TypeMoq.Times.once());
+            processService
+                .setup(p => p.exec(TypeMoq.It.isValue('python3'), TypeMoq.It.isValue(execArgs), TypeMoq.It.isAny()))
+                .returns(() => Promise.resolve({ stdout: 'c:/python3' }))
+                .verifiable(TypeMoq.Times.once());
 
-            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/root:python'))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
-            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python1'))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
-            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python2'))).returns(() => Promise.resolve(false)).verifiable(TypeMoq.Times.once());
-            fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python3'))).returns(() => Promise.resolve(true)).verifiable(TypeMoq.Times.once());
+            fileSystem
+                .setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/root:python')))
+                .returns(() => Promise.resolve(true))
+                .verifiable(TypeMoq.Times.once());
+            fileSystem
+                .setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python1')))
+                .returns(() => Promise.resolve(false))
+                .verifiable(TypeMoq.Times.once());
+            fileSystem
+                .setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python2')))
+                .returns(() => Promise.resolve(false))
+                .verifiable(TypeMoq.Times.once());
+            fileSystem
+                .setup(fs => fs.fileExists(TypeMoq.It.isValue('c:/python3')))
+                .returns(() => Promise.resolve(true))
+                .verifiable(TypeMoq.Times.once());
 
             const interpreters = await currentPathService.getInterpreters();
             processService.verifyAll();

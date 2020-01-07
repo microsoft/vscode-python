@@ -33,5 +33,4 @@ export class MockLanguageServerProxy implements ILanguageServerProxy {
     public dispose(): void | undefined {
         this.mockLanguageClient = undefined;
     }
-
 }

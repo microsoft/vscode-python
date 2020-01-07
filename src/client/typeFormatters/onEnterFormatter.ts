@@ -9,12 +9,7 @@ import { getDocumentTokens } from '../providers/providerUtilities';
 export class OnEnterFormatter implements OnTypeFormattingEditProvider {
     private readonly formatter = new LineFormatter();
 
-    public provideOnTypeFormattingEdits(
-        document: TextDocument,
-        position: Position,
-        _ch: string,
-        _options: FormattingOptions,
-        _cancellationToken: CancellationToken): TextEdit[] {
+    public provideOnTypeFormattingEdits(document: TextDocument, position: Position, _ch: string, _options: FormattingOptions, _cancellationToken: CancellationToken): TextEdit[] {
         if (position.line === 0) {
             return [];
         }

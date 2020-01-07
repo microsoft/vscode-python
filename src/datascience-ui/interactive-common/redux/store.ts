@@ -4,20 +4,19 @@
 import * as fastDeepEqual from 'fast-deep-equal';
 import * as Redux from 'redux';
 import { createLogger } from 'redux-logger';
-
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState } from '../../interactive-common/mainState';
+import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
+import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
-import { computeEditorOptions, loadDefaultSettings } from '../../react-common/settingsReactSide';
+import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
-    const defaultSettings = loadDefaultSettings();
     if (!skipDefault) {
         return generateTestState('', editable);
     } else {
@@ -25,8 +24,7 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             // tslint:disable-next-line: no-typeof-undefined
             skipDefault,
             testMode,
-            baseTheme: defaultSettings.ignoreVscodeTheme ? 'vscode-light' : baseTheme,
-            editorOptions: computeEditorOptions(defaultSettings),
+            baseTheme: baseTheme,
             cellVMs: [],
             busy: true,
             undoStack: [],
@@ -42,13 +40,19 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             isAtBottom: true,
             font: {
                 size: 14,
-                family: 'Consolas, \'Courier New\', monospace'
+                family: "Consolas, 'Courier New', monospace"
             },
             codeTheme: Identifiers.GeneratedThemeName,
-            settings: defaultSettings,
             activateCount: 0,
             monacoReady: testMode, // When testing, monaco starts out ready
-            loaded: false
+            loaded: false,
+            kernel: {
+                displayName: 'Python',
+                localizedUri: getLocString('DataScience.noKernel', 'No Kernel'),
+                jupyterServerStatus: ServerStatus.NotStarted
+            },
+            settings: testMode ? getDefaultSettings() : undefined, // When testing, we don't send (or wait) for the real settings.
+            editorOptions: testMode ? computeEditorOptions(getDefaultSettings()) : undefined
         };
     }
 }
@@ -58,9 +62,7 @@ function generateMainReducer<M>(skipDefault: boolean, testMode: boolean, baseThe
     const defaultState = generateDefaultState(skipDefault, testMode, baseTheme, editable);
 
     // Then combine that with our map of state change message to reducer
-    return combineReducers<IMainState, M>(
-        defaultState,
-        reducerMap);
+    return combineReducers<IMainState, M>(defaultState, reducerMap);
 }
 
 function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
@@ -70,16 +72,20 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
         const afterState = store.getState();
 
         // If cell vm count changed or selected cell changed, send the message
-        if (prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
+        if (
+            prevState.main.cellVMs.length !== afterState.main.cellVMs.length ||
             prevState.main.selectedCellId !== afterState.main.selectedCellId ||
             prevState.main.undoStack.length !== afterState.main.undoStack.length ||
-            prevState.main.redoStack.length !== afterState.main.redoStack.length) {
-            store.dispatch(createPostableAction(InteractiveWindowMessages.SendInfo, {
-                cellCount: afterState.main.cellVMs.length,
-                undoCount: afterState.main.undoStack.length,
-                redoCount: afterState.main.redoStack.length,
-                selectedCell: afterState.main.selectedCellId
-            }));
+            prevState.main.redoStack.length !== afterState.main.redoStack.length
+        ) {
+            store.dispatch(
+                createPostableAction(InteractiveWindowMessages.SendInfo, {
+                    cellCount: afterState.main.cellVMs.length,
+                    undoCount: afterState.main.undoStack.length,
+                    redoCount: afterState.main.redoStack.length,
+                    selectedCell: afterState.main.selectedCellId
+                })
+            );
         }
         return res;
     };
@@ -100,7 +106,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         // Indicate settings updates
         if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.UpdateSettings)));
+            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.SettingsUpdated)));
         }
 
         // Indicate clean changes
@@ -148,14 +154,14 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
     const logger = createLogger({
         // tslint:disable-next-line: no-any
         stateTransformer: (state: any) => {
-            if (!state || typeof state !== 'object'){
+            if (!state || typeof state !== 'object') {
                 return state;
             }
             // tslint:disable-next-line: no-any
-            const rootState = {...state} as any;
-            if ('main' in rootState && typeof rootState.main === 'object'){
+            const rootState = { ...state } as any;
+            if ('main' in rootState && typeof rootState.main === 'object') {
                 // tslint:disable-next-line: no-any
-                const main = rootState.main = {...rootState.main} as any  as Partial<IMainState>;
+                const main = (rootState.main = ({ ...rootState.main } as any) as Partial<IMainState>);
                 main.rootCss = reduceLogMessage;
                 main.rootStyle = reduceLogMessage;
                 // tslint:disable-next-line: no-any
@@ -169,17 +175,16 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
         },
         // tslint:disable-next-line: no-any
         actionTransformer: (action: any) => {
-            if (!action){
+            if (!action) {
                 return action;
             }
-            if (actionsWithLargePayload.indexOf(action.type) >= 0){
+            if (actionsWithLargePayload.indexOf(action.type) >= 0) {
                 return { ...action, payload: reduceLogMessage };
             }
             return action;
         }
     });
-    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode)
-        ? logger : undefined;
+    const loggerMiddleware = process.env.VSC_PYTHON_FORCE_LOGGING !== undefined || (process.env.NODE_ENV !== 'production' && !testMode) ? logger : undefined;
 
     const results: Redux.Middleware<{}, IStore>[] = [];
     results.push(queueableActions);
@@ -225,9 +230,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     const middleware = createMiddleWare(testMode);
 
     // Use this reducer and middle ware to create a store
-    const store = Redux.createStore(
-        rootReducer,
-        Redux.applyMiddleware(...middleware));
+    const store = Redux.createStore(rootReducer, Redux.applyMiddleware(...middleware));
 
     // Make all messages from the post office dispatch to the store, changing the type to
     // turn them into actions.

@@ -4,7 +4,7 @@ import * as md5 from 'md5';
 import { EOL } from 'os';
 import * as path from 'path';
 import { Position, Range, TextDocument, TextEdit, Uri, WorkspaceEdit } from 'vscode';
-import { IFileSystem } from './platform/types';
+import { IFileSystem } from '../common/platform/types';
 import { IEditorUtils } from './types';
 
 // Code borrowed from goFormat.ts (Go Extension for VS Code)
@@ -80,22 +80,18 @@ export function getTextEditsFromPatch(before: string, patch: string): TextEdit[]
 
     return textEdits;
 }
-export function getWorkspaceEditsFromPatch(
-    filePatches: string[],
-    fs: IFileSystem,
-    workspaceRoot?: string
-): WorkspaceEdit {
+export function getWorkspaceEditsFromPatch(filePatches: string[], workspaceRoot: string | undefined, fs: IFileSystem): WorkspaceEdit {
     const workspaceEdit = new WorkspaceEdit();
     filePatches.forEach(patch => {
         const indexOfAtAt = patch.indexOf('@@');
         if (indexOfAtAt === -1) {
             return;
         }
-        const fileNameLines = patch.substring(0, indexOfAtAt).split(/\r?\n/g)
+        const fileNameLines = patch
+            .substring(0, indexOfAtAt)
+            .split(/\r?\n/g)
             .map(line => line.trim())
-            .filter(line => line.length > 0 &&
-                line.toLowerCase().endsWith('.py') &&
-                line.indexOf(' a') > 0);
+            .filter(line => line.length > 0 && line.toLowerCase().endsWith('.py') && line.indexOf(' a') > 0);
 
         if (patch.startsWith('---')) {
             // Strip the first two lines
@@ -168,7 +164,7 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     let character = 0;
     if (line > 0) {
         const beforeLines = before.split(/\r?\n/g);
-        beforeLines.filter((_l, i) => i < line).forEach(l => character += l.length + NEW_LINE_LENGTH);
+        beforeLines.filter((_l, i) => i < line).forEach(l => (character += l.length + NEW_LINE_LENGTH));
     }
     const edits: Edit[] = [];
     let edit: Edit | null = null;
@@ -230,25 +226,22 @@ function getTextEditsInternal(before: string, diffs: [number, string][], startLi
     return edits;
 }
 
-export async function getTempFileWithDocumentContents(
-    document: TextDocument,
-    fs: IFileSystem
-): Promise<string> {
+export async function getTempFileWithDocumentContents(document: TextDocument, fs: IFileSystem): Promise<string> {
+    const ext = path.extname(document.uri.fsPath);
     // Don't create file in temp folder since external utilities
-    // look into configuration files in the workspace and are not able
+    // look into configuration files in the workspace and are not
     // to find custom rules if file is saved in a random disk location.
     // This means temp file has to be created in the same folder
     // as the original one and then removed.
 
-    const ext = path.extname(document.uri.fsPath);
-    const filename = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
-    await (
-        fs.writeFile(filename, document.getText())
-            .catch(err => {
-                throw Error(`Failed to create a temporary file, ${err.message}`);
-            })
-    );
-    return filename;
+    // tslint:disable-next-line:no-require-imports
+    const fileName = `${document.uri.fsPath}.${md5(document.uri.fsPath)}${ext}`;
+    try {
+        await fs.writeFile(fileName, document.getText());
+    } catch (ex) {
+        throw Error(`Failed to create a temporary file, ${ex.message}`);
+    }
+    return fileName;
 }
 
 /**

@@ -3,12 +3,7 @@
 'use strict';
 import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
 
-import {
-    DefaultWordPattern,
-    ensureValidWordDefinition,
-    getWordAtText,
-    regExpLeadsToEndlessLoop
-} from '../../client/datascience/interactive-common/intellisense/wordHelper';
+import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from '../../client/datascience/interactive-common/intellisense/wordHelper';
 
 class MockLine implements TextLine {
     private _range: Range;
@@ -136,19 +131,13 @@ export class MockDocument implements TextDocument {
         if (!regexp) {
             // use default when custom-regexp isn't provided
             regexp = DefaultWordPattern;
-
         } else if (regExpLeadsToEndlessLoop(regexp)) {
             // use default when custom-regexp is bad
             console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
             regexp = DefaultWordPattern;
         }
 
-        const wordAtText = getWordAtText(
-            position.character + 1,
-            ensureValidWordDefinition(regexp),
-            this._lines[position.line].text,
-            0
-        );
+        const wordAtText = getWordAtText(position.character + 1, ensureValidWordDefinition(regexp), this._lines[position.line].text, 0);
 
         if (wordAtText) {
             return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);

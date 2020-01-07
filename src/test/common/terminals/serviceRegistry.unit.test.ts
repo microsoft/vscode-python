@@ -35,9 +35,6 @@ suite('Common Terminal Service Registry', () => {
 
         verify(serviceManager.addSingleton<ITerminalAutoActivation>(ITerminalAutoActivation, TerminalAutoActivation)).once();
 
-        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(
-            IExtensionSingleActivationService,
-            ExtensionActivationForTerminalActivation
-        )).once();
+        verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionActivationForTerminalActivation)).once();
     });
 });

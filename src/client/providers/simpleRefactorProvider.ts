@@ -19,32 +19,42 @@ export function activateSimplePythonRefactorProvider(context: vscode.ExtensionCo
     installer = serviceContainer.get<IInstaller>(IInstaller);
     let disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Variable, () => {
         const stopWatch = new StopWatch();
-        const promise = extractVariable(context.extensionPath,
+        const promise = extractVariable(
+            context.extensionPath,
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
+            outputChannel,
+            serviceContainer
             // tslint:disable-next-line:no-empty
-            outputChannel, serviceContainer).catch(() => { });
+        ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_VAR, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
 
     disposable = vscode.commands.registerCommand(Commands.Refactor_Extract_Method, () => {
         const stopWatch = new StopWatch();
-        const promise = extractMethod(context.extensionPath,
+        const promise = extractMethod(
+            context.extensionPath,
             vscode.window.activeTextEditor!,
             vscode.window.activeTextEditor!.selection,
+            outputChannel,
+            serviceContainer
             // tslint:disable-next-line:no-empty
-            outputChannel, serviceContainer).catch(() => { });
+        ).catch(() => {});
         sendTelemetryWhenDone(EventName.REFACTOR_EXTRACT_FUNCTION, promise, stopWatch);
     });
     context.subscriptions.push(disposable);
 }
 
 // Exported for unit testing
-export function extractVariable(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range,
+export function extractVariable(
+    extensionDir: string,
+    textEditor: vscode.TextEditor,
+    range: vscode.Range,
+    outputChannel: vscode.OutputChannel,
+    serviceContainer: IServiceContainer
     // tslint:disable-next-line:no-any
-    outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): Promise<any> {
-
+): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
         workspaceFolder = vscode.workspace.workspaceFolders[0];
@@ -64,10 +74,14 @@ export function extractVariable(extensionDir: string, textEditor: vscode.TextEdi
 }
 
 // Exported for unit testing
-export function extractMethod(extensionDir: string, textEditor: vscode.TextEditor, range: vscode.Range,
+export function extractMethod(
+    extensionDir: string,
+    textEditor: vscode.TextEditor,
+    range: vscode.Range,
+    outputChannel: vscode.OutputChannel,
+    serviceContainer: IServiceContainer
     // tslint:disable-next-line:no-any
-    outputChannel: vscode.OutputChannel, serviceContainer: IServiceContainer): Promise<any> {
-
+): Promise<any> {
     let workspaceFolder = vscode.workspace.getWorkspaceFolder(textEditor.document.uri);
     if (!workspaceFolder && Array.isArray(vscode.workspace.workspaceFolders) && vscode.workspace.workspaceFolders.length > 0) {
         workspaceFolder = vscode.workspace.workspaceFolders[0];
@@ -104,66 +118,74 @@ function validateDocumentForRefactor(textEditor: vscode.TextEditor): Promise<any
     });
 }
 
-function extractName(textEditor: vscode.TextEditor, newName: string,
+function extractName(
+    textEditor: vscode.TextEditor,
+    newName: string,
+    renameResponse: Promise<string>,
+    outputChannel: vscode.OutputChannel
     // tslint:disable-next-line:no-any
-    renameResponse: Promise<string>, outputChannel: vscode.OutputChannel): Promise<any> {
+): Promise<any> {
     let changeStartsAtLine = -1;
-    return renameResponse.then(diff => {
-        if (diff.length === 0) {
-            return [];
-        }
-        return getTextEditsFromPatch(textEditor.document.getText(), diff);
-    }).then(edits => {
-        return textEditor.edit(editBuilder => {
-            edits.forEach(edit => {
-                if (changeStartsAtLine === -1 || changeStartsAtLine > edit.range.start.line) {
-                    changeStartsAtLine = edit.range.start.line;
-                }
-                editBuilder.replace(edit.range, edit.newText);
-            });
-        });
-    }).then(done => {
-        if (done && changeStartsAtLine >= 0) {
-            let newWordPosition: vscode.Position | undefined;
-            for (let lineNumber = changeStartsAtLine; lineNumber < textEditor.document.lineCount; lineNumber += 1) {
-                const line = textEditor.document.lineAt(lineNumber);
-                const indexOfWord = line.text.indexOf(newName);
-                if (indexOfWord >= 0) {
-                    newWordPosition = new vscode.Position(line.range.start.line, indexOfWord);
-                    break;
-                }
+    return renameResponse
+        .then(diff => {
+            if (diff.length === 0) {
+                return [];
             }
+            return getTextEditsFromPatch(textEditor.document.getText(), diff);
+        })
+        .then(edits => {
+            return textEditor.edit(editBuilder => {
+                edits.forEach(edit => {
+                    if (changeStartsAtLine === -1 || changeStartsAtLine > edit.range.start.line) {
+                        changeStartsAtLine = edit.range.start.line;
+                    }
+                    editBuilder.replace(edit.range, edit.newText);
+                });
+            });
+        })
+        .then(done => {
+            if (done && changeStartsAtLine >= 0) {
+                let newWordPosition: vscode.Position | undefined;
+                for (let lineNumber = changeStartsAtLine; lineNumber < textEditor.document.lineCount; lineNumber += 1) {
+                    const line = textEditor.document.lineAt(lineNumber);
+                    const indexOfWord = line.text.indexOf(newName);
+                    if (indexOfWord >= 0) {
+                        newWordPosition = new vscode.Position(line.range.start.line, indexOfWord);
+                        break;
+                    }
+                }
 
-            if (newWordPosition) {
-                textEditor.selections = [new vscode.Selection(newWordPosition, new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length))];
-                textEditor.revealRange(new vscode.Range(textEditor.selection.start, textEditor.selection.end), vscode.TextEditorRevealType.Default);
+                if (newWordPosition) {
+                    textEditor.selections = [new vscode.Selection(newWordPosition, new vscode.Position(newWordPosition.line, newWordPosition.character + newName.length))];
+                    textEditor.revealRange(new vscode.Range(textEditor.selection.start, textEditor.selection.end), vscode.TextEditorRevealType.Default);
+                }
+                return newWordPosition;
             }
-            return newWordPosition;
-        }
-        return null;
-    }).then(newWordPosition => {
-        if (newWordPosition) {
-            return textEditor.document.save().then(() => {
-                // Now that we have selected the new variable, lets invoke the rename command
-                return vscode.commands.executeCommand('editor.action.rename');
-            });
-        }
-    }).catch(error => {
-        if (error === 'Not installed') {
-            installer.promptToInstall(Product.rope, textEditor.document.uri)
-                .catch(ex => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
-            return Promise.reject('');
-        }
-        let errorMessage = `${error}`;
-        if (typeof error === 'string') {
-            errorMessage = error;
-        }
-        if (typeof error === 'object' && error.message) {
-            errorMessage = error.message;
-        }
-        outputChannel.appendLine(`${'#'.repeat(10)}Refactor Output${'#'.repeat(10)}`);
-        outputChannel.appendLine(`Error in refactoring:\n${errorMessage}`);
-        vscode.window.showErrorMessage(`Cannot perform refactoring using selected element(s). (${errorMessage})`);
-        return Promise.reject(error);
-    });
+            return null;
+        })
+        .then(newWordPosition => {
+            if (newWordPosition) {
+                return textEditor.document.save().then(() => {
+                    // Now that we have selected the new variable, lets invoke the rename command
+                    return vscode.commands.executeCommand('editor.action.rename');
+                });
+            }
+        })
+        .catch(error => {
+            if (error === 'Not installed') {
+                installer.promptToInstall(Product.rope, textEditor.document.uri).catch(ex => traceError('Python Extension: simpleRefactorProvider.promptToInstall', ex));
+                return Promise.reject('');
+            }
+            let errorMessage = `${error}`;
+            if (typeof error === 'string') {
+                errorMessage = error;
+            }
+            if (typeof error === 'object' && error.message) {
+                errorMessage = error.message;
+            }
+            outputChannel.appendLine(`${'#'.repeat(10)}Refactor Output${'#'.repeat(10)}`);
+            outputChannel.appendLine(`Error in refactoring:\n${errorMessage}`);
+            vscode.window.showErrorMessage(`Cannot perform refactoring using selected element(s). (${errorMessage})`);
+            return Promise.reject(error);
+        });
 }

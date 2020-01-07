@@ -6,23 +6,17 @@ import '../../../common/extensions';
 import { CancellationToken } from 'vscode';
 import * as vsls from 'vsls/vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IConnection,
-    IJupyterExecution,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IConnection, IJupyterExecution, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterExecutionBase } from '../jupyterExecution';
+import { KernelSelector } from '../kernels/kernelSelector';
+import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantHost } from './liveShareParticipantMixin';
 import { IRoleBasedObject } from './roleBasedFactory';
 import { ServerCache } from './serverCache';
@@ -30,39 +24,38 @@ import { ServerCache } from './serverCache';
 // tslint:disable:no-any
 
 // This class is really just a wrapper around a jupyter execution that also provides a shared live share service
-export class HostJupyterExecution
-    extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService)
-    implements IRoleBasedObject, IJupyterExecution {
+export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecutionBase, LiveShare.JupyterExecutionService) implements IRoleBasedObject, IJupyterExecution {
     private serverCache: ServerCache;
     constructor(
         liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSys: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configService: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
-        serviceContainer: IServiceContainer) {
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
+        appShell: IApplicationShell,
+        jupyterOutputChannel: IOutputChannel,
+        serviceContainer: IServiceContainer
+    ) {
         super(
             liveShare,
-            executionFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
-            asyncRegistry,
-            fileSys,
-            sessionManager,
             workspace,
             configService,
-            activationHelper,
-            serviceContainer);
+            kernelSelector,
+            notebookStarter,
+            appShell,
+            jupyterOutputChannel,
+            serviceContainer
+        );
         this.serverCache = new ServerCache(configService, workspace, fileSys);
+        asyncRegistry.push(this);
     }
 
     public async dispose(): Promise<void> {
@@ -76,21 +69,12 @@ export class HostJupyterExecution
         }
     }
 
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
-        // See if we have this server in our cache already or not
-        let result = await this.serverCache.get(options);
-        if (result) {
-            return result;
-        } else {
-            // Create the server
-            result = await super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
+    public async hostConnectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+        return super.connectToNotebookServer(await this.serverCache.generateDefaultOptions(options), cancelToken);
+    }
 
-            // Save in our cache
-            if (result) {
-                await this.serverCache.set(result, noop, options);
-            }
-            return result;
-        }
+    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
+        return this.serverCache.getOrCreate(this.hostConnectToNotebookServer.bind(this), options, cancelToken);
     }
 
     public async onAttach(api: vsls.LiveShare | null): Promise<void> {
@@ -103,8 +87,6 @@ export class HostJupyterExecution
             if (service) {
                 service.onRequest(LiveShareCommands.isNotebookSupported, this.onRemoteIsNotebookSupported);
                 service.onRequest(LiveShareCommands.isImportSupported, this.onRemoteIsImportSupported);
-                service.onRequest(LiveShareCommands.isKernelCreateSupported, this.onRemoteIsKernelCreateSupported);
-                service.onRequest(LiveShareCommands.isKernelSpecSupported, this.onRemoteIsKernelSpecSupported);
                 service.onRequest(LiveShareCommands.connectToNotebookServer, this.onRemoteConnectToNotebookServer);
                 service.onRequest(LiveShareCommands.getUsableJupyterPython, this.onRemoteGetUsableJupyterPython);
             }
@@ -115,8 +97,7 @@ export class HostJupyterExecution
         await super.onDetach(api);
 
         // clear our cached servers if our role is no longer host or none
-        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ?
-            vsls.Role.Host : vsls.Role.Guest;
+        const newRole = api === null || (api.session && api.session.role !== vsls.Role.Guest) ? vsls.Role.Host : vsls.Role.Guest;
         if (newRole !== vsls.Role.Host) {
             await this.serverCache.dispose();
         }
@@ -130,21 +111,12 @@ export class HostJupyterExecution
     private onRemoteIsNotebookSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isNotebookSupported(cancellation);
-    }
+    };
 
     private onRemoteIsImportSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.isImportSupported(cancellation);
-    }
-
-    private onRemoteIsKernelCreateSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.isKernelCreateSupported(cancellation);
-    }
-    private onRemoteIsKernelSpecSupported = (_args: any[], cancellation: CancellationToken): Promise<any> => {
-        // Just call local
-        return this.isKernelSpecSupported(cancellation);
-    }
+    };
 
     private onRemoteConnectToNotebookServer = async (args: any[], cancellation: CancellationToken): Promise<IConnection | undefined> => {
         // Connect to the local server. THe local server should have started the port forwarding already
@@ -162,15 +134,17 @@ export class HostJupyterExecution
                     hostName: connectionInfo.hostName,
                     localLaunch: false,
                     localProcExitCode: undefined,
-                    disconnected: (_l) => { return { dispose: noop }; },
+                    disconnected: _l => {
+                        return { dispose: noop };
+                    },
                     dispose: noop
                 };
             }
         }
-    }
+    };
 
     private onRemoteGetUsableJupyterPython = (_args: any[], cancellation: CancellationToken): Promise<any> => {
         // Just call local
         return this.getUsableJupyterPython(cancellation);
-    }
+    };
 }

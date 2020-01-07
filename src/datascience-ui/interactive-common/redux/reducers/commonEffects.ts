@@ -6,10 +6,10 @@ import { IGetCssResponse } from '../../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { IMainState } from '../../../interactive-common/mainState';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
+import { storeLocStrings } from '../../../react-common/locReactSide';
 import { CommonReducerArg } from './types';
 
 export namespace CommonEffects {
-
     export function notebookDirty<T>(arg: CommonReducerArg<T>): IMainState {
         return {
             ...arg.prevState,
@@ -45,6 +45,13 @@ export namespace CommonEffects {
         };
     }
 
+    export function handleLocInit<T>(arg: CommonReducerArg<T, string>): IMainState {
+        // Read in the loc strings
+        const locJSON = JSON.parse(arg.payload);
+        storeLocStrings(locJSON);
+        return arg.prevState;
+    }
+
     export function handleCss<T>(arg: CommonReducerArg<T, IGetCssResponse>): IMainState {
         // Recompute our known dark value from the class name in the body
         // VS code should update this dynamically when the theme changes
@@ -52,11 +59,11 @@ export namespace CommonEffects {
 
         // We also get this in our response, but computing is more reliable
         // than searching for it.
-        const newBaseTheme = (arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode) ?
-            computedKnownDark ? 'vscode-dark' : 'vscode-light' : arg.prevState.baseTheme;
+        const newBaseTheme =
+            arg.prevState.knownDark !== computedKnownDark && !arg.prevState.testMode ? (computedKnownDark ? 'vscode-dark' : 'vscode-light') : arg.prevState.baseTheme;
 
         let fontSize: number = 14;
-        let fontFamily: string = 'Consolas, \'Courier New\', monospace';
+        let fontFamily: string = "Consolas, 'Courier New', monospace";
         const sizeSetting = '--code-font-size: ';
         const familySetting = '--code-font-family: ';
         const fontSizeIndex = arg.payload.css.indexOf(sizeSetting);

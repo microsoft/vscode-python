@@ -5,7 +5,12 @@
 
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
-import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel, StableLanguageServerPackageRepository } from '../../../client/activation/languageServer/languageServerPackageRepository';
+import {
+    BetaLanguageServerPackageRepository,
+    DailyLanguageServerPackageRepository,
+    LanguageServerDownloadChannel,
+    StableLanguageServerPackageRepository
+} from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 suite('Language Server Download Channels', () => {
@@ -33,11 +38,17 @@ suite('Language Server Download Channels', () => {
                 throw new Error('Unknown download channel');
             }
         }
-        const instance = new class extends classToCreate {
-            constructor() { super(serviceContainer.object); }
-            public get storageAccount() { return this.azureCDNBlobStorageAccount; }
-            public get storageContainer() { return this.azureBlobStorageContainer; }
-        }();
+        const instance = new (class extends classToCreate {
+            constructor() {
+                super(serviceContainer.object);
+            }
+            public get storageAccount() {
+                return this.azureCDNBlobStorageAccount;
+            }
+            public get storageContainer() {
+                return this.azureBlobStorageContainer;
+            }
+        })();
 
         return [instance.storageAccount, instance.storageContainer];
     }

@@ -440,3 +440,59 @@ body, html {
     display: flex;
     width: 100%;
 }
+
+.kernel-status {
+    position: absolute;
+    right: 3px;
+    margin-top: 2px;
+    color: var(--vscode-editor-foreground);
+    display: grid;
+    grid-template-columns: 1fr auto auto;
+    grid-template-rows: 1fr;
+    max-width: 60%;
+}
+
+.kernel-status-section {
+    float: left;
+    padding: 2px 5px 2px 5px;
+}
+
+.kernel-status-section-hoverable:hover {
+    background-color: var(--override-badge-background, var(--vscode-badge-background));
+    cursor:pointer;
+}
+
+.kernel-status-divider {
+    border-left: 1px solid var(--vscode-badge-background);
+    height: 17px;
+    margin: 0 5px 0 5px;
+    float: left;
+    grid-column-start: 2;
+    grid-column-end: 2;
+}
+
+.kernel-status-text {
+    float: left;
+    padding-right: 5px;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+}
+
+.kernel-status-server {
+    grid-column-start: 1;
+    grid-column-end: 1;
+    display: grid;
+    grid-template-columns: 1fr auto;
+}
+
+.kernel-status-status {
+    grid-column-start: 3;
+    grid-column-end: 3;
+}
+
+.kernel-status-icon {
+    float: right;
+    width: 16px;
+    height: 0px;
+}

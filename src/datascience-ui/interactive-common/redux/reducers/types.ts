@@ -3,10 +3,7 @@
 'use strict';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
-import {
-    IShowDataViewer,
-    NativeCommandType
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IShowDataViewer, NativeCommandType } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ActionWithPayload, ReducerArg } from '../../../react-common/reduxUtils';
 import { CursorPos, IMainState } from '../../mainState';
 
@@ -60,6 +57,8 @@ export enum CommonActionType {
     SAVE = 'action.save',
     SCROLL = 'action.scroll',
     SELECT_CELL = 'action.select_cell',
+    SELECT_KERNEL = 'action.select_kernel',
+    SELECT_SERVER = 'action.select_server',
     SEND_COMMAND = 'action.send_command',
     SHOW_DATA_VIEWER = 'action.show_data_viewer',
     SHOW_PLOT = 'action.show_plot',
@@ -74,8 +73,7 @@ export enum CommonActionType {
     UNMOUNT = 'action.unmount'
 }
 
-export interface IShowDataViewerAction extends IShowDataViewer {
-}
+export interface IShowDataViewerAction extends IShowDataViewer {}
 
 export interface ILinkClickAction {
     href: string;
@@ -119,8 +117,7 @@ export interface IRefreshVariablesAction {
     newExecutionCount?: number;
 }
 
-export interface IShowDataViewerAction extends IShowDataViewer {
-}
+export interface IShowDataViewerAction extends IShowDataViewer {}
 
 export interface ISendCommandAction {
     commandType: 'mouse' | 'keyboard';

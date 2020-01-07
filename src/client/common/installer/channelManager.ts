@@ -8,13 +8,14 @@ import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { Product } from '../types';
+import { Installer } from '../utils/localize';
 import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
 import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
 export class InstallationChannelManager implements IInstallationChannelManager {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
     public async getInstallationChannel(product: Product, resource?: InterpreterUri): Promise<IModuleInstaller | undefined> {
         const channels = await this.getInstallationChannels(resource);
@@ -76,16 +77,14 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const search = 'Search for help';
         let result: string | undefined;
         if (interpreter.type === InterpreterType.Conda) {
-            result = await appShell.showErrorMessage('There is no Conda or Pip installer available in the selected environment.', search);
+            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
         } else {
-            result = await appShell.showErrorMessage('There is no Pip installer available in the selected environment.', search);
+            result = await appShell.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp());
         }
         if (result === search) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-            const osName = platform.isWindows
-                ? 'Windows'
-                : (platform.isMac ? 'MacOS' : 'Linux');
-            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${(interpreter.type === InterpreterType.Conda) ? 'Conda' : ''}`);
+            const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
+            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${interpreter.type === InterpreterType.Conda ? 'Conda' : ''}`);
         }
     }
 }

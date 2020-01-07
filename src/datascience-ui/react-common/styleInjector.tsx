@@ -26,7 +26,6 @@ interface IStyleInjectorState {
 }
 
 export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleInjectorState> implements IMessageHandler {
-
     constructor(props: IStyleInjectorProps) {
         super(props);
         this.state = { rootCss: undefined, theme: undefined };
@@ -45,7 +44,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     public componentDidMount() {
         if (!this.state.rootCss) {
             // Set to a temporary value.
-            this.setState({rootCss: ' '});
+            this.setState({ rootCss: ' ' });
             this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
             this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
         }
@@ -53,17 +52,15 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
 
     public render() {
         return (
-            <div className='styleSetter'>
-                <style>
-                    {this.state.rootCss}
-                </style>
+            <div className="styleSetter">
+                <style>{this.state.rootCss}</style>
                 {this.props.children}
             </div>
         );
     }
 
     // tslint:disable-next-line:no-any
-    public handleMessage = (msg: string, payload?: any) : boolean => {
+    public handleMessage = (msg: string, payload?: any): boolean => {
         switch (msg) {
             case CssMessages.GetCssResponse:
                 this.handleCssResponse(payload);
@@ -82,13 +79,12 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         }
 
         return true;
-    }
+    };
 
     // tslint:disable-next-line:no-any
     private handleCssResponse(payload?: any) {
         const response = payload as IGetCssResponse;
         if (response && response.css) {
-
             // Recompute our known dark value from the class name in the body
             // VS code should update this dynamically when the theme changes
             const computedKnownDark = this.computeKnownDark();
@@ -96,16 +92,18 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             // We also get this in our response, but computing is more reliable
             // than searching for it.
 
-            if (this.state.knownDark !== computedKnownDark &&
-                this.props.darkChanged) {
+            if (this.state.knownDark !== computedKnownDark && this.props.darkChanged) {
                 this.props.darkChanged(computedKnownDark);
             }
 
-            this.setState({
-                rootCss: response.css,
-                theme: response.theme,
-                knownDark: computedKnownDark
-            }, this.props.onReady);
+            this.setState(
+                {
+                    rootCss: response.css,
+                    theme: response.theme,
+                    knownDark: computedKnownDark
+                },
+                this.props.onReady
+            );
         }
     }
 
@@ -113,7 +111,6 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
     private handleMonacoThemeResponse(payload?: any) {
         const response = payload as IGetMonacoThemeResponse;
         if (response && response.theme) {
-
             // Tell monaco we have a new theme. THis is like a state update for monaco
             monacoEditor.editor.defineTheme(Identifiers.GeneratedThemeName, response.theme);
         }
@@ -132,7 +129,7 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         }
     }
 
-    private computeKnownDark() : boolean {
+    private computeKnownDark(): boolean {
         const ignore = this.props.settings.ignoreVscodeTheme ? true : false;
         const baseTheme = ignore ? 'vscode-light' : detectBaseTheme();
         return baseTheme !== 'vscode-light';

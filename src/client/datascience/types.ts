@@ -2,28 +2,19 @@
 // Licensed under the MIT License.
 'use strict';
 import { nbformat } from '@jupyterlab/coreutils';
+import { Session } from '@jupyterlab/services';
 import { Kernel, KernelMessage } from '@jupyterlab/services/lib/kernel';
 import { JSONObject } from '@phosphor/coreutils';
 import { Observable } from 'rxjs/Observable';
-import {
-    CancellationToken,
-    CodeLens,
-    CodeLensProvider,
-    DebugSession,
-    Disposable,
-    Event,
-    Range,
-    TextDocument,
-    TextEditor,
-    Uri
-} from 'vscode';
-
+import { CancellationToken, CodeLens, CodeLensProvider, DebugSession, Disposable, Event, Range, TextDocument, TextEditor, Uri } from 'vscode';
+import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { ICommandManager } from '../common/application/types';
 import { ExecutionResult, ObservableExecutionResult, SpawnOptions } from '../common/process/types';
 import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
+import { LiveKernelModel } from './jupyter/kernels/types';
 
 // Main interface
 export const IDataScience = Symbol('IDataScience');
@@ -57,9 +48,15 @@ export enum InterruptResult {
 // Information used to launch a notebook server
 export interface INotebookServerLaunchInfo {
     connectionInfo: IConnection;
-    currentInterpreter: PythonInterpreter | undefined;
+    /**
+     * The python interpreter associated with the kernel.
+     *
+     * @type {(PythonInterpreter | undefined)}
+     * @memberof INotebookServerLaunchInfo
+     */
+    interpreter: PythonInterpreter | undefined;
     uri: string | undefined; // Different from the connectionInfo as this is the setting used, not the result
-    kernelSpec: IJupyterKernelSpec | undefined;
+    kernelSpec: IJupyterKernelSpec | undefined | LiveKernelModel;
     workingDir: string | undefined;
     purpose: string | undefined; // Purpose this server is for
     enableDebugging: boolean | undefined; // If we should enable debugging for this server
@@ -89,6 +86,8 @@ export interface INotebookServer extends IAsyncDisposable {
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Uri;
     readonly server: INotebookServer;
+    onSessionStatusChanged: Event<ServerStatus>;
+    onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]>;
@@ -100,8 +99,10 @@ export interface INotebook extends IAsyncDisposable {
     getSysInfo(): Promise<ICell | undefined>;
     setMatplotLibStyle(useDark: boolean): Promise<void>;
     addLogger(logger: INotebookExecutionLogger): void;
-    getMatchingInterpreter(): Promise<PythonInterpreter | undefined>;
-    getKernelSpec(): Promise<IJupyterKernelSpec | undefined>;
+    getMatchingInterpreter(): PythonInterpreter | undefined;
+    getKernelSpec(): IJupyterKernelSpec | LiveKernelModel | undefined;
+    setKernelSpec(spec: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
+    setInterpreter(interpeter: PythonInterpreter): void;
 }
 
 export interface INotebookServerOptions {
@@ -133,8 +134,6 @@ export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean>;
-    isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;
     connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined>;
     spawnNotebook(file: string): Promise<void>;
@@ -166,13 +165,18 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
-    onRestarted: Event<void>;
+    onSessionStatusChanged: Event<ServerStatus>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;
     waitForIdle(timeout: number): Promise<void>;
-    requestExecute(content: KernelMessage.IExecuteRequestMsg['content'], disposeOnDone?: boolean, metadata?: JSONObject): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
+    requestExecute(
+        content: KernelMessage.IExecuteRequestMsg['content'],
+        disposeOnDone?: boolean,
+        metadata?: JSONObject
+    ): Kernel.IShellFuture<KernelMessage.IExecuteRequestMsg, KernelMessage.IExecuteReplyMsg> | undefined;
     requestComplete(content: KernelMessage.ICompleteRequestMsg['content']): Promise<KernelMessage.ICompleteReplyMsg | undefined>;
     sendInputReply(content: string): void;
+    changeKernel(kernel: IJupyterKernelSpec | LiveKernelModel, timeoutMS: number): Promise<void>;
 }
 
 export const IJupyterSessionManagerFactory = Symbol('IJupyterSessionManagerFactory');
@@ -181,19 +185,34 @@ export interface IJupyterSessionManagerFactory {
 }
 
 export interface IJupyterSessionManager extends IAsyncDisposable {
-    startNew(kernelSpec: IJupyterKernelSpec | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
+    startNew(kernelSpec: IJupyterKernelSpec | LiveKernelModel | undefined, cancelToken?: CancellationToken): Promise<IJupyterSession>;
     getKernelSpecs(): Promise<IJupyterKernelSpec[]>;
     getConnInfo(): IConnection;
     getRunningKernels(): Promise<IJupyterKernel[]>;
+    getRunningSessions(): Promise<Session.IModel[]>;
 }
 
 export interface IJupyterKernel {
-    name: string | undefined;
+    /**
+     * Id of an existing (active) Kernel from an active session.
+     *
+     * @type {string}
+     * @memberof IJupyterKernel
+     */
+    id?: string;
+    name: string;
     lastActivityTime: Date;
     numberOfConnections: number;
 }
 
-export interface IJupyterKernelSpec extends IAsyncDisposable {
+export interface IJupyterKernelSpec {
+    /**
+     * Id of an existing (active) Kernel from an active session.
+     *
+     * @type {string}
+     * @memberof IJupyterKernel
+     */
+    id?: string;
     name: string;
     language: string;
     path: string;
@@ -210,6 +229,7 @@ export interface IJupyterKernelSpec extends IAsyncDisposable {
      */
     // tslint:disable-next-line: no-any
     readonly metadata?: Record<string, any> & { interpreter?: Partial<PythonInterpreter> };
+    readonly argv: string[];
 }
 
 export const INotebookImporter = Symbol('INotebookImporter');
@@ -239,6 +259,7 @@ export interface IDataScienceErrorHandler {
 
 export interface IInteractiveBase extends Disposable {
     onExecutedCode: Event<string>;
+    notebook?: INotebook;
     show(): Promise<void>;
     startProgress(): void;
     stopProgress(): void;
@@ -252,7 +273,6 @@ export interface IInteractiveBase extends Disposable {
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends IInteractiveBase {
     closed: Event<IInteractiveWindow>;
-    ready: Promise<void>;
     addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
     debugCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
@@ -277,11 +297,11 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
-    closed: Event<INotebookEditor>;
-    executed: Event<INotebookEditor>;
-    modified: Event<INotebookEditor>;
-    saved: Event<INotebookEditor>;
-    metadataUpdated: Event<INotebookEditor>;
+    readonly closed: Event<INotebookEditor>;
+    readonly executed: Event<INotebookEditor>;
+    readonly modified: Event<INotebookEditor>;
+    readonly saved: Event<INotebookEditor>;
+    readonly metadataUpdated: Event<INotebookEditor>;
     /**
      * Is this notebook representing an untitled file which has never been saved yet.
      */
@@ -543,7 +563,7 @@ export interface ICellHash {
     runtimeLine: number; // Line in the jupyter source to start at
     hash: string;
     executionCount: number;
-    id: string;         // Cell id as sent to jupyter
+    id: string; // Cell id as sent to jupyter
 }
 
 export interface IFileHashes {
@@ -572,5 +592,4 @@ export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker {
     updated: Event<void>;
     getLocation(debugSession: DebugSession): IDebugLocation | undefined;
-
 }

@@ -13,9 +13,7 @@ import { TEST_OUTPUT_CHANNEL } from '../../client/testing/common/constants';
 import { TestConfigurationManagerFactory } from '../../client/testing/configurationFactory';
 import * as nose from '../../client/testing/nosetest/testConfigurationManager';
 import * as pytest from '../../client/testing/pytest/testConfigurationManager';
-import {
-    ITestConfigSettingsService, ITestConfigurationManagerFactory
-} from '../../client/testing/types';
+import { ITestConfigSettingsService, ITestConfigurationManagerFactory } from '../../client/testing/types';
 import * as unittest from '../../client/testing/unittest/testConfigurationManager';
 
 use(chaiAsPromised);

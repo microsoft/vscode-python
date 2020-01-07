@@ -19,6 +19,8 @@ export const reducerMap: IInteractiveActionMapping = {
     [CommonActionType.REFRESH_VARIABLES]: Variables.refreshVariables,
     [CommonActionType.RESTART_KERNEL]: Kernel.restartKernel,
     [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
+    [CommonActionType.SELECT_KERNEL]: Kernel.selectKernel,
+    [CommonActionType.SELECT_SERVER]: Kernel.selectJupyterURI,
     [CommonActionType.EXPORT]: Transfer.exportCells,
     [CommonActionType.SAVE]: Transfer.save,
     [CommonActionType.SHOW_DATA_VIEWER]: Transfer.showDataViewer,
@@ -62,5 +64,7 @@ export const reducerMap: IInteractiveActionMapping = {
     [IncomingMessageActions.UPDATESETTINGS]: Effects.updateSettings,
     [IncomingMessageActions.STARTDEBUGGING]: Execution.startDebugging,
     [IncomingMessageActions.STOPDEBUGGING]: Execution.stopDebugging,
-    [IncomingMessageActions.SCROLLTOCELL]: Effects.scrollToCell
+    [IncomingMessageActions.SCROLLTOCELL]: Effects.scrollToCell,
+    [IncomingMessageActions.UPDATEKERNEL]: Kernel.updateStatus,
+    [IncomingMessageActions.LOCINIT]: CommonEffects.handleLocInit
 };

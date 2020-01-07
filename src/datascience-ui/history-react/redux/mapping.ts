@@ -1,14 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    IRefreshVariablesRequest,
-    IScrollToCell
-} from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IRefreshVariablesRequest, IScrollToCell } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
-import { IMainState } from '../../interactive-common/mainState';
+import { IMainState, IServerState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
     CommonActionType,
@@ -30,6 +27,8 @@ export class IInteractiveActionMapping {
     public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.REFRESH_VARIABLES]: InteractiveReducerFunc<IRefreshVariablesRequest>;
     public [CommonActionType.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_KERNEL]: InteractiveReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_SERVER]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.INTERRUPT_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.EXPORT]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SAVE]: InteractiveReducerFunc<never | undefined>;
@@ -75,4 +74,6 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.STARTDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.STOPDEBUGGING]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.SCROLLTOCELL]: InteractiveReducerFunc<IScrollToCell>;
+    public [IncomingMessageActions.UPDATEKERNEL]: InteractiveReducerFunc<IServerState>;
+    public [IncomingMessageActions.LOCINIT]: InteractiveReducerFunc<string>;
 }

@@ -3,19 +3,9 @@
 'use strict';
 import * as uuid from 'uuid/v4';
 
-import {
-    ILoadAllCells,
-    InteractiveWindowMessages
-} from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { ILoadAllCells, InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
-import {
-    createCellVM,
-    createEmptyCell,
-    CursorPos,
-    extractInputText,
-    ICellViewModel,
-    IMainState
-} from '../../../interactive-common/mainState';
+import { createCellVM, createEmptyCell, CursorPos, extractInputText, ICellViewModel, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
 import { ICellAction } from '../../../interactive-common/redux/reducers/types';
@@ -23,14 +13,14 @@ import { actionCreators } from '../actions';
 import { NativeEditorReducerArg } from '../mapping';
 
 export namespace Creation {
-    function prepareCellVM(cell: ICell, hasBeenRun: boolean, settings: IDataScienceExtraSettings): ICellViewModel {
-        const cellVM: ICellViewModel = createCellVM(cell, settings, true);
+    function prepareCellVM(cell: ICell, hasBeenRun: boolean, settings?: IDataScienceExtraSettings): ICellViewModel {
+        const cellVM: ICellViewModel = createCellVM(cell, settings, true, false);
 
         // Set initial cell visibility and collapse
         cellVM.editable = true;
 
         // Always have the cell input text open
-        const newText = extractInputText(cellVM.cell, settings);
+        const newText = extractInputText(cellVM, settings);
 
         cellVM.inputBlockOpen = true;
         cellVM.inputBlockText = newText;
@@ -67,7 +57,9 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index: position, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index: position, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) })
+        );
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
@@ -100,7 +92,9 @@ export namespace Creation {
         };
 
         // Send a messsage that we inserted a cell
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) }));
+        arg.queueAction(
+            createPostableAction(InteractiveWindowMessages.InsertCell, { cell: newVM.cell, index, code: '', codeCellAboveId: findFirstCodeCellAbove(newList, position) })
+        );
 
         // Queue up an action to set focus to the cell we're inserting
         setTimeout(() => {
@@ -124,15 +118,15 @@ export namespace Creation {
     }
 
     export function startCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
+        return Helpers.updateOrAdd(arg, (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings));
     }
 
     export function updateCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
+        return Helpers.updateOrAdd(arg, (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings));
     }
 
     export function finishCell(arg: NativeEditorReducerArg<ICell>): IMainState {
-        return Helpers.updateOrAdd(arg, (c: ICell, s: IDataScienceExtraSettings) => prepareCellVM(c, true, s));
+        return Helpers.updateOrAdd(arg, (c: ICell, s: IMainState) => prepareCellVM(c, true, s.settings));
     }
 
     export function deleteAllCells(arg: NativeEditorReducerArg): IMainState {
@@ -247,5 +241,4 @@ export namespace Creation {
             redoStack: []
         };
     }
-
 }

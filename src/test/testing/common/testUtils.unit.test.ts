@@ -8,16 +8,18 @@ import * as path from 'path';
 import { Uri } from 'vscode';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import {
-    getChildren, getParent, getParentFile, getParentSuite, getTestDataItemType,
-    getTestFile, getTestFolder, getTestFunction, getTestSuite
+    getChildren,
+    getParent,
+    getParentFile,
+    getParentSuite,
+    getTestDataItemType,
+    getTestFile,
+    getTestFolder,
+    getTestFunction,
+    getTestSuite
 } from '../../../client/testing/common/testUtils';
-import {
-    FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile,
-    TestFolder, TestFunction, Tests, TestSuite
-} from '../../../client/testing/common/types';
-import {
-    TestDataItem, TestDataItemType, TestWorkspaceFolder
-} from '../../../client/testing/types';
+import { FlattenedTestFunction, FlattenedTestSuite, SubtestParent, TestFile, TestFolder, TestFunction, Tests, TestSuite } from '../../../client/testing/common/types';
+import { TestDataItem, TestDataItemType, TestWorkspaceFolder } from '../../../client/testing/types';
 
 // tslint:disable:prefer-template
 
@@ -35,12 +37,7 @@ function longestCommonSubstring(strings: string[]): string {
     return substr;
 }
 
-export function createMockTestDataItem<T extends TestDataItem>(
-    type: TestDataItemType,
-    nameSuffix: string = '',
-    name?: string,
-    nameToRun?: string
-) {
+export function createMockTestDataItem<T extends TestDataItem>(type: TestDataItemType, nameSuffix: string = '', name?: string, nameToRun?: string) {
     const folder: TestFolder = {
         resource: Uri.file(__filename),
         folders: [],
@@ -87,7 +84,7 @@ export function createMockTestDataItem<T extends TestDataItem>(
         case TestDataItemType.suite:
             return suite as T;
         case TestDataItemType.workspaceFolder:
-            return (new TestWorkspaceFolder({ uri: Uri.file(''), name: 'a', index: 0 })) as T;
+            return new TestWorkspaceFolder({ uri: Uri.file(''), name: 'a', index: 0 }) as T;
         default:
             throw new Error(`Unknown type ${type}`);
     }
@@ -118,12 +115,7 @@ export function createSubtestParent(funcs: TestFunction[]): SubtestParent {
     return subtestParent;
 }
 
-export function createTests(
-    folders: TestFolder[],
-    files: TestFile[],
-    suites: TestSuite[],
-    funcs: TestFunction[]
-): Tests {
+export function createTests(folders: TestFolder[], files: TestFile[], suites: TestSuite[], funcs: TestFunction[]): Tests {
     // tslint:disable:no-any
     return {
         summary: { errors: 0, skipped: 0, passed: 0, failures: 0 },
@@ -172,46 +164,41 @@ suite('Unit Tests - TestUtils', () => {
             const func = getTestFunction(item);
 
             switch (typeName.value) {
-                case TestDataItemType.file:
-                    {
-                        assert.equal(file, item);
-                        assert.equal(folder, undefined);
-                        assert.equal(suite, undefined);
-                        assert.equal(func, undefined);
-                        break;
-                    }
-                case TestDataItemType.folder:
-                    {
-                        assert.equal(file, undefined);
-                        assert.equal(folder, item);
-                        assert.equal(suite, undefined);
-                        assert.equal(func, undefined);
-                        break;
-                    }
-                case TestDataItemType.function:
-                    {
-                        assert.equal(file, undefined);
-                        assert.equal(folder, undefined);
-                        assert.equal(suite, undefined);
-                        assert.equal(func, item);
-                        break;
-                    }
-                case TestDataItemType.suite:
-                    {
-                        assert.equal(file, undefined);
-                        assert.equal(folder, undefined);
-                        assert.equal(suite, item);
-                        assert.equal(func, undefined);
-                        break;
-                    }
-                case TestDataItemType.workspaceFolder:
-                    {
-                        assert.equal(file, undefined);
-                        assert.equal(folder, undefined);
-                        assert.equal(suite, undefined);
-                        assert.equal(func, undefined);
-                        break;
-                    }
+                case TestDataItemType.file: {
+                    assert.equal(file, item);
+                    assert.equal(folder, undefined);
+                    assert.equal(suite, undefined);
+                    assert.equal(func, undefined);
+                    break;
+                }
+                case TestDataItemType.folder: {
+                    assert.equal(file, undefined);
+                    assert.equal(folder, item);
+                    assert.equal(suite, undefined);
+                    assert.equal(func, undefined);
+                    break;
+                }
+                case TestDataItemType.function: {
+                    assert.equal(file, undefined);
+                    assert.equal(folder, undefined);
+                    assert.equal(suite, undefined);
+                    assert.equal(func, item);
+                    break;
+                }
+                case TestDataItemType.suite: {
+                    assert.equal(file, undefined);
+                    assert.equal(folder, undefined);
+                    assert.equal(suite, item);
+                    assert.equal(func, undefined);
+                    break;
+                }
+                case TestDataItemType.workspaceFolder: {
+                    assert.equal(file, undefined);
+                    assert.equal(folder, undefined);
+                    assert.equal(suite, undefined);
+                    assert.equal(func, undefined);
+                    break;
+                }
                 default:
                     throw new Error(`Unknown type ${typeName.name},${typeName.value}`);
             }
@@ -641,12 +628,7 @@ suite('Unit Tests - TestUtils', () => {
         suite.functions.push(func4);
         suite.functions.push(func5);
         suite.functions.push(func6);
-        const tests = createTests(
-            [folder],
-            [file],
-            [suite],
-            [func1, func2, func3, func4, func5, func6]
-        );
+        const tests = createTests([folder], [file], [suite], [func1, func2, func3, func4, func5, func6]);
 
         assert.equal(getParent(tests, folder), undefined);
         assert.equal(getParent(tests, file), folder);

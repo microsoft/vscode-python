@@ -11,15 +11,7 @@ import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common
 import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { LSControl, LSEnabled } from '../common/experimentGroups';
 import { traceError } from '../common/logger';
-import {
-    IConfigurationService,
-    IDisposableRegistry,
-    IExperimentsManager,
-    IOutputChannel,
-    IPersistentStateFactory,
-    IPythonSettings,
-    Resource
-} from '../common/types';
+import { IConfigurationService, IDisposableRegistry, IExperimentsManager, IOutputChannel, IPersistentStateFactory, IPythonSettings, Resource } from '../common/types';
 import { swallowExceptions } from '../common/utils/decorators';
 import { noop } from '../common/utils/misc';
 import { IInterpreterService, PythonInterpreter } from '../interpreter/contracts';
@@ -28,14 +20,10 @@ import { sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { Commands } from './languageServer/constants';
 import { RefCountedLanguageServer } from './refCountedLanguageServer';
-import {
-    IExtensionActivationService,
-    ILanguageServerActivator,
-    ILanguageServerCache,
-    LanguageServerActivator
-} from './types';
+import { IExtensionActivationService, ILanguageServerActivator, ILanguageServerCache, LanguageServerType } from './types';
 
 const jediEnabledSetting: keyof IPythonSettings = 'jediEnabled';
+const languageServerSetting: keyof IPythonSettings = 'languageServer';
 const workspacePathNameForGlobalWorkspaces = '';
 
 interface IActivatedServer {
@@ -55,17 +43,16 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     private readonly interpreterService: IInterpreterService;
     private resource!: Resource;
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IPersistentStateFactory) private stateFactory: IPersistentStateFactory,
-        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager) {
+        @inject(IExperimentsManager) private readonly abExperiments: IExperimentsManager
+    ) {
         this.workspaceService = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.output = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
-        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(
-            IDiagnosticsService,
-            LSNotSupportedDiagnosticServiceId
-        );
+        this.lsNotSupportedDiagnosticService = this.serviceContainer.get<IDiagnosticsService>(IDiagnosticsService, LSNotSupportedDiagnosticServiceId);
         const commandManager = this.serviceContainer.get<ICommandManager>(ICommandManager);
         const disposables = serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         disposables.push(this);
@@ -97,7 +84,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
 
         // Save our active server.
-        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerActivator.Jedi };
+        this.activatedServer = { key, server: result, jedi: result.type === LanguageServerType.Jedi };
 
         // Force this server to reconnect (if disconnected) as it should be the active
         // language server for all of VS code.
@@ -153,7 +140,7 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             traceError('WorkspaceConfiguration.inspect returns `undefined` for setting `python.jediEnabled`');
             return false;
         }
-        return (settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined);
+        return settings.globalValue === undefined && settings.workspaceValue === undefined && settings.workspaceFolderValue === undefined;
     }
 
     /**
@@ -169,7 +156,9 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             this.abExperiments.sendTelemetryIfInExperiment(LSControl);
         }
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
-        const enabled = configurationService.getSettings(this.resource).jediEnabled;
+        let enabled = configurationService.getSettings(this.resource).jediEnabled;
+        const languageServerType = configurationService.getSettings(this.resource).languageServer;
+        enabled = enabled || languageServerType === LanguageServerType.Jedi;
         this.sendTelemetryForChosenLanguageServer(enabled).ignoreErrors();
         return enabled;
     }
@@ -193,33 +182,49 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
     }
 
     private async createRefCountedServer(resource: Resource, interpreter: PythonInterpreter | undefined, key: string): Promise<RefCountedLanguageServer> {
-        let jedi = this.useJedi();
-        if (!jedi) {
-            const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
-            this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
-            if (diagnostic.length) {
-                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
-                jedi = true;
-            }
+        const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        let serverType = configurationService.getSettings(this.resource).languageServer;
+        if (!serverType) {
+            serverType = LanguageServerType.Jedi;
         }
 
-        await this.logStartup(jedi);
-        let serverName = jedi ? LanguageServerActivator.Jedi : LanguageServerActivator.DotNet;
-        let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
+        switch (serverType) {
+            case LanguageServerType.None:
+                sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
+                break;
+            case LanguageServerType.Microsoft:
+                if (this.useJedi()) {
+                    serverType = LanguageServerType.Jedi;
+                    break;
+                }
+                const diagnostic = await this.lsNotSupportedDiagnosticService.diagnose(undefined);
+                this.lsNotSupportedDiagnosticService.handle(diagnostic).ignoreErrors();
+                if (diagnostic.length) {
+                    sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_PLATFORM_SUPPORTED, undefined, { supported: false });
+                    serverType = LanguageServerType.Jedi;
+                }
+                break;
+            default:
+                serverType = LanguageServerType.Jedi;
+                break;
+        }
+
+        await this.logStartup(serverType);
+        let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
             await server.start(resource, interpreter);
         } catch (ex) {
-            if (jedi) {
+            if (serverType === LanguageServerType.Jedi) {
                 throw ex;
             }
-            await this.logStartup(jedi);
-            serverName = LanguageServerActivator.Jedi;
-            server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverName);
+            await this.logStartup(serverType);
+            serverType = LanguageServerType.Jedi;
+            server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
             await server.start(resource, interpreter);
         }
 
         // Wrap the returned server in something that ref counts it.
-        return new RefCountedLanguageServer(server, serverName, () => {
+        return new RefCountedLanguageServer(server, serverType, () => {
             // When we finally remove the last ref count, remove from the cache
             this.cache.delete(key);
 
@@ -228,10 +233,21 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         });
     }
 
-    private async logStartup(isJedi: boolean): Promise<void> {
-        const outputLine = isJedi
-            ? 'Starting Jedi Python language engine.'
-            : 'Starting Microsoft Python language server.';
+    private async logStartup(serverType: LanguageServerType): Promise<void> {
+        let outputLine;
+        switch (serverType) {
+            case LanguageServerType.Jedi:
+                outputLine = 'Starting Jedi Python language engine.';
+                break;
+            case LanguageServerType.Microsoft:
+                outputLine = 'Starting Microsoft Python language server.';
+                break;
+            case LanguageServerType.None:
+                outputLine = 'Editor support is inactive since language server is set to None.';
+                break;
+            default:
+                throw new Error('Unknown langauge server type in activator.');
+        }
         this.output.appendLine(outputLine);
     }
 
@@ -239,17 +255,25 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         const workspacesUris: (Uri | undefined)[] = this.workspaceService.hasWorkspaceFolders
             ? this.workspaceService.workspaceFolders!.map(workspace => workspace.uri)
             : [undefined];
-        if (workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1) {
+        if (
+            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${jediEnabledSetting}`, uri)) === -1 &&
+            workspacesUris.findIndex(uri => event.affectsConfiguration(`python.${languageServerSetting}`, uri)) === -1
+        ) {
             return;
         }
         const jedi = this.useJedi();
-        if (this.activatedServer && this.activatedServer.jedi === jedi) {
-            return;
+        if (this.activatedServer) {
+            if (this.activatedServer.jedi === jedi) {
+                return;
+            }
+            const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+            const lsType = configurationService.getSettings(this.resource).languageServer;
+            if (this.activatedServer.key === lsType) {
+                return;
+            }
         }
-        const item = await this.appShell.showInformationMessage(
-            'Please reload the window switching between language engines.',
-            'Reload'
-        );
+
+        const item = await this.appShell.showInformationMessage('Please reload the window switching between language engines.', 'Reload');
         if (item === 'Reload') {
             this.serviceContainer.get<ICommandManager>(ICommandManager).executeCommand('workbench.action.reloadWindow');
         }
@@ -263,6 +287,6 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
 
     private async onClearAnalysisCaches() {
         const values = await Promise.all([...this.cache.values()]);
-        values.forEach(v => v.clearAnalysisCache ? v.clearAnalysisCache() : noop());
+        values.forEach(v => (v.clearAnalysisCache ? v.clearAnalysisCache() : noop()));
     }
 }

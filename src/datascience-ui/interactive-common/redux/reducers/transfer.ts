@@ -5,15 +5,7 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CssMessages } from '../../../../client/datascience/messages';
 import { extractInputText, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
-import {
-    CommonReducerArg,
-    ICellAction,
-    IEditCellAction,
-    ILinkClickAction,
-    ISendCommandAction,
-    IShowDataViewerAction,
-    IShowPlotAction
-} from './types';
+import { CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction, IShowPlotAction } from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
 export namespace Transfer {
@@ -77,7 +69,7 @@ export namespace Transfer {
 
         // Send a message to the other side to jump to a particular cell
         if (cellVM) {
-            arg.queueAction(createPostableAction(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM.cell, arg.prevState.settings) }));
+            arg.queueAction(createPostableAction(InteractiveWindowMessages.CopyCodeCell, { source: extractInputText(cellVM, arg.prevState.settings) }));
         }
 
         return arg.prevState;

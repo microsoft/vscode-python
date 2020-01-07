@@ -19,7 +19,7 @@ export namespace Creation {
         return true;
     }
 
-    export function alterCellVM(cellVM: ICellViewModel, settings: IDataScienceExtraSettings, visible: boolean, expanded: boolean): ICellViewModel {
+    export function alterCellVM(cellVM: ICellViewModel, settings?: IDataScienceExtraSettings, visible?: boolean, expanded?: boolean): ICellViewModel {
         if (cellVM.cell.data.cell_type === 'code') {
             // If we are already in the correct state, return back our initial cell vm
             if (cellVM.inputBlockShow === visible && cellVM.inputBlockOpen === expanded) {
@@ -41,13 +41,13 @@ export namespace Creation {
             if (cellVM.inputBlockOpen !== expanded && cellVM.inputBlockCollapseNeeded && cellVM.inputBlockShow) {
                 if (expanded) {
                     // Expand the cell
-                    const newText = extractInputText(cellVM.cell, settings);
+                    const newText = extractInputText(cellVM, settings);
 
                     newCellVM.inputBlockOpen = true;
                     newCellVM.inputBlockText = newText;
                 } else {
                     // Collapse the cell
-                    let newText = extractInputText(cellVM.cell, settings);
+                    let newText = extractInputText(cellVM, settings);
                     if (newText.length > 0) {
                         newText = newText.split('\n', 1)[0];
                         newText = newText.slice(0, 255); // Slice to limit length, slicing past length is fine
@@ -65,14 +65,14 @@ export namespace Creation {
         return cellVM;
     }
 
-    export function prepareCellVM(cell: ICell, settings: IDataScienceExtraSettings): ICellViewModel {
-        let cellVM: ICellViewModel = createCellVM(cell, settings, false);
+    export function prepareCellVM(cell: ICell, mainState: IMainState): ICellViewModel {
+        let cellVM: ICellViewModel = createCellVM(cell, mainState.settings, false, mainState.debugging);
 
-        const visible = settings.showCellInputCode;
-        const expanded = !settings.collapseCellInputCodeByDefault;
+        const visible = mainState.settings ? mainState.settings.showCellInputCode : false;
+        const expanded = !mainState.settings?.collapseCellInputCodeByDefault;
 
         // Set initial cell visibility and collapse
-        cellVM = alterCellVM(cellVM, settings, visible, expanded);
+        cellVM = alterCellVM(cellVM, mainState.settings, visible, expanded);
         cellVM.hasBeenRun = true;
 
         return cellVM;
@@ -85,13 +85,13 @@ export namespace Creation {
                 const cellVM = result.cellVMs[result.cellVMs.length - 1];
 
                 // We're adding a new cell here. Tell the intellisense engine we have a new cell
-                arg.queueAction(createPostableAction(
-                    InteractiveWindowMessages.AddCell,
-                    {
-                        fullText: extractInputText(cellVM.cell, result.settings),
+                arg.queueAction(
+                    createPostableAction(InteractiveWindowMessages.AddCell, {
+                        fullText: extractInputText(cellVM, result.settings),
                         currentText: cellVM.inputBlockText,
                         cell: cellVM.cell
-                    }));
+                    })
+                );
             }
 
             return result;
@@ -149,7 +149,8 @@ export namespace Creation {
             ...arg.prevState,
             cellVMs: [],
             undoStack: [],
-            redoStack: []
+            redoStack: [],
+            editCellVM: undefined
         };
     }
 }

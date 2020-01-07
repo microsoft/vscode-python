@@ -3,12 +3,12 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
 import { WorkspaceConfiguration } from 'vscode';
 import './common/extensions';
 import { traceError } from './common/logger';
+import { FileSystem } from './common/platform/fileSystem';
+import { PlatformService } from './common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from './constants';
 
 type VSCode = typeof import('vscode');
@@ -59,15 +59,11 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
-        // SourceMapSupport is initialized before the extension, so we
-        // do not have access to IFileSystem yet and have to use Node's
-        // "fs" directly.
-        const fsExists = promisify(fs.exists);
-        const fsRename = promisify(fs.rename);
-        if (await fsExists(targetFile)) {
+        const fs = new FileSystem(new PlatformService());
+        if (await fs.fileExists(targetFile)) {
             return;
         }
-        await fsRename(sourceFile, targetFile);
+        await fs.move(sourceFile, targetFile);
     }
 }
 export function initialize(vscode: VSCode = require('vscode')) {

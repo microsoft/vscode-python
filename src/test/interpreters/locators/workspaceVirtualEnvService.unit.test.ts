@@ -14,16 +14,15 @@ import { WorkspaceVirtualEnvService } from '../../../client/interpreter/locators
 import { ServiceContainer } from '../../../client/ioc/container';
 
 suite('Interpreters - Workspace VirtualEnv Service', () => {
-
     test('Get list of watchers', async () => {
         const serviceContainer = mock(ServiceContainer);
         const builder = mock(InterpreterWatcherBuilder);
-        const locator = new class extends WorkspaceVirtualEnvService {
+        const locator = new (class extends WorkspaceVirtualEnvService {
             // tslint:disable-next-line:no-unnecessary-override
             public async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
                 return super.getInterpreterWatchers(resource);
             }
-        }(undefined as any, instance(serviceContainer), instance(builder));
+        })(undefined as any, instance(serviceContainer), instance(builder));
 
         const watchers = 1 as any;
         when(builder.getWorkspaceVirtualEnvInterpreterWatcher(anything())).thenResolve(watchers);

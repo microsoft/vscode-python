@@ -12,8 +12,12 @@ import { ICommandManager } from '../../client/common/application/types';
 export class MockCommandManager implements ICommandManager {
     private commands: Map<string, (...args: any[]) => any> = new Map<string, (...args: any[]) => any>();
 
-    public registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, callback: (...args: U) => any, thisArg?: any): Disposable {
-        this.commands.set(command, thisArg ? callback.bind(thisArg) as any : callback as any);
+    public registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        callback: (...args: U) => any,
+        thisArg?: any
+    ): Disposable {
+        this.commands.set(command, thisArg ? (callback.bind(thisArg) as any) : (callback as any));
         return {
             dispose: () => {
                 noop();

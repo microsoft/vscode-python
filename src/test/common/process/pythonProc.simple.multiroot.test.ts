@@ -27,12 +27,22 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { GLOBAL_MEMENTO, IConfigurationService, ICurrentProcess, IDisposableRegistry, ILogger, IMemento, IOutputChannel, IPathUtils, IPersistentStateFactory, IsWindows, WORKSPACE_MEMENTO } from '../../../client/common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    ICurrentProcess,
+    IDisposableRegistry,
+    ILogger,
+    IMemento,
+    IOutputChannel,
+    IPathUtils,
+    IPersistentStateFactory,
+    IsWindows,
+    WORKSPACE_MEMENTO
+} from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
-import {
-    registerTypes as variablesRegisterTypes
-} from '../../../client/common/variables/serviceRegistry';
+import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
@@ -50,10 +60,7 @@ import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonV
 import { MockOutputChannel } from '../../mockClasses';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
 import { MockMemento } from '../../mocks/mementos';
-import {
-    closeActiveWindows, initialize, initializeTest,
-    IS_MULTI_ROOT_TEST
-} from './../../initialize';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 use(chaiAsPromised);
 
@@ -68,7 +75,7 @@ suite('PythonExecutableService', () => {
     let configService: IConfigurationService;
     let pythonExecFactory: IPythonExecutionFactory;
 
-    suiteSetup(async function () {
+    suiteSetup(async function() {
         if (!IS_MULTI_ROOT_TEST) {
             // tslint:disable-next-line:no-invalid-this
             this.skip();
@@ -144,10 +151,10 @@ suite('PythonExecutableService', () => {
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
     });
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async function() {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
-        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+        if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -159,7 +166,7 @@ suite('PythonExecutableService', () => {
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
     });
 
-    test('Known modules such as \'os\' and \'sys\' should be deemed \'installed\'', async () => {
+    test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const osModuleIsInstalled = pythonExecService.isModuleInstalled('os');
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
@@ -167,7 +174,7 @@ suite('PythonExecutableService', () => {
         await expect(sysModuleIsInstalled).to.eventually.equal(true, 'sys module is not installed');
     });
 
-    test('Unknown modules such as \'xyzabc123\' be deemed \'not installed\'', async () => {
+    test("Unknown modules such as 'xyzabc123' be deemed 'not installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const randomModuleName = `xyz123${new Date().getSeconds()}`;
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);

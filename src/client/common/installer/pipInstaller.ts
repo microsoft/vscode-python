@@ -8,10 +8,10 @@ import { IPythonExecutionFactory } from '../process/types';
 import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { InterpreterUri } from './types';
 
 @injectable()
-export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
+export class PipInstaller extends ModuleInstaller {
     public get name(): string {
         return 'Pip';
     }
@@ -45,7 +45,8 @@ export class PipInstaller extends ModuleInstaller implements IModuleInstaller {
         const pythonExecutionFactory = this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory);
         const resource = isResource(info) ? info : undefined;
         const pythonPath = isResource(info) ? undefined : info.path;
-        return pythonExecutionFactory.create({ resource, pythonPath })
+        return pythonExecutionFactory
+            .create({ resource, pythonPath })
             .then(proc => proc.isModuleInstalled('pip'))
             .catch(() => false);
     }

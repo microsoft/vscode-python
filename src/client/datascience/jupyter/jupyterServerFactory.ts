@@ -1,37 +1,28 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import '../../common/extensions';
-
 import { inject, injectable, multiInject, optional } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 import * as vsls from 'vsls/vscode';
-
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
+import '../../common/extensions';
+import { IFileSystem } from '../../common/platform/types';
 import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { IInterpreterService } from '../../interpreter/contracts';
-import {
-    IConnection,
-    IDataScience,
-    IJupyterSessionManagerFactory,
-    INotebook,
-    INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo
-} from '../types';
+import { IConnection, IDataScience, IJupyterSessionManagerFactory, INotebook, INotebookExecutionLogger, INotebookServer, INotebookServerLaunchInfo } from '../types';
 import { GuestJupyterServer } from './liveshare/guestJupyterServer';
 import { HostJupyterServer } from './liveshare/hostJupyterServer';
 import { IRoleBasedObject, RoleBasedFactory } from './liveshare/roleBasedFactory';
 import { ILiveShareHasRole } from './liveshare/types';
 
-interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {
-}
+interface IJupyterServerInterface extends IRoleBasedObject, INotebookServer {}
 
 // tslint:disable:callable-types
 type JupyterServerClassType = {
-    new(liveShare: ILiveShareApi,
+    new (
+        liveShare: ILiveShareApi,
         dataScience: IDataScience,
         asyncRegistry: IAsyncDisposableRegistry,
         disposableRegistry: IDisposableRegistry,
@@ -40,6 +31,7 @@ type JupyterServerClassType = {
         workspaceService: IWorkspaceService,
         loggers: INotebookExecutionLogger[],
         appShell: IApplicationShell,
+        fs: IFileSystem,
         interpreterService: IInterpreterService
     ): IJupyterServerInterface;
 };
@@ -62,7 +54,9 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @multiInject(INotebookExecutionLogger) @optional() loggers: INotebookExecutionLogger[] | undefined,
         @inject(IApplicationShell) appShell: IApplicationShell,
-        @inject(IInterpreterService) interpreterService: IInterpreterService) {
+        @inject(IFileSystem) fs: IFileSystem,
+        @inject(IInterpreterService) interpreterService: IInterpreterService
+    ) {
         this.serverFactory = new RoleBasedFactory<IJupyterServerInterface, JupyterServerClassType>(
             liveShare,
             HostJupyterServer,
@@ -76,6 +70,7 @@ export class JupyterServerFactory implements INotebookServer, ILiveShareHasRole 
             workspaceService,
             loggers ? loggers : [],
             appShell,
+            fs,
             interpreterService
         );
     }

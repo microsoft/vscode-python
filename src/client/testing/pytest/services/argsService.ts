@@ -7,33 +7,122 @@ import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../../ioc/types';
 import { IArgumentsHelper, IArgumentsService, TestFilter } from '../../types';
 
-const OptionsWithArguments = ['-c', '-k', '-m', '-o', '-p', '-r', '-W',
+const OptionsWithArguments = [
+    '-c',
+    '-k',
+    '-m',
+    '-o',
+    '-p',
+    '-r',
+    '-W',
     '-n', // -n is a pytest-xdist option
-    '--assert', '--basetemp', '--capture', '--color', '--confcutdir',
-    '--cov', '--cov-config', '--cov-fail-under', '--cov-report',
-    '--deselect', '--dist', '--doctest-glob',
-    '--doctest-report', '--durations', '--ignore', '--import-mode',
-    '--junit-prefix', '--junit-xml', '--last-failed-no-failures',
-    '--lfnf', '--log-cli-date-format', '--log-cli-format',
-    '--log-cli-level', '--log-date-format', '--log-file',
-    '--log-file-date-format', '--log-file-format', '--log-file-level',
-    '--log-format', '--log-level', '--maxfail', '--override-ini',
-    '--pastebin', '--pdbcls', '--pythonwarnings', '--result-log',
-    '--rootdir', '--show-capture', '--tb', '--verbosity', '--max-slave-restart',
-    '--numprocesses', '--rsyncdir', '--rsyncignore', '--tx'];
+    '--assert',
+    '--basetemp',
+    '--capture',
+    '--color',
+    '--confcutdir',
+    '--cov',
+    '--cov-config',
+    '--cov-fail-under',
+    '--cov-report',
+    '--deselect',
+    '--dist',
+    '--doctest-glob',
+    '--doctest-report',
+    '--durations',
+    '--ignore',
+    '--import-mode',
+    '--junit-prefix',
+    '--junit-xml',
+    '--last-failed-no-failures',
+    '--lfnf',
+    '--log-cli-date-format',
+    '--log-cli-format',
+    '--log-cli-level',
+    '--log-date-format',
+    '--log-file',
+    '--log-file-date-format',
+    '--log-file-format',
+    '--log-file-level',
+    '--log-format',
+    '--log-level',
+    '--maxfail',
+    '--override-ini',
+    '--pastebin',
+    '--pdbcls',
+    '--pythonwarnings',
+    '--result-log',
+    '--rootdir',
+    '--show-capture',
+    '--tb',
+    '--verbosity',
+    '--max-slave-restart',
+    '--numprocesses',
+    '--rsyncdir',
+    '--rsyncignore',
+    '--tx'
+];
 
-const OptionsWithoutArguments = ['--cache-clear', '--cache-show', '--collect-in-virtualenv',
-    '--collect-only', '--continue-on-collection-errors',
-    '--cov-append', '--cov-branch', '--debug', '--disable-pytest-warnings',
-    '--disable-warnings', '--doctest-continue-on-failure', '--doctest-ignore-import-errors',
-    '--doctest-modules', '--exitfirst', '--failed-first', '--ff', '--fixtures',
-    '--fixtures-per-test', '--force-sugar', '--full-trace', '--funcargs', '--help',
-    '--keep-duplicates', '--last-failed', '--lf', '--markers', '--new-first', '--nf',
-    '--no-cov', '--no-cov-on-fail',
-    '--no-print-logs', '--noconftest', '--old-summary', '--pdb', '--pyargs', '-PyTest, Unittest-pyargs',
-    '--quiet', '--runxfail', '--setup-only', '--setup-plan', '--setup-show', '--showlocals',
-    '--strict', '--trace-config', '--verbose', '--version', '-h', '-l', '-q', '-s', '-v', '-x',
-    '--boxed', '--forked', '--looponfail', '--trace', '--tx', '-d'];
+const OptionsWithoutArguments = [
+    '--cache-clear',
+    '--cache-show',
+    '--collect-in-virtualenv',
+    '--collect-only',
+    '--continue-on-collection-errors',
+    '--cov-append',
+    '--cov-branch',
+    '--debug',
+    '--disable-pytest-warnings',
+    '--disable-warnings',
+    '--doctest-continue-on-failure',
+    '--doctest-ignore-import-errors',
+    '--doctest-modules',
+    '--exitfirst',
+    '--failed-first',
+    '--ff',
+    '--fixtures',
+    '--fixtures-per-test',
+    '--force-sugar',
+    '--full-trace',
+    '--funcargs',
+    '--help',
+    '--keep-duplicates',
+    '--last-failed',
+    '--lf',
+    '--markers',
+    '--new-first',
+    '--nf',
+    '--no-cov',
+    '--no-cov-on-fail',
+    '--no-print-logs',
+    '--noconftest',
+    '--old-summary',
+    '--pdb',
+    '--pyargs',
+    '-PyTest, Unittest-pyargs',
+    '--quiet',
+    '--runxfail',
+    '--setup-only',
+    '--setup-plan',
+    '--setup-show',
+    '--showlocals',
+    '--strict',
+    '--trace-config',
+    '--verbose',
+    '--version',
+    '-h',
+    '-l',
+    '-q',
+    '-s',
+    '-v',
+    '-x',
+    '--boxed',
+    '--forked',
+    '--looponfail',
+    '--trace',
+    '--tx',
+    '-d'
+];
 
 @injectable()
 export class ArgumentsService implements IArgumentsService {
@@ -50,6 +139,7 @@ export class ArgumentsService implements IArgumentsService {
     public getOptionValue(args: string[], option: string): string | string[] | undefined {
         return this.helper.getOptionValues(args, option);
     }
+    // tslint:disable-next-line: max-func-body-length
     public filterArguments(args: string[], argumentToRemoveOrFilter: string[] | TestFilter): string[] {
         const optionsWithoutArgsToRemove: string[] = [];
         const optionsWithArgsToRemove: string[] = [];
@@ -68,45 +158,63 @@ export class ArgumentsService implements IArgumentsService {
         } else {
             switch (argumentToRemoveOrFilter) {
                 case TestFilter.removeTests: {
-                    optionsWithoutArgsToRemove.push(...[
-                        '--lf', '--last-failed',
-                        '--ff', '--failed-first',
-                        '--nf', '--new-first'
-                    ]);
-                    optionsWithArgsToRemove.push(...[
-                        '-k', '-m',
-                        '--lfnf', '--last-failed-no-failures'
-                    ]);
+                    optionsWithoutArgsToRemove.push(...['--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first']);
+                    optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
                     removePositionalArgs = true;
                     break;
                 }
                 case TestFilter.discovery: {
-                    optionsWithoutArgsToRemove.push(...[
-                        '-x', '--exitfirst',
-                        '--fixtures', '--funcargs',
-                        '--fixtures-per-test', '--pdb',
-                        '--lf', '--last-failed',
-                        '--ff', '--failed-first',
-                        '--nf', '--new-first',
-                        '--cache-show',
-                        '-v', '--verbose', '-q', '-quiet',
-                        '-l', '--showlocals',
-                        '--no-print-logs',
-                        '--debug',
-                        '--setup-only', '--setup-show', '--setup-plan', '--trace'
-                    ]);
-                    optionsWithArgsToRemove.push(...[
-                        '-m', '--maxfail',
-                        '--pdbcls', '--capture',
-                        '--lfnf', '--last-failed-no-failures',
-                        '--verbosity', '-r',
-                        '--tb',
-                        '--rootdir', '--show-capture',
-                        '--durations',
-                        '--junit-xml', '--junit-prefix', '--result-log',
-                        '-W', '--pythonwarnings',
-                        '--log-*'
-                    ]);
+                    optionsWithoutArgsToRemove.push(
+                        ...[
+                            '-x',
+                            '--exitfirst',
+                            '--fixtures',
+                            '--funcargs',
+                            '--fixtures-per-test',
+                            '--pdb',
+                            '--lf',
+                            '--last-failed',
+                            '--ff',
+                            '--failed-first',
+                            '--nf',
+                            '--new-first',
+                            '--cache-show',
+                            '-v',
+                            '--verbose',
+                            '-q',
+                            '-quiet',
+                            '-l',
+                            '--showlocals',
+                            '--no-print-logs',
+                            '--debug',
+                            '--setup-only',
+                            '--setup-show',
+                            '--setup-plan',
+                            '--trace'
+                        ]
+                    );
+                    optionsWithArgsToRemove.push(
+                        ...[
+                            '-m',
+                            '--maxfail',
+                            '--pdbcls',
+                            '--capture',
+                            '--lfnf',
+                            '--last-failed-no-failures',
+                            '--verbosity',
+                            '-r',
+                            '--tb',
+                            '--rootdir',
+                            '--show-capture',
+                            '--durations',
+                            '--junit-xml',
+                            '--junit-prefix',
+                            '--result-log',
+                            '-W',
+                            '--pythonwarnings',
+                            '--log-*'
+                        ]
+                    );
                     removePositionalArgs = true;
                     break;
                 }
@@ -117,17 +225,8 @@ export class ArgumentsService implements IArgumentsService {
                 }
                 case TestFilter.debugSpecific:
                 case TestFilter.runSpecific: {
-                    optionsWithoutArgsToRemove.push(...[
-                        '--collect-only',
-                        '--lf', '--last-failed',
-                        '--ff', '--failed-first',
-                        '--nf', '--new-first',
-                        '--trace'
-                    ]);
-                    optionsWithArgsToRemove.push(...[
-                        '-k', '-m',
-                        '--lfnf', '--last-failed-no-failures'
-                    ]);
+                    optionsWithoutArgsToRemove.push(...['--collect-only', '--lf', '--last-failed', '--ff', '--failed-first', '--nf', '--new-first', '--trace']);
+                    optionsWithArgsToRemove.push(...['-k', '-m', '--lfnf', '--last-failed-no-failures']);
                     removePositionalArgs = true;
                     break;
                 }

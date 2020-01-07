@@ -3,31 +3,26 @@
 
 import { inject, injectable } from 'inversify';
 import { Disposable, WorkspaceConfiguration } from 'vscode';
-import {
-    IApplicationShell, ICommandManager, IWorkspaceService
-} from './application/types';
+import { IApplicationShell, ICommandManager, IWorkspaceService } from './application/types';
 import { launch } from './net/browser';
-import {
-    DeprecatedFeatureInfo, DeprecatedSettingAndValue,
-    IFeatureDeprecationManager, IPersistentStateFactory
-} from './types';
+import { DeprecatedFeatureInfo, DeprecatedSettingAndValue, IFeatureDeprecationManager, IPersistentStateFactory } from './types';
 
 const deprecatedFeatures: DeprecatedFeatureInfo[] = [
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FORMAT_ON_SAVE',
-        message: 'The setting \'python.formatting.formatOnSave\' is deprecated, please use \'editor.formatOnSave\'.',
+        message: "The setting 'python.formatting.formatOnSave' is deprecated, please use 'editor.formatOnSave'.",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/309',
         setting: { setting: 'formatting.formatOnSave', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_LINT_ON_TEXT_CHANGE',
-        message: 'The setting \'python.linting.lintOnTextChange\' is deprecated, please enable \'python.linting.lintOnSave\' and \'files.autoSave\'.',
+        message: "The setting 'python.linting.lintOnTextChange' is deprecated, please enable 'python.linting.lintOnSave' and 'files.autoSave'.",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/313',
         setting: { setting: 'linting.lintOnTextChange', values: ['true', true] }
     },
     {
         doNotDisplayPromptStateKey: 'SHOW_DEPRECATED_FEATURE_PROMPT_FOR_AUTO_COMPLETE_PRELOAD_MODULES',
-        message: 'The setting \'python.autoComplete.preloadModules\' is deprecated, please consider using the new Language Server (\'python.jediEnabled = false\').',
+        message: "The setting 'python.autoComplete.preloadModules' is deprecated, please consider using the new Language Server ('python.jediEnabled = false').",
         moreInfoUrl: 'https://github.com/Microsoft/vscode-python/issues/1704',
         setting: { setting: 'autoComplete.preloadModules' }
     }
@@ -41,7 +36,7 @@ export class FeatureDeprecationManager implements IFeatureDeprecationManager {
         @inject(ICommandManager) private cmdMgr: ICommandManager,
         @inject(IWorkspaceService) private workspace: IWorkspaceService,
         @inject(IApplicationShell) private appShell: IApplicationShell
-    ) { }
+    ) {}
 
     public dispose() {
         this.disposables.forEach(disposable => disposable.dispose());

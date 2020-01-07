@@ -1,12 +1,10 @@
-import { CancellationToken, Disposable, languages, OutputChannel } from 'vscode';
-import { IApplicationShell, ICommandManager, IWorkspaceService } from '../common/application/types';
+import { CancellationToken, Disposable, languages, OutputChannel, TextDocument } from 'vscode';
+import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { Commands, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { isNotInstalledError } from '../common/helpers';
 import { IFileSystem } from '../common/platform/types';
 import { IProcessServiceFactory } from '../common/process/types';
-import {
-    IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product
-} from '../common/types';
+import { IConfigurationService, IInstaller, InstallerResponse, IOutputChannel, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Generator } from './generator';
 import { WorkspaceSymbolProvider } from './provider';
@@ -23,6 +21,7 @@ export class WorkspaceSymbols implements Disposable {
     private processFactory: IProcessServiceFactory;
     private appShell: IApplicationShell;
     private configurationService: IConfigurationService;
+    private documents: IDocumentManager;
 
     constructor(private serviceContainer: IServiceContainer) {
         this.outputChannel = this.serviceContainer.get<OutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
@@ -32,12 +31,15 @@ export class WorkspaceSymbols implements Disposable {
         this.processFactory = this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
         this.appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.documents = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
         this.registerCommands();
         this.initializeGenerators();
         languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators));
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
+        this.disposables.push(this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e)));
+        this.buildSymbolsOnStart();
     }
     public dispose() {
         this.disposables.forEach(d => d.dispose());
@@ -55,14 +57,34 @@ export class WorkspaceSymbols implements Disposable {
         }
     }
 
+    private buildSymbolsOnStart() {
+        if (Array.isArray(this.workspace.workspaceFolders)) {
+            this.workspace.workspaceFolders.forEach(workspaceFolder => {
+                const pythonSettings = this.configurationService.getSettings(workspaceFolder.uri);
+                if (pythonSettings.workspaceSymbols.rebuildOnStart) {
+                    const promises = this.buildWorkspaceSymbols(true);
+                    return Promise.all(promises);
+                }
+            });
+        }
+    }
+
     private registerCommands() {
         this.disposables.push(
-            this.commandMgr.registerCommand(
-                Commands.Build_Workspace_Symbols,
-                async (rebuild: boolean = true, token?: CancellationToken) => {
-                    const promises = this.buildWorkspaceSymbols(rebuild, token);
-                    return Promise.all(promises);
-                }));
+            this.commandMgr.registerCommand(Commands.Build_Workspace_Symbols, async (rebuild: boolean = true, token?: CancellationToken) => {
+                const promises = this.buildWorkspaceSymbols(rebuild, token);
+                return Promise.all(promises);
+            })
+        );
+    }
+
+    private onDocumentSaved(document: TextDocument) {
+        const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
+        const pythonSettings = this.configurationService.getSettings(workspaceFolder?.uri);
+        if (pythonSettings.workspaceSymbols.rebuildOnFileSave) {
+            const promises = this.buildWorkspaceSymbols(true);
+            return Promise.all(promises);
+        }
     }
 
     // tslint:disable-next-line:no-any
@@ -108,7 +130,7 @@ export class WorkspaceSymbols implements Disposable {
                     promptPromise = installer.promptToInstall(Product.ctags, this.workspace.workspaceFolders![0]!.uri);
                     promptResponse = await promptPromise;
                 }
-                if (promptResponse !== InstallerResponse.Installed || (!token || token.isCancellationRequested)) {
+                if (promptResponse !== InstallerResponse.Installed || !token || token.isCancellationRequested) {
                     return;
                 }
             }

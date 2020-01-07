@@ -49,6 +49,6 @@ export class IDataViewerMapping {
     public [DataViewerMessages.GetRowsRequest]: IGetRowsRequest;
     public [DataViewerMessages.GetRowsResponse]: IGetRowsResponse;
     public [DataViewerMessages.CompletedData]: never | undefined;
-    public [CssMessages.GetCssRequest] : IGetCssRequest;
-    public [CssMessages.GetCssResponse] : IGetCssResponse;
+    public [CssMessages.GetCssRequest]: IGetCssRequest;
+    public [CssMessages.GetCssResponse]: IGetCssResponse;
 }

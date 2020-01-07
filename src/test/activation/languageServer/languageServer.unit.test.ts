@@ -40,9 +40,11 @@ suite('Language Server - LanguageServer', () => {
         configService = typemoq.Mock.ofType<IConfigurationService>();
 
         commandManager = typemoq.Mock.ofType<ICommandManager>();
-        commandManager.setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny())).returns(() => {
-            return typemoq.Mock.ofType<Disposable>().object;
-        });
+        commandManager
+            .setup(c => c.registerCommand(typemoq.It.isAny(), typemoq.It.isAny(), typemoq.It.isAny()))
+            .returns(() => {
+                return typemoq.Mock.ofType<Disposable>().object;
+            });
         server = new LanguageServerTest(instance(clientFactory), instance(testManager), configService.object);
     });
     teardown(() => {
@@ -63,17 +65,11 @@ suite('Language Server - LanguageServer', () => {
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
 
         const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
-        pythonSettings
-            .setup(p => p.downloadLanguageServer)
-            .returns(() => true);
-        configService
-            .setup(c => c.getSettings(uri))
-            .returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.downloadLanguageServer).returns(() => true);
+        configService.setup(c => c.getSettings(uri)).returns(() => pythonSettings.object);
 
         const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
-        client
-            .setup(c => c.onTelemetry(typemoq.It.isAny()))
-            .returns(() => onTelemetryDisposable.object);
+        client.setup(c => c.onTelemetry(typemoq.It.isAny())).returns(() => onTelemetryDisposable.object);
 
         client.setup(c => (c as any).then).returns(() => undefined);
         when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
@@ -83,11 +79,7 @@ suite('Language Server - LanguageServer', () => {
             .setup(c => c.start())
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
-        client
-            .setup(c =>
-                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
-            )
-            .returns(() => Promise.resolve(undefined) as any);
+        client.setup(c => c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))).returns(() => Promise.resolve(undefined) as any);
 
         expect(() => server.loadExtension(loadExtensionArgs)).not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());
@@ -119,17 +111,11 @@ suite('Language Server - LanguageServer', () => {
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
 
         const pythonSettings = typemoq.Mock.ofType<IPythonSettings>();
-        pythonSettings
-            .setup(p => p.downloadLanguageServer)
-            .returns(() => true);
-        configService
-            .setup(c => c.getSettings(uri))
-            .returns(() => pythonSettings.object);
+        pythonSettings.setup(p => p.downloadLanguageServer).returns(() => true);
+        configService.setup(c => c.getSettings(uri)).returns(() => pythonSettings.object);
 
         const onTelemetryDisposable = typemoq.Mock.ofType<IDisposable>();
-        client
-            .setup(c => c.onTelemetry(typemoq.It.isAny()))
-            .returns(() => onTelemetryDisposable.object);
+        client.setup(c => c.onTelemetry(typemoq.It.isAny())).returns(() => onTelemetryDisposable.object);
 
         client.setup(c => (c as any).then).returns(() => undefined);
         when(clientFactory.createLanguageClient(uri, undefined, options)).thenResolve(client.object);
@@ -139,11 +125,7 @@ suite('Language Server - LanguageServer', () => {
             .setup(c => c.start())
             .returns(() => startDisposable.object)
             .verifiable(typemoq.Times.once());
-        client
-            .setup(c =>
-                c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))
-            )
-            .returns(() => Promise.resolve(undefined) as any);
+        client.setup(c => c.sendRequest(typemoq.It.isValue('python/loadExtension'), typemoq.It.isValue(loadExtensionArgs))).returns(() => Promise.resolve(undefined) as any);
 
         expect(() => server.loadExtension(loadExtensionArgs)).not.throw();
         client.verify(c => c.sendRequest(typemoq.It.isAny(), typemoq.It.isAny()), typemoq.Times.never());

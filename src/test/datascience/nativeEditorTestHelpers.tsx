@@ -13,15 +13,7 @@ import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import {
-    addMockData,
-    getCellResults,
-    getNativeFocusedEditor,
-    injectCode,
-    mountWebView,
-    simulateKey,
-    waitForMessage
-} from './testHelpers';
+import { addMockData, getCellResults, getNativeFocusedEditor, injectCode, mountWebView, simulateKey, waitForMessage } from './testHelpers';
 
 // tslint:disable: no-any
 
@@ -51,7 +43,11 @@ export async function openEditor(ioc: DataScienceIocContainer, contents: string,
 }
 
 // tslint:disable-next-line: no-any
-export function getNativeCellResults(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, expectedRenders: number, updater: () => Promise<void>): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
+export function getNativeCellResults(
+    wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
+    expectedRenders: number,
+    updater: () => Promise<void>
+): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     return getCellResults(wrapper, NativeEditor, 'NativeCell', expectedRenders, updater);
 }
 

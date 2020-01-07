@@ -22,8 +22,7 @@ export class MockLanguageServerAnalysisOptions implements ILanguageServerAnalysi
         return Promise.resolve();
     }
     public getAnalysisOptions(): Promise<LanguageClientOptions> {
-        return Promise.resolve({
-        });
+        return Promise.resolve({});
     }
     public dispose(): void | undefined {
         noop();

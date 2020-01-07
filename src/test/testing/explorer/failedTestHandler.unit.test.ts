@@ -51,18 +51,36 @@ suite('Unit Tests Test Explorer View Items', () => {
     test('Change handler will not invoke the command to reveal the nodes (for failed and errored suites, files & folders)', async () => {
         const uri = Uri.file(__filename);
         const failedSuite: TestSuite = {
-            name: 'suite1', time: 0, resource: uri, nameToRun: 'suite1',
-            functions: [], isInstance: false, isUnitTest: false, suites: [], xmlName: 'suite1',
+            name: 'suite1',
+            time: 0,
+            resource: uri,
+            nameToRun: 'suite1',
+            functions: [],
+            isInstance: false,
+            isUnitTest: false,
+            suites: [],
+            xmlName: 'suite1',
             status: TestStatus.Error
         };
         const failedFile: TestFile = {
-            name: 'suite1', time: 0, resource: uri, nameToRun: 'file',
-            functions: [], suites: [], xmlName: 'file', status: TestStatus.Error,
+            name: 'suite1',
+            time: 0,
+            resource: uri,
+            nameToRun: 'file',
+            functions: [],
+            suites: [],
+            xmlName: 'file',
+            status: TestStatus.Error,
             fullPath: ''
         };
         const failedFolder: TestFolder = {
-            name: 'suite1', time: 0, resource: uri, nameToRun: 'file',
-            testFiles: [], folders: [], status: TestStatus.Error
+            name: 'suite1',
+            time: 0,
+            resource: uri,
+            nameToRun: 'file',
+            testFiles: [],
+            folders: [],
+            status: TestStatus.Error
         };
         when(commandManager.executeCommand(Commands.Test_Reveal_Test_Item, anything())).thenResolve();
 

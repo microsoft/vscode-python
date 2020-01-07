@@ -3,14 +3,7 @@ import 'rxjs/add/observable/of';
 import { EventEmitter } from 'events';
 import { Observable } from 'rxjs/Observable';
 
-import {
-    ExecutionResult,
-    IProcessService,
-    ObservableExecutionResult,
-    Output,
-    ShellOptions,
-    SpawnOptions
-} from '../../client/common/process/types';
+import { ExecutionResult, IProcessService, ObservableExecutionResult, Output, ShellOptions, SpawnOptions } from '../../client/common/process/types';
 import { noop } from '../core';
 
 type ExecObservableCallback = (result: Observable<Output<string>> | Output<string>) => void;
@@ -28,7 +21,10 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         let value: Observable<Output<string>> | Output<string> | undefined;
         let valueReturned = false;
-        this.emit('execObservable', file, args, options, (result: Observable<Output<string>> | Output<string>) => { value = result; valueReturned = true; });
+        this.emit('execObservable', file, args, options, (result: Observable<Output<string>> | Output<string>) => {
+            value = result;
+            valueReturned = true;
+        });
 
         if (valueReturned) {
             const output = value as Output<string>;
@@ -37,14 +33,18 @@ export class MockProcessService extends EventEmitter implements IProcessService 
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
                     out: Observable.of(output),
-                    dispose: () => { noop(); }
+                    dispose: () => {
+                        noop();
+                    }
                 };
             } else {
                 return {
                     // tslint:disable-next-line:no-any
                     proc: {} as any,
                     out: value as Observable<Output<string>>,
-                    dispose: () => { noop(); }
+                    dispose: () => {
+                        noop();
+                    }
                 };
             }
         } else {
@@ -57,7 +57,10 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     public async exec(file: string, args: string[], options: SpawnOptions = {}): Promise<ExecutionResult<string>> {
         let value: ExecutionResult<string> | undefined;
         let valueReturned = false;
-        this.emit('exec', file, args, options, (result: ExecutionResult<string>) => { value = result; valueReturned = true; });
+        this.emit('exec', file, args, options, (result: ExecutionResult<string>) => {
+            value = result;
+            valueReturned = true;
+        });
 
         return valueReturned ? value! : this.procService.exec(file, args, options);
     }
@@ -65,7 +68,10 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     public async shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>> {
         let value: ExecutionResult<string> | undefined;
         let valueReturned = false;
-        this.emit('shellExec', command, options, (result: ExecutionResult<string>) => { value = result; valueReturned = true; });
+        this.emit('shellExec', command, options, (result: ExecutionResult<string>) => {
+            value = result;
+            valueReturned = true;
+        });
 
         return valueReturned ? value! : this.procService.shellExec(command, options);
     }
@@ -73,5 +79,4 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     public dispose() {
         return;
     }
-
 }

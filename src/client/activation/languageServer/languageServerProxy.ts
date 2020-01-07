@@ -86,11 +86,7 @@ export class LanguageServerProxy implements ILanguageServerProxy {
         }
         this.extensionLoadedArgs.add(args || '');
         this.startupCompleted.promise
-            .then(() =>
-                this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex =>
-                    traceError('Request python/loadExtension failed', ex)
-                )
-            )
+            .then(() => this.languageClient!.sendRequest('python/loadExtension', args).then(noop, ex => traceError('Request python/loadExtension failed', ex)))
             .ignoreErrors();
     }
     @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_READY, undefined, true)

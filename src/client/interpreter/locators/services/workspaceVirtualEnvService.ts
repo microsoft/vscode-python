@@ -20,7 +20,8 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
     public constructor(
         @inject(IVirtualEnvironmentsSearchPathProvider) @named('workspace') workspaceVirtualEnvPathProvider: IVirtualEnvironmentsSearchPathProvider,
         @inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder) {
+        @inject(IInterpreterWatcherBuilder) private readonly builder: IInterpreterWatcherBuilder
+    ) {
         super(workspaceVirtualEnvPathProvider, serviceContainer, 'WorkspaceVirtualEnvService', true);
     }
     protected async getInterpreterWatchers(resource: Uri | undefined): Promise<IInterpreterWatcher[]> {
@@ -30,9 +31,7 @@ export class WorkspaceVirtualEnvService extends BaseVirtualEnvService {
 
 @injectable()
 export class WorkspaceVirtualEnvironmentsSearchPathProvider implements IVirtualEnvironmentsSearchPathProvider {
-    public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-
-    }
+    public constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     public async getSearchPaths(resource?: Uri): Promise<string[]> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
         const paths: string[] = [];

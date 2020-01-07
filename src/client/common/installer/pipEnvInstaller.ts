@@ -7,12 +7,12 @@ import { IServiceContainer } from '../../ioc/types';
 import { ExecutionInfo } from '../types';
 import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller, InterpreterUri } from './types';
+import { InterpreterUri } from './types';
 
 export const pipenvName = 'pipenv';
 
 @injectable()
-export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller {
+export class PipEnvInstaller extends ModuleInstaller {
     private readonly pipenv: IInterpreterLocatorService;
 
     public get name(): string {
@@ -31,9 +31,9 @@ export class PipEnvInstaller extends ModuleInstaller implements IModuleInstaller
         this.pipenv = this.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, PIPENV_SERVICE);
     }
     public async isSupported(resource?: InterpreterUri): Promise<boolean> {
-        if (isResource(resource)){
+        if (isResource(resource)) {
             const interpreters = await this.pipenv.getInterpreters(resource);
-            return interpreters && interpreters.length > 0;
+            return interpreters.length > 0;
         } else {
             return resource.type === InterpreterType.Pipenv;
         }

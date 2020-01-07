@@ -102,14 +102,16 @@ function configure(): SetupOptions {
  * @returns
  */
 function activatePythonExtensionScript() {
-    const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
+    const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
     let timer: NodeJS.Timer | undefined;
     const failed = new Promise((_, reject) => {
         timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);
     });
-    const promise = Promise.race([initialize(), failed]);
-    promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
-    return promise;
+    const initializationPromise = initialize();
+    const promise = Promise.race([initializationPromise, failed]);
+    // tslint:disable-next-line: no-console
+    promise.finally(() => clearTimeout(timer!)).catch(e => console.error(e));
+    return initializationPromise;
 }
 
 /**
@@ -146,7 +148,14 @@ export async function run(): Promise<void> {
     // Setup test files that need to be run.
     testFiles.forEach(file => mocha.addFile(path.join(testsRoot, file)));
 
-    await activatePythonExtensionScript();
+    // tslint:disable: no-console
+    console.time('Time taken to activate the extension');
+    try {
+        await activatePythonExtensionScript();
+        console.timeEnd('Time taken to activate the extension');
+    } catch (ex) {
+        console.error('Failed to activate python extension without errors', ex);
+    }
 
     // Run the tests.
     await new Promise<void>((resolve, reject) => {

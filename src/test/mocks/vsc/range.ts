@@ -34,7 +34,6 @@ export namespace vscMockRange {
      * A range in the editor. (startLineNumber,startColumn) is <= (endLineNumber,endColumn)
      */
     export class Range {
-
         /**
          * Line number on which the range starts (starts at 1).
          */
@@ -53,7 +52,7 @@ export namespace vscMockRange {
         public readonly endColumn: number;
 
         constructor(startLineNumber: number, startColumn: number, endLineNumber: number, endColumn: number) {
-            if ((startLineNumber > endLineNumber) || (startLineNumber === endLineNumber && startColumn > endColumn)) {
+            if (startLineNumber > endLineNumber || (startLineNumber === endLineNumber && startColumn > endColumn)) {
                 this.startLineNumber = endLineNumber;
                 this.startColumn = endColumn;
                 this.endLineNumber = startLineNumber;
@@ -77,7 +76,7 @@ export namespace vscMockRange {
          * Test if `range` is empty.
          */
         public static isEmpty(range: IRange): boolean {
-            return (range.startLineNumber === range.endLineNumber && range.startColumn === range.endColumn);
+            return range.startLineNumber === range.endLineNumber && range.startColumn === range.endColumn;
         }
 
         /**
@@ -225,14 +224,7 @@ export namespace vscMockRange {
          * Test if range `a` equals `b`.
          */
         public static equalsRange(a: IRange, b: IRange): boolean {
-            return (
-                !!a &&
-                !!b &&
-                a.startLineNumber === b.startLineNumber &&
-                a.startColumn === b.startColumn &&
-                a.endLineNumber === b.endLineNumber &&
-                a.endColumn === b.endColumn
-            );
+            return !!a && !!b && a.startLineNumber === b.startLineNumber && a.startColumn === b.startColumn && a.endLineNumber === b.endLineNumber && a.endColumn === b.endColumn;
         }
 
         /**
@@ -306,11 +298,7 @@ export namespace vscMockRange {
          */
         public static isIRange(obj: any): obj is IRange {
             return (
-                obj
-                && (typeof obj.startLineNumber === 'number')
-                && (typeof obj.startColumn === 'number')
-                && (typeof obj.endLineNumber === 'number')
-                && (typeof obj.endColumn === 'number')
+                obj && typeof obj.startLineNumber === 'number' && typeof obj.startColumn === 'number' && typeof obj.endLineNumber === 'number' && typeof obj.endColumn === 'number'
             );
         }
 

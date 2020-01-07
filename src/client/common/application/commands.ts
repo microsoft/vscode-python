@@ -6,6 +6,7 @@
 import { CancellationToken, Position, TextDocument, Uri } from 'vscode';
 import { Commands as LSCommands } from '../../activation/languageServer/constants';
 import { Commands as DSCommands } from '../../datascience/constants';
+import { INotebook } from '../../datascience/types';
 import { CommandSource } from '../../testing/common/constants';
 import { TestFunction, TestsToRun } from '../../testing/common/types';
 import { TestDataItem, TestWorkspaceFolder } from '../../testing/types';
@@ -44,6 +45,7 @@ interface ICommandNameWithoutArgumentTypeMapping {
     [Commands.Tests_Ask_To_Stop_Discovery]: [];
     [Commands.Tests_Ask_To_Stop_Test]: [];
     [Commands.Tests_Discovering]: [];
+    [Commands.PickLocalProcess]: [];
     [DSCommands.RunCurrentCell]: [];
     [DSCommands.RunCurrentCellAdvance]: [];
     [DSCommands.ExecSelectionInInteractiveWindow]: [];
@@ -97,6 +99,7 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [Commands.Tests_Run]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Debug]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri, undefined | TestsToRun];
+    [Commands.Tests_Run_Parametrized]: [undefined, undefined | CommandSource, Uri, TestFunction[], boolean];
     // When command is invoked from a tree node, first argument is the node data.
     [Commands.Tests_Discover]: [undefined | TestWorkspaceFolder, undefined | CommandSource, undefined | Uri];
     [Commands.Tests_Run_Failed]: [undefined, CommandSource, Uri];
@@ -136,4 +139,6 @@ export interface ICommandNameArgumentTypeMapping extends ICommandNameWithoutArgu
     [DSCommands.DebugContinue]: [];
     [DSCommands.RunCurrentCellAndAddBelow]: [string];
     [DSCommands.ScrollToCell]: [string, string];
+    [DSCommands.ViewJupyterOutput]: [];
+    [DSCommands.SwitchJupyterKernel]: [INotebook | undefined];
 }

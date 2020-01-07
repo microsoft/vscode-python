@@ -18,7 +18,7 @@ const languageServerFolder = 'languageServer';
 
 @injectable()
 export class LanguageServerFolderService implements ILanguageServerFolderService {
-    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private readonly serviceContainer: IServiceContainer) {}
 
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {
@@ -30,8 +30,7 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
             return path.basename(currentFolder.path);
         }
 
-        serverVersion = await this.getLatestLanguageServerVersion(resource)
-            .catch(() => undefined);
+        serverVersion = await this.getLatestLanguageServerVersion(resource).catch(() => undefined);
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
             return path.basename(currentFolder.path);
@@ -73,12 +72,14 @@ export class LanguageServerFolderService implements ILanguageServerFolderService
         const subDirs = await fs.getSubDirectories(EXTENSION_ROOT_DIR);
         return subDirs
             .filter(dir => path.basename(dir).startsWith(languageServerFolder))
-            .map(dir => { return { path: dir, version: this.getFolderVersion(path.basename(dir)) }; });
+            .map(dir => {
+                return { path: dir, version: this.getFolderVersion(path.basename(dir)) };
+            });
     }
 
     public getFolderVersion(dirName: string): semver.SemVer {
         const suffix = dirName.substring(languageServerFolder.length + 1);
-        return suffix.length === 0 ? new semver.SemVer('0.0.0') : (semver.parse(suffix, true) || new semver.SemVer('0.0.0'));
+        return suffix.length === 0 ? new semver.SemVer('0.0.0') : semver.parse(suffix, true) || new semver.SemVer('0.0.0');
     }
     private getDownloadChannel() {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);

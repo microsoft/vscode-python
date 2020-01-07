@@ -111,7 +111,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
             }
             await this.documentManager.applyEdit(changes);
         } catch (error) {
-            const message = typeof error === 'string' ? error : (error.message ? error.message : error);
+            const message = typeof error === 'string' ? error : error.message ? error.message : error;
             const outputChannel = this.serviceContainer.get<IOutputChannel>(IOutputChannel, STANDARD_OUTPUT_CHANNEL);
             outputChannel.appendLine(error);
             const logger = this.serviceContainer.get<ILogger>(ILogger);

@@ -17,6 +17,6 @@ const baseTheme = detectBaseTheme();
 
 // tslint:disable:no-typeof-undefined
 ReactDOM.render(
-  <MainPanel baseTheme={baseTheme} skipDefault={typeof acquireVsCodeApi !== 'undefined'}/>, // Turn this back off when we have real variable explorer data
-  document.getElementById('root') as HTMLElement
+    <MainPanel baseTheme={baseTheme} skipDefault={typeof acquireVsCodeApi !== 'undefined'} />, // Turn this back off when we have real variable explorer data
+    document.getElementById('root') as HTMLElement
 );

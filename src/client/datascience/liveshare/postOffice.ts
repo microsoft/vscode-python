@@ -18,7 +18,6 @@ interface IMessageArgs {
 
 // This class is used to register two communication between a host and all of its guests
 export class PostOffice implements IAsyncDisposable {
-
     private name: string;
     private startedPromise: Deferred<vsls.LiveShare | null> | undefined;
     private hostServer: vsls.SharedService | null = null;
@@ -31,7 +30,8 @@ export class PostOffice implements IAsyncDisposable {
     constructor(
         name: string,
         private liveShareApi: ILiveShareApi,
-        private hostArgsTranslator?: (api: vsls.LiveShare | null, command: string, role: vsls.Role, args: any[]) => void) {
+        private hostArgsTranslator?: (api: vsls.LiveShare | null, command: string, role: vsls.Role, args: any[]) => void
+    ) {
         this.name = name;
 
         // Note to self, could the callbacks be keeping things alive that we don't want to be alive?
@@ -149,7 +149,7 @@ export class PostOffice implements IAsyncDisposable {
         const unescaped = this.unescapeCommandName(command);
         const args = JSON.parse(m.args) as JSONArray;
         this.callCallback(unescaped, ...args);
-    }
+    };
 
     private callCallback(command: string, ...args: any[]) {
         const callback = this.getCallback(command);
@@ -171,8 +171,7 @@ export class PostOffice implements IAsyncDisposable {
         return callback;
     }
 
-    private getApi() : Promise<vsls.LiveShare | null> {
-
+    private getApi(): Promise<vsls.LiveShare | null> {
         if (!this.startedPromise) {
             this.startedPromise = createDeferred<vsls.LiveShare | null>();
             this.startCommandServer()
@@ -255,17 +254,17 @@ export class PostOffice implements IAsyncDisposable {
                 this.postCommand(command, ...rest).ignoreErrors();
             }
         }
-    }
+    };
 
     private registerGuestCommands(api: vsls.LiveShare) {
         if (api && api.session && api.session.role === vsls.Role.Guest && this.guestServer !== null) {
             const keys = Object.keys(this.commandMap);
             keys.forEach(k => {
-                if (this.guestServer !== null) { // Hygiene is too dumb to recognize the if above
+                if (this.guestServer !== null) {
+                    // Hygiene is too dumb to recognize the if above
                     this.guestServer.onNotify(this.escapeCommandName(k), a => this.onGuestNotify(k, a as IMessageArgs));
                 }
             });
         }
     }
-
 }

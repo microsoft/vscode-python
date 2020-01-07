@@ -1,9 +1,0 @@
-/* Copyright (c) Jupyter Development Team.
- * Distributed under the terms of the Modified BSD License.
- */
-
-/*
- * This example shows how to customize the theming and still compile the CSS
- * down to something that all browsers support.
- */
-@import "@jupyter-widgets/controls/css/widgets.css";

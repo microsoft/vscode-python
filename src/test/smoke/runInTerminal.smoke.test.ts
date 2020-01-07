@@ -13,7 +13,7 @@ import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 
 suite('Smoke Test: Run Python File In Terminal', () => {
-    suiteSetup(async function () {
+    suiteSetup(async function() {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
@@ -24,20 +24,8 @@ suite('Smoke Test: Run Python File In Terminal', () => {
     teardown(closeActiveWindows);
 
     test('Exec', async () => {
-        const file = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'testMultiRootWkspc',
-            'smokeTests',
-            'testExecInTerminal.py'
-        );
-        const outputFile = path.join(
-            EXTENSION_ROOT_DIR_FOR_TESTS,
-            'src',
-            'testMultiRootWkspc',
-            'smokeTests',
-            'testExecInTerminal.log'
-        );
+        const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.py');
+        const outputFile = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'testMultiRootWkspc', 'smokeTests', 'testExecInTerminal.log');
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }

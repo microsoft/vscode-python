@@ -5,7 +5,7 @@ import { ILoadAllCells } from '../../../client/datascience/interactive-common/in
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
 import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
-import { IMainState } from '../../interactive-common/mainState';
+import { IMainState, IServerState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
     CommonActionType,
@@ -65,6 +65,8 @@ export class INativeEditorActionMapping {
     public [CommonActionType.EDITOR_LOADED]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.LOADED_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.UNMOUNT]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_KERNEL]: NativeEditorReducerFunc<never | undefined>;
+    public [CommonActionType.SELECT_SERVER]: NativeEditorReducerFunc<never | undefined>;
 
     // Messages from the extension
     public [IncomingMessageActions.STARTCELL]: NativeEditorReducerFunc<ICell>;
@@ -90,4 +92,6 @@ export class INativeEditorActionMapping {
     public [IncomingMessageActions.GETCSSRESPONSE]: NativeEditorReducerFunc<IGetCssResponse>;
     public [IncomingMessageActions.MONACOREADY]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETMONACOTHEMERESPONSE]: NativeEditorReducerFunc<IGetMonacoThemeResponse>;
+    public [IncomingMessageActions.UPDATEKERNEL]: NativeEditorReducerFunc<IServerState>;
+    public [IncomingMessageActions.LOCINIT]: NativeEditorReducerFunc<string>;
 }

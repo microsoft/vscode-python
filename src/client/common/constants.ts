@@ -8,9 +8,7 @@ export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
-export const PYTHON_ALLFILES = [
-    { language: PYTHON_LANGUAGE }
-];
+export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
 export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
@@ -32,6 +30,7 @@ export namespace Commands {
     export const Tests_Run_Failed = 'python.runFailedTests';
     export const Sort_Imports = 'python.sortImports';
     export const Tests_Run = 'python.runtests';
+    export const Tests_Run_Parametrized = 'python.runParametrizedTests';
     export const Tests_Debug = 'python.debugtests';
     export const Tests_Ask_To_Stop_Test = 'python.askToStopTests';
     export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
@@ -61,6 +60,7 @@ export namespace Commands {
     export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
     export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
     export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
+    export const PickLocalProcess = 'python.pickLocalProcess';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';

@@ -16,8 +16,7 @@ import { ILocationStackFrameDetails, IPythonTestMessage, PythonTestMessageSeveri
 
 @injectable()
 export class TestMessageService implements ITestMessageService {
-
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
     /**
      * Condense the test details down to just the potentially relevant information. Messages
      * should only be created for tests that were actually run.
@@ -94,10 +93,10 @@ export class TestMessageService implements ITestMessageService {
                 const file = await workspace.openTextDocument(fileUri);
                 const fileLineNum = parseInt(fileDetails[1], 10);
                 const line = file.lineAt(fileLineNum - 1);
-                const location = new Location(fileUri, new Range(
-                    new Position((fileLineNum - 1), line.firstNonWhitespaceCharacterIndex),
-                    new Position((fileLineNum - 1), line.text.length)
-                ));
+                const location = new Location(
+                    fileUri,
+                    new Range(new Position(fileLineNum - 1, line.firstNonWhitespaceCharacterIndex), new Position(fileLineNum - 1, line.text.length))
+                );
                 const stackFrame: ILocationStackFrameDetails = { location: location, lineText: file.getText(location.range) };
                 locationStack.push(stackFrame);
             }
@@ -133,7 +132,7 @@ export class TestMessageService implements ITestMessageService {
         }
         const matches = trimmedLineText!.slice(prefix.length).match(/[^ \(:]+/);
         const testSimpleName = matches ? matches[0] : '';
-        const testDefStartCharNum = (lineText.length - trimmedLineText.length) + prefix.length;
+        const testDefStartCharNum = lineText.length - trimmedLineText.length + prefix.length;
         const testDefEndCharNum = testDefStartCharNum + testSimpleName.length;
         const lineStart = new Position(testDefLine!.lineNumber, testDefStartCharNum);
         const lineEnd = new Position(testDefLine!.lineNumber, testDefEndCharNum);
@@ -172,7 +171,7 @@ export class TestMessageService implements ITestMessageService {
     private async getParentSuiteLocation(testFunction: FlattenedTestFunction): Promise<ILocationStackFrameDetails> {
         const suiteStackWithFileAndTest = testFunction.testFunction.nameToRun.replace('::()', '').split('::');
         // Don't need the file location or the test's name.
-        const suiteStack = suiteStackWithFileAndTest.slice(1, (suiteStackWithFileAndTest.length - 1));
+        const suiteStack = suiteStackWithFileAndTest.slice(1, suiteStackWithFileAndTest.length - 1);
         const testFileUri = Uri.file(testFunction.parentTestFile.fullPath);
         const testFile = await workspace.openTextDocument(testFileUri);
         const testFileLines = testFile.getText().splitLines({ trim: false, removeEmptyEntries: false });
@@ -249,10 +248,10 @@ export class TestMessageService implements ITestMessageService {
             parentIndentation = indentation!;
 
             // Invert the index to get the unreversed equivalent.
-            const realIndex = (reversedTestFileLines.length - 1) - suiteDefLineIndex;
+            const realIndex = reversedTestFileLines.length - 1 - suiteDefLineIndex;
             const startChar = indentation! + classPrefix.length;
             const suiteStartPos = new Position(realIndex, startChar);
-            const suiteEndPos = new Position(realIndex, (startChar + suiteName!.length));
+            const suiteEndPos = new Position(realIndex, startChar + suiteName!.length);
             const suiteRange = new Range(suiteStartPos, suiteEndPos);
             const suiteLocation = new Location(testFileUri, suiteRange);
             suiteLocationStackFrameDetails.push({ location: suiteLocation, lineText: testFile.getText(suiteRange) });

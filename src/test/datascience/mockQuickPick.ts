@@ -74,5 +74,4 @@ export class MockQuickPick implements QuickPick<QuickPickItem> {
     public dispose(): void {
         // Do nothing.
     }
-
 }

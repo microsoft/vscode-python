@@ -3,12 +3,12 @@
 'use strict';
 import * as React from 'react';
 import { connect } from 'react-redux';
-
 import { OSType } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ContentPanel, IContentPanelProps } from '../interactive-common/contentPanel';
 import { handleLinkClick } from '../interactive-common/handlers';
+import { KernelSelection } from '../interactive-common/kernelSelection';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
 import { IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
@@ -20,9 +20,8 @@ import { getLocString } from '../react-common/locReactSide';
 import { Progress } from '../react-common/progress';
 import { AddCellLine } from './addCellLine';
 import { getConnectedNativeCell } from './nativeCell';
-import { actionCreators } from './redux/actions';
-
 import './nativeEditor.less';
+import { actionCreators } from './redux/actions';
 
 type INativeEditorProps = IMainState & typeof actionCreators;
 
@@ -82,24 +81,24 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
 
         // Update the state controller with our new state
         const progressBar = this.props.busy && !this.props.testMode ? <Progress /> : undefined;
-        const addCellLine = this.props.cellVMs.length === 0 ? null :
-            <AddCellLine includePlus={true} className='add-cell-line-top' click={this.props.insertAboveFirst} baseTheme={this.props.baseTheme}/>;
+        const addCellLine =
+            this.props.cellVMs.length === 0 ? null : (
+                <AddCellLine includePlus={true} className="add-cell-line-top" click={this.props.insertAboveFirst} baseTheme={this.props.baseTheme} />
+            );
 
         return (
-            <div id='main-panel' role='Main' style={dynamicFont}>
-                <div className='styleSetter'>
-                    <style>
-                        {this.props.rootCss}
-                    </style>
+            <div id="main-panel" role="Main" style={dynamicFont}>
+                <div className="styleSetter">
+                    <style>{this.props.rootCss}</style>
                 </div>
-                <header id='main-panel-toolbar'>
+                <header id="main-panel-toolbar">
                     {this.renderToolbarPanel()}
                     {progressBar}
                 </header>
-                <section id='main-panel-variable' aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
+                <section id="main-panel-variable" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     {this.renderVariablePanel(this.props.baseTheme)}
                 </section>
-                <main id='main-panel-content'>
+                <main id="main-panel-content">
                     {addCellLine}
                     {this.renderContentPanel(this.props.baseTheme)}
                 </main>
@@ -108,6 +107,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     }
 
     // tslint:disable: react-this-binding-issue
+    // tslint:disable-next-line: max-func-body-length
     private renderToolbarPanel() {
         const selectedIndex = this.props.cellVMs.findIndex(c => c.cell.id === this.props.selectedCellId);
 
@@ -128,9 +128,9 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             this.props.toggleVariableExplorer();
             this.props.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');
         };
-        const variableExplorerTooltip = this.props.variablesVisible ?
-            getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel') :
-            getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
+        const variableExplorerTooltip = this.props.variablesVisible
+            ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
+            : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
         const runAbove = () => {
             if (this.props.selectedCellId) {
                 this.props.executeAbove(this.props.selectedCellId);
@@ -145,44 +145,93 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                 this.props.sendCommand(NativeCommandType.RunBelow, 'mouse');
             }
         };
+        const selectKernel = () => {
+            this.props.selectKernel();
+            this.props.sendCommand(NativeCommandType.SelectKernel, 'mouse');
+        };
+        const selectServer = () => {
+            this.props.selectServer();
+            this.props.sendCommand(NativeCommandType.SelectServer, 'mouse');
+        };
         const canRunAbove = selectedIndex > 0;
         const canRunBelow = selectedIndex < this.props.cellVMs.length - 1 && this.props.selectedCellId;
 
         return (
-            <div id='toolbar-panel'>
-                <div className='toolbar-menu-bar'>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className='native-button' tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAll} />
+            <div id="toolbar-panel">
+                <div className="toolbar-menu-bar">
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className="native-button" tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAll} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAbove} disabled={!canRunAbove} className='native-button' tooltip={getLocString('DataScience.runAbove', 'Run cells above')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunAbove} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={runAbove}
+                        disabled={!canRunAbove}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAbove} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runBelow} disabled={!canRunBelow} className='native-button' tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.RunBelow} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={runBelow}
+                        disabled={!canRunBelow}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunBelow} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.restartKernel} className='native-button' tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Restart} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={this.props.restartKernel}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.interruptKernel} className='native-button' tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.Interrupt} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={this.props.interruptKernel}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className='native-button' tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.InsertBelow} />
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className="native-button" tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.clearAllOutputs} disabled={!this.props.cellVMs.length} className='native-button' tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ClearAllOutput} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={this.props.clearAllOutputs}
+                        disabled={!this.props.cellVMs.length}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ClearAllOutput} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className='native-button' tooltip={variableExplorerTooltip}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.VariableExplorer} />
+                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className="native-button" tooltip={variableExplorerTooltip}>
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={save} disabled={!this.props.dirty} className='native-button' tooltip={getLocString('DataScience.save', 'Save File')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.SaveAs} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={save}
+                        disabled={!this.props.dirty}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.save', 'Save File')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
                     </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={this.props.export} disabled={!this.props.cellVMs.length} className='native-button' tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}>
-                        <Image baseTheme={this.props.baseTheme} class='image-button-image' image={ImageName.ExportToPython} />
+                    <ImageButton
+                        baseTheme={this.props.baseTheme}
+                        onClick={this.props.export}
+                        disabled={!this.props.cellVMs.length}
+                        className="native-button"
+                        tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
+                    >
+                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ExportToPython} />
                     </ImageButton>
+                    <KernelSelection baseTheme={this.props.baseTheme} font={this.props.font} kernel={this.props.kernel} selectServer={selectServer} selectKernel={selectKernel} />
                 </div>
-                <div className='toolbar-divider'/>
+                <div className="toolbar-divider" />
             </div>
         );
     }
@@ -220,20 +269,20 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             renderCell: this.renderCell,
             scrollToBottom: this.scrollDiv
         };
-    }
+    };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
-       return {
-        variables: this.props.variables,
-        pendingVariableCount: this.props.pendingVariableCount,
-        debugging: this.props.debugging,
-        busy: this.props.busy,
-        showDataExplorer: this.props.showDataViewer,
-        skipDefault: this.props.skipDefault,
-        testMode: this.props.testMode,
-        closeVariableExplorer: this.props.toggleVariableExplorer,
-        baseTheme: baseTheme
-       };
-    }
+        return {
+            variables: this.props.variables,
+            pendingVariableCount: this.props.pendingVariableCount,
+            debugging: this.props.debugging,
+            busy: this.props.busy,
+            showDataExplorer: this.props.showDataViewer,
+            skipDefault: this.props.skipDefault,
+            testMode: this.props.testMode,
+            closeVariableExplorer: this.props.toggleVariableExplorer,
+            baseTheme: baseTheme
+        };
+    };
 
     private mainKeyDown = (event: KeyboardEvent) => {
         // Handler for key down presses in the main panel
@@ -265,7 +314,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             default:
                 break;
         }
-    }
+    };
 
     // private copyToClipboard = (cellId: string) => {
     //     const cell = this.props.findCell(cellId);
@@ -300,23 +349,24 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     // }
 
     private renderCell = (cellVM: ICellViewModel, index: number): JSX.Element | null => {
+        // Don't render until we have settings
+        if (!this.props.settings || !this.props.editorOptions) {
+            return null;
+        }
+
         const addNewCell = () => {
             this.props.insertBelow(cellVM.cell.id);
             this.props.sendCommand(NativeCommandType.AddToEnd, 'mouse');
         };
         const firstLine = index === 0;
-        const lastLine = index === this.props.cellVMs.length - 1 ?
-            <AddCellLine
-                includePlus={true}
-                baseTheme={this.props.baseTheme}
-                className='add-cell-line-cell'
-                click={addNewCell} /> : null;
+        const lastLine =
+            index === this.props.cellVMs.length - 1 ? <AddCellLine includePlus={true} baseTheme={this.props.baseTheme} className="add-cell-line-cell" click={addNewCell} /> : null;
 
         return (
             <div key={cellVM.cell.id} id={cellVM.cell.id}>
                 <ErrorBoundary>
                     <ConnectedNativeCell
-                        role='listitem'
+                        role="listitem"
                         maxTextSize={this.props.settings.maxOutputSize}
                         testMode={this.props.testMode}
                         cellVM={cellVM}
@@ -333,23 +383,20 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                     />
                 </ErrorBoundary>
                 {lastLine}
-            </div>);
-    }
+            </div>
+        );
+    };
 
     private scrollDiv = (_div: HTMLDivElement) => {
         // Doing nothing for now. This should be implemented once redux refactor is done.
-    }
+    };
 
     private linkClick = (ev: MouseEvent) => {
         handleLinkClick(ev, this.props.linkClick);
-    }
-
+    };
 }
 
 // Main export, return a redux connected editor
 export function getConnectedNativeEditor() {
-    return connect(
-        mapStateToProps,
-        actionCreators
-    )(NativeEditor);
+    return connect(mapStateToProps, actionCreators)(NativeEditor);
 }

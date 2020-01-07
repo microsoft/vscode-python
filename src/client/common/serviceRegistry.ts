@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IFileDownloader, IHttpClient } from '../common/types';
+import { LiveShareApi } from '../datascience/liveshare/liveshare';
 import { IServiceManager } from '../ioc/types';
 import { ImportTracker } from '../telemetry/importTracker';
 import { IImportTracker } from '../telemetry/types';
@@ -32,22 +33,12 @@ import { CryptoUtils } from './crypto';
 import { EditorUtils } from './editor';
 import { ExperimentsManager } from './experiments';
 import { FeatureDeprecationManager } from './featureDeprecationManager';
-import {
-    ExtensionInsidersDailyChannelRule,
-    ExtensionInsidersOffChannelRule,
-    ExtensionInsidersWeeklyChannelRule
-} from './insidersBuild/downloadChannelRules';
+import { ExtensionInsidersDailyChannelRule, ExtensionInsidersOffChannelRule, ExtensionInsidersWeeklyChannelRule } from './insidersBuild/downloadChannelRules';
 import { ExtensionChannelService } from './insidersBuild/downloadChannelService';
 import { InsidersExtensionPrompt } from './insidersBuild/insidersExtensionPrompt';
 import { InsidersExtensionService } from './insidersBuild/insidersExtensionService';
-import {
-    ExtensionChannel,
-    IExtensionChannelRule,
-    IExtensionChannelService,
-    IInsiderExtensionPrompt
-} from './insidersBuild/types';
+import { ExtensionChannel, IExtensionChannelRule, IExtensionChannelService, IInsiderExtensionPrompt } from './insidersBuild/types';
 import { ProductInstaller } from './installer/productInstaller';
-import { LiveShareApi } from './liveshare/liveshare';
 import { Logger } from './logger';
 import { BrowserService } from './net/browser';
 import { FileDownloader } from './net/fileDownloader';
@@ -135,16 +126,15 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IExperimentsManager>(IExperimentsManager, ExperimentsManager);
 
     serviceManager.addSingleton<ITerminalHelper>(ITerminalHelper, TerminalHelper);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
     serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, Bash, TerminalActivationProviders.bashCShellFish);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, CommandPromptAndPowerShell, TerminalActivationProviders.commandPromptAndPowerShell);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
-    serviceManager.addSingleton<ITerminalActivationCommandProvider>(
-        ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
+        ITerminalActivationCommandProvider,
+        CommandPromptAndPowerShell,
+        TerminalActivationProviders.commandPromptAndPowerShell
+    );
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, PyEnvActivationCommandProvider, TerminalActivationProviders.pyenv);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, CondaActivationCommandProvider, TerminalActivationProviders.conda);
+    serviceManager.addSingleton<ITerminalActivationCommandProvider>(ITerminalActivationCommandProvider, PipEnvActivationCommandProvider, TerminalActivationProviders.pipenv);
     serviceManager.addSingleton<IFeatureDeprecationManager>(IFeatureDeprecationManager, FeatureDeprecationManager);
 
     serviceManager.addSingleton<IAsyncDisposableRegistry>(IAsyncDisposableRegistry, AsyncDisposableRegistry);

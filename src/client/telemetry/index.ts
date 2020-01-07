@@ -108,7 +108,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 // Else nothign will be sent.
                 // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
                 (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
-            } catch (ex){
+            } catch (ex) {
                 traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
             }
         });
@@ -1095,6 +1095,10 @@ export interface IEventNamePropertyMapping {
      */
     [EventName.PYTHON_LANGUAGE_SERVER_STARTUP]: never | undefined;
     /**
+     * Telemetry event sent when user specified None to the language server and jediEnabled is false.
+     */
+    [EventName.PYTHON_LANGUAGE_SERVER_NONE]: never | undefined;
+    /**
      * Telemetry sent from Language Server (details of telemetry sent can be provided by LS team)
      */
     [EventName.PYTHON_LANGUAGE_SERVER_TELEMETRY]: any;
@@ -1112,6 +1116,19 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when Experiments have been disabled.
      */
     [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
+    /**
+     * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
+     */
+    [EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT]: {
+        /**
+         * Carries the name of the experiment user has been opted into manually
+         */
+        expNameOptedInto?: string;
+        /**
+         * Carries the name of the experiment user has been opted out of manually
+         */
+        expNameOptedOutOf?: string;
+    };
     /**
      * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
      */
@@ -1405,6 +1422,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ConnectRemoteJupyter]: never | undefined;
     [Telemetry.ConnectRemoteFailedJupyter]: never | undefined;
     [Telemetry.ConnectRemoteSelfCertFailedJupyter]: never | undefined;
+    [Telemetry.RegisterAndUseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseInterpreterAsKernel]: never | undefined;
+    [Telemetry.UseExistingKernel]: never | undefined;
+    [Telemetry.SwitchToExistingKernel]: never | undefined;
+    [Telemetry.SwitchToInterpreterAsKernel]: never | undefined;
     [Telemetry.ConvertToPythonFile]: never | undefined;
     [Telemetry.CopySourceCode]: never | undefined;
     [Telemetry.CreateNewNotebook]: never | undefined;
@@ -1437,9 +1459,9 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ImportNotebook]: { scope: 'command' | 'file' };
     [Telemetry.Interrupt]: never | undefined;
     [Telemetry.InterruptJupyterTime]: never | undefined;
-    [Telemetry.NotebookRunCount]: number;
-    [Telemetry.NotebookWorkspaceCount]: number;
-    [Telemetry.NotebookOpenCount]: number;
+    [Telemetry.NotebookRunCount]: { count: number };
+    [Telemetry.NotebookWorkspaceCount]: { count: number };
+    [Telemetry.NotebookOpenCount]: { count: number };
     [Telemetry.NotebookOpenTime]: number;
     [Telemetry.PandasNotInstalled]: never | undefined;
     [Telemetry.PandasTooOld]: never | undefined;
@@ -1448,6 +1470,7 @@ export interface IEventNamePropertyMapping {
     [Telemetry.PtvsdSuccessfullyInstalled]: never | undefined;
     [Telemetry.OpenNotebook]: { scope: 'command' | 'file' };
     [Telemetry.OpenNotebookAll]: never | undefined;
+    [Telemetry.OpenedInteractiveWindow]: never | undefined;
     [Telemetry.OpenPlotViewer]: never | undefined;
     [Telemetry.Redo]: never | undefined;
     [Telemetry.RemoteAddCode]: never | undefined;
@@ -1467,10 +1490,11 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ScrolledToCell]: never | undefined;
     [Telemetry.CellCount]: { count: number };
     [Telemetry.Save]: never | undefined;
-    [Telemetry.AutoSaveEnabled]: { enabled: boolean };
     [Telemetry.SelfCertsMessageClose]: never | undefined;
     [Telemetry.SelfCertsMessageEnabled]: never | undefined;
     [Telemetry.SelectJupyterURI]: never | undefined;
+    [Telemetry.SelectLocalJupyterKernel]: never | undefined;
+    [Telemetry.SelectRemoteJupyuterKernel]: never | undefined;
     [Telemetry.SessionIdleTimeout]: never | undefined;
     [Telemetry.JupyterNotInstalledErrorShown]: never | undefined;
     [Telemetry.JupyterCommandSearch]: { where: 'activeInterpreter' | 'otherInterpreter' | 'path' | 'nowhere'; command: JupyterCommands };
@@ -1483,6 +1507,14 @@ export interface IEventNamePropertyMapping {
     [Telemetry.ShowHistoryPane]: never | undefined;
     [Telemetry.StartJupyter]: never | undefined;
     [Telemetry.StartJupyterProcess]: never | undefined;
+    [Telemetry.JupyterStartTimeout]: {
+        /**
+         * Total time spent in attempting to start and connect to jupyter before giving up.
+         *
+         * @type {number}
+         */
+        timeout: number;
+    };
     [Telemetry.SubmitCellThroughInput]: never | undefined;
     [Telemetry.Undo]: never | undefined;
     [Telemetry.VariableExplorerFetchTime]: never | undefined;
@@ -1577,4 +1609,60 @@ export interface IEventNamePropertyMapping {
         hasCustomShell: undefined | boolean;
         hasShellInEnv: undefined | boolean;
     };
+    /**
+     * Telemetry event sent when getting environment variables for an activated environment has failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED]: {
+        /**
+         * Whether the activation commands contain the name `conda`.
+         *
+         * @type {boolean}
+         */
+        isPossiblyCondaEnv: boolean;
+        /**
+         * The type of terminal shell created: powershell, cmd, zsh, bash etc.
+         *
+         * @type {TerminalShellType}
+         */
+        terminal: TerminalShellType;
+    };
+    /**
+     * Telemetry event sent once done searching for kernel spec and interpreter for a local connection.
+     *
+     * @type {{
+     *         kernelSpecFound: boolean;
+     *         interpreterFound: boolean;
+     *     }}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.FindKernelForLocalConnection]: {
+        /**
+         * Whether a kernel spec was found.
+         *
+         * @type {boolean}
+         */
+        kernelSpecFound: boolean;
+        /**
+         * Whether an interpreter was found.
+         *
+         * @type {boolean}
+         */
+        interpreterFound: boolean;
+        /**
+         * Whether user was prompted to select a kernel spec.
+         *
+         * @type {boolean}
+         */
+        promptedToSelect?: boolean;
+    };
+    /**
+     * Telemetry event sent when starting a session for a local connection failed.
+     *
+     * @type {(undefined | never)}
+     * @memberof IEventNamePropertyMapping
+     */
+    [Telemetry.StartSessionFailedJupyter]: undefined | never;
 }

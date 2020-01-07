@@ -4,7 +4,6 @@
 import '../../common/extensions';
 
 import { nbformat } from '@jupyterlab/coreutils';
-import * as fs from 'fs-extra';
 import { inject, injectable } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
@@ -94,7 +93,7 @@ export class JupyterImporter implements INotebookImporter {
         // a) JSON parse should validate that it's JSON
         // b) cells check should validate it's at least close to a notebook
         // tslint:disable-next-line: no-any
-        const contents = json ? JSON.parse(json) as any : undefined;
+        const contents = json ? (JSON.parse(json) as any) : undefined;
         if (contents && contents.cells) {
             // Convert the cells into actual cell objects
             const cells = contents.cells as (nbformat.ICodeCell | nbformat.IRawCell | nbformat.IMarkdownCell)[];
@@ -117,12 +116,12 @@ export class JupyterImporter implements INotebookImporter {
 
     public dispose = () => {
         this.isDisposed = true;
-    }
+    };
 
     private addInstructionComments = (pythonOutput: string): string => {
         const comments = localize.DataScience.instructionComments().format(this.defaultCellMarker);
         return comments.concat(pythonOutput);
-    }
+    };
 
     private get defaultCellMarker(): string {
         return this.configuration.getSettings().datascience.defaultCellMarker || Identifiers.DefaultCodeCellMarker;
@@ -130,12 +129,16 @@ export class JupyterImporter implements INotebookImporter {
 
     private addIPythonImport = (pythonOutput: string): string => {
         return CodeSnippits.ImportIPython.format(this.defaultCellMarker, pythonOutput);
-    }
+    };
 
     private addDirectoryChange = (pythonOutput: string, directoryChange: string): string => {
-        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(localize.DataScience.importChangeDirectoryComment().format(this.defaultCellMarker), CodeSnippits.ChangeDirectoryCommentIdentifier, directoryChange);
+        const newCode = CodeSnippits.ChangeDirectory.join(os.EOL).format(
+            localize.DataScience.importChangeDirectoryComment().format(this.defaultCellMarker),
+            CodeSnippits.ChangeDirectoryCommentIdentifier,
+            directoryChange
+        );
         return newCode.concat(pythonOutput);
-    }
+    };
 
     // When importing a file, calculate if we can create a %cd so that the relative paths work
     private async calculateDirectoryChange(notebookFile: string): Promise<string | undefined> {
@@ -161,7 +164,6 @@ export class JupyterImporter implements INotebookImporter {
             // If path.relative can't calculate a relative path, then it just returns the full second path
             // so check here, we only want this if we were able to calculate a relative path, no network shares or drives
             if (directoryChange && !path.isAbsolute(directoryChange)) {
-
                 // Escape windows path chars so they end up in the source escaped
                 if (this.platform.isWindows) {
                     directoryChange = directoryChange.replace('\\', '\\\\');
@@ -185,7 +187,7 @@ export class JupyterImporter implements INotebookImporter {
             try {
                 // Save this file into our disposables so the temp file goes away
                 this.disposableRegistry.push(file);
-                await fs.appendFile(file.filePath, this.nbconvertTemplateFormat.format(this.defaultCellMarker));
+                await this.fileSystem.appendFile(file.filePath, this.nbconvertTemplateFormat.format(this.defaultCellMarker));
 
                 // Now we should have a template that will convert
                 return file.filePath;

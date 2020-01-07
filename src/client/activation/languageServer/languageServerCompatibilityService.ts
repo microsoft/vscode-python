@@ -12,7 +12,7 @@ import { ILanguageServerCompatibilityService } from '../types';
 
 @injectable()
 export class LanguageServerCompatibilityService implements ILanguageServerCompatibilityService {
-    constructor(@inject(IDotNetCompatibilityService) private readonly dotnetCompatibility: IDotNetCompatibilityService) { }
+    constructor(@inject(IDotNetCompatibilityService) private readonly dotnetCompatibility: IDotNetCompatibilityService) {}
     public async isSupported(): Promise<boolean> {
         try {
             const supported = await this.dotnetCompatibility.isSupported();

@@ -15,9 +15,7 @@ import { IProcessService } from '../client/common/process/types';
 import { IPythonSettings, Resource } from '../client/common/types';
 import { PythonInterpreter } from '../client/interpreter/contracts';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
-import {
-    EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST
-} from './constants';
+import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_MULTI_ROOT_TEST, IS_PERF_TEST, IS_SMOKE_TEST } from './constants';
 import { noop } from './core';
 
 const StreamZip = require('node-stream-zip');
@@ -41,15 +39,31 @@ export enum OSType {
     Linux = 'Linux'
 }
 
-export type PythonSettingKeys = 'workspaceSymbols.enabled' | 'pythonPath' |
-    'linting.lintOnSave' |
-    'linting.enabled' | 'linting.pylintEnabled' |
-    'linting.flake8Enabled' | 'linting.pycodestyleEnabled' | 'linting.pylamaEnabled' |
-    'linting.prospectorEnabled' | 'linting.pydocstyleEnabled' | 'linting.mypyEnabled' | 'linting.banditEnabled' |
-    'testing.nosetestArgs' | 'testing.pytestArgs' | 'testing.unittestArgs' |
-    'formatting.provider' | 'sortImports.args' |
-    'testing.nosetestsEnabled' | 'testing.pytestEnabled' | 'testing.unittestEnabled' |
-    'envFile' | 'jediEnabled' | 'linting.ignorePatterns' | 'terminal.activateEnvironment';
+export type PythonSettingKeys =
+    | 'workspaceSymbols.enabled'
+    | 'pythonPath'
+    | 'linting.lintOnSave'
+    | 'linting.enabled'
+    | 'linting.pylintEnabled'
+    | 'linting.flake8Enabled'
+    | 'linting.pycodestyleEnabled'
+    | 'linting.pylamaEnabled'
+    | 'linting.prospectorEnabled'
+    | 'linting.pydocstyleEnabled'
+    | 'linting.mypyEnabled'
+    | 'linting.banditEnabled'
+    | 'testing.nosetestArgs'
+    | 'testing.pytestArgs'
+    | 'testing.unittestArgs'
+    | 'formatting.provider'
+    | 'sortImports.args'
+    | 'testing.nosetestsEnabled'
+    | 'testing.pytestEnabled'
+    | 'testing.unittestEnabled'
+    | 'envFile'
+    | 'jediEnabled'
+    | 'linting.ignorePatterns'
+    | 'terminal.activateEnvironment';
 
 async function disposePythonSettings() {
     if (!IS_SMOKE_TEST) {
@@ -62,9 +76,12 @@ export async function updateSetting(setting: PythonSettingKeys, value: {} | unde
     const vscode = require('vscode') as typeof import('vscode');
     const settings = vscode.workspace.getConfiguration('python', resource || null);
     const currentValue = settings.inspect(setting);
-    if (currentValue !== undefined && ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
-        (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
-        (configTarget === vscode.ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))) {
+    if (
+        currentValue !== undefined &&
+        ((configTarget === vscode.ConfigurationTarget.Global && currentValue.globalValue === value) ||
+            (configTarget === vscode.ConfigurationTarget.Workspace && currentValue.workspaceValue === value) ||
+            (configTarget === vscode.ConfigurationTarget.WorkspaceFolder && currentValue.workspaceFolderValue === value))
+    ) {
         await disposePythonSettings();
         return;
     }
@@ -137,16 +154,15 @@ export function retryAsync(this: any, wrapped: Function, retryCount: number = 2)
             const reasons: any[] = [];
 
             const makeCall = () => {
-                wrapped.call(this as Function, ...args)
-                    .then(resolve, (reason: any) => {
-                        reasons.push(reason);
-                        if (reasons.length >= retryCount) {
-                            reject(reasons);
-                        } else {
-                            // If failed once, lets wait for some time before trying again.
-                            setTimeout(makeCall, 500);
-                        }
-                    });
+                wrapped.call(this as Function, ...args).then(resolve, (reason: any) => {
+                    reasons.push(reason);
+                    if (reasons.length >= retryCount) {
+                        reject(reasons);
+                    } else {
+                        // If failed once, lets wait for some time before trying again.
+                        setTimeout(makeCall, 500);
+                    }
+                });
             };
 
             makeCall();
@@ -170,7 +186,7 @@ async function setPythonPathInWorkspace(resource: string | Uri | undefined, conf
 }
 async function restoreGlobalPythonPathSetting(): Promise<void> {
     const vscode = require('vscode') as typeof import('vscode');
-    const pythonConfig = vscode.workspace.getConfiguration('python', null as any as Uri);
+    const pythonConfig = vscode.workspace.getConfiguration('python', (null as any) as Uri);
     await pythonConfig.update('pythonPath', undefined, true);
     await disposePythonSettings();
 }
@@ -191,7 +207,7 @@ export async function deleteFile(file: string) {
 
 export async function deleteFiles(globPattern: string) {
     const items = await new Promise<string[]>((resolve, reject) => {
-        glob(globPattern, (ex, files) => ex ? reject(ex) : resolve(files));
+        glob(globPattern, (ex, files) => (ex ? reject(ex) : resolve(files)));
     });
 
     return Promise.all(items.map(item => fs.remove(item).catch(noop)));
@@ -262,9 +278,10 @@ export async function getPythonSemVer(procService?: IProcessService): Promise<Se
     const pythonProcRunner = procService ? procService : new proc.ProcessService(new decoder.BufferDecoder());
     const pyVerArgs = ['-c', 'import sys;print("{0}.{1}.{2}".format(*sys.version_info[:3]))'];
 
-    return pythonProcRunner.exec(PYTHON_PATH, pyVerArgs)
+    return pythonProcRunner
+        .exec(PYTHON_PATH, pyVerArgs)
         .then(strVersion => new SemVer(strVersion.stdout.trim()))
-        .catch((err) => {
+        .catch(err => {
             // if the call fails this should make it loudly apparent.
             console.error('Failed to get Python Version in getPythonSemVer', err);
             return undefined;
@@ -428,7 +445,7 @@ export async function waitForCondition(condition: () => Promise<boolean>, timeou
             reject(new Error(errorMessage));
         }, timeoutMs);
         const timer = setInterval(async () => {
-            if (!await condition().catch(() => false)) {
+            if (!(await condition().catch(() => false))) {
                 return;
             }
             clearTimeout(timeout);
@@ -444,4 +461,81 @@ export async function openFile(file: string): Promise<TextDocument> {
     await vscode.window.showTextDocument(textDocument);
     assert(vscode.window.activeTextEditor, 'No active editor');
     return textDocument;
+}
+
+/**
+ * Fakes for timers in nodejs when testing, using `lolex`.
+ * An alternative to `sinon.useFakeTimers` (which in turn uses `lolex`, but doesn't expose the `async` methods).
+ * Use this class when you have tests with `setTimeout` and which to avoid them for faster tests.
+ *
+ * For further information please refer:
+ * - https://www.npmjs.com/package/lolex
+ * - https://sinonjs.org/releases/v1.17.6/fake-timers/
+ *
+ * @class FakeClock
+ */
+export class FakeClock {
+    // tslint:disable-next-line:no-any
+    private clock?: any;
+    /**
+     * Creates an instance of FakeClock.
+     * @param {number} [advacenTimeMs=10_000] Default `timeout` value. Defaults to 10s. Assuming we do not have anything bigger.
+     * @memberof FakeClock
+     */
+    constructor(private readonly advacenTimeMs: number = 10_000) {}
+    public install() {
+        // tslint:disable-next-line:no-require-imports
+        const lolex = require('lolex');
+        this.clock = lolex.install();
+    }
+    public uninstall() {
+        this.clock?.uninstall();
+    }
+    /**
+     * Wait for timers to kick in, and then wait for all of them to complete.
+     *
+     * @returns {Promise<void>}
+     * @memberof FakeClock
+     */
+    public async wait(): Promise<void> {
+        await this.waitForTimersToStart();
+        await this.waitForTimersToFinish();
+    }
+
+    /**
+     * Wait for timers to start.
+     *
+     * @returns {Promise<void>}
+     * @memberof FakeClock
+     */
+    private async waitForTimersToStart(): Promise<void> {
+        if (!this.clock) {
+            throw new Error('Fake clock not installed');
+        }
+        while (this.clock.countTimers() === 0) {
+            // Relinquish control to event loop, so other timer code will run.
+            // We want to wait for `setTimeout` to kick in.
+            await new Promise(resolve => process.nextTick(resolve));
+        }
+    }
+    /**
+     * Wait for timers to finish.
+     *
+     * @returns {Promise<void>}
+     * @memberof FakeClock
+     */
+    private async waitForTimersToFinish(): Promise<void> {
+        if (!this.clock) {
+            throw new Error('Fake clock not installed');
+        }
+        while (this.clock.countTimers()) {
+            // Advance clock by 10s (can be anything to ensure the next scheduled block of code executes).
+            // Assuming we do not have timers > 10s
+            // This will ensure any such such as `setTimeout(..., 10)` will get executed.
+            this.clock.tick(this.advacenTimeMs);
+
+            // Wait for the timer code to run to completion (incase they are promises).
+            await this.clock.runAllAsync();
+        }
+    }
 }

@@ -5,25 +5,18 @@ import { injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { CancellationToken } from 'vscode';
 
-import { ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
+import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../../common/process/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
-import { noop } from '../../../common/utils/misc';
-import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
 import { LiveShare, LiveShareCommands } from '../../constants';
-import {
-    IConnection,
-    IJupyterSessionManagerFactory,
-    INotebookServer,
-    INotebookServerOptions
-} from '../../types';
+import { IConnection, INotebookServer, INotebookServerOptions } from '../../types';
 import { JupyterConnectError } from '../jupyterConnectError';
 import { JupyterExecutionBase } from '../jupyterExecution';
-import { GuestJupyterSessionManagerFactory } from './guestJupyterSessionManagerFactory';
+import { KernelSelector } from '../kernels/kernelSelector';
+import { NotebookStarter } from '../notebookStarter';
 import { LiveShareParticipantGuest } from './liveShareParticipantMixin';
 import { ServerCache } from './serverCache';
 
@@ -34,32 +27,32 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
 
     constructor(
         liveShare: ILiveShareApi,
-        executionFactory: IPythonExecutionFactory,
         interpreterService: IInterpreterService,
-        processServiceFactory: IProcessServiceFactory,
         logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
-        sessionManager: IJupyterSessionManagerFactory,
         workspace: IWorkspaceService,
         configuration: IConfigurationService,
-        activationHelper: IEnvironmentActivationService,
-        serviceContainer: IServiceContainer) {
+        kernelSelector: KernelSelector,
+        notebookStarter: NotebookStarter,
+        appShell: IApplicationShell,
+        jupyterOutputChannel: IOutputChannel,
+        serviceContainer: IServiceContainer
+    ) {
         super(
             liveShare,
-            executionFactory,
             interpreterService,
-            processServiceFactory,
             logger,
             disposableRegistry,
-            asyncRegistry,
-            fileSystem,
-            new GuestJupyterSessionManagerFactory(sessionManager), // Don't talk to the active session on the guest side.
             workspace,
             configuration,
-            activationHelper,
-            serviceContainer);
+            kernelSelector,
+            notebookStarter,
+            appShell,
+            jupyterOutputChannel,
+            serviceContainer
+        );
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);
     }
@@ -77,49 +70,34 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         return this.checkSupported(LiveShareCommands.isImportSupported, cancelToken);
     }
-    public isKernelCreateSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelCreateSupported, cancelToken);
-    }
-    public isKernelSpecSupported(cancelToken?: CancellationToken): Promise<boolean> {
-        return this.checkSupported(LiveShareCommands.isKernelSpecSupported, cancelToken);
-    }
     public isSpawnSupported(_cancelToken?: CancellationToken): Promise<boolean> {
         return Promise.resolve(false);
     }
-    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
-        let result: INotebookServer | undefined = await this.serverCache.get(options);
 
-        // See if we already have this server or not.
-        if (result) {
-            return result;
-        }
-
-        // Create the server on the remote machine. It should return an IConnection we can use to build a remote uri
+    public async guestConnectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         const service = await this.waitForService();
         if (service) {
             const purpose = options ? options.purpose : uuid();
-            const connection: IConnection = await service.request(
-                LiveShareCommands.connectToNotebookServer,
-                [options],
-                cancelToken);
+            const connection: IConnection = await service.request(LiveShareCommands.connectToNotebookServer, [options], cancelToken);
 
             // If that works, then treat this as a remote server and connect to it
             if (connection && connection.baseUrl) {
                 const newUri = `${connection.baseUrl}?token=${connection.token}`;
-                result = await super.connectToNotebookServer(
+                return super.connectToNotebookServer(
                     {
                         uri: newUri,
                         useDefaultConfig: options && options.useDefaultConfig,
                         workingDir: options ? options.workingDir : undefined,
                         purpose
                     },
-                    cancelToken);
-                // Save in our cache
-                if (result) {
-                    await this.serverCache.set(result, noop, options);
-                }
+                    cancelToken
+                );
             }
         }
+    }
+
+    public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer> {
+        const result = await this.serverCache.getOrCreate(this.guestConnectToNotebookServer.bind(this), options, cancelToken);
 
         if (!result) {
             throw new JupyterConnectError(localize.DataScience.liveShareConnectFailure());
@@ -127,6 +105,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
 
         return result;
     }
+
     public spawnNotebook(_file: string): Promise<void> {
         // Not supported in liveshare
         throw new Error(localize.DataScience.liveShareCannotSpawnNotebooks());

@@ -11,12 +11,7 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import {
-    ILanguageServerAnalysisOptions,
-    ILanguageServerExtension,
-    ILanguageServerManager,
-    ILanguageServerProxy
-} from '../types';
+import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy } from '../types';
 import { LanguageClientMiddleware } from './languageClientMiddleware';
 
 @injectable()
@@ -32,7 +27,7 @@ export class LanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
-    ) { }
+    ) {}
     public dispose() {
         if (this.languageProxy) {
             this.languageProxy.dispose();

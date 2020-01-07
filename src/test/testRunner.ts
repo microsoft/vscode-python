@@ -8,14 +8,14 @@
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import { IS_SMOKE_TEST } from './constants';
+import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants';
 import { initialize } from './initialize';
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
 // Since we are not running in a tty environment, we just implement the method statically.
 const tty = require('tty');
 if (!tty.getWindowSize) {
-    tty.getWindowSize = function (): number[] {
+    tty.getWindowSize = function(): number[] {
         return [80, 75];
     };
 }
@@ -66,10 +66,10 @@ export async function run(): Promise<void> {
      * @returns
      */
     function initializationScript() {
-        const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
+        const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
         let timer: NodeJS.Timer | undefined;
         const failed = new Promise((_, reject) => {
-            timer = setTimeout(() => reject(ex), 120_000);
+            timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);
         });
         const promise = Promise.race([initialize(), failed]);
         promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));

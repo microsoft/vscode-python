@@ -20,8 +20,10 @@ enum JsonLanguages {
 
 @injectable()
 export class LaunchJsonCompletionProvider implements CompletionItemProvider, IExtensionSingleActivationService {
-    constructor(@inject(ILanguageService) private readonly languageService: ILanguageService,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry) { }
+    constructor(
+        @inject(ILanguageService) private readonly languageService: ILanguageService,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+    ) {}
     public async activate(): Promise<void> {
         this.disposableRegistry.push(this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this));
         this.disposableRegistry.push(this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this));
@@ -54,6 +56,6 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
         const location = getLocation(document.getText(), document.offsetAt(position));
         // Cursor must be inside the configurations array and not in any nested items.
         // Hence path[0] = array, path[1] = array element index.
-        return (location.path[0] === configurationNodeName && location.path.length === 2);
+        return location.path[0] === configurationNodeName && location.path.length === 2;
     }
 }

@@ -18,7 +18,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         @inject(IPipEnvService) private readonly pipenvService: IPipEnvService,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem
-    ) { }
+    ) {}
 
     public isShellSupported(_targetShell: TerminalShellType): boolean {
         return false;
@@ -31,8 +31,7 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         }
         // Activate using `pipenv shell` only if the current folder relates pipenv environment.
         const workspaceFolder = resource ? this.workspaceService.getWorkspaceFolder(resource) : undefined;
-        if (workspaceFolder && interpreter.pipEnvWorkspaceFolder &&
-            !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)) {
+        if (workspaceFolder && interpreter.pipEnvWorkspaceFolder && !this.fs.arePathsSame(workspaceFolder.uri.fsPath, interpreter.pipEnvWorkspaceFolder)) {
             return;
         }
         const execName = this.pipenvService.executable;
@@ -48,5 +47,4 @@ export class PipEnvActivationCommandProvider implements ITerminalActivationComma
         const execName = this.pipenvService.executable;
         return [`${execName.fileToCommandArgument()} shell`];
     }
-
 }

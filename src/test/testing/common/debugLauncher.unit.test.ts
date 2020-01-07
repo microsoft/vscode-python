@@ -479,7 +479,10 @@ suite('Unit Tests - Debug Launcher', () => {
             testProvider: 'unittest'
         };
         const expected = getDefaultDebugConfig();
-        setupSuccess(options, 'unittest', expected, [{ name: 'spam', type: DebuggerTypeName, request: 'launch' }, { name: 'spam', type: DebuggerTypeName, request: 'attach' }]);
+        setupSuccess(options, 'unittest', expected, [
+            { name: 'spam', type: DebuggerTypeName, request: 'launch' },
+            { name: 'spam', type: DebuggerTypeName, request: 'attach' }
+        ]);
 
         await debugLauncher.launchDebugger(options);
 

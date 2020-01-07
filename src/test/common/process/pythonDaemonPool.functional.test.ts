@@ -15,7 +15,6 @@ import { Observable } from 'rxjs/Observable';
 import * as sinon from 'sinon';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import { createMessageConnection, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { PythonDaemonExecutionServicePool } from '../../../client/common/process/pythonDaemonPool';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
@@ -28,6 +27,7 @@ import { parsePythonVersion } from '../../../client/common/utils/version';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 import { PythonDaemonModule } from '../../../client/datascience/constants';
 import { isPythonVersion, PYTHON_PATH, waitForCondition } from '../../common';
+import { createTemporaryFile } from '../../utils/fs';
 use(chaiPromised);
 
 // tslint:disable: max-func-body-length
@@ -41,7 +41,6 @@ suite('Daemon - Python Daemon Pool', () => {
     let disposables: IDisposable[] = [];
     let createDaemonServicesSpy: sinon.SinonSpy<[], Promise<IPythonDaemonExecutionService>>;
     let logger: IProcessLogger;
-    let fsUtils: FileSystem;
     class DaemonPool extends PythonDaemonExecutionServicePool {
         // tslint:disable-next-line: no-unnecessary-override
         public createDaemonServices(): Promise<IPythonDaemonExecutionService> {
@@ -55,10 +54,9 @@ suite('Daemon - Python Daemon Pool', () => {
                 .stdout.toString()
                 .trim();
         }
-        fsUtils = new FileSystem();
     });
-    setup(async function () {
-        if (isPythonVersion('2.7')){
+    setup(async function() {
+        if (isPythonVersion('2.7')) {
             // tslint:disable-next-line: no-invalid-this
             return this.skip();
         }
@@ -96,8 +94,8 @@ suite('Daemon - Python Daemon Pool', () => {
     }
 
     async function createPythonFile(source: string): Promise<string> {
-        const tmpFile = await fsUtils.createTemporaryFile('.py');
-        disposables.push({ dispose: () => tmpFile.dispose() });
+        const tmpFile = await createTemporaryFile('.py');
+        disposables.push({ dispose: () => tmpFile.cleanupCallback() });
         await fs.writeFile(tmpFile.filePath, source, { encoding: 'utf8' });
         return tmpFile.filePath;
     }
@@ -133,9 +131,9 @@ suite('Daemon - Python Daemon Pool', () => {
         await assert.eventually.equal(pythonDaemonPool.isModuleInstalled(moduleName), expectedToBeInstalled);
     }
 
-    test('\'pip\' module is installed', async () => testModuleInstalled('pip', true));
-    test('\'unittest\' module is installed', async () => testModuleInstalled('unittest', true));
-    test('\'VSCode-Python-Rocks\' module is not Installed', async () => testModuleInstalled('VSCode-Python-Rocks', false));
+    test("'pip' module is installed", async () => testModuleInstalled('pip', true));
+    test("'unittest' module is installed", async () => testModuleInstalled('unittest', true));
+    test("'VSCode-Python-Rocks' module is not Installed", async () => testModuleInstalled('VSCode-Python-Rocks', false));
 
     test('Execute a file and capture stdout (with unicode)', async () => {
         const source = dedent`

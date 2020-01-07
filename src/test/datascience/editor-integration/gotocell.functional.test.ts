@@ -13,14 +13,7 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { traceError } from '../../../client/common/logger';
 import { Commands, Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
-import {
-    ICell,
-    ICodeLensFactory,
-    IDataScienceCodeLensProvider,
-    IInteractiveWindowListener,
-    IJupyterExecution,
-    INotebook
-} from '../../../client/datascience/types';
+import { ICell, ICodeLensFactory, IDataScienceCodeLensProvider, IInteractiveWindowListener, IJupyterExecution, INotebook } from '../../../client/datascience/types';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
 
@@ -172,20 +165,23 @@ suite('DataScience gotocell tests', () => {
     }
 
     runTest('Basic execution', async () => {
-        addDocument([
-            {
-                code: `#%%\na=1\na`,
-                result: 1
-            },
-            {
-                code: `#%%\na+=1\na`,
-                result: 2
-            },
-            {
-                code: `#%%\na+=4\na`,
-                result: 6
-            }
-        ], path.join(srcDirectory(), 'foo.py'));
+        addDocument(
+            [
+                {
+                    code: `#%%\na=1\na`,
+                    result: 1
+                },
+                {
+                    code: `#%%\na+=1\na`,
+                    result: 2
+                },
+                {
+                    code: `#%%\na+=4\na`,
+                    result: 6
+                }
+            ],
+            path.join(srcDirectory(), 'foo.py')
+        );
 
         const server = await createNotebook(true);
         assert.ok(server, 'No server created');
@@ -204,24 +200,27 @@ suite('DataScience gotocell tests', () => {
 
     runTest('Basic edit', async () => {
         const filePath = path.join(srcDirectory(), 'foo.py');
-        addDocument([
-            {
-                code: `#%%\na=1\na`,
-                result: 1
-            },
-            {
-                code: `#%%\na+=1\na`,
-                result: 2
-            },
-            {
-                code: `#%%\na+=4\na`,
-                result: 6
-            },
-            {
-                code: `#%%\n`,
-                result: undefined
-            }
-        ], filePath);
+        addDocument(
+            [
+                {
+                    code: `#%%\na=1\na`,
+                    result: 1
+                },
+                {
+                    code: `#%%\na+=1\na`,
+                    result: 2
+                },
+                {
+                    code: `#%%\na+=4\na`,
+                    result: 6
+                },
+                {
+                    code: `#%%\n`,
+                    result: undefined
+                }
+            ],
+            filePath
+        );
 
         const server = await createNotebook(true);
         assert.ok(server, 'No server created');

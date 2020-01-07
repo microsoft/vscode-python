@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-Object.defineProperty(exports, "__esModule", { value: true });
-const path = require("path");
-const tsconfig_paths_webpack_plugin_1 = require("tsconfig-paths-webpack-plugin");
-const constants_1 = require("../constants");
-const common_1 = require("./common");
+
+const path = require('path');
+const tsconfig_paths_webpack_plugin = require('tsconfig-paths-webpack-plugin');
+const constants = require('../constants');
+const common = require('./common');
 // tslint:disable-next-line:no-var-requires no-require-imports
-const configFileName = path.join(constants_1.ExtensionRootDir, 'tsconfig.extension.json');
+const configFileName = path.join(constants.ExtensionRootDir, 'tsconfig.extension.json');
 const config = {
     mode: 'production',
     target: 'node',
@@ -40,22 +40,15 @@ const config = {
             }
         ]
     },
-    externals: [
-        'vscode',
-        'commonjs'
-    ],
-    plugins: [
-        ...common_1.getDefaultPlugins('debugger')
-    ],
+    externals: ['vscode', 'commonjs'],
+    plugins: [...common.getDefaultPlugins('debugger')],
     resolve: {
         extensions: ['.ts', '.js'],
-        plugins: [
-            new tsconfig_paths_webpack_plugin_1.TsconfigPathsPlugin({ configFile: configFileName })
-        ]
+        plugins: [new tsconfig_paths_webpack_plugin.TsconfigPathsPlugin({ configFile: configFileName })]
     },
     output: {
         filename: '[name].js',
-        path: path.resolve(constants_1.ExtensionRootDir, 'out', 'client'),
+        path: path.resolve(constants.ExtensionRootDir, 'out', 'client'),
         libraryTarget: 'commonjs2',
         devtoolModuleFilenameTemplate: '../../[resource-path]'
     }
