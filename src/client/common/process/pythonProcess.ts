@@ -44,6 +44,9 @@ export class PythonExecutionService implements IPythonExecutionService {
                 const output = await this.procService.exec(command, ['--version'], { mergeStdOutErr: true });
                 if (output) {
                     traceInfo(`Find interpreter command ${command} exists`);
+                } else {
+                    traceInfo(`Find interpreter command ${command} does not return any output for --version`);
+                    return;
                 }
             } catch (ex) {
                 traceError(`Failed to parse interpreter information, ${command} --version failed with `, ex);
