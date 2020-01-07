@@ -39,40 +39,19 @@ export class PythonExecutionService implements IPythonExecutionService {
             // https://github.com/microsoft/vscode-python/issues/7760
             const { command, args } = this.getExecutionInfo([file]);
 
-            // First check command
-            try {
-                const output = await this.procService.exec(command, ['--version'], { mergeStdOutErr: true });
-                if (output) {
-                    traceInfo(`Find interpreter command ${command} exists`);
-                } else {
-                    traceInfo(`Find interpreter command ${command} does not return any output for --version`);
-                    return;
-                }
-            } catch (ex) {
-                traceError(`Failed to parse interpreter information, ${command} --version failed with `, ex);
+            // Try shell execing the command, followed by the arguments. This will make node kill the process if it
+            // takes too long.
+            const result = await this.procService.shellExec(`${command} ${args.join(' ')}`, { timeout: 15000 });
+            if (result.stderr) {
+                traceError(`Failed to parse interpreter information for ${command} ${args} stderr: ${result.stderr}`);
                 return;
             }
 
-            // Then get the interpreter information.
-            const jsonValue = await new Promise<string>((resolve, reject) => {
-                const timer = setTimeout(() => resolve('--timed out --'), 15000);
-                this.procService
-                    .exec(command, args, { mergeStdOutErr: true })
-                    .then(o => {
-                        clearTimeout(timer);
-                        resolve(o.stdout);
-                    })
-                    .catch(ex => {
-                        clearTimeout(timer);
-                        reject(ex);
-                    });
-            }); // --timed out-- should cause an exception
-
             let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
             try {
-                json = JSON.parse(jsonValue);
+                json = JSON.parse(result.stdout);
             } catch (ex) {
-                traceError(`Failed to parse interpreter information for '${command} ${args}' with JSON ${jsonValue}`, ex);
+                traceError(`Failed to parse interpreter information for '${command} ${args}' with JSON ${result.stdout}`, ex);
                 return;
             }
             traceInfo(`Found interpreter for ${command} ${args}`);
