@@ -1161,7 +1161,11 @@ suite('FileSystem', () => {
                 expect(filename1).to.not.equal(filename2);
             });
 
-            test('Ensure writing to a temp file is supported via file stream', async () => {
+            test('Ensure writing to a temp file is supported via file stream', async function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
                 const tempfile = await createTemporaryFile('.tmp');
                 const stream = fileSystem.createWriteStream(tempfile.filePath);
                 fix.addCleanup(() => stream.destroy());
