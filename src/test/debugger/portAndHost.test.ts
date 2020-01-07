@@ -25,6 +25,11 @@ const debuggerType = DebuggerTypeName;
 // tslint:disable-next-line:max-func-body-length
 suite(`Standard Debugging of ports and hosts: ${debuggerType}`, () => {
     let debugClient: DebugClient;
+    suiteSetup(async function() {
+        // https://github.com/microsoft/vscode-python/issues/9383
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
+    });
     setup(async function() {
         if (!IS_MULTI_ROOT_TEST || !TEST_DEBUGGER) {
             // tslint:disable-next-line:no-invalid-this
