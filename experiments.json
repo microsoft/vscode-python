@@ -57,7 +57,7 @@
         "name": "Reload - control",
         "salt": "DebugAdapterFactory",
         "min": 80,
-        "max": 93
+        "max": 83
     },
     {
         "name": "Reload - experiment",
