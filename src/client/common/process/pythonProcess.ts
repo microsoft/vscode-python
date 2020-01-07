@@ -102,9 +102,12 @@ export class PythonExecutionService implements IPythonExecutionService {
             // https://github.com/microsoft/vscode-python/issues/7760
             const { command, args } = this.getExecutionInfo([file]);
 
+            // Concat these together to make a set of quoted strings
+            const quoted = [command, ...args].reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
+
             // Try shell execing the command, followed by the arguments. This will make node kill the process if it
             // takes too long.
-            const result = await this.procService.shellExec(`"${command}" "${args.join('" ')}"`, { timeout: 5000 });
+            const result = await this.procService.shellExec(quoted, { timeout: 5000 });
             if (result.stderr) {
                 traceError(`Failed to parse interpreter information for ${command} ${args} stderr: ${result.stderr}`);
                 return;
