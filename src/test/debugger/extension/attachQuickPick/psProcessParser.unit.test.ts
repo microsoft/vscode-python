@@ -42,7 +42,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'UserEventAgent (System)',
                 id: '42',
                 processName: 'UserEventAgent',
-                commandLine: 'UserEventAgent'
+                commandLine: 'UserEventAgent (System)'
             },
             {
                 label: 'uninstalld',
@@ -108,7 +108,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'UserEventAgent (System)',
                 id: '42',
                 processName: 'UserEventAgent',
-                commandLine: 'UserEventAgent'
+                commandLine: 'UserEventAgent (System)'
             },
             {
                 label: 'kextd',
@@ -166,7 +166,7 @@ suite('Attach to process - ps process parser (POSIX)', () => {
                 detail: 'UserEventAgent (System)',
                 id: '42',
                 processName: 'UserEventAgent',
-                commandLine: 'UserEventAgent'
+                commandLine: 'UserEventAgent (System)'
             },
             {
                 label: 'kextd',
