@@ -20,7 +20,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
 
     public getAttachItems(): Promise<IAttachItem[]> {
         return this._getInternalProcessEntries().then(processEntries => {
-            processEntries.sort(({ processName: aprocessName, detail: aDetail }, { processName: bProcessName, detail: bDetail }) => {
+            processEntries.sort(({ processName: aprocessName, commandLine: aCommandLine }, { processName: bProcessName, commandLine: bCommandLine }) => {
                 const compare = (aString: string, bString: string): number => {
                     // localeCompare is significantly slower than < and > (2000 ms vs 80 ms for 10,000 elements)
                     // We can change to localeCompare if this becomes an issue
@@ -45,7 +45,7 @@ export class AttachProcessProvider implements IAttachProcessProvider {
                         return 1;
                     }
 
-                    return aPython ? compare(aDetail!, bDetail!) : compare(bDetail!, aDetail!);
+                    return aPython ? compare(aCommandLine!, bCommandLine!) : compare(bCommandLine!, aCommandLine!);
                 }
 
                 return compare(aprocessName, bProcessName);

@@ -14,7 +14,8 @@ export namespace WmicProcessParser {
         description: '',
         detail: '',
         id: '',
-        processName: ''
+        processName: '',
+        commandLine: ''
     };
 
     // Perf numbers on Win10:
@@ -72,6 +73,7 @@ export namespace WmicProcessParser {
                 }
 
                 currentItem.detail = value;
+                currentItem.commandLine = value;
             }
         }
 
