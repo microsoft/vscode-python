@@ -74,6 +74,8 @@ Use the `Extension` launch option.
 
 ### Running Unit Tests
 
+Note: Unit tests are those in files with extension `.unit.test.ts`.
+
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
 1. For the linters and formatters tests to pass successfully, you will need to have those corresponding Python libraries installed locally
@@ -98,6 +100,8 @@ Alter the `launch.json` file in the `"Debug Unit Tests"` section by setting the 
 ...this will only run the suite with the tests you care about during a test run (be sure to set the debugger to run the `Debug Unit Tests` launcher).
 
 ### Running System Tests
+
+Note: System tests are those in files with extension `.test.ts` but which are not `.unit.test.ts`.
 
 1. Make sure you have compiled all code (done automatically when using incremental building)
 1. Ensure you have disabled breaking into 'Uncaught Exceptions' when running the Unit Tests
