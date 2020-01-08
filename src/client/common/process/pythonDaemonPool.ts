@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { PYTHON_WARNINGS } from '../constants';
 import { traceDecorators, traceError } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { createDeferred, sleep } from '../utils/async';
@@ -25,7 +24,6 @@ import {
     PythonExecutionInfo,
     SpawnOptions
 } from './types';
-import { PYTHON_WARNINGS } from '../constants';
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 

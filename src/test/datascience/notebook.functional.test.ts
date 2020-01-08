@@ -1223,7 +1223,7 @@ plt.show()`,
             this.skip();
         } else {
             // Force python warnings to always
-            process.env['PYTHONWARNINGS'] = 'always';
+            process.env[`PYTHONWARNINGS`] = 'always';
             jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
 
             // Try creating a notebook

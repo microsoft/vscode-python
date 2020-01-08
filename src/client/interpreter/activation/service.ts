@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
+import { PYTHON_WARNINGS } from '../../common/constants';
 import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
@@ -19,7 +20,6 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
-import { PYTHON_WARNINGS } from '../../common/constants';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const cacheDuration = 10 * 60 * 1000;

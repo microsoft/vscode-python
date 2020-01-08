@@ -221,6 +221,7 @@ export class KernelService {
      */
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
+    // tslint:disable-next-line:max-func-body-length
     public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         if (!interpreter.displayName) {
             throw new Error('Interpreter does not have a display name');

@@ -2,13 +2,14 @@
 // Licensed under the MIT License.
 'use strict';
 import { SemVer } from 'semver';
+
+import { PYTHON_WARNINGS } from '../../client/common/constants';
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { ExecutionResult, InterpreterInfomation, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
-import { PYTHON_WARNINGS } from '../../client/common/constants';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;
