@@ -303,6 +303,14 @@ export class KernelService {
             return;
         }
 
+        // Special case, modify the PYTHONWARNINGS env to the global value.
+        // otherwise it's forced to 'ignore' because activated variables are cached.
+        if (specModel.env && process.env.PYTHONWARNINGS) {
+            specModel.env.PYTHONWARNINGS = process.env.PYTHONWARNINGS;
+        } else if (specModel.env && specModel.env.PYTHONWARNINGS) {
+            delete specModel.env.PYTHONWARNINGS;
+        }
+
         // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).
         // We'll need information such as interpreter type, display name, path, etc...
         // Its just a JSON file, and the information is small, hence might as well store everything.
