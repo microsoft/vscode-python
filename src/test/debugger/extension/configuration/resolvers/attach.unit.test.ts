@@ -200,14 +200,14 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                         const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
                         if (inDescriptorExperiment && inNewPtvsdExperiment) {
-                            expect(pathMappings).to.be.undefined;
+                            expect(pathMappings).to.be.equal(undefined, 'Path mappings should not be set.');
                         } else {
                             expect(pathMappings).to.be.lengthOf(1);
                             expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                             expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
                         }
                     });
-                    test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async function () {
+                    test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}'`, async function() {
                         if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                             return this.skip();
                         }
@@ -228,14 +228,14 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                         const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
                         if (inDescriptorExperiment && inNewPtvsdExperiment) {
-                            expect(pathMappings).to.be.undefined;
+                            expect(pathMappings).to.be.equal(undefined, 'Path mappings should not be set.');
                         } else {
                             const expected = Uri.file(path.join('c:', 'Debug', 'Python_Path')).fsPath;
                             expect(pathMappings![0].localRoot).to.be.equal(expected);
                             expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
                         }
                     });
-                    test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}'`, async function () {
+                    test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}'`, async function() {
                         if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                             return this.skip();
                         }
@@ -256,14 +256,14 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                         const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
                         if (inDescriptorExperiment && inNewPtvsdExperiment) {
-                            expect(pathMappings).to.be.undefined;
+                            expect(pathMappings).to.be.equal(undefined, 'Path mappings should not be set.');
                         } else {
                             const expected = Uri.file(path.join('USR', 'Debug', 'Python_Path')).fsPath;
                             expect(pathMappings![0].localRoot).to.be.equal(expected);
                             expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
                         }
                     });
-                    test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function () {
+                    test(`Ensure drive letter is lower cased for local path mappings on Windows when host is '${host}' and with existing path mappings`, async function() {
                         if (getOSType() !== OSType.Windows || osType !== OSType.Windows) {
                             return this.skip();
                         }
@@ -289,12 +289,11 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                         } as any) as DebugConfiguration);
                         const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
-
                         const expected = Uri.file(path.join('c:', 'Debug', 'Python_Path', localRoot)).fsPath;
                         expect(pathMappings![0].localRoot).to.be.equal(expected);
                         expect(pathMappings![0].remoteRoot).to.be.equal('/app/');
                     });
-                    test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}' and with existing path mappings`, async function () {
+                    test(`Ensure drive letter is not lower cased for local path mappings on non-Windows when host is '${host}' and with existing path mappings`, async function() {
                         if (getOSType() === OSType.Windows || osType === OSType.Windows) {
                             return this.skip();
                         }
@@ -342,7 +341,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
                         const pathMappings = (debugConfig as AttachRequestArguments).pathMappings;
 
                         if (inDescriptorExperiment && inNewPtvsdExperiment) {
-                            expect(pathMappings).to.be.undefined;
+                            expect(pathMappings).to.be.equal(undefined, 'Path mappings should not be set.');
                         } else {
                             expect(pathMappings![0].localRoot).to.be.equal(workspaceFolder.uri.fsPath);
                             expect(pathMappings![0].remoteRoot).to.be.equal(workspaceFolder.uri.fsPath);
