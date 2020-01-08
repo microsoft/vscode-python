@@ -107,7 +107,7 @@ export class PythonExecutionService implements IPythonExecutionService {
 
             // Try shell execing the command, followed by the arguments. This will make node kill the process if it
             // takes too long.
-            const result = await this.procService.shellExec(quoted, { timeout: 5000 });
+            const result = await this.procService.shellExec(quoted, { timeout: 15000 });
             if (result.stderr) {
                 traceError(`Failed to parse interpreter information for ${command} ${args} stderr: ${result.stderr}`);
                 return;
