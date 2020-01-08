@@ -168,9 +168,10 @@ suite('DataScience notebook tests', () => {
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) {
                 // For linter
-                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
-                assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
-                verifyValue((data as any)[mimeType]);
+                assert.ok(data.hasOwnProperty(mimeType) || data.hasOwnProperty('text/plain'), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
+                const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
+                assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
+                verifyValue((data as any)[actualMimeType]);
             }
             if (text) {
                 verifyValue(text);
