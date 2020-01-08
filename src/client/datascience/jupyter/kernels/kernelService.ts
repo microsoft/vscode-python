@@ -307,7 +307,8 @@ export class KernelService {
         // Special case, modify the PYTHONWARNINGS env to the global value.
         // otherwise it's forced to 'ignore' because activated variables are cached.
         if (specModel.env && process.env[PYTHON_WARNINGS]) {
-            specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS];
+            // tslint:disable-next-line:no-any
+            specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS] as any;
         } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
             delete specModel.env[PYTHON_WARNINGS];
         }

@@ -73,7 +73,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const processService = await this.processServiceFactory.create(resource);
             const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
-            const env = hasCustomEnvVars ? customEnvVars : this.currentProcess.env;
+            const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
 
             // Make sure python warnings don't interfere with getting the environment. However
             // respect the warning in the returned values
