@@ -1145,6 +1145,10 @@ export interface IEventNamePropertyMapping {
         error?: string;
     };
     /**
+     * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
+     */
+    [EventName.PYTHON_PYRX_ENABLED]: never | undefined;
+    /**
      * Telemetry event sent when PyRx is ready to start
      */
     [EventName.PYTHON_PYRX_READY]: never | undefined;

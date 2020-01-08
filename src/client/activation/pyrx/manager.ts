@@ -11,7 +11,7 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy } from '../types';
+import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy, LanguageServerType } from '../types';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 
 @injectable()
@@ -45,7 +45,6 @@ export class PyRxManager implements ILanguageServerManager {
         if (this.languageProxy) {
             throw new Error('Language Server already started');
         }
-        this.registerCommandHandler();
         this.resource = resource;
         this.interpreter = interpreter;
         this.analysisOptions.onDidChange(this.restartLanguageServerDebounced, this, this.disposables);
@@ -62,16 +61,6 @@ export class PyRxManager implements ILanguageServerManager {
     public disconnect() {
         this.connected = false;
         this.middleware?.disconnect();
-    }
-
-    protected registerCommandHandler() {
-        this.lsExtension.invoked(this.loadExtensionIfNecessary, this, this.disposables);
-    }
-
-    protected loadExtensionIfNecessary() {
-        if (this.languageProxy && this.lsExtension.loadExtensionArgs) {
-            this.languageProxy.loadExtension(this.lsExtension.loadExtensionArgs);
-        }
     }
 
     @debounceSync(1000)
@@ -91,7 +80,7 @@ export class PyRxManager implements ILanguageServerManager {
     @captureTelemetry(EventName.PYTHON_PYRX_STARTUP, undefined, true)
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
-        this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
+        this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.PyRx);
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
 
@@ -102,6 +91,5 @@ export class PyRxManager implements ILanguageServerManager {
 
         // Then use this middleware to start a new language client.
         await this.languageServerProxy.start(this.resource, this.interpreter, options);
-        this.loadExtensionIfNecessary();
     }
 }

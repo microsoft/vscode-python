@@ -192,6 +192,9 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             case LanguageServerType.None:
                 sendTelemetryEvent(EventName.PYTHON_LANGUAGE_SERVER_NONE, undefined, undefined);
                 break;
+            case LanguageServerType.PyRx:
+                // No telemetry in development phase.
+                break;
             case LanguageServerType.Microsoft:
                 if (this.useJedi()) {
                     serverType = LanguageServerType.Jedi;

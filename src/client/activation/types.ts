@@ -66,6 +66,7 @@ export interface IExtensionActivationService {
 export enum LanguageServerType {
     Jedi = 'Jedi',
     Microsoft = 'Microsoft',
+    PyRx = 'PyRx',
     None = 'None'
 }
 
@@ -82,16 +83,16 @@ export interface LanguageServerCommandHandler {
 
 export interface ILanguageServer
     extends RenameProvider,
-        DefinitionProvider,
-        HoverProvider,
-        ReferenceProvider,
-        CompletionItemProvider,
-        CodeLensProvider,
-        DocumentSymbolProvider,
-        SignatureHelpProvider,
-        Partial<DocumentHandler>,
-        Partial<LanguageServerCommandHandler>,
-        IDisposable {}
+    DefinitionProvider,
+    HoverProvider,
+    ReferenceProvider,
+    CompletionItemProvider,
+    CodeLensProvider,
+    DocumentSymbolProvider,
+    SignatureHelpProvider,
+    Partial<DocumentHandler>,
+    Partial<LanguageServerCommandHandler>,
+    IDisposable { }
 
 export const ILanguageServerActivator = Symbol('ILanguageServerActivator');
 export interface ILanguageServerActivator extends ILanguageServer {
