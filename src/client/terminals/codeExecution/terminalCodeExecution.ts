@@ -9,7 +9,7 @@ import { Disposable, Uri } from 'vscode';
 import { IWorkspaceService } from '../../common/application/types';
 import '../../common/extensions';
 import { IPlatformService } from '../../common/platform/types';
-import { IPythonExecutionFactory, PythonExecutionInfo } from '../../common/process/types';
+import { PythonExecutionInfo } from '../../common/process/types';
 import { ITerminalService, ITerminalServiceFactory } from '../../common/terminal/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { ICodeExecutionService } from '../../terminals/types';
@@ -24,8 +24,7 @@ export class TerminalCodeExecutionProvider implements ICodeExecutionService {
         @inject(IConfigurationService) protected readonly configurationService: IConfigurationService,
         @inject(IWorkspaceService) protected readonly workspace: IWorkspaceService,
         @inject(IDisposableRegistry) protected readonly disposables: Disposable[],
-        @inject(IPlatformService) protected readonly platformService: IPlatformService,
-        @inject(IPythonExecutionFactory) private readonly pythonExecFactory: IPythonExecutionFactory
+        @inject(IPlatformService) protected readonly platformService: IPlatformService
     ) {}
 
     public async executeFile(file: Uri) {

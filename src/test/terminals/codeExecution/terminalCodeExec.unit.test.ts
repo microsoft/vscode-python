@@ -67,18 +67,11 @@ suite('Terminal - Code Execution', () => {
 
             switch (testSuiteName) {
                 case 'Terminal Execution': {
-                    executor = new TerminalCodeExecutionProvider(
-                        terminalFactory.object,
-                        configService.object,
-                        workspace.object,
-                        disposables,
-                        platform.object,
-                        pythonExecutionFactory.object
-                    );
+                    executor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
                     break;
                 }
                 case 'Repl Execution': {
-                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, pythonExecutionFactory.object, disposables, platform.object);
+                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
                     expectedTerminalTitle = 'REPL';
                     break;
                 }
@@ -97,7 +90,6 @@ suite('Terminal - Code Execution', () => {
                         platform.object,
                         commandManager.object,
                         fileSystem.object,
-                        pythonExecutionFactory.object,
                         disposables
                     );
                     expectedTerminalTitle = 'Django Shell';

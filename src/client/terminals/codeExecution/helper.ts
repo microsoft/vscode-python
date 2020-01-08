@@ -1,15 +1,15 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Range, TextEditor, Uri } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
-import '../../common/extensions';
 import { traceError } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IProcessServiceFactory, IPythonExecutionFactory } from '../../common/process/types';
+import { IProcessServiceFactory } from '../../common/process/types';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
@@ -19,13 +19,11 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
     private readonly processServiceFactory: IProcessServiceFactory;
-    private readonly fileSystem: IFileSystem;
     private readonly interpreterService: IInterpreterService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
         this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {

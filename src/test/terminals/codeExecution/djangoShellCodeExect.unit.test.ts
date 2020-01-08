@@ -54,7 +54,6 @@ suite('Terminal - Django Shell Code Execution', () => {
             platform.object,
             commandManager.object,
             fileSystem.object,
-            pythonExecutionFactory.object,
             disposables
         );
 
