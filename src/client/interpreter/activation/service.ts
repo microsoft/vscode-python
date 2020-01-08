@@ -101,6 +101,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             // Put back the PYTHONWARNINGS value
             if (oldWarnings && returnedEnv) {
                 returnedEnv[PYTHON_WARNINGS] = oldWarnings;
+            } else if (returnedEnv) {
+                delete returnedEnv[PYTHON_WARNINGS];
             }
             return returnedEnv;
         } catch (e) {
