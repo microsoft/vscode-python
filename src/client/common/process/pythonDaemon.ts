@@ -134,30 +134,14 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             } catch (ex) {
                 if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
                     traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.execObservable(args, options);
                 } else {
                     throw ex;
                 }
             }
+        } else {
+            return this.pythonExecutionService.execObservable(args, options);
         }
-
-        // Double check not being called with the -m flag
-        const { moduleName, newArgs } = this.extractModuleArgs(args);
-        if (this.isAlive && moduleName && this.canExecModuleUsingDaemon(moduleName, newArgs, options)) {
-            try {
-                return this.execAsObservable({ moduleName }, newArgs, options);
-            } catch (ex) {
-                if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
-                    traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
-                } else {
-                    throw ex;
-                }
-            }
-        }
-
-        // Force warnings to ignore as that's how the daemon behaves. This does slightly change
-        // the behavior if we're using the daemon to start a long running process, but allows
-        // non user started processes to work even if there are warnings
-        return this.pythonExecutionService.execObservable(['-Wignore', ...args], options);
     }
     public execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string> {
         if (this.isAlive && this.canExecModuleUsingDaemon(moduleName, args, options)) {
@@ -166,16 +150,14 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             } catch (ex) {
                 if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
                     traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.execModuleObservable(moduleName, args, options);
                 } else {
                     throw ex;
                 }
             }
+        } else {
+            return this.pythonExecutionService.execModuleObservable(moduleName, args, options);
         }
-
-        // Force warnings to ignore as that's how the daemon behaves. This does slightly change
-        // the behavior if we're using the daemon to start a long running process, but allows
-        // non user started processes to work even if there are warnings
-        return this.pythonExecutionService.execObservable(['-Wignore', '-m', moduleName, ...args], options);
     }
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         if (this.isAlive && this.canExecFileUsingDaemon(args, options)) {
@@ -184,12 +166,14 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             } catch (ex) {
                 if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
                     traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.exec(args, options);
                 } else {
                     throw ex;
                 }
             }
+        } else {
+            return this.pythonExecutionService.exec(args, options);
         }
-        return this.pythonExecutionService.exec(args, options);
     }
     public async execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         if (this.isAlive && this.canExecModuleUsingDaemon(moduleName, args, options)) {
@@ -198,12 +182,14 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
             } catch (ex) {
                 if (ex instanceof DaemonError || ex instanceof ConnectionClosedError) {
                     traceWarning('Falling back to Python Execution Service due to failure in daemon', ex);
+                    return this.pythonExecutionService.execModule(moduleName, args, options);
                 } else {
                     throw ex;
                 }
             }
+        } else {
+            return this.pythonExecutionService.execModule(moduleName, args, options);
         }
-        return this.pythonExecutionService.execModule(moduleName, args, options);
     }
     protected canExecFileUsingDaemon(args: string[], options: SpawnOptions): boolean {
         return args[0].toLowerCase().endsWith('.py') && this.areOptionsSupported(options);
@@ -215,19 +201,6 @@ export class PythonDaemonExecutionService implements IPythonDaemonExecutionServi
         const daemonSupportedSpawnOptions: (keyof SpawnOptions)[] = ['cwd', 'env', 'throwOnStdErr', 'token', 'encoding', 'mergeStdOutErr'];
         // tslint:disable-next-line: no-any
         return Object.keys(options).every(item => daemonSupportedSpawnOptions.indexOf(item as any) >= 0);
-    }
-    private extractModuleArgs(args: string[]): { moduleName: string | undefined; newArgs: string[] } {
-        const index = args.indexOf('-m');
-        if (index >= 0 && index < args.length - 1) {
-            return {
-                moduleName: args[index + 1],
-                newArgs: args.slice(index + 2)
-            };
-        }
-        return {
-            moduleName: undefined,
-            newArgs: args
-        };
     }
     private sendRequestWithoutArgs<R, E, RO>(type: RequestType0<R, E, RO>): Thenable<R> {
         return Promise.race([this.connection.sendRequest(type), this.connectionClosedDeferred.promise]);
