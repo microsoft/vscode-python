@@ -31,6 +31,11 @@ export class PythonExecutionService implements IPythonExecutionService {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
+    public forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
+        // Pass onto the proc service
+        this.procService.setVariable('PYTHONWARNINGS', value);
+    }
+
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py');
         try {

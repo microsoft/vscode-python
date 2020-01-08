@@ -73,6 +73,12 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
             const env = hasCustomEnvVars ? customEnvVars : this.currentProcess.env;
+
+            // Make sure python warnings don't interfere with getting the environment. However
+            // respect the warning in the returned values
+            const oldWarnings = env.PYTHONWARNINGS;
+            env.PYTHONWARNINGS = 'ignore';
+
             traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
 
             // In order to make sure we know where the environment output is,
@@ -89,7 +95,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (result.stderr && result.stderr.length > 0) {
                 throw new Error(`StdErr from ShellExec, ${result.stderr}`);
             }
-            return this.parseEnvironmentOutput(result.stdout);
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout);
+
+            // Put back the PYTHONWARNINGS value
+            if (oldWarnings && returnedEnv) {
+                returnedEnv.PYTHONWARNINGS = oldWarnings;
+            }
+            return returnedEnv;
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, { isPossiblyCondaEnv, terminal: shellInfo.shellType });

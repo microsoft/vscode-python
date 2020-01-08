@@ -16,6 +16,11 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     constructor() {
         this.procService = new ProcessService(new BufferDecoder());
     }
+
+    public forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
+        this.procService.setVariable('PYTHONWARNINGS', value);
+    }
+
     public getInterpreterInformation(): Promise<InterpreterInfomation> {
         return Promise.resolve({
             path: '',

@@ -75,6 +75,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         private readonly _interpreter: PythonInterpreter,
         isActiveInterpreter: boolean
     ) {
+        this.args = ['-Wignore', ...this.args]; // Ignore warnings on commands. They shouldn't interfere with the commands running
         this.interpreterPromise = Promise.resolve(this._interpreter);
         this.pythonLauncher = this.interpreterPromise.then(async interpreter => {
             // Create a daemon only if the interpreter is the same as the current interpreter.
@@ -105,7 +106,12 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                     }
                 }
             }
-            return pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter });
+
+            // Not using a daemon, make sure to turn off PYTHONWARNINGS so that they don't
+            // mess up executing commands.
+            const launcher = await pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter });
+            launcher.forcePythonWarnings('ignore');
+            return launcher;
         });
     }
     public interpreter(): Promise<PythonInterpreter | undefined> {
@@ -116,20 +122,14 @@ class InterpreterJupyterCommand implements IJupyterCommand {
         const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
-        const moduleName = newArgs[1];
-        newArgs.shift(); // Remove '-m'
-        newArgs.shift(); // Remove module name
-        return launcher.execModuleObservable(moduleName, newArgs, newOptions);
+        return launcher.execObservable(newArgs, newOptions);
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
         const newOptions = { ...options };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
-        const moduleName = newArgs[1];
-        newArgs.shift(); // Remove '-m'
-        newArgs.shift(); // Remove module name
-        return launcher.execModule(moduleName, newArgs, newOptions);
+        return launcher.exec(newArgs, newOptions);
     }
 }
 

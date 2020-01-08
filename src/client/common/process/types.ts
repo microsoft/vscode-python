@@ -48,6 +48,7 @@ export interface IProcessLogger {
 }
 
 export interface IProcessService extends IDisposable {
+    setVariable(variable: string, value: string | undefined): void;
     execObservable(file: string, args: string[], options?: SpawnOptions): ObservableExecutionResult<string>;
     exec(file: string, args: string[], options?: SpawnOptions): Promise<ExecutionResult<string>>;
     shellExec(command: string, options?: ShellOptions): Promise<ExecutionResult<string>>;
@@ -131,6 +132,7 @@ export type InterpreterInfomation = {
 export const IPythonExecutionService = Symbol('IPythonExecutionService');
 
 export interface IPythonExecutionService {
+    forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore'): void;
     getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;

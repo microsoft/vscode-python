@@ -229,4 +229,19 @@ suite('ProcessService Observable', () => {
         const result = procService.shellExec('invalid command');
         await expect(result).to.eventually.be.rejectedWith(Error, 'a', 'Expected error to be thrown');
     });
+    test('variables can be changed after the fact', async () => {
+        const procService = new ProcessService(new BufferDecoder(), process.env);
+        procService.setVariable('MY_TEST_VARIABLE', 'foo');
+        let result = await procService.exec(pythonPath, ['-c', `import os;print(os.environ.get("MY_TEST_VARIABLE"))`]);
+
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal('foo', 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+
+        procService.setVariable('MY_TEST_VARIABLE', undefined);
+        result = await procService.exec(pythonPath, ['-c', `import os;print(os.environ.get("MY_TEST_VARIABLE"))`]);
+        expect(result).not.to.be.an('undefined', 'result is undefined');
+        expect(result.stdout.trim()).to.be.equal('None', 'Invalid output');
+        expect(result.stderr).to.equal(undefined, 'stderr not undefined');
+    });
 });

@@ -12,6 +12,10 @@ export class MockProcessService implements IProcessService {
     private execObservableResults: { file: string; args: (string | RegExp)[]; result(): ObservableExecutionResult<string> }[] = [];
     private timeDelay: number | undefined;
 
+    public setVariable(_variable: string, _value: string | undefined): void {
+        // Do nothing for now.
+    }
+
     public execObservable(file: string, args: string[], _options: SpawnOptions): ObservableExecutionResult<string> {
         const match = this.execObservableResults.find(f => this.argsMatch(f.args, args) && f.file === file);
         if (match) {

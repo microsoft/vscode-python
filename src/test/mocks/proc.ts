@@ -15,6 +15,9 @@ export class MockProcessService extends EventEmitter implements IProcessService 
     constructor(private procService: IProcessService) {
         super();
     }
+    public setVariable(_variable: string, _value: string | undefined): void {
+        // Do nothing at the moment.
+    }
     public onExecObservable(handler: (file: string, args: string[], options: SpawnOptions, callback: ExecObservableCallback) => void) {
         this.on('execObservable', handler);
     }

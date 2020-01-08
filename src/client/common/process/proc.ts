@@ -47,6 +47,16 @@ export class ProcessService extends EventEmitter implements IProcessService {
         });
     }
 
+    public setVariable(variable: string, value: string | undefined): void {
+        if (this.env) {
+            if (value) {
+                this.env[variable] = value;
+            } else {
+                delete this.env[variable];
+            }
+        }
+    }
+
     public execObservable(file: string, args: string[], options: SpawnOptions = {}): ObservableExecutionResult<string> {
         const spawnOptions = this.getDefaultOptions(options);
         const encoding = spawnOptions.encoding ? spawnOptions.encoding : 'utf8';

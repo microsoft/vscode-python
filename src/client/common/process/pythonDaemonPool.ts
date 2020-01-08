@@ -64,6 +64,10 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     public dispose() {
         noop();
     }
+    public forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
+        // Apply this to the execution service so that executions after this point use the warning level
+        this.pythonExecutionService.forcePythonWarnings(value);
+    }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
         return this.wrapCall(daemon => daemon.getInterpreterInformation(), msg);
@@ -111,7 +115,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         const loggingArgs: string[] = ['-v']; // Log information messages or greater (see daemon.__main__.py for options).
         const args = (this.options.daemonModule ? [`--daemon-module=${this.options.daemonModule}`] : []).concat(loggingArgs);
         const env = this.envVariables;
-        const daemonProc = this.pythonExecutionService!.execModuleObservable('datascience.daemon', args, { env });
+        const daemonProc = this.pythonExecutionService!.execObservable(['-Wignore', '-m', 'datascience.daemon', ...args], { env });
         if (!daemonProc.proc) {
             throw new Error('Failed to create Daemon Proc');
         }

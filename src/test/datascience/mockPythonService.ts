@@ -13,6 +13,10 @@ export class MockPythonService implements IPythonExecutionService {
         this.interpreter = interpreter;
     }
 
+    public forcePythonWarnings(_value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
+        // Ignored for now
+    }
+
     public getInterpreterInformation(): Promise<InterpreterInfomation> {
         return Promise.resolve(this.interpreter);
     }
