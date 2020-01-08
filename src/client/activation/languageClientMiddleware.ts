@@ -51,8 +51,8 @@ import {
     ResolveDocumentLinkSignature
 } from 'vscode-languageclient';
 
-import { HiddenFilePrefix } from '../../common/constants';
-import { IPythonExtensionBanner } from '../../common/types';
+import { HiddenFilePrefix } from '../common/constants';
+import { IPythonExtensionBanner } from '../common/types';
 
 export class LanguageClientMiddleware implements Middleware {
     private connected = false; // Default to not forwarding to VS code.
@@ -219,9 +219,9 @@ export class LanguageClientMiddleware implements Middleware {
     ): ProviderResult<
         | Range
         | {
-              range: Range;
-              placeholder: string;
-          }
+            range: Range;
+            placeholder: string;
+        }
     > {
         if (this.connected) {
             return next(document, position, token);

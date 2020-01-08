@@ -15,7 +15,7 @@ import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServ
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
 
 @injectable()
-export class LanguageServerManager implements ILanguageServerManager {
+export class PyRxManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
     private interpreter: PythonInterpreter | undefined;
@@ -28,6 +28,7 @@ export class LanguageServerManager implements ILanguageServerManager {
         @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
     ) { }
+
     public dispose() {
         if (this.languageProxy) {
             this.languageProxy.dispose();
@@ -38,6 +39,7 @@ export class LanguageServerManager implements ILanguageServerManager {
     public get languageProxy() {
         return this.languageServerProxy;
     }
+
     @traceDecorators.error('Failed to start Language Server')
     public async start(resource: Resource, interpreter: PythonInterpreter | undefined): Promise<void> {
         if (this.languageProxy) {
@@ -51,26 +53,32 @@ export class LanguageServerManager implements ILanguageServerManager {
         await this.analysisOptions.initialize(resource, interpreter);
         await this.startLanguageServer();
     }
+
     public connect() {
         this.connected = true;
         this.middleware?.connect();
     }
+
     public disconnect() {
         this.connected = false;
         this.middleware?.disconnect();
     }
+
     protected registerCommandHandler() {
         this.lsExtension.invoked(this.loadExtensionIfNecessary, this, this.disposables);
     }
+
     protected loadExtensionIfNecessary() {
         if (this.languageProxy && this.lsExtension.loadExtensionArgs) {
             this.languageProxy.loadExtension(this.lsExtension.loadExtensionArgs);
         }
     }
+
     @debounceSync(1000)
     protected restartLanguageServerDebounced(): void {
         this.restartLanguageServer().ignoreErrors();
     }
+
     @traceDecorators.error('Failed to restart Language Server')
     @traceDecorators.verbose('Restarting Language Server')
     protected async restartLanguageServer(): Promise<void> {
@@ -79,7 +87,8 @@ export class LanguageServerManager implements ILanguageServerManager {
         }
         await this.startLanguageServer();
     }
-    @captureTelemetry(EventName.PYTHON_LANGUAGE_SERVER_STARTUP, undefined, true)
+
+    @captureTelemetry(EventName.PYTHON_PYRX_STARTUP, undefined, true)
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
         this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy);
