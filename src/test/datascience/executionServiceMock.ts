@@ -8,6 +8,7 @@ import { BufferDecoder } from '../../client/common/process/decoder';
 import { ProcessService } from '../../client/common/process/proc';
 import { ExecutionResult, InterpreterInfomation, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../client/common/process/types';
 import { Architecture } from '../../client/common/utils/platform';
+import { PYTHON_WARNINGS } from '../../client/common/constants';
 
 export class MockPythonExecutionService implements IPythonExecutionService {
     private procService: ProcessService;
@@ -18,7 +19,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     }
 
     public forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
-        this.procService.setVariable('PYTHONWARNINGS', value);
+        this.procService.setVariable(PYTHON_WARNINGS, value);
     }
 
     public getInterpreterInformation(): Promise<InterpreterInfomation> {

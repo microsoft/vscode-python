@@ -4,6 +4,8 @@ export const PYTHON_LANGUAGE = 'python';
 
 export const JUPYTER_LANGUAGE = 'jupyter';
 
+export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
+
 export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }

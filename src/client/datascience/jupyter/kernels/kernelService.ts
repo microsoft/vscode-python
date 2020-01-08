@@ -10,7 +10,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 import { Cancellation, wrapCancellationTokens } from '../../../common/cancellation';
-import { PYTHON_LANGUAGE } from '../../../common/constants';
+import { PYTHON_LANGUAGE, PYTHON_WARNINGS } from '../../../common/constants';
 import '../../../common/extensions';
 import { traceDecorators, traceError, traceInfo, traceVerbose, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
@@ -305,10 +305,10 @@ export class KernelService {
 
         // Special case, modify the PYTHONWARNINGS env to the global value.
         // otherwise it's forced to 'ignore' because activated variables are cached.
-        if (specModel.env && process.env.PYTHONWARNINGS) {
-            specModel.env.PYTHONWARNINGS = process.env.PYTHONWARNINGS;
-        } else if (specModel.env && specModel.env.PYTHONWARNINGS) {
-            delete specModel.env.PYTHONWARNINGS;
+        if (specModel.env && process.env[PYTHON_WARNINGS]) {
+            specModel.env[PYTHON_WARNINGS] = process.env[PYTHON_WARNINGS];
+        } else if (specModel.env && specModel.env[PYTHON_WARNINGS]) {
+            delete specModel.env[PYTHON_WARNINGS];
         }
 
         // Ensure we update the metadata to include interpreter stuff as well (we'll use this to search kernels that match an interpreter).

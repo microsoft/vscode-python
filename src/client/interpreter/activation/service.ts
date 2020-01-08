@@ -19,6 +19,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
+import { PYTHON_WARNINGS } from '../../common/constants';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
 const cacheDuration = 10 * 60 * 1000;
@@ -76,8 +77,8 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
             // Make sure python warnings don't interfere with getting the environment. However
             // respect the warning in the returned values
-            const oldWarnings = env.PYTHONWARNINGS;
-            env.PYTHONWARNINGS = 'ignore';
+            const oldWarnings = env[PYTHON_WARNINGS];
+            env[PYTHON_WARNINGS] = 'ignore';
 
             traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
 
@@ -99,7 +100,7 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
 
             // Put back the PYTHONWARNINGS value
             if (oldWarnings && returnedEnv) {
-                returnedEnv.PYTHONWARNINGS = oldWarnings;
+                returnedEnv[PYTHON_WARNINGS] = oldWarnings;
             }
             return returnedEnv;
         } catch (e) {

@@ -25,6 +25,7 @@ import {
     PythonExecutionInfo,
     SpawnOptions
 } from './types';
+import { PYTHON_WARNINGS } from '../constants';
 
 type DaemonType = 'StandardDaemon' | 'ObservableDaemon';
 
@@ -72,7 +73,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         this.pythonExecutionService.forcePythonWarnings(value);
 
         // Modify the local env variables too
-        this.envVariables.PYTHONWARNINGS = value;
+        this.envVariables[PYTHON_WARNINGS] = value;
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const msg = { args: ['GetPythonVersion'] };
