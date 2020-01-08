@@ -29,22 +29,9 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
 
     @traceDecorators.error('Error in prompting to install insiders')
     public async promptToInstallInsiders(): Promise<void> {
-        await this.promptAndUpdate(ExtensionChannels.promptMessage());
-    }
-
-    @traceDecorators.error('Error in prompting to reload')
-    public async promptToReload(): Promise<void> {
-        const selection = await this.appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload());
-        sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, { selection: selection ? 'Reload' : undefined });
-        if (selection === Common.reload()) {
-            this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
-        }
-    }
-
-    private async promptAndUpdate(message: string) {
         const prompts = [ExtensionChannels.yesWeekly(), ExtensionChannels.yesDaily(), DataScienceSurveyBanner.bannerLabelNo()];
         const telemetrySelections: ['Yes, weekly', 'Yes, daily', 'No, thanks'] = ['Yes, weekly', 'Yes, daily', 'No, thanks'];
-        const selection = await this.appShell.showInformationMessage(message, ...prompts);
+        const selection = await this.appShell.showInformationMessage(ExtensionChannels.promptMessage(), ...prompts);
 
         await this.hasUserBeenNotified.updateValue(true);
         sendTelemetryEvent(EventName.INSIDERS_PROMPT, undefined, { selection: selection ? telemetrySelections[prompts.indexOf(selection)] : undefined });
@@ -56,6 +43,15 @@ export class InsidersExtensionPrompt implements IInsiderExtensionPrompt {
             await this.insidersDownloadChannelService.updateChannel('weekly');
         } else if (selection === ExtensionChannels.yesDaily()) {
             await this.insidersDownloadChannelService.updateChannel('daily');
+        }
+    }
+
+    @traceDecorators.error('Error in prompting to reload')
+    public async promptToReload(): Promise<void> {
+        const selection = await this.appShell.showInformationMessage(ExtensionChannels.reloadToUseInsidersMessage(), Common.reload());
+        sendTelemetryEvent(EventName.INSIDERS_RELOAD_PROMPT, undefined, { selection: selection ? 'Reload' : undefined });
+        if (selection === Common.reload()) {
+            this.cmdManager.executeCommand('workbench.action.reloadWindow').then(noop);
         }
     }
 }
