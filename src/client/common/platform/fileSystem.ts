@@ -220,6 +220,7 @@ export class RawFileSystem implements IRawFileSystem {
         const files = await this.fsExtra.readdir(dirname);
         const promises = files.map(async basename => {
             const filename = this.paths.join(dirname, basename);
+            // Note that this follows symlinks.
             const fileType = await getFileType(filename);
             return [filename, fileType] as [string, FileType];
         });
@@ -312,8 +313,35 @@ export class FileSystem implements IFileSystem {
         return this.raw.rmtree(directoryPath);
     }
 
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
-        return this.raw.listdir(dirname);
+    // prettier-ignore
+    public async listdir(
+        dirname: string,
+        fileType?: FileType
+    ): Promise<[string, FileType][]> {
+        let files: [string, FileType][];
+        try {
+            files = await this.raw.listdir(dirname);
+        } catch (err) {
+            // We're only preserving pre-existng behavior here...
+            if (!(await this.pathExists(dirname))) {
+                return [];
+            }
+            throw err; // re-throw
+        }
+
+        if (fileType === undefined) {
+            return files;
+        }
+        // We preserve the pre-existing behavior of following symlinks.
+        if (fileType === FileType.Unknown) {
+            // FileType.Unknown == 0 so we can't just use bitwise
+            // operations blindly here.
+            return files.filter(([_file, ft]) => {
+                return ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown);
+            });
+        } else {
+            return files.filter(([_file, ft]) => (ft & fileType) > 0);
+        }
     }
 
     public async appendFile(filename: string, text: string): Promise<void> {
@@ -381,39 +409,14 @@ export class FileSystem implements IFileSystem {
     }
 
     public async getSubDirectories(dirname: string): Promise<string[]> {
-        let files: [string, FileType][];
-        try {
-            files = await this.raw.listdir(dirname);
-        } catch {
-            // We're only preserving pre-existng behavior here...
-            return [];
-        }
-        return files
-            .filter(([_file, fileType]) => {
-                // We preserve the pre-existing behavior of following
-                // symlinks.
-                return (fileType & FileType.Directory) > 0;
-            })
-            .map(([filename, _ft]) => filename);
+        // prettier-ignore
+        return (await this.listdir(dirname, FileType.Directory))
+            .map(([filename, _fileType]) => filename);
     }
     public async getFiles(dirname: string): Promise<string[]> {
-        let files: [string, FileType][];
-        try {
-            files = await this.raw.listdir(dirname);
-        } catch (err) {
-            // This matches what getSubDirectories() does.
-            if (!(await fs.pathExists(dirname))) {
-                return [];
-            }
-            throw err; // re-throw
-        }
-        return files
-            .filter(([_file, fileType]) => {
-                // We preserve the pre-existing behavior of following
-                // symlinks.
-                return (fileType & FileType.File) > 0;
-            })
-            .map(([filename, _ft]) => filename);
+        // prettier-ignore
+        return (await this.listdir(dirname, FileType.File))
+            .map(([filename, _fileType]) => filename);
     }
 
     public async getFileHash(filename: string): Promise<string> {
