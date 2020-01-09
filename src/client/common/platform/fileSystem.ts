@@ -347,26 +347,37 @@ export class FileSystem implements IFileSystem {
     //=================================
     // utils
 
-    public async objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
-        return new Promise<boolean>(resolve => {
+    // prettier-ignore
+    public async pathExists(
+        filename: string,
+        fileType?: FileType
+    ): Promise<boolean> {
+        let stat: FileStat;
+        try {
             // Note that we are using stat() rather than lstat().  This
             // means that any symlinks are getting resolved.
-            fs.stat(filePath, (error, stats) => {
-                if (error) {
-                    return resolve(false);
-                }
-                return resolve(statCheck(stats));
-            });
-        });
+            stat = await this.raw.stat(filename);
+        } catch (err) {
+            return false;
+        }
+
+        if (fileType === undefined) {
+            return true;
+        }
+        if (fileType === FileType.Unknown) {
+            // FileType.Unknown == 0, hence do not use bitwise operations.
+            return stat.type === FileType.Unknown;
+        }
+        return (stat.type & fileType) === fileType;
     }
-    public async fileExists(filePath: string): Promise<boolean> {
-        return this.objectExists(filePath, stats => stats.isFile());
+    public async fileExists(filename: string): Promise<boolean> {
+        return this.pathExists(filename, FileType.File);
     }
     public fileExistsSync(filePath: string): boolean {
         return fs.existsSync(filePath);
     }
-    public async directoryExists(filePath: string): Promise<boolean> {
-        return this.objectExists(filePath, stats => stats.isDirectory());
+    public async directoryExists(dirname: string): Promise<boolean> {
+        return this.pathExists(dirname, FileType.Directory);
     }
 
     public async getSubDirectories(dirname: string): Promise<string[]> {

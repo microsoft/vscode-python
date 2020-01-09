@@ -96,4 +96,88 @@ suite('FileSystem', () => {
             await expect(promise).to.eventually.be.rejected;
         });
     });
+
+    suite('fileExists', () => {
+        test('want file, got file', async () => {
+            const filename = await fix.createFile('x/y/z/spam.py');
+
+            const exists = await filesystem.fileExists(filename);
+
+            expect(exists).to.equal(true);
+        });
+
+        test('want file, not file', async () => {
+            const filename = await fix.createDirectory('x/y/z/spam.py');
+
+            const exists = await filesystem.fileExists(filename);
+
+            expect(exists).to.equal(false);
+        });
+
+        test('symlink', async function() {
+            if (!SUPPORTS_SYMLINKS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const filename = await fix.createFile('x/y/z/spam.py', '...');
+            const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
+
+            const exists = await filesystem.fileExists(symlink);
+
+            // This is because we currently use stat() and not lstat().
+            expect(exists).to.equal(true);
+        });
+
+        test('unknown', async function() {
+            if (!SUPPORTS_SOCKETS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+
+            const exists = await filesystem.fileExists(sockFile);
+
+            expect(exists).to.equal(false);
+        });
+    });
+
+    suite('directoryExists', () => {
+        test('want directory, got directory', async () => {
+            const dirname = await fix.createDirectory('x/y/z/spam');
+
+            const exists = await filesystem.directoryExists(dirname);
+
+            expect(exists).to.equal(true);
+        });
+
+        test('want directory, not directory', async () => {
+            const dirname = await fix.createFile('x/y/z/spam');
+
+            const exists = await filesystem.directoryExists(dirname);
+
+            expect(exists).to.equal(false);
+        });
+
+        test('symlink', async () => {
+            const dirname = await fix.createDirectory('x/y/z/spam');
+            const symlink = await fix.createSymlink('x/y/z/eggs', dirname);
+
+            const exists = await filesystem.directoryExists(symlink);
+
+            // This is because we currently use stat() and not lstat().
+            expect(exists).to.equal(true);
+        });
+
+        test('unknown', async function() {
+            if (!SUPPORTS_SOCKETS) {
+                // tslint:disable-next-line:no-invalid-this
+                this.skip();
+            }
+            const sockFile = await fix.createSocket('x/y/z/ipc.sock');
+
+            const exists = await filesystem.directoryExists(sockFile);
+
+            expect(exists).to.equal(false);
+        });
+    });
 });
