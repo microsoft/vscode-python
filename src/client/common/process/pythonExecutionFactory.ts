@@ -119,7 +119,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
 
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
-    // Not using CondaExecutionService instances since there are breaking issues with conda run (as of PVSC 2020.1)
+    // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
     // See https://github.com/microsoft/vscode-python/issues/9490
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
         const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
