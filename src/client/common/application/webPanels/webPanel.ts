@@ -38,7 +38,8 @@ export class WebPanel implements IWebPanel {
             {
                 enableScripts: true,
                 retainContextWhenHidden: true,
-                localResourceRoots: [Uri.file(this.options.rootPath)],
+                localResourceRoots: [Uri.file(this.options.rootPath), Uri.file(this.options.cwd)],
+                enableFindWidget: true,
                 portMapping: port ? [{ webviewPort: RemappedPort, extensionHostPort: port }] : undefined
             }
         );
@@ -128,7 +129,7 @@ export class WebPanel implements IWebPanel {
 
     // tslint:disable-next-line:no-any
     private generateLocalReactHtml(webView: Webview) {
-        const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
+        const uriBase = webView.asWebviewUri(Uri.file(this.options.cwd)).toString();
         const uris = this.options.scripts.map(script => webView.asWebviewUri(Uri.file(script)));
 
         return `<!doctype html>
@@ -136,11 +137,13 @@ export class WebPanel implements IWebPanel {
             <head>
                 <meta charset="utf-8">
                 <meta name="viewport" content="width=device-width,initial-scale=1,shrink-to-fit=no">
-                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob:; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
+                <meta http-equiv="Content-Security-Policy" content="img-src 'self' data: https: http: blob: ${
+                    webView.cspSource
+                }; default-src 'unsafe-inline' 'unsafe-eval' vscode-resource: data: https: http: blob:;">
                 <meta name="theme-color" content="#000000">
                 <meta name="theme" content="${Identifiers.GeneratedThemeName}"/>
                 <title>React App</title>
-                <base href="${uriBase}"/>
+                <base href="${uriBase}${uriBase.endsWith('/') ? '' : '/'}"/>
             </head>
             <body>
                 <noscript>You need to enable JavaScript to run this app.</noscript>

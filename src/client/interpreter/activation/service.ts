@@ -6,6 +6,7 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
+import { PYTHON_WARNINGS } from '../../common/constants';
 import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
@@ -72,7 +73,13 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             const processService = await this.processServiceFactory.create(resource);
             const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
-            const env = hasCustomEnvVars ? customEnvVars : this.currentProcess.env;
+            const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
+
+            // Make sure python warnings don't interfere with getting the environment. However
+            // respect the warning in the returned values
+            const oldWarnings = env[PYTHON_WARNINGS];
+            env[PYTHON_WARNINGS] = 'ignore';
+
             traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
 
             // In order to make sure we know where the environment output is,
@@ -89,7 +96,15 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (result.stderr && result.stderr.length > 0) {
                 throw new Error(`StdErr from ShellExec, ${result.stderr}`);
             }
-            return this.parseEnvironmentOutput(result.stdout);
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout);
+
+            // Put back the PYTHONWARNINGS value
+            if (oldWarnings && returnedEnv) {
+                returnedEnv[PYTHON_WARNINGS] = oldWarnings;
+            } else if (returnedEnv) {
+                delete returnedEnv[PYTHON_WARNINGS];
+            }
+            return returnedEnv;
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
             sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, { isPossiblyCondaEnv, terminal: shellInfo.shellType });

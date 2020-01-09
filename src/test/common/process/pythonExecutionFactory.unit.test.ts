@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
@@ -87,6 +88,7 @@ suite('Process - PythonExecutionFactory', () => {
             let processService: typemoq.IMock<IProcessService>;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
             let interpreterService: IInterpreterService;
+            let executionService: typemoq.IMock<IPythonExecutionService>;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -95,6 +97,8 @@ suite('Process - PythonExecutionFactory', () => {
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+                executionService = typemoq.Mock.ofType<IPythonExecutionService>();
+                executionService.setup((p: any) => p.then).returns(() => undefined);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
@@ -365,12 +369,12 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);
@@ -382,12 +386,12 @@ suite('Process - PythonExecutionFactory', () => {
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
                 reset(interpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: parse('2.7.14') } as any);
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(0);
@@ -397,34 +401,30 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon1 = await factory.createDaemon({});
-                const daemon2 = await factory.createDaemon({});
+                const daemon1 = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
+                const daemon2 = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon1).to.equal(daemon2);
             });
-            // https://github.com/microsoft/vscode-python/issues/9297
-            // tslint:disable-next-line: no-function-expression
-            test('Create Daemon Service should return two different daemons (if python path is different)', async function() {
-                // tslint:disable-next-line: no-invalid-this
-                return this.skip();
+            test('Create Daemon Service should return two different daemons (if python path is different)', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon1 = await factory.createDaemon({});
+                const daemon1 = await factory.createDaemon({ resource });
 
                 when(pythonSettings.pythonPath).thenReturn('HELLO2');
-                const daemon2 = await factory.createDaemon({});
+                const daemon2 = await factory.createDaemon({ resource });
 
                 expect(daemon1).to.not.equal(daemon2);
             });
@@ -433,12 +433,15 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const [daemon1, daemon2] = await Promise.all([factory.createDaemon({}), factory.createDaemon({})]);
+                const [daemon1, daemon2] = await Promise.all([
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path }),
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path })
+                ]);
 
                 expect(daemon1).to.equal(daemon2);
             });
@@ -453,7 +456,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.reject(new Error('Kaboom')));
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);

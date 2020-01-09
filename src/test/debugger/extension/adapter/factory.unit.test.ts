@@ -396,4 +396,15 @@ suite('Debugging - Adapter Factory', () => {
         assert.deepEqual(Reporter.eventNames, []);
         assert.deepEqual(Reporter.properties, []);
     });
+
+    test('Use custom debug adapter path when specified', async () => {
+        const customAdapterPath = 'custom/debug/adapter/path';
+        const session = createSession({ debugAdapterPath: customAdapterPath });
+        const debugExecutable = new DebugAdapterExecutable(pythonPath, [customAdapterPath]);
+
+        when(spiedInstance.inExperiment(DebugAdapterNewPtvsd.experiment)).thenReturn(true);
+        const descriptor = await factory.createDebugAdapterDescriptor(session, nodeExecutable);
+
+        assert.deepEqual(descriptor, debugExecutable);
+    });
 });

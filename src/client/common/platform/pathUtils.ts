@@ -1,36 +1,64 @@
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8542): Drop this file.
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { IPathUtils, IsWindows } from '../types';
-import { NON_WINDOWS_PATH_VARIABLE_NAME, WINDOWS_PATH_VARIABLE_NAME } from './constants';
+import { OSType } from '../utils/platform';
+// prettier-ignore
+import {
+    Executables,
+    FileSystemPaths,
+    FileSystemPathUtils
+} from './fs-paths';
 // tslint:disable-next-line:no-var-requires no-require-imports
 const untildify = require('untildify');
 
 @injectable()
 export class PathUtils implements IPathUtils {
-    public readonly home = '';
-    constructor(@inject(IsWindows) private isWindows: boolean) {
-        this.home = untildify('~');
+    private readonly utils: FileSystemPathUtils;
+    // prettier-ignore
+    constructor(
+        @inject(IsWindows) isWindows: boolean
+    ) {
+        // We cannot just use FileSystemPathUtils.withDefaults() because
+        // of the isWindows arg.
+        // prettier-ignore
+        this.utils = new FileSystemPathUtils(
+            untildify('~'),
+            FileSystemPaths.withDefaults(),
+            new Executables(
+                path.delimiter,
+                isWindows ? OSType.Windows : OSType.Unknown
+            ),
+            path
+        );
     }
+
+    public get home(): string {
+        return this.utils.home;
+    }
+
     public get delimiter(): string {
-        return path.delimiter;
+        return this.utils.executables.delimiter;
     }
+
     public get separator(): string {
-        return path.sep;
+        return this.utils.paths.sep;
     }
-    // TO DO: Deprecate in favor of IPlatformService
-    public getPathVariableName() {
-        return this.isWindows ? WINDOWS_PATH_VARIABLE_NAME : NON_WINDOWS_PATH_VARIABLE_NAME;
+
+    // tslint:disable-next-line:no-suspicious-comment
+    // TODO: Deprecate in favor of IPlatformService?
+    public getPathVariableName(): 'Path' | 'PATH' {
+        // tslint:disable-next-line:no-any
+        return this.utils.executables.envVar as any;
     }
-    public basename(pathValue: string, ext?: string): string {
-        return path.basename(pathValue, ext);
-    }
+
     public getDisplayName(pathValue: string, cwd?: string): string {
-        if (cwd && pathValue.startsWith(cwd)) {
-            return `.${path.sep}${path.relative(cwd, pathValue)}`;
-        } else if (pathValue.startsWith(this.home)) {
-            return `~${path.sep}${path.relative(this.home, pathValue)}`;
-        } else {
-            return pathValue;
-        }
+        return this.utils.getDisplayName(pathValue, cwd);
+    }
+
+    public basename(pathValue: string, ext?: string): string {
+        return this.utils.paths.basename(pathValue, ext);
     }
 }

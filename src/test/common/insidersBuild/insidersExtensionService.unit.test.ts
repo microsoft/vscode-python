@@ -209,7 +209,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     let cmdManager: TypeMoq.IMock<ICommandManager>;
     let insidersPrompt: TypeMoq.IMock<IInsiderExtensionPrompt>;
     let hasUserBeenNotifiedState: IPersistentState<boolean>;
-    let hasUserBeenAskedToOptInAgainState: IPersistentState<boolean>;
     let insidersInstaller: TypeMoq.IMock<IExtensionBuildInstaller>;
 
     let insidersExtensionService: InsidersExtensionService;
@@ -222,7 +221,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>(undefined, TypeMoq.MockBehavior.Strict);
         insidersPrompt = TypeMoq.Mock.ofType<IInsiderExtensionPrompt>(undefined, TypeMoq.MockBehavior.Strict);
         hasUserBeenNotifiedState = mock(PersistentState);
-        hasUserBeenAskedToOptInAgainState = mock(PersistentState);
 
         insidersExtensionService = new InsidersExtensionService(
             extensionChannelService.object,
@@ -237,11 +235,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         insidersPrompt
             .setup(p => p.hasUserBeenNotified)
             .returns(() => instance(hasUserBeenNotifiedState))
-            // Basically means "we don't care" (necessary for strict mocks).
-            .verifiable(TypeMoq.Times.atLeast(0));
-        insidersPrompt
-            .setup(p => p.hasUserBeenAskedToOptInAgain)
-            .returns(() => instance(hasUserBeenAskedToOptInAgainState))
             // Basically means "we don't care" (necessary for strict mocks).
             .verifiable(TypeMoq.Times.atLeast(0));
     }
@@ -263,10 +256,9 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         installChannel: ExtensionChannels;
         isChannelUsingDefaultConfiguration?: boolean;
         hasUserBeenNotified?: boolean;
-        hasUserBeenAskedToOptInAgain?: boolean;
     };
 
-    function setState(info: TestInfo, checkPromptEnroll: boolean, checkPromptReEnroll: boolean, checkDisable: boolean) {
+    function setState(info: TestInfo, checkPromptEnroll: boolean, checkDisable: boolean) {
         if (info.vscodeChannel) {
             appEnvironment.setup(e => e.channel).returns(() => info.vscodeChannel!);
         }
@@ -280,49 +272,14 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
         if (info.hasUserBeenNotified !== undefined) {
             when(hasUserBeenNotifiedState.value).thenReturn(info.hasUserBeenNotified!);
         }
-        if (info.hasUserBeenAskedToOptInAgain !== undefined) {
-            when(hasUserBeenAskedToOptInAgainState.value).thenReturn(info.hasUserBeenAskedToOptInAgain!);
-        }
-
         if (checkPromptEnroll) {
             insidersPrompt.setup(p => p.promptToInstallInsiders()).returns(() => Promise.resolve());
         }
-        if (checkPromptReEnroll) {
-            insidersPrompt.setup(p => p.promptToEnrollBackToInsiders()).returns(() => Promise.resolve());
-        }
     }
-
-    suite('Case I - Verify enroll into the program again prompt is displayed when conditions are met', async () => {
-        const testsForHandleEdgeCaseI: TestInfo[] = [
-            {
-                // prompt to re-enroll
-                installChannel: 'off',
-                isChannelUsingDefaultConfiguration: false,
-                hasUserBeenAskedToOptInAgain: false
-            }
-        ];
-
-        setup(() => {
-            setupCommon();
-        });
-
-        testsForHandleEdgeCaseI.forEach(testParams => {
-            const testName = `Enroll into the program again prompt is displayed when vscode channel = '${testParams.vscodeChannel}', install channel = '${testParams.installChannel}', isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
-            test(testName, async () => {
-                setState(testParams, false, true, false);
-
-                await insidersExtensionService.handleEdgeCases(testParams.installChannel, testParams.isChannelUsingDefaultConfiguration!);
-
-                verifyAll();
-                verify(hasUserBeenNotifiedState.value).never();
-            });
-        });
-    });
 
     suite('Case II - Verify Insiders Install Prompt is displayed when conditions are met', async () => {
         const testsForHandleEdgeCaseII: TestInfo[] = [
             {
-                // skip re-enroll
                 installChannel: 'daily',
                 // prompt to enroll
                 vscodeChannel: 'insiders',
@@ -330,18 +287,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 isChannelUsingDefaultConfiguration: true
             },
             {
-                // skip re-enroll
                 installChannel: 'off',
-                hasUserBeenAskedToOptInAgain: true,
-                // prompt to enroll
-                vscodeChannel: 'insiders',
-                hasUserBeenNotified: false,
-                isChannelUsingDefaultConfiguration: true
-            },
-            {
-                // skip re-enroll
-                installChannel: 'off',
-                hasUserBeenAskedToOptInAgain: false,
                 // prompt to enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: false,
@@ -360,7 +306,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 !testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'
             }, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
             test(testName, async () => {
-                setState(testParams, true, false, false);
+                setState(testParams, true, false);
 
                 await insidersExtensionService.handleEdgeCases(testParams.installChannel, testParams.isChannelUsingDefaultConfiguration!);
 
@@ -373,7 +319,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case III - Verify Insiders channel is set to off when conditions are met', async () => {
         const testsForHandleEdgeCaseIII: TestInfo[] = [
             {
-                // skip re-enroll
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'stable',
@@ -382,7 +327,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 extensionChannel: 'stable'
             },
             {
-                // skip re-enroll
                 installChannel: 'weekly',
                 // skip enroll
                 vscodeChannel: 'stable',
@@ -403,7 +347,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 !testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'
             }, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
             test(testName, async () => {
-                setState(testParams, false, false, true);
+                setState(testParams, false, true);
 
                 await insidersExtensionService.handleEdgeCases(
                     testParams.installChannel,
@@ -419,7 +363,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
     suite('Case IV - Verify no operation is performed if none of the case conditions are met', async () => {
         const testsForHandleEdgeCaseIV: TestInfo[] = [
             {
-                // skip re-enroll
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'insiders',
@@ -428,7 +371,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 extensionChannel: 'insiders'
             },
             {
-                // skip re-enroll
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'insiders',
@@ -438,7 +380,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 extensionChannel: 'insiders'
             },
             {
-                // skip re-enroll
                 installChannel: 'daily',
                 // skip enroll
                 vscodeChannel: 'stable',
@@ -446,41 +387,24 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 extensionChannel: 'insiders'
             },
             {
-                // skip re-enroll
                 installChannel: 'off',
-                hasUserBeenAskedToOptInAgain: true,
                 // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: true
-                // disable skipped due to installChannel
             },
             {
-                // skip re-enroll
                 installChannel: 'off',
-                hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
                 // skip enroll
                 vscodeChannel: 'insiders',
                 hasUserBeenNotified: true
-                // disable skipped due to installChannel
             },
             {
                 // skip re-enroll
                 installChannel: 'off',
-                hasUserBeenAskedToOptInAgain: false,
                 isChannelUsingDefaultConfiguration: true,
                 // skip enroll
                 vscodeChannel: 'stable'
-                // disable skipped due to installChannel
-            },
-            {
-                // skip re-enroll
-                installChannel: 'off',
-                hasUserBeenAskedToOptInAgain: false,
-                isChannelUsingDefaultConfiguration: true,
-                // skip enroll
-                vscodeChannel: 'stable'
-                // disable skipped due to installChannel
             }
         ];
 
@@ -495,7 +419,7 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                 !testParams.hasUserBeenNotified ? 'user has not been notified to install insiders' : 'user has already been notified to install insiders'
             }, isChannelUsingDefaultConfiguration = ${testParams.isChannelUsingDefaultConfiguration}`;
             test(testName, async () => {
-                setState(testParams, false, false, false);
+                setState(testParams, false, false);
 
                 await insidersExtensionService.handleEdgeCases(testParams.installChannel, testParams.isChannelUsingDefaultConfiguration || testParams.installChannel === 'off');
 
@@ -504,11 +428,6 @@ suite('Insiders Extension Service - Function handleEdgeCases()', () => {
                     verify(hasUserBeenNotifiedState.value).never();
                 } else {
                     verify(hasUserBeenNotifiedState.value).once();
-                }
-                if (testParams.hasUserBeenAskedToOptInAgain === undefined) {
-                    verify(hasUserBeenAskedToOptInAgainState.value).never();
-                } else {
-                    verify(hasUserBeenAskedToOptInAgainState.value).once();
                 }
             });
         });

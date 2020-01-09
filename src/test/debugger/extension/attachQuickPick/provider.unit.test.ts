@@ -47,19 +47,25 @@ suite('Attach to process - process provider', () => {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             }
         ];
         when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
@@ -82,19 +88,25 @@ suite('Attach to process - process provider', () => {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             }
         ];
         when(processService.exec(PsProcessParser.psDarwinCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
@@ -125,19 +137,25 @@ ProcessId=5912\r
                 label: 'System',
                 description: '4',
                 detail: '',
-                id: '4'
+                id: '4',
+                processName: 'System',
+                commandLine: ''
             },
             {
                 label: 'sihost.exe',
                 description: '5728',
                 detail: 'sihost.exe',
-                id: '5728'
+                id: '5728',
+                processName: 'sihost.exe',
+                commandLine: 'sihost.exe'
             },
             {
                 label: 'svchost.exe',
                 description: '5912',
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
-                id: '5912'
+                id: '5912',
+                processName: 'svchost.exe',
+                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
             }
         ];
         when(platformService.isMac).thenReturn(false);
@@ -162,6 +180,7 @@ ProcessId=5912\r
         await expect(promise).to.eventually.be.rejectedWith(`Operating system '${OSType.Unknown}' not supported.`);
     });
 
+    // tslint:disable-next-line: max-func-body-length
     suite('POSIX getAttachItems (Linux)', () => {
         setup(() => {
             when(platformService.isMac).thenReturn(false);
@@ -179,19 +198,25 @@ ProcessId=5912\r
                     label: 'kextd',
                     description: '146',
                     detail: 'kextd',
-                    id: '146'
+                    id: '146',
+                    processName: 'kextd',
+                    commandLine: 'kextd'
                 },
                 {
                     label: 'launchd',
                     description: '1',
                     detail: 'launchd',
-                    id: '1'
+                    id: '1',
+                    processName: 'launchd',
+                    commandLine: 'launchd'
                 },
                 {
                     label: 'syslogd',
                     description: '41',
                     detail: 'syslogd',
-                    id: '41'
+                    id: '41',
+                    processName: 'syslogd',
+                    commandLine: 'syslogd'
                 }
             ];
             when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
@@ -214,31 +239,41 @@ ProcessId=5912\r
                     label: 'python',
                     description: '96',
                     detail: 'python',
-                    id: '96'
+                    id: '96',
+                    processName: 'python',
+                    commandLine: 'python'
                 },
                 {
                     label: 'python',
                     description: '31896',
                     detail: 'python script.py',
-                    id: '31896'
+                    id: '31896',
+                    processName: 'python',
+                    commandLine: 'python script.py'
                 },
                 {
                     label: 'kextd',
                     description: '146',
                     detail: 'kextd',
-                    id: '146'
+                    id: '146',
+                    processName: 'kextd',
+                    commandLine: 'kextd'
                 },
                 {
                     label: 'launchd',
                     description: '1',
                     detail: 'launchd',
-                    id: '1'
+                    id: '1',
+                    processName: 'launchd',
+                    commandLine: 'launchd'
                 },
                 {
                     label: 'syslogd',
                     description: '41',
                     detail: 'syslogd',
-                    id: '41'
+                    id: '41',
+                    processName: 'syslogd',
+                    commandLine: 'syslogd'
                 }
             ];
             when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
@@ -277,19 +312,25 @@ ProcessId=5728\r
                     label: 'sihost.exe',
                     description: '5728',
                     detail: 'sihost.exe',
-                    id: '5728'
+                    id: '5728',
+                    processName: 'sihost.exe',
+                    commandLine: 'sihost.exe'
                 },
                 {
                     label: 'svchost.exe',
                     description: '5372',
                     detail: '',
-                    id: '5372'
+                    id: '5372',
+                    processName: 'svchost.exe',
+                    commandLine: ''
                 },
                 {
                     label: 'System',
                     description: '4',
                     detail: '',
-                    id: '4'
+                    id: '4',
+                    processName: 'System',
+                    commandLine: ''
                 }
             ];
             when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
@@ -334,37 +375,49 @@ ProcessId=8026\r
                     label: 'python.exe',
                     description: '8026',
                     detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
-                    id: '8026'
+                    id: '8026',
+                    processName: 'python.exe',
+                    commandLine: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py'
                 },
                 {
                     label: 'python.exe',
                     description: '6028',
                     detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
-                    id: '6028'
+                    id: '6028',
+                    processName: 'python.exe',
+                    commandLine: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
                 },
                 {
                     label: 'sihost.exe',
                     description: '5728',
                     detail: 'sihost.exe',
-                    id: '5728'
+                    id: '5728',
+                    processName: 'sihost.exe',
+                    commandLine: 'sihost.exe'
                 },
                 {
                     label: 'svchost.exe',
                     description: '5372',
                     detail: '',
-                    id: '5372'
+                    id: '5372',
+                    processName: 'svchost.exe',
+                    commandLine: ''
                 },
                 {
                     label: 'svchost.exe',
                     description: '5912',
                     detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
-                    id: '5912'
+                    id: '5912',
+                    processName: 'svchost.exe',
+                    commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
                 },
                 {
                     label: 'System',
                     description: '4',
                     detail: '',
-                    id: '4'
+                    id: '4',
+                    processName: 'System',
+                    commandLine: ''
                 }
             ];
             when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });

@@ -437,24 +437,21 @@ body, html {
     border-bottom-width: 2px;
 }
 .toolbar-menu-bar {
-    display: flex;
+    display: inline-flex;
     width: 100%;
 }
 
 .kernel-status {
-    position: absolute;
-    right: 3px;
     margin-top: 2px;
-    color: var(--vscode-editor-foreground);
-    display: grid;
-    grid-template-columns: 1fr auto auto;
-    grid-template-rows: 1fr;
-    max-width: 60%;
+    max-width: 350px;
+    flex: 1;
+    display: flex;
+    margin-left: auto;
 }
 
 .kernel-status-section {
-    float: left;
     padding: 2px 5px 2px 5px;
+    flex: 1;
 }
 
 .kernel-status-section-hoverable:hover {
@@ -464,15 +461,11 @@ body, html {
 
 .kernel-status-divider {
     border-left: 1px solid var(--vscode-badge-background);
-    height: 17px;
-    margin: 0 5px 0 5px;
-    float: left;
-    grid-column-start: 2;
-    grid-column-end: 2;
+    flex: 1;
+    max-width: 1px;
 }
 
 .kernel-status-text {
-    float: left;
     padding-right: 5px;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -480,19 +473,19 @@ body, html {
 }
 
 .kernel-status-server {
-    grid-column-start: 1;
-    grid-column-end: 1;
     display: grid;
     grid-template-columns: 1fr auto;
+    max-width: 60%;
 }
 
 .kernel-status-status {
-    grid-column-start: 3;
-    grid-column-end: 3;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+    max-width: 38%;
 }
 
 .kernel-status-icon {
-    float: right;
     width: 16px;
     height: 0px;
 }

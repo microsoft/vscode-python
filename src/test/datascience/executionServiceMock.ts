@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 'use strict';
 import { SemVer } from 'semver';
+
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
@@ -16,6 +17,7 @@ export class MockPythonExecutionService implements IPythonExecutionService {
     constructor() {
         this.procService = new ProcessService(new BufferDecoder());
     }
+
     public getInterpreterInformation(): Promise<InterpreterInfomation> {
         return Promise.resolve({
             path: '',

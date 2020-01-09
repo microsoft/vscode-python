@@ -93,15 +93,6 @@ class PythonDaemon(BasePythonDaemon):
         sys.stdout.write(jupyter_client.__version__)
         sys.stdout.flush()
 
-    def _print_kernelspec_version(self):
-        import jupyter_client
-
-        # Check whether kernelspec module exists.
-        import jupyter_client.kernelspec
-
-        sys.stdout.write(jupyter_client.__version__)
-        sys.stdout.flush()
-
     def _print_kernel_list(self):
         self.log.info("listing kernels")
         # Get kernel specs.

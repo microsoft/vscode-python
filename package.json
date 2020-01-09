@@ -2735,11 +2735,11 @@
     "scripts": {
         "package": "gulp clean && gulp prePublishBundle && vsce package -o ms-python-insiders.vsix",
         "compile": "tsc -watch -p ./",
-        "compile-webviews-watch": "npx npx -n --max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
+        "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "checkDependencies": "gulp checkDependencies",
-        "dump-datascience-webpack-stats": "npx -n --max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
+        "dump-datascience-webpack-stats": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
         "compile-webviews": "gulp compile-webviews",
-        "compile-webviews-verbose": "npx webpack --config ./build/webpack/webpack.datascience-ui.config.js",
+        "compile-webviews-verbose": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience.config.js",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
@@ -2756,7 +2756,8 @@
         "lint": "tslint src/**/*.ts -t verbose",
         "clean": "gulp clean",
         "updateBuildNumber": "gulp updateBuildNumber",
-        "verifyBundle": "gulp verifyBundle"
+        "verifyBundle": "gulp verifyBundle",
+        "webpack": "webpack"
     },
     "dependencies": {
         "@blueprintjs/select": "3.10.0",
@@ -2918,6 +2919,7 @@
         "codecov": "^3.6.1",
         "colors": "^1.2.1",
         "copy-webpack-plugin": "^4.6.0",
+        "cross-env": "^6.0.3",
         "cross-spawn": "^6.0.5",
         "css-loader": "^1.0.1",
         "cucumber-html-reporter": "^4.0.5",
@@ -2964,7 +2966,7 @@
         "nock": "^10.0.6",
         "node-has-native-dependencies": "^1.0.2",
         "node-html-parser": "^1.1.13",
-        "nyc": "^14.1.1",
+        "nyc": "^15.0.0",
         "prettier": "^1.19.1",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",

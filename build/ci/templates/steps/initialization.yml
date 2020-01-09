@@ -101,11 +101,10 @@ steps:
       displayName: "Setup NODE_PATH for extension (Debugger Tests)"
       condition: and(succeeded(), eq(variables['agent.os'], 'Darwin'))
 
-    # We need these almost always.
+    # Install vsce 
     - bash: |
           npm install -g vsce
-          npm install -g npx
-      displayName: "Install vsce & npx"
+      displayName: "Install vsce"
       condition: and(succeeded(), eq('${{ parameters.installVSCEorNPX }}', 'true'))
 
     - bash: npx tsc -p ./

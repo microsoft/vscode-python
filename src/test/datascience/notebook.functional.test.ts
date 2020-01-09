@@ -90,6 +90,9 @@ suite('DataScience notebook tests', () => {
         } catch (e) {
             traceError(e);
         }
+        if (process.env.PYTHONWARNINGS) {
+            delete process.env.PYTHONWARNINGS;
+        }
     });
 
     suiteTeardown(() => {
@@ -1211,6 +1214,21 @@ plt.show()`,
             }
 
             assert.ok(threw, 'No exception thrown during notebook creation');
+        }
+    });
+
+    test('Notebook launch with PYTHONWARNINGS', async function() {
+        if (ioc.mockJupyter) {
+            // tslint:disable-next-line: no-invalid-this
+            this.skip();
+        } else {
+            // Force python warnings to always
+            process.env[`PYTHONWARNINGS`] = 'always';
+            jupyterExecution = ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
+
+            // Try creating a notebook
+            const server = await createNotebook(true);
+            assert.ok(server, 'Server died before running');
         }
     });
 

@@ -127,10 +127,6 @@ export namespace ExtensionChannels {
         'ExtensionChannels.promptMessage',
         'We noticed you are using Visual Studio Code Insiders. Would you like to use the Insiders build of the Python extension?'
     );
-    export const optIntoProgramAgainMessage = localize(
-        'ExtensionChannels.optIntoProgramAgainMessage',
-        'It looks like you were previously in the Insiders Program of the Python extension. Would you like to opt into the program again?'
-    );
     export const reloadToUseInsidersMessage = localize(
         'ExtensionChannels.reloadToUseInsidersMessage',
         'Please reload Visual Studio Code to use the insiders build of the Python extension.'
