@@ -5,12 +5,12 @@ import * as path from 'path';
 import { LanguageClient, LanguageClientOptions, ServerOptions, TransportKind } from 'vscode-languageclient';
 
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
+import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { IEnvironmentActivationService } from '../../interpreter/activation/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { ILanguageClientFactory, LanguageClientFactory } from '../types';
-import { IFileSystem } from '../../common/platform/types';
 
 // tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
 const languageClientName = 'Python Tools';
@@ -49,9 +49,7 @@ export class PyRxLanguageClientFactory implements ILanguageClientFactory {
  */
 @injectable()
 export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
-    constructor(
-        @inject(IFileSystem) private readonly fs: IFileSystem
-    ) { }
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
     public async createLanguageClient(
         _resource: Resource,
         _interpreter: PythonInterpreter | undefined,
@@ -60,7 +58,7 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
     ): Promise<LanguageClient> {
         const bundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server', 'server.bundle.js');
         const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server', 'server.js');
-        const debugOptions = { execArgv: ["--nolazy", "--inspect=6600"] };
+        const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
         // If the extension is launched in debug mode, then the debug server options are used.
         const serverOptions: ServerOptions = {
             run: { module: bundlePath, transport: TransportKind.ipc },
@@ -69,9 +67,10 @@ export class DownloadedLanguageClientFactory implements ILanguageClientFactory {
             // someone starts the production extension in debug mode.
             debug: {
                 module: this.fs.fileExists(nonBundlePath) ? nonBundlePath : bundlePath,
-                transport: TransportKind.ipc, options: debugOptions
+                transport: TransportKind.ipc,
+                options: debugOptions
             }
-        }
+        };
         const vscodeLanguageClient = require('vscode-languageclient') as typeof import('vscode-languageclient');
         return new vscodeLanguageClient.LanguageClient(PYTHON_LANGUAGE, languageClientName, serverOptions, clientOptions);
     }
