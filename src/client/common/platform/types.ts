@@ -47,6 +47,10 @@ export interface IPlatformService {
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
+export interface ITempFileSystem {
+    createFile(suffix: string): Promise<TemporaryFile>;
+}
+
 //===========================
 // FS paths
 

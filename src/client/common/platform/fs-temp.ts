@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as tmp from 'tmp';
-import { TemporaryFile } from './types';
+import { ITempFileSystem, TemporaryFile } from './types';
 
 interface IRawTempFS {
     // tslint:disable-next-line:no-any
@@ -10,7 +10,7 @@ interface IRawTempFS {
 }
 
 // Operations related to temporary files and directories.
-export class TemporaryFileSystem {
+export class TemporaryFileSystem implements ITempFileSystem {
     // prettier-ignore
     constructor(
         private readonly raw: IRawTempFS
