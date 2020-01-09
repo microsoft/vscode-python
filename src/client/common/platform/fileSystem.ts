@@ -83,6 +83,23 @@ export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
     };
 }
 
+// prettier-ignore
+function filterByFileType(
+    files: [string, FileType][],
+    fileType: FileType
+): [string, FileType][] {
+    // We preserve the pre-existing behavior of following symlinks.
+    if (fileType === FileType.Unknown) {
+        // FileType.Unknown == 0 so we can't just use bitwise
+        // operations blindly here.
+        return files.filter(([_file, ft]) => {
+            return ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown);
+        });
+    } else {
+        return files.filter(([_file, ft]) => (ft & fileType) > 0);
+    }
+}
+
 //==========================================
 // "raw" filesystem
 
@@ -220,7 +237,8 @@ export class RawFileSystem implements IRawFileSystem {
         const files = await this.fsExtra.readdir(dirname);
         const promises = files.map(async basename => {
             const filename = this.paths.join(dirname, basename);
-            // Note that this follows symlinks.
+            // Note that this follows symlinks (while still preserving
+            // the Symlink flag).
             const fileType = await getFileType(filename);
             return [filename, fileType] as [string, FileType];
         });
@@ -313,35 +331,16 @@ export class FileSystem implements IFileSystem {
         return this.raw.rmtree(directoryPath);
     }
 
-    // prettier-ignore
-    public async listdir(
-        dirname: string,
-        fileType?: FileType
-    ): Promise<[string, FileType][]> {
-        let files: [string, FileType][];
-        try {
-            files = await this.raw.listdir(dirname);
-        } catch (err) {
-            // We're only preserving pre-existng behavior here...
-            if (!(await this.pathExists(dirname))) {
-                return [];
-            }
-            throw err; // re-throw
-        }
-
-        if (fileType === undefined) {
-            return files;
-        }
-        // We preserve the pre-existing behavior of following symlinks.
-        if (fileType === FileType.Unknown) {
-            // FileType.Unknown == 0 so we can't just use bitwise
-            // operations blindly here.
-            return files.filter(([_file, ft]) => {
-                return ft === FileType.Unknown || ft === (FileType.SymbolicLink & FileType.Unknown);
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        // prettier-ignore
+        return this.raw.listdir(dirname)
+            .catch(async err => {
+                // We're only preserving pre-existng behavior here...
+                if (!(await this.pathExists(dirname))) {
+                    return [];
+                }
+                throw err; // re-throw
             });
-        } else {
-            return files.filter(([_file, ft]) => (ft & fileType) > 0);
-        }
     }
 
     public async appendFile(filename: string, text: string): Promise<void> {
@@ -410,13 +409,17 @@ export class FileSystem implements IFileSystem {
 
     public async getSubDirectories(dirname: string): Promise<string[]> {
         // prettier-ignore
-        return (await this.listdir(dirname, FileType.Directory))
-            .map(([filename, _fileType]) => filename);
+        return filterByFileType(
+            (await this.listdir(dirname)),
+            FileType.Directory
+        ).map(([filename, _fileType]) => filename);
     }
     public async getFiles(dirname: string): Promise<string[]> {
         // prettier-ignore
-        return (await this.listdir(dirname, FileType.File))
-            .map(([filename, _fileType]) => filename);
+        return filterByFileType(
+            (await this.listdir(dirname)),
+            FileType.File
+        ).map(([filename, _fileType]) => filename);
     }
 
     public async getFileHash(filename: string): Promise<string> {
