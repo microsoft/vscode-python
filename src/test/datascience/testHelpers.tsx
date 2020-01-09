@@ -11,6 +11,7 @@ import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
+import { traceInfo } from '../../client/common/logger';
 import { createDeferred } from '../../client/common/utils/async';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
@@ -71,6 +72,7 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
     const numberOfTimes = !options ? 1 : typeof options === 'number' ? 1 : options.numberOfTimes ?? 1;
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
+    traceInfo(`Waiting for message ${message} with timeout of ${timeoutMs}`);
     let handler: (m: string, p: any) => void;
     const timer = setTimeout(() => {
         if (!promise.resolved) {
@@ -84,9 +86,9 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
             if (timesMessageReceived < numberOfTimes) {
                 return;
             }
+            clearTimeout(timer);
             ioc.removeMessageListener(handler);
             promise.resolve();
-            clearTimeout(timer);
         }
     };
     ioc.addMessageListener(handler);
