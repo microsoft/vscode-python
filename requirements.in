@@ -1,5 +1,5 @@
 # IntelliSense
-jedi==0.15.1
+jedi==0.15.2
 # Sort Imports
 isort==4.3.21
 # DS Python daemon
