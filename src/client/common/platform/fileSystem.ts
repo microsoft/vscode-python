@@ -405,19 +405,11 @@ export class FileSystem implements IFileSystem {
             .map(([filename, _ft]) => filename);
     }
 
-    public async getFileHash(filePath: string): Promise<string> {
-        return new Promise<string>((resolve, reject) => {
-            fs.lstat(filePath, (err, stats) => {
-                if (err) {
-                    reject(err);
-                } else {
-                    const actual = createHash('sha512')
-                        .update(`${stats.ctimeMs}-${stats.mtimeMs}`)
-                        .digest('hex');
-                    resolve(actual);
-                }
-            });
-        });
+    public async getFileHash(filename: string): Promise<string> {
+        // The reason for lstat rather than stat is not clear...
+        const stat = await this.raw.lstat(filename);
+        const data = `${stat.ctime}-${stat.mtime}`;
+        return getHashString(data);
     }
 
     public async search(globPattern: string, cwd?: string): Promise<string[]> {
@@ -450,4 +442,13 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
+}
+
+// We *could* use ICryptoUtils, but it's a bit overkill, issue tracked
+// in https://github.com/microsoft/vscode-python/issues/8438.
+function getHashString(data: string): string {
+    // prettier-ignore
+    const hash = createHash('sha512')
+        .update(data);
+    return hash.digest('hex');
 }
