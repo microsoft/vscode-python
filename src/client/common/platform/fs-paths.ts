@@ -21,7 +21,6 @@ interface INodePath {
     normalize(filename: string): string;
 }
 
-// The file path operations used by the extension.
 export class FileSystemPaths implements IFileSystemPaths {
     // prettier-ignore
     constructor(
@@ -74,10 +73,6 @@ export class FileSystemPaths implements IFileSystemPaths {
     }
 }
 
-// Where to fine executables.
-//
-// In particular this class provides all the tools needed to find
-// executables, including through an environment variable.
 export class Executables {
     // prettier-ignore
     constructor(
@@ -108,7 +103,6 @@ interface IRawPaths {
     relative(relpath: string, rootpath: string): string;
 }
 
-// A collection of high-level utilities related to filesystem paths.
 export class FileSystemPathUtils implements IFileSystemPathUtils {
     // prettier-ignore
     constructor(
@@ -136,16 +130,12 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         );
     }
 
-    // Return true if the two paths are equivalent on the current
-    // filesystem and false otherwise.  On Windows this is significant.
-    // On non-Windows the filenames must always be exactly the same.
     public arePathsSame(path1: string, path2: string): boolean {
         path1 = this.paths.normCase(path1);
         path2 = this.paths.normCase(path2);
         return path1 === path2;
     }
 
-    // Return the canonicalized absolute filename.
     public async getRealPath(filename: string): Promise<string> {
         try {
             return await fs.realpath(filename);
@@ -155,7 +145,6 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         }
     }
 
-    // Return the clean (displayable) form of the given filename.
     public getDisplayName(filename: string, cwd?: string): string {
         if (cwd && filename.startsWith(cwd)) {
             return `.${this.paths.sep}${this.raw.relative(cwd, filename)}`;
