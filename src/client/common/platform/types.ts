@@ -94,6 +94,54 @@ export import FileStat = vscode.FileStat;
 export type ReadStream = fs.ReadStream;
 export type WriteStream = fs.WriteStream;
 
+// The low-level filesystem operations on which the extension depends.
+export interface IRawFileSystem {
+    // Get information about a file (resolve symlinks).
+    stat(filename: string): Promise<FileStat>;
+    // Get information about a file (do not resolve synlinks).
+    lstat(filename: string): Promise<FileStat>;
+    // Change a file's permissions.
+    chmod(filename: string, mode: string | number): Promise<void>;
+    // Move the file to a different location (and/or rename it).
+    move(src: string, tgt: string): Promise<void>;
+
+    //***********************
+    // files
+
+    // Return the raw bytes of the given file.
+    readData(filename: string): Promise<Buffer>;
+    // Return the text of the given file (decoded from UTF-8).
+    readText(filename: string): Promise<string>;
+    // Write the given text to the file (UTF-8 encoded).
+    writeText(filename: string, data: {}): Promise<void>;
+    // Write the given text to the end of the file (UTF-8 encoded).
+    appendText(filename: string, text: string): Promise<void>;
+    // Copy a file.
+    copyFile(src: string, dest: string): Promise<void>;
+    // Delete a file.
+    rmfile(filename: string): Promise<void>;
+
+    //***********************
+    // directories
+
+    // Create the directory and any missing parent directories.
+    mkdirp(dirname: string): Promise<void>;
+    // Delete the directory and everything in it.
+    rmtree(dirname: string): Promise<void>;
+    // Return the contents of the directory.
+    listdir(dirname: string): Promise<[string, FileType][]>;
+
+    //***********************
+    // not async
+
+    // Return the text of the given file (decoded from UTF-8).
+    readTextSync(filename: string): string;
+    // Create a streaming wrappr around an open file (for reading).
+    createReadStream(filename: string): ReadStream;
+    // Create a streaming wrappr around an open file (for writing).
+    createWriteStream(filename: string): WriteStream;
+}
+
 export const IFileSystem = Symbol('IFileSystem');
 export interface IFileSystem {
     // path-related

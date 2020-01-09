@@ -16,7 +16,7 @@ import { TemporaryFileSystem } from './fs-temp';
 // prettier-ignore
 import {
     FileStat, FileType,
-    IFileSystem, IFileSystemPaths, IPlatformService,
+    IFileSystem, IFileSystemPaths, IPlatformService, IRawFileSystem,
     ReadStream, TemporaryFile, WriteStream
 } from './types';
 
@@ -123,7 +123,7 @@ interface IRawPath {
 // "FileSystemUtils" and then rename "RawFileSystem" to "FileSystem".
 
 // The low-level filesystem operations used by the extension.
-export class RawFileSystem {
+export class RawFileSystem implements IRawFileSystem {
     // prettier-ignore
     constructor(
         protected readonly paths: IRawPath,
@@ -146,32 +146,6 @@ export class RawFileSystem {
         );
     }
 
-    public readData(filename: string): Promise<Buffer> {
-        return this.fsExtra.readFile(filename);
-    }
-
-    // Return the UTF8-decoded text of the file.
-    public async readText(filename: string): Promise<string> {
-        return this.fsExtra.readFile(filename, ENCODING);
-    }
-
-    // Write the UTF8-encoded text to the file.
-    public async writeText(filename: string, text: string): Promise<void> {
-        await this.fsExtra.writeFile(filename, text, { encoding: ENCODING });
-    }
-
-    public async appendText(filename: string, text: string): Promise<void> {
-        return this.fsExtra.appendFile(filename, text);
-    }
-
-    public async rmtree(dirname: string): Promise<void> {
-        return this.fsExtra.rmdir(dirname);
-    }
-
-    public async rmfile(filename: string): Promise<void> {
-        return this.fsExtra.unlink(filename);
-    }
-
     public async stat(filename: string): Promise<FileStat> {
         // Note that, prior to the November release of VS Code,
         // stat.ctime was always 0.
@@ -180,18 +154,36 @@ export class RawFileSystem {
         return this.vscfs.stat(uri);
     }
 
-    public async listdir(dirname: string): Promise<[string, FileType][]> {
-        const files = await this.fsExtra.readdir(dirname);
-        const promises = files.map(async basename => {
-            const filename = this.paths.join(dirname, basename);
-            const fileType = await getFileType(filename);
-            return [filename, fileType] as [string, FileType];
-        });
-        return Promise.all(promises);
+    public async lstat(filename: string): Promise<FileStat> {
+        const stat = await this.fsExtra.lstat(filename);
+        // Note that, unlike stat(), lstat() does not include the type
+        // of the symlink's target.
+        const fileType = convertFileType(stat);
+        return convertStat(stat, fileType);
     }
 
-    public async mkdirp(dirname: string): Promise<void> {
-        return this.fsExtra.mkdirp(dirname);
+    public async chmod(filename: string, mode: string | number): Promise<void> {
+        return this.fsExtra.chmod(filename, mode);
+    }
+
+    public async move(src: string, tgt: string) {
+        await this.fsExtra.rename(src, tgt);
+    }
+
+    public async readData(filename: string): Promise<Buffer> {
+        return this.fsExtra.readFile(filename);
+    }
+
+    public async readText(filename: string): Promise<string> {
+        return this.fsExtra.readFile(filename, ENCODING);
+    }
+
+    public async writeText(filename: string, text: string): Promise<void> {
+        await this.fsExtra.writeFile(filename, text, { encoding: ENCODING });
+    }
+
+    public async appendText(filename: string, text: string): Promise<void> {
+        return this.fsExtra.appendFile(filename, text);
     }
 
     public async copyFile(src: string, dest: string): Promise<void> {
@@ -213,20 +205,26 @@ export class RawFileSystem {
         return deferred.promise;
     }
 
-    public async move(src: string, tgt: string) {
-        await this.fsExtra.rename(src, tgt);
+    public async rmfile(filename: string): Promise<void> {
+        return this.fsExtra.unlink(filename);
     }
 
-    public async chmod(filename: string, mode: string | number): Promise<void> {
-        return this.fsExtra.chmod(filename, mode);
+    public async rmtree(dirname: string): Promise<void> {
+        return this.fsExtra.rmdir(dirname);
     }
 
-    public async lstat(filename: string): Promise<FileStat> {
-        const stat = await this.fsExtra.lstat(filename);
-        // Note that, unlike stat(), lstat() does not include the type
-        // of the symlink's target.
-        const fileType = convertFileType(stat);
-        return convertStat(stat, fileType);
+    public async mkdirp(dirname: string): Promise<void> {
+        return this.fsExtra.mkdirp(dirname);
+    }
+
+    public async listdir(dirname: string): Promise<[string, FileType][]> {
+        const files = await this.fsExtra.readdir(dirname);
+        const promises = files.map(async basename => {
+            const filename = this.paths.join(dirname, basename);
+            const fileType = await getFileType(filename);
+            return [filename, fileType] as [string, FileType];
+        });
+        return Promise.all(promises);
     }
 
     //****************************
