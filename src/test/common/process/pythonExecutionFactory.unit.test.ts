@@ -237,7 +237,7 @@ suite('Process - PythonExecutionFactory', () => {
                 expect(service).instanceOf(CondaExecutionService);
             });
 
-            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function () {
+            test('Ensure `create` returns a PythonExecutionService instance if createCondaExecutionService() returns undefined', async function() {
                 // tslint:disable-next-line:no-invalid-this
                 return this.skip();
 
