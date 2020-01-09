@@ -372,7 +372,7 @@ export class FileSystem implements IFileSystem {
     public async getSubDirectories(dirname: string): Promise<string[]> {
         let files: [string, FileType][];
         try {
-            files = await this.listdir(dirname);
+            files = await this.raw.listdir(dirname);
         } catch {
             // We're only preserving pre-existng behavior here...
             return [];
@@ -388,7 +388,7 @@ export class FileSystem implements IFileSystem {
     public async getFiles(dirname: string): Promise<string[]> {
         let files: [string, FileType][];
         try {
-            files = await this.listdir(dirname);
+            files = await this.raw.listdir(dirname);
         } catch (err) {
             // This matches what getSubDirectories() does.
             if (!(await fs.pathExists(dirname))) {
