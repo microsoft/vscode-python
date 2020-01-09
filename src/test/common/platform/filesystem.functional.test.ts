@@ -7,10 +7,16 @@ import { expect, use } from 'chai';
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import { convertStat, FileSystem } from '../../../client/common/platform/fileSystem';
+import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType, TemporaryFile } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
-import { assertDoesNotExist, assertExists, DOES_NOT_EXIST, fixPath, FSFixture, OSX, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS } from './utils';
+// prettier-ignore
+import {
+    assertDoesNotExist, assertExists, DOES_NOT_EXIST,
+    fixPath, FSFixture,
+    OSX, SUPPORTS_SOCKETS, SUPPORTS_SYMLINKS, WINDOWS
+} from './utils';
 
 // tslint:disable:no-require-imports no-var-requires
 const assertArrays = require('chai-arrays');
@@ -21,7 +27,10 @@ suite('FileSystem', () => {
     let fileSystem: FileSystem;
     let fix: FSFixture;
     setup(async () => {
-        fileSystem = new FileSystem(new PlatformService());
+        // prettier-ignore
+        fileSystem = new FileSystem(
+            new PlatformService()
+        );
         fix = new FSFixture();
 
         await assertDoesNotExist(DOES_NOT_EXIST);
@@ -32,181 +41,43 @@ suite('FileSystem', () => {
     });
 
     suite('path-related', () => {
+        const paths = FileSystemPaths.withDefaults();
+        const pathUtils = FileSystemPathUtils.withDefaults(paths);
+
         suite('directorySeparatorChar', () => {
-            test('value', () => {
+            // tested fully in the FileSystemPaths tests.
+
+            test('matches wrapped object', () => {
+                const expected = paths.sep;
+
                 const sep = fileSystem.directorySeparatorChar;
 
-                expect(sep).to.equal(path.sep);
+                expect(sep).to.equal(expected);
             });
         });
 
         suite('arePathsSame', () => {
-            test('identical', () => {
-                const filename = 'x/y/z/spam.py';
+            // tested fully in the FileSystemPathUtils tests.
 
-                const result = fileSystem.arePathsSame(filename, filename);
+            test('matches wrapped object', () => {
+                const file1 = fixPath('a/b/c/spam.py');
+                const file2 = fixPath('a/b/c/Spam.py');
+                const expected = pathUtils.arePathsSame(file1, file2);
 
-                expect(result).to.equal(true);
-            });
+                const areSame = fileSystem.arePathsSame(file1, file2);
 
-            test('not the same', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'a/b/c/spam.py';
-
-                const result = fileSystem.arePathsSame(file1, file2);
-
-                expect(result).to.equal(false);
-            });
-
-            test('with different separators', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x\\y\\z\\spam.py';
-                const expected = WINDOWS;
-
-                const result = fileSystem.arePathsSame(file1, file2);
-
-                expect(result).to.equal(expected);
-            });
-
-            test('with different case', () => {
-                const file1 = 'x/y/z/spam.py';
-                const file2 = 'x/Y/z/Spam.py';
-                const expected = WINDOWS;
-
-                const result = fileSystem.arePathsSame(file1, file2);
-
-                expect(result).to.equal(expected);
+                expect(areSame).to.equal(expected);
             });
         });
 
         suite('getRealPath', () => {
-            const prevCwd = process.cwd();
-            let cwd: string;
-            setup(async function() {
-                if (OSX) {
-                    // tslint:disable-next-line:no-suspicious-comment
-                    // TODO(GH-8995) These tests are failing on Mac, so
-                    // we are temporarily disabling it.
-                    // tslint:disable-next-line:no-invalid-this
-                    return this.skip();
-                }
-                cwd = await fix.createDirectory('x/y/z');
-                process.chdir(cwd);
-            });
-            teardown(() => {
-                process.chdir(prevCwd);
-            });
+            // tested fully in the FileSystemPathUtils tests.
 
-            test('basename-only', async () => {
-                const expected = await fix.createFile('x/y/z/spam.py');
-
-                const resolved = await fileSystem.getRealPath('spam.py');
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('absolute', async () => {
-                const filename = await fix.createFile('spam.py');
-                const expected = filename;
+            test('matches wrapped object', async () => {
+                const filename = fixPath('a/b/c/spam.py');
+                const expected = await pathUtils.getRealPath(filename);
 
                 const resolved = await fileSystem.getRealPath(filename);
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('relative', async () => {
-                const expected = await fix.createFile('x/y/z/w/spam.py');
-                const relpath = fixPath('./w/spam.py');
-
-                const resolved = await fileSystem.getRealPath(relpath);
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('parent', async () => {
-                const expected = await fix.resolve('x/y');
-
-                const resolved = await fileSystem.getRealPath('..');
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('cousin', async () => {
-                const expected = await fix.createFile('x/w/spam.py');
-                const relpath = fixPath('../../w/spam.py');
-
-                const resolved = await fileSystem.getRealPath(relpath);
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('does not exist', async () => {
-                const resolved = await fileSystem.getRealPath('spam.py');
-
-                // The original path was returned unchanged.
-                expect(resolved).to.equal('spam.py'); // instead of <TMP>/x/y/z/spam.py
-            });
-
-            test('directory does not exist', async () => {
-                const relpath = fixPath('../../w/spam.py');
-
-                const resolved = await fileSystem.getRealPath(relpath);
-
-                // The original path was returned unchanged.
-                expect(resolved).to.equal(relpath); // instead of <TMP>/x/w/spam.py
-            });
-
-            test('symlink', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const expected = await fix.createFile('spam.py');
-                await fix.createSymlink('x/y/z/eggs.py', expected);
-
-                const resolved = await fileSystem.getRealPath('eggs.py');
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('symlink chain', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const expected = await fix.createFile('w/spam.py');
-                const symlink1 = await fix.createSymlink('x/y/spam.py', expected);
-                await fix.createSymlink('x/y/z/eggs.py', symlink1);
-
-                const resolved = await fileSystem.getRealPath('eggs.py');
-
-                expect(resolved).to.equal(expected);
-            });
-
-            test('symlink (target does not exist)', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const filename = await fix.resolve('spam.py');
-                await fix.createSymlink('x/y/z/eggs.py', filename);
-
-                const resolved = await fileSystem.getRealPath('eggs.py');
-
-                // The original path was returned unchanged.
-                expect(resolved).to.equal('eggs.py'); // instead of <TMP>/spam.py
-            });
-
-            test('mixed', async function() {
-                if (!SUPPORTS_SYMLINKS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const expected = await fix.createFile('x/y/w/eggs.py');
-                await fix.createSymlink('x/w/spam.py', expected);
-                const relpath = fixPath('../../w/spam.py');
-
-                const resolved = await fileSystem.getRealPath(relpath);
 
                 expect(resolved).to.equal(expected);
             });
@@ -222,7 +93,11 @@ suite('FileSystem', () => {
                 }
                 const filename = await fix.createFile('x/y/z/spam.py', '...');
                 const symlink = await fix.createSymlink('x/y/z/eggs.py', filename);
-                const expected = convertStat(await fs.lstat(symlink), FileType.SymbolicLink);
+                // prettier-ignore
+                const expected = convertStat(
+                    await fs.lstat(symlink),
+                    FileType.SymbolicLink
+                );
 
                 const stat = await fileSystem.lstat(symlink);
 
@@ -234,7 +109,11 @@ suite('FileSystem', () => {
                 // Ideally we would compare to the result of
                 // fileSystem.stat().  However, we do not have access
                 // to the VS Code API here.
-                const expected = convertStat(await fs.lstat(filename), FileType.File);
+                // prettier-ignore
+                const expected = convertStat(
+                    await fs.lstat(filename),
+                    FileType.File
+                );
 
                 const stat = await fileSystem.lstat(filename);
 
@@ -480,7 +359,9 @@ suite('FileSystem', () => {
 
                 await fileSystem.writeFile(filename, data);
 
-                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -490,7 +371,9 @@ suite('FileSystem', () => {
 
                 await fileSystem.writeFile(filename, data);
 
-                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -500,7 +383,9 @@ suite('FileSystem', () => {
 
                 await fileSystem.writeFile(filename, data);
 
-                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
         });
@@ -554,9 +439,13 @@ suite('FileSystem', () => {
 
                 await fileSystem.copyFile(src, dest);
 
-                const actual = await fs.readFile(dest).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(dest)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
-                const original = await fs.readFile(src).then(buffer => buffer.toString());
+                // prettier-ignore
+                const original = await fs.readFile(src)
+                    .then(buffer => buffer.toString());
                 expect(original).to.equal(data);
             });
 
@@ -568,9 +457,13 @@ suite('FileSystem', () => {
 
                 await fileSystem.copyFile(src, dest);
 
-                const actual = await fs.readFile(dest).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(dest)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
-                const original = await fs.readFile(src).then(buffer => buffer.toString());
+                // prettier-ignore
+                const original = await fs.readFile(src)
+                    .then(buffer => buffer.toString());
                 expect(original).to.equal(data);
             });
 
@@ -841,7 +734,9 @@ suite('FileSystem', () => {
             });
 
             test('throws an exception if file does not exist', () => {
-                expect(() => fileSystem.readFileSync(DOES_NOT_EXIST)).to.throw(Error);
+                expect(() => {
+                    fileSystem.readFileSync(DOES_NOT_EXIST);
+                }).to.throw(Error);
             });
         });
 
@@ -884,7 +779,9 @@ suite('FileSystem', () => {
                 stream.write(data);
                 stream.destroy();
 
-                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -896,7 +793,9 @@ suite('FileSystem', () => {
                 stream.write(data);
                 stream.destroy();
 
-                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
 
@@ -915,7 +814,9 @@ suite('FileSystem', () => {
                 stream.write(data);
                 stream.destroy();
 
-                const actual = await fs.readFile(filename).then(buffer => buffer.toString());
+                // prettier-ignore
+                const actual = await fs.readFile(filename)
+                    .then(buffer => buffer.toString());
                 expect(actual).to.equal(data);
             });
         });
@@ -1032,7 +933,12 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getSubDirectories(dirname);
 
-                    expect(results.sort()).to.deep.equal([symlink, subdir2, subdir1]);
+                    // prettier-ignore
+                    expect(results.sort()).to.deep.equal([
+                        symlink,
+                        subdir2,
+                        subdir1
+                    ]);
                 });
             } else {
                 test('mixed types', async () => {
@@ -1048,7 +954,11 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getSubDirectories(dirname);
 
-                    expect(results.sort()).to.deep.equal([subdir2, subdir1]);
+                    // prettier-ignore
+                    expect(results.sort()).to.deep.equal([
+                        subdir2,
+                        subdir1
+                    ]);
                 });
             }
 
@@ -1085,7 +995,13 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getFiles(dirname);
 
-                    expect(results.sort()).to.deep.equal([file3, file2, symlink, file1]);
+                    // prettier-ignore
+                    expect(results.sort()).to.deep.equal([
+                        file3,
+                        file2,
+                        symlink,
+                        file1
+                    ]);
                 });
             } else {
                 test('mixed types', async () => {
@@ -1101,7 +1017,12 @@ suite('FileSystem', () => {
 
                     const results = await fileSystem.getFiles(dirname);
 
-                    expect(results.sort()).to.deep.equal([file3, file2, file1]);
+                    // prettier-ignore
+                    expect(results.sort()).to.deep.equal([
+                        file3,
+                        file2,
+                        file1
+                    ]);
                 });
             }
 
@@ -1240,7 +1161,11 @@ suite('FileSystem', () => {
                 expect(filename1).to.not.equal(filename2);
             });
 
-            test('Ensure writing to a temp file is supported via file stream', async () => {
+            test('Ensure writing to a temp file is supported via file stream', async function() {
+                if (WINDOWS) {
+                    // tslint:disable-next-line:no-invalid-this
+                    this.skip();
+                }
                 const tempfile = await createTemporaryFile('.tmp');
                 const stream = fileSystem.createWriteStream(tempfile.filePath);
                 fix.addCleanup(() => stream.destroy());
@@ -1256,7 +1181,9 @@ suite('FileSystem', () => {
                 // Note that on Windows chmod is a noop.
                 const tempfile = await createTemporaryFile('.tmp');
 
-                await expect(fs.chmod(tempfile.filePath, '7777')).to.not.eventually.be.rejected;
+                const promise = fs.chmod(tempfile.filePath, '7777');
+
+                await expect(promise).to.not.eventually.be.rejected;
             });
         });
 

@@ -44,6 +44,14 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     public userExperiments: ABExperiments = [];
     /**
+     * Experiments user requested to opt into manually
+     */
+    public _experimentsOptedInto: string[];
+    /**
+     * Experiments user requested to opt out from manually
+     */
+    public _experimentsOptedOutFrom: string[];
+    /**
      * Keeps track of the experiments to be used in the current session
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
@@ -61,10 +69,6 @@ export class ExperimentsManager implements IExperimentsManager {
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     /**
      * Returns `true` if experiments are enabled, else `false`.
-     *
-     * @private
-     * @type {boolean}
-     * @memberof ExperimentsManager
      */
     private readonly enabled: boolean;
     /**
@@ -88,7 +92,10 @@ export class ExperimentsManager implements IExperimentsManager {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
-        this.enabled = configurationService.getSettings(undefined).experiments.enabled;
+        const settings = configurationService.getSettings(undefined);
+        this.enabled = settings.experiments.enabled;
+        this._experimentsOptedInto = settings.experiments.optInto;
+        this._experimentsOptedOutFrom = settings.experiments.optOutFrom;
     }
 
     @swallowExceptions('Failed to activate experiments')
@@ -124,10 +131,18 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @traceDecorators.error('Failed to populate user experiments')
     public populateUserExperiments(): void {
+        this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
                 try {
-                    if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                    if (this._experimentsOptedOutFrom.includes('All') || this._experimentsOptedOutFrom.includes(experiment.name)) {
+                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedOutOf: experiment.name });
+                        continue;
+                    }
+                    if (this._experimentsOptedInto.includes('All') || this._experimentsOptedInto.includes(experiment.name)) {
+                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedInto: experiment.name });
+                        this.userExperiments.push(experiment);
+                    } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
                         this.userExperiments.push(experiment);
                     }
                 } catch (ex) {
@@ -269,5 +284,23 @@ export class ExperimentsManager implements IExperimentsManager {
             traceError('Effort to download experiments within timeout failed with error', ex);
             return false;
         }
+    }
+
+    /**
+     * You can only opt in or out of experiment groups, not control groups. So remove requests for control groups.
+     */
+    private cleanUpExperimentsOptList(): void {
+        for (let i = 0; i < this._experimentsOptedInto.length; i += 1) {
+            if (this._experimentsOptedInto[i].endsWith('control')) {
+                this._experimentsOptedInto[i] = '';
+            }
+        }
+        for (let i = 0; i < this._experimentsOptedOutFrom.length; i += 1) {
+            if (this._experimentsOptedOutFrom[i].endsWith('control')) {
+                this._experimentsOptedOutFrom[i] = '';
+            }
+        }
+        this._experimentsOptedInto = this._experimentsOptedInto.filter(exp => exp !== '');
+        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter(exp => exp !== '');
     }
 }

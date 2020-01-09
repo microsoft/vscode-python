@@ -9,24 +9,32 @@ import { Uri } from 'vscode';
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CondaInstaller } from '../../../client/common/installer/condaInstaller';
-import { IConfigurationService, IPythonSettings } from '../../../client/common/types';
-import { ICondaService } from '../../../client/interpreter/contracts';
+import { InterpreterUri } from '../../../client/common/installer/types';
+import { ExecutionInfo, IConfigurationService, IPythonSettings } from '../../../client/common/types';
+import { CondaEnvironmentInfo, ICondaService } from '../../../client/interpreter/contracts';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 
+// tslint:disable-next-line: max-func-body-length
 suite('Common - Conda Installer', () => {
-    let installer: CondaInstaller;
+    let installer: CondaInstallerTest;
     let serviceContainer: IServiceContainer;
     let condaService: ICondaService;
     let configService: IConfigurationService;
+    class CondaInstallerTest extends CondaInstaller {
+        // tslint:disable-next-line: no-unnecessary-override
+        public async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
+            return super.getExecutionInfo(moduleName, resource);
+        }
+    }
     setup(() => {
         serviceContainer = mock(ServiceContainer);
         condaService = mock(CondaService);
         configService = mock(ConfigurationService);
         when(serviceContainer.get<ICondaService>(ICondaService)).thenReturn(instance(condaService));
         when(serviceContainer.get<IConfigurationService>(IConfigurationService)).thenReturn(instance(configService));
-        installer = new CondaInstaller(instance(serviceContainer));
+        installer = new CondaInstallerTest(instance(serviceContainer));
     });
     test('Name and priority', async () => {
         assert.equal(installer.displayName, 'Conda');
@@ -76,5 +84,43 @@ suite('Common - Conda Installer', () => {
         const supported = await installer.isSupported(uri);
 
         assert.equal(supported, true);
+    });
+    test('Include name of environment', async () => {
+        const uri = Uri.file(__filename);
+        const settings: IPythonSettings = mock(PythonSettings);
+        const pythonPath = 'my py path';
+        const condaPath = 'some Conda Path';
+        const condaEnv: CondaEnvironmentInfo = {
+            name: 'Hello',
+            path: 'Some Path'
+        };
+
+        when(configService.getSettings(uri)).thenReturn(instance(settings));
+        when(settings.pythonPath).thenReturn(pythonPath);
+        when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaEnvironment(pythonPath)).thenResolve(condaEnv);
+
+        const execInfo = await installer.getExecutionInfo('abc', uri);
+
+        assert.deepEqual(execInfo, { args: ['install', '--name', condaEnv.name, 'abc', '-y'], execPath: condaPath });
+    });
+    test('Include path of environment', async () => {
+        const uri = Uri.file(__filename);
+        const settings: IPythonSettings = mock(PythonSettings);
+        const pythonPath = 'my py path';
+        const condaPath = 'some Conda Path';
+        const condaEnv: CondaEnvironmentInfo = {
+            name: '',
+            path: 'Some Path'
+        };
+
+        when(configService.getSettings(uri)).thenReturn(instance(settings));
+        when(settings.pythonPath).thenReturn(pythonPath);
+        when(condaService.getCondaFile()).thenResolve(condaPath);
+        when(condaService.getCondaEnvironment(pythonPath)).thenResolve(condaEnv);
+
+        const execInfo = await installer.getExecutionInfo('abc', uri);
+
+        assert.deepEqual(execInfo, { args: ['install', '--prefix', condaEnv.path.fileToCommandArgument(), 'abc', '-y'], execPath: condaPath });
     });
 });

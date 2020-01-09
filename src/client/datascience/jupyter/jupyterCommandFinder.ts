@@ -359,7 +359,7 @@ export class JupyterCommandFinderImpl {
     private async createExecutionService(interpreter: PythonInterpreter): Promise<IPythonExecutionService> {
         const [currentInterpreter, pythonService] = await Promise.all([
             this.interpreterService.getActiveInterpreter(undefined),
-            this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true })
+            this.executionFactory.createActivatedEnvironment({ resource: undefined, interpreter, allowEnvironmentFetchExceptions: true, bypassCondaExecution: true })
         ]);
 
         // Use daemons for current interpreter, when using any other interpreter, do not use a daemon.

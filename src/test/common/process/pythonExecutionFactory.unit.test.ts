@@ -370,7 +370,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);
@@ -387,7 +387,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(0);
@@ -402,16 +402,12 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon1 = await factory.createDaemon({});
-                const daemon2 = await factory.createDaemon({});
+                const daemon1 = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
+                const daemon2 = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon1).to.equal(daemon2);
             });
-            // https://github.com/microsoft/vscode-python/issues/9297
-            // tslint:disable-next-line: no-function-expression
-            test('Create Daemon Service should return two different daemons (if python path is different)', async function() {
-                // tslint:disable-next-line: no-invalid-this
-                return this.skip();
+            test('Create Daemon Service should return two different daemons (if python path is different)', async () => {
                 const pythonSettings = mock(PythonSettings);
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
@@ -421,10 +417,10 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const daemon1 = await factory.createDaemon({});
+                const daemon1 = await factory.createDaemon({ resource });
 
                 when(pythonSettings.pythonPath).thenReturn('HELLO2');
-                const daemon2 = await factory.createDaemon({});
+                const daemon2 = await factory.createDaemon({ resource });
 
                 expect(daemon1).to.not.equal(daemon2);
             });
@@ -438,7 +434,10 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
 
-                const [daemon1, daemon2] = await Promise.all([factory.createDaemon({}), factory.createDaemon({})]);
+                const [daemon1, daemon2] = await Promise.all([
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path }),
+                    factory.createDaemon({ resource, pythonPath: item.interpreter?.path })
+                ]);
 
                 expect(daemon1).to.equal(daemon2);
             });
@@ -453,7 +452,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.reject(new Error('Kaboom')));
 
-                const daemon = await factory.createDaemon({});
+                const daemon = await factory.createDaemon({ resource, pythonPath: item.interpreter?.path });
 
                 expect(daemon).not.instanceOf(PythonDaemonExecutionServicePool);
                 expect(initialize.callCount).to.equal(1);

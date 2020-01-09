@@ -74,7 +74,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
+        const activatedProcPromise = this.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
+            pythonPath: pythonPath,
+            resource: options.resource,
+            bypassCondaExecution: true
+        });
 
         // No daemon support in Python 2.7.
         const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
@@ -123,9 +128,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
 
-        const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-        if (condaExecutionService) {
-            return condaExecutionService;
+        // Allow parts of the code to ignore conda run.
+        if (!options.bypassCondaExecution) {
+            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
+            if (condaExecutionService) {
+                return condaExecutionService;
+            }
         }
 
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);

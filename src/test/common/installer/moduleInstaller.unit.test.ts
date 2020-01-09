@@ -282,6 +282,7 @@ suite('Module Installer', () => {
                                                     expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
                                                 }
                                                 expectedArgs.push('"pylint<2.0.0"');
+                                                expectedArgs.push('-y');
                                                 await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
                                             });
                                         }
@@ -314,6 +315,7 @@ suite('Module Installer', () => {
                                                     expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
                                                 }
                                                 expectedArgs.push('pylint');
+                                                expectedArgs.push('-y');
                                                 await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
                                             });
                                         }
@@ -445,6 +447,7 @@ suite('Module Installer', () => {
                                         expectedArgs.push(condaEnvInfo.path.fileToCommandArgument());
                                     }
                                     expectedArgs.push(moduleName);
+                                    expectedArgs.push('-y');
                                     await installModuleAndVerifyCommand(condaExecutable, expectedArgs);
                                 });
                             }

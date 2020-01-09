@@ -50,7 +50,7 @@ export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     localRoot?: string;
     remoteRoot?: string;
 
-    // Internal files used to attach to subprocess using python debug adapter
+    // Internal field used to attach to subprocess using python debug adapter
     subProcessId?: number;
 
     processId?: number | string;
@@ -72,6 +72,9 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     env?: Record<string, string | undefined>;
     envFile: string;
     console?: ConsoleType;
+
+    // Internal field used to set custom python debug adapter (for testing)
+    debugAdapterPath?: string;
 }
 // tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {

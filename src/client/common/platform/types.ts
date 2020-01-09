@@ -7,6 +7,9 @@ import { SemVer } from 'semver';
 import * as vscode from 'vscode';
 import { Architecture, OSType } from '../utils/platform';
 
+//===========================
+// registry
+
 export enum RegistryHive {
     HKCU,
     HKLM
@@ -17,6 +20,11 @@ export interface IRegistry {
     getKeys(key: string, hive: RegistryHive, arch?: Architecture): Promise<string[]>;
     getValue(key: string, hive: RegistryHive, arch?: Architecture, name?: string): Promise<string | undefined | null>;
 }
+
+//===========================
+// platform
+
+export const IsWindows = Symbol('IS_WINDOWS');
 
 export const IPlatformService = Symbol('IPlatformService');
 export interface IPlatformService {
@@ -33,8 +41,38 @@ export interface IPlatformService {
     getVersion(): Promise<SemVer>;
 }
 
+//===========================
+// temp FS
+
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
+
+//===========================
+// FS paths
+
+export interface IFileSystemPaths {
+    readonly sep: string;
+    join(...filenames: string[]): string;
+    dirname(filename: string): string;
+    basename(filename: string, suffix?: string): string;
+    normalize(filename: string): string;
+    normCase(filename: string): string;
+}
+
+export interface IExecutables {
+    delimiter: string;
+    envVar: string;
+}
+
+export interface IFileSystemPathUtils {
+    readonly paths: IFileSystemPaths;
+    readonly executables: IExecutables;
+    arePathsSame(path1: string, path2: string): boolean;
+    getDisplayName(pathValue: string, cwd?: string): string;
+}
+
+//===========================
+// filesystem operations
 
 export import FileType = vscode.FileType;
 export import FileStat = vscode.FileStat;

@@ -416,7 +416,9 @@ export class PythonSettings implements IPythonSettings {
         this.experiments = this.experiments
             ? this.experiments
             : {
-                  enabled: true
+                  enabled: true,
+                  optInto: [],
+                  optOutFrom: []
               };
 
         const dataScienceSettings = systemVariables.resolveAny(pythonSettings.get<IDataScienceSettings>('dataScience'))!;

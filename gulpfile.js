@@ -110,31 +110,34 @@ gulp.task('checkNativeDependencies', done => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
+const webpackEnv = { 'NODE_OPTIONS': '--max_old_space_size=9096' };
+
 gulp.task('compile-webviews', async () => {
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '0'});
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '1'});
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '2'});
-    await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', '--config', './build/webpack/webpack.config.js', '--mode', 'production'], {'BUNDLE_INDEX': '3'});
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-interactiveWindow.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
 });
 
 gulp.task('webpack', async () => {
-    // Build node_modules and DS stuff.
-    // Unwrap the array used to build each webpack.
-    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '0'});
-    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '1'});
-    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '2'});
-    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '3'});
-    await buildWebPack('production', ['--config', './build/webpack/webpack.config.js'], {'BUNDLE_INDEX': '4'});
+    // Build node_modules.
+    await buildWebPack('production', ['--config', './build/webpack/webpack.extension.dependencies.config.js'], webpackEnv);
+    // Build DS stuff (separately as it uses far too much memory and slows down CI).
+    // Individually is faster on CI.
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-interactiveWindow.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js'], webpackEnv);
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
-        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
+        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
         await Promise.all([buildExtension, buildDebugAdapter]);
     } else {
-        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
-        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
+        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
     }
 });
 
@@ -173,7 +176,7 @@ async function updateBuildNumber(args) {
 async function buildWebPack(webpackConfigName, args, env) {
     // Remember to perform a case insensitive search.
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
-    const stdOut = await spawnAsync('npx', ['-n', '--max_old_space_size=9096', 'webpack', ...args, ...['--mode', 'production']], env);
+    const stdOut = await spawnAsync('npm', ['run', 'webpack', '--', ...args, ...['--mode', 'production']], env);
     const stdOutLines = stdOut
         .split(os.EOL)
         .map(item => item.trim())
@@ -335,9 +338,10 @@ gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.e
 
 function spawnAsync(command, args, env) {
     env = env || {};
-    env = {...process.env, ...env};
+    env = { ...process.env, ...env };
     return new Promise((resolve, reject) => {
         let stdOut = '';
+        console.info(`> ${command} ${args.join(' ')}`);
         const proc = spawn(command, args, { cwd: __dirname, env });
         proc.stdout.on('data', data => {
             // Log output on CI (else travis times out when there's not output).

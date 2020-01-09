@@ -25,46 +25,9 @@ suite('Attach to process - process provider', () => {
 
     let provider: AttachProcessProvider;
 
-    const psOutput = `
-    aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa\n\
-    1 launchd                                            launchd\n\
-   41 syslogd                                            syslogd\n\
-  146 kextd                                              kextd\n\
-31896 python                                             python script.py\n\
-`;
-
-    const windowsOutput = `
-CommandLine=\r\n\
-Name=System\r\n\
-ProcessId=4\r\n\
-\r\n\
-\r\n\
-CommandLine=\r\n\
-Name=svchost.exe\r\n\
-ProcessId=5372\r\n\
-\r\n\
-\r\n\
-CommandLine=sihost.exe\r\n\
-Name=sihost.exe\r\n\
-ProcessId=5728\r\n\
-\r\n\
-\r\n\
-CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r\n\
-Name=svchost.exe\r\n\
-ProcessId=5912\r\n\
-\r\n\
-\r\n\
-CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r\n\
-Name=python.exe\r\n\
-ProcessId=6028\r\n\
-`;
-
     setup(() => {
         platformService = mock(PlatformService);
         processService = mock(ProcessService);
-        when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
-        when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
-        when(processService.exec(PsProcessParser.psDarwinCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
         processServiceFactory = mock(ProcessServiceFactory);
         when(processServiceFactory.create()).thenResolve(instance(processService));
 
@@ -74,32 +37,38 @@ ProcessId=6028\r\n\
     test('The Linux process list command should be called if the platform is Linux', async () => {
         when(platformService.isMac).thenReturn(false);
         when(platformService.isLinux).thenReturn(true);
+        const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+1 launchd                                            launchd
+41 syslogd                                            syslogd
+146 kextd                                              kextd
+`;
         const expectedOutput: IAttachItem[] = [
             {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             }
         ];
+        when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
 
         const attachItems = await provider._getInternalProcessEntries();
 
@@ -109,32 +78,38 @@ ProcessId=6028\r\n\
 
     test('The macOS process list command should be called if the platform is macOS', async () => {
         when(platformService.isMac).thenReturn(true);
+        const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+1 launchd                                            launchd
+41 syslogd                                            syslogd
+146 kextd                                              kextd
+`;
         const expectedOutput: IAttachItem[] = [
             {
                 label: 'launchd',
                 description: '1',
                 detail: 'launchd',
-                id: '1'
+                id: '1',
+                processName: 'launchd',
+                commandLine: 'launchd'
             },
             {
                 label: 'syslogd',
                 description: '41',
                 detail: 'syslogd',
-                id: '41'
+                id: '41',
+                processName: 'syslogd',
+                commandLine: 'syslogd'
             },
             {
                 label: 'kextd',
                 description: '146',
                 detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
+                id: '146',
+                processName: 'kextd',
+                commandLine: 'kextd'
             }
         ];
+        when(processService.exec(PsProcessParser.psDarwinCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
 
         const attachItems = await provider._getInternalProcessEntries();
 
@@ -143,41 +118,50 @@ ProcessId=6028\r\n\
     });
 
     test('The Windows process list command should be called if the platform is Windows', async () => {
-        when(platformService.isMac).thenReturn(false);
-        when(platformService.isLinux).thenReturn(false);
-        when(platformService.isWindows).thenReturn(true);
+        const windowsOutput = `CommandLine=\r
+Name=System\r
+ProcessId=4\r
+\r
+\r
+CommandLine=sihost.exe\r
+Name=sihost.exe\r
+ProcessId=5728\r
+\r
+\r
+CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r
+Name=svchost.exe\r
+ProcessId=5912\r
+`;
         const expectedOutput: IAttachItem[] = [
             {
                 label: 'System',
                 description: '4',
                 detail: '',
-                id: '4'
-            },
-            {
-                label: 'svchost.exe',
-                description: '5372',
-                detail: '',
-                id: '5372'
+                id: '4',
+                processName: 'System',
+                commandLine: ''
             },
             {
                 label: 'sihost.exe',
                 description: '5728',
                 detail: 'sihost.exe',
-                id: '5728'
+                id: '5728',
+                processName: 'sihost.exe',
+                commandLine: 'sihost.exe'
             },
             {
                 label: 'svchost.exe',
                 description: '5912',
                 detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
-                id: '5912'
-            },
-            {
-                label: 'python.exe',
-                description: '6028',
-                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
-                id: '6028'
+                id: '5912',
+                processName: 'svchost.exe',
+                commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
             }
         ];
+        when(platformService.isMac).thenReturn(false);
+        when(platformService.isLinux).thenReturn(false);
+        when(platformService.isWindows).thenReturn(true);
+        when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
 
         const attachItems = await provider._getInternalProcessEntries();
 
@@ -196,115 +180,251 @@ ProcessId=6028\r\n\
         await expect(promise).to.eventually.be.rejectedWith(`Operating system '${OSType.Unknown}' not supported.`);
     });
 
-    test('Items returned by getAttachItems should be sorted alphabetically on Linux', async () => {
-        when(platformService.isMac).thenReturn(false);
-        when(platformService.isLinux).thenReturn(true);
-        const expectedOutput: IAttachItem[] = [
-            {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
-            },
-            {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
-            }
-        ];
+    // tslint:disable-next-line: max-func-body-length
+    suite('POSIX getAttachItems (Linux)', () => {
+        setup(() => {
+            when(platformService.isMac).thenReturn(false);
+            when(platformService.isLinux).thenReturn(true);
+        });
 
-        const output = await provider.getAttachItems();
+        test('Items returned by getAttachItems should be sorted alphabetically', async () => {
+            const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+    1 launchd                                            launchd
+    41 syslogd                                            syslogd
+    146 kextd                                              kextd
+`;
+            const expectedOutput: IAttachItem[] = [
+                {
+                    label: 'kextd',
+                    description: '146',
+                    detail: 'kextd',
+                    id: '146',
+                    processName: 'kextd',
+                    commandLine: 'kextd'
+                },
+                {
+                    label: 'launchd',
+                    description: '1',
+                    detail: 'launchd',
+                    id: '1',
+                    processName: 'launchd',
+                    commandLine: 'launchd'
+                },
+                {
+                    label: 'syslogd',
+                    description: '41',
+                    detail: 'syslogd',
+                    id: '41',
+                    processName: 'syslogd',
+                    commandLine: 'syslogd'
+                }
+            ];
+            when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
 
-        assert.deepEqual(output, expectedOutput);
+            const output = await provider.getAttachItems();
+
+            assert.deepEqual(output, expectedOutput);
+        });
+
+        test('Python processes should be at the top of the list returned by getAttachItems', async () => {
+            const psOutput = `aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+     1 launchd                                            launchd
+    41 syslogd                                            syslogd
+    96 python                                             python
+   146 kextd                                              kextd
+ 31896 python                                             python script.py
+`;
+            const expectedOutput: IAttachItem[] = [
+                {
+                    label: 'python',
+                    description: '96',
+                    detail: 'python',
+                    id: '96',
+                    processName: 'python',
+                    commandLine: 'python'
+                },
+                {
+                    label: 'python',
+                    description: '31896',
+                    detail: 'python script.py',
+                    id: '31896',
+                    processName: 'python',
+                    commandLine: 'python script.py'
+                },
+                {
+                    label: 'kextd',
+                    description: '146',
+                    detail: 'kextd',
+                    id: '146',
+                    processName: 'kextd',
+                    commandLine: 'kextd'
+                },
+                {
+                    label: 'launchd',
+                    description: '1',
+                    detail: 'launchd',
+                    id: '1',
+                    processName: 'launchd',
+                    commandLine: 'launchd'
+                },
+                {
+                    label: 'syslogd',
+                    description: '41',
+                    detail: 'syslogd',
+                    id: '41',
+                    processName: 'syslogd',
+                    commandLine: 'syslogd'
+                }
+            ];
+            when(processService.exec(PsProcessParser.psLinuxCommand.command, anything(), anything())).thenResolve({ stdout: psOutput });
+
+            const output = await provider.getAttachItems();
+
+            assert.deepEqual(output, expectedOutput);
+        });
     });
 
-    test('Items returned by getAttachItems should be sorted alphabetically on macOS', async () => {
-        when(platformService.isMac).thenReturn(true);
-        const expectedOutput: IAttachItem[] = [
-            {
-                label: 'kextd',
-                description: '146',
-                detail: 'kextd',
-                id: '146'
-            },
-            {
-                label: 'launchd',
-                description: '1',
-                detail: 'launchd',
-                id: '1'
-            },
-            {
-                label: 'python',
-                description: '31896',
-                detail: 'python script.py',
-                id: '31896'
-            },
-            {
-                label: 'syslogd',
-                description: '41',
-                detail: 'syslogd',
-                id: '41'
-            }
-        ];
+    // tslint:disable-next-line: max-func-body-length
+    suite('Windows getAttachItems', () => {
+        setup(() => {
+            when(platformService.isMac).thenReturn(false);
+            when(platformService.isLinux).thenReturn(false);
+            when(platformService.isWindows).thenReturn(true);
+        });
 
-        const output = await provider.getAttachItems();
+        test('Items returned by getAttachItems should be sorted alphabetically', async () => {
+            const windowsOutput = `CommandLine=\r
+Name=System\r
+ProcessId=4\r
+\r
+\r
+CommandLine=\r
+Name=svchost.exe\r
+ProcessId=5372\r
+\r
+\r
+CommandLine=sihost.exe\r
+Name=sihost.exe\r
+ProcessId=5728\r
+`;
+            const expectedOutput: IAttachItem[] = [
+                {
+                    label: 'sihost.exe',
+                    description: '5728',
+                    detail: 'sihost.exe',
+                    id: '5728',
+                    processName: 'sihost.exe',
+                    commandLine: 'sihost.exe'
+                },
+                {
+                    label: 'svchost.exe',
+                    description: '5372',
+                    detail: '',
+                    id: '5372',
+                    processName: 'svchost.exe',
+                    commandLine: ''
+                },
+                {
+                    label: 'System',
+                    description: '4',
+                    detail: '',
+                    id: '4',
+                    processName: 'System',
+                    commandLine: ''
+                }
+            ];
+            when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
 
-        assert.deepEqual(output, expectedOutput);
-    });
+            const output = await provider.getAttachItems();
 
-    test('Items returned by getAttachItems should be sorted alphabetically on Windows', async () => {
-        when(platformService.isMac).thenReturn(false);
-        when(platformService.isLinux).thenReturn(false);
-        when(platformService.isWindows).thenReturn(true);
-        const expectedOutput: IAttachItem[] = [
-            {
-                label: 'python.exe',
-                description: '6028',
-                detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
-                id: '6028'
-            },
-            {
-                label: 'sihost.exe',
-                description: '5728',
-                detail: 'sihost.exe',
-                id: '5728'
-            },
-            {
-                label: 'svchost.exe',
-                description: '5372',
-                detail: '',
-                id: '5372'
-            },
-            {
-                label: 'svchost.exe',
-                description: '5912',
-                detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
-                id: '5912'
-            },
+            assert.deepEqual(output, expectedOutput);
+        });
 
-            {
-                label: 'System',
-                description: '4',
-                detail: '',
-                id: '4'
-            }
-        ];
+        test('Python processes should be at the top of the list returned by getAttachItems', async () => {
+            const windowsOutput = `CommandLine=\r
+Name=System\r
+ProcessId=4\r
+\r
+\r
+CommandLine=\r
+Name=svchost.exe\r
+ProcessId=5372\r
+\r
+\r
+CommandLine=sihost.exe\r
+Name=sihost.exe\r
+ProcessId=5728\r
+\r
+\r
+CommandLine=C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc\r
+Name=svchost.exe\r
+ProcessId=5912\r
+\r
+\r
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py\r
+Name=python.exe\r
+ProcessId=6028\r
+\r
+\r
+CommandLine=C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py\r
+Name=python.exe\r
+ProcessId=8026\r
+            `;
+            const expectedOutput: IAttachItem[] = [
+                {
+                    label: 'python.exe',
+                    description: '8026',
+                    detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py',
+                    id: '8026',
+                    processName: 'python.exe',
+                    commandLine: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/foo_bar.py'
+                },
+                {
+                    label: 'python.exe',
+                    description: '6028',
+                    detail: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py',
+                    id: '6028',
+                    processName: 'python.exe',
+                    commandLine: 'C:\\Users\\Contoso\\AppData\\Local\\Programs\\Python\\Python37\\python.exe c:/Users/Contoso/Documents/hello_world.py'
+                },
+                {
+                    label: 'sihost.exe',
+                    description: '5728',
+                    detail: 'sihost.exe',
+                    id: '5728',
+                    processName: 'sihost.exe',
+                    commandLine: 'sihost.exe'
+                },
+                {
+                    label: 'svchost.exe',
+                    description: '5372',
+                    detail: '',
+                    id: '5372',
+                    processName: 'svchost.exe',
+                    commandLine: ''
+                },
+                {
+                    label: 'svchost.exe',
+                    description: '5912',
+                    detail: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc',
+                    id: '5912',
+                    processName: 'svchost.exe',
+                    commandLine: 'C:\\WINDOWS\\system32\\svchost.exe -k UnistackSvcGroup -s CDPUserSvc'
+                },
+                {
+                    label: 'System',
+                    description: '4',
+                    detail: '',
+                    id: '4',
+                    processName: 'System',
+                    commandLine: ''
+                }
+            ];
+            when(processService.exec(WmicProcessParser.wmicCommand.command, anything(), anything())).thenResolve({ stdout: windowsOutput });
 
-        const output = await provider.getAttachItems();
+            const output = await provider.getAttachItems();
 
-        assert.deepEqual(output, expectedOutput);
+            assert.deepEqual(output, expectedOutput);
+        });
     });
 });

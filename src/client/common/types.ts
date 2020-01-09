@@ -133,8 +133,9 @@ export interface IInstaller {
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8542): Drop IPathUtils in favor of IFileSystemPathUtils.
 export const IPathUtils = Symbol('IPathUtils');
-
 export interface IPathUtils {
     readonly delimiter: string;
     readonly home: string;
@@ -302,11 +303,16 @@ export interface ITerminalSettings {
 export interface IExperiments {
     /**
      * Return `true` if experiments are enabled, else `false`.
-     *
-     * @type {boolean}
-     * @memberof IExperiments
      */
     readonly enabled: boolean;
+    /**
+     * Experiments user requested to opt into manually
+     */
+    readonly optInto: string[];
+    /**
+     * Experiments user requested to opt out from manually
+     */
+    readonly optOutFrom: string[];
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';

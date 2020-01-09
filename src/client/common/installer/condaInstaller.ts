@@ -74,6 +74,7 @@ export class CondaInstaller extends ModuleInstaller {
             args.push(info.path.fileToCommandArgument());
         }
         args.push(moduleName);
+        args.push('-y');
         return {
             args,
             execPath: condaFile

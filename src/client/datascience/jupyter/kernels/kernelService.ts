@@ -28,7 +28,7 @@ import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
-const NamedRegexp = require('named-js-regexp');
+const NamedRegexp = require('named-js-regexp') as typeof import('named-js-regexp');
 
 /**
  * Helper to ensure we can differentiate between two types in union types, keeping typing information.
@@ -153,10 +153,10 @@ export class KernelService {
         // Check if kernel is `Python2` or `Python3` or a similar generic kernel.
         const regEx = NamedRegexp('python\\s*(?<version>(\\d+))', 'g');
         const match = regEx.exec(kernelSpec.name.toLowerCase());
-        if (match) {
+        if (match && match.groups()) {
             // 3. Look for interpreter with same major version
 
-            const majorVersion = parseInt(match.groups().version, 10) || 0;
+            const majorVersion = parseInt(match.groups()!.version, 10) || 0;
             // If the major versions match, that's sufficient.
             if (!majorVersion || (activeInterpreter?.version && activeInterpreter.version.major === majorVersion)) {
                 traceInfo(`Using current interpreter for kernel ${kernelSpec.name}, ${kernelSpec.display_name}`);
@@ -219,6 +219,7 @@ export class KernelService {
      * @returns {Promise<IJupyterKernelSpec>}
      * @memberof KernelService
      */
+    // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
@@ -268,6 +269,13 @@ export class KernelService {
             // Wait for jupyter server to get updated with the new kernel information.
             await sleep(500);
             kernel = await this.findMatchingKernelSpec({ display_name: interpreter.displayName, name }, undefined, cancelToken);
+        }
+        if (!kernel) {
+            // Possible user doesn't have kernelspec installed.
+            kernel = await this.getKernelSpecFromStdOut(output.stdout).catch(ex => {
+                traceError('Failed to get kernelspec from stdout', ex);
+                return undefined;
+            });
         }
         if (!kernel) {
             const error = `Kernel not created with the name ${name}, display_name ${interpreter.displayName}. Output is ${output.stdout}`;
@@ -347,7 +355,47 @@ export class KernelService {
         return `${interpreter.displayName || ''}${uuid()}`.replace(/[^A-Za-z0-9]/g, '').toLowerCase();
     }
 
-    private enumerateSpecs = async (_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> => {
+    /**
+     * Will scrape kernelspec info from the output when a new kernel is created.
+     *
+     * @private
+     * @param {string} output
+     * @returns {JupyterKernelSpec}
+     * @memberof KernelService
+     */
+    @traceDecorators.error('Failed to parse kernel creation stdout')
+    private async getKernelSpecFromStdOut(output: string): Promise<JupyterKernelSpec | undefined> {
+        if (!output) {
+            return;
+        }
+
+        // Output should be of the form
+        // `Installed kernel <kernelname> in <path>`
+        const regEx = NamedRegexp('Installed\\skernelspec\\s(?<name>\\w*)\\sin\\s(?<path>.*)', 'g');
+        const match = regEx.exec(output);
+        if (!match || !match.groups()) {
+            return;
+        }
+
+        type RegExGroup = { name: string; path: string };
+        const groups = match.groups() as RegExGroup | undefined;
+
+        if (!groups || !groups.name || !groups.path) {
+            traceError('Kernel Output not parsed', output);
+            throw new Error('Unable to parse output to get the kernel info');
+        }
+
+        const specFile = path.join(groups.path, 'kernel.json');
+        if (!(await this.fileSystem.fileExists(specFile))) {
+            throw new Error('KernelSpec file not found');
+        }
+
+        const kernelModel = JSON.parse(await this.fileSystem.readFile(specFile));
+        kernelModel.name = groups.name;
+        return new JupyterKernelSpec(kernelModel as Kernel.ISpecModel, specFile);
+    }
+
+    private async enumerateSpecs(_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> {
         // Ignore errors if there are no kernels.
         const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
 
@@ -387,5 +435,5 @@ export class KernelService {
             // This is failing for some folks. In that case return nothing
             return [];
         }
-    };
+    }
 }

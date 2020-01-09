@@ -981,18 +981,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
     };
     /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'It looks like you were previously in the Insiders Program of the Python extension. Would you like to opt into the program again?'
-     */
-    [EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel
-         * `Yes, daily` When user selects to use "daily" as extension channel
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
      * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
      */
@@ -1116,6 +1104,19 @@ export interface IEventNamePropertyMapping {
      * Telemetry event sent when Experiments have been disabled.
      */
     [EventName.PYTHON_EXPERIMENTS_DISABLED]: never | undefined;
+    /**
+     * Telemetry event sent with details when a user has requested to opt it or out of an experiment group
+     */
+    [EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT]: {
+        /**
+         * Carries the name of the experiment user has been opted into manually
+         */
+        expNameOptedInto?: string;
+        /**
+         * Carries the name of the experiment user has been opted out of manually
+         */
+        expNameOptedOutOf?: string;
+    };
     /**
      * Telemetry event sent with details when doing best effort to download the experiments within timeout and using it in the current session only
      */

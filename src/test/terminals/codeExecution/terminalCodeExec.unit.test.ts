@@ -67,18 +67,11 @@ suite('Terminal - Code Execution', () => {
 
             switch (testSuiteName) {
                 case 'Terminal Execution': {
-                    executor = new TerminalCodeExecutionProvider(
-                        terminalFactory.object,
-                        configService.object,
-                        workspace.object,
-                        disposables,
-                        platform.object,
-                        pythonExecutionFactory.object
-                    );
+                    executor = new TerminalCodeExecutionProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
                     break;
                 }
                 case 'Repl Execution': {
-                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, pythonExecutionFactory.object, disposables, platform.object);
+                    executor = new ReplProvider(terminalFactory.object, configService.object, workspace.object, disposables, platform.object);
                     expectedTerminalTitle = 'REPL';
                     break;
                 }
@@ -97,7 +90,6 @@ suite('Terminal - Code Execution', () => {
                         platform.object,
                         commandManager.object,
                         fileSystem.object,
-                        pythonExecutionFactory.object,
                         disposables
                     );
                     expectedTerminalTitle = 'Django Shell';
@@ -239,7 +231,6 @@ suite('Terminal - Code Execution', () => {
                 const expectedPythonPath = isWindows ? pythonPath.replace(/\\/g, '/') : pythonPath;
                 const expectedArgs = terminalArgs.concat(file.fsPath.fileToCommandArgument());
                 terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(expectedPythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
-                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath, undefined, file), TypeMoq.Times.once());
             }
 
             test('Ensure python file execution script is sent to terminal on windows', async () => {
@@ -278,12 +269,9 @@ suite('Terminal - Code Execution', () => {
 
                 await executor.executeFile(file);
 
-                const hasEnvName = condaEnv.name !== '';
-                const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
-                const expectedArgs = [...condaArgs, ...terminalArgs, file.fsPath.fileToCommandArgument()];
+                const expectedArgs = [...terminalArgs, file.fsPath.fileToCommandArgument()];
 
-                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath, undefined, file), TypeMoq.Times.once());
-                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(condaFile), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
+                terminalService.verify(async t => t.sendCommand(TypeMoq.It.isValue(pythonPath), TypeMoq.It.isValue(expectedArgs)), TypeMoq.Times.once());
             }
 
             test('Ensure conda args with conda env name are sent to terminal if there is a conda environment with a name', async () => {
@@ -309,7 +297,6 @@ suite('Terminal - Code Execution', () => {
                 expect(replCommandArgs).not.to.be.an('undefined', 'Command args is undefined');
                 expect(replCommandArgs.command).to.be.equal(expectedPythonPath, 'Incorrect python path');
                 expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect arguments');
-                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath, undefined, undefined), TypeMoq.Times.once());
             }
 
             test('Ensure fully qualified python path is escaped when building repl args on Windows', async () => {
@@ -359,17 +346,14 @@ suite('Terminal - Code Execution', () => {
                     .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
                     .returns(() => Promise.resolve(condaExecutionService));
 
-                const hasEnvName = condaEnv.name !== '';
-                const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
                 const djangoArgs = isDjangoRepl ? ['manage.py', 'shell'] : [];
-                const expectedTerminalArgs = [...condaArgs, ...terminalArgs, ...djangoArgs];
+                const expectedTerminalArgs = [...terminalArgs, ...djangoArgs];
 
                 const replCommandArgs = await (executor as TerminalCodeExecutionProvider).getExecutableInfo();
 
                 expect(replCommandArgs).not.to.be.an('undefined', 'Conda command args are undefined');
-                expect(replCommandArgs.command).to.be.equal('conda', 'Incorrect conda path');
-                expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect conda arguments');
-                pythonExecutionFactory.verify(async p => p.createCondaExecutionService(pythonPath, undefined, undefined), TypeMoq.Times.once());
+                expect(replCommandArgs.command).to.be.equal(pythonPath, 'Repl needs to use python, not conda');
+                expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect terminal arguments');
             }
 
             test('Ensure conda args with env name are returned when building repl args with a conda env with a name', async () => {
