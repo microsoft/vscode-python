@@ -3,7 +3,6 @@
 'use strict';
 import { SemVer } from 'semver';
 
-import { PYTHON_WARNINGS } from '../../client/common/constants';
 import { ErrorUtils } from '../../client/common/errors/errorUtils';
 import { ModuleNotInstalledError } from '../../client/common/errors/moduleNotInstalledError';
 import { BufferDecoder } from '../../client/common/process/decoder';
@@ -17,10 +16,6 @@ export class MockPythonExecutionService implements IPythonExecutionService {
 
     constructor() {
         this.procService = new ProcessService(new BufferDecoder());
-    }
-
-    public forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
-        this.procService.setVariable(PYTHON_WARNINGS, value);
     }
 
     public getInterpreterInformation(): Promise<InterpreterInfomation> {

@@ -28,7 +28,6 @@ import {
 } from '../../../client/common/process/types';
 import { WindowsStorePythonProcess } from '../../../client/common/process/windowsStorePythonProcess';
 import { IConfigurationService, IDisposableRegistry } from '../../../client/common/types';
-import { noop } from '../../../client/common/utils/misc';
 import { Architecture } from '../../../client/common/utils/platform';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
@@ -448,7 +447,7 @@ suite('Process - PythonExecutionFactory', () => {
             });
             test('Failure to create Daemon Service should return PythonExecutionService', async () => {
                 const pythonSettings = mock(PythonSettings);
-                const pythonExecService = ({ dummy: 1, forcePythonWarnings: noop } as any) as IPythonExecutionService;
+                const pythonExecService = ({ dummy: 1 } as any) as IPythonExecutionService;
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));

@@ -82,10 +82,6 @@ class InterpreterJupyterCommand implements IJupyterCommand {
             if (isActiveInterpreter) {
                 const svc = await pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter!.path });
 
-                // Make sure to ignore all warnings with the daemon. THe user isn't running code here
-                // so we want warnings to be ignored.
-                svc.forcePythonWarnings('ignore');
-
                 // If we're using this command to start notebook, then ensure the daemon can start a notebook inside it.
                 if (
                     (moduleName.toLowerCase() === 'jupyter' &&
@@ -109,11 +105,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                     }
                 }
             }
-            const local = await pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter });
-            // Make sure to ignore all warnings with the non daemon case too. THe user isn't running code here
-            // so we want warnings to be ignored.
-            local.forcePythonWarnings('ignore');
-            return local;
+            return pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter });
         });
     }
     public interpreter(): Promise<PythonInterpreter | undefined> {
@@ -121,7 +113,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     }
 
     public async execObservable(args: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        const newOptions = { ...options };
+        const newOptions = { ...options, extraVariables: { PYTHONWARNINGS: 'ignore' } };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
         const moduleName = newArgs[1];
@@ -131,7 +123,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
     }
 
     public async exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>> {
-        const newOptions = { ...options };
+        const newOptions = { ...options, extraVariables: { PYTHONWARNINGS: 'ignore' } };
         const launcher = await this.pythonLauncher;
         const newArgs = [...this.args, ...args];
         const moduleName = newArgs[1];

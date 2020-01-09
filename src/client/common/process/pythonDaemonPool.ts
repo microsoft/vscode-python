@@ -53,7 +53,7 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         this.envVariables.PYTHONUNBUFFERED = '1';
 
         // Always ignore warnings as the user should never see the output of the daemon running
-        this.forcePythonWarnings('ignore');
+        this.envVariables[PYTHON_WARNINGS] = 'ignore';
     }
     public async initialize() {
         // tslint:disable-next-line: prefer-array-literal
@@ -65,13 +65,6 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
     }
     public dispose() {
         noop();
-    }
-    public forcePythonWarnings(value: 'default' | 'error' | 'always' | 'module' | 'once' | 'ignore') {
-        // Apply this to the execution service so that executions after this point use the warning level
-        this.pythonExecutionService.forcePythonWarnings(value);
-
-        // Modify the local env variables too
-        this.envVariables[PYTHON_WARNINGS] = value;
     }
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
         const msg = { args: ['GetPythonVersion'] };

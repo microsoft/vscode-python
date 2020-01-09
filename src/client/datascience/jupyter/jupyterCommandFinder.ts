@@ -367,9 +367,6 @@ export class JupyterCommandFinderImpl {
         // E.g. users can have dozens of pipenv or conda environments.
         // In such cases, we'd end up creating n*3 python processes that are long lived.
         if (!currentInterpreter || currentInterpreter.path !== interpreter.path) {
-            // Make sure none of the commands allow warnings to cause a failure. The user isn't
-            // running these commands.
-            pythonService?.forcePythonWarnings('ignore');
             return pythonService!;
         }
 
