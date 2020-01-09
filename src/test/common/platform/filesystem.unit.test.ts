@@ -6,10 +6,17 @@ import * as fs from 'fs';
 import * as fsextra from 'fs-extra';
 import * as TypeMoq from 'typemoq';
 import * as vscode from 'vscode';
-import { RawFileSystem } from '../../../client/common/platform/fileSystem';
-// prettier-ignore
+import { FileSystemUtils, RawFileSystem } from '../../../client/common/platform/fileSystem';
 import {
-    FileStat, FileType, ReadStream, WriteStream
+    FileStat,
+    FileType,
+    // These interfaces are needed for FileSystemUtils deps.
+    IFileSystemPaths,
+    IFileSystemPathUtils,
+    IRawFileSystem,
+    ITempFileSystem,
+    ReadStream,
+    WriteStream
 } from '../../../client/common/platform/types';
 
 // tslint:disable:max-func-body-length chai-vague-errors
@@ -19,7 +26,13 @@ function createDummyStat(filetype: FileType): FileStat {
     return { type: filetype } as any;
 }
 
-interface IRawFS {
+interface IPaths {
+    // fs paths (IFileSystemPaths)
+    sep: string;
+    join(...filenames: string[]): string;
+}
+
+interface IRawFS extends IPaths {
     // vscode.workspace.fs
     stat(uri: vscode.Uri): Thenable<FileStat>;
 
@@ -39,9 +52,6 @@ interface IRawFS {
     readFileSync(path: string, encoding: string): string;
     createReadStream(filename: string): ReadStream;
     createWriteStream(filename: string): WriteStream;
-
-    // fs paths (IFileSystemPaths)
-    join(...filenames: string[]): string;
 }
 
 suite('Raw FileSystem', () => {
@@ -661,6 +671,70 @@ suite('Raw FileSystem', () => {
     });
 });
 
-// tslint:disable-next-line:no-suspicious-comment
-// TODO(GH-8995): The FileSystem isn't unit-tesstable currently.  Once
-// we address that, all its methods should have tests here.
+interface IUtilsDeps extends IRawFileSystem, IFileSystemPaths, IFileSystemPathUtils, ITempFileSystem {
+    // helpers
+    getHash(data: string): string;
+    globFile(pat: string, options?: { cwd: string }): Promise<string[]>;
+}
+
+suite('FileSystemUtils', () => {
+    let deps: TypeMoq.IMock<IUtilsDeps>;
+    let stats: TypeMoq.IMock<FileStat>[];
+    let utils: FileSystemUtils;
+    setup(() => {
+        deps = TypeMoq.Mock.ofType<IUtilsDeps>(undefined, TypeMoq.MockBehavior.Strict);
+
+        stats = [];
+        utils = new FileSystemUtils(
+            // Since it's a mock we can just use it for all 3 values.
+            deps.object,
+            deps.object,
+            deps.object,
+            deps.object,
+            (data: string) => deps.object.getHash(data),
+            (pat: string, options?: { cwd: string }) => deps.object.globFile(pat, options)
+        );
+    });
+    function verifyAll() {
+        deps.verifyAll();
+        stats.forEach(stat => {
+            stat.verifyAll();
+        });
+    }
+
+    suite('createDirectory', () => {
+        test('wraps the low-level function', async () => {
+            const dirname = 'x/y/z/spam';
+            deps.setup(d => d.mkdirp(dirname)) // expect the specific filename
+                .returns(() => Promise.resolve());
+
+            await utils.createDirectory(dirname);
+
+            verifyAll();
+        });
+    });
+
+    suite('deleteDirectory', () => {
+        test('wraps the low-level function', async () => {
+            const dirname = 'x/y/z/spam';
+            deps.setup(d => d.rmtree(dirname)) // expect the specific filename
+                .returns(() => Promise.resolve());
+
+            await utils.deleteDirectory(dirname);
+
+            verifyAll();
+        });
+    });
+
+    suite('deleteFile', () => {
+        test('wraps the low-level function', async () => {
+            const filename = 'x/y/z/spam.py';
+            deps.setup(d => d.rmfile(filename)) // expect the specific filename
+                .returns(() => Promise.resolve());
+
+            await utils.deleteFile(filename);
+
+            verifyAll();
+        });
+    });
+});

@@ -9,7 +9,7 @@ import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
 import { IS_WINDOWS } from '../client/common/platform/constants';
-import { convertStat, FileSystem, RawFileSystem } from '../client/common/platform/fileSystem';
+import { convertStat, FileSystem, FileSystemUtils, RawFileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
@@ -98,7 +98,8 @@ class LegacyFileSystem extends FileSystem {
     constructor() {
         super();
         const vscfs = new FakeVSCodeFileSystemAPI();
-        this.raw = RawFileSystem.withDefaults(undefined, vscfs);
+        const raw = RawFileSystem.withDefaults(undefined, vscfs);
+        this.utils = FileSystemUtils.withDefaults(raw);
     }
 }
 
