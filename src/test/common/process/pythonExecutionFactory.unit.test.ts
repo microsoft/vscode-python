@@ -271,7 +271,7 @@ suite('Process - PythonExecutionFactory', () => {
                 const service = await factory.createActivatedEnvironment({ resource, interpreter });
 
                 verify(condaService.getCondaFile()).once();
-                if (interpreter) {
+                if (!interpreter) {
                     verify(pythonSettings.pythonPath).once();
                     verify(condaService.getCondaEnvironment(pythonPath)).once();
                 } else {
