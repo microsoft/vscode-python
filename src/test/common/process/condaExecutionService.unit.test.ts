@@ -24,7 +24,10 @@ suite('CondaExecutionService', () => {
         serviceContainer.setup(s => s.get<IFileSystem>(IFileSystem)).returns(() => fileSystem.object);
     });
 
-    test('getExecutionInfo with a named environment should return execution info using the environment name', () => {
+    test('getExecutionInfo with a named environment should return execution info using the environment name', function() {
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
+
         const environment = { name: 'foo', path: 'bar' };
         executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
@@ -33,7 +36,10 @@ suite('CondaExecutionService', () => {
         expect(result).to.deep.equal({ command: condaFile, args: ['run', '-n', environment.name, 'python', ...args] });
     });
 
-    test('getExecutionInfo with a non-named environment should return execution info using the environment path', async () => {
+    test('getExecutionInfo with a non-named environment should return execution info using the environment path', async function() {
+        // tslint:disable-next-line:no-invalid-this
+        return this.skip();
+
         const environment = { name: '', path: 'bar' };
         executionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, environment);
 
