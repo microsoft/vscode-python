@@ -8,7 +8,7 @@ import * as TypeMoq from 'typemoq';
 import { Disposable, EventEmitter } from 'vscode';
 
 import { IWorkspaceService } from '../../client/common/application/types';
-import { FileSystem } from '../../client/common/platform/fileSystem';
+import { FileSystemPaths, FileSystemPathUtils } from '../../client/common/platform/fs-paths';
 import { IFileSystem, IPlatformService } from '../../client/common/platform/types';
 import { IProcessService, IProcessServiceFactory } from '../../client/common/process/types';
 import { ITerminalActivationCommandProvider } from '../../client/common/terminal/types';
@@ -91,7 +91,11 @@ suite('Interpreters Conda Service', () => {
         fileSystem
             .setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns((p1, p2) => {
-                return new FileSystem(platformService.object).arePathsSame(p1, p2);
+                // prettier-ignore
+                const utils = FileSystemPathUtils.withDefaults(
+                    FileSystemPaths.withDefaults(platformService.object.isWindows)
+                );
+                return utils.arePathsSame(p1, p2);
             });
 
         condaService = new CondaService(

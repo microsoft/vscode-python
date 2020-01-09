@@ -8,7 +8,6 @@ import * as fs from 'fs-extra';
 import * as path from 'path';
 import { convertStat, FileSystem, RawFileSystem } from '../../../client/common/platform/fileSystem';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { FileType } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
 // prettier-ignore
@@ -796,9 +795,7 @@ suite('FileSystem', () => {
     let fix: FSFixture;
     setup(async () => {
         // prettier-ignore
-        fileSystem = new FileSystem(
-            new PlatformService()
-        );
+        fileSystem = new FileSystem();
         fix = new FSFixture();
 
         await assertDoesNotExist(DOES_NOT_EXIST);

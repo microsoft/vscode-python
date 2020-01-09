@@ -7,13 +7,12 @@ import { assert, expect } from 'chai';
 import * as path from 'path';
 import { CryptoUtils } from '../../client/common/crypto';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { PlatformService } from '../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR_FOR_TESTS } from '../constants';
 
 // tslint:disable-next-line: max-func-body-length
 suite('Crypto Utils', async () => {
     let crypto: CryptoUtils;
-    const fs = new FileSystem(new PlatformService());
+    const fs = new FileSystem();
     const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'common', 'randomWords.txt');
     setup(() => {
         crypto = new CryptoUtils();

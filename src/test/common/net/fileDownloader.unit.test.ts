@@ -93,7 +93,7 @@ suite('File Downloader', () => {
             httpClient = mock(HttpClient);
             appShell = mock(ApplicationShell);
             when(httpClient.downloadFile(anything())).thenCall(request);
-            fs = new FileSystem(new PlatformService());
+            fs = new FileSystem();
         });
         teardown(() => {
             rewiremock.disable();

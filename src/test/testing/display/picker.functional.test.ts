@@ -9,7 +9,6 @@ import { ApplicationShell } from '../../../client/common/application/application
 import { CommandManager } from '../../../client/common/application/commandManager';
 import { IApplicationShell, ICommandManager } from '../../../client/common/application/types';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
@@ -75,7 +74,7 @@ suite('Testing - TestDisplay', () => {
 
         setup(() => {
             tests = createEmptyResults();
-            when(mockedServiceContainer.get<IFileSystem>(IFileSystem)).thenReturn(new FileSystem(new PlatformService()));
+            when(mockedServiceContainer.get<IFileSystem>(IFileSystem)).thenReturn(new FileSystem());
             when(mockedTestCollectionStorage.getTests(wkspace)).thenReturn(tests);
             when(mockedAppShell.showQuickPick(anything(), anything())).thenResolve();
         });

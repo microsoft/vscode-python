@@ -12,7 +12,6 @@ chai.use(chaiHttp);
 
 import { WebPanelServer } from '../../../client/common/application/webPanels/webPanelServer';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from '../../../client/constants';
 
 // tslint:disable:no-any
@@ -24,7 +23,7 @@ suite('WebPanelServer', () => {
     const historyBundle = path.join(EXTENSION_ROOT_DIR, 'out', 'datascience-ui', 'history-react', 'index_bundle.js');
     setup(async () => {
         // So these are effectively functional tests rather than unit tests...
-        const fs = new FileSystem(new PlatformService());
+        const fs = new FileSystem();
         host = new WebPanelServer(await portfinder.getPortPromise(), token, fs);
         server = host.start();
     });

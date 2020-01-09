@@ -248,7 +248,7 @@ class TestFixture extends BaseTestFixture {
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IProcessLogger), TypeMoq.It.isAny())).returns(() => processLogger.object);
 
         const platformService = new PlatformService();
-        const filesystem = new FileSystem(platformService);
+        const filesystem = new FileSystem();
 
         super(
             platformService,

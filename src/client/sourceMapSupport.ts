@@ -8,7 +8,6 @@ import { WorkspaceConfiguration } from 'vscode';
 import './common/extensions';
 import { traceError } from './common/logger';
 import { FileSystem } from './common/platform/fileSystem';
-import { PlatformService } from './common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from './constants';
 
 type VSCode = typeof import('vscode');
@@ -59,7 +58,7 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
-        const fs = new FileSystem(new PlatformService());
+        const fs = new FileSystem();
         if (await fs.fileExists(targetFile)) {
             return;
         }

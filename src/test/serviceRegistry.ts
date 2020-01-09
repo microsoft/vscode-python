@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import * as fsextra from 'fs-extra';
-import { Container, inject } from 'inversify';
+import { Container } from 'inversify';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
@@ -95,8 +95,8 @@ class FakeVSCodeFileSystemAPI {
     }
 }
 class LegacyFileSystem extends FileSystem {
-    constructor(@inject(IPlatformService) platformService: IPlatformService) {
-        super(platformService);
+    constructor() {
+        super();
         const vscfs = new FakeVSCodeFileSystemAPI();
         this.raw = RawFileSystem.withDefaults(undefined, vscfs);
     }

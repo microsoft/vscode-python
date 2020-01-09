@@ -10,7 +10,6 @@ import * as fsextra from 'fs-extra';
 import {
     convertStat, FileSystem, RawFileSystem
 } from '../../../client/common/platform/fileSystem';
-import { PlatformService } from '../../../client/common/platform/platformService';
 // prettier-ignore
 import {
     FileType, IFileSystem, IRawFileSystem
@@ -99,10 +98,7 @@ suite('FileSystem', () => {
     let filesystem: IFileSystem;
     let fix: FSFixture;
     setup(async () => {
-        // prettier-ignore
-        filesystem = new FileSystem(
-            new PlatformService()
-        );
+        filesystem = new FileSystem();
         fix = new FSFixture();
 
         await assertDoesNotExist(DOES_NOT_EXIST);

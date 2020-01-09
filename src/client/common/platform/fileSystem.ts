@@ -5,7 +5,7 @@
 import { createHash } from 'crypto';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
-import { inject, injectable } from 'inversify';
+import { injectable } from 'inversify';
 import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
@@ -16,7 +16,7 @@ import { TemporaryFileSystem } from './fs-temp';
 // prettier-ignore
 import {
     FileStat, FileType,
-    IFileSystem, IFileSystemPaths, IPlatformService, IRawFileSystem,
+    IFileSystem, IFileSystemPaths, IRawFileSystem,
     ReadStream, TemporaryFile, WriteStream
 } from './types';
 
@@ -282,14 +282,8 @@ export class FileSystem implements IFileSystem {
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
     private readonly tmp: TemporaryFileSystem;
-    // prettier-ignore
-    constructor(
-        @inject(IPlatformService) platformService: IPlatformService
-    ) {
-        // prettier-ignore
-        this.paths = FileSystemPaths.withDefaults(
-            platformService.isWindows
-        );
+    constructor() {
+        this.paths = FileSystemPaths.withDefaults();
         this.pathUtils = FileSystemPathUtils.withDefaults(this.paths);
         this.tmp = TemporaryFileSystem.withDefaults();
         this.raw = RawFileSystem.withDefaults(this.paths);

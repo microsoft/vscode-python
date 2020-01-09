@@ -10,7 +10,6 @@ import { IWorkspaceService } from '../../client/common/application/types';
 import { PythonSettings } from '../../client/common/configSettings';
 import { Logger } from '../../client/common/logger';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { PlatformService } from '../../client/common/platform/platformService';
 import { CurrentProcess } from '../../client/common/process/currentProcess';
 import { IConfigurationService } from '../../client/common/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
@@ -34,7 +33,7 @@ suite('Theme colors', () => {
         extensions = new Extensions();
         currentProcess = new CurrentProcess();
         logger = new Logger();
-        const fs = new FileSystem(new PlatformService());
+        const fs = new FileSystem();
         themeFinder = new ThemeFinder(extensions, currentProcess, logger, fs);
 
         workspaceConfig = TypeMoq.Mock.ofType<WorkspaceConfiguration>();
@@ -158,7 +157,7 @@ suite('Theme colors', () => {
         mockThemeFinder.setup(m => m.isThemeDark(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(false));
         mockThemeFinder.setup(m => m.findThemeRootJson(TypeMoq.It.isAnyString())).returns(() => Promise.resolve(undefined));
 
-        const fs = new FileSystem(new PlatformService());
+        const fs = new FileSystem();
         cssGenerator = new CodeCssGenerator(workspaceService.object, mockThemeFinder.object, configService.object, logger, fs);
 
         const colors = await cssGenerator.generateThemeCss(false, 'Kimbie Dark');

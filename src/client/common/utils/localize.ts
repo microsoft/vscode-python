@@ -6,7 +6,6 @@
 import * as path from 'path';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { FileSystem } from '../platform/fileSystem';
-import { PlatformService } from '../platform/platformService';
 
 // External callers of localize use these tables to retrieve localized values.
 export namespace Diagnostics {
@@ -688,7 +687,7 @@ function getString(key: string, defValue?: string) {
 }
 
 function load() {
-    const fs = new FileSystem(new PlatformService());
+    const fs = new FileSystem();
 
     // Figure out our current locale.
     loadedLocale = parseLocale();
