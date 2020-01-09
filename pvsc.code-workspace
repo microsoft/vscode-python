@@ -8,9 +8,6 @@
         },
         {
             "path": "pythonFiles"
-        },
-        {
-            "path": "src/ipywidgets"
         }
     ],
     "settings": {
