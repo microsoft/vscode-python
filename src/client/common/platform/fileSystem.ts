@@ -3,7 +3,6 @@
 'use strict';
 
 import { createHash } from 'crypto';
-import * as fileSystem from 'fs';
 import * as fs from 'fs-extra';
 import * as glob from 'glob';
 import { inject, injectable } from 'inversify';
@@ -337,11 +336,11 @@ export class FileSystem implements IFileSystem {
         await this.raw.move(src, tgt);
     }
 
-    public createReadStream(filePath: string): fileSystem.ReadStream {
+    public createReadStream(filePath: string): ReadStream {
         return this.raw.createReadStream(filePath);
     }
 
-    public createWriteStream(filePath: string): fileSystem.WriteStream {
+    public createWriteStream(filePath: string): WriteStream {
         return this.raw.createWriteStream(filePath);
     }
 
