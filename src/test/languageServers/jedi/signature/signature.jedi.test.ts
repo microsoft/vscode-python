@@ -80,8 +80,8 @@ suite('Signatures (Jedi)', () => {
                 new SignatureHelpResult(0, 3, 0, 0, null),
                 new SignatureHelpResult(0, 4, 0, 0, null),
                 new SignatureHelpResult(0, 5, 0, 0, null),
-                new SignatureHelpResult(0, 6, 2, 0, 'start'),
-                new SignatureHelpResult(0, 7, 2, 0, 'start')
+                new SignatureHelpResult(0, 6, 2, 0, 'stop'),
+                new SignatureHelpResult(0, 7, 2, 0, 'stop')
                 // new SignatureHelpResult(0, 6, 1, 0, 'start'),
                 // new SignatureHelpResult(0, 7, 1, 0, 'start'),
                 // new SignatureHelpResult(0, 8, 1, 1, 'stop'),
