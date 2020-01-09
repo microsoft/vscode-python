@@ -347,7 +347,7 @@ export class FileSystem implements IFileSystem {
     //=================================
     // utils
 
-    public objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
+    public async objectExists(filePath: string, statCheck: (s: fs.Stats) => boolean): Promise<boolean> {
         return new Promise<boolean>(resolve => {
             // Note that we are using stat() rather than lstat().  This
             // means that any symlinks are getting resolved.
@@ -359,13 +359,13 @@ export class FileSystem implements IFileSystem {
             });
         });
     }
-    public fileExists(filePath: string): Promise<boolean> {
+    public async fileExists(filePath: string): Promise<boolean> {
         return this.objectExists(filePath, stats => stats.isFile());
     }
     public fileExistsSync(filePath: string): boolean {
         return fs.existsSync(filePath);
     }
-    public directoryExists(filePath: string): Promise<boolean> {
+    public async directoryExists(filePath: string): Promise<boolean> {
         return this.objectExists(filePath, stats => stats.isDirectory());
     }
 
@@ -405,7 +405,7 @@ export class FileSystem implements IFileSystem {
             .map(([filename, _ft]) => filename);
     }
 
-    public getFileHash(filePath: string): Promise<string> {
+    public async getFileHash(filePath: string): Promise<string> {
         return new Promise<string>((resolve, reject) => {
             fs.lstat(filePath, (err, stats) => {
                 if (err) {
