@@ -55,7 +55,7 @@ type WaitForMessageOptions = {
      */
     numberOfTimes?: number;
 };
-export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void>;
+
 /**
  *
  *
@@ -66,19 +66,20 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
  * @returns {Promise<void>}
  */
 // tslint:disable-next-line: unified-signatures
-export function waitForMessage(ioc: DataScienceIocContainer, message: string, timeoutMs?: number): Promise<void>;
-export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: number | WaitForMessageOptions): Promise<void> {
-    const timeoutMs = !options ? 65_000 : typeof options === 'number' ? 65_000 : options.timeoutMs ?? 65_000;
-    const numberOfTimes = !options ? 1 : typeof options === 'number' ? 1 : options.numberOfTimes ?? 1;
+export function waitForMessage(ioc: DataScienceIocContainer, message: string, options?: WaitForMessageOptions): Promise<void> {
+    const timeoutMs = options && options.timeoutMs ? options.timeoutMs : undefined;
+    const numberOfTimes = options && options.numberOfTimes ? options.numberOfTimes : 1;
     // Wait for the mounted web panel to send a message back to the data explorer
     const promise = createDeferred<void>();
     traceInfo(`Waiting for message ${message} with timeout of ${timeoutMs}`);
     let handler: (m: string, p: any) => void;
-    const timer = setTimeout(() => {
-        if (!promise.resolved) {
-            promise.reject(new Error(`Waiting for ${message} timed out`));
-        }
-    }, timeoutMs);
+    const timer = timeoutMs
+        ? setTimeout(() => {
+              if (!promise.resolved) {
+                  promise.reject(new Error(`Waiting for ${message} timed out`));
+              }
+          }, timeoutMs)
+        : undefined;
     let timesMessageReceived = 0;
     handler = (m: string, _p: any) => {
         if (m === message) {
@@ -86,7 +87,9 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
             if (timesMessageReceived < numberOfTimes) {
                 return;
             }
-            clearTimeout(timer);
+            if (timer) {
+                clearTimeout(timer);
+            }
             ioc.removeMessageListener(handler);
             promise.resolve();
         }
