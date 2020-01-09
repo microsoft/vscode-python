@@ -5,11 +5,7 @@ import { TestConfigurationManager } from '../common/managers/testConfigurationMa
 import { ITestConfigSettingsService } from '../types';
 
 export class ConfigurationManager extends TestConfigurationManager {
-    constructor(
-        workspace: Uri,
-        serviceContainer: IServiceContainer,
-        cfg?: ITestConfigSettingsService
-    ) {
+    constructor(workspace: Uri, serviceContainer: IServiceContainer, cfg?: ITestConfigSettingsService) {
         super(workspace, Product.unittest, serviceContainer, cfg);
     }
     public async requiresUserToConfigure(_wkspace: Uri): Promise<boolean> {

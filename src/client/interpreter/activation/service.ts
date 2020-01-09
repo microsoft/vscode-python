@@ -6,19 +6,17 @@ import '../../common/extensions';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
+import { PYTHON_WARNINGS } from '../../common/constants';
 import { LogOptions, traceDecorators, traceError, traceVerbose } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IProcessServiceFactory } from '../../common/process/types';
 import { ITerminalHelper, TerminalShellType } from '../../common/terminal/types';
 import { ICurrentProcess, IDisposable, Resource } from '../../common/types';
-import {
-    cacheResourceSpecificInterpreterData,
-    clearCachedResourceSpecificIngterpreterData
-} from '../../common/utils/decorators';
+import { cacheResourceSpecificInterpreterData, clearCachedResourceSpecificIngterpreterData } from '../../common/utils/decorators';
 import { OSType } from '../../common/utils/platform';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { captureTelemetry } from '../../telemetry';
+import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
@@ -38,12 +36,13 @@ const defaultShells = {
 @injectable()
 export class EnvironmentActivationService implements IEnvironmentActivationService, IDisposable {
     private readonly disposables: IDisposable[] = [];
-    constructor(@inject(ITerminalHelper) private readonly helper: ITerminalHelper,
+    constructor(
+        @inject(ITerminalHelper) private readonly helper: ITerminalHelper,
         @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IProcessServiceFactory) private processServiceFactory: IProcessServiceFactory,
         @inject(ICurrentProcess) private currentProcess: ICurrentProcess,
-        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider) {
-
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsService: IEnvironmentVariablesProvider
+    ) {
         this.envVarsService.onDidEnvironmentVariablesChange(this.onDidEnvironmentVariablesChange, this, this.disposables);
     }
 
@@ -58,20 +57,29 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
         if (!shellInfo) {
             return;
         }
-
+        let isPossiblyCondaEnv = false;
         try {
             const activationCommands = await this.helper.getEnvironmentActivationShellCommands(resource, shellInfo.shellType, interpreter);
             traceVerbose(`Activation Commands received ${activationCommands} for shell ${shellInfo.shell}`);
             if (!activationCommands || !Array.isArray(activationCommands) || activationCommands.length === 0) {
                 return;
             }
-
+            isPossiblyCondaEnv = activationCommands
+                .join(' ')
+                .toLowerCase()
+                .includes('conda');
             // Run the activate command collect the environment from it.
             const activationCommand = this.fixActivationCommands(activationCommands).join(' && ');
             const processService = await this.processServiceFactory.create(resource);
             const customEnvVars = await this.envVarsService.getEnvironmentVariables(resource);
             const hasCustomEnvVars = Object.keys(customEnvVars).length;
-            const env = hasCustomEnvVars ? customEnvVars : this.currentProcess.env;
+            const env = hasCustomEnvVars ? customEnvVars : { ...this.currentProcess.env };
+
+            // Make sure python warnings don't interfere with getting the environment. However
+            // respect the warning in the returned values
+            const oldWarnings = env[PYTHON_WARNINGS];
+            env[PYTHON_WARNINGS] = 'ignore';
+
             traceVerbose(`${hasCustomEnvVars ? 'Has' : 'No'} Custom Env Vars`);
 
             // In order to make sure we know where the environment output is,
@@ -88,9 +96,18 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
             if (result.stderr && result.stderr.length > 0) {
                 throw new Error(`StdErr from ShellExec, ${result.stderr}`);
             }
-            return this.parseEnvironmentOutput(result.stdout);
+            const returnedEnv = this.parseEnvironmentOutput(result.stdout);
+
+            // Put back the PYTHONWARNINGS value
+            if (oldWarnings && returnedEnv) {
+                returnedEnv[PYTHON_WARNINGS] = oldWarnings;
+            } else if (returnedEnv) {
+                delete returnedEnv[PYTHON_WARNINGS];
+            }
+            return returnedEnv;
         } catch (e) {
             traceError('getActivatedEnvironmentVariables', e);
+            sendTelemetryEvent(EventName.ACTIVATE_ENV_TO_GET_ENV_VARS_FAILED, undefined, { isPossiblyCondaEnv, terminal: shellInfo.shellType });
 
             // Some callers want this to bubble out, others don't
             if (allowExceptions) {

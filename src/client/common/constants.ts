@@ -1,20 +1,26 @@
 import { DocumentFilter } from 'vscode';
 
 export const PYTHON_LANGUAGE = 'python';
+
+export const JUPYTER_LANGUAGE = 'jupyter';
+
+export const PYTHON_WARNINGS = 'PYTHONWARNINGS';
+
 export const PYTHON: DocumentFilter[] = [
     { scheme: 'file', language: PYTHON_LANGUAGE },
     { scheme: 'untitled', language: PYTHON_LANGUAGE }
 ];
-export const PYTHON_ALLFILES = [
-    { language: PYTHON_LANGUAGE }
-];
+export const PYTHON_ALLFILES = [{ language: PYTHON_LANGUAGE }];
 
 export const PVSC_EXTENSION_ID = 'ms-python.python';
+export const CODE_RUNNER_EXTENSION_ID = 'formulahendry.code-runner';
+export const AppinsightsKey = 'AIF-d9b70cd4-b9f9-4d70-929b-a071c400b217';
 
 export namespace Commands {
     export const Set_Interpreter = 'python.setInterpreter';
     export const Set_ShebangInterpreter = 'python.setShebangInterpreter';
     export const Exec_In_Terminal = 'python.execInTerminal';
+    export const Exec_In_Terminal_Icon = 'python.execInTerminal-icon';
     export const Exec_Selection_In_Terminal = 'python.execSelectionInTerminal';
     export const Exec_Selection_In_Django_Shell = 'python.execSelectionInDjangoShell';
     export const Tests_View_UI = 'python.viewTestUI';
@@ -26,6 +32,7 @@ export namespace Commands {
     export const Tests_Run_Failed = 'python.runFailedTests';
     export const Sort_Imports = 'python.sortImports';
     export const Tests_Run = 'python.runtests';
+    export const Tests_Run_Parametrized = 'python.runParametrizedTests';
     export const Tests_Debug = 'python.debugtests';
     export const Tests_Ask_To_Stop_Test = 'python.askToStopTests';
     export const Tests_Ask_To_Stop_Discovery = 'python.askToStopTestDiscovery';
@@ -39,7 +46,6 @@ export namespace Commands {
     export const Tests_Run_Current_File = 'python.runCurrentTestFile';
     export const Refactor_Extract_Variable = 'python.refactorExtractVariable';
     export const Refactor_Extract_Method = 'python.refactorExtractMethod';
-    export const Update_SparkLibrary = 'python.updateSparkLibrary';
     export const Build_Workspace_Symbols = 'python.buildWorkspaceSymbols';
     export const Start_REPL = 'python.startREPL';
     export const Create_Terminal = 'python.createTerminal';
@@ -53,9 +59,10 @@ export namespace Commands {
     export const openTestNodeInEditor = 'python.openTestNodeInEditor';
     export const runTestNode = 'python.runTestNode';
     export const debugTestNode = 'python.debugTestNode';
-    export const SwitchToStable = 'python.switchToStable';
-    export const SwitchToInsidersDaily = 'python.switchToInsidersDaily';
-    export const SwitchToInsidersWeekly = 'python.switchToInsidersWeekly';
+    export const SwitchOffInsidersChannel = 'python.switchOffInsidersChannel';
+    export const SwitchToInsidersDaily = 'python.switchToDailyChannel';
+    export const SwitchToInsidersWeekly = 'python.switchToWeeklyChannel';
+    export const PickLocalProcess = 'python.pickLocalProcess';
 }
 export namespace Octicons {
     export const Test_Pass = '$(check)';
@@ -75,19 +82,9 @@ export namespace Delays {
     export const MaxUnitTestCodeLensDelay = 5000;
 }
 
-export namespace LinterErrors {
-    export namespace pylint {
-        export const InvalidSyntax = 'E0001';
-    }
-    export namespace prospector {
-        export const InvalidSyntax = 'F999';
-    }
-    export namespace flake8 {
-        export const InvalidSyntax = 'E999';
-    }
-}
-
 export const STANDARD_OUTPUT_CHANNEL = 'STANDARD_OUTPUT_CHANNEL';
+
+export const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
 export function isTestExecution(): boolean {
     return process.env.VSC_PYTHON_CI_TEST === '1' || isUnitTestExecution();

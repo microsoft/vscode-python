@@ -34,14 +34,9 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
 
         const workspaceFolder = this.resolveWorkspaceFolder(options.cwd);
-        const launchArgs = await this.getLaunchArgs(
-            options,
-            workspaceFolder,
-            this.configService.getSettings(workspaceFolder.uri)
-        );
+        const launchArgs = await this.getLaunchArgs(options, workspaceFolder, this.configService.getSettings(workspaceFolder.uri));
         const debugManager = this.serviceContainer.get<IDebugService>(IDebugService);
-        return debugManager.startDebugging(workspaceFolder, launchArgs)
-            .then(noop, ex => traceError('Failed to start debugging tests', ex));
+        return debugManager.startDebugging(workspaceFolder, launchArgs).then(noop, ex => traceError('Failed to start debugging tests', ex));
     }
     public async readAllDebugConfigs(workspaceFolder: WorkspaceFolder): Promise<DebugConfiguration[]> {
         const filename = path.join(workspaceFolder.uri.fsPath, '.vscode', 'launch.json');
@@ -76,11 +71,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         return workspaceFolder;
     }
 
-    private async getLaunchArgs(
-        options: LaunchOptions,
-        workspaceFolder: WorkspaceFolder,
-        configSettings: IPythonSettings
-    ): Promise<LaunchRequestArguments> {
+    private async getLaunchArgs(options: LaunchOptions, workspaceFolder: WorkspaceFolder, configSettings: IPythonSettings): Promise<LaunchRequestArguments> {
         let debugConfig = await this.readDebugConfig(workspaceFolder);
         if (!debugConfig) {
             debugConfig = {
@@ -113,11 +104,7 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
         return undefined;
     }
-    private applyDefaults(
-        cfg: ITestDebugConfig,
-        workspaceFolder: WorkspaceFolder,
-        configSettings: IPythonSettings
-    ) {
+    private applyDefaults(cfg: ITestDebugConfig, workspaceFolder: WorkspaceFolder, configSettings: IPythonSettings) {
         // cfg.pythonPath is handled by LaunchConfigurationResolver.
 
         // Default value of justMyCode is not provided intentionally, for now we derive its value required for launchArgs using debugStdLib
@@ -150,22 +137,14 @@ export class DebugLauncher implements ITestDebugLauncher {
         }
     }
 
-    private async convertConfigToArgs(
-        debugConfig: ITestDebugConfig,
-        workspaceFolder: WorkspaceFolder,
-        options: LaunchOptions
-    ): Promise<LaunchRequestArguments> {
+    private async convertConfigToArgs(debugConfig: ITestDebugConfig, workspaceFolder: WorkspaceFolder, options: LaunchOptions): Promise<LaunchRequestArguments> {
         const configArgs = debugConfig as LaunchRequestArguments;
 
         configArgs.program = this.getTestLauncherScript(options.testProvider);
         configArgs.args = this.fixArgs(options.args, options.testProvider);
         // We leave configArgs.request as "test" so it will be sent in telemetry.
 
-        const launchArgs = await this.launchResolver.resolveDebugConfiguration(
-            workspaceFolder,
-            configArgs,
-            options.token
-        );
+        const launchArgs = await this.launchResolver.resolveDebugConfiguration(workspaceFolder, configArgs, options.token);
         if (!launchArgs) {
             throw Error(`Invalid debug config "${debugConfig.name}"`);
         }

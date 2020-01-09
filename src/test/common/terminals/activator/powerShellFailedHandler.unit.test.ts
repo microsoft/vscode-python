@@ -18,13 +18,18 @@ suite('Terminal Activation Powershell Failed Handler', () => {
     let platform: TypeMoq.IMock<IPlatformService>;
     let diagnosticService: TypeMoq.IMock<IDiagnosticsService>;
 
-    async function testDiagnostics(mustHandleDiagnostics: boolean, isWindows: boolean, activatedSuccessfully: boolean, shellType: TerminalShellType, cmdPromptHasActivationCommands: boolean) {
+    async function testDiagnostics(
+        mustHandleDiagnostics: boolean,
+        isWindows: boolean,
+        activatedSuccessfully: boolean,
+        shellType: TerminalShellType,
+        cmdPromptHasActivationCommands: boolean
+    ) {
         platform.setup(p => p.isWindows).returns(() => isWindows);
-        helper
-            .setup(p => p.identifyTerminalShell(TypeMoq.It.isAny()))
-            .returns(() => shellType);
+        helper.setup(p => p.identifyTerminalShell(TypeMoq.It.isAny())).returns(() => shellType);
         const cmdPromptCommands = cmdPromptHasActivationCommands ? ['a'] : [];
-        helper.setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isValue(TerminalShellType.commandPrompt), TypeMoq.It.isAny()))
+        helper
+            .setup(h => h.getEnvironmentActivationCommands(TypeMoq.It.isValue(TerminalShellType.commandPrompt), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(cmdPromptCommands));
 
         diagnosticService
@@ -40,7 +45,7 @@ suite('Terminal Activation Powershell Failed Handler', () => {
                 suite(`Shell is ${shell.name}`, () => {
                     [true, false].forEach(hasCommandPromptActivations => {
                         hasCommandPromptActivations = isWindows && hasCommandPromptActivations && shell.value !== TerminalShellType.commandPrompt;
-                        suite(`${hasCommandPromptActivations ? 'Can activate with Command Prompt' : 'Can\'t activate with Command Prompt'}`, () => {
+                        suite(`${hasCommandPromptActivations ? 'Can activate with Command Prompt' : "Can't activate with Command Prompt"}`, () => {
                             [true, false].forEach(activatedSuccessfully => {
                                 suite(`Terminal Activation is ${activatedSuccessfully ? 'successful' : 'has failed'}`, () => {
                                     setup(() => {

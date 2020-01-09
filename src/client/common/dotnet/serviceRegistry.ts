@@ -17,5 +17,4 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, WindowsDotNetCompatibilityService, OSType.Windows);
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, LinuxDotNetCompatibilityService, OSType.Linux);
     serviceManager.addSingleton<IOSDotNetCompatibilityService>(IOSDotNetCompatibilityService, UnknownOSDotNetCompatibilityService, OSType.Unknown);
-
 }

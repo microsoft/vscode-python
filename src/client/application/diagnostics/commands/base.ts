@@ -6,7 +6,6 @@
 import { IDiagnostic, IDiagnosticCommand } from '../types';
 
 export abstract class BaseDiagnosticCommand implements IDiagnosticCommand {
-    constructor(public readonly diagnostic: IDiagnostic) {
-    }
+    constructor(public readonly diagnostic: IDiagnostic) {}
     public abstract invoke(): Promise<void>;
 }

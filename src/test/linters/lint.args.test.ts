@@ -23,8 +23,8 @@ import { BaseLinter } from '../../client/linters/baseLinter';
 import { Flake8 } from '../../client/linters/flake8';
 import { LinterManager } from '../../client/linters/linterManager';
 import { MyPy } from '../../client/linters/mypy';
-import { Pep8 } from '../../client/linters/pep8';
 import { Prospector } from '../../client/linters/prospector';
+import { Pycodestyle } from '../../client/linters/pycodestyle';
 import { PyDocStyle } from '../../client/linters/pydocstyle';
 import { PyLama } from '../../client/linters/pylama';
 import { Pylint } from '../../client/linters/pylint';
@@ -56,7 +56,9 @@ suite('Linting - Arguments', () => {
                     outputChannel = TypeMoq.Mock.ofType<OutputChannel>();
 
                     const fs = TypeMoq.Mock.ofType<IFileSystem>();
-                    fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(() => new Promise<boolean>((resolve, _reject) => resolve(true)));
+                    fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(
+                        () => new Promise<boolean>((resolve, _reject) => resolve(true))
+                    );
                     fs.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns(() => true);
                     serviceManager.addSingletonInstance<IFileSystem>(IFileSystem, fs.object);
 
@@ -119,8 +121,8 @@ suite('Linting - Arguments', () => {
                     const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
                     await testLinter(linter, expectedArgs);
                 });
-                test('Pep8', async () => {
-                    const linter = new Pep8(outputChannel.object, serviceContainer);
+                test('Pycodestyle', async () => {
+                    const linter = new Pycodestyle(outputChannel.object, serviceContainer);
                     const expectedArgs = ['--format=%(row)d,%(col)d,%(code).1s,%(code)s:%(text)s', fileUri.fsPath];
                     await testLinter(linter, expectedArgs);
                 });
@@ -137,7 +139,8 @@ suite('Linting - Arguments', () => {
                 });
                 test('MyPy', async () => {
                     const linter = new MyPy(outputChannel.object, serviceContainer);
-                    const expectedArgs = [fileUri.fsPath];
+                    const expectedPath = workspaceUri ? path.join(path.basename(path.dirname(fileUri.fsPath)), path.basename(fileUri.fsPath)) : path.basename(fileUri.fsPath);
+                    const expectedArgs = [expectedPath];
                     await testLinter(linter, expectedArgs);
                 });
                 test('Pydocstyle', async () => {

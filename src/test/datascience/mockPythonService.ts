@@ -1,17 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import {
-    ExecutionResult,
-    InterpreterInfomation,
-    IPythonExecutionService,
-    ObservableExecutionResult,
-    SpawnOptions
-} from '../../client/common/process/types';
+import { ExecutionResult, InterpreterInfomation, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../client/common/process/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { MockProcessService } from './mockProcessService';
 
-export class MockPythonService implements IPythonExecutionService  {
+export class MockPythonService implements IPythonExecutionService {
     private interpreter: PythonInterpreter;
     private procService: MockProcessService = new MockProcessService();
 
@@ -63,5 +57,9 @@ export class MockPythonService implements IPythonExecutionService  {
 
     public setDelay(timeout: number | undefined) {
         this.procService.setDelay(timeout);
+    }
+
+    public getExecutionInfo(args: string[]) {
+        return { command: this.interpreter.path, args };
     }
 }

@@ -7,7 +7,14 @@ import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
 import { InstallationChannelManager } from '../../client/common/installer/channelManager';
 import { ProductInstaller } from '../../client/common/installer/productInstaller';
-import { CTagsProductPathService, DataScienceProductPathService, FormatterProductPathService, LinterProductPathService, RefactoringLibraryProductPathService, TestFrameworkProductPathService } from '../../client/common/installer/productPath';
+import {
+    CTagsProductPathService,
+    DataScienceProductPathService,
+    FormatterProductPathService,
+    LinterProductPathService,
+    RefactoringLibraryProductPathService,
+    TestFrameworkProductPathService
+} from '../../client/common/installer/productPath';
 import { ProductService } from '../../client/common/installer/productService';
 import { IInstallationChannelManager, IModuleInstaller, IProductPathService, IProductService } from '../../client/common/installer/types';
 import { Logger } from '../../client/common/logger';
@@ -18,9 +25,26 @@ import { ProcessLogger } from '../../client/common/process/logger';
 import { IProcessLogger, IProcessServiceFactory } from '../../client/common/process/types';
 import { TerminalHelper } from '../../client/common/terminal/helper';
 import { ITerminalHelper } from '../../client/common/terminal/types';
-import { IConfigurationService, ICurrentProcess, IInstaller, ILogger, IPathUtils, IPersistentStateFactory, IsWindows, ModuleNamePurpose, Product, ProductType } from '../../client/common/types';
+import {
+    IConfigurationService,
+    ICurrentProcess,
+    IInstaller,
+    ILogger,
+    IPathUtils,
+    IPersistentStateFactory,
+    IsWindows,
+    ModuleNamePurpose,
+    Product,
+    ProductType
+} from '../../client/common/types';
 import { createDeferred } from '../../client/common/utils/async';
 import { getNamesAndValues } from '../../client/common/utils/enum';
+import { ICondaService } from '../../client/interpreter/contracts';
+import { CondaService } from '../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { rootWorkspaceUri, updateSetting } from '../common';
 import { MockModuleInstaller } from '../mocks/moduleInstaller';
 import { MockProcessService } from '../mocks/proc';
@@ -67,7 +91,9 @@ suite('Installer', () => {
         ioc.serviceManager.addSingletonInstance<IApplicationShell>(IApplicationShell, TypeMoq.Mock.ofType<IApplicationShell>().object);
         ioc.serviceManager.addSingleton<IConfigurationService>(IConfigurationService, ConfigurationService);
         ioc.serviceManager.addSingleton<IWorkspaceService>(IWorkspaceService, WorkspaceService);
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
 
+        ioc.registerMockInterpreterTypes();
         ioc.registerMockProcessTypes();
         ioc.serviceManager.addSingletonInstance<boolean>(IsWindows, false);
         ioc.serviceManager.addSingletonInstance<IProductService>(IProductService, new ProductService());
@@ -77,6 +103,11 @@ suite('Installer', () => {
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, TestFrameworkProductPathService, ProductType.TestFramework);
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
         ioc.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
+
+        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
     async function resetSettings() {
         await updateSetting('linting.pylintEnabled', true, rootWorkspaceUri, ConfigurationTarget.Workspace);
@@ -84,7 +115,7 @@ suite('Installer', () => {
 
     async function testCheckingIfProductIsInstalled(product: Product) {
         const installer = ioc.serviceContainer.get<IInstaller>(IInstaller);
-        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const processService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         const checkInstalledDef = createDeferred<boolean>();
         processService.onExec((_file, args, _options, callback) => {
             const moduleName = installer.translateProductToModuleName(product, ModuleNamePurpose.run);
@@ -101,7 +132,13 @@ suite('Installer', () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (prod.value === Product.ctags || prod.value === Product.unittest || prod.value === Product.isort || prod.value === Product.jupyter) {
+            if (
+                prod.value === Product.ctags ||
+                prod.value === Product.unittest ||
+                prod.value === Product.isort ||
+                prod.value === Product.jupyter ||
+                prod.value === Product.ipykernel
+            ) {
                 return;
             }
             await testCheckingIfProductIsInstalled(prod.value);
@@ -128,7 +165,13 @@ suite('Installer', () => {
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('one', false));
             ioc.serviceManager.addSingletonInstance<IModuleInstaller>(IModuleInstaller, new MockModuleInstaller('two', true));
             ioc.serviceManager.addSingletonInstance<ITerminalHelper>(ITerminalHelper, instance(mock(TerminalHelper)));
-            if (prod.value === Product.unittest || prod.value === Product.ctags || prod.value === Product.isort || prod.value === Product.jupyter) {
+            if (
+                prod.value === Product.unittest ||
+                prod.value === Product.ctags ||
+                prod.value === Product.isort ||
+                prod.value === Product.jupyter ||
+                prod.value === Product.ipykernel
+            ) {
                 return;
             }
             await testInstallingProduct(prod.value);

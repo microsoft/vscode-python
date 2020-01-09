@@ -16,8 +16,7 @@ import { DiagnosticCommandPromptHandlerServiceId, MessageCommandPrompt } from '.
 import { DiagnosticScope, IDiagnostic, IDiagnosticCommand, IDiagnosticHandlerService } from '../types';
 
 const messages = {
-    [DiagnosticCodes.NoPythonInterpretersDiagnostic]:
-        'Python is not installed. Please download and install Python before using the extension.',
+    [DiagnosticCodes.NoPythonInterpretersDiagnostic]: 'Python is not installed. Please download and install Python before using the extension.',
     [DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic]:
         'No Python interpreter is selected. You need to select a Python interpreter to enable features such as IntelliSense, linting, and debugging.'
 };
@@ -32,17 +31,8 @@ export const InvalidPythonInterpreterServiceId = 'InvalidPythonInterpreterServic
 
 @injectable()
 export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
-        @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
-        super(
-            [
-                DiagnosticCodes.NoPythonInterpretersDiagnostic,
-                DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic
-            ],
-            serviceContainer,
-            disposableRegistry,
-            false
-        );
+    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer, @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry) {
+        super([DiagnosticCodes.NoPythonInterpretersDiagnostic, DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic], serviceContainer, disposableRegistry, false);
     }
     public async diagnose(resource: Resource): Promise<IDiagnostic[]> {
         const configurationService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -60,12 +50,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
 
         const currentInterpreter = await interpreterService.getActiveInterpreter(resource);
         if (!currentInterpreter) {
-            return [
-                new InvalidPythonInterpreterDiagnostic(
-                    DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic,
-                    resource
-                )
-            ];
+            return [new InvalidPythonInterpreterDiagnostic(DiagnosticCodes.NoCurrentlySelectedPythonInterpreterDiagnostic, resource)];
         }
 
         return [];
@@ -74,10 +59,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
         if (diagnostics.length === 0) {
             return;
         }
-        const messageService = this.serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(
-            IDiagnosticHandlerService,
-            DiagnosticCommandPromptHandlerServiceId
-        );
+        const messageService = this.serviceContainer.get<IDiagnosticHandlerService<MessageCommandPrompt>>(IDiagnosticHandlerService, DiagnosticCommandPromptHandlerServiceId);
         await Promise.all(
             diagnostics.map(async diagnostic => {
                 if (!this.canHandle(diagnostic)) {
@@ -114,7 +96,7 @@ export class InvalidPythonInterpreterService extends BaseDiagnosticsService {
                 ];
             }
             default: {
-                throw new Error('Invalid diagnostic for \'InvalidPythonInterpreterService\'');
+                throw new Error("Invalid diagnostic for 'InvalidPythonInterpreterService'");
             }
         }
     }

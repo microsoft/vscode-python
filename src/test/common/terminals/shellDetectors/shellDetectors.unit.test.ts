@@ -63,10 +63,10 @@ suite('Shell Detectors', () => {
         appEnv = mock(ApplicationEnvironment);
     });
     test('Test Priority of detectors', async () => {
-        expect(new TerminalNameShellDetector().priority).to.equal(0);
-        expect(new VSCEnvironmentShellDetector(instance(appEnv)).priority).to.equal(1);
+        expect(new TerminalNameShellDetector().priority).to.equal(4);
+        expect(new VSCEnvironmentShellDetector(instance(appEnv)).priority).to.equal(3);
         expect(new SettingsShellDetector(instance(workspaceService), instance(platformService)).priority).to.equal(2);
-        expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(3);
+        expect(new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService)).priority).to.equal(1);
     });
     test('Test identification of Terminal Shells (base class method)', async () => {
         const shellDetector = new TerminalNameShellDetector();
@@ -86,10 +86,13 @@ suite('Shell Detectors', () => {
         const shellDetector = new VSCEnvironmentShellDetector(instance(appEnv));
         shellPathsAndIdentification.forEach((shellType, shellPath) => {
             when(appEnv.shell).thenReturn(shellPath);
-            expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(shellType, `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`);
+            expect(shellDetector.identify(telemetryProperties, { name: shellPath } as any)).to.equal(
+                shellType,
+                `Incorrect Shell Type from identifyShellByTerminalName, for path '${shellPath}'`
+            );
         });
 
-        when(appEnv.shell).thenReturn(undefined);
+        when(appEnv.shell).thenReturn(undefined as any);
         expect(shellDetector.identify(telemetryProperties, undefined)).to.equal(undefined, 'Should be undefined when vscode.env.shell is undefined');
     });
     test('Identify shell based on VSC Settings', async () => {
@@ -167,7 +170,7 @@ suite('Shell Detectors', () => {
 
         expect(shellPath).to.equal('hello.exe');
     });
-    [OSType.OSX, OSType.Linux].forEach((osType) => {
+    [OSType.OSX, OSType.Linux].forEach(osType => {
         test(`Default shell on ${osType} is /bin/bash`, () => {
             const shellDetector = new UserEnvironmentShellDetector(instance(currentProcess), instance(platformService));
             when(platformService.osType).thenReturn(OSType.OSX);

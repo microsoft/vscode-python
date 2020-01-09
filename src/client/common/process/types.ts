@@ -5,9 +5,11 @@ import { Observable } from 'rxjs/Observable';
 import { CancellationToken, Uri } from 'vscode';
 
 import { PythonInterpreter } from '../../interpreter/contracts';
+import { Newable } from '../../ioc/types';
 import { ExecutionInfo, IDisposable, Version } from '../types';
 import { Architecture } from '../utils/platform';
 import { EnvironmentVariables } from '../variables/types';
+import { CondaExecutionService } from './condaExecutionService';
 
 export const IBufferDecoder = Symbol('IBufferDecoder');
 export interface IBufferDecoder {
@@ -30,6 +32,7 @@ export type SpawnOptions = ChildProcessSpawnOptions & {
     token?: CancellationToken;
     mergeStdOutErr?: boolean;
     throwOnStdErr?: boolean;
+    extraVariables?: NodeJS.ProcessEnv;
 };
 
 // tslint:disable-next-line:interface-name
@@ -63,14 +66,65 @@ export type ExecutionFactoryCreationOptions = {
     resource?: Uri;
     pythonPath?: string;
 };
+export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOptions & {
+    /**
+     * Python file that implements the daemon.
+     *
+     * @type {string}
+     */
+    daemonModule?: string;
+    /**
+     * Typescript Daemon class (client) that maps to the Python daemon.
+     * Defaults to `PythonDaemonExecutionService`.
+     * Any other class provided must extend `PythonDaemonExecutionService`.
+     *
+     * @type {Newable<IPythonDaemonExecutionService>}
+     */
+    daemonClass?: Newable<IPythonDaemonExecutionService>;
+    /**
+     * Number of daemons to be created for standard synchronous operations such as
+     * checking if a module is installed, running a module, running a python file, etc.
+     * Defaults to `2`.
+     *
+     */
+    daemonCount?: number;
+    /**
+     * Number of daemons to be created for operations such as execObservable, execModuleObservale.
+     * These operations are considered to be long running compared to checking if a module is installed.
+     * Hence a separate daemon will be created for this.
+     * Defaults to `1`.
+     *
+     */
+    observableDaemonCount?: number;
+};
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
+    pythonPath?: string;
     interpreter?: PythonInterpreter;
     allowEnvironmentFetchExceptions?: boolean;
+    /**
+     * Ignore running `conda run` when running code.
+     * It is known to fail in certain scenarios. Where necessary we might want to bypass this.
+     *
+     * @type {boolean}
+     */
+    bypassCondaExecution?: boolean;
 };
 export interface IPythonExecutionFactory {
     create(options: ExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
+    /**
+     * Creates a daemon Python Process.
+     * On windows its cheapter to create a daemon and use that than spin up Python Processes everytime.
+     * If something cannot be executed within the daemin, it will resort to using the stanard IPythonExecutionService.
+     * Note: The returned execution service is always using an activated environment.
+     *
+     * @param {ExecutionFactoryCreationOptions} options
+     * @returns {(Promise<IPythonExecutionService & IDisposable>)}
+     * @memberof IPythonExecutionFactory
+     */
+    createDaemon(options: DaemonExecutionFactoryCreationOptions): Promise<IPythonExecutionService>;
     createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService>;
+    createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined>;
 }
 export type ReleaseLevel = 'alpha' | 'beta' | 'candidate' | 'final' | 'unknown';
 export type PythonVersionInfo = [number, number, number, ReleaseLevel];
@@ -88,6 +142,7 @@ export interface IPythonExecutionService {
     getInterpreterInformation(): Promise<InterpreterInfomation | undefined>;
     getExecutablePath(): Promise<string>;
     isModuleInstalled(moduleName: string): Promise<boolean>;
+    getExecutionInfo(args: string[]): PythonExecutionInfo;
 
     execObservable(args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
     execModuleObservable(moduleName: string, args: string[], options: SpawnOptions): ObservableExecutionResult<string>;
@@ -95,6 +150,21 @@ export interface IPythonExecutionService {
     exec(args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
     execModule(moduleName: string, args: string[], options: SpawnOptions): Promise<ExecutionResult<string>>;
 }
+
+export type PythonExecutionInfo = {
+    command: string;
+    args: string[];
+};
+/**
+ * Identical to the PythonExecutionService, but with a `dispose` method.
+ * This is a daemon process that lives on until it is disposed, hence the `IDisposable`.
+ *
+ * @export
+ * @interface IPythonDaemonExecutionService
+ * @extends {IPythonExecutionService}
+ * @extends {IDisposable}
+ */
+export interface IPythonDaemonExecutionService extends IPythonExecutionService, IDisposable {}
 
 export class StdErrError extends Error {
     constructor(message: string) {

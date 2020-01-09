@@ -1,0 +1,6 @@
+# IntelliSense
+jedi==0.15.1
+# Sort Imports
+isort==4.3.21
+# DS Python daemon
+python-jsonrpc-server==0.2.0

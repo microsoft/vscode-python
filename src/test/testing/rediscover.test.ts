@@ -16,13 +16,7 @@ const testFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pyt
 const testFile = path.join(testFilesPath, 'tests', 'test_debugger_two.py');
 const testFileWithFewTests = path.join(testFilesPath, 'tests', 'test_debugger_two.txt');
 const testFileWithMoreTests = path.join(testFilesPath, 'tests', 'test_debugger_two.updated.txt');
-const defaultUnitTestArgs = [
-    '-v',
-    '-s',
-    '.',
-    '-p',
-    '*test*.py'
-];
+const defaultUnitTestArgs = ['-v', '-s', '.', '-p', '*test*.py'];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests re-discovery', () => {

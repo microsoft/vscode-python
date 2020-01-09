@@ -2,11 +2,12 @@
 // Licensed under the MIT License.
 
 import { Uri } from 'vscode';
-import { IExtensionActivationService } from '../activation/types';
+import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceContainer, IServiceManager } from '../ioc/types';
 import { ArgumentsHelper } from './common/argumentsHelper';
 import { NOSETEST_PROVIDER, PYTEST_PROVIDER, UNITTEST_PROVIDER } from './common/constants';
 import { DebugLauncher } from './common/debugLauncher';
+import { EnablementTracker } from './common/enablementTracker';
 import { TestRunner } from './common/runner';
 import { TestConfigSettingsService } from './common/services/configSettingService';
 import { TestContextService } from './common/services/contextService';
@@ -23,11 +24,25 @@ import { TestsHelper } from './common/testUtils';
 import { TestFlatteningVisitor } from './common/testVisitors/flatteningVisitor';
 import { TestResultResetVisitor } from './common/testVisitors/resultResetVisitor';
 import {
-    ITestCollectionStorageService, ITestContextService,
-    ITestDebugLauncher, ITestDiscoveryService, ITestManager, ITestManagerFactory,
-    ITestManagerService, ITestManagerServiceFactory, ITestMessageService, ITestResultsService,
-    ITestRunner, ITestsHelper, ITestsParser, ITestsStatusUpdaterService, ITestVisitor,
-    IUnitTestSocketServer, IWorkspaceTestManagerService, IXUnitParser, TestProvider
+    ITestCollectionStorageService,
+    ITestContextService,
+    ITestDebugLauncher,
+    ITestDiscoveryService,
+    ITestManager,
+    ITestManagerFactory,
+    ITestManagerService,
+    ITestManagerServiceFactory,
+    ITestMessageService,
+    ITestResultsService,
+    ITestRunner,
+    ITestsHelper,
+    ITestsParser,
+    ITestsStatusUpdaterService,
+    ITestVisitor,
+    IUnitTestSocketServer,
+    IWorkspaceTestManagerService,
+    IXUnitParser,
+    TestProvider
 } from './common/types';
 import { UpdateTestSettingService } from './common/updateTestSettings';
 import { XUnitParser } from './common/xUnitParser';
@@ -53,11 +68,19 @@ import { ArgumentsService as PyTestArgumentsService } from './pytest/services/ar
 import { TestDiscoveryService as PytestTestDiscoveryService } from './pytest/services/discoveryService';
 import { TestMessageService } from './pytest/services/testMessageService';
 import {
-    IArgumentsHelper, IArgumentsService, ITestConfigSettingsService,
-    ITestConfigurationManagerFactory, ITestConfigurationService, ITestDataItemResource,
-    ITestDiagnosticService, ITestDisplay, ITestManagementService,
+    IArgumentsHelper,
+    IArgumentsService,
+    ITestConfigSettingsService,
+    ITestConfigurationManagerFactory,
+    ITestConfigurationService,
+    ITestDataItemResource,
+    ITestDiagnosticService,
+    ITestDisplay,
+    ITestManagementService,
     ITestManagerRunner,
-    ITestResultDisplay, ITestTreeViewProvider, IUnitTestHelper
+    ITestResultDisplay,
+    ITestTreeViewProvider,
+    IUnitTestHelper
 } from './types';
 import { UnitTestHelper } from './unittest/helper';
 import { TestManager as UnitTestTestManager } from './unittest/main';
@@ -116,11 +139,12 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ITestTreeViewProvider>(ITestTreeViewProvider, TestTreeViewProvider);
     serviceManager.addSingleton<ITestDataItemResource>(ITestDataItemResource, TestTreeViewProvider);
     serviceManager.addSingleton<ITestExplorerCommandHandler>(ITestExplorerCommandHandler, TestExplorerCommandHandler);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, TreeViewService);
-    serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, FailedTestHandler);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, TreeViewService);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, FailedTestHandler);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, EnablementTracker);
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, UpdateTestSettingService);
 
-    serviceManager.addFactory<ITestManager>(ITestManagerFactory, (context) => {
+    serviceManager.addFactory<ITestManager>(ITestManagerFactory, context => {
         return (testProvider: TestProvider, workspaceFolder: Uri, rootDirectory: string) => {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
 
@@ -141,7 +165,7 @@ export function registerTypes(serviceManager: IServiceManager) {
         };
     });
 
-    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, (context) => {
+    serviceManager.addFactory<ITestManagerService>(ITestManagerServiceFactory, context => {
         return (workspaceFolder: Uri) => {
             const serviceContainer = context.container.get<IServiceContainer>(IServiceContainer);
             const testsHelper = context.container.get<ITestsHelper>(ITestsHelper);

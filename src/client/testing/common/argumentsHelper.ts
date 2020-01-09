@@ -58,12 +58,16 @@ export class ArgumentsHelper implements IArgumentsHelper {
                 return;
             } else if (arg.startsWith('-')) {
                 // Ok this is an unknown option, lets treat this as one without values.
-                this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
+                this.logger.logWarning(
+                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`
+                );
                 nonPositionalIndexes.push(index);
                 return;
             } else if (arg.indexOf('=') > 0) {
                 // Ok this is an unknown option with a value
-                this.logger.logWarning(`Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`);
+                this.logger.logWarning(
+                    `Unknown command line option passed into args parser for tests '${arg}'. Please report on https://github.com/Microsoft/vscode-python/issues/new`
+                );
                 nonPositionalIndexes.push(index);
             }
         });
@@ -76,8 +80,7 @@ export class ArgumentsHelper implements IArgumentsHelper {
                 return false;
             }
             // Options can use willd cards (with trailing '*')
-            if (optionsWithoutArguments.indexOf(arg) >= 0 ||
-                optionsWithoutArguments.filter(option => option.endsWith('*') && arg.startsWith(option.slice(0, -1))).length > 0) {
+            if (optionsWithoutArguments.indexOf(arg) >= 0 || optionsWithoutArguments.filter(option => option.endsWith('*') && arg.startsWith(option.slice(0, -1))).length > 0) {
                 return false;
             }
             // Ignore args that match exactly.

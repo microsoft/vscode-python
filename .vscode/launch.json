@@ -16,7 +16,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Extension inside container",
@@ -67,7 +68,8 @@
                 "${workspaceFolder}/out/client/**/*.js"
             ],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Debugger, VS Code, *.test.ts)",
@@ -89,7 +91,32 @@
             "preLaunchTask": "Compile",
             "env": {
                 "IS_CI_SERVER_TEST_DEBUGGER": "1"
-            }
+            },
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            // Note, for the smoke test you want to debug, you may need to copy the file,
+            // rename it and remove a check for only smoke tests.
+            "name": "Tests (Smoke, VS Code, *.test.ts)",
+            "type": "extensionHost",
+            "request": "launch",
+            "runtimeExecutable": "${execPath}",
+            "args": [
+                "${workspaceFolder}/src/testMultiRootWkspc/smokeTests",
+                "--disable-extensions",
+                "--extensionDevelopmentPath=${workspaceFolder}",
+                "--extensionTestsPath=${workspaceFolder}/out/test"
+            ],
+            "env": {
+                "VSC_PYTHON_CI_TEST_GREP": "Smoke Test"
+            },
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Single Workspace, VS Code, *.test.ts)",
@@ -110,7 +137,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
@@ -129,7 +157,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
@@ -150,7 +179,31 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
+        },
+        {
+            "name": "Unit Tests (fast, without VS Code and without react/monaco, *.unit.test.ts)",
+            "type": "node",
+            "request": "launch",
+            "program": "${workspaceFolder}/node_modules/mocha/bin/_mocha",
+            "stopOnEntry": false,
+            "sourceMaps": true,
+            "args": [
+                "./out/test/**/*.unit.test.js",
+                "--require=out/test/unittests.js",
+                "--ui=tdd",
+                "--recursive",
+                "--colors",
+                //"--grep", "<suite name>",
+                "--timeout=300000",
+                "--fast"
+            ],
+            "outFiles": [
+                "${workspaceFolder}/out/**/*.js"
+            ],
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
@@ -171,7 +224,8 @@
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],
-            "preLaunchTask": "Compile"
+            "preLaunchTask": "Compile",
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "type": "node",
@@ -180,7 +234,8 @@
             "program": "${workspaceFolder}/node_modules/gulp/bin/gulp.js",
             "args": [
                 "watch"
-            ]
+            ],
+            "skipFiles": ["<node_internals>/**"]
         },
         {
             "name": "Behave Smoke Tests",

@@ -8,11 +8,8 @@
 import * as glob from 'glob';
 import * as Mocha from 'mocha';
 import * as path from 'path';
-import { MochaSetupOptions } from 'vscode/lib/testrunner';
-import { IS_SMOKE_TEST } from './constants';
+import { IS_SMOKE_TEST, MAX_EXTENSION_ACTIVATION_TIME } from './constants';
 import { initialize } from './initialize';
-
-type TestCallback = (error?: Error, failures?: number) => void;
 
 // Linux: prevent a weird NPE when mocha on Linux requires the window size from the TTY.
 // Since we are not running in a tty environment, we just implement the method statically.
@@ -28,9 +25,8 @@ let mocha = new Mocha(<any>{
     colors: true
 });
 
-export type SetupOptions = MochaSetupOptions & {
+export type SetupOptions = Mocha.MochaOptions & {
     testFilesSuffix?: string;
-    reporter?: string;
     reporterOptions?: {
         mochaFile?: string;
         properties?: string;
@@ -48,7 +44,8 @@ export function configure(setupOptions: SetupOptions): void {
     mocha = new Mocha(setupOptions);
 }
 
-export function run(testsRoot: string, callback: TestCallback): void {
+export async function run(): Promise<void> {
+    const testsRoot = path.join(__dirname);
     // Enable source map support.
     require('source-map-support').install();
 
@@ -69,27 +66,29 @@ export function run(testsRoot: string, callback: TestCallback): void {
      * @returns
      */
     function initializationScript() {
-        const ex = new Error('Failed to initialize Python extension for tests after 2 minutes');
+        const ex = new Error('Failed to initialize Python extension for tests after 3 minutes');
         let timer: NodeJS.Timer | undefined;
         const failed = new Promise((_, reject) => {
-            timer = setTimeout(() => reject(ex), 120_000);
+            timer = setTimeout(() => reject(ex), MAX_EXTENSION_ACTIVATION_TIME);
         });
         const promise = Promise.race([initialize(), failed]);
         promise.then(() => clearTimeout(timer!)).catch(() => clearTimeout(timer!));
         return promise;
     }
     // Run the tests.
-    glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
-        if (error) {
-            return callback(error);
-        }
-        try {
-            files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
-            initializationScript()
-                .then(() => mocha.run(failures => callback(undefined, failures)))
-                .catch(callback);
-        } catch (error) {
-            return callback(error);
-        }
+    await new Promise<void>((resolve, reject) => {
+        glob(`**/**.${testFilesGlob}.js`, { ignore: ['**/**.unit.test.js', '**/**.functional.test.js'], cwd: testsRoot }, (error, files) => {
+            if (error) {
+                return reject(error);
+            }
+            try {
+                files.forEach(file => mocha.addFile(path.join(testsRoot, file)));
+                initializationScript()
+                    .then(() => mocha.run(failures => (failures > 0 ? reject(new Error(`${failures} total failures`)) : resolve())))
+                    .catch(reject);
+            } catch (error) {
+                return reject(error);
+            }
+        });
     });
 }

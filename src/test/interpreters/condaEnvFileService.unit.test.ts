@@ -49,29 +49,31 @@ suite('Interpreters from Conda Environments Text File', () => {
     });
 
     async function filterFilesInEnvironmentsFileAndReturnValidItems(isWindows: boolean) {
-        const validPaths = [
-            path.join(environmentsPath, 'conda', 'envs', 'numpy'),
-            path.join(environmentsPath, 'conda', 'envs', 'scipy')];
-        const interpreterPaths = [
-            path.join(environmentsPath, 'xyz', 'one'),
-            path.join(environmentsPath, 'xyz', 'two'),
-            path.join(environmentsPath, 'xyz', 'python.exe')
-        ].concat(validPaths);
+        const validPaths = [path.join(environmentsPath, 'conda', 'envs', 'numpy'), path.join(environmentsPath, 'conda', 'envs', 'scipy')];
+        const interpreterPaths = [path.join(environmentsPath, 'xyz', 'one'), path.join(environmentsPath, 'xyz', 'two'), path.join(environmentsPath, 'xyz', 'python.exe')].concat(
+            validPaths
+        );
         condaService.setup(c => c.condaEnvironmentsFile).returns(() => environmentsFilePath);
-        condaService.setup(c => c.getInterpreterPath(TypeMoq.It.isAny())).returns(environmentPath => {
-            return isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python');
-        });
-        condaService.setup(c => c.getCondaEnvironments(TypeMoq.It.isAny())).returns(() => {
-            const condaEnvironments = validPaths.map(item => {
-                return {
-                    path: item,
-                    name: path.basename(item)
-                };
+        condaService
+            .setup(c => c.getInterpreterPath(TypeMoq.It.isAny()))
+            .returns(environmentPath => {
+                return isWindows ? path.join(environmentPath, 'python.exe') : path.join(environmentPath, 'bin', 'python');
             });
-            return Promise.resolve(condaEnvironments);
-        });
+        condaService
+            .setup(c => c.getCondaEnvironments(TypeMoq.It.isAny()))
+            .returns(() => {
+                const condaEnvironments = validPaths.map(item => {
+                    return {
+                        path: item,
+                        name: path.basename(item)
+                    };
+                });
+                return Promise.resolve(condaEnvironments);
+            });
         fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(environmentsFilePath))).returns(() => Promise.resolve(true));
-        fileSystem.setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns((p1: string, p2: string) => isWindows ? p1 === p2 : p1.toUpperCase() === p2.toUpperCase());
+        fileSystem
+            .setup(fs => fs.arePathsSame(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns((p1: string, p2: string) => (isWindows ? p1 === p2 : p1.toUpperCase() === p2.toUpperCase()));
         validPaths.forEach(validPath => {
             const pythonPath = isWindows ? path.join(validPath, 'python.exe') : path.join(validPath, 'bin', 'python');
             fileSystem.setup(fs => fs.fileExists(TypeMoq.It.isValue(pythonPath))).returns(() => Promise.resolve(true));

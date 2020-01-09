@@ -17,6 +17,7 @@ import { IArgumentsService, TestFilter } from '../../../client/testing/types';
 
 use(chaipromise);
 
+// tslint:disable-next-line: max-func-body-length
 suite('Unit Tests - nose - Discovery', () => {
     let discoveryService: ITestDiscoveryService;
     let argsService: typeMoq.IMock<IArgumentsService>;
@@ -28,10 +29,8 @@ suite('Unit Tests - nose - Discovery', () => {
         testParser = typeMoq.Mock.ofType<ITestsParser>();
         runner = typeMoq.Mock.ofType<ITestRunner>();
 
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny()))
-            .returns(() => argsService.object);
-        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny()))
-            .returns(() => runner.object);
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsService), typeMoq.It.isAny())).returns(() => argsService.object);
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ITestRunner), typeMoq.It.isAny())).returns(() => runner.object);
 
         discoveryService = new TestDiscoveryService(serviceContainer.object, testParser.object);
     });
@@ -40,20 +39,26 @@ suite('Unit Tests - nose - Discovery', () => {
         const runOutput = 'xyz';
         const tests: Tests = {
             summary: { errors: 1, failures: 0, passed: 0, skipped: 0 },
-            testFiles: [], testFunctions: [], testSuites: [],
-            rootTestFolders: [], testFolders: []
+            testFiles: [],
+            testFunctions: [],
+            testSuites: [],
+            rootTestFolders: [],
+            testFolders: []
         };
-        argsService.setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
+        argsService
+            .setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
             .returns(() => [])
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
+        runner
+            .setup(r => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('--collect-only');
                 expect(opts.args).to.include('-vvv');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
-        testParser.setup(t => t.parse(typeMoq.It.isValue(runOutput), typeMoq.It.isAny()))
+        testParser
+            .setup(t => t.parse(typeMoq.It.isValue(runOutput), typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.once());
 
@@ -61,8 +66,7 @@ suite('Unit Tests - nose - Discovery', () => {
         const token = typeMoq.Mock.ofType<CancellationToken>();
         options.setup(o => o.args).returns(() => args);
         options.setup(o => o.token).returns(() => token.object);
-        token.setup(t => t.isCancellationRequested)
-            .returns(() => false);
+        token.setup(t => t.isCancellationRequested).returns(() => false);
 
         const result = await discoveryService.discoverTests(options.object);
 
@@ -76,26 +80,33 @@ suite('Unit Tests - nose - Discovery', () => {
         const runOutput = 'xyz';
         const tests: Tests = {
             summary: { errors: 1, failures: 0, passed: 0, skipped: 0 },
-            testFiles: [], testFunctions: [], testSuites: [],
-            rootTestFolders: [], testFolders: []
+            testFiles: [],
+            testFunctions: [],
+            testSuites: [],
+            rootTestFolders: [],
+            testFolders: []
         };
-        argsService.setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
+        argsService
+            .setup(a => a.filterArguments(typeMoq.It.isValue(args), typeMoq.It.isValue(TestFilter.discovery)))
             .returns(() => [])
             .verifiable(typeMoq.Times.once());
-        runner.setup(r => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
+        runner
+            .setup(r => r.run(typeMoq.It.isValue(NOSETEST_PROVIDER), typeMoq.It.isAny()))
             .callback((_, opts: Options) => {
                 expect(opts.args).to.include('--collect-only');
                 expect(opts.args).to.include('-vvv');
             })
             .returns(() => Promise.resolve(runOutput))
             .verifiable(typeMoq.Times.once());
-        testParser.setup(t => t.parse(typeMoq.It.isAny(), typeMoq.It.isAny()))
+        testParser
+            .setup(t => t.parse(typeMoq.It.isAny(), typeMoq.It.isAny()))
             .returns(() => tests)
             .verifiable(typeMoq.Times.never());
 
         const options = typeMoq.Mock.ofType<TestDiscoveryOptions>();
         const token = typeMoq.Mock.ofType<CancellationToken>();
-        token.setup(t => t.isCancellationRequested)
+        token
+            .setup(t => t.isCancellationRequested)
             .returns(() => true)
             .verifiable(typeMoq.Times.once());
 

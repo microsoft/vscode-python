@@ -3,6 +3,7 @@
     // for the documentation about the extensions.json format
     "recommendations": [
         "ms-vscode.vscode-typescript-tslint-plugin",
-        "editorconfig.editorconfig"
+        "editorconfig.editorconfig",
+        "esbenp.prettier-vscode"
     ]
 }

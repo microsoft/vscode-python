@@ -45,14 +45,14 @@ suite('Unit Tests - PyTest - Discovery', () => {
     test('Ensure discovery is invoked when there are no test directories', async () => {
         const options: TestDiscoveryOptions = {
             args: ['some args'],
-            cwd: __dirname,
+            cwd: Uri.file(__dirname).fsPath,
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
             workspaceFolder: Uri.file(__dirname)
         };
         const args = ['1', '2', '3'];
-        const discoveredTests = 'Hello World' as any as Tests;
+        const discoveredTests = ('Hello World' as any) as Tests;
         discoveryService.buildTestCollectionArgs = () => args;
         discoveryService.discoverTestsInTestDirectory = () => Promise.resolve(discoveredTests);
         when(argsService.getTestFolders(deepEqual(options.args))).thenReturn([]);
@@ -64,7 +64,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     test('Ensure discovery is invoked when there are multiple test directories', async () => {
         const options: TestDiscoveryOptions = {
             args: ['some args'],
-            cwd: __dirname,
+            cwd: Uri.file(__dirname).fsPath,
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
@@ -73,13 +73,13 @@ suite('Unit Tests - PyTest - Discovery', () => {
         const args = ['1', '2', '3'];
         discoveryService.buildTestCollectionArgs = () => args;
         const directories = ['a', 'b'];
-        discoveryService.discoverTestsInTestDirectory = async (opts) => {
+        discoveryService.discoverTestsInTestDirectory = async opts => {
             const dir = opts.args[opts.args.length - 1];
             if (dir === 'a') {
-                return 'Result A' as any as Tests;
+                return ('Result A' as any) as Tests;
             }
             if (dir === 'b') {
-                return 'Result B' as any as Tests;
+                return ('Result B' as any) as Tests;
             }
             throw new Error('Unrecognized directory');
         };
@@ -94,7 +94,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     test('Build collection arguments', async () => {
         const options: TestDiscoveryOptions = {
             args: ['some args', 'and some more'],
-            cwd: __dirname,
+            cwd: Uri.file(__dirname).fsPath,
             ignoreCache: false,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
@@ -102,7 +102,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = ['-s', ...filteredArgs];
+        const expectedArgs = ['--rootdir', Uri.file(__dirname).fsPath, '-s', ...filteredArgs];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -113,7 +113,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     test('Build collection arguments with ignore in args', async () => {
         const options: TestDiscoveryOptions = {
             args: ['some args', 'and some more', '--cache-clear'],
-            cwd: __dirname,
+            cwd: Uri.file(__dirname).fsPath,
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
@@ -121,7 +121,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = ['-s', ...filteredArgs];
+        const expectedArgs = ['--rootdir', Uri.file(__dirname).fsPath, '-s', ...filteredArgs];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -132,7 +132,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     test('Build collection arguments (& ignore)', async () => {
         const options: TestDiscoveryOptions = {
             args: ['some args', 'and some more'],
-            cwd: __dirname,
+            cwd: Uri.file(__dirname).fsPath,
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
@@ -140,7 +140,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         };
 
         const filteredArgs = options.args;
-        const expectedArgs = ['-s', '--cache-clear', ...filteredArgs];
+        const expectedArgs = ['--rootdir', Uri.file(__dirname).fsPath, '-s', '--cache-clear', ...filteredArgs];
         when(argsService.filterArguments(deepEqual(options.args), TestFilter.discovery)).thenReturn(filteredArgs);
 
         const args = discoveryService.buildTestCollectionArgs(options);
@@ -151,7 +151,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
     test('Discover using common discovery', async () => {
         const options: TestDiscoveryOptions = {
             args: ['some args', 'and some more'],
-            cwd: __dirname,
+            cwd: Uri.file(__dirname).fsPath,
             ignoreCache: true,
             outChannel: new MockOutputChannel('Tests'),
             token: new CancellationTokenSource().token,
@@ -162,7 +162,7 @@ suite('Unit Tests - PyTest - Discovery', () => {
         discoveryOptions.args = expectedDiscoveryArgs;
 
         const commonDiscoveryService = mock(TestsDiscoveryService);
-        const discoveredTests = 'Hello' as any as Tests;
+        const discoveredTests = ('Hello' as any) as Tests;
         when(serviceContainer.get<ITestDiscoveryService>(ITestDiscoveryService, 'common')).thenReturn(instance(commonDiscoveryService));
         when(commonDiscoveryService.discoverTests(deepEqual(discoveryOptions))).thenResolve(discoveredTests);
 

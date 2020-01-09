@@ -22,6 +22,10 @@ export enum DebugOptions {
     SubProcess = 'Multiprocess'
 }
 
+export type PathMapping = {
+    localRoot: string;
+    remoteRoot: string;
+};
 interface ICommonDebugArguments {
     redirectOutput?: boolean;
     django?: boolean;
@@ -36,14 +40,20 @@ interface ICommonDebugArguments {
     // Show return values of functions while stepping.
     showReturnValue?: boolean;
     subProcess?: boolean;
+    // An absolute path to local directory with source.
+    pathMappings?: PathMapping[];
 }
 export interface IKnownAttachDebugArguments extends ICommonDebugArguments {
     workspaceFolder?: string;
-    // An absolute path to local directory with source.
+    customDebugger?: boolean;
+    // localRoot and remoteRoot are deprecated (replaced by pathMappings).
     localRoot?: string;
     remoteRoot?: string;
-    pathMappings?: { localRoot: string; remoteRoot: string }[];
-    customDebugger?: boolean;
+
+    // Internal field used to attach to subprocess using python debug adapter
+    subProcessId?: number;
+
+    processId?: number | string;
 }
 
 export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
@@ -62,6 +72,9 @@ export interface IKnownLaunchRequestArguments extends ICommonDebugArguments {
     env?: Record<string, string | undefined>;
     envFile: string;
     console?: ConsoleType;
+
+    // Internal field used to set custom python debug adapter (for testing)
+    debugAdapterPath?: string;
 }
 // tslint:disable-next-line:interface-name
 export interface LaunchRequestArguments extends DebugProtocol.LaunchRequestArguments, IKnownLaunchRequestArguments, DebugConfiguration {
@@ -74,6 +87,8 @@ export interface AttachRequestArguments extends DebugProtocol.AttachRequestArgum
 }
 
 // tslint:disable-next-line:interface-name
-export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments { }
+export interface DebugConfigurationArguments extends LaunchRequestArguments, AttachRequestArguments {}
 
 export type ConsoleType = 'internalConsole' | 'integratedTerminal' | 'externalTerminal';
+
+export type TriggerType = 'launch' | 'attach' | 'test';

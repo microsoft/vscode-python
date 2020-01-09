@@ -4,22 +4,22 @@
 
 import * as fs from 'fs-extra';
 import * as path from 'path';
-import {
-    CancellationTokenSource, Position, Uri, window, workspace
-} from 'vscode';
-import {
-    IProcessServiceFactory, IPythonExecutionFactory
-} from '../../client/common/process/types';
+import { CancellationTokenSource, Position, Uri, window, workspace } from 'vscode';
+import { IProcessServiceFactory, IPythonExecutionFactory } from '../../client/common/process/types';
 import { AutoPep8Formatter } from '../../client/formatters/autoPep8Formatter';
 import { BlackFormatter } from '../../client/formatters/blackFormatter';
 import { YapfFormatter } from '../../client/formatters/yapfFormatter';
 import { ICondaService } from '../../client/interpreter/contracts';
 import { CondaService } from '../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { isPythonVersionInProcess } from '../common';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
 import { MockProcessService } from '../mocks/proc';
-import { compareFiles } from '../textUtils';
 import { UnitTestIocContainer } from '../testing/serviceRegistry';
+import { compareFiles } from '../textUtils';
 
 const ch = window.createOutputChannel('Tests');
 const formatFilesPath = path.join(__dirname, '..', '..', '..', 'src', 'test', 'pythonFiles', 'formatting');
@@ -68,8 +68,7 @@ suite('Formatting - General', () => {
     });
 
     async function formattingTestIsBlackSupported(): Promise<boolean> {
-        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory)
-            .create(Uri.file(workspaceRootPath));
+        const processService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(Uri.file(workspaceRootPath));
         return !(await isPythonVersionInProcess(processService, '2', '3.0', '3.1', '3.2', '3.3', '3.4', '3.5'));
     }
 
@@ -97,13 +96,19 @@ suite('Formatting - General', () => {
         ioc.registerUnitTestTypes();
         ioc.registerFormatterTypes();
 
+        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+
         // Mocks.
         ioc.registerMockProcessTypes();
-        ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        ioc.registerMockInterpreterTypes();
     }
 
     async function injectFormatOutput(outputFileName: string) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--diff') >= 0) {
                 callback({
@@ -129,15 +134,11 @@ suite('Formatting - General', () => {
     }
 
     test('AutoPep8', async () => {
-        await testFormatting(
-            new AutoPep8Formatter(ioc.serviceContainer),
-            formattedAutoPep8,
-            autoPep8FileToFormat,
-            'autopep8.output');
+        await testFormatting(new AutoPep8Formatter(ioc.serviceContainer), formattedAutoPep8, autoPep8FileToFormat, 'autopep8.output');
     });
     // tslint:disable-next-line:no-function-expression
-    test('Black', async function () {
-        if (!await formattingTestIsBlackSupported()) {
+    test('Black', async function() {
+        if (!(await formattingTestIsBlackSupported())) {
             // Skip for versions of python below 3.6, as Black doesn't support them at all.
             // tslint:disable-next-line:no-invalid-this
             return this.skip();

@@ -4,33 +4,23 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import {
-    CancellationToken, OutputChannel, TextDocument, Uri
-} from 'vscode';
+import { CancellationToken, OutputChannel, TextDocument, Uri } from 'vscode';
 import { IWorkspaceService } from '../common/application/types';
-import {
-    IConfigurationService, ILogger, Product
-} from '../common/types';
+import { IConfigurationService, ILogger, Product } from '../common/types';
 import { IServiceContainer } from '../ioc/types';
 import { Bandit } from './bandit';
 import { Flake8 } from './flake8';
 import { LinterInfo, PylintLinterInfo } from './linterInfo';
 import { MyPy } from './mypy';
-import { Pep8 } from './pep8';
 import { Prospector } from './prospector';
+import { Pycodestyle } from './pycodestyle';
 import { PyDocStyle } from './pydocstyle';
 import { PyLama } from './pylama';
 import { Pylint } from './pylint';
-import {
-    IAvailableLinterActivator,
-    ILinter,
-    ILinterInfo,
-    ILinterManager,
-    ILintMessage
-} from './types';
+import { IAvailableLinterActivator, ILinter, ILinterInfo, ILinterManager, ILintMessage } from './types';
 
 class DisabledLinter implements ILinter {
-    constructor(private configService: IConfigurationService) { }
+    constructor(private configService: IConfigurationService) {}
     public get info() {
         return new LinterInfo(Product.pylint, 'pylint', this.configService);
     }
@@ -45,8 +35,7 @@ export class LinterManager implements ILinterManager {
     private configService: IConfigurationService;
     private checkedForInstalledLinters = new Set<string>();
 
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
         // Note that we use unit tests to ensure all the linters are here.
         this.linters = [
@@ -54,7 +43,7 @@ export class LinterManager implements ILinterManager {
             new LinterInfo(Product.flake8, 'flake8', this.configService),
             new PylintLinterInfo(this.configService, this.workspaceService, ['.pylintrc', 'pylintrc']),
             new LinterInfo(Product.mypy, 'mypy', this.configService),
-            new LinterInfo(Product.pep8, 'pep8', this.configService),
+            new LinterInfo(Product.pycodestyle, 'pycodestyle', this.configService),
             new LinterInfo(Product.prospector, 'prospector', this.configService),
             new LinterInfo(Product.pydocstyle, 'pydocstyle', this.configService),
             new LinterInfo(Product.pylama, 'pylama', this.configService)
@@ -115,7 +104,7 @@ export class LinterManager implements ILinterManager {
     }
 
     public async createLinter(product: Product, outputChannel: OutputChannel, serviceContainer: IServiceContainer, resource?: Uri): Promise<ILinter> {
-        if (!await this.isLintingEnabled(true, resource)) {
+        if (!(await this.isLintingEnabled(true, resource))) {
             return new DisabledLinter(this.configService);
         }
         const error = 'Linter manager: Unknown linter';
@@ -134,8 +123,8 @@ export class LinterManager implements ILinterManager {
                 return new PyLama(outputChannel, serviceContainer);
             case Product.pydocstyle:
                 return new PyDocStyle(outputChannel, serviceContainer);
-            case Product.pep8:
-                return new Pep8(outputChannel, serviceContainer);
+            case Product.pycodestyle:
+                return new Pycodestyle(outputChannel, serviceContainer);
             default:
                 serviceContainer.get<ILogger>(ILogger).logError(error);
                 break;

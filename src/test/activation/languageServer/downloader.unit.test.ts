@@ -8,39 +8,44 @@
 import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
 import { SemVer } from 'semver';
+import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
-import { ILanguageServerFolderService, IPlatformData } from '../../../client/activation/types';
-import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
-import { IFileSystem } from '../../../client/common/platform/types';
-import { IOutputChannel, Resource, IFileDownloader } from '../../../client/common/types';
-import { Common, LanguageService } from '../../../client/common/utils/localize';
-import { mock, instance, verify, when, anything, deepEqual } from 'ts-mockito';
-import { PlatformData } from '../../../client/activation/languageServer/platformData';
-import { FileDownloader } from '../../../client/common/net/fileDownloader';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { PlatformData } from '../../../client/activation/languageServer/platformData';
+import { ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../../../client/activation/types';
 import { ApplicationShell } from '../../../client/common/application/applicationShell';
-import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IApplicationShell, IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
-import { MockOutputChannel } from '../../mockClasses';
+import { FileDownloader } from '../../../client/common/net/fileDownloader';
+import { FileSystem } from '../../../client/common/platform/fileSystem';
+import { IFileSystem } from '../../../client/common/platform/types';
+import { IFileDownloader, IOutputChannel, Resource } from '../../../client/common/types';
+import { Common, LanguageService } from '../../../client/common/utils/localize';
 import { noop } from '../../core';
+import { MockOutputChannel } from '../../mockClasses';
 
 use(chaiAsPromised);
 
 // tslint:disable-next-line:max-func-body-length
-suite('Activation - Downloader', () => {
+suite('Language Server Activation - Downloader', () => {
     let languageServerDownloader: LanguageServerDownloader;
     let folderService: TypeMoq.IMock<ILanguageServerFolderService>;
     let workspaceService: TypeMoq.IMock<IWorkspaceService>;
     let resource: Resource;
+    let outputChannel: IOutputChannel;
+    let lsOutputChannel: TypeMoq.IMock<ILanguageServerOutputChannel>;
     setup(() => {
+        outputChannel = mock(MockOutputChannel);
+        lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+        lsOutputChannel.setup(l => l.channel).returns(() => instance(outputChannel));
         folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
         workspaceService = TypeMoq.Mock.ofType<IWorkspaceService>(undefined, TypeMoq.MockBehavior.Strict);
         resource = Uri.file(__dirname);
         languageServerDownloader = new LanguageServerDownloader(
             undefined as any,
-            undefined as any,
+            lsOutputChannel.object,
             undefined as any,
             folderService.object,
             undefined as any,
@@ -51,8 +56,7 @@ suite('Activation - Downloader', () => {
 
     test('Get download info - HTTPS with resource', async () => {
         const cfg = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
-        cfg
-            .setup(c => c.get('proxyStrictSSL', true))
+        cfg.setup(c => c.get('proxyStrictSSL', true))
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
         workspaceService
@@ -76,8 +80,7 @@ suite('Activation - Downloader', () => {
 
     test('Get download info - HTTPS without resource', async () => {
         const cfg = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
-        cfg
-            .setup(c => c.get('proxyStrictSSL', true))
+        cfg.setup(c => c.get('proxyStrictSSL', true))
             .returns(() => true)
             .verifiable(TypeMoq.Times.once());
         workspaceService
@@ -101,8 +104,7 @@ suite('Activation - Downloader', () => {
 
     test('Get download info - HTTPS disabled', async () => {
         const cfg = TypeMoq.Mock.ofType<WorkspaceConfiguration>(undefined, TypeMoq.MockBehavior.Strict);
-        cfg
-            .setup(c => c.get('proxyStrictSSL', true))
+        cfg.setup(c => c.get('proxyStrictSSL', true))
             .returns(() => false)
             .verifiable(TypeMoq.Times.once());
         workspaceService
@@ -158,23 +160,33 @@ suite('Activation - Downloader', () => {
 
     suite('Test LanguageServerDownloader.downloadFile', () => {
         let lsDownloader: LanguageServerDownloader;
-        let outputChannel: IOutputChannel;
+        let outputChannelDownload: IOutputChannel;
         let fileDownloader: IFileDownloader;
+        let lsOutputChannelDownload: TypeMoq.IMock<ILanguageServerOutputChannel>;
+        // tslint:disable-next-line: no-http-string
         const downloadUri = 'http://wow.com/file.txt';
         const downloadTitle = 'Downloadimg file.txt';
         setup(() => {
             const platformData = mock(PlatformData);
-            outputChannel = mock(MockOutputChannel);
+            outputChannelDownload = mock(MockOutputChannel);
             fileDownloader = mock(FileDownloader);
             const lsFolderService = mock(LanguageServerFolderService);
             const appShell = mock(ApplicationShell);
             const fs = mock(FileSystem);
+            // tslint:disable-next-line: no-shadowed-variable
             const workspaceService = mock(WorkspaceService);
+            lsOutputChannelDownload = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannelDownload.setup(l => l.channel).returns(() => instance(outputChannelDownload));
 
-            lsDownloader = new LanguageServerDownloader(instance(platformData),
-                instance(outputChannel), instance(fileDownloader),
-                instance(lsFolderService), instance(appShell),
-                instance(fs), instance(workspaceService));
+            lsDownloader = new LanguageServerDownloader(
+                instance(platformData),
+                lsOutputChannelDownload.object,
+                instance(fileDownloader),
+                instance(lsFolderService),
+                instance(appShell),
+                instance(fs),
+                instance(workspaceService)
+            );
         });
 
         test('Downloaded file name must be returned from file downloader and right args passed', async () => {
@@ -182,7 +194,7 @@ suite('Activation - Downloader', () => {
             when(fileDownloader.downloadFile(anything(), anything())).thenResolve(downloadedFile);
             const expectedDownloadOptions = {
                 extension: '.nupkg',
-                outputChannel: instance(outputChannel),
+                outputChannel: instance(outputChannelDownload),
                 progressMessagePrefix: downloadTitle
             };
 
@@ -198,7 +210,7 @@ suite('Activation - Downloader', () => {
             await lsDownloader.downloadFile(downloadUri, downloadTitle);
 
             verify(fileDownloader.downloadFile(anything(), anything())).once();
-            verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).once();
+            verify(outputChannelDownload.appendLine(LanguageService.extractionCompletedOutputMessage())).once();
         });
         test('If download fails do not log completion message', async () => {
             const ex = new Error('kaboom');
@@ -207,7 +219,7 @@ suite('Activation - Downloader', () => {
             const promise = lsDownloader.downloadFile(downloadUri, downloadTitle);
             await promise.catch(noop);
 
-            verify(outputChannel.appendLine(LanguageService.extractionCompletedOutputMessage())).never();
+            verify(outputChannelDownload.appendLine(LanguageService.extractionCompletedOutputMessage())).never();
             expect(promise).to.eventually.be.rejectedWith('kaboom');
         });
     });
@@ -250,13 +262,15 @@ suite('Activation - Downloader', () => {
         setup(() => {
             appShell = TypeMoq.Mock.ofType<IApplicationShell>(undefined, TypeMoq.MockBehavior.Strict);
             folderService = TypeMoq.Mock.ofType<ILanguageServerFolderService>(undefined, TypeMoq.MockBehavior.Strict);
-            output = TypeMoq.Mock.ofType<IOutputChannel>(undefined, TypeMoq.MockBehavior.Strict);
+            output = TypeMoq.Mock.ofType<IOutputChannel>();
             fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
             platformData = TypeMoq.Mock.ofType<IPlatformData>(undefined, TypeMoq.MockBehavior.Strict);
+            lsOutputChannel = TypeMoq.Mock.ofType<ILanguageServerOutputChannel>();
+            lsOutputChannel.setup(l => l.channel).returns(() => output.object);
 
             languageServerDownloaderTest = new LanguageServerDownloaderTest(
                 platformData.object,
-                output.object,
+                lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,
@@ -265,7 +279,7 @@ suite('Activation - Downloader', () => {
             );
             languageServerExtractorTest = new LanguageServerExtractorTest(
                 platformData.object,
-                output.object,
+                lsOutputChannel.object,
                 undefined as any,
                 folderService.object,
                 appShell.object,
@@ -275,16 +289,10 @@ suite('Activation - Downloader', () => {
         });
         test('Display error message if LS downloading fails', async () => {
             const pkg = makePkgInfo('ls', 'xyz');
-            folderService
-                .setup(f => f.getLatestLanguageServerVersion(resource))
-                .returns(() => Promise.resolve(pkg));
-            output
-                .setup(o => o.appendLine(LanguageService.downloadFailedOutputMessage()));
-            output
-                .setup(o => o.appendLine((failure as unknown) as string));
-            appShell
-                .setup(a => a.showErrorMessage(LanguageService.lsFailedToDownload(), Common.openOutputPanel()))
-                .returns(() => Promise.resolve(undefined));
+            folderService.setup(f => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
+            output.setup(o => o.appendLine(LanguageService.downloadFailedOutputMessage()));
+            output.setup(o => o.appendLine((failure as unknown) as string));
+            appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToDownload(), Common.openOutputPanel())).returns(() => Promise.resolve(undefined));
 
             let actualFailure: Error | undefined;
             try {
@@ -302,16 +310,10 @@ suite('Activation - Downloader', () => {
         });
         test('Display error message if LS extraction fails', async () => {
             const pkg = makePkgInfo('ls', 'xyz');
-            folderService
-                .setup(f => f.getLatestLanguageServerVersion(resource))
-                .returns(() => Promise.resolve(pkg));
-            output
-                .setup(o => o.appendLine(LanguageService.extractionFailedOutputMessage()));
-            output
-                .setup(o => o.appendLine((failure as unknown) as string));
-            appShell
-                .setup(a => a.showErrorMessage(LanguageService.lsFailedToExtract(), Common.openOutputPanel()))
-                .returns(() => Promise.resolve(undefined));
+            folderService.setup(f => f.getLatestLanguageServerVersion(resource)).returns(() => Promise.resolve(pkg));
+            output.setup(o => o.appendLine(LanguageService.extractionFailedOutputMessage()));
+            output.setup(o => o.appendLine((failure as unknown) as string));
+            appShell.setup(a => a.showErrorMessage(LanguageService.lsFailedToExtract(), Common.openOutputPanel())).returns(() => Promise.resolve(undefined));
 
             let actualFailure: Error | undefined;
             try {

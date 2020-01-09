@@ -17,13 +17,7 @@ import { DiagnosticScope, IDiagnostic, IDiagnosticHandlerService } from '../type
 
 export class LSNotSupportedDiagnostic extends BaseDiagnostic {
     constructor(message: string, resource: Resource) {
-        super(
-            DiagnosticCodes.LSNotSupportedDiagnostic,
-            message,
-            DiagnosticSeverity.Warning,
-            DiagnosticScope.Global,
-            resource
-        );
+        super(DiagnosticCodes.LSNotSupportedDiagnostic, message, DiagnosticSeverity.Warning, DiagnosticScope.Global, resource);
     }
 }
 
@@ -60,7 +54,7 @@ export class LSNotSupportedDiagnosticService extends BaseDiagnosticsService {
         const options = [
             {
                 prompt: 'More Info',
-                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/AA3qqka' })
+                command: commandFactory.createCommand(diagnostic, { type: 'launch', options: 'https://aka.ms/pythonlsrequirements' })
             },
             {
                 prompt: 'Do not show again',

@@ -34,6 +34,7 @@ export class TestResultResetVisitor implements ITestVisitor {
         testFolder.functionsFailed = 0;
         testFolder.functionsPassed = 0;
         testFolder.passed = undefined;
+        testFolder.time = 0;
         testFolder.status = TestStatus.Unknown;
     }
 }

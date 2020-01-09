@@ -1,14 +1,16 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
+import '../../common/extensions';
 
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Range, TextEditor, Uri } from 'vscode';
+
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
-import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IProcessServiceFactory } from '../../common/process/types';
-import { IConfigurationService } from '../../common/types';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { ICodeExecutionHelper } from '../types';
 
@@ -17,12 +19,12 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
     private readonly documentManager: IDocumentManager;
     private readonly applicationShell: IApplicationShell;
     private readonly processServiceFactory: IProcessServiceFactory;
-    private readonly configurationService: IConfigurationService;
+    private readonly interpreterService: IInterpreterService;
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.applicationShell = serviceContainer.get<IApplicationShell>(IApplicationShell);
         this.processServiceFactory = serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory);
-        this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        this.interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
     public async normalizeLines(code: string, resource?: Uri): Promise<string> {
         try {
@@ -32,14 +34,14 @@ export class CodeExecutionHelper implements ICodeExecutionHelper {
             // On windows cr is not handled well by python when passing in/out via stdin/stdout.
             // So just remove cr from the input.
             code = code.replace(new RegExp('\\r', 'g'), '');
-            const pythonPath = this.configurationService.getSettings(resource).pythonPath;
-            const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
+            const interpreter = await this.interpreterService.getActiveInterpreter(resource);
             const processService = await this.processServiceFactory.create(resource);
-            const proc = await processService.exec(pythonPath, args, { throwOnStdErr: true });
+            const args = [path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'normalizeForInterpreter.py'), code];
+            const proc = await processService.exec(interpreter?.path || 'python', args, { throwOnStdErr: true });
 
             return proc.stdout;
         } catch (ex) {
-            console.error(ex, 'Python: Failed to normalize code for execution in terminal');
+            traceError(ex, 'Python: Failed to normalize code for execution in terminal');
             return code;
         }
     }

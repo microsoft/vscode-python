@@ -8,14 +8,16 @@ import { IServiceContainer } from '../../ioc/types';
 import { IApplicationShell } from '../application/types';
 import { IPlatformService } from '../platform/types';
 import { Product } from '../types';
+import { Installer } from '../utils/localize';
+import { isResource } from '../utils/misc';
 import { ProductNames } from './productNames';
-import { IInstallationChannelManager, IModuleInstaller } from './types';
+import { IInstallationChannelManager, IModuleInstaller, InterpreterUri } from './types';
 
 @injectable()
 export class InstallationChannelManager implements IInstallationChannelManager {
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) { }
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {}
 
-    public async getInstallationChannel(product: Product, resource?: Uri): Promise<IModuleInstaller | undefined> {
+    public async getInstallationChannel(product: Product, resource?: InterpreterUri): Promise<IModuleInstaller | undefined> {
         const channels = await this.getInstallationChannels(resource);
         if (channels.length === 1) {
             return channels[0];
@@ -24,7 +26,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const productName = ProductNames.get(product)!;
         const appShell = this.serviceContainer.get<IApplicationShell>(IApplicationShell);
         if (channels.length === 0) {
-            await this.showNoInstallersMessage(resource);
+            await this.showNoInstallersMessage(isResource(resource) ? resource : undefined);
             return;
         }
 
@@ -40,7 +42,7 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         return selection ? selection.installer : undefined;
     }
 
-    public async getInstallationChannels(resource?: Uri): Promise<IModuleInstaller[]> {
+    public async getInstallationChannels(resource?: InterpreterUri): Promise<IModuleInstaller[]> {
         const installers = this.serviceContainer.getAll<IModuleInstaller>(IModuleInstaller);
         const supportedInstallers: IModuleInstaller[] = [];
         if (installers.length === 0) {
@@ -75,16 +77,14 @@ export class InstallationChannelManager implements IInstallationChannelManager {
         const search = 'Search for help';
         let result: string | undefined;
         if (interpreter.type === InterpreterType.Conda) {
-            result = await appShell.showErrorMessage('There is no Conda or Pip installer available in the selected environment.', search);
+            result = await appShell.showErrorMessage(Installer.noCondaOrPipInstaller(), Installer.searchForHelp());
         } else {
-            result = await appShell.showErrorMessage('There is no Pip installer available in the selected environment.', search);
+            result = await appShell.showErrorMessage(Installer.noPipInstaller(), Installer.searchForHelp());
         }
         if (result === search) {
             const platform = this.serviceContainer.get<IPlatformService>(IPlatformService);
-            const osName = platform.isWindows
-                ? 'Windows'
-                : (platform.isMac ? 'MacOS' : 'Linux');
-            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${(interpreter.type === InterpreterType.Conda) ? 'Conda' : ''}`);
+            const osName = platform.isWindows ? 'Windows' : platform.isMac ? 'MacOS' : 'Linux';
+            appShell.openUrl(`https://www.bing.com/search?q=Install Pip ${osName} ${interpreter.type === InterpreterType.Conda ? 'Conda' : ''}`);
         }
     }
 }

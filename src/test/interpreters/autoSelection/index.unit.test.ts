@@ -70,11 +70,17 @@ suite('Interpreters - Auto Selection', () => {
         proxy = mock(InterpreterAutoSeletionProxyService);
 
         autoSelectionService = new InterpreterAutoSelectionServiceTest(
-            instance(workspaceService), instance(stateFactory), instance(fs),
-            instance(systemInterpreter), instance(currentPathInterpreter),
-            instance(winRegInterpreter), instance(cachedPaths),
-            instance(userDefinedInterpreter), instance(workspaceInterpreter),
-            instance(proxy), instance(helper)
+            instance(workspaceService),
+            instance(stateFactory),
+            instance(fs),
+            instance(systemInterpreter),
+            instance(currentPathInterpreter),
+            instance(winRegInterpreter),
+            instance(cachedPaths),
+            instance(userDefinedInterpreter),
+            instance(workspaceInterpreter),
+            instance(proxy),
+            instance(helper)
         );
     });
 
@@ -91,7 +97,7 @@ suite('Interpreters - Auto Selection', () => {
     });
     test('Run rules in background', async () => {
         let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         autoSelectionService.initializeStore = () => Promise.resolve();
         await autoSelectionService.autoSelectInterpreter(undefined);
 
@@ -108,7 +114,7 @@ suite('Interpreters - Auto Selection', () => {
     });
     test('Run userDefineInterpreter as the first rule', async () => {
         let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         autoSelectionService.initializeStore = () => Promise.resolve();
 
         await autoSelectionService.autoSelectInterpreter(undefined);
@@ -119,8 +125,8 @@ suite('Interpreters - Auto Selection', () => {
     test('Initialize the store', async () => {
         let initialize = false;
         let eventFired = false;
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
-        autoSelectionService.initializeStore = async () => initialize = true as any;
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
+        autoSelectionService.initializeStore = async () => (initialize = true as any);
 
         await autoSelectionService.autoSelectInterpreter(undefined);
 
@@ -136,7 +142,7 @@ suite('Interpreters - Auto Selection', () => {
 
         verify(stateFactory.createGlobalPersistentState(preferredGlobalInterpreter, undefined)).once();
     });
-    test('Clear file stored in cache if it doesn\'t exist', async () => {
+    test("Clear file stored in cache if it doesn't exist", async () => {
         const pythonPath = 'Hello World';
         const interpreterInfo = { path: pythonPath } as any;
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(preferredGlobalInterpreter, undefined)).thenReturn(instance(state));
@@ -170,7 +176,7 @@ suite('Interpreters - Auto Selection', () => {
         const interpreterInfo = { path: pythonPath } as any;
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(preferredGlobalInterpreter, undefined)).thenReturn(instance(state));
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
 
         await autoSelectionService.initializeStore(undefined);
         await autoSelectionService.storeAutoSelectedInterpreter(undefined, interpreterInfo);
@@ -187,7 +193,7 @@ suite('Interpreters - Auto Selection', () => {
         const interpreterInfoInState = { path: pythonPath, version: new SemVer('2.0.0') } as any;
         when(fs.fileExists(interpreterInfoInState.path)).thenResolve(true);
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(preferredGlobalInterpreter, undefined)).thenReturn(instance(state));
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         when(state.value).thenReturn(interpreterInfoInState);
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
@@ -206,7 +212,7 @@ suite('Interpreters - Auto Selection', () => {
         const interpreterInfoInState = { path: pythonPath, version: new SemVer('2.0.0') } as any;
         when(fs.fileExists(interpreterInfoInState.path)).thenResolve(true);
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(preferredGlobalInterpreter, undefined)).thenReturn(instance(state));
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         when(state.value).thenReturn(interpreterInfoInState);
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
@@ -238,7 +244,7 @@ suite('Interpreters - Auto Selection', () => {
         const resource = Uri.parse('one');
         when(stateFactory.createGlobalPersistentState<PythonInterpreter | undefined>(preferredGlobalInterpreter, undefined)).thenReturn(instance(state));
         when(workspaceService.getWorkspaceFolder(resource)).thenReturn({ name: '', index: 0, uri: resource });
-        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => eventFired = true);
+        autoSelectionService.onDidChangeAutoSelectedInterpreter(() => (eventFired = true));
         when(workspaceService.getWorkspaceFolderIdentifier(undefined, anything())).thenReturn('');
 
         await autoSelectionService.initializeStore(undefined);

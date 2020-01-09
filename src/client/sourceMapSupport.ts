@@ -3,11 +3,12 @@
 
 'use strict';
 
-import * as fs from 'fs';
 import * as path from 'path';
-import { promisify } from 'util';
 import { WorkspaceConfiguration } from 'vscode';
 import './common/extensions';
+import { traceError } from './common/logger';
+import { FileSystem } from './common/platform/fileSystem';
+import { PlatformService } from './common/platform/platformService';
 import { EXTENSION_ROOT_DIR } from './constants';
 
 type VSCode = typeof import('vscode');
@@ -25,6 +26,7 @@ export class SourceMapSupport {
             return;
         }
         await this.enableSourceMaps(true);
+        require('source-map-support').install();
         const localize = require('./common/utils/localize') as typeof import('./common/utils/localize');
         const disable = localize.Diagnostics.disableSourceMaps();
         this.vscode.window.showWarningMessage(localize.Diagnostics.warnSourceMaps(), disable).then(selection => {
@@ -57,12 +59,11 @@ export class SourceMapSupport {
         }
     }
     protected async rename(sourceFile: string, targetFile: string) {
-        const fsExists = promisify(fs.exists);
-        const fsRename = promisify(fs.rename);
-        if (await fsExists(targetFile)) {
+        const fs = new FileSystem(new PlatformService());
+        if (await fs.fileExists(targetFile)) {
             return;
         }
-        await fsRename(sourceFile, targetFile);
+        await fs.move(sourceFile, targetFile);
     }
 }
 export function initialize(vscode: VSCode = require('vscode')) {
@@ -71,6 +72,6 @@ export function initialize(vscode: VSCode = require('vscode')) {
         return;
     }
     new SourceMapSupport(vscode).initialize().catch(_ex => {
-        console.error('Failed to initialize source map support in extension');
+        traceError('Failed to initialize source map support in extension');
     });
 }

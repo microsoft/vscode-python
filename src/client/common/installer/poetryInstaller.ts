@@ -12,13 +12,17 @@ import { traceError } from '../logger';
 import { IFileSystem } from '../platform/types';
 import { IProcessServiceFactory } from '../process/types';
 import { ExecutionInfo, IConfigurationService } from '../types';
+import { isResource } from '../utils/misc';
 import { ModuleInstaller } from './moduleInstaller';
-import { IModuleInstaller } from './types';
+import { InterpreterUri } from './types';
 export const poetryName = 'poetry';
 const poetryFile = 'poetry.lock';
 
 @injectable()
-export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller {
+export class PoetryInstaller extends ModuleInstaller {
+    public get name(): string {
+        return 'poetry';
+    }
 
     public get displayName() {
         return poetryName;
@@ -27,18 +31,20 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
         return 10;
     }
 
-    constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) serviceContainer: IServiceContainer,
         @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory) {
+        @inject(IProcessServiceFactory) private readonly processFactory: IProcessServiceFactory
+    ) {
         super(serviceContainer);
     }
-    public async isSupported(resource?: Uri): Promise<boolean> {
+    public async isSupported(resource?: InterpreterUri): Promise<boolean> {
         if (!resource) {
             return false;
         }
-        const workspaceFolder = this.workspaceService.getWorkspaceFolder(resource);
+        const workspaceFolder = this.workspaceService.getWorkspaceFolder(isResource(resource) ? resource : undefined);
         if (!workspaceFolder) {
             return false;
         }
@@ -52,14 +58,14 @@ export class PoetryInstaller extends ModuleInstaller implements IModuleInstaller
             const processService = await this.processFactory.create(workfolder);
             const execPath = this.configurationService.getSettings(workfolder).poetryPath;
             const result = await processService.exec(execPath, ['list'], { cwd: workfolder.fsPath });
-            return result && ((result.stderr || '').trim().length === 0);
+            return result && (result.stderr || '').trim().length === 0;
         } catch (error) {
             traceError(`${poetryFile} exists but Poetry not found`, error);
             return false;
         }
     }
-    protected async getExecutionInfo(moduleName: string, resource?: Uri): Promise<ExecutionInfo> {
-        const execPath = this.configurationService.getSettings(resource).poetryPath;
+    protected async getExecutionInfo(moduleName: string, resource?: InterpreterUri): Promise<ExecutionInfo> {
+        const execPath = this.configurationService.getSettings(isResource(resource) ? resource : undefined).poetryPath;
         const args = ['add', '--dev', moduleName];
         if (moduleName === 'black') {
             args.push('--allow-prereleases');

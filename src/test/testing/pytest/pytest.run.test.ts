@@ -11,12 +11,22 @@ import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IFileSystem } from '../../../client/common/platform/types';
 import { PythonExecutionFactory } from '../../../client/common/process/pythonExecutionFactory';
 import { PythonExecutionService } from '../../../client/common/process/pythonProcess';
-import { ExecutionFactoryCreateWithEnvironmentOptions, IBufferDecoder, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService } from '../../../client/common/process/types';
+import {
+    ExecutionFactoryCreateWithEnvironmentOptions,
+    IBufferDecoder,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService
+} from '../../../client/common/process/types';
 import { IConfigurationService } from '../../../client/common/types';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../client/interpreter/interpreterService';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { UnitTestDiagnosticService } from '../../../client/testing/common/services/unitTestDiagnosticService';
@@ -48,7 +58,7 @@ interface IResultsSummaryCount {
  * @param tests The tests that were discovered.
  */
 async function getScenarioTestsToRun(scenario: ITestScenarioDetails, tests: Tests): Promise<TestsToRun> {
-    const generateTestsToRun = (scenario.testSuiteIndex || scenario.testFunctionIndex);
+    const generateTestsToRun = scenario.testSuiteIndex || scenario.testFunctionIndex;
     if (scenario.testsToRun === undefined && generateTestsToRun) {
         scenario.testsToRun = {
             testFolder: [],
@@ -169,7 +179,7 @@ function getIssueCountFromRelevantTestDetails(testDetails: ITestDetails[], skipp
  * @param diagnostics The array of Diagnostics for a file.
  * @param testFunc The FlattenedTestFunction to find the Diagnostic for.
  */
-function getDiagnosticForTestFunc(diagnostics: vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
+function getDiagnosticForTestFunc(diagnostics: readonly vscode.Diagnostic[], testFunc: FlattenedTestFunction): vscode.Diagnostic {
     return diagnostics.find(diag => {
         return testFunc.testFunction.nameToRun === diag.code;
     })!;
@@ -241,27 +251,12 @@ async function getExpectedDiagnosticFromTestDetails(testDetails: ITestDetails): 
     }
     if (testDetails.imported) {
         // Stack should include the class furthest down the chain from the file that was executed.
-        relatedInfo.push(
-            new vscode.DiagnosticRelatedInformation(
-                new vscode.Location(testFileUri, testDetails.classDefRange!),
-                testDetails.simpleClassName!
-            )
-        );
+        relatedInfo.push(new vscode.DiagnosticRelatedInformation(new vscode.Location(testFileUri, testDetails.classDefRange!), testDetails.simpleClassName!));
         expectedDiagRange = testDetails.classDefRange;
     }
-    relatedInfo.push(
-        new vscode.DiagnosticRelatedInformation(
-            new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!),
-            testDetails.sourceTestName
-        )
-    );
+    relatedInfo.push(new vscode.DiagnosticRelatedInformation(new vscode.Location(expectedSourceTestFileUri, testDetails.testDefRange!), testDetails.sourceTestName));
     if (testDetails.status !== TestStatus.Skipped) {
-        relatedInfo.push(
-            new vscode.DiagnosticRelatedInformation(
-                new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!),
-                testDetails.issueLineText!
-            )
-        );
+        relatedInfo.push(new vscode.DiagnosticRelatedInformation(new vscode.Location(expectedSourceTestFileUri, testDetails.issueRange!), testDetails.issueLineText!));
     } else {
         expectedSeverity = vscode.DiagnosticSeverity.Information;
     }
@@ -308,16 +303,20 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     const configTarget = IS_MULTI_ROOT_TEST ? vscode.ConfigurationTarget.WorkspaceFolder : vscode.ConfigurationTarget.Workspace;
     @injectable()
     class ExecutionFactory extends PythonExecutionFactory {
-        constructor(@inject(IServiceContainer) private readonly _serviceContainer: IServiceContainer,
+        constructor(
+            @inject(IServiceContainer) private readonly _serviceContainer: IServiceContainer,
             @inject(IEnvironmentActivationService) activationHelper: IEnvironmentActivationService,
             @inject(IProcessServiceFactory) processServiceFactory: IProcessServiceFactory,
             @inject(IConfigurationService) private readonly _configService: IConfigurationService,
-            @inject(IBufferDecoder) decoder: IBufferDecoder) {
-            super(_serviceContainer, activationHelper, processServiceFactory, _configService, decoder);
+            @inject(ICondaService) condaService: ICondaService,
+            @inject(WindowsStoreInterpreter) windowsStoreInterpreter: WindowsStoreInterpreter,
+            @inject(IBufferDecoder) decoder: IBufferDecoder
+        ) {
+            super(_serviceContainer, activationHelper, processServiceFactory, _configService, condaService, decoder, windowsStoreInterpreter);
         }
         public async createActivatedEnvironment(options: ExecutionFactoryCreateWithEnvironmentOptions): Promise<IPythonExecutionService> {
             const pythonPath = options.interpreter ? options.interpreter.path : this._configService.getSettings(options.resource).pythonPath;
-            const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+            const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
             return new PythonExecutionService(this._serviceContainer, procService, pythonPath);
         }
     }
@@ -335,21 +334,28 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
         ioc.serviceManager.addSingletonInstance<ICondaService>(ICondaService, instance(mock(CondaService)));
         ioc.serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mock(InterpreterService)));
         ioc.serviceManager.rebind<IPythonExecutionFactory>(IPythonExecutionFactory, ExecutionFactory);
+        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExec((_file, args, _options, callback) => {
             if (args.indexOf('discover') >= 0 && args.indexOf('pytest') >= 0) {
                 let stdout = fs.readFileSync(path.join(PYTEST_RESULTS_PATH, outputFileName), 'utf8');
-                stdout = stdout.replace(/\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g, path.dirname(UNITTEST_TEST_FILES_PATH))
+                stdout = stdout.replace(
+                    /\/Users\/donjayamanne\/.vscode-insiders\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles/g,
+                    path.dirname(UNITTEST_TEST_FILES_PATH)
+                );
                 stdout = stdout.replace(/\\/g, '/');
                 callback({ stdout });
             }
         });
     }
     async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (failedOutput && args.indexOf('--last-failed') === -1) {
                 return;
@@ -365,23 +371,29 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
     }
     function getScenarioTestDetails(scenario: ITestScenarioDetails, failedRun: boolean): ITestDetails[] {
         if (scenario.shouldRunFailed && failedRun) {
-            return scenario.testDetails!.filter(td => { return td.status === TestStatus.Fail; })!;
+            return scenario.testDetails!.filter(td => {
+                return td.status === TestStatus.Fail;
+            })!;
         }
         return scenario.testDetails!;
     }
+    // tslint:disable-next-line: max-func-body-length
     testScenarios.forEach(scenario => {
+        // tslint:disable-next-line: max-func-body-length
         suite(scenario.scenarioName, () => {
             let testDetails: ITestDetails[];
             let factory: ITestManagerFactory;
             let testManager: ITestManager;
             let results: Tests;
-            let diagnostics: vscode.Diagnostic[];
+            let diagnostics: readonly vscode.Diagnostic[];
             suiteSetup(async () => {
                 await initializeTest();
                 initializeDI();
                 await injectTestDiscoveryOutput(scenario.discoveryOutput);
                 await injectTestRunOutput(scenario.runOutput);
-                if (scenario.shouldRunFailed === true) { await injectTestRunOutput(scenario.failedRunOutput!, true); }
+                if (scenario.shouldRunFailed === true) {
+                    await injectTestRunOutput(scenario.failedRunOutput!, true);
+                }
                 await updateSetting('testing.pytestArgs', ['-k=test_'], rootWorkspaceUri, configTarget);
                 factory = ioc.serviceContainer.get<ITestManagerFactory>(ITestManagerFactory);
                 testManager = factory('pytest', rootWorkspaceUri!, UNITTEST_TEST_FILES_PATH);
@@ -402,7 +414,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                         results = await getResultsFromTestManagerRunTest(testManager, scenario.testsToRun!, failedRun);
                         expectedSummaryCount = getExpectedSummaryCount(testDetails, failedRun);
                     });
-                    test('Test results summary', async () => { await testResultsSummary(results, expectedSummaryCount); });
+                    test('Test results summary', async () => {
+                        await testResultsSummary(results, expectedSummaryCount);
+                    });
                     uniqueIssueFiles.forEach(fileName => {
                         suite(fileName, () => {
                             let testFileUri: vscode.Uri;
@@ -422,7 +436,7 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                                     let expectedDiagnostic: vscode.Diagnostic;
                                     suiteSetup(async () => {
                                         testFunc = getTestFuncFromResultsByTestFileAndName(ioc, results, testFileUri, td)!;
-                                        expectedStatus = (failedRun && td.passOnFailedRun) ? TestStatus.Pass : td.status;
+                                        expectedStatus = failedRun && td.passOnFailedRun ? TestStatus.Pass : td.status;
                                     });
                                     suite('TestFunction', async () => {
                                         test('Status', async () => {
@@ -435,7 +449,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                                                 diagnostic = getDiagnosticForTestFunc(diagnostics, testFunc)!;
                                                 expectedDiagnostic = await getExpectedDiagnosticFromTestDetails(td);
                                             });
-                                            test('Test Diagnostic', async () => { await testDiagnostic(diagnostic, expectedDiagnostic); });
+                                            test('Test Diagnostic', async () => {
+                                                await testDiagnostic(diagnostic, expectedDiagnostic);
+                                            });
                                             suite('Test DiagnosticRelatedInformation', async () => {
                                                 if (td.imported) {
                                                     test('Class Definition', async () => {
@@ -443,11 +459,17 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                                                     });
                                                 }
                                                 test('Test Function Definition', async () => {
-                                                    await testDiagnosticRelatedInformation(diagnostic.relatedInformation![(td.imported ? 1 : 0)], expectedDiagnostic.relatedInformation![(td.imported ? 1 : 0)]);
+                                                    await testDiagnosticRelatedInformation(
+                                                        diagnostic.relatedInformation![td.imported ? 1 : 0],
+                                                        expectedDiagnostic.relatedInformation![td.imported ? 1 : 0]
+                                                    );
                                                 });
                                                 if (td.status !== TestStatus.Skipped) {
                                                     test('Failure Line', async () => {
-                                                        await testDiagnosticRelatedInformation(diagnostic.relatedInformation![(td.imported ? 1 : 0) + 1], expectedDiagnostic.relatedInformation![(td.imported ? 1 : 0) + 1]);
+                                                        await testDiagnosticRelatedInformation(
+                                                            diagnostic.relatedInformation![(td.imported ? 1 : 0) + 1],
+                                                            expectedDiagnostic.relatedInformation![(td.imported ? 1 : 0) + 1]
+                                                        );
                                                     });
                                                 }
                                             });
@@ -455,7 +477,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                                     }
                                 });
                             };
-                            relevantTestDetails.forEach((td: ITestDetails) => { validateTestFunctionAndDiagnostics(td); });
+                            relevantTestDetails.forEach((td: ITestDetails) => {
+                                validateTestFunctionAndDiagnostics(td);
+                            });
                             if (failedRun) {
                                 relevantSkippedIssues.forEach((td: ITestDetails) => {
                                     validateTestFunctionAndDiagnostics(td);
@@ -466,7 +490,9 @@ suite('Unit Tests - pytest - run with mocked process output', () => {
                 });
             };
             shouldRunProperly('Run');
-            if (scenario.shouldRunFailed) { shouldRunProperly('Run Failed', true); }
+            if (scenario.shouldRunFailed) {
+                shouldRunProperly('Run Failed', true);
+            }
         });
     });
 });

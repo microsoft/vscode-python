@@ -1,10 +1,10 @@
 // tslint:disable:quotemark ordered-imports member-ordering one-line prefer-const
 
-"use strict";
+'use strict';
 
-import * as net from "net";
-import { EventEmitter } from "events";
-import { SocketStream } from "./SocketStream";
+import * as net from 'net';
+import { EventEmitter } from 'events';
+import { SocketStream } from './SocketStream';
 import { SocketServer } from './socketServer';
 
 export abstract class SocketCallbackHandler extends EventEmitter {
@@ -46,8 +46,7 @@ export abstract class SocketCallbackHandler extends EventEmitter {
     private HandleIncomingData(buffer: Buffer, socket: net.Socket): boolean | undefined {
         if (!this._stream) {
             this._stream = new SocketStream(socket, buffer);
-        }
-        else {
+        } else {
             this._stream.Append(buffer);
         }
 
@@ -76,9 +75,8 @@ export abstract class SocketCallbackHandler extends EventEmitter {
         if (this.commandHandlers.has(cmd)) {
             const handler = this.commandHandlers.get(cmd)!;
             handler();
-        }
-        else {
-            this.emit("error", `Unhandled command '${cmd}'`);
+        } else {
+            this.emit('error', `Unhandled command '${cmd}'`);
         }
 
         if (this.stream.HasInsufficientDataForReading) {

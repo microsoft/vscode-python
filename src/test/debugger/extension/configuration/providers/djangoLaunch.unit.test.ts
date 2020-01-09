@@ -44,7 +44,7 @@ suite('Debugging - Configuration Provider Django', () => {
         input = mock<MultiStepInput<DebugConfigurationState>>(MultiStepInput);
         provider = new TestDjangoLaunchDebugConfigurationProvider(instance(fs), instance(workspaceService), instance(pathUtils));
     });
-    test('getManagePyPath should return undefined if file doesn\'t exist', async () => {
+    test("getManagePyPath should return undefined if file doesn't exist", async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
         const managePyPath = path.join(folder.uri.fsPath, 'manage.py');
         when(fs.fileExists(managePyPath)).thenResolve(false);
@@ -95,7 +95,7 @@ suite('Debugging - Configuration Provider Django', () => {
 
         expect(error).to.be.length.greaterThan(1);
     });
-    test('Validation of path should return errors if resolved path doesn\'t exist', async () => {
+    test("Validation of path should return errors if resolved path doesn't exist", async () => {
         const folder = { uri: Uri.parse(path.join('one', 'two')), name: '1', index: 0 };
         provider.resolveVariables = () => 'xyz';
 
@@ -135,10 +135,7 @@ suite('Debugging - Configuration Provider Django', () => {
             type: DebuggerTypeName,
             request: 'launch',
             program: 'xyz.py',
-            args: [
-                'runserver',
-                '--noreload'
-            ],
+            args: ['runserver', '--noreload'],
             django: true
         };
 
@@ -158,10 +155,7 @@ suite('Debugging - Configuration Provider Django', () => {
             type: DebuggerTypeName,
             request: 'launch',
             program: 'hello',
-            args: [
-                'runserver',
-                '--noreload'
-            ],
+            args: ['runserver', '--noreload'],
             django: true
         };
 
@@ -184,10 +178,7 @@ suite('Debugging - Configuration Provider Django', () => {
             type: DebuggerTypeName,
             request: 'launch',
             program: defaultProgram,
-            args: [
-                'runserver',
-                '--noreload'
-            ],
+            args: ['runserver', '--noreload'],
             django: true
         };
 

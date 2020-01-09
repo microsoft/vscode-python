@@ -4,17 +4,22 @@
 'use strict';
 
 // tslint:disable-next-line:ordered-imports
-import {
-    DiagnosticSeverity, Disposable, DocumentSymbolProvider,
-    Event, Location, ProviderResult, TextDocument,
-    TreeDataProvider, TreeItem, Uri, WorkspaceFolder
-} from 'vscode';
+import { DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Location, ProviderResult, TextDocument, TreeDataProvider, TreeItem, Uri, WorkspaceFolder } from 'vscode';
 import { Product, Resource } from '../common/types';
 import { CommandSource } from './common/constants';
 import {
-    FlattenedTestFunction, ITestManager, ITestResultsService,
-    TestFile, TestFolder, TestFunction, TestRunOptions, Tests,
-    TestStatus, TestsToRun, TestSuite, UnitTestProduct
+    FlattenedTestFunction,
+    ITestManager,
+    ITestResultsService,
+    TestFile,
+    TestFolder,
+    TestFunction,
+    TestRunOptions,
+    Tests,
+    TestStatus,
+    TestsToRun,
+    TestSuite,
+    UnitTestProduct
 } from './common/types';
 
 export const ITestConfigurationService = Symbol('ITestConfigurationService');
@@ -70,6 +75,7 @@ export interface ITestConfigSettingsService {
     updateTestArgs(testDirectory: string | Uri, product: UnitTestProduct, args: string[]): Promise<void>;
     enable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
     disable(testDirectory: string | Uri, product: UnitTestProduct): Promise<void>;
+    getTestEnablingSetting(product: UnitTestProduct): string;
 }
 
 export interface ITestConfigurationManager {
@@ -156,6 +162,13 @@ export interface ILocationStackFrameDetails {
 
 export type WorkspaceTestStatus = { workspace: Uri; status: TestStatus };
 
+export enum TestDataItemType {
+    workspaceFolder = 'workspaceFolder',
+    folder = 'folder',
+    file = 'file',
+    suite = 'suite',
+    function = 'function'
+}
 export type TestDataItem = TestWorkspaceFolder | TestFolder | TestFile | TestSuite | TestFunction;
 
 export class TestWorkspaceFolder {
@@ -165,7 +178,7 @@ export class TestWorkspaceFolder {
     public functionsFailed?: number;
     public functionsDidNotRun?: number;
     public passed?: boolean;
-    constructor(public readonly workspaceFolder: WorkspaceFolder) { }
+    constructor(public readonly workspaceFolder: WorkspaceFolder) {}
     public get resource(): Uri {
         return this.workspaceFolder.uri;
     }

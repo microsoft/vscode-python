@@ -15,8 +15,8 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
     constructor(
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService) {
-
+        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+    ) {
         super(AutoSelectionRule.settings, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(_resource: Resource, _manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
@@ -24,6 +24,6 @@ export class SettingsInterpretersAutoSelectionRule extends BaseRuleService {
         const pythonConfig = this.workspaceService.getConfiguration('python', null as any)!;
         const pythonPathInConfig = pythonConfig.inspect<string>('pythonPath')!;
         // No need to store python paths defined in settings in our caches, they can be retrieved from the settings directly.
-        return (pythonPathInConfig.globalValue && pythonPathInConfig.globalValue !== 'python') ? NextAction.exit : NextAction.runNextRule;
+        return pythonPathInConfig.globalValue && pythonPathInConfig.globalValue !== 'python' ? NextAction.exit : NextAction.runNextRule;
     }
 }

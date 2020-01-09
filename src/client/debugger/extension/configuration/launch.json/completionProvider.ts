@@ -7,9 +7,9 @@ import { inject, injectable } from 'inversify';
 import { getLocation } from 'jsonc-parser';
 import * as path from 'path';
 import { CancellationToken, CompletionItem, CompletionItemKind, CompletionItemProvider, Position, SnippetString, TextDocument } from 'vscode';
-import { IExtensionActivationService } from '../../../../activation/types';
+import { IExtensionSingleActivationService } from '../../../../activation/types';
 import { ILanguageService } from '../../../../common/application/types';
-import { IDisposableRegistry, Resource } from '../../../../common/types';
+import { IDisposableRegistry } from '../../../../common/types';
 import { DebugConfigStrings } from '../../../../common/utils/localize';
 
 const configurationNodeName = 'configurations';
@@ -19,10 +19,12 @@ enum JsonLanguages {
 }
 
 @injectable()
-export class LaunchJsonCompletionProvider implements CompletionItemProvider, IExtensionActivationService {
-    constructor(@inject(ILanguageService) private readonly languageService: ILanguageService,
-        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry) { }
-    public async activate(_resource: Resource): Promise<void> {
+export class LaunchJsonCompletionProvider implements CompletionItemProvider, IExtensionSingleActivationService {
+    constructor(
+        @inject(ILanguageService) private readonly languageService: ILanguageService,
+        @inject(IDisposableRegistry) private readonly disposableRegistry: IDisposableRegistry
+    ) {}
+    public async activate(): Promise<void> {
         this.disposableRegistry.push(this.languageService.registerCompletionItemProvider({ language: JsonLanguages.json }, this));
         this.disposableRegistry.push(this.languageService.registerCompletionItemProvider({ language: JsonLanguages.jsonWithComments }, this));
     }
@@ -54,6 +56,6 @@ export class LaunchJsonCompletionProvider implements CompletionItemProvider, IEx
         const location = getLocation(document.getText(), document.offsetAt(position));
         // Cursor must be inside the configurations array and not in any nested items.
         // Hence path[0] = array, path[1] = array element index.
-        return (location.path[0] === configurationNodeName && location.path.length === 2);
+        return location.path[0] === configurationNodeName && location.path.length === 2;
     }
 }

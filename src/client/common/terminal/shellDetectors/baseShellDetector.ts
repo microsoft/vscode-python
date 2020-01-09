@@ -13,6 +13,7 @@ import { IShellDetector, ShellIdentificationTelemetry, TerminalShellType } from 
 /*
 When identifying the shell use the following algorithm:
 * 1. Identify shell based on the name of the terminal (if there is one already opened and used).
+* 2. Identify shell based on the api provided by VSC.
 * 2. Identify shell based on the settings in VSC.
 * 3. Identify shell based on users environment variables.
 * 4. Use default shells (bash for mac and linux, cmd for windows).
@@ -49,19 +50,18 @@ detectableShells.set(TerminalShellType.xonsh, IS_XONSH);
 
 @injectable()
 export abstract class BaseShellDetector implements IShellDetector {
-    constructor(@unmanaged() public readonly priority: number) { }
+    constructor(@unmanaged() public readonly priority: number) {}
     public abstract identify(telemetryProperties: ShellIdentificationTelemetry, terminal?: Terminal): TerminalShellType | undefined;
     public identifyShellFromShellPath(shellPath: string): TerminalShellType {
-        const shell = Array.from(detectableShells.keys())
-            .reduce((matchedShell, shellToDetect) => {
-                if (matchedShell === TerminalShellType.other) {
-                    const pat = detectableShells.get(shellToDetect);
-                    if (pat && pat.test(shellPath)) {
-                        return shellToDetect;
-                    }
+        const shell = Array.from(detectableShells.keys()).reduce((matchedShell, shellToDetect) => {
+            if (matchedShell === TerminalShellType.other) {
+                const pat = detectableShells.get(shellToDetect);
+                if (pat && pat.test(shellPath)) {
+                    return shellToDetect;
                 }
-                return matchedShell;
-            }, TerminalShellType.other);
+            }
+            return matchedShell;
+        }, TerminalShellType.other);
 
         traceVerbose(`Shell path '${shellPath}'`);
         traceVerbose(`Shell path identified as shell '${shell}'`);

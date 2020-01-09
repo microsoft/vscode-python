@@ -4,14 +4,28 @@
 
 import { Socket } from 'net';
 import { Request as RequestResult } from 'request';
-import { ConfigurationTarget, DiagnosticSeverity, Disposable, DocumentSymbolProvider, Event, Extension, ExtensionContext, OutputChannel, Uri, WorkspaceEdit } from 'vscode';
+import {
+    CancellationToken,
+    ConfigurationTarget,
+    DiagnosticSeverity,
+    Disposable,
+    DocumentSymbolProvider,
+    Event,
+    Extension,
+    ExtensionContext,
+    OutputChannel,
+    Uri,
+    WorkspaceEdit
+} from 'vscode';
+import { LanguageServerType } from '../activation/types';
 import { CommandsWithoutArgs } from './application/commands';
 import { ExtensionChannels } from './insidersBuild/types';
+import { InterpreterUri } from './installer/types';
 import { EnvironmentVariables } from './variables/types';
 export const IOutputChannel = Symbol('IOutputChannel');
-export interface IOutputChannel extends OutputChannel { }
+export interface IOutputChannel extends OutputChannel {}
 export const IDocumentSymbolProvider = Symbol('IDocumentSymbolProvider');
-export interface IDocumentSymbolProvider extends DocumentSymbolProvider { }
+export interface IDocumentSymbolProvider extends DocumentSymbolProvider {}
 export const IsWindows = Symbol('IS_WINDOWS');
 export const IDisposableRegistry = Symbol('IDiposableRegistry');
 export type IDisposableRegistry = { push(disposable: Disposable): void };
@@ -31,6 +45,10 @@ export type Version = {
     patch: number;
     build: string[];
     prerelease: string[];
+};
+
+export type ReadWrite<T> = {
+    -readonly [P in keyof T]: T[P];
 };
 
 export const IPersistentStateFactory = Symbol('IPersistentStateFactory');
@@ -84,7 +102,7 @@ export enum Product {
     nosetest = 2,
     pylint = 3,
     flake8 = 4,
-    pep8 = 5,
+    pycodestyle = 5,
     pylama = 6,
     prospector = 7,
     pydocstyle = 8,
@@ -97,7 +115,8 @@ export enum Product {
     isort = 15,
     black = 16,
     bandit = 17,
-    jupyter = 18
+    jupyter = 18,
+    ipykernel = 19
 }
 
 export enum ModuleNamePurpose {
@@ -108,14 +127,15 @@ export enum ModuleNamePurpose {
 export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
-    promptToInstall(product: Product, resource?: Uri): Promise<InstallerResponse>;
-    install(product: Product, resource?: Uri): Promise<InstallerResponse>;
-    isInstalled(product: Product, resource?: Uri): Promise<boolean | undefined>;
+    promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
+    install(product: Product, resource?: InterpreterUri): Promise<InstallerResponse>;
+    isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }
 
+// tslint:disable-next-line:no-suspicious-comment
+// TODO(GH-8542): Drop IPathUtils in favor of IFileSystemPathUtils.
 export const IPathUtils = Symbol('IPathUtils');
-
 export interface IPathUtils {
     readonly delimiter: string;
     readonly home: string;
@@ -172,6 +192,8 @@ export interface IPythonSettings {
     readonly autoUpdateLanguageServer: boolean;
     readonly datascience: IDataScienceSettings;
     readonly onDidChange: Event<void>;
+    readonly experiments: IExperiments;
+    readonly languageServer: LanguageServerType;
 }
 export interface ISortImportSettings {
     readonly path: string;
@@ -199,7 +221,7 @@ export interface IPylintCategorySeverity {
     readonly error: DiagnosticSeverity;
     readonly fatal: DiagnosticSeverity;
 }
-export interface IPep8CategorySeverity {
+export interface IPycodestyleCategorySeverity {
     readonly W: DiagnosticSeverity;
     readonly E: DiagnosticSeverity;
 }
@@ -220,8 +242,8 @@ export interface ILintingSettings {
     readonly prospectorArgs: string[];
     readonly pylintEnabled: boolean;
     readonly pylintArgs: string[];
-    readonly pep8Enabled: boolean;
-    readonly pep8Args: string[];
+    readonly pycodestyleEnabled: boolean;
+    readonly pycodestyleArgs: string[];
     readonly pylamaEnabled: boolean;
     readonly pylamaArgs: string[];
     readonly flake8Enabled: boolean;
@@ -231,12 +253,12 @@ export interface ILintingSettings {
     readonly lintOnSave: boolean;
     readonly maxNumberOfProblems: number;
     readonly pylintCategorySeverity: IPylintCategorySeverity;
-    readonly pep8CategorySeverity: IPep8CategorySeverity;
+    readonly pycodestyleCategorySeverity: IPycodestyleCategorySeverity;
     readonly flake8CategorySeverity: Flake8CategorySeverity;
     readonly mypyCategorySeverity: IMypyCategorySeverity;
     prospectorPath: string;
     pylintPath: string;
-    pep8Path: string;
+    pycodestylePath: string;
     pylamaPath: string;
     flake8Path: string;
     pydocstylePath: string;
@@ -275,6 +297,22 @@ export interface ITerminalSettings {
     readonly executeInFileDir: boolean;
     readonly launchArgs: string[];
     readonly activateEnvironment: boolean;
+    readonly activateEnvInCurrentTerminal: boolean;
+}
+
+export interface IExperiments {
+    /**
+     * Return `true` if experiments are enabled, else `false`.
+     */
+    readonly enabled: boolean;
+    /**
+     * Experiments user requested to opt into manually
+     */
+    readonly optInto: string[];
+    /**
+     * Experiments user requested to opt out from manually
+     */
+    readonly optOutFrom: string[];
 }
 
 export type LanguageServerDownloadChannels = 'stable' | 'beta' | 'daily';
@@ -289,6 +327,12 @@ export interface IAnalysisSettings {
     readonly disabled: string[];
     readonly traceLogging: boolean;
     readonly logLevel: LogLevel;
+}
+
+interface IGatherRule {
+    objectName?: string;
+    functionName: string;
+    doesNotModify: string[] | number[];
 }
 
 export interface IDataScienceSettings {
@@ -306,29 +350,42 @@ export interface IDataScienceSettings {
     showCellInputCode: boolean;
     collapseCellInputCodeByDefault: boolean;
     maxOutputSize: number;
+    enableGather?: boolean;
+    gatherToScript?: boolean;
+    gatherRules?: IGatherRule[];
     sendSelectionToInteractiveWindow: boolean;
     markdownRegularExpression: string;
     codeRegularExpression: string;
     allowLiveShare?: boolean;
     errorBackgroundColor: string;
     ignoreVscodeTheme?: boolean;
-    showJupyterVariableExplorer?: boolean;
     variableExplorerExclude?: string;
     liveShareConnectionTimeout?: number;
     decorateCells?: boolean;
     enableCellCodeLens?: boolean;
     askForLargeDataFrames?: boolean;
     enableAutoMoveToNextCell?: boolean;
-    autoPreviewNotebooksInInteractivePane?: boolean;
     allowUnauthorizedRemoteConnection?: boolean;
     askForKernelRestart?: boolean;
     enablePlotViewer?: boolean;
     codeLenses?: string;
+    debugCodeLenses?: string;
     ptvsdDistPath?: string;
     stopOnFirstLineWhileDebugging?: boolean;
     textOutputLimit?: number;
     magicCommandsAsComments?: boolean;
+    stopOnError?: boolean;
     remoteDebuggerPort?: number;
+    colorizeInputBox?: boolean;
+    addGotoCodeLenses?: boolean;
+    useNotebookEditor?: boolean;
+    runMagicCommands?: string;
+    runStartupCommands: string;
+    debugJustMyCode: boolean;
+    defaultCellMarker?: string;
+    verboseLogging?: boolean;
+    themeMatplotlibPlots?: boolean;
+    useWebViewServer?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');
@@ -398,7 +455,7 @@ export interface IHttpClient {
 }
 
 export const IExtensionContext = Symbol('ExtensionContext');
-export interface IExtensionContext extends ExtensionContext { }
+export interface IExtensionContext extends ExtensionContext {}
 
 export const IExtensions = Symbol('IExtensions');
 export interface IExtensions {
@@ -406,7 +463,13 @@ export interface IExtensions {
      * All extensions currently known to the system.
      */
     // tslint:disable-next-line:no-any
-    readonly all: Extension<any>[];
+    readonly all: readonly Extension<any>[];
+
+    /**
+     * An event which fires when `extensions.all` changes. This can happen when extensions are
+     * installed, uninstalled, enabled or disabled.
+     */
+    readonly onDidChange: Event<void>;
 
     /**
      * Get an extension by its full identifier in the form of: `publisher.name`.
@@ -477,8 +540,8 @@ export interface IAsyncDisposable {
  * Stores hash formats
  */
 export interface IHashFormat {
-    'number': number; // If hash format is a number
-    'string': string; // If hash format is a string
+    number: number; // If hash format is a number
+    string: string; // If hash format is a string
 }
 
 /**
@@ -492,7 +555,7 @@ export interface ICryptoUtils {
      * @param data The string to hash
      * @param hashFormat Return format of the hash, number or string
      */
-    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E): IHashFormat[E];
+    createHash<E extends keyof IHashFormat>(data: string, hashFormat: E, algorithm?: 'SHA512' | 'FNV'): IHashFormat[E];
 }
 
 export const IAsyncDisposableRegistry = Symbol('IAsyncDisposableRegistry');
@@ -507,8 +570,8 @@ export interface IAsyncDisposableRegistry extends IAsyncDisposable {
 export type ABExperiments = {
     name: string; // Name of the experiment
     salt: string; // Salt string for the experiment
-    min: number;  // Lower limit for the experiment
-    max: number;  // Upper limit for the experiment
+    min: number; // Lower limit for the experiment
+    max: number; // Upper limit for the experiment
 }[];
 
 /**

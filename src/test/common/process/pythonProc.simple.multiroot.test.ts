@@ -11,11 +11,13 @@ import { Container } from 'inversify';
 import { EOL } from 'os';
 import * as path from 'path';
 import { anything, instance, mock, when } from 'ts-mockito';
-import { ConfigurationTarget, Disposable, OutputChannel, Uri } from 'vscode';
+import { ConfigurationTarget, Disposable, Memento, OutputChannel, Uri } from 'vscode';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { STANDARD_OUTPUT_CHANNEL } from '../../../client/common/constants';
+import { Logger } from '../../../client/common/logger';
+import { PersistentStateFactory } from '../../../client/common/persistentState';
 import { IS_WINDOWS } from '../../../client/common/platform/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../client/common/platform/pathUtils';
@@ -25,25 +27,40 @@ import { CurrentProcess } from '../../../client/common/process/currentProcess';
 import { ProcessLogger } from '../../../client/common/process/logger';
 import { registerTypes as processRegisterTypes } from '../../../client/common/process/serviceRegistry';
 import { IProcessLogger, IPythonExecutionFactory, StdErrError } from '../../../client/common/process/types';
-import { IConfigurationService, ICurrentProcess, IDisposableRegistry, IOutputChannel, IPathUtils, IsWindows } from '../../../client/common/types';
+import {
+    GLOBAL_MEMENTO,
+    IConfigurationService,
+    ICurrentProcess,
+    IDisposableRegistry,
+    ILogger,
+    IMemento,
+    IOutputChannel,
+    IPathUtils,
+    IPersistentStateFactory,
+    IsWindows,
+    WORKSPACE_MEMENTO
+} from '../../../client/common/types';
 import { clearCache } from '../../../client/common/utils/cacheUtils';
 import { OSType } from '../../../client/common/utils/platform';
-import {
-    registerTypes as variablesRegisterTypes
-} from '../../../client/common/variables/serviceRegistry';
+import { registerTypes as variablesRegisterTypes } from '../../../client/common/variables/serviceRegistry';
 import { EnvironmentActivationService } from '../../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../../client/interpreter/activation/types';
 import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../../../client/interpreter/autoSelection/types';
+import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
+import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { ServiceManager } from '../../../client/ioc/serviceManager';
 import { IServiceContainer } from '../../../client/ioc/types';
 import { clearPythonPathInWorkspaceFolder, getExtensionSettings, isOs, isPythonVersion } from '../../common';
 import { MockOutputChannel } from '../../mockClasses';
 import { MockAutoSelectionService } from '../../mocks/autoSelector';
-import {
-    closeActiveWindows, initialize, initializeTest,
-    IS_MULTI_ROOT_TEST
-} from './../../initialize';
+import { MockMemento } from '../../mocks/mementos';
+import { closeActiveWindows, initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initialize';
 
 use(chaiAsPromised);
 
@@ -85,8 +102,23 @@ suite('PythonExecutableService', () => {
         serviceManager.addSingleton<IProcessLogger>(IProcessLogger, ProcessLogger);
         serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
         serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
+        serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+        serviceManager.addSingleton<IPersistentStateFactory>(IPersistentStateFactory, PersistentStateFactory);
+        serviceManager.addSingleton<Memento>(IMemento, MockMemento, GLOBAL_MEMENTO);
+        serviceManager.addSingleton<Memento>(IMemento, MockMemento, WORKSPACE_MEMENTO);
+
+        serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
+        serviceManager.addSingleton<ILogger>(ILogger, Logger);
+
         processRegisterTypes(serviceManager);
         variablesRegisterTypes(serviceManager);
+
+        const mockInterpreterService = mock(InterpreterService);
+        when(mockInterpreterService.hasInterpreters).thenResolve(false);
+        serviceManager.addSingletonInstance<IInterpreterService>(IInterpreterService, instance(mockInterpreterService));
 
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
@@ -119,10 +151,10 @@ suite('PythonExecutableService', () => {
         await expect(promise).to.eventually.be.rejectedWith(StdErrError);
     });
 
-    test('Importing with a valid PYTHONPATH from .env file should succeed', async function () {
+    test('Importing with a valid PYTHONPATH from .env file should succeed', async function() {
         // This test has not been working for many months in Python 2.7 under
         // Windows. Tracked by #2547.
-        if (isOs(OSType.Windows) && await isPythonVersion('2.7')) {
+        if (isOs(OSType.Windows) && (await isPythonVersion('2.7'))) {
             // tslint:disable-next-line:no-invalid-this
             return this.skip();
         }
@@ -134,7 +166,7 @@ suite('PythonExecutableService', () => {
         await expect(promise).to.eventually.have.property('stdout', `Hello${EOL}`);
     });
 
-    test('Known modules such as \'os\' and \'sys\' should be deemed \'installed\'', async () => {
+    test("Known modules such as 'os' and 'sys' should be deemed 'installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const osModuleIsInstalled = pythonExecService.isModuleInstalled('os');
         const sysModuleIsInstalled = pythonExecService.isModuleInstalled('sys');
@@ -142,7 +174,7 @@ suite('PythonExecutableService', () => {
         await expect(sysModuleIsInstalled).to.eventually.equal(true, 'sys module is not installed');
     });
 
-    test('Unknown modules such as \'xyzabc123\' be deemed \'not installed\'', async () => {
+    test("Unknown modules such as 'xyzabc123' be deemed 'not installed'", async () => {
         const pythonExecService = await pythonExecFactory.create({ resource: workspace4PyFile });
         const randomModuleName = `xyz123${new Date().getSeconds()}`;
         const randomModuleIsInstalled = pythonExecService.isModuleInstalled(randomModuleName);

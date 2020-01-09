@@ -9,7 +9,9 @@
 		"no-cond-assign": 0,
 		"no-unused-vars": 1,
 		"no-extra-semi": "warn",
-		"semi": "warn"
+        "semi": "warn",
+        "prettier/prettier": "error"
 	},
-	"extends": "eslint:recommended"
+    "extends": ["eslint:recommended", "prettier"],
+    "plugins": ["prettier"]
 }

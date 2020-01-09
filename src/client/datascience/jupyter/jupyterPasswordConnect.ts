@@ -13,14 +13,14 @@ import { Telemetry } from './../constants';
 
 @injectable()
 export class JupyterPasswordConnect implements IJupyterPasswordConnect {
-
-    constructor(
-        @inject(IApplicationShell) private appShell: IApplicationShell
-    ) {
-    }
+    constructor(@inject(IApplicationShell) private appShell: IApplicationShell) {}
 
     @captureTelemetry(Telemetry.GetPasswordAttempt)
-    public async getPasswordConnectionInfo(url: string, allowUnauthorized: boolean, fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<IJupyterPasswordConnectInfo | undefined> {
+    public async getPasswordConnectionInfo(
+        url: string,
+        allowUnauthorized: boolean,
+        fetchFunction?: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
+    ): Promise<IJupyterPasswordConnectInfo | undefined> {
         // For testing allow for our fetch function to be overridden
         if (!fetchFunction) {
             fetchFunction = nodeFetch.default;
@@ -53,13 +53,17 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
                 sessionCookieName = sessionResult.sessionCookieName;
                 sessionCookieValue = sessionResult.sessionCookieValue;
             }
+        } else {
+            // If userPassword is undefined or '' then the user didn't pick a password. In this case return back that we should just try to connect
+            // like a standard connection. Might be the case where there is no token and no password
+            return { emptyPassword: true, xsrfCookie: '', sessionCookieName: '', sessionCookieValue: '' };
         }
         userPassword = undefined;
 
         // If we found everything return it all back if not, undefined as partial is useless
         if (xsrfCookie && sessionCookieName && sessionCookieValue) {
             sendTelemetryEvent(Telemetry.GetPasswordSuccess);
-            return { xsrfCookie, sessionCookieName, sessionCookieValue };
+            return { xsrfCookie, sessionCookieName, sessionCookieValue, emptyPassword: false };
         } else {
             sendTelemetryEvent(Telemetry.GetPasswordFailure);
             return undefined;
@@ -69,14 +73,14 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // For HTTPS connections respect our allowUnauthorized setting by adding in an agent to enable that on the request
     private addAllowUnauthorized(url: string, allowUnauthorized: boolean, options: nodeFetch.RequestInit): nodeFetch.RequestInit {
         if (url.startsWith('https') && allowUnauthorized) {
-            const requestAgent = new HttpsAgent({rejectUnauthorized: false});
-            return {...options, agent: requestAgent};
+            const requestAgent = new HttpsAgent({ rejectUnauthorized: false });
+            return { ...options, agent: requestAgent };
         }
 
         return options;
     }
 
-    private async getUserPassword() : Promise<string | undefined> {
+    private async getUserPassword(): Promise<string | undefined> {
         // First get the proposed URI from the user
         return this.appShell.showInputBox({
             prompt: localize.DataScience.jupyterSelectPasswordPrompt(),
@@ -85,14 +89,21 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         });
     }
 
-    private async getXSRFToken(url: string, allowUnauthorized: boolean, fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<string | undefined> {
+    private async getXSRFToken(
+        url: string,
+        allowUnauthorized: boolean,
+        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
+    ): Promise<string | undefined> {
         let xsrfCookie: string | undefined;
 
-        const response = await fetchFunction(`${url}login?`, this.addAllowUnauthorized(url, allowUnauthorized, {
-            method: 'get',
-            redirect: 'manual',
-            headers: { Connection: 'keep-alive' }
-        }));
+        const response = await fetchFunction(
+            `${url}login?`,
+            this.addAllowUnauthorized(url, allowUnauthorized, {
+                method: 'get',
+                redirect: 'manual',
+                headers: { Connection: 'keep-alive' }
+            })
+        );
 
         if (response.ok) {
             const cookies = this.getCookies(response);
@@ -108,11 +119,13 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
     // This workflow can be seen by running fiddler and hitting the login page with a browser
     // First you need a get at the login page to get the xsrf token, then you send back that token along with the password in a post
     // That will return back the session cookie. This session cookie then needs to be added to our requests and websockets for @jupyterlab/services
-    private async getSessionCookie(url: string,
+    private async getSessionCookie(
+        url: string,
         allowUnauthorized: boolean,
         xsrfCookie: string,
         password: string,
-        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>): Promise<{sessionCookieName: string | undefined; sessionCookieValue: string | undefined}> {
+        fetchFunction: (url: nodeFetch.RequestInfo, init?: nodeFetch.RequestInit) => Promise<nodeFetch.Response>
+    ): Promise<{ sessionCookieName: string | undefined; sessionCookieValue: string | undefined }> {
         let sessionCookieName: string | undefined;
         let sessionCookieValue: string | undefined;
         // Create the form params that we need
@@ -120,12 +133,15 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
         postParams.append('_xsrf', xsrfCookie);
         postParams.append('password', password);
 
-        const response = await fetchFunction(`${url}login?`, this.addAllowUnauthorized(url, allowUnauthorized, {
-            method: 'post',
-            headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' },
-            body: postParams.toString(),
-            redirect: 'manual'
-        }));
+        const response = await fetchFunction(
+            `${url}login?`,
+            this.addAllowUnauthorized(url, allowUnauthorized, {
+                method: 'post',
+                headers: { Cookie: `_xsrf=${xsrfCookie}`, Connection: 'keep-alive', 'content-type': 'application/x-www-form-urlencoded;charset=UTF-8' },
+                body: postParams.toString(),
+                redirect: 'manual'
+            })
+        );
 
         // Now from this result we need to extract the session cookie
         if (response.status === 302) {
@@ -138,7 +154,7 @@ export class JupyterPasswordConnect implements IJupyterPasswordConnect {
             }
         }
 
-        return {sessionCookieName, sessionCookieValue};
+        return { sessionCookieName, sessionCookieValue };
     }
 
     private getCookies(response: nodeFetch.Response): Map<string, string> {

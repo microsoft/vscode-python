@@ -7,6 +7,8 @@ import {
     CancellationToken,
     CompletionItemProvider,
     ConfigurationChangeEvent,
+    DebugAdapterDescriptorFactory,
+    DebugAdapterTrackerFactory,
     DebugConfiguration,
     DebugConfigurationProvider,
     DebugConsole,
@@ -23,6 +25,7 @@ import {
     MessageItem,
     MessageOptions,
     OpenDialogOptions,
+    OutputChannel,
     Progress,
     ProgressOptions,
     QuickPick,
@@ -46,6 +49,7 @@ import {
     TreeViewOptions,
     Uri,
     ViewColumn,
+    WindowState,
     WorkspaceConfiguration,
     WorkspaceEdit,
     WorkspaceFolder,
@@ -61,6 +65,12 @@ import { ICommandNameArgumentTypeMapping } from './commands';
 
 export const IApplicationShell = Symbol('IApplicationShell');
 export interface IApplicationShell {
+    /**
+     * An [event](#Event) which fires when the focus state of the current window
+     * changes. The value of the event represents whether the window is focused.
+     */
+    readonly onDidChangeWindowState: Event<WindowState>;
+
     showInformationMessage(message: string, ...items: string[]): Thenable<string | undefined>;
 
     /**
@@ -346,12 +356,18 @@ export interface IApplicationShell {
      * @returns a [TreeView](#TreeView).
      */
     createTreeView<T>(viewId: string, options: TreeViewOptions<T>): TreeView<T>;
+
+    /**
+     * Creates a new [output channel](#OutputChannel) with the given name.
+     *
+     * @param name Human-readable string which will be used to represent the channel in the UI.
+     */
+    createOutputChannel(name: string): OutputChannel;
 }
 
 export const ICommandManager = Symbol('ICommandManager');
 
 export interface ICommandManager {
-
     /**
      * Registers a command that can be invoked via a keyboard shortcut,
      * a menu item, an action, or directly.
@@ -364,7 +380,11 @@ export interface ICommandManager {
      * @param thisArg The `this` context used when invoking the handler function.
      * @return Disposable which unregisters this command on disposal.
      */
-    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(command: E, callback: (...args: U) => any, thisArg?: any): Disposable;
+    registerCommand<E extends keyof ICommandNameArgumentTypeMapping, U extends ICommandNameArgumentTypeMapping[E]>(
+        command: E,
+        callback: (...args: U) => any,
+        thisArg?: any
+    ): Disposable;
 
     /**
      * Registers a text editor command that can be invoked via a keyboard shortcut,
@@ -567,7 +587,6 @@ export interface IDocumentManager {
      * @return A new decoration type instance.
      */
     createTextEditorDecorationType(options: DecorationRenderOptions): TextEditorDecorationType;
-
 }
 
 export const IWorkspaceService = Symbol('IWorkspaceService');
@@ -765,6 +784,26 @@ export interface IDebugService {
     registerDebugConfigurationProvider(debugType: string, provider: DebugConfigurationProvider): Disposable;
 
     /**
+     * Register a [debug adapter descriptor factory](#DebugAdapterDescriptorFactory) for a specific debug type.
+     * An extension is only allowed to register a DebugAdapterDescriptorFactory for the debug type(s) defined by the extension. Otherwise an error is thrown.
+     * Registering more than one DebugAdapterDescriptorFactory for a debug type results in an error.
+     *
+     * @param debugType The debug type for which the factory is registered.
+     * @param factory The [debug adapter descriptor factory](#DebugAdapterDescriptorFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable;
+
+    /**
+     * Register a debug adapter tracker factory for the given debug type.
+     *
+     * @param debugType The debug type for which the factory is registered or '*' for matching all debug types.
+     * @param factory The [debug adapter tracker factory](#DebugAdapterTrackerFactory) to register.
+     * @return A [disposable](#Disposable) that unregisters this factory when being disposed.
+     */
+    registerDebugAdapterTrackerFactory(debugType: string, factory: DebugAdapterTrackerFactory): Disposable;
+
+    /**
      * Start debugging by using either a named launch or named compound configuration,
      * or by directly passing a [DebugConfiguration](#DebugConfiguration).
      * The named configurations are looked up in '.vscode/launch.json' found in the given folder.
@@ -854,7 +893,7 @@ export interface IApplicationEnvironment {
      * @type {string}
      * @memberof IApplicationShell
      */
-    readonly shell: string | undefined;
+    readonly shell: string;
     /**
      * Gets the vscode channel (whether 'insiders' or 'stable').
      */
@@ -866,6 +905,10 @@ export interface IApplicationEnvironment {
      * @memberof IApplicationShell
      */
     readonly extensionChannel: Channel;
+    /**
+     * The version of the editor.
+     */
+    readonly vscodeVersion: string;
 }
 
 export const IWebPanelMessageListener = Symbol('IWebPanelMessageListener');
@@ -898,7 +941,7 @@ export type WebPanelMessage = {
 // Wraps the VS Code webview panel
 export const IWebPanel = Symbol('IWebPanel');
 export interface IWebPanel {
-    title: string;
+    setTitle(val: string): void;
     /**
      * Makes the webpanel show up.
      * @return A Promise that can be waited on
@@ -923,6 +966,23 @@ export interface IWebPanel {
      * Indicates if the webview has the focus or not.
      */
     isActive(): boolean;
+    /**
+     * Updates the current working directory for serving up files.
+     * @param cwd
+     */
+    updateCwd(cwd: string): void;
+}
+
+export interface IWebPanelOptions {
+    viewColumn: ViewColumn;
+    listener: IWebPanelMessageListener;
+    title: string;
+    rootPath: string;
+    scripts: string[];
+    startHttpServer: boolean;
+    cwd: string;
+    // tslint:disable-next-line: no-any
+    settings?: any;
 }
 
 // Wraps the VS Code api for creating a web panel
@@ -930,12 +990,12 @@ export const IWebPanelProvider = Symbol('IWebPanelProvider');
 export interface IWebPanelProvider {
     /**
      * Creates a new webpanel
-     * @param listener for messages from the panel
-     * @param title: title of the panel when it shows
-     * @param: mainScriptPath: full path in the output folder to the script
-     * @return A IWebPanel that can be used to show html pages.
+     *
+     * @param {IWebPanelOptions} options - params for creating an IWebPanel
+     * @returns {IWebPanel}
+     * @memberof IWebPanelProvider
      */
-    create(viewColumn: ViewColumn, listener: IWebPanelMessageListener, title: string, mainScriptPath: string, embeddedCss?: string, settings?: any): IWebPanel;
+    create(options: IWebPanelOptions): Promise<IWebPanel>;
 }
 
 // Wraps the vsls liveshare API
@@ -974,3 +1034,11 @@ export interface ILanguageService {
 }
 
 export type Channel = 'stable' | 'insiders';
+
+/**
+ * Wraps the `ActiveResourceService` API class. Created for injecting and mocking class methods in testing
+ */
+export const IActiveResourceService = Symbol('IActiveResourceService');
+export interface IActiveResourceService {
+    getActiveResource(): Resource;
+}

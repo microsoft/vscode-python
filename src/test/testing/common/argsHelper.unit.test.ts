@@ -19,9 +19,7 @@ suite('Unit Tests - Arguments Helper', () => {
         const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         const logger = typeMoq.Mock.ofType<ILogger>();
 
-        serviceContainer
-            .setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny()))
-            .returns(() => logger.object);
+        serviceContainer.setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny())).returns(() => logger.object);
 
         argsHelper = new ArgumentsHelper(serviceContainer.object);
     });

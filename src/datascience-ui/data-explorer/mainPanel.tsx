@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import './mainPanel.css';
 
 import { JSONArray, JSONObject } from '@phosphor/coreutils';
 import * as React from 'react';
@@ -14,8 +15,9 @@ import {
     IDataViewerMapping,
     IGetRowsResponse
 } from '../../client/datascience/data-viewing/types';
-import { IJupyterVariable } from '../../client/datascience/types';
-import { getLocString } from '../react-common/locReactSide';
+import { SharedMessages } from '../../client/datascience/messages';
+import { IDataScienceExtraSettings, IJupyterVariable } from '../../client/datascience/types';
+import { getLocString, storeLocStrings } from '../react-common/locReactSide';
 import { IMessageHandler, PostOffice } from '../react-common/postOffice';
 import { Progress } from '../react-common/progress';
 import { StyleInjector } from '../react-common/styleInjector';
@@ -24,8 +26,6 @@ import { ISlickGridAdd, ISlickRow, ReactSlickGrid } from './reactSlickGrid';
 import { generateTestData } from './testData';
 
 // Our css has to come after in order to override body styles
-import './mainPanel.css';
-
 export interface IMainPanelProps {
     skipDefault?: boolean;
     baseTheme: string;
@@ -40,6 +40,8 @@ interface IMainPanelState {
     totalRowCount: number;
     filters: {};
     indexColumn: string;
+    styleReady: boolean;
+    settings?: IDataScienceExtraSettings;
 }
 
 export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState> implements IMessageHandler {
@@ -51,7 +53,8 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     private rowFetchSizeSubsequent: number = 0;
     private rowFetchSizeAll: number = 0;
     // Just used for testing.
-    private grid: React.Ref<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private grid: React.RefObject<ReactSlickGrid> = React.createRef<ReactSlickGrid>();
+    private updateTimeout?: NodeJS.Timer | number;
 
     // tslint:disable-next-line:max-func-body-length
     constructor(props: IMainPanelProps, _state: IMainPanelState) {
@@ -60,26 +63,28 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         if (!this.props.skipDefault) {
             const data = generateTestData(5000);
             this.state = {
-                gridColumns: data.columns.map(c => { return {...c, formatter: cellFormatterFunc }; }),
+                gridColumns: data.columns.map(c => {
+                    return { ...c, formatter: cellFormatterFunc };
+                }),
                 gridRows: [],
                 totalRowCount: data.rows.length,
-                fetchedRowCount: 0,
+                fetchedRowCount: -1,
                 filters: {},
-                indexColumn: data.primaryKeys[0]
+                indexColumn: data.primaryKeys[0],
+                styleReady: false
             };
 
             // Fire off a timer to mimic dynamic loading
-            setTimeout(() => {
-                this.handleGetAllRowsResponse({data: data.rows});
-            }, 1000);
+            setTimeout(() => this.handleGetAllRowsResponse({ data: data.rows }), 1000);
         } else {
             this.state = {
                 gridColumns: [],
                 gridRows: [],
                 totalRowCount: 0,
-                fetchedRowCount: 0,
+                fetchedRowCount: -1,
                 filters: {},
-                indexColumn: 'index'
+                indexColumn: 'index',
+                styleReady: false
             };
         }
     }
@@ -98,6 +103,10 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
     }
 
     public render = () => {
+        if (!this.state.settings) {
+            return <div className="main-panel" />;
+        }
+
         // Send our done message if we haven't yet and we just reached full capacity. Do it here so we
         // can guarantee our render will run before somebody checks our rendered output.
         if (this.state.totalRowCount && this.state.totalRowCount === this.state.fetchedRowCount && !this.sentDone) {
@@ -108,15 +117,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         const progressBar = this.state.totalRowCount > this.state.fetchedRowCount ? <Progress /> : undefined;
 
         return (
-            <div className='main-panel' ref={this.container}>
-                <StyleInjector
-                    expectingDark={this.props.baseTheme !== 'vscode-light'}
-                    postOffice={this.postOffice} />
+            <div className="main-panel" ref={this.container}>
+                <StyleInjector onReady={this.saveReadyState} settings={this.state.settings} expectingDark={this.props.baseTheme !== 'vscode-light'} postOffice={this.postOffice} />
                 {progressBar}
-                {this.state.totalRowCount > 0 && this.renderGrid()}
+                {this.state.totalRowCount > 0 && this.state.styleReady && this.renderGrid()}
             </div>
         );
-    }
+    };
 
     // tslint:disable-next-line:no-any
     public handleMessage = (msg: string, payload?: any) => {
@@ -133,12 +140,37 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 this.handleGetRowChunkResponse(payload as IGetRowsResponse);
                 break;
 
+            case SharedMessages.UpdateSettings:
+                this.updateSettings(payload);
+                break;
+
+            case SharedMessages.LocInit:
+                this.initializeLoc(payload);
+                break;
+
             default:
                 break;
         }
 
         return false;
+    };
+
+    private initializeLoc(content: string) {
+        const locJSON = JSON.parse(content);
+        storeLocStrings(locJSON);
     }
+
+    private updateSettings(content: string) {
+        const newSettingsJSON = JSON.parse(content);
+        const newSettings = newSettingsJSON as IDataScienceExtraSettings;
+        this.setState({
+            settings: newSettings
+        });
+    }
+
+    private saveReadyState = () => {
+        this.setState({ styleReady: true });
+    };
 
     private renderGrid() {
         const filterRowsText = getLocString('DataScience.filterRowsButton', 'Filter Rows');
@@ -168,15 +200,13 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
                 const initialRows: ISlickRow[] = [];
                 const indexColumn = variable.indexColumn ? variable.indexColumn : 'index';
 
-                this.setState(
-                    {
-                        gridColumns: columns,
-                        gridRows: initialRows,
-                        totalRowCount,
-                        fetchedRowCount: initialRows.length,
-                        indexColumn: indexColumn
-                    }
-                );
+                this.setState({
+                    gridColumns: columns,
+                    gridRows: initialRows,
+                    totalRowCount,
+                    fetchedRowCount: initialRows.length,
+                    indexColumn: indexColumn
+                });
 
                 // Compute our row fetch sizes based on the number of columns
                 this.rowFetchSizeAll = Math.round(CellFetchAllLimit / columns.length);
@@ -205,27 +235,26 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         // Instead, do them one at a time.
         const chunkEnd = startIndex + Math.min(this.rowFetchSizeFirst, endIndex);
         const chunkStart = startIndex;
-        this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+        this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
     }
 
     private handleGetAllRowsResponse(response: JSONObject) {
-        const rows = response.data ? response.data as JSONArray : [];
+        const rows = response.data ? (response.data as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
 
         // Update our fetched count and actual rows
-        this.setState(
-            {
-                gridRows: this.state.gridRows.concat(normalized),
-                fetchedRowCount: this.state.totalRowCount
-            });
+        this.setState({
+            gridRows: this.state.gridRows.concat(normalized),
+            fetchedRowCount: this.state.totalRowCount
+        });
 
         // Add all of these rows to the grid
-        this.gridAddEvent.notify({newRows: normalized});
+        this.updateRows(normalized);
     }
 
     private handleGetRowChunkResponse(response: IGetRowsResponse) {
         // We have a new fetched row count
-        const rows = response.rows.data ? response.rows.data as JSONArray : [];
+        const rows = response.rows.data ? (response.rows.data as JSONArray) : [];
         const normalized = this.normalizeRows(rows);
         const newFetched = this.state.fetchedRowCount + (response.end - response.start);
 
@@ -241,19 +270,19 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         });
 
         // Tell our grid about the new ros
-        this.gridAddEvent.notify({newRows: normalized});
+        this.updateRows(normalized);
 
         // Get the next chunk
         if (newFetched < this.state.totalRowCount) {
             const chunkStart = response.end;
             const chunkEnd = Math.min(chunkStart + this.rowFetchSizeSubsequent, this.state.totalRowCount);
-            this.sendMessage(DataViewerMessages.GetRowsRequest, {start: chunkStart, end: chunkEnd});
+            this.sendMessage(DataViewerMessages.GetRowsRequest, { start: chunkStart, end: chunkEnd });
         }
     }
 
-    private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[]  {
+    private generateColumns(variable: IJupyterVariable): Slick.Column<Slick.SlickData>[] {
         if (variable.columns) {
-            return variable.columns.map((c: {key: string; type: string}, i: number) => {
+            return variable.columns.map((c: { key: string; type: string }, i: number) => {
                 return {
                     type: c.type,
                     field: c.key.toString(),
@@ -284,4 +313,16 @@ export class MainPanel extends React.Component<IMainPanelProps, IMainPanelState>
         this.postOffice.sendMessage<M, T>(type, payload);
     }
 
+    private updateRows(newRows: ISlickRow[]) {
+        if (this.updateTimeout !== undefined) {
+            clearTimeout(this.updateTimeout as any);
+            this.updateTimeout = undefined;
+        }
+        if (!this.grid.current) {
+            // This might happen before we render the grid. Postpone till then.
+            this.updateTimeout = setTimeout(() => this.updateRows(newRows), 10);
+        } else {
+            this.gridAddEvent.notify({ newRows });
+        }
+    }
 }

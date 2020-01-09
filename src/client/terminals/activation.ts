@@ -5,10 +5,38 @@
 
 import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
-import { ITerminalManager, IWorkspaceService } from '../common/application/types';
+import { IExtensionSingleActivationService } from '../activation/types';
+import { IActiveResourceService, ICommandManager, ITerminalManager } from '../common/application/types';
+import { CODE_RUNNER_EXTENSION_ID } from '../common/constants';
 import { ITerminalActivator } from '../common/terminal/types';
-import { IDisposable, IDisposableRegistry } from '../common/types';
+import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
+import { noop } from '../common/utils/misc';
+import { sendTelemetryEvent } from '../telemetry';
+import { EventName } from '../telemetry/constants';
 import { ITerminalAutoActivation } from './types';
+
+@injectable()
+export class ExtensionActivationForTerminalActivation implements IExtensionSingleActivationService {
+    constructor(
+        @inject(ICommandManager) private commands: ICommandManager,
+        @inject(IExtensions) private extensions: IExtensions,
+        @inject(IDisposableRegistry) disposables: IDisposable[]
+    ) {
+        disposables.push(this.extensions.onDidChange(this.activate.bind(this)));
+    }
+
+    public async activate(): Promise<void> {
+        const isInstalled = this.isCodeRunnerInstalled();
+        // Hide the play icon if code runner is installed, otherwise display the play icon.
+        this.commands.executeCommand('setContext', 'python.showPlayIcon', !isInstalled).then(noop, noop);
+        sendTelemetryEvent(EventName.PLAY_BUTTON_ICON_DISABLED, undefined, { disabled: isInstalled });
+    }
+
+    private isCodeRunnerInstalled(): boolean {
+        const extension = this.extensions.getExtension(CODE_RUNNER_EXTENSION_ID)!;
+        return extension === undefined ? false : true;
+    }
+}
 
 @injectable()
 export class TerminalAutoActivation implements ITerminalAutoActivation {
@@ -17,7 +45,7 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         @inject(ITerminalManager) private readonly terminalManager: ITerminalManager,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(ITerminalActivator) private readonly activator: ITerminalActivator,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService
+        @inject(IActiveResourceService) private readonly activeResourceService: IActiveResourceService
     ) {
         disposableRegistry.push(this);
     }
@@ -36,10 +64,6 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
     private async activateTerminal(terminal: Terminal): Promise<void> {
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
-        const workspaceFolder =
-            this.workspaceService.hasWorkspaceFolders && this.workspaceService.workspaceFolders!.length > 0
-                ? this.workspaceService.workspaceFolders![0].uri
-                : undefined;
-        await this.activator.activateEnvironmentInTerminal(terminal, workspaceFolder);
+        await this.activator.activateEnvironmentInTerminal(terminal, this.activeResourceService.getActiveResource());
     }
 }

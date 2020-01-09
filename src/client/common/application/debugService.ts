@@ -4,7 +4,19 @@
 'use strict';
 
 import { injectable } from 'inversify';
-import { Breakpoint, BreakpointsChangeEvent, debug, DebugConfiguration, DebugConsole, DebugSession, DebugSessionCustomEvent, Disposable, Event, WorkspaceFolder } from 'vscode';
+import {
+    Breakpoint,
+    BreakpointsChangeEvent,
+    debug,
+    DebugAdapterDescriptorFactory,
+    DebugConfiguration,
+    DebugConsole,
+    DebugSession,
+    DebugSessionCustomEvent,
+    Disposable,
+    Event,
+    WorkspaceFolder
+} from 'vscode';
 import { IDebugService } from './types';
 
 @injectable()
@@ -38,6 +50,10 @@ export class DebugService implements IDebugService {
     public registerDebugConfigurationProvider(debugType: string, provider: any): Disposable {
         return debug.registerDebugConfigurationProvider(debugType, provider);
     }
+    // tslint:disable-next-line:no-any
+    public registerDebugAdapterTrackerFactory(debugType: string, provider: any): Disposable {
+        return debug.registerDebugAdapterTrackerFactory(debugType, provider);
+    }
     public startDebugging(folder: WorkspaceFolder | undefined, nameOrConfiguration: string | DebugConfiguration, parentSession?: DebugSession): Thenable<boolean> {
         return debug.startDebugging(folder, nameOrConfiguration, parentSession);
     }
@@ -46,5 +62,8 @@ export class DebugService implements IDebugService {
     }
     public removeBreakpoints(breakpoints: Breakpoint[]): void {
         debug.removeBreakpoints(breakpoints);
+    }
+    public registerDebugAdapterDescriptorFactory(debugType: string, factory: DebugAdapterDescriptorFactory): Disposable {
+        return debug.registerDebugAdapterDescriptorFactory(debugType, factory);
     }
 }

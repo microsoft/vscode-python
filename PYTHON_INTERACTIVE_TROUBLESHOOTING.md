@@ -3,50 +3,34 @@
 This document is intended to help troubleshoot problems in the Python Interactive Window.
 
 ---
-## Jupyter Not Installed
-This error can happen when you 
+## Jupyter Not Starting
+This error can happen when
 
-* Don't have Jupyter installed
-* Have picked the wrong Python environment (one that doesn't have Jupyter installed).
+* Jupyter is out of date
+* Jupyter is not installed
+* You picked the wrong Python environment (one that doesn't have Jupyter installed).
 
-### The first step is to verify you are running the Python environment you want. 
+### The first step is to verify you are running the Python environment you want.
 
-The python you're using is picked with the selection dropdown on the bottom left of the VS Code window:
+The Python you're using is picked with the selection dropdown on the bottom left of the VS Code window:
 
 ![selector](resources/PythonSelector.png)
 
-To verify this version of python supports Jupyter notebooks, start a 'Python: REPL' from the command palette
-and then type in the following code:
+### The second step is to check that jupyter isn't giving any errors on startup.
 
-```python
-import jupyter_core
-import notebook
-jupyter_core.version_info
-notebook.version_info
-```
-If any of these commands fail, the python you have selected doesn't support launching jupyter notebooks.
+Run the following command from an environment that matches the Python you selected:
+``` python -m jupyter notebook --version ```
 
-Failures would look something like:
+If this command shows any warnings, you need to upgrade or fix the warnings to continue with this version of Python.
+If this command says 'no module named jupyter', you need to install Jupyter.
 
-```
->>> import jupyter
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-ImportError: No module named jupyter
->>> import notebook
-Traceback (most recent call last):
-  File "<stdin>", line 1, in <module>
-ImportError: No module named notebook
->>>
-```
-
-### The second step (if changing the Python version doesn't work) is to install Jupyter
+### How to install Jupyter
 
 You can do this in a number of different ways:
 
 #### Anaconda
 
-Anaconda is a popular Python distribution. It makes it super easy to get Jupyter up and running. 
+Anaconda is a popular Python distribution. It makes it super easy to get Jupyter up and running.
 
 If you're already using Anaconda, follow these steps to get Jupyter
 1. Start anaconda environment
@@ -60,7 +44,7 @@ https://www.anaconda.com/download
 
 #### Pip
 
-You can also install Jupyter using pip. 
+You can also install Jupyter using pip.
 
 1. python -m pip install --upgrade pip
 1. python -m pip install jupyter

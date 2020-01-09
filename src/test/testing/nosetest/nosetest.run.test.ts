@@ -7,9 +7,12 @@ import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { IProcessServiceFactory } from '../../../client/common/process/types';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { ICondaService } from '../../../client/interpreter/contracts';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
+import { InterpreterHashProvider } from '../../../client/interpreter/locators/services/hashProvider';
+import { InterpeterHashProviderFactory } from '../../../client/interpreter/locators/services/hashProviderFactory';
+import { InterpreterFilter } from '../../../client/interpreter/locators/services/interpreterFilter';
+import { WindowsStoreInterpreter } from '../../../client/interpreter/locators/services/windowsStoreInterpreter';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory, TestsToRun } from '../../../client/testing/common/types';
 import { rootWorkspaceUri, updateSetting } from '../../common';
@@ -19,10 +22,7 @@ import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initiali
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
 const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
-const filesToDelete = [
-    path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
-];
+const filesToDelete = [path.join(UNITTEST_TEST_FILES_PATH, '.noseids'), path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - nose - run against actual python process', () => {
@@ -62,16 +62,23 @@ suite('Unit Tests - nose - run against actual python process', () => {
         ioc.registerVariableTypes();
 
         ioc.registerMockProcessTypes();
+        ioc.registerMockInterpreterTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        ioc.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
+
+        ioc.serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
+        ioc.serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
+        ioc.serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
+        ioc.serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
     }
 
     async function injectTestDiscoveryOutput(outputFileName: string) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (args.indexOf('--collect-only') >= 0) {
                 callback({
-                    out: fs.readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8').replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, UNITTEST_TEST_FILES_PATH),
+                    out: fs
+                        .readFileSync(path.join(UNITTEST_TEST_FILES_PATH, outputFileName), 'utf8')
+                        .replace(/\/Users\/donjayamanne\/.vscode\/extensions\/pythonVSCode\/src\/test\/pythonFiles\/testFiles\/noseFiles/g, UNITTEST_TEST_FILES_PATH),
                     source: 'stdout'
                 });
             }
@@ -79,7 +86,7 @@ suite('Unit Tests - nose - run against actual python process', () => {
     }
 
     async function injectTestRunOutput(outputFileName: string, failedOutput: boolean = false) {
-        const procService = await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create() as MockProcessService;
+        const procService = (await ioc.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create()) as MockProcessService;
         procService.onExecObservable((_file, args, _options, callback) => {
             if (failedOutput && args.indexOf('--failed') === -1) {
                 return;

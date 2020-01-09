@@ -10,15 +10,17 @@ import { traceDecorators } from '../../common/logger';
 import { IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import { Common, Interpreters } from '../../common/utils/localize';
-import { IInterpreterLocatorProgressService, InterpreterLocatorProgressHandler } from '../contracts';
+import { IInterpreterLocatorProgressHandler, IInterpreterLocatorProgressService } from '../contracts';
 
 @injectable()
-export class InterpreterLocatorProgressStatubarHandler implements InterpreterLocatorProgressHandler {
+export class InterpreterLocatorProgressStatubarHandler implements IInterpreterLocatorProgressHandler {
     private deferred: Deferred<void> | undefined;
     private isFirstTimeLoadingInterpreters = true;
-    constructor(@inject(IApplicationShell) private readonly shell: IApplicationShell,
+    constructor(
+        @inject(IApplicationShell) private readonly shell: IApplicationShell,
         @inject(IInterpreterLocatorProgressService) private readonly progressService: IInterpreterLocatorProgressService,
-        @inject(IDisposableRegistry) private readonly disposables: Disposable[]) { }
+        @inject(IDisposableRegistry) private readonly disposables: Disposable[]
+    ) {}
     public register() {
         this.progressService.onRefreshing(() => this.showProgress(), this, this.disposables);
         this.progressService.onRefreshed(() => this.hideProgress(), this, this.disposables);

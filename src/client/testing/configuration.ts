@@ -11,10 +11,7 @@ import { EventName } from '../telemetry/constants';
 import { TestConfiguringTelemetry, TestTool } from '../telemetry/types';
 import { BufferedTestConfigSettingsService } from './common/services/configSettingService';
 import { ITestsHelper, UnitTestProduct } from './common/types';
-import {
-    ITestConfigSettingsService, ITestConfigurationManager,
-    ITestConfigurationManagerFactory, ITestConfigurationService
-} from './types';
+import { ITestConfigSettingsService, ITestConfigurationManager, ITestConfigurationManagerFactory, ITestConfigurationService } from './types';
 
 @injectable()
 export class UnitTestConfigurationService implements ITestConfigurationService {
@@ -43,25 +40,27 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         }
     }
     public async selectTestRunner(placeHolderMessage: string): Promise<UnitTestProduct | undefined> {
-        const items = [{
-            label: 'unittest',
-            product: Product.unittest,
-            description: 'Standard Python test framework',
-            detail: 'https://docs.python.org/3/library/unittest.html'
-        },
-        {
-            label: 'pytest',
-            product: Product.pytest,
-            description: 'pytest framework',
-            // tslint:disable-next-line:no-http-string
-            detail: 'http://docs.pytest.org/'
-        },
-        {
-            label: 'nose',
-            product: Product.nosetest,
-            description: 'nose framework',
-            detail: 'https://nose.readthedocs.io/'
-        }];
+        const items = [
+            {
+                label: 'unittest',
+                product: Product.unittest,
+                description: 'Standard Python test framework',
+                detail: 'https://docs.python.org/3/library/unittest.html'
+            },
+            {
+                label: 'pytest',
+                product: Product.pytest,
+                description: 'pytest framework',
+                // tslint:disable-next-line:no-http-string
+                detail: 'http://docs.pytest.org/'
+            },
+            {
+                label: 'nose',
+                product: Product.nosetest,
+                description: 'nose framework',
+                detail: 'https://nose.readthedocs.io/'
+            }
+        ];
         const options = {
             ignoreFocusOut: true,
             matchOnDescription: true,
@@ -70,7 +69,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         };
         const selectedTestRunner = await this.appShell.showQuickPick(items, options);
         // tslint:disable-next-line:prefer-type-cast
-        return selectedTestRunner ? selectedTestRunner.product as UnitTestProduct : undefined;
+        return selectedTestRunner ? (selectedTestRunner.product as UnitTestProduct) : undefined;
     }
     public async enableTest(wkspace: Uri, product: UnitTestProduct): Promise<void> {
         const factory = this.serviceContainer.get<ITestConfigurationManagerFactory>(ITestConfigurationManagerFactory);
@@ -79,12 +78,7 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
     }
 
     public async promptToEnableAndConfigureTestFramework(wkspace: Uri) {
-        await this._promptToEnableAndConfigureTestFramework(
-            wkspace,
-            undefined,
-            false,
-            'commandpalette'
-        );
+        await this._promptToEnableAndConfigureTestFramework(wkspace, undefined, false, 'commandpalette');
     }
 
     private _enableTest(wkspace: Uri, configMgr: ITestConfigurationManager) {
@@ -92,12 +86,14 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
         if (pythonConfig.get<boolean>('testing.promptToConfigure')) {
             return configMgr.enable();
         }
-        return pythonConfig.update('testing.promptToConfigure', undefined).then(() => {
-            return configMgr.enable();
-        }, reason => {
-            return configMgr.enable()
-                .then(() => Promise.reject(reason));
-        });
+        return pythonConfig.update('testing.promptToConfigure', undefined).then(
+            () => {
+                return configMgr.enable();
+            },
+            reason => {
+                return configMgr.enable().then(() => Promise.reject(reason));
+            }
+        );
     }
 
     private async _promptToEnableAndConfigureTestFramework(
@@ -126,7 +122,8 @@ export class UnitTestConfigurationService implements ITestConfigurationService {
                 // Configure everything before enabling.
                 // Cuz we don't want the test engine (in main.ts file - tests get discovered when config changes are detected)
                 // to start discovering tests when tests haven't been configured properly.
-                await configMgr.configure(wkspace)
+                await configMgr
+                    .configure(wkspace)
                     .then(() => this._enableTest(wkspace, configMgr))
                     .catch(reason => {
                         return this._enableTest(wkspace, configMgr).then(() => Promise.reject(reason));

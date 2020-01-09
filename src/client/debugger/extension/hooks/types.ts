@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugSession, DebugSessionCustomEvent } from 'vscode';
+import { DebugConfiguration, DebugSession, DebugSessionCustomEvent } from 'vscode';
 import { AttachRequestArguments, LaunchRequestArguments } from '../../types';
 
 export const IDebugSessionEventHandlers = Symbol('IDebugSessionEventHandlers');
@@ -57,5 +57,5 @@ export type ChildProcessLaunchData = {
 
 export const IChildProcessAttachService = Symbol('IChildProcessAttachService');
 export interface IChildProcessAttachService {
-    attach(data: ChildProcessLaunchData, parentSession: DebugSession): Promise<void>;
+    attach(data: ChildProcessLaunchData | (AttachRequestArguments & DebugConfiguration), parentSession: DebugSession): Promise<void>;
 }

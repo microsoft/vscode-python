@@ -5,9 +5,8 @@
 * run `python3 -m pip install --user -r tpn/requirements.txt`
 
 
-# Release candidate (Tuesday, XXX XX)
+# Release candidate (Monday, XXX XX)
 
-- [ ] Ensure all new features are tracked via telemetry
 - [ ] Announce the code freeze (not just to team but also to ptvsd and language server)
 - [ ] Update master for the release
    - [ ] Create a branch against `master` for a pull request
@@ -20,6 +19,7 @@
       - [ ] Copy over the "Thanks" section from the previous release
       - [ ] Make sure the "Thanks" section is up-to-date (e.g. compare to versions in requirements.json)
       - [ ] Touch up news entries (e.g. add missing periods)
+      - [ ] Check the Markdown rendering to make sure everything looks good
       - [ ] Add any relevant news entries for ptvsd and the language server if they were updated
    - [ ] Update [`ThirdPartyNotices-Distribution.txt`](https://github.com/Microsoft/vscode-python/blob/master/ThirdPartyNotices-Distribution.txt) by running [`tpn`](https://github.com/Microsoft/vscode-python/tree/master/tpn) (typically `python tpn --npm package-lock.json --npm-overrides package.datascience-ui.dependencies.json --config tpn/distribution.toml ThirdPartyNotices-Distribution.txt`)
       * for each failure:
@@ -58,7 +58,7 @@
 - [ ] Ask CTI to test the release candidate
 
 
-# Final (Tuesday, XXX XX)
+# Final (Monday, XXX XX)
 
 ## Preparation
 
@@ -89,9 +89,9 @@
 - [ ] Merge `release` back into `master`
 
 ## Clean up after _this_ release
-- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?utf8=%E2%9C%93&q=is%3Aopen+label%3A%22info+needed%22+sort%3Acreated-asc+-label%3A%22data+science%22) and close any that have no activity for over a month
+- [ ] Go through [`info needed` issues](https://github.com/Microsoft/vscode-python/issues?q=is%3Aopen+label%3A%22info+needed%22+-label%3A%22data+science%22+sort%3Aupdated-asc) and close any that have no activity for over a month
 - [ ] GDPR bookkeeping
 
 ## Prep for the _next_ release
-- [ ] Create a new [release plan](https://github.com/Microsoft/vscode-python/edit/master/.github/release_plan.md)
+- [ ] Create a new [release plan](https://raw.githubusercontent.com/microsoft/vscode-python/master/.github/release_plan.md)
 - [ ] [(Un-)pin](https://help.github.com/en/articles/pinning-an-issue-to-your-repository) [release plan issues](https://github.com/Microsoft/vscode-python/labels/release%20plan)

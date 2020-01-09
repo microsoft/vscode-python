@@ -5,10 +5,10 @@
 
 'use strict';
 
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable, named, optional } from 'inversify';
 import { parse } from 'jsonc-parser';
 import * as path from 'path';
-import { IHttpClient } from '../common/types';
+import { IConfigurationService, IHttpClient } from '../common/types';
 import { isTelemetryDisabled, sendTelemetryEvent } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { IApplicationEnvironment, IWorkspaceService } from './application/types';
@@ -16,6 +16,7 @@ import { EXTENSION_ROOT_DIR, STANDARD_OUTPUT_CHANNEL } from './constants';
 import { traceDecorators, traceError } from './logger';
 import { IFileSystem } from './platform/types';
 import { ABExperiments, ICryptoUtils, IExperimentsManager, IOutputChannel, IPersistentState, IPersistentStateFactory } from './types';
+import { sleep } from './utils/async';
 import { swallowExceptions } from './utils/decorators';
 import { Experiments } from './utils/localize';
 
@@ -29,6 +30,9 @@ export const downloadedExperimentStorageKey = 'DOWNLOADED_EXPERIMENTS_STORAGE_KE
  */
 const configFile = path.join(EXTENSION_ROOT_DIR, 'experiments.json');
 export const configUri = 'https://raw.githubusercontent.com/microsoft/vscode-python/master/experiments.json';
+export const EXPERIMENTS_EFFORT_TIMEOUT_MS = 2000;
+// The old experiments which are working fine using the `SHA512` algorithm
+export const oldExperimentSalts = ['ShowExtensionSurveyPrompt', 'ShowPlayIcon', 'AlwaysDisplayTestExplorer', 'LS'];
 
 /**
  * Manages and stores experiments, implements the AB testing functionality
@@ -40,7 +44,15 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     public userExperiments: ABExperiments = [];
     /**
-     * Keeps track of the downloaded experiments in the previous sessions
+     * Experiments user requested to opt into manually
+     */
+    public _experimentsOptedInto: string[];
+    /**
+     * Experiments user requested to opt out from manually
+     */
+    public _experimentsOptedOutFrom: string[];
+    /**
+     * Keeps track of the experiments to be used in the current session
      */
     private experimentStorage: IPersistentState<ABExperiments | undefined>;
     /**
@@ -56,6 +68,10 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     private downloadedExperimentsStorage: IPersistentState<ABExperiments | undefined>;
     /**
+     * Returns `true` if experiments are enabled, else `false`.
+     */
+    private readonly enabled: boolean;
+    /**
      * Keeps track if the storage needs updating or not.
      * Note this has to be separate from the actual storage as
      * download storages by itself should not have an Expiry (so that it can be used in the next session even when download fails in the current session)
@@ -69,11 +85,17 @@ export class ExperimentsManager implements IExperimentsManager {
         @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
         @inject(IApplicationEnvironment) private readonly appEnvironment: IApplicationEnvironment,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly output: IOutputChannel,
-        @inject(IFileSystem) private readonly fs: IFileSystem
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @optional() private experimentEffortTimeout: number = EXPERIMENTS_EFFORT_TIMEOUT_MS
     ) {
         this.isDownloadedStorageValid = this.persistentStateFactory.createGlobalPersistentState<boolean>(isDownloadedStorageValidKey, false, EXPIRY_DURATION_MS);
         this.experimentStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(experimentStorageKey, undefined);
         this.downloadedExperimentsStorage = this.persistentStateFactory.createGlobalPersistentState<ABExperiments | undefined>(downloadedExperimentStorageKey, undefined);
+        const settings = configurationService.getSettings(undefined);
+        this.enabled = settings.experiments.enabled;
+        this._experimentsOptedInto = settings.experiments.optInto;
+        this._experimentsOptedOutFrom = settings.experiments.optOutFrom;
     }
 
     @swallowExceptions('Failed to activate experiments')
@@ -82,6 +104,10 @@ export class ExperimentsManager implements IExperimentsManager {
             return;
         }
         this.activatedOnce = true;
+        if (!this.enabled) {
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DISABLED);
+            return;
+        }
         await this.updateExperimentStorage();
         this.populateUserExperiments();
         for (const exp of this.userExperiments || []) {
@@ -93,6 +119,9 @@ export class ExperimentsManager implements IExperimentsManager {
 
     @traceDecorators.error('Failed to identify if user is in experiment')
     public inExperiment(experimentName: string): boolean {
+        if (!this.enabled) {
+            return false;
+        }
         this.sendTelemetryIfInExperiment(experimentName);
         return this.userExperiments.find(exp => exp.name === experimentName) ? true : false;
     }
@@ -102,10 +131,18 @@ export class ExperimentsManager implements IExperimentsManager {
      */
     @traceDecorators.error('Failed to populate user experiments')
     public populateUserExperiments(): void {
+        this.cleanUpExperimentsOptList();
         if (Array.isArray(this.experimentStorage.value)) {
             for (const experiment of this.experimentStorage.value) {
                 try {
-                    if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
+                    if (this._experimentsOptedOutFrom.includes('All') || this._experimentsOptedOutFrom.includes(experiment.name)) {
+                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedOutOf: experiment.name });
+                        continue;
+                    }
+                    if (this._experimentsOptedInto.includes('All') || this._experimentsOptedInto.includes(experiment.name)) {
+                        sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_OPT_IN_OUT, undefined, { expNameOptedInto: experiment.name });
+                        this.userExperiments.push(experiment);
+                    } else if (this.isUserInRange(experiment.min, experiment.max, experiment.salt)) {
                         this.userExperiments.push(experiment);
                     }
                 } catch (ex) {
@@ -123,18 +160,27 @@ export class ExperimentsManager implements IExperimentsManager {
     }
 
     /**
-     * Downloads experiments and updates storage given previously downloaded experiments are no longer valid
+     * Downloads experiments and updates downloaded storage for the next session given previously downloaded experiments are no longer valid
      */
     @traceDecorators.error('Failed to initialize experiments')
-    public async initializeInBackground() {
+    public async initializeInBackground(): Promise<void> {
         if (this.isDownloadedStorageValid.value) {
             return;
         }
+        await this.downloadAndStoreExperiments();
+    }
+
+    /**
+     * Downloads experiments and updates storage
+     * @param storage The storage to store the experiments in. By default, downloaded storage for the next session is used.
+     */
+    @traceDecorators.error('Failed to download and store experiments')
+    public async downloadAndStoreExperiments(storage: IPersistentState<ABExperiments | undefined> = this.downloadedExperimentsStorage): Promise<void> {
         const downloadedExperiments = await this.httpClient.getJSON<ABExperiments>(configUri, false);
         if (!this.areExperimentsValid(downloadedExperiments)) {
             return;
         }
-        await this.downloadedExperimentsStorage.updateValue(downloadedExperiments);
+        await storage.updateValue(downloadedExperiments);
         await this.isDownloadedStorageValid.updateValue(true);
     }
 
@@ -145,15 +191,22 @@ export class ExperimentsManager implements IExperimentsManager {
      * @param salt The experiment salt value
      */
     public isUserInRange(min: number, max: number, salt: string): boolean {
-        if (typeof (this.appEnvironment.machineId) !== 'string') {
+        if (typeof this.appEnvironment.machineId !== 'string') {
             throw new Error('Machine ID should be a string');
         }
-        const hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number');
+        let hash: number;
+        if (oldExperimentSalts.find(oldSalt => oldSalt === salt)) {
+            hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'SHA512');
+        } else {
+            hash = this.crypto.createHash(`${this.appEnvironment.machineId}+${salt}`, 'number', 'FNV');
+        }
         return hash % 100 >= min && hash % 100 < max;
     }
 
     /**
-     * Updates experiment storage using local data if available.
+     * Do best effort to populate experiment storage. Attempt to update experiment storage by,
+     * * Using appropriate local data if available
+     * * Trying to download fresh experiments within 2 seconds to update storage
      * Local data could be:
      * * Experiments downloaded in the last session
      *   - The function makes sure these are used in the current session
@@ -167,12 +220,21 @@ export class ExperimentsManager implements IExperimentsManager {
         // Step 1. Update experiment storage using downloaded experiments in the last session if any
         if (Array.isArray(this.downloadedExperimentsStorage.value)) {
             await this.experimentStorage.updateValue(this.downloadedExperimentsStorage.value);
-            await this.downloadedExperimentsStorage.updateValue(undefined);
+            return this.downloadedExperimentsStorage.updateValue(undefined);
+        }
+
+        if (Array.isArray(this.experimentStorage.value)) {
+            // Experiment storage already contains latest experiments, do not use the following techniques
             return;
         }
 
-        // Step 2. Update experiment storage using local experiments file if available
-        if (!this.experimentStorage.value && (await this.fs.fileExists(configFile))) {
+        // Step 2. Do best effort to download the experiments within timeout and use it in the current session only
+        if ((await this.doBestEffortToPopulateExperiments()) === true) {
+            return;
+        }
+
+        // Step 3. Update experiment storage using local experiments file if available
+        if (await this.fs.fileExists(configFile)) {
             const content = await this.fs.readFile(configFile);
             try {
                 const experiments = parse(content, [], { allowTrailingComma: true, disallowComments: false });
@@ -182,7 +244,6 @@ export class ExperimentsManager implements IExperimentsManager {
                 await this.experimentStorage.updateValue(experiments);
             } catch (ex) {
                 traceError('Failed to parse experiments configuration file to update storage', ex);
-                return;
             }
         }
     }
@@ -204,5 +265,42 @@ export class ExperimentsManager implements IExperimentsManager {
             }
         }
         return true;
+    }
+
+    /**
+     * Do best effort to download the experiments within timeout and use it in the current session only
+     */
+    public async doBestEffortToPopulateExperiments(): Promise<boolean> {
+        try {
+            const success = await Promise.race([
+                // Download and store experiments in the storage for the current session
+                this.downloadAndStoreExperiments(this.experimentStorage).then(() => true),
+                sleep(this.experimentEffortTimeout).then(() => false)
+            ]);
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success });
+            return success;
+        } catch (ex) {
+            sendTelemetryEvent(EventName.PYTHON_EXPERIMENTS_DOWNLOAD_SUCCESS_RATE, undefined, { success: false, error: 'Downloading experiments failed with error' }, ex);
+            traceError('Effort to download experiments within timeout failed with error', ex);
+            return false;
+        }
+    }
+
+    /**
+     * You can only opt in or out of experiment groups, not control groups. So remove requests for control groups.
+     */
+    private cleanUpExperimentsOptList(): void {
+        for (let i = 0; i < this._experimentsOptedInto.length; i += 1) {
+            if (this._experimentsOptedInto[i].endsWith('control')) {
+                this._experimentsOptedInto[i] = '';
+            }
+        }
+        for (let i = 0; i < this._experimentsOptedOutFrom.length; i += 1) {
+            if (this._experimentsOptedOutFrom[i].endsWith('control')) {
+                this._experimentsOptedOutFrom[i] = '';
+            }
+        }
+        this._experimentsOptedInto = this._experimentsOptedInto.filter(exp => exp !== '');
+        this._experimentsOptedOutFrom = this._experimentsOptedOutFrom.filter(exp => exp !== '');
     }
 }

@@ -5,7 +5,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { PYTEST_PROVIDER } from '../common/constants';
 import { Options } from '../common/runner';
-import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IXUnitParser, LaunchOptions, PassCalculationFormulae, TestRunOptions, Tests } from '../common/types';
+import { ITestDebugLauncher, ITestManager, ITestResultsService, ITestRunner, IXUnitParser, LaunchOptions, TestRunOptions, Tests } from '../common/types';
 import { IArgumentsHelper, IArgumentsService, ITestManagerRunner } from '../types';
 
 const JunitXmlArg = '--junitxml';
@@ -48,6 +48,8 @@ export class TestManagerRunner implements ITestManagerRunner {
             const testArgs = this.argsService.filterArguments(args, [JunitXmlArg]);
             testArgs.splice(0, 0, `${JunitXmlArg}=${xmlLogFile}`);
 
+            testArgs.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
+
             // Positional arguments control the tests to be run.
             testArgs.push(...testPaths);
 
@@ -76,7 +78,7 @@ export class TestManagerRunner implements ITestManagerRunner {
     }
 
     private async updateResultsFromLogFiles(tests: Tests, outputXmlFile: string, testResultsService: ITestResultsService): Promise<Tests> {
-        await this.xUnitParser.updateResultsFromXmlLogFile(tests, outputXmlFile, PassCalculationFormulae.pytest);
+        await this.xUnitParser.updateResultsFromXmlLogFile(tests, outputXmlFile);
         testResultsService.updateResults(tests);
         return tests;
     }
@@ -88,5 +90,4 @@ export class TestManagerRunner implements ITestManagerRunner {
         }
         return this.fs.createTemporaryFile('.xml');
     }
-
 }

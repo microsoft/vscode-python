@@ -8,12 +8,11 @@ import { Minimatch } from 'minimatch';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../common/application/types';
-import { LinterErrors, STANDARD_OUTPUT_CHANNEL } from '../common/constants';
+import { STANDARD_OUTPUT_CHANNEL } from '../common/constants';
 import { IFileSystem } from '../common/platform/types';
 import { IConfigurationService, IOutputChannel } from '../common/types';
 import { StopWatch } from '../common/utils/stopWatch';
 import { IServiceContainer } from '../ioc/types';
-import { JupyterProvider } from '../jupyter/provider';
 import { sendTelemetryWhenDone } from '../telemetry';
 import { EventName } from '../telemetry/constants';
 import { LinterTrigger, LintingTelemetry } from '../telemetry/types';
@@ -27,15 +26,8 @@ lintSeverityToVSSeverity.set(LintMessageSeverity.Hint, vscode.DiagnosticSeverity
 lintSeverityToVSSeverity.set(LintMessageSeverity.Information, vscode.DiagnosticSeverity.Information);
 lintSeverityToVSSeverity.set(LintMessageSeverity.Warning, vscode.DiagnosticSeverity.Warning);
 
-// tslint:disable-next-line:interface-name
-interface DocumentHasJupyterCodeCells {
-    // tslint:disable-next-line:callable-types
-    (doc: vscode.TextDocument, token: vscode.CancellationToken): Promise<Boolean>;
-}
-
 @injectable()
 export class LintingEngine implements ILintingEngine {
-    private documentHasJupyterCodeCells: DocumentHasJupyterCodeCells;
     private workspace: IWorkspaceService;
     private documents: IDocumentManager;
     private configurationService: IConfigurationService;
@@ -46,7 +38,6 @@ export class LintingEngine implements ILintingEngine {
     private fileSystem: IFileSystem;
 
     constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer) {
-        this.documentHasJupyterCodeCells = (_a, _b) => Promise.resolve(false);
         this.documents = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.configurationService = serviceContainer.get<IConfigurationService>(IConfigurationService);
@@ -77,7 +68,7 @@ export class LintingEngine implements ILintingEngine {
         this.diagnosticCollection.set(document.uri, []);
 
         // Check if we need to lint this document
-        if (!await this.shouldLintDocument(document)) {
+        if (!(await this.shouldLintDocument(document))) {
             return;
         }
 
@@ -96,21 +87,14 @@ export class LintingEngine implements ILintingEngine {
         this.pendingLintings.set(document.uri.fsPath, cancelToken);
 
         const activeLinters = await this.linterManager.getActiveLinters(false, document.uri);
-        const promises: Promise<ILintMessage[]>[] = activeLinters
-            .map(async (info: ILinterInfo) => {
-                const stopWatch = new StopWatch();
-                const linter = await this.linterManager.createLinter(
-                    info.product,
-                    this.outputChannel,
-                    this.serviceContainer,
-                    document.uri
-                );
-                const promise = linter.lint(document, cancelToken.token);
-                this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
-                return promise;
-            });
+        const promises: Promise<ILintMessage[]>[] = activeLinters.map(async (info: ILinterInfo) => {
+            const stopWatch = new StopWatch();
+            const linter = await this.linterManager.createLinter(info.product, this.outputChannel, this.serviceContainer, document.uri);
+            const promise = linter.lint(document, cancelToken.token);
+            this.sendLinterRunTelemetry(info, document.uri, promise, stopWatch, trigger);
+            return promise;
+        });
 
-        const hasJupyterCodeCells = await this.documentHasJupyterCodeCells(document, cancelToken.token);
         // linters will resolve asynchronously - keep a track of all
         // diagnostics reported as them come in.
         let diagnostics: vscode.Diagnostic[] = [];
@@ -125,13 +109,6 @@ export class LintingEngine implements ILintingEngine {
             if (this.isDocumentOpen(document.uri)) {
                 // Build the message and suffix the message with the name of the linter used.
                 for (const m of msgs) {
-                    // Ignore magic commands from jupyter.
-                    if (hasJupyterCodeCells && document.lineAt(m.line - 1).text.trim().startsWith('%') &&
-                        (m.code === LinterErrors.pylint.InvalidSyntax ||
-                            m.code === LinterErrors.prospector.InvalidSyntax ||
-                            m.code === LinterErrors.flake8.InvalidSyntax)) {
-                        continue;
-                    }
                     diagnostics.push(this.createDiagnostics(m, document));
                 }
                 // Limit the number of messages to the max value.
@@ -140,20 +117,6 @@ export class LintingEngine implements ILintingEngine {
         }
         // Set all diagnostics found in this pass, as this method always clears existing diagnostics.
         this.diagnosticCollection.set(document.uri, diagnostics);
-    }
-
-    // tslint:disable-next-line:no-any
-    public async linkJupyterExtension(jupyter: vscode.Extension<any> | undefined): Promise<void> {
-        if (!jupyter) {
-            return;
-        }
-        if (!jupyter.isActive) {
-            await jupyter.activate();
-        }
-        // tslint:disable-next-line:no-unsafe-any
-        jupyter.exports.registerLanguageProvider(PYTHON.language, new JupyterProvider());
-        // tslint:disable-next-line:no-unsafe-any
-        this.documentHasJupyterCodeCells = jupyter.exports.hasCodeCells;
     }
 
     private sendLinterRunTelemetry(info: ILinterInfo, resource: vscode.Uri, promise: Promise<ILintMessage[]>, stopWatch: StopWatch, trigger: LinterTrigger): void {
@@ -183,7 +146,7 @@ export class LintingEngine implements ILintingEngine {
     }
 
     private async shouldLintDocument(document: vscode.TextDocument): Promise<boolean> {
-        if (!await this.linterManager.isLintingEnabled(false, document.uri)) {
+        if (!(await this.linterManager.isLintingEnabled(false, document.uri))) {
             this.diagnosticCollection.set(document.uri, []);
             return false;
         }
@@ -193,7 +156,7 @@ export class LintingEngine implements ILintingEngine {
         }
 
         const workspaceFolder = this.workspace.getWorkspaceFolder(document.uri);
-        const workspaceRootPath = (workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string') ? workspaceFolder.uri.fsPath : undefined;
+        const workspaceRootPath = workspaceFolder && typeof workspaceFolder.uri.fsPath === 'string' ? workspaceFolder.uri.fsPath : undefined;
         const relativeFileName = typeof workspaceRootPath === 'string' ? path.relative(workspaceRootPath, document.fileName) : document.fileName;
 
         const settings = this.configurationService.getSettings(document.uri);

@@ -16,7 +16,7 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private readonly outputChannel: IOutputChannel
-    ) { }
+    ) {}
     public register() {
         this.serviceContainer.get<ISourceMapSupportService>(ISourceMapSupportService).register();
     }
@@ -27,18 +27,26 @@ export class ApplicationDiagnostics implements IApplicationDiagnostics {
         }
         const services = this.serviceContainer.getAll<IDiagnosticsService>(IDiagnosticsService);
         // Perform these validation checks in the foreground.
-        await this.runDiagnostics(services.filter(item => !item.runInBackground), resource);
+        await this.runDiagnostics(
+            services.filter(item => !item.runInBackground),
+            resource
+        );
         // Perform these validation checks in the background.
-        this.runDiagnostics(services.filter(item => item.runInBackground), resource).ignoreErrors();
+        this.runDiagnostics(
+            services.filter(item => item.runInBackground),
+            resource
+        ).ignoreErrors();
     }
     private async runDiagnostics(diagnosticServices: IDiagnosticsService[], resource: Resource): Promise<void> {
-        await Promise.all(diagnosticServices.map(async diagnosticService => {
-            const diagnostics = await diagnosticService.diagnose(resource);
-            if (diagnostics.length > 0) {
-                this.log(diagnostics);
-                await diagnosticService.handle(diagnostics);
-            }
-        }));
+        await Promise.all(
+            diagnosticServices.map(async diagnosticService => {
+                const diagnostics = await diagnosticService.diagnose(resource);
+                if (diagnostics.length > 0) {
+                    this.log(diagnostics);
+                    await diagnosticService.handle(diagnostics);
+                }
+            })
+        );
     }
     private log(diagnostics: IDiagnostic[]): void {
         const logger = this.serviceContainer.get<ILogger>(ILogger);

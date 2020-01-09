@@ -10,9 +10,7 @@ import { PVSC_EXTENSION_ID } from '../../common/constants';
 import { traceDecorators, traceVerbose } from '../../common/logger';
 import { INugetRepository, INugetService, NugetPackage } from '../../common/nuget/types';
 import { IPlatformService } from '../../common/platform/types';
-import {
-    IConfigurationService, IExtensions, LanguageServerDownloadChannels, Resource
-} from '../../common/types';
+import { IConfigurationService, IExtensions, LanguageServerDownloadChannels, Resource } from '../../common/types';
 import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import { ILanguageServerPackageService, PlatformName } from '../types';
@@ -30,9 +28,11 @@ export const PackageNames = {
 @injectable()
 export class LanguageServerPackageService implements ILanguageServerPackageService {
     public maxMajorVersion: number = maxMajorVersion;
-    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
+    constructor(
+        @inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer,
         @inject(IApplicationEnvironment) private readonly appEnv: IApplicationEnvironment,
-        @inject(IPlatformService) private readonly platform: IPlatformService) { }
+        @inject(IPlatformService) private readonly platform: IPlatformService
+    ) {}
     public getNugetPackageName(): string {
         switch (this.platform.osType) {
             case OSType.Windows: {
@@ -65,8 +65,18 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             return settings.analysis.downloadChannel;
         }
 
+        if (settings.insidersChannel === 'daily' || settings.insidersChannel === 'weekly') {
+            return 'beta';
+        }
         const isAlphaVersion = this.isAlphaVersionOfExtension();
         return isAlphaVersion ? 'beta' : 'stable';
+    }
+
+    public isAlphaVersionOfExtension() {
+        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
+        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
+        const version = parse(extension.packageJSON.version)!;
+        return version.prerelease.length > 0 && version.prerelease[0] === 'alpha';
     }
     protected getValidPackage(packages: NugetPackage[]): NugetPackage {
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
@@ -88,12 +98,5 @@ export class LanguageServerPackageService implements ILanguageServerPackageServi
             package: LanguageServerPackageStorageContainers.stable,
             uri: `${azureCDNBlobStorageAccount}/${LanguageServerPackageStorageContainers.stable}/${this.getNugetPackageName()}.${minimumVersion}.nupkg`
         };
-    }
-
-    private isAlphaVersionOfExtension() {
-        const extensions = this.serviceContainer.get<IExtensions>(IExtensions);
-        const extension = extensions.getExtension(PVSC_EXTENSION_ID)!;
-        const version = parse(extension.packageJSON.version)!;
-        return version.prerelease.length > 0 && version.prerelease[0] === 'alpha';
     }
 }

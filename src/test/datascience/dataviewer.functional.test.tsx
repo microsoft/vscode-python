@@ -10,25 +10,25 @@ import { mount, ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
 import * as uuid from 'uuid/v4';
-import { Disposable } from 'vscode';
+import { Disposable, Uri } from 'vscode';
 
-import { createDeferred } from '../../client/common/utils/async';
 import { Identifiers } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
-import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../client/datascience/types';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
+import { waitForMessage } from './testHelpers';
 
 // import { asyncDump } from '../common/asyncDump';
 suite('DataScience DataViewer tests', () => {
     const disposables: Disposable[] = [];
     let dataProvider: IDataViewerProvider;
     let ioc: DataScienceIocContainer;
-    let messageWrapper: ((m: string, payload: any) => void) | undefined;
+    let notebook: INotebook | undefined;
 
-    suiteSetup(function () {
+    suiteSetup(function() {
         // DataViewer tests require jupyter to run. Othewrise can't
         // run any of our variable execution code
         const isRollingBuild = process.env ? process.env.VSCODE_PYTHON_ROLLING !== undefined : false;
@@ -43,20 +43,11 @@ suite('DataScience DataViewer tests', () => {
     setup(() => {
         ioc = new DataScienceIocContainer();
         ioc.registerDataScienceTypes();
-
-        // Add a listener for our ioc that lets the test
-        // forward messages on
-        ioc.addMessageListener((m, p) => {
-            if (messageWrapper) {
-                messageWrapper(m, p);
-            }
-        });
-
     });
 
     function mountWebView(): ReactWrapper<any, Readonly<{}>, React.Component> {
         // Setup our webview panel
-        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true}/>));
+        ioc.createWebView(() => mount(<MainPanel skipDefault={true} baseTheme={'vscode-light'} testMode={true} />));
 
         // Make sure the data explorer provider and execution factory in the container is created (the extension does this on startup in the extension)
         dataProvider = ioc.get<IDataViewerProvider>(IDataViewerProvider);
@@ -84,15 +75,16 @@ suite('DataScience DataViewer tests', () => {
     });
 
     async function createDataViewer(variable: string): Promise<IDataViewer> {
-        return dataProvider.create(variable);
+        return dataProvider.create(variable, notebook!);
     }
 
-    async function injectCode(code: string) : Promise<void> {
+    async function injectCode(code: string): Promise<void> {
         const exec = ioc.get<IJupyterExecution>(IJupyterExecution);
         const interactiveWindowProvider = ioc.get<IInteractiveWindowProvider>(IInteractiveWindowProvider);
         const server = await exec.connectToNotebookServer(await interactiveWindowProvider.getNotebookOptions());
-        if (server) {
-            const cells = await server.execute(code, Identifiers.EmptyFileName, 0, uuid());
+        notebook = server ? await server.createNotebook(Uri.parse(Identifiers.InteractiveWindowIdentity)) : undefined;
+        if (notebook) {
+            const cells = await notebook.execute(code, Identifiers.EmptyFileName, 0, uuid());
             assert.equal(cells.length, 1, `Wrong number of cells returned`);
             assert.equal(cells[0].data.cell_type, 'code', `Wrong type of cell returned`);
             const cell = cells[0].data as nbformat.ICodeCell;
@@ -105,19 +97,8 @@ suite('DataScience DataViewer tests', () => {
         }
     }
 
-    function waitForMessage(message: string) : Promise<void> {
-        // Wait for the mounted web panel to send a message back to the data explorer
-        const promise = createDeferred<void>();
-        messageWrapper = (m: string, _p: any) => {
-            if (m === message) {
-                promise.resolve();
-            }
-        };
-        return promise.promise;
-    }
-
-    function getCompletedPromise() : Promise<void> {
-        return waitForMessage(DataViewerMessages.CompletedData);
+    function getCompletedPromise(): Promise<void> {
+        return waitForMessage(ioc, DataViewerMessages.CompletedData);
     }
 
     // tslint:disable-next-line:no-any
@@ -135,7 +116,7 @@ suite('DataScience DataViewer tests', () => {
         });
     }
 
-    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean) : void {
+    function sortRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortCol: string, sortAsc: boolean): void {
         // Cause our sort
         const mainPanelWrapper = wrapper.find(MainPanel);
         assert.ok(mainPanelWrapper && mainPanelWrapper.length > 0, 'Grid not found to sort on');
@@ -153,7 +134,7 @@ suite('DataScience DataViewer tests', () => {
 
     function verifyRows(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, rows: (string | number)[]) {
         const mainPanel = wrapper.find('.main-panel');
-        assert.ok(mainPanel.length >= 1, 'Didn\'t find any cells being rendered');
+        assert.ok(mainPanel.length >= 1, "Didn't find any cells being rendered");
 
         // Force the main panel to actually render.
         const html = mainPanel.html();
@@ -171,7 +152,7 @@ suite('DataScience DataViewer tests', () => {
         }
     }
 
-    runMountedTest('Data Frame', async (wrapper) => {
+    runMountedTest('Data Frame', async wrapper => {
         await injectCode('import pandas as pd\r\ndf = pd.DataFrame([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
         const dv = await createDataViewer('df');
@@ -181,7 +162,7 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
-    runMountedTest('List', async (wrapper) => {
+    runMountedTest('List', async wrapper => {
         await injectCode('ls = [0, 1, 2, 3]');
         const gotAllRows = getCompletedPromise();
         const dv = await createDataViewer('ls');
@@ -191,7 +172,7 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
-    runMountedTest('Series', async (wrapper) => {
+    runMountedTest('Series', async wrapper => {
         await injectCode('import pandas as pd\r\ns = pd.Series([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
         const dv = await createDataViewer('s');
@@ -201,7 +182,7 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
-    runMountedTest('np.array', async (wrapper) => {
+    runMountedTest('np.array', async wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
         const dv = await createDataViewer('x');
@@ -211,7 +192,7 @@ suite('DataScience DataViewer tests', () => {
         verifyRows(wrapper, [0, 0, 1, 1, 2, 2, 3, 3]);
     });
 
-    runMountedTest('Failure', async (_wrapper) => {
+    runMountedTest('Failure', async _wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         try {
             await createDataViewer('unknown variable');
@@ -221,7 +202,7 @@ suite('DataScience DataViewer tests', () => {
         }
     });
 
-    runMountedTest('Sorting', async (wrapper) => {
+    runMountedTest('Sorting', async wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
         const dv = await createDataViewer('x');

@@ -13,12 +13,12 @@ import { ISourceMapSupportService } from './types';
 
 @injectable()
 export class SourceMapSupportService implements ISourceMapSupportService {
-    constructor(@inject(ICommandManager) private readonly commandManager: ICommandManager,
+    constructor(
+        @inject(ICommandManager) private readonly commandManager: ICommandManager,
         @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
-        @inject(IApplicationShell) private readonly shell: IApplicationShell) {
-
-    }
+        @inject(IApplicationShell) private readonly shell: IApplicationShell
+    ) {}
     public register(): void {
         this.disposables.push(this.commandManager.registerCommand(Commands.Enable_SourceMap_Support, this.onEnable, this));
     }

@@ -3,8 +3,7 @@ import * as fs from 'fs';
 import * as path from 'path';
 import * as vscode from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
-import { ICondaService, IInterpreterService } from '../../../client/interpreter/contracts';
-import { InterpreterService } from '../../../client/interpreter/interpreterService';
+import { ICondaService } from '../../../client/interpreter/contracts';
 import { CondaService } from '../../../client/interpreter/locators/services/condaService';
 import { CommandSource } from '../../../client/testing/common/constants';
 import { ITestManagerFactory } from '../../../client/testing/common/types';
@@ -15,10 +14,7 @@ import { initialize, initializeTest, IS_MULTI_ROOT_TEST } from './../../initiali
 
 const UNITTEST_TEST_FILES_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'noseFiles');
 const UNITTEST_SINGLE_TEST_FILE_PATH = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'pythonFiles', 'testFiles', 'single');
-const filesToDelete = [
-    path.join(UNITTEST_TEST_FILES_PATH, '.noseids'),
-    path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')
-];
+const filesToDelete = [path.join(UNITTEST_TEST_FILES_PATH, '.noseids'), path.join(UNITTEST_SINGLE_TEST_FILE_PATH, '.noseids')];
 
 // tslint:disable-next-line:max-func-body-length
 suite('Unit Tests - nose - discovery against actual python process', () => {
@@ -57,8 +53,8 @@ suite('Unit Tests - nose - discovery against actual python process', () => {
         ioc.registerProcessTypes();
         ioc.registerUnitTestTypes();
         ioc.registerVariableTypes();
+        ioc.registerMockInterpreterTypes();
         ioc.serviceManager.addSingleton<ICondaService>(ICondaService, CondaService);
-        ioc.serviceManager.addSingleton<IInterpreterService>(IInterpreterService, InterpreterService);
     }
 
     test('Discover Tests (single test file)', async () => {

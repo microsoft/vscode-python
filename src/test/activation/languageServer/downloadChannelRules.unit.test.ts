@@ -41,11 +41,11 @@ suite('Language Server Download Channel Rules', () => {
                     .returns(() => state.object)
                     .verifiable(typeMoq.Times.once());
 
-                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPersistentStateFactory)))
-                    .returns(() => stateFactory.object);
+                serviceContainer.setup(c => c.get(typeMoq.It.isValue(IPersistentStateFactory))).returns(() => stateFactory.object);
             });
             function setupStateValue(value: boolean) {
-                state.setup(s => s.value)
+                state
+                    .setup(s => s.value)
                     .returns(() => value)
                     .verifiable(typeMoq.Times.atLeastOnce());
             }

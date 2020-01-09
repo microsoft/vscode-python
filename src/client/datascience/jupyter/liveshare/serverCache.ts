@@ -5,6 +5,7 @@ import '../../../common/extensions';
 
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
+import { CancellationToken } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
@@ -12,14 +13,52 @@ import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
 
 export class ServerCache implements IAsyncDisposable {
-    private cache: Map<string, INotebookServer> = new Map<string, INotebookServer>();
+    private cache: Map<string, Promise<INotebookServer | undefined>> = new Map<string, Promise<INotebookServer | undefined>>();
     private emptyKey = uuid();
 
-    constructor(
-        private configService: IConfigurationService,
-        private workspace: IWorkspaceService,
-        private fileSystem: IFileSystem
-    ) { }
+    constructor(private configService: IConfigurationService, private workspace: IWorkspaceService, private fileSystem: IFileSystem) {}
+
+    public async getOrCreate(
+        createFunction: (options?: INotebookServerOptions, cancelToken?: CancellationToken) => Promise<INotebookServer | undefined>,
+        options?: INotebookServerOptions,
+        cancelToken?: CancellationToken
+    ): Promise<INotebookServer | undefined> {
+        const fixedOptions = await this.generateDefaultOptions(options);
+        const key = this.generateKey(fixedOptions);
+        let createPromise: Promise<INotebookServer | undefined> | undefined;
+
+        // Check to see if we already have a promise for this key
+        createPromise = this.cache.get(key);
+
+        if (!createPromise) {
+            // Didn't find one, so start up our promise and cache it
+            const newCreatePromise = createFunction(options, cancelToken);
+            this.cache.set(key, newCreatePromise);
+            createPromise = newCreatePromise;
+        }
+
+        return createPromise
+            .then((server: INotebookServer | undefined) => {
+                if (!server) {
+                    this.cache.delete(key);
+                    return undefined;
+                }
+
+                // Change the dispose on it so we
+                // can detach from the server when it goes away.
+                const oldDispose = server.dispose.bind(server);
+                server.dispose = () => {
+                    this.cache.delete(key);
+                    return oldDispose();
+                };
+
+                return server;
+            })
+            .catch(e => {
+                this.cache.delete(key);
+                throw e;
+            });
+    }
 
     public async get(options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         const fixedOptions = await this.generateDefaultOptions(options);
@@ -29,33 +68,13 @@ export class ServerCache implements IAsyncDisposable {
         }
     }
 
-    public async set(result: INotebookServer, disposeCallback: () => void, options?: INotebookServerOptions): Promise<void> {
-        const fixedOptions = await this.generateDefaultOptions(options);
-        const key = this.generateKey(fixedOptions);
-
-        // Eliminate any already with this key
-        const item = this.cache.get(key);
-        if (item) {
-            await item.dispose();
-        }
-
-        // Save in our cache.
-        this.cache.set(key, result);
-
-        // Save this result, but modify its dispose such that we
-        // can detach from the server when it goes away.
-        const oldDispose = result.dispose.bind(result);
-        result.dispose = () => {
-            this.cache.delete(key);
-            disposeCallback();
-            return oldDispose();
-        };
-    }
-
     public async dispose(): Promise<void> {
-        for (const [, s] of this.cache) {
-            await s.dispose();
-        }
+        await Promise.all(
+            [...this.cache.values()].map(async serverPromise => {
+                const server = await serverPromise;
+                await server?.dispose();
+            })
+        );
         this.cache.clear();
     }
 
@@ -66,7 +85,8 @@ export class ServerCache implements IAsyncDisposable {
             useDefaultConfig: options ? options.useDefaultConfig : true, // Default for this is true.
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
-            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory()
+            workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
+            metadata: options?.metadata
         };
     }
 
@@ -78,8 +98,6 @@ export class ServerCache implements IAsyncDisposable {
             const uri = options.uri ? options.uri : '';
             const useFlag = options.useDefaultConfig ? 'true' : 'false';
             const debug = options.enableDebugging ? 'true' : 'false';
-            // tslint:disable-next-line:no-suspicious-comment
-            // TODO: Should there be some separator in the key?
             return `${options.purpose}${uri}${useFlag}${options.workingDir}${debug}`;
         }
     }
@@ -102,7 +120,7 @@ export class ServerCache implements IAsyncDisposable {
                     // User setting is absolute and doesn't exist, use workspace
                     workingDir = workspaceFolderPath;
                 }
-            } else {
+            } else if (!fileRoot.includes('${')) {
                 // fileRoot is a relative path, combine it with the workspace folder
                 const combinedPath = path.join(workspaceFolderPath, fileRoot);
                 if (await this.fileSystem.directoryExists(combinedPath)) {
@@ -112,9 +130,11 @@ export class ServerCache implements IAsyncDisposable {
                     // Combined path doesn't exist, use workspace
                     workingDir = workspaceFolderPath;
                 }
+            } else {
+                // fileRoot is a variable that hasn't been expanded
+                workingDir = fileRoot;
             }
         }
         return workingDir;
     }
-
 }

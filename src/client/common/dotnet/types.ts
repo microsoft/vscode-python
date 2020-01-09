@@ -8,4 +8,4 @@ export interface IDotNetCompatibilityService {
     isSupported(): Promise<boolean>;
 }
 export const IOSDotNetCompatibilityService = Symbol('IOSDotNetCompatibilityService');
-export interface IOSDotNetCompatibilityService extends IDotNetCompatibilityService { }
+export interface IOSDotNetCompatibilityService extends IDotNetCompatibilityService {}

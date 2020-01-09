@@ -17,18 +17,18 @@ export class SystemWideInterpretersAutoSelectionRule extends BaseRuleService {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(IInterpreterHelper) private readonly helper: IInterpreterHelper,
         @inject(IPersistentStateFactory) stateFactory: IPersistentStateFactory,
-        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService) {
-
+        @inject(IInterpreterService) private readonly interpreterService: IInterpreterService
+    ) {
         super(AutoSelectionRule.systemWide, fs, stateFactory);
     }
     protected async onAutoSelectInterpreter(resource: Resource, manager?: IInterpreterAutoSelectionService): Promise<NextAction> {
         const interpreters = await this.interpreterService.getInterpreters(resource);
         // Exclude non-local interpreters.
-        const filteredInterpreters = interpreters.filter(int => int.type !== InterpreterType.VirtualEnv &&
-            int.type !== InterpreterType.Venv &&
-            int.type !== InterpreterType.Pipenv);
+        const filteredInterpreters = interpreters.filter(
+            int => int.type !== InterpreterType.VirtualEnv && int.type !== InterpreterType.Venv && int.type !== InterpreterType.Pipenv
+        );
         const bestInterpreter = this.helper.getBestInterpreter(filteredInterpreters);
         traceVerbose(`Selected Interpreter from ${this.ruleName}, ${bestInterpreter ? JSON.stringify(bestInterpreter) : 'Nothing Selected'}`);
-        return await this.setGlobalInterpreter(bestInterpreter, manager) ? NextAction.exit : NextAction.runNextRule;
+        return (await this.setGlobalInterpreter(bestInterpreter, manager)) ? NextAction.exit : NextAction.runNextRule;
     }
 }

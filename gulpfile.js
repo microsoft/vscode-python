@@ -32,7 +32,7 @@ const os = require('os');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
-const noop = function() {};
+const noop = function () { };
 /**
  * Hygiene works by creating cascading subsets of all our files and
  * passing them through a sequence of checks. Here are the current subsets,
@@ -110,23 +110,34 @@ gulp.task('checkNativeDependencies', done => {
 
 gulp.task('check-datascience-dependencies', () => checkDatascienceDependencies());
 
-gulp.task('compile-webviews', async () =>
-    spawnAsync('npx', ['-n', '--max_old_space_size=4096', 'webpack', '--config', 'webpack.datascience-ui.config.js', '--mode', 'production'])
-);
+const webpackEnv = { 'NODE_OPTIONS': '--max_old_space_size=9096' };
+
+gulp.task('compile-webviews', async () => {
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-interactiveWindow.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
+});
 
 gulp.task('webpack', async () => {
-    // Build node_modules and DS stuff.
-    await buildWebPack('production', []);
+    // Build node_modules.
+    await buildWebPack('production', ['--config', './build/webpack/webpack.extension.dependencies.config.js'], webpackEnv);
+    // Build DS stuff (separately as it uses far too much memory and slows down CI).
+    // Individually is faster on CI.
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-interactiveWindow.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js'], webpackEnv);
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
     if (isCI) {
-        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
-        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+        const buildExtension = buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
+        const buildDebugAdapter = buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
         await Promise.all([buildExtension, buildDebugAdapter]);
     } else {
-        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js']);
-        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js']);
+        await buildWebPack('extension', ['--config', './build/webpack/webpack.extension.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
+        await buildWebPack('debugAdapter', ['--config', './build/webpack/webpack.debugadapter.config.js'], { 'NODE_OPTIONS': '--max_old_space_size=9096' });
     }
 });
 
@@ -162,10 +173,10 @@ async function updateBuildNumber(args) {
     }
 }
 
-async function buildWebPack(webpackConfigName, args) {
+async function buildWebPack(webpackConfigName, args, env) {
     // Remember to perform a case insensitive search.
     const allowedWarnings = getAllowedWarningsForWebPack(webpackConfigName).map(item => item.toLowerCase());
-    const stdOut = await spawnAsync('npx', ['-n', '--max_old_space_size=4096', 'webpack', ...args, ...['--mode', 'production']], allowedWarnings);
+    const stdOut = await spawnAsync('npm', ['run', 'webpack', '--', ...args, ...['--mode', 'production']], env);
     const stdOutLines = stdOut
         .split(os.EOL)
         .map(item => item.trim())
@@ -179,7 +190,7 @@ async function buildWebPack(webpackConfigName, args) {
         throw new Error(`Errors in ${webpackConfigName}, \n${warnings.join(', ')}\n\n${stdOut}`);
     }
     if (warnings.length > 0) {
-        throw new Error(`Warnings in ${webpackConfigName}, \n\n${stdOut}`);
+        throw new Error(`Warnings in ${webpackConfigName}, Check gulpfile.js to see if the warning should be allowed., \n\n${stdOut}`);
     }
 }
 function getAllowedWarningsForWebPack(buildConfig) {
@@ -194,7 +205,10 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/buffer-util.js',
+                'WARNING in ./node_modules/@jupyterlab/services/node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/any-promise/register.js'
             ];
         case 'extension':
             return [
@@ -202,7 +216,8 @@ function getAllowedWarningsForWebPack(buildConfig) {
                 'WARNING in ./node_modules/ws/lib/BufferUtil.js',
                 'WARNING in ./node_modules/ws/lib/buffer-util.js',
                 'WARNING in ./node_modules/ws/lib/Validation.js',
-                'WARNING in ./node_modules/ws/lib/validation.js'
+                'WARNING in ./node_modules/ws/lib/validation.js',
+                'WARNING in ./node_modules/any-promise/register.js'
             ];
         case 'debugAdapter':
             return ['WARNING in ./node_modules/vscode-uri/lib/index.js'];
@@ -211,7 +226,7 @@ function getAllowedWarningsForWebPack(buildConfig) {
     }
 }
 gulp.task('renameSourceMaps', async () => {
-    // By default souce maps will be disabled in the extenion.
+    // By default source maps will be disabled in the extension.
     // Users will need to use the command `python.enableSourceMapSupport` to enable source maps.
     const extensionSourceMap = path.join(__dirname, 'out', 'client', 'extension.js.map');
     const debuggerSourceMap = path.join(__dirname, 'out', 'client', 'debugger', 'debugAdapter', 'main.js.map');
@@ -229,9 +244,10 @@ gulp.task('verifyBundle', async () => {
 });
 
 gulp.task('prePublishBundle', gulp.series('webpack', 'renameSourceMaps'));
-gulp.task('prePublishNonBundle', gulp.series('checkNativeDependencies', 'check-datascience-dependencies', 'compile', 'compile-webviews'));
+gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-datascience-dependencies'));
+gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
 
-gulp.task('installPythonLibs', async () => {
+gulp.task('installPythonRequirements', async () => {
     const requirements = fs
         .readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8')
         .split('\n')
@@ -254,6 +270,54 @@ gulp.task('installPythonLibs', async () => {
     );
 });
 
+
+// See https://github.com/microsoft/vscode-python/issues/7136
+gulp.task('installNewPtvsd', async () => {
+    // Install new PTVSD with wheels for python 3.7
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', ['./pythonFiles/install_ptvsd.py'])
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            return false;
+        });
+    if (!successWithWheels) {
+        console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+    }
+
+    // Install source only version of new PTVSD for use with all other python versions.
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/new_ptvsd/no_wheels', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==5.0.0a10']
+    const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install PTVSD using 'python3'", ex);
+            return false;
+        });
+    if (!successWithoutWheels) {
+        console.info("Failed to install source only version of new PTVSD using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install source only PTVSD 5.0 using 'python'", ex));
+    }
+});
+
+// Install the last stable version of old PTVSD (which includes a middle layer adapter and requires ptvsd_launcher.py)
+// until all users have migrated to the new debug adapter + new PTVSD (specified in requirements.txt)
+// See https://github.com/microsoft/vscode-python/issues/7136
+gulp.task('installOldPtvsd', async () => {
+    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python/old_ptvsd', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade', 'ptvsd==4.3.2']
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install PTVSD using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install PTVSD using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD using 'python'", ex));
+    }
+});
+
+gulp.task('installPythonLibs', gulp.series('installPythonRequirements', 'installOldPtvsd', 'installNewPtvsd'));
+
 function uploadExtension(uploadBlobName) {
     const azure = require('gulp-azure-storage');
     const rename = require('gulp-rename');
@@ -272,10 +336,13 @@ function uploadExtension(uploadBlobName) {
 gulp.task('uploadDeveloperExtension', () => uploadExtension('ms-python-insiders.vsix'));
 gulp.task('uploadReleaseExtension', () => uploadExtension(`ms-python-${process.env.TRAVIS_BRANCH || process.env.BUILD_SOURCEBRANCHNAME}.vsix`));
 
-function spawnAsync(command, args) {
+function spawnAsync(command, args, env) {
+    env = env || {};
+    env = { ...process.env, ...env };
     return new Promise((resolve, reject) => {
         let stdOut = '';
-        const proc = spawn(command, args, { cwd: __dirname });
+        console.info(`> ${command} ${args.join(' ')}`);
+        const proc = spawn(command, args, { cwd: __dirname, env });
         proc.stdout.on('data', data => {
             // Log output on CI (else travis times out when there's not output).
             stdOut += data.toString();
@@ -440,7 +507,7 @@ const hygiene = (options, done) => {
     options = options || {};
     let errorCount = 0;
 
-    const indentation = es.through(function(file) {
+    const indentation = es.through(function (file) {
         file.contents
             .toString('utf8')
             .split(/\r\n|\r|\n/)
@@ -459,7 +526,7 @@ const hygiene = (options, done) => {
     });
 
     const formatOptions = { verify: true, tsconfig: true, tslint: true, editorconfig: true, tsfmt: true };
-    const formatting = es.map(function(file, cb) {
+    const formatting = es.map(function (file, cb) {
         tsfmt
             .processString(file.path, file.contents.toString('utf8'), formatOptions)
             .then(result => {
@@ -517,7 +584,7 @@ const hygiene = (options, done) => {
     }
 
     const { linter, configuration } = getLinter(options);
-    const tsl = es.through(function(file) {
+    const tsl = es.through(function (file) {
         const contents = file.contents.toString('utf8');
         if (isCI) {
             // Don't print anything to the console, we'll do that.
@@ -525,7 +592,7 @@ const hygiene = (options, done) => {
         }
         // Yes this is a hack, but tslinter doesn't provide an option to prevent this.
         const oldWarn = console.warn;
-        console.warn = () => {};
+        console.warn = () => { };
         linter.failures = [];
         linter.fixes = [];
         linter.lint(file.relative, contents, configuration.results);
@@ -544,7 +611,7 @@ const hygiene = (options, done) => {
     });
 
     const tsFiles = [];
-    const tscFilesTracker = es.through(function(file) {
+    const tscFilesTracker = es.through(function (file) {
         tsFiles.push(file.path.replace(/\\/g, '/'));
         tsFiles.push(file.path);
         this.emit('data', file);
@@ -552,10 +619,10 @@ const hygiene = (options, done) => {
 
     const tsProject = getTsProject(options);
 
-    const tsc = function() {
+    const tsc = function () {
         function customReporter() {
             return {
-                error: function(error, typescript) {
+                error: function (error, typescript) {
                     const fullFilename = error.fullFilename || '';
                     const relativeFilename = error.relativeFilename || '';
                     if (tsFiles.findIndex(file => fullFilename === file || relativeFilename === file) === -1) {
@@ -564,7 +631,7 @@ const hygiene = (options, done) => {
                     console.error(`Error: ${error.message}`);
                     errorCount += 1;
                 },
-                finish: function() {
+                finish: function () {
                     // forget the summary.
                     console.log('Finished compilation');
                 }
@@ -598,7 +665,7 @@ const hygiene = (options, done) => {
         .pipe(sourcemaps.init())
         .pipe(tsc())
         .pipe(
-            sourcemaps.mapSources(function(sourcePath, file) {
+            sourcemaps.mapSources(function (sourcePath, file) {
                 let tsFileName = path.basename(file.path).replace(/js$/, 'ts');
                 const qualifiedSourcePath = path
                     .dirname(file.path)
@@ -618,7 +685,7 @@ const hygiene = (options, done) => {
         .pipe(sourcemaps.write('.', { includeContent: false }))
         .pipe(gulp.dest(dest))
         .pipe(
-            es.through(null, function() {
+            es.through(null, function () {
                 if (errorCount > 0) {
                     const errorMessage = `Hygiene failed with errors 👎 . Check 'gulpfile.js' (completed in ${new Date().getTime() - started}ms).`;
                     console.error(colors.red(errorMessage));
@@ -828,5 +895,5 @@ exports.hygiene = hygiene;
 
 // this allows us to run hygiene via CLI (e.g. `node gulfile.js`).
 if (require.main === module) {
-    run({ exitOnError: true, mode: 'staged' }, () => {});
+    run({ exitOnError: true, mode: 'staged' }, () => { });
 }

@@ -14,9 +14,11 @@ import { Channel, IApplicationEnvironment } from './types';
 
 @injectable()
 export class ApplicationEnvironment implements IApplicationEnvironment {
-    constructor(@inject(IPlatformService) private readonly platform: IPlatformService,
+    constructor(
+        @inject(IPlatformService) private readonly platform: IPlatformService,
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
-        @inject(ICurrentProcess) private readonly process: ICurrentProcess) { }
+        @inject(ICurrentProcess) private readonly process: ICurrentProcess
+    ) {}
 
     public get userSettingsFile(): string | undefined {
         const vscodeFolderName = this.channel === 'insiders' ? 'Code - Insiders' : 'Code';
@@ -34,6 +36,9 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
     public get appName(): string {
         return vscode.env.appName;
     }
+    public get vscodeVersion(): string {
+        return vscode.version;
+    }
     public get appRoot(): string {
         return vscode.env.appRoot;
     }
@@ -50,9 +55,17 @@ export class ApplicationEnvironment implements IApplicationEnvironment {
         // tslint:disable-next-line:non-literal-require
         return this.packageJson.displayName;
     }
-    public get shell(): string | undefined {
-        // tslint:disable-next-line:no-any
-        return (vscode.env as any).shell;
+    /**
+     * At the time of writing this API, the vscode.env.shell isn't officially released in stable version of VS Code.
+     * Using this in stable version seems to throw errors in VSC with messages being displayed to the user about use of
+     * unstable API.
+     * Solution - log and suppress the errors.
+     * @readonly
+     * @type {(string)}
+     * @memberof ApplicationEnvironment
+     */
+    public get shell(): string {
+        return vscode.env.shell;
     }
     // tslint:disable-next-line:no-any
     public get packageJson(): any {

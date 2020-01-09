@@ -22,7 +22,7 @@ export enum PlatformLSExecutables {
 
 @injectable()
 export class PlatformData implements IPlatformData {
-    constructor(@inject(IPlatformService) private readonly platform: IPlatformService) { }
+    constructor(@inject(IPlatformService) private readonly platform: IPlatformService) {}
     public get platformName(): PlatformName {
         if (this.platform.isWindows) {
             return this.platform.is64bit ? PlatformName.Windows64Bit : PlatformName.Windows32Bit;

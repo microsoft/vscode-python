@@ -3,12 +3,7 @@
 'use strict';
 import { EndOfLine, Position, Range, TextDocument, TextDocumentContentChangeEvent, TextLine, Uri } from 'vscode';
 
-import {
-    DefaultWordPattern,
-    ensureValidWordDefinition,
-    getWordAtText,
-    regExpLeadsToEndlessLoop
-} from '../../client/datascience/interactive-window/intellisense/wordHelper';
+import { DefaultWordPattern, ensureValidWordDefinition, getWordAtText, regExpLeadsToEndlessLoop } from '../../client/datascience/interactive-common/intellisense/wordHelper';
 
 class MockLine implements TextLine {
     private _range: Range;
@@ -55,11 +50,20 @@ export class MockDocument implements TextDocument {
     private _version: number = 0;
     private _lines: MockLine[] = [];
     private _contents: string = '';
+    private _isUntitled = false;
+    private _isDirty = false;
+    private _onSave: (doc: TextDocument) => Promise<boolean>;
 
-    constructor(contents: string, fileName: string) {
+    constructor(contents: string, fileName: string, onSave: (doc: TextDocument) => Promise<boolean>) {
         this._uri = Uri.file(fileName);
         this._contents = contents;
         this._lines = this.createLines();
+        this._onSave = onSave;
+    }
+
+    public forceUntitled(): void {
+        this._isUntitled = true;
+        this._isDirty = true;
     }
 
     public get uri(): Uri {
@@ -70,7 +74,7 @@ export class MockDocument implements TextDocument {
     }
 
     public get isUntitled(): boolean {
-        return true;
+        return this._isUntitled;
     }
     public get languageId(): string {
         return 'python';
@@ -79,13 +83,13 @@ export class MockDocument implements TextDocument {
         return this._version;
     }
     public get isDirty(): boolean {
-        return true;
+        return this._isDirty;
     }
     public get isClosed(): boolean {
         return false;
     }
     public save(): Thenable<boolean> {
-        return Promise.resolve(true);
+        return this._onSave(this);
     }
     public get eol(): EndOfLine {
         return EndOfLine.LF;
@@ -127,19 +131,13 @@ export class MockDocument implements TextDocument {
         if (!regexp) {
             // use default when custom-regexp isn't provided
             regexp = DefaultWordPattern;
-
         } else if (regExpLeadsToEndlessLoop(regexp)) {
             // use default when custom-regexp is bad
             console.warn(`[getWordRangeAtPosition]: ignoring custom regexp '${regexp.source}' because it matches the empty string.`);
             regexp = DefaultWordPattern;
         }
 
-        const wordAtText = getWordAtText(
-            position.character + 1,
-            ensureValidWordDefinition(regexp),
-            this._lines[position.line].text,
-            0
-        );
+        const wordAtText = getWordAtText(position.character + 1, ensureValidWordDefinition(regexp), this._lines[position.line].text, 0);
 
         if (wordAtText) {
             return new Range(position.line, wordAtText.startColumn - 1, position.line, wordAtText.endColumn - 1);

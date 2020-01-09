@@ -30,22 +30,18 @@ suite('ArgsService: Common', () => {
             let expectedWithArgs: string[] = [];
             let expectedWithoutArgs: string[] = [];
 
-            setup(function () {
+            setup(function() {
                 // Take the spawning of process into account.
                 // tslint:disable-next-line:no-invalid-this
                 this.timeout(5000);
                 const serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
                 const logger = typeMoq.Mock.ofType<ILogger>();
 
-                serviceContainer
-                    .setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny()))
-                    .returns(() => logger.object);
+                serviceContainer.setup(s => s.get(typeMoq.It.isValue(ILogger), typeMoq.It.isAny())).returns(() => logger.object);
 
                 const argsHelper = new ArgumentsHelper(serviceContainer.object);
 
-                serviceContainer
-                    .setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny()))
-                    .returns(() => argsHelper);
+                serviceContainer.setup(s => s.get(typeMoq.It.isValue(IArgumentsHelper), typeMoq.It.isAny())).returns(() => argsHelper);
 
                 switch (product) {
                     case Product.unittest: {
@@ -144,12 +140,14 @@ function getOptions(product: Product, moduleName: string, withValues: boolean) {
             .filter(item => knownOptionsWithoutArgs.indexOf(item) === -1)
             .sort();
     } else {
-        return getOptionsWithoutArguments(output)
-            .concat(...knownOptionsWithoutArgs)
-            .filter(item => knownOptionsWithArgs.indexOf(item) === -1)
-            // In pytest, any option beginning with --log- is known to have args.
-            .filter(item => product === Product.pytest ? !item.startsWith('--log-') : true)
-            .sort();
+        return (
+            getOptionsWithoutArguments(output)
+                .concat(...knownOptionsWithoutArgs)
+                .filter(item => knownOptionsWithArgs.indexOf(item) === -1)
+                // In pytest, any option beginning with --log- is known to have args.
+                .filter(item => (product === Product.pytest ? !item.startsWith('--log-') : true))
+                .sort()
+        );
     }
 }
 
@@ -172,7 +170,5 @@ function getMatches(pattern: any, str: string) {
         matches.push(result[1].trim());
         result = regex.exec(str);
     }
-    return matches
-        .sort()
-        .reduce<string[]>((items, item) => items.indexOf(item) === -1 ? items.concat([item]) : items, []);
+    return matches.sort().reduce<string[]>((items, item) => (items.indexOf(item) === -1 ? items.concat([item]) : items), []);
 }

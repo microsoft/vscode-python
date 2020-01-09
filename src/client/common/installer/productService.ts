@@ -15,7 +15,7 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.bandit, ProductType.Linter);
         this.ProductTypes.set(Product.flake8, ProductType.Linter);
         this.ProductTypes.set(Product.mypy, ProductType.Linter);
-        this.ProductTypes.set(Product.pep8, ProductType.Linter);
+        this.ProductTypes.set(Product.pycodestyle, ProductType.Linter);
         this.ProductTypes.set(Product.prospector, ProductType.Linter);
         this.ProductTypes.set(Product.pydocstyle, ProductType.Linter);
         this.ProductTypes.set(Product.pylama, ProductType.Linter);
@@ -29,6 +29,7 @@ export class ProductService implements IProductService {
         this.ProductTypes.set(Product.yapf, ProductType.Formatter);
         this.ProductTypes.set(Product.rope, ProductType.RefactoringLibrary);
         this.ProductTypes.set(Product.jupyter, ProductType.DataScience);
+        this.ProductTypes.set(Product.ipykernel, ProductType.DataScience);
     }
     public getProductType(product: Product): ProductType {
         return this.ProductTypes.get(product)!;

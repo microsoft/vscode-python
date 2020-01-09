@@ -3,13 +3,16 @@
 
 'use strict';
 
+import { DebugAdapterDescriptorFactory as DebugAdapterExperiment, DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
+import { IExperimentsManager } from './common/types';
 import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
+import { IDebugAdapterDescriptorFactory } from './debugger/extension/types';
 
 /*
  * Do not introduce any breaking changes to this API.
  * This is the public API for other extensions to interact with this extension.
-*/
+ */
 
 export interface IExtensionApi {
     /**
@@ -33,15 +36,23 @@ export interface IExtensionApi {
 }
 
 // tslint:disable-next-line:no-any
-export function buildApi(ready: Promise<any>) {
+export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsManager, debugFactory: IDebugAdapterDescriptorFactory) {
     return {
-        // 'ready' will propogate the exception, but we must log it here first.
-        ready: ready.catch((ex) => {
+        // 'ready' will propagate the exception, but we must log it here first.
+        ready: ready.catch(ex => {
             traceError('Failure during activation.', ex);
             return Promise.reject(ex);
         }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
+                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+
+                if (useNewDAPtvsd) {
+                    // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.
+                    const args = debugFactory.getRemotePtvsdArgs({ host, port, waitUntilDebuggerAttaches });
+                    return [debugFactory.getPtvsdPath(), ...args];
+                }
+
                 return new RemoteDebuggerExternalLauncherScriptProvider().getLauncherArgs({ host, port, waitUntilDebuggerAttaches });
             }
         }

@@ -6,6 +6,7 @@ import * as path from 'path';
 import { Disposable } from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 
 @injectable()
@@ -16,14 +17,9 @@ export class DjangoContextInitializer implements Disposable {
     private lastCheckedWorkspace: string = '';
     private disposables: Disposable[] = [];
 
-    constructor(private documentManager: IDocumentManager,
-        private workpaceService: IWorkspaceService,
-        private fileSystem: IFileSystem,
-        commandManager: ICommandManager) {
-
+    constructor(private documentManager: IDocumentManager, private workpaceService: IWorkspaceService, private fileSystem: IFileSystem, commandManager: ICommandManager) {
         this.isDjangoProject = new ContextKey('python.isDjangoProject', commandManager);
-        this.ensureContextStateIsSet()
-            .catch(ex => console.error('Python Extension: ensureState', ex));
+        this.ensureContextStateIsSet().catch(ex => traceError('Python Extension: ensureState', ex));
         this.disposables.push(this.workpaceService.onDidChangeWorkspaceFolders(() => this.updateContextKeyBasedOnActiveWorkspace()));
     }
 

@@ -18,7 +18,6 @@ export function validateConstraints(args: any[], constraints: TypeConstraint[]):
 }
 
 export function validateConstraint(arg: any, constraint: TypeConstraint): void {
-
     if (isString(constraint)) {
         if (typeof arg !== constraint) {
             throw new Error(`argument does not match constraint: typeof ${constraint}`);

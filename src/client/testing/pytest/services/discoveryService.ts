@@ -28,14 +28,16 @@ export class TestDiscoveryService implements ITestDiscoveryService {
             };
             return this.discoverTestsInTestDirectory(opts);
         }
-        const results = await Promise.all(testDirectories.map(testDir => {
-            // Add test directory as a positional argument.
-            const opts = {
-                ...options,
-                args: [...args, testDir]
-            };
-            return this.discoverTestsInTestDirectory(opts);
-        }));
+        const results = await Promise.all(
+            testDirectories.map(testDir => {
+                // Add test directory as a positional argument.
+                const opts = {
+                    ...options,
+                    args: [...args, testDir]
+                };
+                return this.discoverTestsInTestDirectory(opts);
+            })
+        );
 
         return this.helper.mergeTests(results);
     }
@@ -48,6 +50,7 @@ export class TestDiscoveryService implements ITestDiscoveryService {
         if (args.indexOf('-s') === -1) {
             args.splice(0, 0, '-s');
         }
+        args.splice(0, 0, '--rootdir', options.workspaceFolder.fsPath);
         return args;
     }
     protected async discoverTestsInTestDirectory(options: TestDiscoveryOptions): Promise<Tests> {

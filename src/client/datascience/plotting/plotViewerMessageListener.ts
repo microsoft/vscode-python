@@ -9,12 +9,11 @@ import { IWebPanel, IWebPanelMessageListener } from '../../common/application/ty
 
 // This class listens to messages that come from the local Plot Viewer window
 export class PlotViewerMessageListener implements IWebPanelMessageListener {
-    private disposedCallback : () => void;
-    private callback :  (message: string, payload: any) => void;
+    private disposedCallback: () => void;
+    private callback: (message: string, payload: any) => void;
     private viewChanged: (panel: IWebPanel) => void;
 
     constructor(callback: (message: string, payload: any) => void, viewChanged: (panel: IWebPanel) => void, disposed: () => void) {
-
         // Save our dispose callback so we remove our history window
         this.disposedCallback = disposed;
 
