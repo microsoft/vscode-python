@@ -145,13 +145,10 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
     });
 
     suite(`Debugging - Config Resolver attach, OS = ${osName}`, () => {
-        let serviceContainer: TypeMoq.IMock<IServiceContainer>;
         let debugProvider: DebugConfigurationProvider;
         let platformService: TypeMoq.IMock<IPlatformService>;
         let fileSystem: TypeMoq.IMock<IFileSystem>;
-        let documentManager: TypeMoq.IMock<IDocumentManager>;
         let configurationService: TypeMoq.IMock<IConfigurationService>;
-        let workspaceService: TypeMoq.IMock<IWorkspaceService>;
         let experimentsManager: TypeMoq.IMock<IExperimentsManager>;
         const debugOptionsAvailable = getAvailableOptions();
         setup(() => {
