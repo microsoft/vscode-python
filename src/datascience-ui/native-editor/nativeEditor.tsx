@@ -160,13 +160,19 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             <div id="toolbar-panel">
                 <div className="toolbar-menu-bar">
                     <div className="toolbar-menu-bar-child">
-                        <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className="native-button" tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={runAll}
+                            disabled={this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.runAll', 'Run All Cells')}
+                        >
                             <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAll} />
                         </ImageButton>
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={runAbove}
-                            disabled={!canRunAbove}
+                            disabled={!canRunAbove || this.props.busy}
                             className="native-button"
                             tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
                         >
@@ -175,7 +181,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={runBelow}
-                            disabled={!canRunBelow}
+                            disabled={!canRunBelow || this.props.busy}
                             className="native-button"
                             tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
                         >
@@ -184,6 +190,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
+                            disabled={this.props.busy}
                             className="native-button"
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
@@ -192,6 +199,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
+                            disabled={this.props.busy}
                             className="native-button"
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >
@@ -224,7 +232,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.export}
-                            disabled={!this.props.cellVMs.length}
+                            disabled={!this.props.cellVMs.length || this.props.busy}
                             className="native-button"
                             tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
                         >

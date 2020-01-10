@@ -7,6 +7,7 @@ import { Event, EventEmitter, Memento, TextEditor, Uri, ViewColumn } from 'vscod
 import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
+import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
@@ -289,24 +290,27 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     }
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
     // tslint:disable-next-line: no-any no-empty
-    private export(cells: ICell[]) {
+    private async export(cells: ICell[]) {
         // Should be an array of cells
         if (cells && this.applicationShell) {
-            const filtersKey = localize.DataScience.exportDialogFilter();
-            const filtersObject: Record<string, string[]> = {};
-            filtersObject[filtersKey] = ['ipynb'];
+            // Indicate busy
+            this.startProgress();
+            try {
+                const filtersKey = localize.DataScience.exportDialogFilter();
+                const filtersObject: Record<string, string[]> = {};
+                filtersObject[filtersKey] = ['ipynb'];
 
-            // Bring up the open file dialog box
-            this.applicationShell
-                .showSaveDialog({
+                // Bring up the open file dialog box
+                const uri = await this.applicationShell.showSaveDialog({
                     saveLabel: localize.DataScience.exportDialogTitle(),
                     filters: filtersObject
-                })
-                .then(async (uri: Uri | undefined) => {
-                    if (uri) {
-                        await this.exportToFile(cells, uri.fsPath);
-                    }
                 });
+                if (uri) {
+                    await this.exportToFile(cells, uri.fsPath);
+                }
+            } finally {
+                this.stopProgress();
+            }
         }
     }
 
@@ -314,7 +318,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     private handleReturnAllCells(cells: ICell[]) {
         // See what we're waiting for.
         if (this.waitingForExportCells) {
-            this.export(cells);
+            this.export(cells).catch(ex => traceError('Error exporting:', ex));
         }
     }
 }

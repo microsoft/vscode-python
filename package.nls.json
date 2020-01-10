@@ -149,7 +149,6 @@
     "ExtensionChannels.reloadToUseInsidersMessage": "Please reload Visual Studio Code to use the insiders build of the Python extension.",
     "ExtensionChannels.downloadCompletedOutputMessage": "Insiders build download complete.",
     "ExtensionChannels.startingDownloadOutputMessage": "Starting download for Insiders build.",
-    "ExtensionChannels.optIntoProgramAgainMessage": "It looks like you were previously in the Insiders Program of the Python extension. Would you like to opt into the program again?",
     "Interpreters.environmentPromptMessage": "We noticed a new virtual environment has been created. Do you want to select it for the workspace folder?",
     "DataScience.restartKernelMessage": "Do you want to restart the IPython kernel? All variables will be lost.",
     "DataScience.restartKernelMessageYes": "Yes",

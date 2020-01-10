@@ -8,6 +8,7 @@ import * as sinon from 'sinon';
 import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
+
 import { PythonSettings } from '../../../client/common/configSettings';
 import { ConfigurationService } from '../../../client/common/configuration/service';
 import { CondaExecutionService } from '../../../client/common/process/condaExecutionService';
@@ -87,6 +88,7 @@ suite('Process - PythonExecutionFactory', () => {
             let processService: typemoq.IMock<IProcessService>;
             let windowsStoreInterpreter: IWindowsStoreInterpreter;
             let interpreterService: IInterpreterService;
+            let executionService: typemoq.IMock<IPythonExecutionService>;
             setup(() => {
                 bufferDecoder = mock(BufferDecoder);
                 activationHelper = mock(EnvironmentActivationService);
@@ -95,6 +97,8 @@ suite('Process - PythonExecutionFactory', () => {
                 condaService = mock(CondaService);
                 processLogger = mock(ProcessLogger);
                 windowsStoreInterpreter = mock(WindowsStoreInterpreter);
+                executionService = typemoq.Mock.ofType<IPythonExecutionService>();
+                executionService.setup((p: any) => p.then).returns(() => undefined);
                 when(processLogger.logProcess('', [], {})).thenReturn();
                 processService = typemoq.Mock.ofType<IProcessService>();
                 processService
@@ -365,7 +369,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
@@ -382,7 +386,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
                 reset(interpreterService);
                 when(interpreterService.getInterpreterDetails(anything())).thenResolve({ version: parse('2.7.14') } as any);
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
@@ -397,7 +401,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
@@ -412,7 +416,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());
@@ -429,7 +433,7 @@ suite('Process - PythonExecutionFactory', () => {
                 when(activationHelper.getActivatedEnvironmentVariables(resource, anything(), anything())).thenResolve({ x: '1' });
                 when(pythonSettings.pythonPath).thenReturn('HELLO');
                 when(configService.getSettings(anything())).thenReturn(instance(pythonSettings));
-                factory.createActivatedEnvironment = () => Promise.resolve(undefined as any);
+                factory.createActivatedEnvironment = () => Promise.resolve(executionService.object);
 
                 const initialize = sinon.stub(PythonDaemonExecutionServicePool.prototype, 'initialize');
                 initialize.returns(Promise.resolve());

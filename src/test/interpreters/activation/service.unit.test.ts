@@ -161,7 +161,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                         });
                         test('Use current process variables if there are no custom variables', async () => {
                             const cmd = ['1', '2'];
-                            const envVars = { one: '1', two: '2' };
+                            const envVars = { one: '1', two: '2', PYTHONWARNINGS: 'ignore' };
                             when(platform.osType).thenReturn(osType.value);
                             when(helper.getEnvironmentActivationShellCommands(resource, anything(), interpreter)).thenResolve(cmd);
                             when(processServiceFactory.create(resource)).thenResolve(instance(processService));
@@ -181,7 +181,7 @@ suite('Interpreters Activation - Python Environment Variables', () => {
                             const options = capture(processService.shellExec).first()[1];
 
                             const expectedShell = defaultShells[osType.value];
-                            expect(options).to.deep.equal({ shell: expectedShell, env: envVars, timeout: 30000, maxBuffer: 1000 * 1000 });
+                            expect(options).to.deep.equal({ env: envVars, shell: expectedShell, timeout: 30000, maxBuffer: 1000 * 1000 });
                         });
                         test('Error must be swallowed when activation fails', async () => {
                             const cmd = ['1', '2'];
