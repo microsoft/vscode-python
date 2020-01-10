@@ -37,7 +37,7 @@ suite('Linting - MyPy', () => {
                 lines[2],
                 {
                     code: undefined,
-                    message: "Name 'not_declared_var' is not defined",
+                    message: 'Name "not_declared_var" is not defined',
                     column: 0,
                     line: 11,
                     type: 'error',
