@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import {
     CancellationToken,
@@ -31,7 +31,7 @@ import { IConfigurationService, Resource } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
+import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager, LanguageServerType } from '../types';
 
 /**
  * Starts the language server managers per workspaces (currently one for first workspace).
@@ -44,13 +44,15 @@ import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFol
 export class LanguageServerExtensionActivator implements ILanguageServerActivator {
     private resource?: Resource;
     constructor(
-        @inject(ILanguageServerManager) private readonly manager: ILanguageServerManager,
+        @inject(ILanguageServerManager) @named(LanguageServerType.PyRx) private readonly manager: ILanguageServerManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) {}
+    ) {
+    }
+
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
         if (!resource) {

@@ -1,6 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import {
     CancellationToken,
     CodeLens,
@@ -26,7 +26,7 @@ import * as vscodeLanguageClient from 'vscode-languageclient';
 import { traceDecorators } from '../../common/logger';
 import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { ILanguageServerActivator, ILanguageServerManager } from '../types';
+import { ILanguageServerActivator, ILanguageServerManager, LanguageServerType } from '../types';
 
 /**
  * Starts the PyRx language server managers per workspaces (currently one for first workspace).
@@ -37,7 +37,8 @@ import { ILanguageServerActivator, ILanguageServerManager } from '../types';
  */
 @injectable()
 export class PyRxExtensionActivator implements ILanguageServerActivator {
-    constructor(@inject(ILanguageServerManager) private readonly manager: ILanguageServerManager) { }
+    constructor(@inject(ILanguageServerManager) @named(LanguageServerType.PyRx) private readonly manager: ILanguageServerManager) {
+    }
 
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
