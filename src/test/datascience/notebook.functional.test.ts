@@ -325,6 +325,7 @@ suite('DataScience notebook tests', () => {
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
         } else {
+            traceInfo('Remote Self Cert is not supported on 2.7');
             _this.skip();
         }
     });
