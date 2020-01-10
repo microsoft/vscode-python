@@ -1,6 +1,6 @@
 # Changelog
 
-## 2020.1.1 (9 January 2020)
+## 2020.1.1 (13 January 2020)
 
 ### Enhancements
 
@@ -19,6 +19,10 @@
    ([#9444](https://github.com/Microsoft/vscode-python/issues/9444))
 1. Update `ptvsd` debugger to version v5.0.0a11. Fixes signing for `inject_dll_x86.exe`.
    ([#9474](https://github.com/Microsoft/vscode-python/issues/9474))
+1. Disable use of `conda run`.
+   ([#9490](https://github.com/Microsoft/vscode-python/issues/9490))
+1. Revert changes related to calling `mypy` with relative paths.
+   ([#9496](https://github.com/Microsoft/vscode-python/issues/9496))
 
 ### Code Health
 
