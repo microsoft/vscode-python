@@ -37,10 +37,10 @@ suite('Terminal - Django Shell Code Execution', () => {
         workspace
             .setup(c => c.onDidChangeWorkspaceFolders(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => {
-            return {
-                dispose: () => void 0
-            };
-        });
+                return {
+                    dispose: () => void 0
+                };
+            });
         platform = TypeMoq.Mock.ofType<IPlatformService>();
         const documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
         const commandManager = TypeMoq.Mock.ofType<ICommandManager>();
@@ -54,7 +54,6 @@ suite('Terminal - Django Shell Code Execution', () => {
             platform.object,
             commandManager.object,
             fileSystem.object,
-            pythonExecutionFactory.object,
             disposables
         );
 
@@ -74,7 +73,14 @@ suite('Terminal - Django Shell Code Execution', () => {
         disposables = [];
     });
 
-    async function testReplCommandArguments(isWindows: boolean, pythonPath: string, expectedPythonPath: string, terminalArgs: string[], expectedTerminalArgs: string[], resource?: Uri) {
+    async function testReplCommandArguments(
+        isWindows: boolean,
+        pythonPath: string,
+        expectedPythonPath: string,
+        terminalArgs: string[],
+        expectedTerminalArgs: string[],
+        resource?: Uri
+    ) {
         platform.setup(p => p.isWindows).returns(() => isWindows);
         settings.setup(s => s.pythonPath).returns(() => pythonPath);
         terminalSettings.setup(t => t.launchArgs).returns(() => terminalArgs);
@@ -179,16 +185,16 @@ suite('Terminal - Django Shell Code Execution', () => {
         const serviceContainer = TypeMoq.Mock.ofType<IServiceContainer>();
         const processService = TypeMoq.Mock.ofType<IProcessService>();
         const condaExecutionService = new CondaExecutionService(serviceContainer.object, processService.object, pythonPath, condaFile, condaEnv);
-        const hasEnvName = condaEnv.name !== '';
-        const condaArgs = ['run', ...(hasEnvName ? ['-n', condaEnv.name] : ['-p', condaEnv.path]), 'python'];
-        const expectedTerminalArgs = [...condaArgs, ...terminalArgs, 'manage.py', 'shell'];
-        pythonExecutionFactory.setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(condaExecutionService));
+        const expectedTerminalArgs = [...terminalArgs, 'manage.py', 'shell'];
+        pythonExecutionFactory
+            .setup(p => p.createCondaExecutionService(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .returns(() => Promise.resolve(condaExecutionService));
 
         const replCommandArgs = await (executor as DjangoShellCodeExecutionProvider).getExecutableInfo(resource);
 
         expect(replCommandArgs).not.to.be.an('undefined', 'Conda command args are undefined');
-        expect(replCommandArgs.command).to.be.equal(condaFile, 'Incorrect conda path');
-        expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect conda arguments');
+        expect(replCommandArgs.command).to.be.equal(pythonPath, 'Repl should use python not conda');
+        expect(replCommandArgs.args).to.be.deep.equal(expectedTerminalArgs, 'Incorrect terminal arguments');
     }
 
     test('Ensure conda args including env name are passed when using a conda environment with a name', async () => {

@@ -1,5 +1,28 @@
 # Changelog
 
+## 2020.1.1 (9 January 2020)
+
+### Enhancements
+
+1. Add support for `Find` in the `Notebook Editor`.
+   ([#9470](https://github.com/Microsoft/vscode-python/issues/9470))
+
+### Fixes
+
+1. Fix the Data Science "Enable Plot Viewer" setting to pass figure_formats correctly when turned off.
+   ([#9420](https://github.com/Microsoft/vscode-python/issues/9420))
+1. Shift+Enter can no longer send multiple lines to the interactive window.
+   ([#9437](https://github.com/Microsoft/vscode-python/issues/9437))
+1. Shift+Enter can no longer run code in the terminal.
+   ([#9439](https://github.com/Microsoft/vscode-python/issues/9439))
+1. Scrape output to get the details of the registered kernel.
+   ([#9444](https://github.com/Microsoft/vscode-python/issues/9444))
+1. Update `ptvsd` debugger to version v5.0.0a11. Fixes signing for `inject_dll_x86.exe`.
+   ([#9474](https://github.com/Microsoft/vscode-python/issues/9474))
+
+### Code Health
+
+
 ## 2020.1.0 (6 January 2020)
 
 ### Enhancements

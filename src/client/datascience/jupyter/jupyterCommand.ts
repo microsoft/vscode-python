@@ -93,7 +93,7 @@ class InterpreterJupyterCommand implements IJupyterCommand {
                     }
                 }
             }
-            return pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter });
+            return pythonExecutionFactory.createActivatedEnvironment({ interpreter: this._interpreter, bypassCondaExecution: true });
         });
     }
     public interpreter(): Promise<PythonInterpreter | undefined> {
@@ -192,7 +192,7 @@ export class InterpreterJupyterKernelSpecCommand extends InterpreterJupyterComma
         }
         try {
             // Try getting kernels using python script, if that fails (even if there's output in stderr) rethrow original exception.
-            const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({ interpreter });
+            const activatedEnv = await this.pythonExecutionFactory.createActivatedEnvironment({ interpreter, bypassCondaExecution: true });
             return activatedEnv.exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')], { ...options, throwOnStdErr: true });
         } catch (innerEx) {
             traceError('Failed to get a list of the kernelspec using python script', innerEx);

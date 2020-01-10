@@ -63,7 +63,12 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        const activatedProcPromise = this.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, pythonPath: pythonPath, resource: options.resource });
+        const activatedProcPromise = this.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
+            pythonPath: pythonPath,
+            resource: options.resource,
+            bypassCondaExecution: true
+        });
 
         // No daemon support in Python 2.7.
         const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
