@@ -243,10 +243,9 @@ export class NotebookStarter implements Disposable {
         // Create a daemon only when using the current interpreter.
         // We dont' want to create daemons for all interpreters.
         const isActiveInterpreter = activeInterpreter ? activeInterpreter.path === interpreter.path : false;
-        const daemon = await (isActiveInterpreter ?
-            this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path }) :
-            this.executionFactory.createActivatedEnvironment({allowEnvironmentFetchExceptions: true, interpreter})
-        );
+        const daemon = await (isActiveInterpreter
+            ? this.executionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path })
+            : this.executionFactory.createActivatedEnvironment({ allowEnvironmentFetchExceptions: true, interpreter, bypassCondaExecution: true }));
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
         const newOptions: SpawnOptions = { mergeStdOutErr: true, token: cancelToken };
         const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
