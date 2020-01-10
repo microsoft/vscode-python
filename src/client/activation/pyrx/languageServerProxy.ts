@@ -16,7 +16,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
-import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory, LanguageServerType } from '../types';
+import { ILanguageClientFactory, ILanguageServerProxy, LanguageServerType } from '../types';
 
 @injectable()
 export class PyRxProxy implements ILanguageServerProxy {

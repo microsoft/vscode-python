@@ -18,8 +18,8 @@ export class PyRxLanguageClientFactory implements ILanguageClientFactory {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem
     ) { }
     public async createLanguageClient(_resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server', 'server.bundle.js');
-        const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server', 'server.js');
+        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server.bundle.js');
+        //const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server.js');
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
         // If the extension is launched in debug mode, then the debug server options are used.
         const serverOptions: ServerOptions = {
@@ -28,7 +28,7 @@ export class PyRxLanguageClientFactory implements ILanguageClientFactory {
             // build includes only the bundled package, so we don't want to crash if
             // someone starts the production extension in debug mode.
             debug: {
-                module: this.fs.fileExists(nonBundlePath) ? nonBundlePath : bundlePath,
+                module: this.fs.fileExists(bundlePath) ? bundlePath : bundlePath,
                 transport: TransportKind.ipc,
                 options: debugOptions
             }
