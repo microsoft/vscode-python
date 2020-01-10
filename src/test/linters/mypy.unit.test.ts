@@ -14,7 +14,7 @@ import { ILintMessage } from '../../client/linters/types';
 // tslint:disable-next-line:no-multiline-string
 const output = `
 provider.pyi:10: error: Incompatible types in assignment (expression has type "str", variable has type "int")
-provider.pyi:11: error: Name "not_declared_var" is not defined
+provider.pyi:11: error: Name 'not_declared_var' is not defined
 provider.pyi:12:21: error: Expression has type "Any"
 `;
 
@@ -37,7 +37,8 @@ suite('Linting - MyPy', () => {
                 lines[2],
                 {
                     code: undefined,
-                    message: 'Name "not_declared_var" is not defined',
+                    // tslint:disable-next-line
+                    message: "Name 'not_declared_var' is not defined",
                     column: 0,
                     line: 11,
                     type: 'error',
