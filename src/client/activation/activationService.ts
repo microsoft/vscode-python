@@ -245,6 +245,9 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
             case LanguageServerType.Microsoft:
                 outputLine = 'Starting Microsoft Python language server.';
                 break;
+            case LanguageServerType.PyRx:
+                outputLine = 'Starting PyRx language server.';
+                break;
             case LanguageServerType.None:
                 outputLine = 'Editor support is inactive since language server is set to None.';
                 break;

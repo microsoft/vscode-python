@@ -11,8 +11,8 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
-import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy, LanguageServerType } from '../types';
 import { LanguageClientMiddleware } from '../languageClientMiddleware';
+import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy, LanguageServerType } from '../types';
 
 @injectable()
 export class PyRxManager implements ILanguageServerManager {
@@ -25,7 +25,6 @@ export class PyRxManager implements ILanguageServerManager {
     constructor(
         @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
         @inject(ILanguageServerAnalysisOptions) private readonly analysisOptions: ILanguageServerAnalysisOptions,
-        @inject(ILanguageServerExtension) private readonly lsExtension: ILanguageServerExtension,
         @inject(IPythonExtensionBanner) @named(BANNER_NAME_LS_SURVEY) private readonly surveyBanner: IPythonExtensionBanner
     ) { }
 

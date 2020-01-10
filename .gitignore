@@ -42,3 +42,5 @@ uitests/out/**
 debug*.log
 ptvsd*.log
 pydevd*.log
+pyrx/**
+

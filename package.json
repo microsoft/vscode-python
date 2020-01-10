@@ -1914,6 +1914,7 @@
                     "enum": [
                         "Jedi",
                         "Microsoft",
+                        "PyRx",
                         "None"
                     ],
                     "default": "Microsoft",

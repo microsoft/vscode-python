@@ -24,9 +24,9 @@ import {
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
 import { traceDecorators } from '../../common/logger';
+import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { ILanguageServerActivator, ILanguageServerManager } from '../types';
-import type { Resource } from '../../common/types';
 
 /**
  * Starts the PyRx language server managers per workspaces (currently one for first workspace).
@@ -37,9 +37,7 @@ import type { Resource } from '../../common/types';
  */
 @injectable()
 export class PyRxExtensionActivator implements ILanguageServerActivator {
-    constructor(
-        @inject(ILanguageServerManager) private readonly manager: ILanguageServerManager
-    ) { }
+    constructor(@inject(ILanguageServerManager) private readonly manager: ILanguageServerManager) { }
 
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
