@@ -285,14 +285,14 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    runTest('Remote Self Certs', async () => {
+    runTest('Remote Self Certs', async (_this: Mocha.Context) => {
         const python = await getNotebookCapableInterpreter(ioc, processFactory);
         const procService = await processFactory.create();
 
         // We will only connect if we allow for self signed cert connections
         ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 
-        if (procService && python) {
+        if (procService && python && python.version?.major && python.version?.major > 2) {
             const connectionFound = createDeferred();
             const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'selfCert.py');
             const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
@@ -324,6 +324,8 @@ suite('DataScience notebook tests', () => {
             }
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
+        } else {
+            _this.skip();
         }
     });
 
