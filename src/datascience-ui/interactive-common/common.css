@@ -443,7 +443,6 @@ body, html {
 
 .kernel-status {
     margin-top: 2px;
-    max-width: 350px;
     flex: 1;
     display: flex;
     margin-left: auto;
@@ -475,14 +474,12 @@ body, html {
 .kernel-status-server {
     display: grid;
     grid-template-columns: 1fr auto;
-    max-width: 60%;
 }
 
 .kernel-status-status {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
-    max-width: 38%;
 }
 
 .kernel-status-icon {

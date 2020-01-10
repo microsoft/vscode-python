@@ -21,15 +21,21 @@ export namespace Kernel {
     export function restartKernel<T>(arg: CommonReducerArg<T>): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.RestartKernel));
 
-        // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
-        return arg.prevState;
+        // Set busy until kernel is restarted
+        return {
+            ...arg.prevState,
+            busy: true
+        };
     }
 
     export function interruptKernel<T>(arg: CommonReducerArg<T>): IMainState {
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Interrupt));
 
-        // Doesn't modify anything right now. Might set a busy flag or kernel state in the future
-        return arg.prevState;
+        // Set busy until kernel is finished interrupting
+        return {
+            ...arg.prevState,
+            busy: true
+        };
     }
 
     export function updateStatus<T>(arg: CommonReducerArg<T, IServerState>): IMainState {

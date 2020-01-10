@@ -159,76 +159,86 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
         return (
             <div id="toolbar-panel">
                 <div className="toolbar-menu-bar">
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={runAll} className="native-button" tooltip={getLocString('DataScience.runAll', 'Run All Cells')}>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAll} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={runAbove}
-                        disabled={!canRunAbove}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAbove} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={runBelow}
-                        disabled={!canRunBelow}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunBelow} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.restartKernel}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.interruptKernel}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className="native-button" tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.clearAllOutputs}
-                        disabled={!this.props.cellVMs.length}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ClearAllOutput} />
-                    </ImageButton>
-                    <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className="native-button" tooltip={variableExplorerTooltip}>
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={save}
-                        disabled={!this.props.dirty}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.save', 'Save File')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
-                    </ImageButton>
-                    <ImageButton
-                        baseTheme={this.props.baseTheme}
-                        onClick={this.props.export}
-                        disabled={!this.props.cellVMs.length}
-                        className="native-button"
-                        tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
-                    >
-                        <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ExportToPython} />
-                    </ImageButton>
+                    <div className="toolbar-menu-bar-child">
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={runAll}
+                            disabled={this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.runAll', 'Run All Cells')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAll} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={runAbove}
+                            disabled={!canRunAbove || this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.runAbove', 'Run cells above')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunAbove} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={runBelow}
+                            disabled={!canRunBelow || this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.runBelow', 'Run cell and below')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.RunBelow} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.restartKernel}
+                            disabled={this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.interruptKernel}
+                            disabled={this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={addCell} className="native-button" tooltip={getLocString('DataScience.addNewCell', 'Insert cell')}>
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.InsertBelow} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.clearAllOutputs}
+                            disabled={!this.props.cellVMs.length}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.clearAllOutput', 'Clear All Output')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ClearAllOutput} />
+                        </ImageButton>
+                        <ImageButton baseTheme={this.props.baseTheme} onClick={toggleVariableExplorer} className="native-button" tooltip={variableExplorerTooltip}>
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.VariableExplorer} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={save}
+                            disabled={!this.props.dirty}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.save', 'Save File')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />
+                        </ImageButton>
+                        <ImageButton
+                            baseTheme={this.props.baseTheme}
+                            onClick={this.props.export}
+                            disabled={!this.props.cellVMs.length || this.props.busy}
+                            className="native-button"
+                            tooltip={getLocString('DataScience.exportAsPythonFileTooltip', 'Save As Python File')}
+                        >
+                            <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.ExportToPython} />
+                        </ImageButton>
+                    </div>
                     <KernelSelection baseTheme={this.props.baseTheme} font={this.props.font} kernel={this.props.kernel} selectServer={selectServer} selectKernel={selectKernel} />
                 </div>
                 <div className="toolbar-divider" />

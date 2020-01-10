@@ -113,6 +113,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.interruptKernel}
+                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.interruptKernel', 'Interrupt IPython kernel')}
                         >
                             <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Interrupt} />
@@ -120,6 +121,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.restartKernel}
+                            disabled={this.props.busy}
                             tooltip={getLocString('DataScience.restartServer', 'Restart IPython kernel')}
                         >
                             <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.Restart} />
@@ -130,7 +132,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
                         <ImageButton
                             baseTheme={this.props.baseTheme}
                             onClick={this.props.export}
-                            disabled={this.props.cellVMs.length === 0}
+                            disabled={this.props.cellVMs.length === 0 || this.props.busy}
                             tooltip={getLocString('DataScience.export', 'Export as Jupyter notebook')}
                         >
                             <Image baseTheme={this.props.baseTheme} class="image-button-image" image={ImageName.SaveAs} />

@@ -181,7 +181,7 @@ for _ in range(50):
                 verifyHtmlOnCell(wrapper, 'NativeCell', `<td>`, CellPosition.Last);
 
                 await addCell(wrapper, ioc, matPlotLib, true);
-                verifyHtmlOnCell(wrapper, 'NativeCell', matPlotLibResults, CellPosition.Last);
+                verifyHtmlOnCell(wrapper, 'NativeCell', /img|Figure/, CellPosition.Last);
 
                 await addCell(wrapper, ioc, spinningCursor, true);
                 verifyHtmlOnCell(wrapper, 'NativeCell', '<div>', CellPosition.Last);

@@ -519,7 +519,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Setup default settings
         this.pythonSettings.datascience = {
             allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 20000,
+            jupyterLaunchTimeout: 60000,
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
@@ -559,6 +559,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
+
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
@@ -584,6 +585,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         }
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);

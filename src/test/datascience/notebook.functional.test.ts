@@ -171,9 +171,10 @@ suite('DataScience notebook tests', () => {
             assert.ok(data || text, `${index}: No data object on the cell for ${code}`);
             if (data) {
                 // For linter
-                assert.ok(data.hasOwnProperty(mimeType), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
-                assert.ok((data as any)[mimeType], `${index}: Cell mime type not correct`);
-                verifyValue((data as any)[mimeType]);
+                assert.ok(data.hasOwnProperty(mimeType) || data.hasOwnProperty('text/plain'), `${index}: Cell mime type not correct for ${JSON.stringify(data)}`);
+                const actualMimeType = data.hasOwnProperty(mimeType) ? mimeType : 'text/plain';
+                assert.ok((data as any)[actualMimeType], `${index}: Cell mime type not correct`);
+                verifyValue((data as any)[actualMimeType]);
             }
             if (text) {
                 verifyValue(text);
@@ -201,7 +202,7 @@ suite('DataScience notebook tests', () => {
 
             // Test all mime types together so we don't have to startup and shutdown between
             // each
-            const server = await createNotebook(true);
+            const server = await createNotebook(true, false, false, 'history', undefined, path.join(srcDirectory(), 'foo.py'));
             if (server) {
                 for (let i = 0; i < types.length; i += 1) {
                     const markdownRegex = types[i].markdownRegEx ? types[i].markdownRegEx : '';
@@ -287,14 +288,14 @@ suite('DataScience notebook tests', () => {
         }
     }
 
-    runTest('Remote Self Certs', async () => {
+    runTest('Remote Self Certs', async (_this: Mocha.Context) => {
         const python = await getNotebookCapableInterpreter(ioc, processFactory);
         const procService = await processFactory.create();
 
         // We will only connect if we allow for self signed cert connections
         ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
 
-        if (procService && python) {
+        if (procService && python && python.version?.major && python.version?.major > 2) {
             const connectionFound = createDeferred();
             const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'selfCert.py');
             const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');
@@ -326,6 +327,9 @@ suite('DataScience notebook tests', () => {
             }
             // Have to dispose here otherwise the process may exit before hand and mess up cleanup.
             await server!.dispose();
+        } else {
+            traceInfo('Remote Self Cert is not supported on 2.7');
+            _this.skip();
         }
     });
 

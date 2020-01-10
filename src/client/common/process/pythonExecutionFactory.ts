@@ -52,17 +52,6 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const processLogger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
         processService.on('exec', processLogger.logProcess.bind(processLogger));
 
-        // Don't bother getting a conda execution service instance if we haven't fetched the list of interpreters yet.
-        // Also, without this hasInterpreters check smoke tests will time out
-        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
-        const hasInterpreters = await interpreterService.hasInterpreters;
-        if (hasInterpreters) {
-            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-            if (condaExecutionService) {
-                return condaExecutionService;
-            }
-        }
-
         if (this.windowsStoreInterpreter.isWindowsStoreInterpreter(pythonPath)) {
             return new WindowsStorePythonProcess(this.serviceContainer, processService, pythonPath, this.windowsStoreInterpreter);
         }
@@ -128,16 +117,10 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         processService.on('exec', processLogger.logProcess.bind(processLogger));
         this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry).push(processService);
 
-        // Allow parts of the code to ignore conda run.
-        if (!options.bypassCondaExecution) {
-            const condaExecutionService = await this.createCondaExecutionService(pythonPath, processService);
-            if (condaExecutionService) {
-                return condaExecutionService;
-            }
-        }
-
         return new PythonExecutionService(this.serviceContainer, processService, pythonPath);
     }
+    // Not using this function for now because there are breaking issues with conda run (conda 4.8, PVSC 2020.1).
+    // See https://github.com/microsoft/vscode-python/issues/9490
     public async createCondaExecutionService(pythonPath: string, processService?: IProcessService, resource?: Uri): Promise<CondaExecutionService | undefined> {
         const processServicePromise = processService ? Promise.resolve(processService) : this.processServiceFactory.create(resource);
         const [condaVersion, condaEnvironment, condaFile, procService] = await Promise.all([
