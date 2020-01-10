@@ -20,6 +20,7 @@ import { LanguageServerExtension } from '../../client/activation/languageServer/
 import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
+import { PyRxManager } from '../../client/activation/pyrx/manager';
 import {
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
@@ -436,7 +437,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy, LanguageServerType.Microsoft);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy, LanguageServerType.PyRx);
         this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
-        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
+        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager, LanguageServerType.Microsoft);
+        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, PyRxManager, LanguageServerType.PyRx);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, AutoSaveService);

@@ -34,6 +34,9 @@ import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
 import { NoLanguageServerExtensionActivator } from './none/activator';
+import { PyRxExtensionActivator } from './pyrx/activator';
+import { PyRxProxy } from './pyrx/languageServerProxy';
+import { PyRxManager } from './pyrx/manager';
 import {
     IDownloadChannelRule,
     IExtensionActivationManager,
@@ -55,8 +58,6 @@ import {
     LanguageClientFactory,
     LanguageServerType
 } from './types';
-import { PyRxExtensionActivator } from './pyrx/activator';
-import { PyRxProxy } from './pyrx/languageServerProxy';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
@@ -88,7 +89,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
     serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy, LanguageServerType.Microsoft);
     serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, PyRxProxy, LanguageServerType.PyRx);
-    serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager);
+    serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager, LanguageServerType.Microsoft);
+    serviceManager.add<ILanguageServerManager>(ILanguageServerManager, PyRxManager, LanguageServerType.PyRx);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);
