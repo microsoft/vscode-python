@@ -28,14 +28,7 @@ suite('Debugging - Configuration Provider File', () => {
             type: DebuggerTypeName,
             request: 'attach',
             // tslint:disable-next-line:no-invalid-template-strings
-            processId: '${command:pickProcess}',
-            pathMappings: [
-                {
-                    // tslint:disable-next-line:no-invalid-template-strings
-                    localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+            processId: '${command:pickProcess}'
         };
 
         expect(state.config).to.be.deep.equal(config);

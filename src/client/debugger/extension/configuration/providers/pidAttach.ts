@@ -21,14 +21,7 @@ export class PidAttachDebugConfigurationProvider implements IDebugConfigurationP
             type: DebuggerTypeName,
             request: 'attach',
             // tslint:disable-next-line:no-invalid-template-strings
-            processId: '${command:pickProcess}',
-            pathMappings: [
-                {
-                    // tslint:disable-next-line:no-invalid-template-strings
-                    localRoot: '${workspaceFolder}',
-                    remoteRoot: '.'
-                }
-            ]
+            processId: '${command:pickProcess}'
         };
         Object.assign(state.config, config);
     }
