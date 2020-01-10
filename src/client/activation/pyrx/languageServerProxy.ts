@@ -16,7 +16,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
 import { ProgressReporting } from '../progress';
-import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory } from '../types';
+import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory, LanguageServerType } from '../types';
 
 @injectable()
 export class PyRxProxy implements ILanguageServerProxy {
@@ -26,9 +26,7 @@ export class PyRxProxy implements ILanguageServerProxy {
     private disposed: boolean = false;
 
     constructor(
-        @inject(ILanguageClientFactory)
-        @named(LanguageClientFactory.base)
-        private readonly factory: ILanguageClientFactory,
+        @inject(ILanguageClientFactory) @named(LanguageServerType.PyRx) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {

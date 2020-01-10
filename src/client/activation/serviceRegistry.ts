@@ -58,6 +58,7 @@ import {
     LanguageClientFactory,
     LanguageServerType
 } from './types';
+import { PyRxLanguageClientFactory } from './pyrx/languageClientFactory';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
@@ -84,6 +85,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, BaseLanguageClientFactory, LanguageClientFactory.base);
     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DownloadedLanguageClientFactory, LanguageClientFactory.downloaded);
     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, SimpleLanguageClientFactory, LanguageClientFactory.simple);
+    serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, PyRxLanguageClientFactory, LanguageServerType.PyRx);
     serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
     serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
