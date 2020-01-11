@@ -1147,19 +1147,19 @@ export interface IEventNamePropertyMapping {
     /**
      * Telemetry event sent when LS is started for workspace (workspace folder in case of multi-root)
      */
-    [EventName.PYTHON_PYRX_ENABLED]: never | undefined;
+    [EventName.PYTHON_NODE_SERVER_ENABLED]: never | undefined;
     /**
-     * Telemetry event sent when PyRx is ready to start
+     * Telemetry event sent when Node.js server is ready to start
      */
-    [EventName.PYTHON_PYRX_READY]: never | undefined;
+    [EventName.PYTHON_NODE_SERVER_READY]: never | undefined;
     /**
-     * Telemetry event sent when starting PyRx
+     * Telemetry event sent when starting Node.js server
      */
-    [EventName.PYTHON_PYRX_STARTUP]: never | undefined;
+    [EventName.PYTHON_NODE_SERVER_STARTUP]: never | undefined;
     /**
-     * Telemetry sent from PyRx (details of telemetry sent can be provided by LS team)
+     * Telemetry sent from Node.js server (details of telemetry sent can be provided by LS team)
      */
-    [EventName.PYTHON_PYRX_TELEMETRY]: any;
+    [EventName.PYTHON_NODE_SERVER_TELEMETRY]: any;
     /**
      * Telemetry captured for enabling reload.
      */

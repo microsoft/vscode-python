@@ -14,12 +14,11 @@ import { ILanguageClientFactory } from '../types';
 const languageClientName = 'Python Tools';
 
 @injectable()
-export class PyRxLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem
-    ) { }
+export class NodeLanguageClientFactory implements ILanguageClientFactory {
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
     public async createLanguageClient(_resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server.bundle.js');
-        //const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'pyrx', 'server.js');
+        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'node', 'server.bundle.js');
+        //const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'node', 'server.js');
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
         // If the extension is launched in debug mode, then the debug server options are used.
         const serverOptions: ServerOptions = {

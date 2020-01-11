@@ -15,7 +15,7 @@ import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerManager, ILanguageServerProxy, LanguageServerType } from '../types';
 
 @injectable()
-export class PyRxManager implements ILanguageServerManager {
+export class NodeLanguageServerManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
     private interpreter: PythonInterpreter | undefined;
@@ -76,10 +76,10 @@ export class PyRxManager implements ILanguageServerManager {
         await this.startLanguageServer();
     }
 
-    @captureTelemetry(EventName.PYTHON_PYRX_STARTUP, undefined, true)
+    @captureTelemetry(EventName.PYTHON_NODE_SERVER_STARTUP, undefined, true)
     @traceDecorators.verbose('Starting Language Server')
     protected async startLanguageServer(): Promise<void> {
-        this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.PyRx);
+        this.languageServerProxy = this.serviceContainer.get<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerType.Node);
         const options = await this.analysisOptions!.getAnalysisOptions();
         options.middleware = this.middleware = new LanguageClientMiddleware(this.surveyBanner);
 

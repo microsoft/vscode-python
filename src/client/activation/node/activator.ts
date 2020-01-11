@@ -29,16 +29,15 @@ import { PythonInterpreter } from '../../interpreter/contracts';
 import { ILanguageServerActivator, ILanguageServerManager, LanguageServerType } from '../types';
 
 /**
- * Starts the PyRx language server managers per workspaces (currently one for first workspace).
+ * Starts the Node.js-based language server managers per workspaces (currently one for first workspace).
  *
  * @export
- * @class PyRxExtensionActivator
+ * @class NodeLanguageServerActivator
  * @implements {ILanguageServerActivator}
  */
 @injectable()
-export class PyRxExtensionActivator implements ILanguageServerActivator {
-    constructor(@inject(ILanguageServerManager) @named(LanguageServerType.PyRx) private readonly manager: ILanguageServerManager) {
-    }
+export class NodeLanguageServerActivator implements ILanguageServerActivator {
+    constructor(@inject(ILanguageServerManager) @named(LanguageServerType.Node) private readonly manager: ILanguageServerManager) { }
 
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {

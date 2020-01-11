@@ -44,14 +44,13 @@ import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFol
 export class LanguageServerExtensionActivator implements ILanguageServerActivator {
     private resource?: Resource;
     constructor(
-        @inject(ILanguageServerManager) @named(LanguageServerType.PyRx) private readonly manager: ILanguageServerManager,
+        @inject(ILanguageServerManager) @named(LanguageServerType.Node) private readonly manager: ILanguageServerManager,
         @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) {
-    }
+    ) { }
 
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {

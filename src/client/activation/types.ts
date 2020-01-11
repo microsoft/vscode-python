@@ -66,7 +66,7 @@ export interface IExtensionActivationService {
 export enum LanguageServerType {
     Jedi = 'Jedi',
     Microsoft = 'Microsoft',
-    PyRx = 'PyRx',
+    Node = 'Node',
     None = 'None'
 }
 

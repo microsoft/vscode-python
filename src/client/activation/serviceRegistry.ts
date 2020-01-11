@@ -33,10 +33,11 @@ import { LanguageServerProxy } from './languageServer/languageServerProxy';
 import { LanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
+import { NodeLanguageServerActivator } from './node/activator';
+import { NodeLanguageClientFactory } from './node/languageClientFactory';
+import { NodeLanguageServerProxy } from './node/languageServerProxy';
+import { NodeLanguageServerManager } from './node/manager';
 import { NoLanguageServerExtensionActivator } from './none/activator';
-import { PyRxExtensionActivator } from './pyrx/activator';
-import { PyRxProxy } from './pyrx/languageServerProxy';
-import { PyRxManager } from './pyrx/manager';
 import {
     IDownloadChannelRule,
     IExtensionActivationManager,
@@ -58,7 +59,6 @@ import {
     LanguageClientFactory,
     LanguageServerType
 } from './types';
-import { PyRxLanguageClientFactory } from './pyrx/languageClientFactory';
 
 export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
@@ -68,7 +68,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi);
     serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerType.Microsoft);
     serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NoLanguageServerExtensionActivator, LanguageServerType.None);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, PyRxExtensionActivator, LanguageServerType.PyRx);
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NodeLanguageServerActivator, LanguageServerType.Node);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
     serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);
@@ -85,14 +85,14 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, BaseLanguageClientFactory, LanguageClientFactory.base);
     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DownloadedLanguageClientFactory, LanguageClientFactory.downloaded);
     serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, SimpleLanguageClientFactory, LanguageClientFactory.simple);
-    serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, PyRxLanguageClientFactory, LanguageServerType.PyRx);
+    serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory, LanguageServerType.Node);
     serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader);
     serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
     serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
     serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy, LanguageServerType.Microsoft);
-    serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, PyRxProxy, LanguageServerType.PyRx);
+    serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy, LanguageServerType.Node);
     serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager, LanguageServerType.Microsoft);
-    serviceManager.add<ILanguageServerManager>(ILanguageServerManager, PyRxManager, LanguageServerType.PyRx);
+    serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager, LanguageServerType.Node);
     serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel);
     serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ExtensionSurveyPrompt);
     serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService);

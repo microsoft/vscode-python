@@ -19,14 +19,14 @@ import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy, LanguageServerType } from '../types';
 
 @injectable()
-export class PyRxProxy implements ILanguageServerProxy {
+export class NodeLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];
     private disposed: boolean = false;
 
     constructor(
-        @inject(ILanguageClientFactory) @named(LanguageServerType.PyRx) private readonly factory: ILanguageClientFactory,
+        @inject(ILanguageClientFactory) @named(LanguageServerType.Node) private readonly factory: ILanguageClientFactory,
         @inject(ITestManagementService) private readonly testManager: ITestManagementService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
     ) {
@@ -52,7 +52,7 @@ export class PyRxProxy implements ILanguageServerProxy {
     }
 
     @traceDecorators.error('Failed to start language server')
-    @captureTelemetry(EventName.PYTHON_PYRX_ENABLED, undefined, true)
+    @captureTelemetry(EventName.PYTHON_NODE_SERVER_ENABLED, undefined, true)
     public async start(resource: Resource, interpreter: PythonInterpreter | undefined, options: LanguageClientOptions): Promise<void> {
         if (!this.languageClient) {
             this.languageClient = await this.factory.createLanguageClient(resource, interpreter, options);
@@ -81,7 +81,7 @@ export class PyRxProxy implements ILanguageServerProxy {
     // tslint:disable-next-line: no-empty
     public loadExtension(_args?: {}) { }
 
-    @captureTelemetry(EventName.PYTHON_PYRX_READY, undefined, true)
+    @captureTelemetry(EventName.PYTHON_NODE_SERVER_READY, undefined, true)
     protected async serverReady(): Promise<void> {
         while (this.languageClient && !this.languageClient!.initializeResult) {
             await sleep(100);
