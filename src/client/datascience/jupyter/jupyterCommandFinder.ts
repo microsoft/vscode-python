@@ -261,6 +261,13 @@ export class JupyterCommandFinderImpl {
             });
         }
 
+        // Make sure found is set (tests can mess this up when interpreters aren't returned)
+        if (!found) {
+            found = {
+                status: ModuleExistsStatus.NotFound
+            };
+        }
+
         // Set the original error so we
         // can propagate the reason to the user
         if (firstError) {
