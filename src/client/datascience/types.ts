@@ -511,10 +511,17 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
-    getVariables(notebook: INotebook): Promise<IJupyterVariable[]>;
-    getValue(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
+    getVariables(notebook: INotebook, sortColumn: string, startIndex?: number, pageSize?: number): Promise<IJupyterVariable[]>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(targetVariable: IJupyterVariable, notebook: INotebook, start: number, end: number): Promise<JSONObject>;
+}
+
+// Request for variables
+export interface IJupyterVariablesRequest {
+    executionCount: number;
+    sortColumn: string;
+    startIndex: number;
+    pageSize: number;
 }
 
 // Wrapper to hold an execution count for our variable requests
@@ -525,7 +532,7 @@ export interface IJupyterVariablesResponse {
 
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
 export interface IDataViewerProvider {
-    create(variable: string, notebook: INotebook): Promise<IDataViewer>;
+    create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer>;
     getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined>;
 }
 export const IDataViewer = Symbol('IDataViewer');

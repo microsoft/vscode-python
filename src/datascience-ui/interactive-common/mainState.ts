@@ -39,6 +39,13 @@ export interface ICellViewModel {
     runDuringDebug?: boolean;
 }
 
+export type IVariableState = {
+    visible: boolean;
+    sortColumn: string;
+    sortAscending: boolean;
+    variables: IJupyterVariable[];
+};
+
 export type IMainState = {
     cellVMs: ICellViewModel[];
     editCellVM: ICellViewModel | undefined;
@@ -56,9 +63,6 @@ export type IMainState = {
     knownDark: boolean;
     editorOptions?: monacoEditor.editor.IEditorOptions;
     currentExecutionCount: number;
-    variablesVisible: boolean;
-    variables: IJupyterVariable[];
-    pendingVariableCount: number;
     debugging: boolean;
     dirty?: boolean;
     selectedCellId?: string;
@@ -127,20 +131,6 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
         currentExecutionCount: 0,
         knownDark: false,
         baseTheme: 'vscode-light',
-        variablesVisible: false,
-        variables: [
-            {
-                name: 'foo',
-                value: 'bar',
-                type: 'DataFrame',
-                size: 100,
-                supportsDataExplorer: true,
-                shape: '(100, 100)',
-                truncated: true,
-                count: 100
-            }
-        ],
-        pendingVariableCount: 0,
         debugging: false,
         isAtBottom: true,
         font: {

@@ -39,34 +39,10 @@ export namespace Variables {
 
         // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
         if (variablesResponse.executionCount === arg.prevState.currentExecutionCount) {
-            // Now put out a request for all of the sub values for the variables
-            variablesResponse.variables.forEach(v => arg.queueAction(createPostableAction(InteractiveWindowMessages.GetVariableValueRequest, v)));
-
             return {
                 ...arg.prevState,
-                variables: variablesResponse.variables,
-                pendingVariableCount: variablesResponse.variables.length
+                variables: variablesResponse.variables
             };
-        }
-
-        return arg.prevState;
-    }
-
-    export function handleVariableResponse<T>(arg: CommonReducerArg<T, IJupyterVariable>): IMainState {
-        const variable = arg.payload as IJupyterVariable;
-
-        // Only send the updated variable data if we are on the same execution count as when we requested it
-        if (variable && variable.executionCount !== undefined && variable.executionCount === arg.prevState.currentExecutionCount) {
-            const stateVariable = arg.prevState.variables.findIndex(v => v.name === variable.name);
-            if (stateVariable >= 0) {
-                const newState = [...arg.prevState.variables];
-                newState.splice(stateVariable, 1, variable);
-                return {
-                    ...arg.prevState,
-                    variables: newState,
-                    pendingVariableCount: Math.max(0, arg.prevState.pendingVariableCount - 1)
-                };
-            }
         }
 
         return arg.prevState;

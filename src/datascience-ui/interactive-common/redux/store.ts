@@ -7,7 +7,7 @@ import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState, ServerStatus } from '../../interactive-common/mainState';
+import { IMainState, IVariableState, ServerStatus } from '../../interactive-common/mainState';
 import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
@@ -31,11 +31,8 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             redoStack: [],
             submittedText: false,
             currentExecutionCount: 0,
-            variables: [],
-            pendingVariableCount: 0,
             debugging: false,
             knownDark: false,
-            variablesVisible: false,
             editCellVM: editable ? undefined : createEditableCellVM(0),
             isAtBottom: true,
             font: {
@@ -120,7 +117,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate variables complete
-        if (prevState.main.pendingVariableCount !== 0 && afterState.main.pendingVariableCount === 0) {
+        if (prevState.variables.pendingVariableCount !== 0 && afterState.main.pendingVariableCount === 0) {
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.VariablesComplete)));
         }
 
@@ -201,6 +198,7 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
 
 export interface IStore {
     main: IMainState;
+    variables: IVariableState;
     monaco: IMonacoState;
     post: {};
 }
@@ -222,6 +220,7 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
+        variables: variablesReducer,
         monaco: monacoReducer,
         post: postOfficeReducer
     });

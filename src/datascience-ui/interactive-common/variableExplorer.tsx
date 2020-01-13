@@ -26,9 +26,8 @@ interface IVariableExplorerProps {
     baseTheme: string;
     skipDefault?: boolean;
     variables: IJupyterVariable[];
-    pendingVariableCount: number;
     debugging: boolean;
-    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
+    showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
 }
 
@@ -226,6 +225,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 buttons: {
                     name: newVar.name,
                     supportsDataExplorer: newVar.supportsDataExplorer,
+                    variable: newVar,
                     numberOfColumns: this.getColumnCountFromShape(newVar.shape)
                 },
                 name: newVar.name,
@@ -246,7 +246,17 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 buttons: {
                     supportsDataExplorer: true,
                     name: 'foo',
-                    numberOfColumns: 100
+                    numberOfColumns: 100,
+                    variable: {
+                        name: 'foo',
+                        supportsDataExplorer: true,
+                        value: '',
+                        type: 'bar',
+                        size: 100,
+                        shape: '',
+                        count: 100,
+                        truncated: false
+                    }
                 }
             }
         ];
@@ -347,7 +357,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
     private rowDoubleClick = (_rowIndex: number, row: IGridRow) => {
         // On row double click, see if data explorer is supported and open it if it is
         if (row.buttons && row.buttons.supportsDataExplorer !== undefined && row.buttons.name && row.buttons.supportsDataExplorer) {
-            this.props.showDataExplorer(row.buttons.name, row.buttons.numberOfColumns);
+            this.props.showDataExplorer(row.buttons.variable, row.buttons.numberOfColumns);
         }
     };
 }

@@ -243,7 +243,7 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
         return {
             variables: this.props.variables,
-            pendingVariableCount: this.props.pendingVariableCount,
+            sortColumn: this.props.variableSortColumn,
             debugging: this.props.debugging,
             busy: this.props.busy,
             showDataExplorer: this.props.showDataViewer,

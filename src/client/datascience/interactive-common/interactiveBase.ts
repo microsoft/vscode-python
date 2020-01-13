@@ -20,7 +20,6 @@ import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, IDisposableRegistry } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { generateCellRangesFromDocument } from '../cellFactory';
@@ -60,6 +59,7 @@ import {
     IJupyterKernelSpec,
     IJupyterVariable,
     IJupyterVariables,
+    IJupyterVariablesRequest,
     IJupyterVariablesResponse,
     IMessageCell,
     INotebook,
@@ -82,8 +82,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private _notebook: INotebook | undefined;
     private _id: string;
     private executeEvent: EventEmitter<string> = new EventEmitter<string>();
-    private variableRequestStopWatch: StopWatch | undefined;
-    private variableRequestPendingCount: number = 0;
     private loadPromise: Promise<void> | undefined;
     private setDarkPromise: Deferred<boolean> | undefined;
     public get notebook(): INotebook | undefined {
@@ -252,10 +250,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
             case InteractiveWindowMessages.GetVariablesRequest:
                 this.handleMessage(message, payload, this.requestVariables);
-                break;
-
-            case InteractiveWindowMessages.GetVariableValueRequest:
-                this.handleMessage(message, payload, this.requestVariableValue);
                 break;
 
             case InteractiveWindowMessages.LoadTmLanguageRequest:
@@ -829,7 +823,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     private async showDataViewer(request: IShowDataViewer): Promise<void> {
         try {
             if (await this.checkColumnSize(request.columnSize)) {
-                await this.dataExplorerProvider.create(request.variableName, this._notebook!);
+                await this.dataExplorerProvider.create(request.variable, this._notebook!);
             }
         } catch (e) {
             this.applicationShell.showErrorMessage(e.toString());
@@ -1214,49 +1208,18 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async requestVariables(requestExecutionCount: number): Promise<void> {
-        this.variableRequestStopWatch = new StopWatch();
-
+    private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
-        const vars: IJupyterVariable[] = this._notebook ? await this.jupyterVariables.getVariables(this._notebook) : [];
-        const variablesResponse: IJupyterVariablesResponse = { executionCount: requestExecutionCount, variables: vars };
+        const vars: IJupyterVariable[] = this._notebook ? await this.jupyterVariables.getVariables(this._notebook, args.sortColumn, args.startIndex, args.pageSize) : [];
+        const variablesResponse: IJupyterVariablesResponse = { executionCount: args.executionCount, variables: vars };
 
         // Tag all of our jupyter variables with the execution count of the request
         variablesResponse.variables.forEach((value: IJupyterVariable) => {
-            value.executionCount = requestExecutionCount;
+            value.executionCount = args.executionCount;
         });
 
-        const settings = this.configuration.getSettings();
-        const excludeString = settings.datascience.variableExplorerExclude;
-
-        if (excludeString) {
-            const excludeArray = excludeString.split(';');
-            variablesResponse.variables = variablesResponse.variables.filter(value => {
-                return excludeArray.indexOf(value.type) === -1;
-            });
-        }
-        this.variableRequestPendingCount = variablesResponse.variables.length;
         this.postMessage(InteractiveWindowMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
         sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: variablesResponse.variables.length });
-    }
-
-    // tslint:disable-next-line: no-any
-    private async requestVariableValue(payload?: any): Promise<void> {
-        if (payload && this._notebook) {
-            const targetVar = payload as IJupyterVariable;
-            // Request our variable value
-            const varValue: IJupyterVariable = await this.jupyterVariables.getValue(targetVar, this._notebook);
-            this.postMessage(InteractiveWindowMessages.GetVariableValueResponse, varValue).ignoreErrors();
-
-            // Send our fetch time if appropriate.
-            if (this.variableRequestPendingCount === 1 && this.variableRequestStopWatch) {
-                this.variableRequestPendingCount -= 1;
-                sendTelemetryEvent(Telemetry.VariableExplorerFetchTime, this.variableRequestStopWatch.elapsedTime);
-                this.variableRequestStopWatch = undefined;
-            } else {
-                this.variableRequestPendingCount = Math.max(0, this.variableRequestPendingCount - 1);
-            }
-        }
     }
 
     // tslint:disable-next-line: no-any

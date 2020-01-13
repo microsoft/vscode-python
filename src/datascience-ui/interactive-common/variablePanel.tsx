@@ -14,9 +14,9 @@ export interface IVariablePanelProps {
     skipDefault?: boolean;
     testMode?: boolean;
     variables: IJupyterVariable[];
-    pendingVariableCount: number;
+    sortColumn: string;
     debugging: boolean;
-    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
+    showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
 }
 
