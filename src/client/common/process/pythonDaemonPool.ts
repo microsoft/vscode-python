@@ -1,12 +1,11 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-
-'use strict';
-
 import { ChildProcess } from 'child_process';
 import * as path from 'path';
 import { createMessageConnection, MessageConnection, RequestType, StreamMessageReader, StreamMessageWriter } from 'vscode-jsonrpc';
+
 import { EXTENSION_ROOT_DIR } from '../../constants';
+import { PYTHON_WARNINGS } from '../constants';
 import { traceDecorators, traceError } from '../logger';
 import { IDisposableRegistry } from '../types';
 import { createDeferred, sleep } from '../utils/async';
@@ -52,6 +51,9 @@ export class PythonDaemonExecutionServicePool implements IPythonDaemonExecutionS
         this.envVariables = this.activatedEnvVariables ? { ...this.activatedEnvVariables } : { ...process.env };
         this.envVariables.PYTHONPATH = this.envVariables.PYTHONPATH ? `${this.envVariables.PYTHONPATH}${path.delimiter}${envPythonPath}` : envPythonPath;
         this.envVariables.PYTHONUNBUFFERED = '1';
+
+        // Always ignore warnings as the user should never see the output of the daemon running
+        this.envVariables[PYTHON_WARNINGS] = 'ignore';
     }
     public async initialize() {
         // tslint:disable-next-line: prefer-array-literal

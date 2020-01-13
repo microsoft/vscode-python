@@ -12,7 +12,12 @@ export namespace Transfer {
     export function exportCells<T>(arg: CommonReducerArg<T>): IMainState {
         const cellContents = arg.prevState.cellVMs.map(v => v.cell);
         arg.queueAction(createPostableAction(InteractiveWindowMessages.Export, cellContents));
-        return arg.prevState;
+
+        // Indicate busy
+        return {
+            ...arg.prevState,
+            busy: true
+        };
     }
 
     export function save<T>(arg: CommonReducerArg<T>): IMainState {

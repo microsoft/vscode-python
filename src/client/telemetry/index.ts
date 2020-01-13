@@ -981,18 +981,6 @@ export interface IEventNamePropertyMapping {
         selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
     };
     /**
-     * Telemetry event sent with details when user clicks a button in the following prompt
-     * `Prompt message` :- 'It looks like you were previously in the Insiders Program of the Python extension. Would you like to opt into the program again?'
-     */
-    [EventName.OPT_INTO_INSIDERS_AGAIN_PROMPT]: {
-        /**
-         * `Yes, weekly` When user selects to use "weekly" as extension channel
-         * `Yes, daily` When user selects to use "daily" as extension channel
-         * `No, thanks` When user decides to keep using the same extension channel as before
-         */
-        selection: 'Yes, weekly' | 'Yes, daily' | 'No, thanks' | undefined;
-    };
-    /**
      * Telemetry event sent with details when user clicks a button in the 'Reload to install insiders prompt'.
      * `Prompt message` :- 'Please reload Visual Studio Code to use the insiders build of the extension'
      */

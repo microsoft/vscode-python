@@ -139,8 +139,7 @@ suite('Linting - Arguments', () => {
                 });
                 test('MyPy', async () => {
                     const linter = new MyPy(outputChannel.object, serviceContainer);
-                    const expectedPath = workspaceUri ? path.join(path.basename(path.dirname(fileUri.fsPath)), path.basename(fileUri.fsPath)) : path.basename(fileUri.fsPath);
-                    const expectedArgs = [expectedPath];
+                    const expectedArgs = [fileUri.fsPath];
                     await testLinter(linter, expectedArgs);
                 });
                 test('Pydocstyle', async () => {

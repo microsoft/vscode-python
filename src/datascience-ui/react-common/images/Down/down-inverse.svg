@@ -26,7 +26,7 @@
   <defs
      id="defs8" />
   <path
-     style="clip-rule:evenodd;fill:#c5c5c5;fill-rule:evenodd"
+     style="clip-rule:evenodd;fill:#c5c5c5 !important;fill-rule:evenodd"
      id="path2"
      d="M 8,9.95954 3.02022,4.97976 2.31311,5.68686 7.64644,11.0202 H 8.35355 L 13.6869,5.68686 12.9798,4.97976 Z" />
 </svg>

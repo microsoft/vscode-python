@@ -219,6 +219,10 @@ export class ProcessService extends EventEmitter implements IProcessService {
             defaultOptions.env = { ...defaultOptions.env };
         }
 
+        if (execOptions && execOptions.extraVariables) {
+            defaultOptions.env = { ...defaultOptions.env, ...execOptions.extraVariables };
+        }
+
         // Always ensure we have unbuffered output.
         defaultOptions.env.PYTHONUNBUFFERED = '1';
         if (!defaultOptions.env.PYTHONIOENCODING) {

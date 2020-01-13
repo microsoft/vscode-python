@@ -152,25 +152,20 @@ export class InterpreterService implements Disposable, IInterpreterService {
                 return found;
             }
             // Use option1 as a fallback.
-            // tslint:disable-next-line:no-any
-            return (option1 as any) as PythonInterpreter;
+            return option1;
         })();
 
-        const interpreterInfo = (await Promise.race([option2, option1])) as PythonInterpreter;
+        // Get the first one that doesn't return undefined
+        let interpreterInfo = await Promise.race([option2, option1]);
+        if (!interpreterInfo) {
+            // If undefined, wait for both
+            const both = await Promise.all([option1, option2]);
+            interpreterInfo = both[0] ? both[0] : both[1];
+        }
 
         // tslint:disable-next-line:no-any
         if (interpreterInfo && (interpreterInfo as any).__store) {
             await this.updateCachedInterpreterInformation(interpreterInfo, resource);
-        } else {
-            // If we got information from option1, then when option2 finishes cache it for later use (ignoring erors);
-            option2
-                .then(async info => {
-                    // tslint:disable-next-line:no-any
-                    if (info && (info as any).__store) {
-                        await this.updateCachedInterpreterInformation(info, resource);
-                    }
-                })
-                .ignoreErrors();
         }
         return interpreterInfo;
     }
