@@ -5,7 +5,6 @@ import { Resource } from '../common/types';
 
 export const INTERPRETER_LOCATOR_SERVICE = 'IInterpreterLocatorService';
 export const WINDOWS_REGISTRY_SERVICE = 'WindowsRegistryService';
-export const CONDA_ENV_FILE_SERVICE = 'CondaEnvFileService';
 export const CONDA_ENV_SERVICE = 'CondaEnvService';
 export const CURRENT_PATH_SERVICE = 'CurrentPathService';
 export const KNOWN_PATH_SERVICE = 'KnownPathsService';

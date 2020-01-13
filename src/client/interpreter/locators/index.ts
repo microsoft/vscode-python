@@ -7,7 +7,6 @@ import { createDeferred, Deferred } from '../../common/utils/async';
 import { OSType } from '../../common/utils/platform';
 import { IServiceContainer } from '../../ioc/types';
 import {
-    CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
@@ -105,7 +104,6 @@ export class PythonInterpreterLocatorService implements IInterpreterLocatorServi
         const keys: [string, OSType | undefined][] = [
             [WINDOWS_REGISTRY_SERVICE, OSType.Windows],
             [CONDA_ENV_SERVICE, undefined],
-            [CONDA_ENV_FILE_SERVICE, undefined],
             [PIPENV_SERVICE, undefined],
             [GLOBAL_VIRTUAL_ENV_SERVICE, undefined],
             [WORKSPACE_VIRTUAL_ENV_SERVICE, undefined],

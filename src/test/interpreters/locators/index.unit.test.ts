@@ -14,7 +14,6 @@ import { IDisposableRegistry } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { Architecture, OSType } from '../../../client/common/utils/platform';
 import {
-    CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
@@ -65,7 +64,6 @@ suite('Interpreters - Locators Index', () => {
                 platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
 
                 locatorsTypes.push(CONDA_ENV_SERVICE);
-                locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
                 locatorsTypes.push(PIPENV_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);
@@ -123,7 +121,6 @@ suite('Interpreters - Locators Index', () => {
                 platformSvc.setup(p => p.isMac).returns(() => osType.value === OSType.OSX);
 
                 locatorsTypes.push(CONDA_ENV_SERVICE);
-                locatorsTypes.push(CONDA_ENV_FILE_SERVICE);
                 locatorsTypes.push(PIPENV_SERVICE);
                 locatorsTypes.push(GLOBAL_VIRTUAL_ENV_SERVICE);
                 locatorsTypes.push(WORKSPACE_VIRTUAL_ENV_SERVICE);

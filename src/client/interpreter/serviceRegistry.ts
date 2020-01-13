@@ -22,7 +22,6 @@ import { PythonPathUpdaterService } from './configuration/pythonPathUpdaterServi
 import { PythonPathUpdaterServiceFactory } from './configuration/pythonPathUpdaterServiceFactory';
 import { IInterpreterComparer, IInterpreterSelector, IPythonPathUpdaterServiceFactory, IPythonPathUpdaterServiceManager } from './configuration/types';
 import {
-    CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
     CURRENT_PATH_SERVICE,
     GLOBAL_VIRTUAL_ENV_SERVICE,
@@ -57,7 +56,6 @@ import { InterpreterVersionService } from './interpreterVersion';
 import { InterpreterLocatorHelper } from './locators/helpers';
 import { PythonInterpreterLocatorService } from './locators/index';
 import { InterpreterLocatorProgressService } from './locators/progressService';
-import { CondaEnvFileService } from './locators/services/condaEnvFileService';
 import { CondaEnvService } from './locators/services/condaEnvService';
 import { CondaService } from './locators/services/condaService';
 import { CurrentPathService, PythonInPathCommandProvider } from './locators/services/currentPathService';
@@ -96,7 +94,6 @@ export function registerTypes(serviceManager: IServiceManager) {
 
     serviceManager.addSingleton<IInterpreterVersionService>(IInterpreterVersionService, InterpreterVersionService);
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, PythonInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
-    serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CondaEnvFileService, CONDA_ENV_FILE_SERVICE);
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CondaEnvService, CONDA_ENV_SERVICE);
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, CurrentPathService, CURRENT_PATH_SERVICE);
     serviceManager.addSingleton<IInterpreterLocatorService>(IInterpreterLocatorService, GlobalVirtualEnvService, GLOBAL_VIRTUAL_ENV_SERVICE);
