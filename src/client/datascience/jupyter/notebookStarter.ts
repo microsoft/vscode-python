@@ -22,7 +22,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, JupyterCommands, PythonDaemonModule, Telemetry } from '../constants';
 import { IConnection } from '../types';
-import { JupyterCommandFinder } from './jupyterCommandFinder';
+import { JupyterCommandFinder } from './interpreter/jupyterCommandFinder';
 import { JupyterConnection, JupyterServerInfo } from './jupyterConnection';
 
 /**

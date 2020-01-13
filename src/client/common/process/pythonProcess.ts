@@ -7,9 +7,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { EXTENSION_ROOT_DIR } from '../constants';
 import { ErrorUtils } from '../errors/errorUtils';
 import { ModuleNotInstalledError } from '../errors/moduleNotInstalledError';
-import { traceError } from '../logger';
+import { traceError, traceInfo } from '../logger';
 import { IFileSystem } from '../platform/types';
-import { waitForPromise } from '../utils/async';
 import { Architecture } from '../utils/platform';
 import { parsePythonVersion } from '../utils/version';
 import {
@@ -26,42 +25,19 @@ import {
 @injectable()
 export class PythonExecutionService implements IPythonExecutionService {
     private readonly fileSystem: IFileSystem;
+    private cachedInterpreterInformation: InterpreterInfomation | undefined | null = null;
 
     constructor(serviceContainer: IServiceContainer, private readonly procService: IProcessService, protected readonly pythonPath: string) {
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
     }
 
     public async getInterpreterInformation(): Promise<InterpreterInfomation | undefined> {
-        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py');
-        try {
-            // Sometimes the python path isn't valid, timeout if that's the case.
-            // See these two bugs:
-            // https://github.com/microsoft/vscode-python/issues/7569
-            // https://github.com/microsoft/vscode-python/issues/7760
-            const { command, args } = this.getExecutionInfo([file]);
-            const jsonValue = await waitForPromise(this.procService.exec(command, args, { mergeStdOutErr: true }), 5000).then(output =>
-                output ? output.stdout.trim() : '--timed out--'
-            ); // --timed out-- should cause an exception
-
-            let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
-            try {
-                json = JSON.parse(jsonValue);
-            } catch (ex) {
-                traceError(`Failed to parse interpreter information for '${this.pythonPath}' with JSON ${jsonValue}`, ex);
-                return;
-            }
-            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
-            return {
-                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
-                path: this.pythonPath,
-                version: parsePythonVersion(versionValue),
-                sysVersion: json.sysVersion,
-                sysPrefix: json.sysPrefix
-            };
-        } catch (ex) {
-            traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
+        if (this.cachedInterpreterInformation === null) {
+            this.cachedInterpreterInformation = await this.getInterpreterInformationImpl();
         }
+        return this.cachedInterpreterInformation;
     }
+
     public async getExecutablePath(): Promise<string> {
         // If we've passed the python file, then return the file.
         // This is because on mac if using the interpreter /usr/bin/python2.7 we can get a different value for the path
@@ -115,5 +91,46 @@ export class PythonExecutionService implements IPythonExecutionService {
         }
 
         return result;
+    }
+
+    private async getInterpreterInformationImpl(): Promise<InterpreterInfomation | undefined> {
+        const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'interpreterInfo.py');
+        try {
+            // Sometimes the python path isn't valid, timeout if that's the case.
+            // See these two bugs:
+            // https://github.com/microsoft/vscode-python/issues/7569
+            // https://github.com/microsoft/vscode-python/issues/7760
+            const { command, args } = this.getExecutionInfo([file]);
+
+            // Concat these together to make a set of quoted strings
+            const quoted = [command, ...args].reduce((p, c) => (p ? `${p} "${c}"` : `"${c.replace('\\', '\\\\')}"`), '');
+
+            // Try shell execing the command, followed by the arguments. This will make node kill the process if it
+            // takes too long.
+            const result = await this.procService.shellExec(quoted, { timeout: 15000 });
+            if (result.stderr) {
+                traceError(`Failed to parse interpreter information for ${command} ${args} stderr: ${result.stderr}`);
+                return;
+            }
+
+            let json: { versionInfo: PythonVersionInfo; sysPrefix: string; sysVersion: string; is64Bit: boolean };
+            try {
+                json = JSON.parse(result.stdout);
+            } catch (ex) {
+                traceError(`Failed to parse interpreter information for '${command} ${args}' with JSON ${result.stdout}`, ex);
+                return;
+            }
+            traceInfo(`Found interpreter for ${command} ${args}`);
+            const versionValue = json.versionInfo.length === 4 ? `${json.versionInfo.slice(0, 3).join('.')}-${json.versionInfo[3]}` : json.versionInfo.join('.');
+            return {
+                architecture: json.is64Bit ? Architecture.x64 : Architecture.x86,
+                path: this.pythonPath,
+                version: parsePythonVersion(versionValue),
+                sysVersion: json.sysVersion,
+                sysPrefix: json.sysPrefix
+            };
+        } catch (ex) {
+            traceError(`Failed to get interpreter information for '${this.pythonPath}'`, ex);
+        }
     }
 }
