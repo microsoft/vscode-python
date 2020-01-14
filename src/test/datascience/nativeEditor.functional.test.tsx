@@ -831,7 +831,7 @@ for _ in range(50):
                 assert.equal(isCellFocused(wrapper, 'NativeCell', 1), true);
 
                 // Now hit escape.
-                update = waitForUpdate(wrapper, NativeEditor, 1);
+                update = waitForUpdate(wrapper, NativeEditor, 2);
                 //simulateKeyPressOnCell(1, { code: 'Escape' });
                 simulateKeyPressOnEditor('Escape');
                 await update;
