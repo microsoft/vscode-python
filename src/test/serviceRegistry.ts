@@ -189,6 +189,11 @@ export class IocContainer {
         platformRegisterTypes(this.serviceManager);
     }
     public registerInterpreterTypes() {
+        // The method content to be registerInterpreterTypes(this.serviceManager) earlier.
+        // But it was registering a type `IInterpreterAutoSeletionProxyService` which is unfortunately already registered in the constructor, so this method was unusable.
+        // Removing `IInterpreterAutoSeletionProxyService` from the constructor is the right thing but requires a lot of effort as almost all tests start failing without it.
+        // So manually pasting contents of registerInterpreterTypes(this.serviceManager) here without registering `IInterpreterAutoSeletionProxyService`.
+
         this.serviceManager.addSingleton<IKnownSearchPathsForInterpreters>(IKnownSearchPathsForInterpreters, KnownSearchPathsForInterpreters);
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(IVirtualEnvironmentsSearchPathProvider, GlobalVirtualEnvironmentsSearchPathProvider, 'global');
         this.serviceManager.addSingleton<IVirtualEnvironmentsSearchPathProvider>(
