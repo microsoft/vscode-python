@@ -291,7 +291,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             closeVariableExplorer: this.props.toggleVariableExplorer,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
-            fontSize: this.props.font.size
+            fontSize: this.props.font.size,
+            executionCount: this.props.currentExecutionCount
         };
     };
 

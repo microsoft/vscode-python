@@ -14,6 +14,7 @@ export interface IVariablePanelProps {
     skipDefault?: boolean;
     testMode?: boolean;
     variables: IJupyterVariable[];
+    executionCount: number;
     debugging: boolean;
     fontSize: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
@@ -39,6 +40,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
                         showDataExplorer={this.props.showDataExplorer}
                         closeVariableExplorer={this.props.closeVariableExplorer}
                         pageIn={this.props.pageIn}
+                        executionCount={this.props.executionCount}
                     />
                 </div>
                 <div id="variable-divider" />

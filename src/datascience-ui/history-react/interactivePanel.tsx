@@ -251,7 +251,8 @@ export class InteractivePanel extends React.Component<IInteractivePanelProps> {
             closeVariableExplorer: this.props.toggleVariableExplorer,
             baseTheme: baseTheme,
             pageIn: this.pageInVariableData,
-            fontSize: this.props.font.size
+            fontSize: this.props.font.size,
+            executionCount: this.props.currentExecutionCount
         };
     };
 

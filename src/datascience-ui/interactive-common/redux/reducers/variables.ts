@@ -14,6 +14,7 @@ export type IVariableState = {
     sortColumn: string;
     sortAscending: boolean;
     variables: IJupyterVariable[];
+    pageSize: number;
 };
 
 type VariableReducerFunc<T> = ReducerFunc<IVariableState, IncomingMessageActions, T>;
@@ -21,16 +22,20 @@ type VariableReducerFunc<T> = ReducerFunc<IVariableState, IncomingMessageActions
 type VariableReducerArg<T = never | undefined> = ReducerArg<IVariableState, IncomingMessageActions, T>;
 
 function handleRequest(arg: VariableReducerArg<IJupyterVariablesRequest>): IVariableState {
+    const newExecutionCount = arg.payload.executionCount ? arg.payload.executionCount : arg.prevState.currentExecutionCount;
     arg.queueAction(
         createPostableAction(InteractiveWindowMessages.GetVariablesRequest, {
-            executionCount: arg.payload.executionCount ? arg.prevState.currentExecutionCount : arg.payload.executionCount,
+            executionCount: newExecutionCount,
             sortColumn: arg.payload.sortColumn,
             startIndex: arg.payload.startIndex,
             sortAscending: arg.payload.sortAscending,
             pageSize: arg.payload.pageSize
         })
     );
-    return arg.prevState;
+    return {
+        ...arg.prevState,
+        pageSize: Math.max(arg.prevState.pageSize, arg.payload.pageSize)
+    };
 }
 
 function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
@@ -50,23 +55,56 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
 }
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
-    const variablesResponse = arg.payload as IJupyterVariablesResponse;
+    const response = arg.payload as IJupyterVariablesResponse;
 
-    // Check to see if we have moved to a new execution count only send our update if we are on the same count as the request
-    if (variablesResponse.executionCount === arg.prevState.currentExecutionCount) {
+    // Check to see if we have moved to a new execution count
+    if (
+        response.executionCount > arg.prevState.currentExecutionCount ||
+        (response.executionCount === arg.prevState.currentExecutionCount && arg.prevState.variables.length === 0)
+    ) {
+        // Should be an entirely new request. Make an empty list
+        const variables = Array<IJupyterVariable>(response.totalCount);
+
+        // Replace the page with the values returned
+        for (let i = 0; i < response.pageResponse.length; i += 1) {
+            variables[i + response.pageStartIndex] = response.pageResponse[i];
+        }
+
+        // Also update the execution count.
         return {
             ...arg.prevState,
-            variables: variablesResponse.variables
+            currentExecutionCount: response.executionCount,
+            variables
+        };
+    } else if (response.executionCount === arg.prevState.currentExecutionCount) {
+        // This is a response for a page in an already existing list.
+        const variables = [...arg.prevState.variables];
+
+        // See if we need to remove any from this page
+        const removeCount = Math.max(0, arg.prevState.variables.length - response.totalCount);
+        if (removeCount) {
+            variables.splice(response.pageStartIndex, removeCount);
+        }
+
+        // Replace the page with the values returned
+        for (let i = 0; i < response.pageResponse.length; i += 1) {
+            variables[i + response.pageStartIndex] = response.pageResponse[i];
+        }
+
+        return {
+            ...arg.prevState,
+            variables
         };
     }
 
+    // Otherwise this response is for an old execution.
     return arg.prevState;
 }
 
 function handleRestarted(arg: VariableReducerArg): IVariableState {
     // If the variables are visible, refresh them
     if (arg.prevState.visible) {
-        return handleRequest({ ...arg, payload: { executionCount: 0, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: 100 } });
+        return handleRequest({ ...arg, payload: { executionCount: 0, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
     }
     return arg.prevState;
 }
@@ -75,7 +113,7 @@ function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
     // If the variables are visible, refresh them
     if (arg.prevState.visible && arg.payload.data.execution_count) {
         const executionCount = parseInt(arg.payload.data.execution_count.toString(), 10);
-        return handleRequest({ ...arg, payload: { executionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: 100 } });
+        return handleRequest({ ...arg, payload: { executionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
     }
     return arg.prevState;
 }
@@ -105,7 +143,8 @@ export function generateVariableReducer(): Reducer<IVariableState, QueuableActio
         variables: [],
         visible: false,
         sortAscending: true,
-        sortColumn: 'name'
+        sortColumn: 'name',
+        pageSize: 5
     };
 
     // Then combine that with our map of state change message to reducer

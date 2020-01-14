@@ -57,7 +57,6 @@ import {
     IJupyterDebugger,
     IJupyterExecution,
     IJupyterKernelSpec,
-    IJupyterVariable,
     IJupyterVariables,
     IJupyterVariablesRequest,
     IJupyterVariablesResponse,
@@ -1210,18 +1209,12 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
-        const vars: IJupyterVariable[] = this._notebook
-            ? await this.jupyterVariables.getVariables(this._notebook, args.sortColumn, args.sortAscending, args.startIndex, args.pageSize)
-            : [];
-        const variablesResponse: IJupyterVariablesResponse = { executionCount: args.executionCount, variables: vars, startIndex: args.startIndex };
+        const response: IJupyterVariablesResponse = this._notebook
+            ? await this.jupyterVariables.getVariables(this._notebook, args)
+            : { totalCount: 0, pageResponse: [], pageStartIndex: args.startIndex, executionCount: args.executionCount };
 
-        // Tag all of our jupyter variables with the execution count of the request
-        variablesResponse.variables.forEach((value: IJupyterVariable) => {
-            value.executionCount = args.executionCount;
-        });
-
-        this.postMessage(InteractiveWindowMessages.GetVariablesResponse, variablesResponse).ignoreErrors();
-        sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: variablesResponse.variables.length });
+        this.postMessage(InteractiveWindowMessages.GetVariablesResponse, response).ignoreErrors();
+        sendTelemetryEvent(Telemetry.VariableExplorerVariableCount, undefined, { variableCount: response.totalCount });
     }
 
     // tslint:disable-next-line: no-any

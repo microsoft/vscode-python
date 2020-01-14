@@ -88,7 +88,6 @@ export interface INotebook extends IAsyncDisposable {
     readonly server: INotebookServer;
     onSessionStatusChanged: Event<ServerStatus>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
-    readonly executionCount: number;
     clear(id: string): void;
     executeObservable(code: string, file: string, line: number, id: string, silent: boolean): Observable<ICell[]>;
     execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken, silent?: boolean): Promise<ICell[]>;
@@ -512,7 +511,7 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
-    getVariables(notebook: INotebook, sortColumn: string, sortAscending: boolean, startIndex?: number, pageSize?: number): Promise<IJupyterVariable[]>;
+    getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(targetVariable: IJupyterVariable, notebook: INotebook, start: number, end: number): Promise<JSONObject>;
 }
@@ -526,11 +525,12 @@ export interface IJupyterVariablesRequest {
     pageSize: number;
 }
 
-// Wrapper to hold an execution count for our variable requests
+// Response to a request
 export interface IJupyterVariablesResponse {
     executionCount: number;
-    startIndex: number;
-    variables: IJupyterVariable[];
+    totalCount: number;
+    pageStartIndex: number;
+    pageResponse: IJupyterVariable[];
 }
 
 export const IDataViewerProvider = Symbol('IDataViewerProvider');

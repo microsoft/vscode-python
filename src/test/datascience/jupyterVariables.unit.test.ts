@@ -121,7 +121,7 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object, '', true);
+            await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -140,7 +140,7 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object, '', true);
+            await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -159,7 +159,7 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object, '', true);
+            await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -183,18 +183,18 @@ suite('JupyterVariables', () => {
             .returns(() => Promise.resolve(generateCells(`['big_dataframe', 'big_dict', 'big_int', 'big_list', 'big_nparray', 'big_string']`, 'execute_result')))
             .verifiable(typemoq.Times.once());
 
-        const results = await jupyterVariables.getVariables(fakeNotebook.object, '', true);
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
 
         // Check the results that we get back
-        assert.equal(results.length, 6);
+        assert.equal(results.pageResponse.length, 6);
 
         // Check our items (just the first few real items, no need to check all 19)
-        assert.equal(results[0].name, 'big_dataframe');
-        assert.equal(results[1].name, 'big_dict');
-        assert.equal(results[2].name, 'big_int');
-        assert.equal(results[3].name, 'big_list');
-        assert.equal(results[4].name, 'big_nparray');
-        assert.equal(results[5].name, 'big_string');
+        assert.equal(results.pageResponse[0].name, 'big_dataframe');
+        assert.equal(results.pageResponse[1].name, 'big_dict');
+        assert.equal(results.pageResponse[2].name, 'big_int');
+        assert.equal(results.pageResponse[3].name, 'big_list');
+        assert.equal(results.pageResponse[4].name, 'big_nparray');
+        assert.equal(results.pageResponse[5].name, 'big_string');
 
         fakeNotebook.verifyAll();
     });

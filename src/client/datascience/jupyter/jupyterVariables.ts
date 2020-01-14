@@ -16,7 +16,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers, Settings } from '../constants';
-import { ICell, IJupyterVariable, IJupyterVariables, INotebook } from '../types';
+import { ICell, IJupyterVariable, IJupyterVariables, IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -48,9 +48,9 @@ export class JupyterVariables implements IJupyterVariables {
     constructor(@inject(IFileSystem) private fileSystem: IFileSystem, @inject(IConfigurationService) private configService: IConfigurationService) {}
 
     // IJupyterVariables implementation
-    public async getVariables(notebook: INotebook, sortColumn: string, sortAscending: boolean, startIndex?: number, pageSize?: number): Promise<IJupyterVariable[]> {
+    public async getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
-        return this.getVariablesBasedOnKernel(notebook, sortColumn, sortAscending, startIndex, pageSize);
+        return this.getVariablesBasedOnKernel(notebook, request);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
@@ -216,19 +216,13 @@ export class JupyterVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariablesBasedOnKernel(
-        notebook: INotebook,
-        _sortColumn: string,
-        _sortAscending: boolean,
-        startIndex?: number,
-        pageSize?: number
-    ): Promise<IJupyterVariable[]> {
+    private async getVariablesBasedOnKernel(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
         // See if we already have the name list
         let list = this.notebookState.get(notebook.resource);
-        if (!list || list.currentExecutionCount !== notebook.executionCount) {
+        if (!list || list.currentExecutionCount !== request.executionCount) {
             // Refetch the list of names from the notebook. They might have changed.
             list = {
-                currentExecutionCount: notebook.executionCount,
+                currentExecutionCount: request.executionCount,
                 variables: (await this.getVariableNamesFromKernel(notebook)).map(n => {
                     return {
                         name: n,
@@ -248,15 +242,22 @@ export class JupyterVariables implements IJupyterVariables {
             ? this.configService.getSettings().datascience.variableExplorerExclude?.split(';')
             : [];
 
+        const result: IJupyterVariablesResponse = {
+            executionCount: request.executionCount,
+            pageStartIndex: -1,
+            pageResponse: [],
+            totalCount: 0
+        };
+
         // Use the list of names to fetch the page of data
         if (list) {
-            const startPos = startIndex ? startIndex : 0;
-            const chunkSize = pageSize ? pageSize : 100;
-            const result = [];
+            const startPos = request.startIndex ? request.startIndex : 0;
+            const chunkSize = request.pageSize ? request.pageSize : 100;
+            result.pageStartIndex = startPos;
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
             for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
-                const fullVariable = await this.getVariableValueFromKernel(list.variables[i], notebook);
+                const fullVariable = list.variables[i].value ? list.variables[i] : await this.getVariableValueFromKernel(list.variables[i], notebook);
 
                 // See if this is excluded or not.
                 if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
@@ -264,7 +265,7 @@ export class JupyterVariables implements IJupyterVariables {
                     list.variables.splice(i, 1);
                 } else {
                     list.variables[i] = fullVariable;
-                    result.push(fullVariable);
+                    result.pageResponse.push(fullVariable);
                     i += 1;
                 }
             }
@@ -272,10 +273,11 @@ export class JupyterVariables implements IJupyterVariables {
             // Save in our cache
             this.notebookState.set(notebook.resource, list);
 
-            return result;
+            // Update total count (exclusions will change this as types are computed)
+            result.totalCount = list.variables.length;
         }
 
-        return [];
+        return result;
     }
 
     private async getVariableNamesFromKernel(notebook: INotebook): Promise<string[]> {

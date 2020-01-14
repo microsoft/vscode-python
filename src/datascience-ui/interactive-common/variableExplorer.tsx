@@ -27,6 +27,7 @@ interface IVariableExplorerProps {
     variables: IJupyterVariable[];
     debugging: boolean;
     fontSize: number;
+    executionCount: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     pageIn(startIndex: number, pageSize: number): void;
@@ -51,6 +52,13 @@ interface IGridRow {
 export class VariableExplorer extends React.Component<IVariableExplorerProps> {
     private divRef: React.RefObject<HTMLDivElement>;
     private pageSize: number = -1;
+
+    // These values keep track of variable requests so we don't make the same ones over and over again
+    // Note: This isn't in the redux state because the requests will come before the state
+    // has been updated. We don't want to force a wait for redraw to determine if a request
+    // has been sent or not.
+    private requestedPages: number[] = [];
+    private requestedPagesExecutionCount: number = 0;
     private gridColumns: {
         key: string;
         name: string;
@@ -180,30 +188,37 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
     private getRow = (index: number): IGridRow => {
         if (index >= 0 && index < this.props.variables.length) {
             const variable = this.props.variables[index];
-            if (!variable.value) {
+            if (!variable || !variable.value) {
                 this.askForPage(index);
-            }
-            let newSize = '';
-            if (variable.shape && variable.shape !== '') {
-                newSize = variable.shape;
-            } else if (variable.count) {
-                newSize = variable.count.toString();
-            }
-            return {
-                buttons: {
+            } else {
+                let newSize = '';
+                if (variable.shape && variable.shape !== '') {
+                    newSize = variable.shape;
+                } else if (variable.count) {
+                    newSize = variable.count.toString();
+                }
+                return {
+                    buttons: {
+                        name: variable.name,
+                        supportsDataExplorer: variable.supportsDataExplorer,
+                        variable: variable,
+                        numberOfColumns: this.getColumnCountFromShape(variable.shape)
+                    },
                     name: variable.name,
-                    supportsDataExplorer: variable.supportsDataExplorer,
-                    variable: variable,
-                    numberOfColumns: this.getColumnCountFromShape(variable.shape)
-                },
-                name: variable.name,
-                type: variable.type,
-                size: newSize,
-                value: variable.value ? variable.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
-            };
+                    type: variable.type,
+                    size: newSize,
+                    value: variable.value ? variable.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                };
+            }
         }
 
-        return { buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0, variable: undefined }, name: '', type: '', size: '', value: '' };
+        return {
+            buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0, variable: undefined },
+            name: '',
+            type: '',
+            size: '',
+            value: getLocString('DataScience.variableLoadingValue', 'Loading...')
+        };
     };
 
     private computePageSize(): number {
@@ -222,12 +237,28 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         // Figure out how many items in a page
         const pageSize = this.computePageSize();
 
-        // Try to find a page of data around this index.
-        let pos = index;
-        while (pos > 0 && pos > index - pageSize / 2 && !this.props.variables[pos].value) {
-            pos -= 1;
+        // Skip if already pending
+        if (this.props.executionCount !== this.requestedPagesExecutionCount || !this.requestedPages.find(n => n <= index && index < n + pageSize)) {
+            // Try to find a page of data around this index.
+            let pageIndex = index;
+            while (pageIndex > 0 && pageIndex > index - pageSize / 2 && (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)) {
+                pageIndex -= 1;
+            }
+
+            // Clear out requested pages if new requested execution
+            if (this.requestedPagesExecutionCount !== this.props.executionCount) {
+                this.requestedPages = [];
+            }
+
+            // Save in the list of requested pages
+            this.requestedPages.push(pageIndex);
+
+            // Save the execution count for this request so we can verify we can skip it on next request.
+            this.requestedPagesExecutionCount = this.props.executionCount;
+
+            // Load this page.
+            this.props.pageIn(pageIndex, pageSize);
         }
-        this.props.pageIn(pos, pageSize);
     }
 
     private getColumnCountFromShape(shape: string | undefined): number {
