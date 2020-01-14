@@ -138,8 +138,8 @@ import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeE
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
-import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
+import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';

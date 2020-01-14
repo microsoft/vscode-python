@@ -4,19 +4,19 @@ import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, CancellationTokenSource, Progress, ProgressLocation, ProgressOptions } from 'vscode';
 
-import { IApplicationShell, IWorkspaceService } from '../../common/application/types';
-import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../common/cancellation';
-import { traceError, traceInfo, traceWarning } from '../../common/logger';
-import { IFileSystem } from '../../common/platform/types';
-import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../common/process/types';
-import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../common/types';
-import { createDeferred, Deferred } from '../../common/utils/async';
-import * as localize from '../../common/utils/localize';
-import { StopWatch } from '../../common/utils/stopWatch';
-import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../interpreter/contracts';
-import { sendTelemetryEvent } from '../../telemetry';
-import { JupyterCommands, PythonDaemonModule, RegExpValues, Telemetry } from '../constants';
-import { IJupyterCommand, IJupyterCommandFactory } from '../types';
+import { IApplicationShell, IWorkspaceService } from '../../../common/application/types';
+import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
+import { traceError, traceInfo, traceWarning } from '../../../common/logger';
+import { IFileSystem } from '../../../common/platform/types';
+import { IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, SpawnOptions } from '../../../common/process/types';
+import { IConfigurationService, IDisposableRegistry, ILogger, IPersistentState, IPersistentStateFactory } from '../../../common/types';
+import { createDeferred, Deferred } from '../../../common/utils/async';
+import * as localize from '../../../common/utils/localize';
+import { StopWatch } from '../../../common/utils/stopWatch';
+import { IInterpreterService, IKnownSearchPathsForInterpreters, PythonInterpreter } from '../../../interpreter/contracts';
+import { sendTelemetryEvent } from '../../../telemetry';
+import { JupyterCommands, PythonDaemonModule, RegExpValues, Telemetry } from '../../constants';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 
 export enum ModuleExistsStatus {
     NotFound,
