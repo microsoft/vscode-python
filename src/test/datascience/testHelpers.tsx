@@ -446,7 +446,8 @@ export async function getCellResults(
     return wrapper.find(cellType);
 }
 
-export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean, ctrlKey?: boolean) {
+export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean, ctrlKey?: boolean,
+    altKey?: boolean, metaKey?: boolean) {
     // Submit a keypress into the textarea. Simulate doesn't work here because the keydown
     // handler is not registered in any react code. It's being handled with DOM events
 
@@ -459,15 +460,15 @@ export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown
     // 1) keydown
     // 2) keypress
     // 3) keyup
-    let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown, ctrlKey });
+    let event = createKeyboardEvent('keydown', { key, code: key, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
 
     // Dispatch. Result can be swallowed. If so skip the next event.
     let result = domNode.dispatchEvent(event);
     if (result) {
-        event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown, ctrlKey });
+        event = createKeyboardEvent('keypress', { key, code: key, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
         result = domNode.dispatchEvent(event);
         if (result) {
-            event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown, ctrlKey });
+            event = createKeyboardEvent('keyup', { key, code: key, shiftKey: shiftDown, ctrlKey, altKey, metaKey });
             domNode.dispatchEvent(event);
 
             // Update our value. This will reset selection to zero.
@@ -499,9 +500,9 @@ async function submitInput(ioc: DataScienceIocContainer, textArea: HTMLTextAreaE
     return renderPromise;
 }
 
-function enterKey(textArea: HTMLTextAreaElement, key: string) {
+function enterKey(textArea: HTMLTextAreaElement, key: string, shiftDown?: boolean, ctrlKey?: boolean, altKey?: boolean, metaKey?: boolean) {
     // Simulate a key press
-    simulateKey(textArea, key);
+    simulateKey(textArea, key, shiftDown, ctrlKey, altKey, metaKey);
 }
 
 export function getInteractiveEditor(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>): ReactWrapper<any, Readonly<{}>, React.Component> {
@@ -547,7 +548,8 @@ export function injectCode(editorControl: ReactWrapper<any, Readonly<{}>, React.
 }
 
 // IANHU Combine with below
-export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, keyCode: string): HTMLTextAreaElement | null {
+export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined,
+    keyboardEvent: Partial<IKeyboardEvent> & { code: string }): HTMLTextAreaElement | null {
     // Find the last cell. It should have a monacoEditor object. We need to search
     // through its DOM to find the actual textarea to send input to
     // (we can't actually find it with the enzyme wrappers because they only search
@@ -562,7 +564,7 @@ export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, Re
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
-    enterKey(textArea!, keyCode);
+    enterKey(textArea!, keyboardEvent.code, keyboardEvent.shiftKey, keyboardEvent.ctrlKey);
 
     return textArea;
 }

@@ -648,33 +648,63 @@ for _ in range(50):
             wrapper.update();
         }
 
-        function simulateKeyPressOnEditor(keyCode: string) {
+        function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
+            // Check to see if we have an active focused editor
             let editor = getNativeFocusedEditor(wrapper);
-            enterEditorKey(editor, keyCode);
+
+            // If we do have one, send the input there, otherwise send it to the outer cell
+            if (editor) {
+                simulateKeyPressOnEditor(editor, keyboardEvent);
+            } else {
+                simulateKeyPressOnCellInner(cellIndex, keyboardEvent);
+            }
+
         }
 
-        function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
+        function simulateKeyPressOnEditor(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
+            enterEditorKey(editorControl, keyboardEvent);
+        }
+
+        function simulateKeyPressOnCellInner(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
             //const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
             //const id = `NotebookImport#${cellIndex}`;
+            // IANHU: To NativeCell, not CellInput?
             wrapper.update();
-            wrapper
-                .find(NativeCell)
-                .at(cellIndex)
-                .find(CellInput)
-                .simulate('keydown', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            let nativeCell = wrapper.find(NativeCell).at(cellIndex);
+            if (nativeCell.exists()) {
+                nativeCell.simulate('keydown', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            }
             wrapper.update();
-            wrapper
-                .find(NativeCell)
-                .at(cellIndex)
-                .find(CellInput)
-                .simulate('keypress', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            // Requery for our cell as something like a 'dd' keydown command can delete it before the press and up
+            nativeCell = wrapper.find(NativeCell).at(cellIndex);
+            if (nativeCell.exists()) {
+                nativeCell.simulate('keypress', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            }
+            nativeCell = wrapper.find(NativeCell).at(cellIndex);
             wrapper.update();
-            wrapper
-                .find(NativeCell)
-                .at(cellIndex)
-                .find(CellInput)
-                .simulate('keyup', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            if (nativeCell.exists()) {
+                nativeCell.simulate('keyup', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            }
             wrapper.update();
+            //wrapper.update();
+            //wrapper
+            //.find(NativeCell)
+            //.at(cellIndex)
+            ////                .find(CellInput)
+            //.simulate('keydown', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            //wrapper.update();
+            //wrapper
+            //.find(NativeCell)
+            //.at(cellIndex)
+            ////                .find(CellInput)
+            //.simulate('keypress', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            //wrapper.update();
+            //wrapper
+            //.find(NativeCell)
+            //.at(cellIndex)
+            ////                .find(CellInput)
+            //.simulate('keyup', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            //wrapper.update();
             //wrapper
             //.find(NativeCell)
             //.at(cellIndex)
@@ -830,10 +860,10 @@ for _ in range(50):
                 assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
                 assert.equal(isCellFocused(wrapper, 'NativeCell', 1), true);
 
-                // Now hit escape.
-                update = waitForUpdate(wrapper, NativeEditor, 2);
-                //simulateKeyPressOnCell(1, { code: 'Escape' });
-                simulateKeyPressOnEditor('Escape');
+                // Now hit escape on the editor
+                // IANHU: Update 2 here?
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                simulateKeyPressOnCell(1, { code: 'Escape' });
                 await update;
 
                 // Confirm it is no longer focused, and it is selected.
@@ -852,6 +882,7 @@ for _ in range(50):
 
                 update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 simulateKeyPressOnCell(1, { code: 'Enter', shiftKey: true, editorInfo: undefined });
+                //simulateKeyPressOnEditor(1, { code: 'Enter', shiftKey: true });
                 await update;
                 wrapper.update();
 
@@ -937,7 +968,6 @@ for _ in range(50):
                 // Give focus
                 update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(2);
-                simulateKeyPressOnCell(3, { code: 'Enter', editorInfo: undefined });
                 await update;
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
 
@@ -1056,7 +1086,7 @@ for _ in range(50):
                 assert.equal(optionsUpdated.lastCall.args[0].lineNumbers, 'off');
             });
 
-            test("Toggle markdown and code modes using 'y' and 'm' keys", async () => {
+            test("IANHU Toggle markdown and code modes using 'y' and 'm' keys", async () => {
                 clickCell(1);
 
                 // Switch to markdown
