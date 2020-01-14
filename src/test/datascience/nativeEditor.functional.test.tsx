@@ -666,24 +666,21 @@ for _ in range(50):
         }
 
         function simulateKeyPressOnCellInner(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
-            //const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
-            //const id = `NotebookImport#${cellIndex}`;
-            // IANHU: To NativeCell, not CellInput?
             wrapper.update();
             let nativeCell = wrapper.find(NativeCell).at(cellIndex);
             if (nativeCell.exists()) {
-                nativeCell.simulate('keydown', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+                nativeCell.simulate('keydown', { key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
             }
             wrapper.update();
             // Requery for our cell as something like a 'dd' keydown command can delete it before the press and up
             nativeCell = wrapper.find(NativeCell).at(cellIndex);
             if (nativeCell.exists()) {
-                nativeCell.simulate('keypress', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+                nativeCell.simulate('keypress', { key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
             }
             nativeCell = wrapper.find(NativeCell).at(cellIndex);
             wrapper.update();
             if (nativeCell.exists()) {
-                nativeCell.simulate('keyup', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+                nativeCell.simulate('keyup', { key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
             }
             wrapper.update();
             //wrapper.update();
@@ -849,7 +846,7 @@ for _ in range(50):
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
             });
 
-            test("IANHU Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
+            test("Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
                 // First focus the cell.
                 let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
@@ -1086,7 +1083,7 @@ for _ in range(50):
                 assert.equal(optionsUpdated.lastCall.args[0].lineNumbers, 'off');
             });
 
-            test("IANHU Toggle markdown and code modes using 'y' and 'm' keys", async () => {
+            test("Toggle markdown and code modes using 'y' and 'm' keys", async () => {
                 clickCell(1);
 
                 // Switch to markdown

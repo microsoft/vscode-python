@@ -235,7 +235,7 @@
                 "--recursive",
                 "--colors",
                 "--grep",
-                "IANHU",
+                "Keyboard Shortcuts",
                 "--timeout=300000"
             ],
             "outFiles": [

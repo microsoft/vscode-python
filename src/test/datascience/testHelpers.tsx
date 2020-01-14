@@ -564,7 +564,8 @@ export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, Re
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
-    enterKey(textArea!, keyboardEvent.code, keyboardEvent.shiftKey, keyboardEvent.ctrlKey);
+    enterKey(textArea!, keyboardEvent.code, keyboardEvent.shiftKey, keyboardEvent.ctrlKey,
+        keyboardEvent.altKey, keyboardEvent.metaKey);
 
     return textArea;
 }
