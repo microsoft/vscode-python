@@ -15,7 +15,7 @@ const languageClientName = 'Python Tools';
 
 @injectable()
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
+    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
     public async createLanguageClient(_resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const bundlePath = path.join(EXTENSION_ROOT_DIR, 'nodeLanguageServer', 'server.bundle.js');
         const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'nodeLanguageServer', 'server.js');

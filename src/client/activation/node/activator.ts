@@ -37,7 +37,7 @@ import { ILanguageServerActivator, ILanguageServerManager, LanguageServerType } 
  */
 @injectable()
 export class NodeLanguageServerActivator implements ILanguageServerActivator {
-    constructor(@inject(ILanguageServerManager) @named(LanguageServerType.Node) private readonly manager: ILanguageServerManager) { }
+    constructor(@inject(ILanguageServerManager) @named(LanguageServerType.Node) private readonly manager: ILanguageServerManager) {}
 
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {

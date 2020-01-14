@@ -15,8 +15,8 @@ import { LanguageServerSymbolProvider } from '../../providers/symbolProvider';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITestManagementService } from '../../testing/types';
-import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory } from '../types';
 import { ProgressReporting } from '../progress';
+import { ILanguageClientFactory, ILanguageServerProxy, LanguageClientFactory } from '../types';
 
 @injectable()
 export class LanguageServerProxy implements ILanguageServerProxy {

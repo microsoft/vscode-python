@@ -219,9 +219,9 @@ export class LanguageClientMiddleware implements Middleware {
     ): ProviderResult<
         | Range
         | {
-            range: Range;
-            placeholder: string;
-        }
+              range: Range;
+              placeholder: string;
+          }
     > {
         if (this.connected) {
             return next(document, position, token);

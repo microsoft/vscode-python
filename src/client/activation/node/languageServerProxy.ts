@@ -79,7 +79,7 @@ export class NodeLanguageServerProxy implements ILanguageServerProxy {
     }
 
     // tslint:disable-next-line: no-empty
-    public loadExtension(_args?: {}) { }
+    public loadExtension(_args?: {}) {}
 
     @captureTelemetry(EventName.PYTHON_NODE_SERVER_READY, undefined, true)
     protected async serverReady(): Promise<void> {

@@ -50,7 +50,7 @@ export class LanguageServerExtensionActivator implements ILanguageServerActivato
         @inject(ILanguageServerDownloader) private readonly lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService,
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService
-    ) { }
+    ) {}
 
     @traceDecorators.error('Failed to activate language server')
     public async start(resource: Resource, interpreter?: PythonInterpreter): Promise<void> {
