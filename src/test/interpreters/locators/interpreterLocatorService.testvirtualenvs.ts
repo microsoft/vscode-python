@@ -1,0 +1,51 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+'use strict';
+
+import { expect } from 'chai';
+import * as path from 'path';
+import { RegistryImplementation } from '../../../client/common/platform/registry';
+import { IRegistry } from '../../../client/common/platform/types';
+import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../../client/interpreter/contracts';
+import { initialize, initializeTest } from '../../initialize';
+import { UnitTestIocContainer } from '../../testing/serviceRegistry';
+
+suite('Python interpreter locator service', () => {
+    let ioc: UnitTestIocContainer;
+    suiteSetup(async () => {
+        await initialize();
+    });
+
+    setup(async () => {
+        await initializeTest();
+        initializeDI();
+    });
+
+    function initializeDI() {
+        ioc = new UnitTestIocContainer();
+        ioc.registerCommonTypes();
+        ioc.registerUnitTestTypes();
+        ioc.registerVariableTypes();
+        ioc.registerInterpreterTypes();
+        ioc.registerMockProcessTypes();
+        ioc.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
+    }
+
+    test('Ensure we are getting all conda environments', async () => {
+        const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
+        const interpreters = await locator.getInterpreters();
+        // Base conda environment in CI
+        let filteredInterpreters = interpreters.filter(i => i.envName === 'base' && i.type === InterpreterType.Conda);
+        expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment base not found');
+        // Created in CI using command `conda create -n "test_env1" -y python`
+        filteredInterpreters = interpreters.filter(i => i.envName === 'test_env1' && i.type === InterpreterType.Conda);
+        expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env1 not found');
+        // Created in CI using command `conda create -p "./test_env2" -y python`
+        filteredInterpreters = interpreters.filter(i => path.dirname(i.path).endsWith('test_env2') && i.type === InterpreterType.Conda);
+        expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env2 not found');
+        // Created in CI using command `conda create -p "<HOME>/test_env3" -y python`
+        filteredInterpreters = interpreters.filter(i => path.dirname(i.path).endsWith('test_env3') && i.type === InterpreterType.Conda);
+        expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env3 not found');
+    });
+});

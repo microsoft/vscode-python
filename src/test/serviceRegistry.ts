@@ -26,7 +26,7 @@ import { registerTypes as variableRegisterTypes } from '../client/common/variabl
 import { registerTypes as formattersRegisterTypes } from '../client/formatters/serviceRegistry';
 import { EnvironmentActivationService } from '../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../client/interpreter/activation/types';
-import { IInterpreterAutoSelectionService, IInterpreterAutoSeletionProxyService } from '../client/interpreter/autoSelection/types';
+import { IInterpreterAutoSelectionService } from '../client/interpreter/autoSelection/types';
 import {
     CONDA_ENV_FILE_SERVICE,
     CONDA_ENV_SERVICE,
@@ -96,7 +96,6 @@ export class IocContainer {
         this.serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, testOutputChannel, TEST_OUTPUT_CHANNEL);
 
         this.serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, MockAutoSelectionService);
-        this.serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, MockAutoSelectionService);
     }
     public async dispose(): Promise<void> {
         for (const disposable of this.disposables) {
