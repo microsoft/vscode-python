@@ -17,8 +17,9 @@ const languageClientName = 'Python Tools';
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
     constructor(@inject(IFileSystem) private readonly fs: IFileSystem) { }
     public async createLanguageClient(_resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'node', 'server.bundle.js');
-        //const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'node', 'server.js');
+        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'nodeLanguageServer', 'server.bundle.js');
+        const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'nodeLanguageServer', 'server.js');
+        const modulePath = (await this.fs.fileExists(nonBundlePath)) ? nonBundlePath : bundlePath;
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
         // If the extension is launched in debug mode, then the debug server options are used.
         const serverOptions: ServerOptions = {
@@ -27,7 +28,7 @@ export class NodeLanguageClientFactory implements ILanguageClientFactory {
             // build includes only the bundled package, so we don't want to crash if
             // someone starts the production extension in debug mode.
             debug: {
-                module: this.fs.fileExists(bundlePath) ? bundlePath : bundlePath,
+                module: modulePath,
                 transport: TransportKind.ipc,
                 options: debugOptions
             }
