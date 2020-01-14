@@ -244,6 +244,10 @@ export class JupyterVariables implements IJupyterVariables {
             };
         }
 
+        const exclusionList = this.configService.getSettings().datascience.variableExplorerExclude
+            ? this.configService.getSettings().datascience.variableExplorerExclude?.split(';')
+            : [];
+
         // Use the list of names to fetch the page of data
         if (list) {
             const startPos = startIndex ? startIndex : 0;
@@ -251,11 +255,18 @@ export class JupyterVariables implements IJupyterVariables {
             const result = [];
 
             // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
-            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; i += 1) {
-                list.variables[i] = await this.getVariableValueFromKernel(list.variables[i], notebook);
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+                const fullVariable = await this.getVariableValueFromKernel(list.variables[i], notebook);
 
-                // Save in result too. Don't need to send the entire array
-                result.push(list.variables[i]);
+                // See if this is excluded or not.
+                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
+                    // Not part of our actual list. Remove from the real list too
+                    list.variables.splice(i, 1);
+                } else {
+                    list.variables[i] = fullVariable;
+                    result.push(fullVariable);
+                    i += 1;
+                }
             }
 
             // Save in our cache
