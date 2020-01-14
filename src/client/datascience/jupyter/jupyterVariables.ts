@@ -25,7 +25,7 @@ import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 // kernels will add the ansi encoding.
 const TypeRegex = /\u001b\[1;31mType:\u001b\[0m\s+(\w+)/;
 const ValueRegex = /\u001b\[1;31mValue:\u001b\[0m\s+(.*)/;
-const StringFormRegex = /\u001b\[1;31mString form:\u001b\[0m\s+([\s\S]+?)\u001b\[1/;
+const StringFormRegex = /\u001b\[1;31mString form:\u001b\[0m\s+([\s\S]+?)\n\u001b\[1/;
 const DocStringRegex = /\u001b\[1;31mDocstring:\u001b\[0m\s+(.*)/;
 const CountRegex = /\u001b\[1;31mLength:\u001b\[0m\s+(.*)/;
 const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;

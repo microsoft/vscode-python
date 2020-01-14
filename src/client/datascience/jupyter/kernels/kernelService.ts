@@ -23,7 +23,7 @@ import { IInterpreterService, PythonInterpreter } from '../../../interpreter/con
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { JupyterCommands, Telemetry } from '../../constants';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { JupyterCommandFinder } from '../jupyterCommandFinder';
+import { JupyterCommandFinder } from '../interpreter/jupyterCommandFinder';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 

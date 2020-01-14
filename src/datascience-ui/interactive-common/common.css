@@ -469,6 +469,7 @@ body, html {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
+    text-align: end;
 }
 
 .kernel-status-server {

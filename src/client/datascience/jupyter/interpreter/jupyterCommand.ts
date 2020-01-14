@@ -4,13 +4,20 @@
 import { SpawnOptions } from 'child_process';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
-import { traceError } from '../../common/logger';
-import { ExecutionResult, IProcessService, IProcessServiceFactory, IPythonExecutionFactory, IPythonExecutionService, ObservableExecutionResult } from '../../common/process/types';
-import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IEnvironmentActivationService } from '../../interpreter/activation/types';
-import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
-import { JupyterCommands, PythonDaemonModule } from '../constants';
-import { IJupyterCommand, IJupyterCommandFactory } from '../types';
+import { traceError } from '../../../common/logger';
+import {
+    ExecutionResult,
+    IProcessService,
+    IProcessServiceFactory,
+    IPythonExecutionFactory,
+    IPythonExecutionService,
+    ObservableExecutionResult
+} from '../../../common/process/types';
+import { EXTENSION_ROOT_DIR } from '../../../constants';
+import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
+import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
+import { JupyterCommands, PythonDaemonModule } from '../../constants';
+import { IJupyterCommand, IJupyterCommandFactory } from '../../types';
 
 // JupyterCommand objects represent some process that can be launched that should be guaranteed to work because it
 // was found by testing it previously

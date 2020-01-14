@@ -29,7 +29,7 @@ export class KernelSelection extends React.Component<IKernelSelectionProps> {
 
     public render() {
         const serverTextSize = getLocString('DataScience.jupyterServer', 'Jupyter Server').length + this.props.kernel.localizedUri.length + 4; // plus 4 for the icon
-        const displayNameTextSize = this.props.kernel.displayName.length + this.props.kernel.jupyterServerStatus.length - 1;
+        const displayNameTextSize = this.props.kernel.displayName.length + this.props.kernel.jupyterServerStatus.length;
         const dynamicFont: React.CSSProperties = {
             fontSize: this.props.font.size > 2 ? this.props.font.size - 2 : this.props.font.size,
             fontFamily: this.props.font.family,

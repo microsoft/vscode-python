@@ -16,7 +16,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Commands, JupyterCommands, Telemetry } from '../constants';
 import { IConnection, IJupyterExecution, IJupyterSessionManagerFactory, INotebookServer, INotebookServerLaunchInfo, INotebookServerOptions } from '../types';
-import { IFindCommandResult, JupyterCommandFinder } from './jupyterCommandFinder';
+import { IFindCommandResult, JupyterCommandFinder } from './interpreter/jupyterCommandFinder';
 import { JupyterInstallError } from './jupyterInstallError';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterSessionStartError } from './jupyterSession';

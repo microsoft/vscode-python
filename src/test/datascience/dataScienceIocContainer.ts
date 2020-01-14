@@ -137,8 +137,8 @@ import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeE
 import { NativeEditorCommandListener } from '../../client/datascience/interactive-ipynb/nativeEditorCommandListener';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
-import { JupyterCommandFactory } from '../../client/datascience/jupyter/jupyterCommand';
-import { JupyterCommandFinder } from '../../client/datascience/jupyter/jupyterCommandFinder';
+import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
+import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -519,7 +519,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         // Setup default settings
         this.pythonSettings.datascience = {
             allowImportFromNotebook: true,
-            jupyterLaunchTimeout: 20000,
+            jupyterLaunchTimeout: 60000,
             jupyterLaunchRetries: 3,
             enabled: true,
             jupyterServerURI: 'local',
@@ -560,6 +560,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         when(workspaceService.getConfiguration(anything(), anything())).thenReturn(instance(workspaceConfig));
         when(workspaceService.onDidChangeConfiguration).thenReturn(this.configChangeEvent.event);
         when(workspaceService.onDidChangeWorkspaceFolders).thenReturn(this.worksaceFoldersChangedEvent.event);
+
         interpreterDisplay.setup(i => i.refresh(TypeMoq.It.isAny())).returns(() => Promise.resolve());
         const startTime = Date.now();
         this.datascience.setup(d => d.activationStartTime).returns(() => startTime);
@@ -585,6 +586,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
             }
         }
         when(workspaceService.createFileSystemWatcher(anything(), anything(), anything(), anything())).thenReturn(new MockFileSystemWatcher());
+        when(workspaceService.createFileSystemWatcher(anything())).thenReturn(new MockFileSystemWatcher());
         when(workspaceService.hasWorkspaceFolders).thenReturn(true);
         const workspaceFolder = this.createMoqWorkspaceFolder(testWorkspaceFolder);
         when(workspaceService.workspaceFolders).thenReturn([workspaceFolder]);
