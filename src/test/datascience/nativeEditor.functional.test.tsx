@@ -21,7 +21,6 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
-import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
@@ -39,7 +38,6 @@ import {
     addContinuousMockData,
     addMockData,
     CellPosition,
-    createKeyboardEventForCell,
     enterEditorKey,
     escapePath,
     findButton,
@@ -841,7 +839,7 @@ for _ in range(50):
                 assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
                 assert.equal(isCellFocused(wrapper, 'NativeCell', 1), true);
 
-                // Now hit escape on the editor
+                // Now hit escape.
                 update = waitForUpdate(wrapper, NativeEditor, 1);
                 simulateKeyPressOnCell(1, { code: 'Escape' });
                 await update;
@@ -862,7 +860,6 @@ for _ in range(50):
 
                 update = waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
                 simulateKeyPressOnCell(1, { code: 'Enter', shiftKey: true, editorInfo: undefined });
-                //simulateKeyPressOnEditor(1, { code: 'Enter', shiftKey: true });
                 await update;
                 wrapper.update();
 
