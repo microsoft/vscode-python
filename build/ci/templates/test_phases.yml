@@ -294,7 +294,7 @@ steps:
 
           # conda
 
-          1. For `terminalActivation.testvirtualenvs.test.ts`
+          # 1. For `terminalActivation.testvirtualenvs.test.ts`
 
           if( '$(Agent.Os)' -match '.*Windows.*' ){
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
@@ -305,7 +305,7 @@ steps:
           }
           & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
 
-          2. For `interpreterLocatorService.testvirtualenvs.ts`
+          # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
           conda create -n "test_env1" -y python
           conda create -p "./test_env2" -y python
