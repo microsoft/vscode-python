@@ -547,20 +547,9 @@ export function injectCode(editorControl: ReactWrapper<any, Readonly<{}>, React.
     return textArea;
 }
 
-// IANHU Combine with below
 export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined,
     keyboardEvent: Partial<IKeyboardEvent> & { code: string }): HTMLTextAreaElement | null {
-    // Find the last cell. It should have a monacoEditor object. We need to search
-    // through its DOM to find the actual textarea to send input to
-    // (we can't actually find it with the enzyme wrappers because they only search
-    //  React accessible nodes and the monaco html is not react)
-    assert.ok(editorControl, 'Editor not defined in order to type code into');
-    let ecDom = editorControl!.getDOMNode();
-    if ((ecDom as any).length) {
-        ecDom = (ecDom as any)[0];
-    }
-    assert.ok(ecDom, 'ec DOM object not found');
-    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
+    const textArea = getTextArea(editorControl);
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
@@ -571,17 +560,7 @@ export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, Re
 }
 
 export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, code: string): HTMLTextAreaElement | null {
-    // Find the last cell. It should have a monacoEditor object. We need to search
-    // through its DOM to find the actual textarea to send input to
-    // (we can't actually find it with the enzyme wrappers because they only search
-    //  React accessible nodes and the monaco html is not react)
-    assert.ok(editorControl, 'Editor not defined in order to type code into');
-    let ecDom = editorControl!.getDOMNode();
-    if ((ecDom as any).length) {
-        ecDom = (ecDom as any)[0];
-    }
-    assert.ok(ecDom, 'ec DOM object not found');
-    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
+    const textArea = getTextArea(editorControl);
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
@@ -594,6 +573,21 @@ export function typeCode(editorControl: ReactWrapper<any, Readonly<{}>, React.Co
         enterKey(textArea!, keyCode);
     }
 
+    return textArea;
+}
+
+function getTextArea(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined): HTMLTextAreaElement | null {
+    // Find the last cell. It should have a monacoEditor object. We need to search
+    // through its DOM to find the actual textarea to send input to
+    // (we can't actually find it with the enzyme wrappers because they only search
+    //  React accessible nodes and the monaco html is not react)
+    assert.ok(editorControl, 'Editor not defined in order to type code into');
+    let ecDom = editorControl!.getDOMNode();
+    if ((ecDom as any).length) {
+        ecDom = (ecDom as any)[0];
+    }
+    assert.ok(ecDom, 'ec DOM object not found');
+    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
     return textArea;
 }
 

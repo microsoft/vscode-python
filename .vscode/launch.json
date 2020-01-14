@@ -234,8 +234,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep",
-                "Keyboard Shortcuts",
+                //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "outFiles": [

@@ -669,45 +669,29 @@ for _ in range(50):
             wrapper.update();
             let nativeCell = wrapper.find(NativeCell).at(cellIndex);
             if (nativeCell.exists()) {
-                nativeCell.simulate('keydown', { key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+                nativeCell.simulate('keydown', {
+                    key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey
+                });
             }
             wrapper.update();
             // Requery for our cell as something like a 'dd' keydown command can delete it before the press and up
             nativeCell = wrapper.find(NativeCell).at(cellIndex);
             if (nativeCell.exists()) {
-                nativeCell.simulate('keypress', { key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+                nativeCell.simulate('keypress', {
+                    key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey
+                });
             }
             nativeCell = wrapper.find(NativeCell).at(cellIndex);
             wrapper.update();
             if (nativeCell.exists()) {
-                nativeCell.simulate('keyup', { key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+                nativeCell.simulate('keyup', {
+                    key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey
+                });
             }
             wrapper.update();
-            //wrapper.update();
-            //wrapper
-            //.find(NativeCell)
-            //.at(cellIndex)
-            ////                .find(CellInput)
-            //.simulate('keydown', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
-            //wrapper.update();
-            //wrapper
-            //.find(NativeCell)
-            //.at(cellIndex)
-            ////                .find(CellInput)
-            //.simulate('keypress', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
-            //wrapper.update();
-            //wrapper
-            //.find(NativeCell)
-            //.at(cellIndex)
-            ////                .find(CellInput)
-            //.simulate('keyup', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
-            //wrapper.update();
-            //wrapper
-            //.find(NativeCell)
-            //.at(cellIndex)
-            //.find(CellInput)
-            //.props().keyDown!(id, event);
-            //wrapper.update();
         }
 
         suite('Selection/Focus', () => {
@@ -858,7 +842,6 @@ for _ in range(50):
                 assert.equal(isCellFocused(wrapper, 'NativeCell', 1), true);
 
                 // Now hit escape on the editor
-                // IANHU: Update 2 here?
                 update = waitForUpdate(wrapper, NativeEditor, 1);
                 simulateKeyPressOnCell(1, { code: 'Escape' });
                 await update;
