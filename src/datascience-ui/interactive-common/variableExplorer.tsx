@@ -39,12 +39,19 @@ const defaultColumnProperties = {
     resizable: true
 };
 
+interface IFormatterArgs {
+    isScrolling?: boolean;
+    value?: string | number | object | boolean;
+    row?: IGridRow;
+}
+
 interface IGridRow {
     // tslint:disable-next-line:no-any
     name: string;
     type: string;
     size: string;
     value: string | undefined;
+    index: number;
     buttons: IButtonCellValue;
 }
 
@@ -64,7 +71,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         name: string;
         type: string;
         width: number;
-        formatter: JSX.Element;
+        formatter: any;
         headerRenderer?: JSX.Element;
         sortable?: boolean;
         resizable?: boolean;
@@ -78,7 +85,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                 name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
                 type: 'string',
                 width: 120,
-                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />,
+                formatter: this.formatNameColumn,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
             {
@@ -185,12 +192,18 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         }
     }
 
+    private formatNameColumn = (args: IFormatterArgs): JSX.Element => {
+        if (!args.isScrolling && args.row !== undefined && !args.value) {
+            this.ensureLoaded(args.row.index);
+        }
+
+        return <VariableExplorerCellFormatter value={args.value} role={'cell'} cellStyle={CellStyle.variable} />;
+    };
+
     private getRow = (index: number): IGridRow => {
         if (index >= 0 && index < this.props.variables.length) {
             const variable = this.props.variables[index];
-            if (!variable || !variable.value) {
-                this.askForPage(index);
-            } else {
+            if (variable && variable.value) {
                 let newSize = '';
                 if (variable.shape && variable.shape !== '') {
                     newSize = variable.shape;
@@ -201,12 +214,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
                     buttons: {
                         name: variable.name,
                         supportsDataExplorer: variable.supportsDataExplorer,
-                        variable: variable,
+                        variable,
                         numberOfColumns: this.getColumnCountFromShape(variable.shape)
                     },
                     name: variable.name,
                     type: variable.type,
                     size: newSize,
+                    index,
                     value: variable.value ? variable.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
                 };
             }
@@ -217,6 +231,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
             name: '',
             type: '',
             size: '',
+            index,
             value: getLocString('DataScience.variableLoadingValue', 'Loading...')
         };
     };
@@ -233,12 +248,15 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         return this.pageSize;
     }
 
-    private askForPage(index: number) {
+    private ensureLoaded = (index: number) => {
         // Figure out how many items in a page
         const pageSize = this.computePageSize();
 
-        // Skip if already pending
-        if (this.props.executionCount !== this.requestedPagesExecutionCount || !this.requestedPages.find(n => n <= index && index < n + pageSize)) {
+        // Skip if already pending or already have a value
+        const haveValue = this.props.variables[index]?.value;
+        const newExecution = this.props.executionCount !== this.requestedPagesExecutionCount;
+        const notRequested = !this.requestedPages.find(n => n <= index && index < n + pageSize);
+        if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.
             let pageIndex = index;
             while (pageIndex > 0 && pageIndex > index - pageSize / 2 && (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)) {
@@ -259,7 +277,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
             // Load this page.
             this.props.pageIn(pageIndex, pageSize);
         }
-    }
+    };
 
     private getColumnCountFromShape(shape: string | undefined): number {
         if (shape) {
