@@ -290,7 +290,8 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
             baseTheme: baseTheme,
-            pageIn: this.pageInVariableData
+            pageIn: this.pageInVariableData,
+            fontSize: this.props.font.size
         };
     };
 

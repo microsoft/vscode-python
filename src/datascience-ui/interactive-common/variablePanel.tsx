@@ -15,6 +15,7 @@ export interface IVariablePanelProps {
     testMode?: boolean;
     variables: IJupyterVariable[];
     debugging: boolean;
+    fontSize: number;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
     pageIn(startIndex: number, pageSize: number): void;
@@ -30,6 +31,7 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
             <div id="variable-panel">
                 <div id="variable-panel-padding">
                     <VariableExplorer
+                        fontSize={this.props.fontSize}
                         variables={this.props.variables}
                         debugging={this.props.debugging}
                         baseTheme={this.props.baseTheme}

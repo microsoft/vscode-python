@@ -13,7 +13,7 @@ import './variableExplorerButtonCellFormatter.css';
 export interface IButtonCellValue {
     supportsDataExplorer: boolean;
     name: string;
-    variable: IJupyterVariable;
+    variable?: IJupyterVariable;
     numberOfColumns: number;
 }
 
@@ -51,7 +51,7 @@ export class VariableExplorerButtonCellFormatter extends React.Component<IVariab
     }
 
     private onDataExplorerClick = () => {
-        if (this.props.value !== null && this.props.value !== undefined) {
+        if (this.props.value !== null && this.props.value !== undefined && this.props.value.variable) {
             this.props.showDataExplorer(this.props.value.variable, this.props.value.numberOfColumns);
         }
     };

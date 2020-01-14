@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as assert from 'assert';
 import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
@@ -12,7 +11,6 @@ import { Disposable } from 'vscode';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
-import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
@@ -254,53 +252,6 @@ Name: 0, dtype: float64`,
             return ioc;
         }
     );
-
-    runDoubleTest(
-        'Variable explorer - Sorting',
-        async wrapper => {
-            const basicCode: string = `b = 2
-c = 3
-stra = 'a'
-strb = 'b'
-strc = 'c'`;
-
-            openVariableExplorer(wrapper);
-
-            await addCodeImpartial(wrapper, 'a=1\na');
-            await addCodeImpartial(wrapper, basicCode, true);
-
-            let targetVariables: IJupyterVariable[] = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
-            ];
-            verifyVariables(wrapper, targetVariables);
-
-            sortVariableExplorer(wrapper, 'value', 'DESC');
-
-            targetVariables = [
-                { name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
-            ];
-            verifyVariables(wrapper, targetVariables);
-        },
-        () => {
-            return ioc;
-        }
-    );
 });
 
 // Open up our variable explorer which also triggers a data fetch
@@ -311,16 +262,6 @@ function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
         if (store) {
             store.dispatch({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER });
         }
-    }
-}
-
-function sortVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortColumn: string, sortDirection: string) {
-    const varExp: VariableExplorer = wrapper.find('VariableExplorer').instance() as VariableExplorer;
-
-    assert(varExp);
-
-    if (varExp) {
-        varExp.sortRows(sortColumn, sortDirection);
     }
 }
 
