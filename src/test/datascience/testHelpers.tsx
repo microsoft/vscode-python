@@ -75,10 +75,10 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
     let handler: (m: string, p: any) => void;
     const timer = timeoutMs
         ? setTimeout(() => {
-              if (!promise.resolved) {
-                  promise.reject(new Error(`Waiting for ${message} timed out`));
-              }
-          }, timeoutMs)
+            if (!promise.resolved) {
+                promise.reject(new Error(`Waiting for ${message} timed out`));
+            }
+        }, timeoutMs)
         : undefined;
     let timesMessageReceived = 0;
     handler = (m: string, _p: any) => {
@@ -257,6 +257,29 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
         assert.ok(targetCell!.isEmptyRender() || outputHtml === undefined, `Target cell is not empty render, got this instead: ${outputHtml}`);
     }
 }
+
+//interface KeyboardEvent<T = Element> extends SyntheticEvent<T, NativeKeyboardEvent> {
+//altKey: boolean;
+//charCode: number;
+//ctrlKey: boolean;
+///**
+//* See [DOM Level 3 Events spec](https://www.w3.org/TR/uievents-key/#keys-modifier). for a list of valid (case-sensitive) arguments to this method.
+//*/
+//getModifierState(key: string): boolean;
+///**
+//* See the [DOM Level 3 Events spec](https://www.w3.org/TR/uievents-key/#named-key-attribute-values). for possible values
+//*/
+//key: string;
+//keyCode: number;
+//locale: string;
+//location: number;
+//metaKey: boolean;
+//repeat: boolean;
+//shiftKey: boolean;
+//which: number;
+//}
+//export function createReactKeyboardEvent(event: Partial<React.KeyboardEvent<HTMLDivElement>)
+//}
 
 /**
  * Creates a keyboard event for a cells.
@@ -519,6 +542,27 @@ export function injectCode(editorControl: ReactWrapper<any, Readonly<{}>, React.
     const model = monaco!.getModel();
     assert.ok(model, 'Monaco model not found');
     model!.setValue(code);
+
+    return textArea;
+}
+
+// IANHU Combine with below
+export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, keyCode: string): HTMLTextAreaElement | null {
+    // Find the last cell. It should have a monacoEditor object. We need to search
+    // through its DOM to find the actual textarea to send input to
+    // (we can't actually find it with the enzyme wrappers because they only search
+    //  React accessible nodes and the monaco html is not react)
+    assert.ok(editorControl, 'Editor not defined in order to type code into');
+    let ecDom = editorControl!.getDOMNode();
+    if ((ecDom as any).length) {
+        ecDom = (ecDom as any)[0];
+    }
+    assert.ok(ecDom, 'ec DOM object not found');
+    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
+    assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
+    textArea!.focus();
+
+    enterKey(textArea!, keyCode);
 
     return textArea;
 }

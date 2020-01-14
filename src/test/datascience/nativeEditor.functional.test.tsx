@@ -40,6 +40,7 @@ import {
     addMockData,
     CellPosition,
     createKeyboardEventForCell,
+    enterEditorKey,
     escapePath,
     findButton,
     getLastOutputCell,
@@ -647,20 +648,43 @@ for _ in range(50):
             wrapper.update();
         }
 
+        function simulateKeyPressOnEditor(keyCode: string) {
+            let editor = getNativeFocusedEditor(wrapper);
+            enterEditorKey(editor, keyCode);
+        }
+
         function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
-            const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
-            const id = `NotebookImport#${cellIndex}`;
+            //const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
+            //const id = `NotebookImport#${cellIndex}`;
             wrapper.update();
             wrapper
                 .find(NativeCell)
                 .at(cellIndex)
                 .find(CellInput)
-                .props().keyDown!(id, event);
+                .simulate('keydown', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
             wrapper.update();
+            wrapper
+                .find(NativeCell)
+                .at(cellIndex)
+                .find(CellInput)
+                .simulate('keypress', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            wrapper.update();
+            wrapper
+                .find(NativeCell)
+                .at(cellIndex)
+                .find(CellInput)
+                .simulate('keyup', { key: keyboardEvent.code, ctrlKey: keyboardEvent.ctrlKey, altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey });
+            wrapper.update();
+            //wrapper
+            //.find(NativeCell)
+            //.at(cellIndex)
+            //.find(CellInput)
+            //.props().keyDown!(id, event);
+            //wrapper.update();
         }
 
         suite('Selection/Focus', () => {
-            setup(async function() {
+            setup(async function () {
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
@@ -708,7 +732,7 @@ for _ in range(50):
                     };
                 })(originalPlatform)
             );
-            setup(async function() {
+            setup(async function () {
                 (window.navigator as any).platform = originalPlatform;
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
@@ -795,7 +819,7 @@ for _ in range(50):
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 1));
             });
 
-            test("Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
+            test("IANHU Pressing 'Escape' on a focused cell results in the cell being selected", async () => {
                 // First focus the cell.
                 let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
@@ -808,7 +832,8 @@ for _ in range(50):
 
                 // Now hit escape.
                 update = waitForUpdate(wrapper, NativeEditor, 1);
-                simulateKeyPressOnCell(1, { code: 'Escape' });
+                //simulateKeyPressOnCell(1, { code: 'Escape' });
+                simulateKeyPressOnEditor('Escape');
                 await update;
 
                 // Confirm it is no longer focused, and it is selected.
@@ -1243,7 +1268,7 @@ for _ in range(50):
 
         suite('Auto Save', () => {
             let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
-            setup(async function() {
+            setup(async function () {
                 initIoc();
 
                 windowStateChangeHandlers = [];
@@ -1454,7 +1479,7 @@ for _ in range(50):
         });
 
         suite('Update Metadata', () => {
-            setup(async function() {
+            setup(async function () {
                 initIoc();
 
                 const oldJson: nbformat.INotebookContent = {
@@ -1572,7 +1597,7 @@ for _ in range(50):
         });
 
         suite('Clear Outputs', () => {
-            setup(async function() {
+            setup(async function () {
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
