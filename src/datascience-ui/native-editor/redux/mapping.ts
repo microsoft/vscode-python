@@ -16,7 +16,6 @@ import {
     IEditCellAction,
     IExecuteAction,
     ILinkClickAction,
-    IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
     IShowPlotAction

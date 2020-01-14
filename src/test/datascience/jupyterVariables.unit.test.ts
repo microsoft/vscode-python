@@ -235,7 +235,7 @@ suite('JupyterVariables', () => {
 
         const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };
 
-        const resultVariable = await jupyterVariables.getValue(testVariable, fakeNotebook.object);
+        const resultVariable = { ...testVariable, name: 'big_fail' }; //await jupyterVariables.getValue(testVariable, fakeNotebook.object);
 
         // Verify the result value should be filled out from fake server result
         assert.deepEqual(resultVariable, { name: 'big_complex', size: 60, type: 'complex', value: '(1+1j)' });
