@@ -48,7 +48,11 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
 
     // If going visible for the first time, refresh our variables
     if (newState.visible) {
-        return handleRestarted({ ...arg, prevState: newState });
+        return handleRequest({
+            ...arg,
+            prevState: newState,
+            payload: { executionCount: arg.prevState.currentExecutionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize }
+        });
     } else {
         return newState;
     }

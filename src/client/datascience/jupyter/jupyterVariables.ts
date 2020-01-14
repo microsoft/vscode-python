@@ -99,7 +99,7 @@ export class JupyterVariables implements IJupyterVariables {
         }
 
         // Prep our targetVariable to send over
-        const variableString = JSON.stringify(targetVariable);
+        const variableString = JSON.stringify(targetVariable).replace('\\n', '\\\\n');
 
         // Setup a regex
         const regexPattern = extraReplacements.length === 0 ? '_VSCode_JupyterTestValue' : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
