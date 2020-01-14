@@ -75,10 +75,10 @@ export function waitForMessage(ioc: DataScienceIocContainer, message: string, op
     let handler: (m: string, p: any) => void;
     const timer = timeoutMs
         ? setTimeout(() => {
-            if (!promise.resolved) {
-                promise.reject(new Error(`Waiting for ${message} timed out`));
-            }
-        }, timeoutMs)
+              if (!promise.resolved) {
+                  promise.reject(new Error(`Waiting for ${message} timed out`));
+              }
+          }, timeoutMs)
         : undefined;
     let timesMessageReceived = 0;
     handler = (m: string, _p: any) => {
@@ -423,8 +423,7 @@ export async function getCellResults(
     return wrapper.find(cellType);
 }
 
-export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean, ctrlKey?: boolean,
-    altKey?: boolean, metaKey?: boolean) {
+export function simulateKey(domNode: HTMLTextAreaElement, key: string, shiftDown?: boolean, ctrlKey?: boolean, altKey?: boolean, metaKey?: boolean) {
     // Submit a keypress into the textarea. Simulate doesn't work here because the keydown
     // handler is not registered in any react code. It's being handled with DOM events
 
@@ -524,14 +523,15 @@ export function injectCode(editorControl: ReactWrapper<any, Readonly<{}>, React.
     return textArea;
 }
 
-export function enterEditorKey(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined,
-    keyboardEvent: Partial<IKeyboardEvent> & { code: string }): HTMLTextAreaElement | null {
+export function enterEditorKey(
+    editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined,
+    keyboardEvent: Partial<IKeyboardEvent> & { code: string }
+): HTMLTextAreaElement | null {
     const textArea = getTextArea(editorControl);
     assert.ok(textArea!, 'Cannot find the textarea inside the monaco editor');
     textArea!.focus();
 
-    enterKey(textArea!, keyboardEvent.code, keyboardEvent.shiftKey, keyboardEvent.ctrlKey,
-        keyboardEvent.altKey, keyboardEvent.metaKey);
+    enterKey(textArea!, keyboardEvent.code, keyboardEvent.shiftKey, keyboardEvent.ctrlKey, keyboardEvent.altKey, keyboardEvent.metaKey);
 
     return textArea;
 }
@@ -564,8 +564,7 @@ function getTextArea(editorControl: ReactWrapper<any, Readonly<{}>, React.Compon
         ecDom = (ecDom as any)[0];
     }
     assert.ok(ecDom, 'ec DOM object not found');
-    const textArea = ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
-    return textArea;
+    return ecDom!.querySelector('.overflow-guard')!.querySelector('textarea');
 }
 
 export async function enterInput(

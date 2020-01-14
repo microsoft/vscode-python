@@ -648,7 +648,7 @@ for _ in range(50):
 
         function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
             // Check to see if we have an active focused editor
-            let editor = getNativeFocusedEditor(wrapper);
+            const editor = getNativeFocusedEditor(wrapper);
 
             // If we do have one, send the input there, otherwise send it to the outer cell
             if (editor) {
@@ -656,7 +656,6 @@ for _ in range(50):
             } else {
                 simulateKeyPressOnCellInner(cellIndex, keyboardEvent);
             }
-
         }
 
         function simulateKeyPressOnEditor(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
@@ -668,8 +667,11 @@ for _ in range(50):
             let nativeCell = wrapper.find(NativeCell).at(cellIndex);
             if (nativeCell.exists()) {
                 nativeCell.simulate('keydown', {
-                    key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey,
-                    altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey
+                    key: keyboardEvent.code,
+                    shiftKey: keyboardEvent.shiftKey,
+                    ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey,
+                    metaKey: keyboardEvent.metaKey
                 });
             }
             wrapper.update();
@@ -677,23 +679,29 @@ for _ in range(50):
             nativeCell = wrapper.find(NativeCell).at(cellIndex);
             if (nativeCell.exists()) {
                 nativeCell.simulate('keypress', {
-                    key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey,
-                    altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey
+                    key: keyboardEvent.code,
+                    shiftKey: keyboardEvent.shiftKey,
+                    ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey,
+                    metaKey: keyboardEvent.metaKey
                 });
             }
             nativeCell = wrapper.find(NativeCell).at(cellIndex);
             wrapper.update();
             if (nativeCell.exists()) {
                 nativeCell.simulate('keyup', {
-                    key: keyboardEvent.code, shiftKey: keyboardEvent.shiftKey, ctrlKey: keyboardEvent.ctrlKey,
-                    altKey: keyboardEvent.altKey, metaKey: keyboardEvent.metaKey
+                    key: keyboardEvent.code,
+                    shiftKey: keyboardEvent.shiftKey,
+                    ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey,
+                    metaKey: keyboardEvent.metaKey
                 });
             }
             wrapper.update();
         }
 
         suite('Selection/Focus', () => {
-            setup(async function () {
+            setup(async function() {
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
@@ -741,7 +749,7 @@ for _ in range(50):
                     };
                 })(originalPlatform)
             );
-            setup(async function () {
+            setup(async function() {
                 (window.navigator as any).platform = originalPlatform;
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
@@ -1275,7 +1283,7 @@ for _ in range(50):
 
         suite('Auto Save', () => {
             let windowStateChangeHandlers: ((e: WindowState) => any)[] = [];
-            setup(async function () {
+            setup(async function() {
                 initIoc();
 
                 windowStateChangeHandlers = [];
@@ -1486,7 +1494,7 @@ for _ in range(50):
         });
 
         suite('Update Metadata', () => {
-            setup(async function () {
+            setup(async function() {
                 initIoc();
 
                 const oldJson: nbformat.INotebookContent = {
@@ -1604,7 +1612,7 @@ for _ in range(50):
         });
 
         suite('Clear Outputs', () => {
-            setup(async function () {
+            setup(async function() {
                 initIoc();
                 // tslint:disable-next-line: no-invalid-this
                 await setupFunction.call(this);
