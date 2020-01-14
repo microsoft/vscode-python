@@ -4,6 +4,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { NativeCommandType } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import { CursorPos } from '../../interactive-common/mainState';
 import {
     CommonAction,
@@ -51,9 +52,9 @@ export const actionCreators = {
     clearAllOutputs: (): CommonAction<never | undefined> => ({ type: CommonActionType.CLEAR_ALL_OUTPUTS }),
     export: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXPORT }),
     save: (): CommonAction<never | undefined> => ({ type: CommonActionType.SAVE }),
-    showDataViewer: (variableName: string, columnSize: number): CommonAction<IShowDataViewerAction> => ({
+    showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> => ({
         type: CommonActionType.SHOW_DATA_VIEWER,
-        payload: { variableName, columnSize }
+        payload: { variable, columnSize }
     }),
     sendCommand: (command: NativeCommandType, commandType: 'mouse' | 'keyboard'): CommonAction<ISendCommandAction> => ({
         type: CommonActionType.SEND_COMMAND,
@@ -81,5 +82,9 @@ export const actionCreators = {
     loadedAllCells: (): CommonAction<never | undefined> => ({ type: CommonActionType.LOADED_ALL_CELLS }),
     editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT }),
     selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL }),
-    selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER })
+    selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER }),
+    getVariableData: (newExecutionCount: number, startIndex: number = 0, pageSize: number = 100): CommonAction<IJupyterVariablesRequest> => ({
+        type: CommonActionType.GET_VARIABLE_DATA,
+        payload: { executionCount: newExecutionCount, sortColumn: 'name', sortAscending: true, startIndex, pageSize }
+    })
 };

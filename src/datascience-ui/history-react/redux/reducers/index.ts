@@ -6,7 +6,6 @@ import { CommonEffects } from '../../../interactive-common/redux/reducers/common
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
-import { Variables } from '../../../interactive-common/redux/reducers/variables';
 import { IInteractiveActionMapping } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
@@ -15,8 +14,6 @@ import { Execution } from './execution';
 // The list of reducers. 1 per message/action.
 export const reducerMap: IInteractiveActionMapping = {
     // State updates
-    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: Variables.toggleVariableExplorer,
-    [CommonActionType.REFRESH_VARIABLES]: Variables.refreshVariables,
     [CommonActionType.RESTART_KERNEL]: Kernel.restartKernel,
     [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
     [CommonActionType.SELECT_KERNEL]: Kernel.selectKernel,
@@ -49,8 +46,6 @@ export const reducerMap: IInteractiveActionMapping = {
     [IncomingMessageActions.FINISHCELL]: Creation.finishCell,
     [IncomingMessageActions.UPDATECELL]: Creation.updateCell,
     [IncomingMessageActions.ACTIVATE]: CommonEffects.activate,
-    [IncomingMessageActions.GETVARIABLESRESPONSE]: Variables.handleVariablesResponse,
-    [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: Variables.handleVariableResponse,
     [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
     [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
     [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,

@@ -7,14 +7,15 @@ import { createLogger } from 'redux-logger';
 import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
-import { IMainState, IVariableState, ServerStatus } from '../../interactive-common/mainState';
-import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
+import { IMainState, ServerStatus } from '../../interactive-common/mainState';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
+import { generateVariableReducer, IVariableState } from './reducers/variables';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     if (!skipDefault) {
@@ -117,7 +118,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate variables complete
-        if (prevState.variables.pendingVariableCount !== 0 && afterState.main.pendingVariableCount === 0) {
+        if (prevState.variables.variables.length !== afterState.variables.variables.length) {
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.VariablesComplete)));
         }
 
@@ -203,6 +204,10 @@ export interface IStore {
     post: {};
 }
 
+export interface IMainWithVariables extends IMainState {
+    variableState: IVariableState;
+}
+
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
     // Create a post office to listen to store dispatches and allow reducers to
     // send messages
@@ -217,10 +222,13 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     // Create another reducer for handling monaco state
     const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
+    // Create another reducer for handling variable state
+    const variableReducer = generateVariableReducer();
+
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
-        variables: variablesReducer,
+        variables: variableReducer,
         monaco: monacoReducer,
         post: postOfficeReducer
     });

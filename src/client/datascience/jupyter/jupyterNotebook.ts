@@ -146,6 +146,7 @@ export class JupyterNotebookBase implements INotebook {
     private _disposed: boolean = false;
     private _workingDirectory: string | undefined;
     private _loggers: INotebookExecutionLogger[] = [];
+    private _executionCount: number = 0;
     private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
     public get onKernelChanged(): Event<IJupyterKernelSpec | LiveKernelModel> {
         return this.kernelChanged.event;
@@ -184,6 +185,10 @@ export class JupyterNotebookBase implements INotebook {
 
     public get server(): INotebookServer {
         return this.owner;
+    }
+
+    public get executionCount(): number {
+        return this._executionCount;
     }
 
     public dispose(): Promise<void> {
@@ -785,6 +790,9 @@ export class JupyterNotebookBase implements INotebook {
             // Set execution count, all messages should have it
             if ('execution_count' in msg.content && typeof msg.content.execution_count === 'number') {
                 subscriber.cell.data.execution_count = msg.content.execution_count as number;
+
+                // Also update internal execution count.
+                this._executionCount = msg.content.execution_count as number;
             }
 
             // Show our update if any new output.

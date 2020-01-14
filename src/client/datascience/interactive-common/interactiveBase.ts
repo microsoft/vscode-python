@@ -1210,8 +1210,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     private async requestVariables(args: IJupyterVariablesRequest): Promise<void> {
         // Request our new list of variables
-        const vars: IJupyterVariable[] = this._notebook ? await this.jupyterVariables.getVariables(this._notebook, args.sortColumn, args.startIndex, args.pageSize) : [];
-        const variablesResponse: IJupyterVariablesResponse = { executionCount: args.executionCount, variables: vars };
+        const vars: IJupyterVariable[] = this._notebook
+            ? await this.jupyterVariables.getVariables(this._notebook, args.sortColumn, args.sortAscending, args.startIndex, args.pageSize)
+            : [];
+        const variablesResponse: IJupyterVariablesResponse = { executionCount: args.executionCount, variables: vars, startIndex: args.startIndex };
 
         // Tag all of our jupyter variables with the execution count of the request
         variablesResponse.variables.forEach((value: IJupyterVariable) => {

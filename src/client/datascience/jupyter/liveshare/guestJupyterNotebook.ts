@@ -47,6 +47,10 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         return this._owner;
     }
 
+    public get executionCount(): number {
+        return 0;
+    }
+
     public shutdown(): Promise<void> {
         return Promise.resolve();
     }

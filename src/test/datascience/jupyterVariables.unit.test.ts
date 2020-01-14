@@ -118,7 +118,7 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object);
+            await jupyterVariables.getVariables(fakeNotebook.object, '', true);
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -144,7 +144,7 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object);
+            await jupyterVariables.getVariables(fakeNotebook.object, '', true);
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -170,7 +170,7 @@ suite('JupyterVariables', () => {
 
         let exceptionThrown = false;
         try {
-            await jupyterVariables.getVariables(fakeNotebook.object);
+            await jupyterVariables.getVariables(fakeNotebook.object, '', true);
         } catch (exc) {
             exceptionThrown = true;
         }
@@ -201,7 +201,7 @@ suite('JupyterVariables', () => {
             )
             .verifiable(typemoq.Times.once());
 
-        const results = await jupyterVariables.getVariables(fakeNotebook.object);
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, '', true);
 
         // Check the results that we get back
         assert.equal(results.length, 6);

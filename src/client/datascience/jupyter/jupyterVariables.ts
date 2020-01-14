@@ -8,6 +8,7 @@ import * as path from 'path';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 
+import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -31,23 +32,25 @@ const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
 const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'np.array', 'Series']);
 
+interface INotebookState {
+    currentExecutionCount: number;
+    variables: IJupyterVariable[];
+}
+
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
     private fetchDataFrameInfoScript?: string;
     private fetchDataFrameRowsScript?: string;
     private filesLoaded: boolean = false;
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
+    private notebookState = new Map<Uri, INotebookState>();
+
     constructor(@inject(IFileSystem) private fileSystem: IFileSystem, @inject(IConfigurationService) private configService: IConfigurationService) {}
 
     // IJupyterVariables implementation
-    public async getVariables(notebook: INotebook): Promise<IJupyterVariable[]> {
+    public async getVariables(notebook: INotebook, sortColumn: string, sortAscending: boolean, startIndex?: number, pageSize?: number): Promise<IJupyterVariable[]> {
         // Run the language appropriate variable fetch
-        return this.getVariablesBasedOnKernel(notebook);
-    }
-
-    public async getValue(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
-        // Talk to the session to get the variable value
-        return this.getVariableValueFromKernel(targetVariable, notebook);
+        return this.getVariablesBasedOnKernel(notebook, sortColumn, sortAscending, startIndex, pageSize);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
@@ -213,7 +216,58 @@ export class JupyterVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariablesBasedOnKernel(notebook: INotebook): Promise<IJupyterVariable[]> {
+    private async getVariablesBasedOnKernel(
+        notebook: INotebook,
+        _sortColumn: string,
+        _sortAscending: boolean,
+        startIndex?: number,
+        pageSize?: number
+    ): Promise<IJupyterVariable[]> {
+        // See if we already have the name list
+        let list = this.notebookState.get(notebook.resource);
+        if (!list || list.currentExecutionCount !== notebook.executionCount) {
+            // Refetch the list of names from the notebook. They might have changed.
+            list = {
+                currentExecutionCount: notebook.executionCount,
+                variables: (await this.getVariableNamesFromKernel(notebook)).map(n => {
+                    return {
+                        name: n,
+                        value: undefined,
+                        supportsDataExplorer: false,
+                        type: '',
+                        size: 0,
+                        shape: '',
+                        count: 0,
+                        truncated: true
+                    };
+                })
+            };
+        }
+
+        // Use the list of names to fetch the page of data
+        if (list) {
+            const startPos = startIndex ? startIndex : 0;
+            const chunkSize = pageSize ? pageSize : 100;
+            const result = [];
+
+            // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; i += 1) {
+                list.variables[i] = await this.getVariableValueFromKernel(list.variables[i], notebook);
+
+                // Save in result too. Don't need to send the entire array
+                result.push(list.variables[i]);
+            }
+
+            // Save in our cache
+            this.notebookState.set(notebook.resource, list);
+
+            return result;
+        }
+
+        return [];
+    }
+
+    private async getVariableNamesFromKernel(notebook: INotebook): Promise<string[]> {
         // Get our query and parser
         const query = this.getParser(notebook);
 
@@ -225,21 +279,9 @@ export class JupyterVariables implements IJupyterVariables {
             // Apply the expression to it
             const matches = this.getAllMatches(query.parser, text);
 
-            // Turn each match into a variable
+            // Turn each match into a value
             if (matches) {
-                return matches.map(m => {
-                    // Only return the name as that's all we have at this point
-                    return {
-                        name: m,
-                        value: undefined,
-                        supportsDataExplorer: false,
-                        type: '',
-                        size: 0,
-                        shape: '',
-                        count: 0,
-                        truncated: true
-                    };
-                });
+                return matches;
             }
         }
 

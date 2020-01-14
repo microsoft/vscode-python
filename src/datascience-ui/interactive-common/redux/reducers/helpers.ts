@@ -10,7 +10,6 @@ import { arePathsSame } from '../../../react-common/arePathsSame';
 import { detectBaseTheme } from '../../../react-common/themeDetector';
 import { ICellViewModel, IMainState } from '../../mainState';
 import { CommonReducerArg } from './types';
-import { Variables } from './variables';
 
 const StackLimit = 10;
 
@@ -50,11 +49,6 @@ export namespace Helpers {
         const newExecutionCount = arg.payload.data.execution_count
             ? Math.max(arg.prevState.currentExecutionCount, parseInt(arg.payload.data.execution_count.toString(), 10))
             : arg.prevState.currentExecutionCount;
-        if (newExecutionCount !== arg.prevState.currentExecutionCount && arg.prevState.variablesVisible) {
-            // We also need to update our variable explorer when the execution count changes
-            // Use the ref here to maintain var explorer independence
-            Variables.refreshVariables({ ...arg, payload: { newExecutionCount } });
-        }
 
         const index = arg.prevState.cellVMs.findIndex((c: ICellViewModel) => {
             return c.cell.id === arg.payload.id && c.cell.line === arg.payload.line && arePathsSame(c.cell.file, arg.payload.file);

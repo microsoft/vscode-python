@@ -11,7 +11,7 @@ import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
 import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
-import { CellState, ICell, IDataScienceExtraSettings, IJupyterVariable, IMessageCell } from '../../client/datascience/types';
+import { CellState, ICell, IDataScienceExtraSettings, IMessageCell } from '../../client/datascience/types';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
 export enum CursorPos {
@@ -38,13 +38,6 @@ export interface ICellViewModel {
     hasBeenRun: boolean;
     runDuringDebug?: boolean;
 }
-
-export type IVariableState = {
-    visible: boolean;
-    sortColumn: string;
-    sortAscending: boolean;
-    variables: IJupyterVariable[];
-};
 
 export type IMainState = {
     cellVMs: ICellViewModel[];

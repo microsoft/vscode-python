@@ -29,6 +29,7 @@ interface IVariableExplorerProps {
     debugging: boolean;
     showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
+    pageIn(startIndex: number, pageSize: number): void;
 }
 
 interface IVariableExplorerState {
@@ -42,7 +43,7 @@ interface IVariableExplorerState {
 
 const defaultColumnProperties = {
     filterable: false,
-    sortable: true,
+    sortable: false,
     resizable: true
 };
 
@@ -177,6 +178,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         // https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html#what-about-memoization
         const gridRows = this.generateRows(this.props.variables, this.state.sortColumn, this.state.sortDirection);
         const getRow = (index: number) => {
+            // Likely spot to make a request if not visible
             if (index >= 0 && index < gridRows.length) {
                 return gridRows[index];
             }
@@ -203,7 +205,6 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                         headerRowHeight={this.state.fontSize + 9}
                         rowHeight={this.state.fontSize + 9}
                         onRowDoubleClick={this.rowDoubleClick}
-                        onGridSort={this.sortRows}
                         emptyRowsView={VariableExplorerEmptyRowsView}
                         rowRenderer={VariableExplorerRowRenderer}
                     />

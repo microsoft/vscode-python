@@ -82,6 +82,10 @@ class MockJupyterNotebook implements INotebook {
         return this.owner;
     }
 
+    public get executionCount(): number {
+        return 0;
+    }
+
     public get resource(): Uri {
         return Uri.parse(Identifiers.InteractiveWindowIdentity);
     }

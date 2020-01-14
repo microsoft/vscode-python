@@ -24,8 +24,6 @@ type InteractiveReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
 export type InteractiveReducerArg<T = never | undefined> = ReducerArg<IMainState, CommonActionType, T>;
 
 export class IInteractiveActionMapping {
-    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: InteractiveReducerFunc<never | undefined>;
-    public [CommonActionType.REFRESH_VARIABLES]: InteractiveReducerFunc<IRefreshVariablesRequest>;
     public [CommonActionType.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_SERVER]: InteractiveReducerFunc<never | undefined>;
@@ -58,8 +56,6 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.FINISHCELL]: InteractiveReducerFunc<ICell>;
     public [IncomingMessageActions.UPDATECELL]: InteractiveReducerFunc<ICell>;
     public [IncomingMessageActions.ACTIVATE]: InteractiveReducerFunc<never | undefined>;
-    public [IncomingMessageActions.GETVARIABLESRESPONSE]: InteractiveReducerFunc<IJupyterVariablesResponse>;
-    public [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: InteractiveReducerFunc<IJupyterVariable>;
     public [IncomingMessageActions.RESTARTKERNEL]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETCSSRESPONSE]: InteractiveReducerFunc<IGetCssResponse>;
     public [IncomingMessageActions.MONACOREADY]: InteractiveReducerFunc<never | undefined>;

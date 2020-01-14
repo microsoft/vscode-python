@@ -12,13 +12,13 @@ import {
     IProvideSignatureHelpResponse
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
-import { IntellisenseProvider } from '../../../interactive-common/intellisenseProvider';
-import { IncomingMessageActions } from '../../../interactive-common/redux/postOffice';
-import { CommonActionType, ICodeCreatedAction, IEditCellAction } from '../../../interactive-common/redux/reducers/types';
-import { initializeTokenizer, registerMonacoLanguage } from '../../../interactive-common/tokenizer';
 import { logMessage } from '../../../react-common/logger';
 import { PostOffice } from '../../../react-common/postOffice';
 import { combineReducers, QueuableAction, ReducerArg, ReducerFunc } from '../../../react-common/reduxUtils';
+import { IntellisenseProvider } from '../../intellisenseProvider';
+import { initializeTokenizer, registerMonacoLanguage } from '../../tokenizer';
+import { IncomingMessageActions } from '../postOffice';
+import { CommonActionType, ICodeCreatedAction, IEditCellAction } from './types';
 
 export interface IMonacoState {
     onigasmData: ArrayBuffer | undefined;
