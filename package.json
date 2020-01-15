@@ -1824,7 +1824,7 @@
                         [
                             {
                                 "language": "python",
-                                "query": "%who_ls",
+                                "query": "_rwho_ls = %who_ls\\nprint(_rwho_ls)",
                                 "parseExpr": "'(\\w+)'"
                             },
                             {
