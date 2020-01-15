@@ -61,7 +61,7 @@ function configure(): SetupOptions {
     const options: SetupOptions & { retries: number } = {
         ui: 'tdd',
         useColors: true,
-        timeout: TEST_TIMEOUT,
+        timeout: TEST_TIMEOUT * 3,
         retries: TEST_RETRYCOUNT,
         grep,
         testFilesSuffix,
