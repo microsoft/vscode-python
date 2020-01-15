@@ -131,7 +131,9 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         const daemon = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         // Wait for the nbconvert to finish
         const args = template ? [file, '--to', 'python', '--stdout', '--template', template] : [file, '--to', 'python', '--stdout'];
-        return daemon.execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: true, encoding: 'utf8', token }).then(output => output.stdout);
+        // Ignore stderr, as nbconvert writes conversion result to stderr.
+        // stdout contains the generated python code.
+        return daemon.execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token }).then(output => output.stdout);
     }
     public async launchNotebook(notebookFile: string): Promise<void> {
         await this.checkNotebookCommand();

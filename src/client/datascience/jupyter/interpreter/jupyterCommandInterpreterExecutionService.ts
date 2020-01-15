@@ -105,7 +105,7 @@ export class JupyterCommandFinderInterpreterExecutionService implements IJupyter
 
         // Wait for the nbconvert to finish
         const args = template ? [file, '--to', 'python', '--stdout', '--template', template] : [file, '--to', 'python', '--stdout'];
-        return convert.command.exec(args, { throwOnStdErr: true, encoding: 'utf8', token }).then(output => output.stdout);
+        return convert.command.exec(args, { throwOnStdErr: false, encoding: 'utf8', token }).then(output => output.stdout);
     }
     public async launchNotebook(notebookFile: string): Promise<void> {
         // First we find a way to start a notebook server
