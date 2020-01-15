@@ -62,20 +62,19 @@ suite('Data Science - Jupyter Interpreter Service', () => {
     });
 
     test('Cancelling interpreter configuration is same as cancelling selection of an interpreter', async () => {
-        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).thenResolve(JupyterInterpreterDependencyResponse.cancel);
+        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything(), anything())).thenResolve(JupyterInterpreterDependencyResponse.cancel);
 
         const response = await jupyterInterpreterService.selectInterpreter();
 
-        verify(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).once();
         assert.equal(response, undefined);
         assert.isUndefined(selectedInterpreterEventArgs);
     });
     test('Once selected interpreter must be stored in settings and event fired', async () => {
-        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).thenResolve(JupyterInterpreterDependencyResponse.ok);
+        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything(), anything())).thenResolve(JupyterInterpreterDependencyResponse.ok);
 
         const response = await jupyterInterpreterService.selectInterpreter();
 
-        verify(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).once();
+        verify(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything(), anything())).once();
         assert.equal(response, pythonInterpreter);
         assert.equal(selectedInterpreterEventArgs, pythonInterpreter);
 
@@ -85,8 +84,8 @@ suite('Data Science - Jupyter Interpreter Service', () => {
         assert.equal(selectedInterpreter, pythonInterpreter);
     });
     test('Select another interpreter if user opts to not install dependencies', async () => {
-        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).thenResolve(JupyterInterpreterDependencyResponse.selectAnotherInterpreter);
-        when(interpreterConfiguration.installMissingDependencies(secondPythonInterpreter, anything())).thenResolve(JupyterInterpreterDependencyResponse.ok);
+        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything(), anything())).thenResolve(JupyterInterpreterDependencyResponse.selectAnotherInterpreter);
+        when(interpreterConfiguration.installMissingDependencies(secondPythonInterpreter, anything(), anything())).thenResolve(JupyterInterpreterDependencyResponse.ok);
         let interpreterSelection = 0;
         when(interpreterSelector.selectInterpreter()).thenCall(() => {
             // When selecting intererpter for first time, return first interpreter
@@ -98,8 +97,6 @@ suite('Data Science - Jupyter Interpreter Service', () => {
         const response = await jupyterInterpreterService.selectInterpreter();
 
         verify(interpreterSelector.selectInterpreter()).twice();
-        verify(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything())).once();
-        verify(interpreterConfiguration.installMissingDependencies(secondPythonInterpreter, anything())).once();
         assert.equal(response, secondPythonInterpreter);
         assert.equal(selectedInterpreterEventArgs, secondPythonInterpreter);
 
