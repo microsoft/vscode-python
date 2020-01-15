@@ -79,6 +79,8 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         }
 
         const names = productsNotInstalled
+            // kernelspec is not a module that can be installed.
+            .filter(product => product !== Product.kernelspec)
             .map(product => ProductNames.get(product))
             .filter(name => !!name)
             .map(name => name as string);
