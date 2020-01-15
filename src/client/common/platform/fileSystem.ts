@@ -10,6 +10,7 @@ import { promisify } from 'util';
 import * as vscode from 'vscode';
 import { createDeferred } from '../utils/async';
 import { noop } from '../utils/misc';
+import { isFileNotFoundError } from './errors';
 import { FileSystemPaths, FileSystemPathUtils } from './fs-paths';
 import { TemporaryFileSystem } from './fs-temp';
 // prettier-ignore
@@ -47,8 +48,11 @@ async function getFileType(filename: string): Promise<FileType> {
         // This shouldn't matter because the only consumers were
         // internal methods that have been updated appropriately.
         stat = await fs.lstat(filename);
-    } catch {
-        return FileType.Unknown;
+    } catch (err) {
+        if (isFileNotFoundError(err)) {
+            return FileType.Unknown;
+        }
+        throw err;
     }
     if (!stat.isSymbolicLink()) {
         return convertFileType(stat);
@@ -58,8 +62,11 @@ async function getFileType(filename: string): Promise<FileType> {
     // See: https://code.visualstudio.com/api/references/vscode-api#FileType
     try {
         stat = await fs.stat(filename);
-    } catch {
-        return FileType.SymbolicLink;
+    } catch (err) {
+        if (isFileNotFoundError(err)) {
+            return FileType.SymbolicLink;
+        }
+        throw err;
     }
     if (stat.isFile()) {
         return FileType.SymbolicLink | FileType.File;
@@ -385,7 +392,10 @@ export class FileSystem implements IFileSystem {
             // means that any symlinks are getting resolved.
             stat = await this.raw.stat(filename);
         } catch (err) {
-            return false;
+            if (isFileNotFoundError(err)) {
+                return false;
+            }
+            throw err;
         }
 
         if (fileType === undefined) {
