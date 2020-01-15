@@ -8,7 +8,7 @@ import * as path from 'path';
 import { RegistryImplementation } from '../../../client/common/platform/registry';
 import { IRegistry } from '../../../client/common/platform/types';
 import { IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE, InterpreterType } from '../../../client/interpreter/contracts';
-import { initialize, initializeTest } from '../../initialize';
+import { closeActiveWindows, initialize, initializeTest } from '../../initialize';
 import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
 suite('Python interpreter locator service', () => {
@@ -28,7 +28,10 @@ suite('Python interpreter locator service', () => {
     teardown(async () => {
         console.timeLog('Time taken to run test');
         console.log('Exiting the test');
+        await ioc.dispose();
+        await closeActiveWindows();
     });
+    suiteTeardown(closeActiveWindows);
 
     function initializeDI() {
         ioc = new UnitTestIocContainer();
