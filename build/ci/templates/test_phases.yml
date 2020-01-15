@@ -298,6 +298,7 @@ steps:
 
           if( '$(Agent.Os)' -match '.*Windows.*' ){
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+              $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath conda
           } else{
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
               $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
@@ -307,9 +308,9 @@ steps:
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
-          conda create -n "test_env1" -y python
-          conda create -p "./test_env2" -y python
-          conda create -p "$Env:HOME/test_env3" -y python
+          $condaExecPath create -n "test_env1" -y python
+          $condaExecPath create -p "./test_env2" -y python
+          $condaExecPath create -p "$Env:HOME/test_env3" -y python
 
           # Set the TEST_FILES_SUFFIX
           Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
