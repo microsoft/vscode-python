@@ -30,6 +30,15 @@ export class JupyterKernelSpec implements IJupyterKernelSpec {
     }
 }
 
+/**
+ * Given the stdout contents from the command `python -m jupyter kernelspec list --json` this will parser that and build a list of kernelspecs.
+ *
+ * @export
+ * @param {string} stdout
+ * @param {IFileSystem} fs
+ * @param {CancellationToken} [token]
+ * @returns
+ */
 export async function parseKernelSpecs(stdout: string, fs: IFileSystem, token?: CancellationToken) {
     traceInfo('Parsing kernelspecs from jupyter');
     // This should give us back a key value pair we can parse
