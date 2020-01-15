@@ -1178,24 +1178,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             if (options && !options.uri) {
                 activeInterpreter = await this.interpreterService.getActiveInterpreter();
                 const usableInterpreter = await this.jupyterExecution.getUsableJupyterPython();
-                if (usableInterpreter) {
-                    // See if the usable interpreter is not our active one. If so, show a warning
-                    // Only do this if not the guest in a liveshare session
-                    const api = await this.liveShare.getApi();
-                    if (!api || (api.session && api.session.role !== vsls.Role.Guest)) {
-                        const active = await this.interpreterService.getActiveInterpreter();
-                        const activeDisplayName = active ? active.displayName : undefined;
-                        const activePath = active ? active.path : undefined;
-                        const usableDisplayName = usableInterpreter ? usableInterpreter.displayName : undefined;
-                        const usablePath = usableInterpreter ? usableInterpreter.path : undefined;
-                        const notebookError = await this.jupyterExecution.getNotebookError();
-                        if (activePath && usablePath && !this.fileSystem.arePathsSame(activePath, usablePath) && activeDisplayName && usableDisplayName) {
-                            this.applicationShell.showWarningMessage(
-                                localize.DataScience.jupyterKernelNotSupportedOnActive().format(activeDisplayName, usableDisplayName, notebookError)
-                            );
-                        }
-                    }
-                }
                 return usableInterpreter ? true : false;
             } else {
                 return true;

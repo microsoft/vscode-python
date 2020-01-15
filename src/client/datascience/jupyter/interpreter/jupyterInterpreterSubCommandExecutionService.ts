@@ -36,7 +36,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
     constructor(
         @inject(JupyterInterpreterService) private readonly jupyterInterpreter: JupyterInterpreterService,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(JupyterInterpreterDependencyService) private readonly jupyterConfigurationService: JupyterInterpreterDependencyService,
+        @inject(JupyterInterpreterDependencyService) private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory
     ) {}
@@ -55,21 +55,21 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (!interpreter) {
             return false;
         }
-        return this.jupyterConfigurationService.areDependenciesInstalled(interpreter, token);
+        return this.jupyterDependencyService.areDependenciesInstalled(interpreter, token);
     }
     public async isExportSupported(token?: CancellationToken): Promise<boolean> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             return false;
         }
-        return this.jupyterConfigurationService.isExportSupported(interpreter, token);
+        return this.jupyterDependencyService.isExportSupported(interpreter, token);
     }
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             return DataScience.selectJupyterInterpreter();
         }
-        const productsNotInstalled = await this.jupyterConfigurationService.getDependenciesNotInstalled(interpreter, token);
+        const productsNotInstalled = await this.jupyterDependencyService.getDependenciesNotInstalled(interpreter, token);
         if (productsNotInstalled.length === 0) {
             return '';
         }
@@ -88,7 +88,6 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         return this.jupyterInterpreter.getSelectedInterpreter(token);
     }
     public async startNotebook(notebookArgs: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        await this.checkNotebookCommand(options.token);
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(options.token);
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
@@ -124,7 +123,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
         }
-        if (!(await this.jupyterConfigurationService.isExportSupported(interpreter, token))) {
+        if (!(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
             throw new Error(DataScience.jupyterNbConvertNotSupported());
         }
 
@@ -136,7 +135,6 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         return daemon.execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token }).then(output => output.stdout);
     }
     public async launchNotebook(notebookFile: string): Promise<void> {
-        await this.checkNotebookCommand();
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter();
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
@@ -149,7 +147,6 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
     }
 
     public async getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]> {
-        await this.checkNotebookCommand();
         const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
@@ -160,11 +157,27 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         }
         try {
             traceInfo('Asking for kernelspecs from jupyter');
-
+            const spawnOptions = { throwOnStdErr: true, encoding: 'utf8' };
             // Ask for our current list.
-            const output = await daemon.execModule('jupyter', ['kernelspec', 'list', '--json'], { throwOnStdErr: true, encoding: 'utf8' });
+            const stdoutFromDaemonPromise = await daemon
+                .execModule('jupyter', ['kernelspec', 'list', '--json'], spawnOptions)
+                .then(output => output.stdout)
+                .catch(daemonEx => {
+                    traceError('Failed to list kernels from daemon', daemonEx);
+                    return '';
+                });
+            // Possible we cannot import ipykernel for some reason. (use as backup option).
+            const stdoutFromFileExecPromise = daemon
+                .exec([path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getJupyterKernels.py')], spawnOptions)
+                .then(output => output.stdout)
+                .catch(fileEx => {
+                    traceError('Failed to list kernels from getJupyterKernels.py', fileEx);
+                    return '';
+                });
 
-            return parseKernelSpecs(output.stdout, this.fs, token).catch(parserError => {
+            const [stdoutFromDaemon, stdoutFromFileExec] = await Promise.all([stdoutFromDaemonPromise, stdoutFromFileExecPromise]);
+
+            return parseKernelSpecs(stdoutFromDaemon || stdoutFromFileExec, this.fs, token).catch(parserError => {
                 traceError('Failed to parse kernelspecs', parserError);
                 // This is failing for some folks. In that case return nothing
                 return [];
@@ -189,13 +202,6 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
             }
         }
 
-        await this.jupyterConfigurationService.installMissingDependencies(interpreter, err);
-    }
-
-    private async checkNotebookCommand(token?: CancellationToken): Promise<void> {
-        const reason = await this.getReasonForJupyterNotebookNotBeingSupported(token);
-        if (reason) {
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
-        }
+        await this.jupyterDependencyService.installMissingDependencies(interpreter, err);
     }
 }

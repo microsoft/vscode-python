@@ -290,11 +290,6 @@ export namespace DataScience {
     );
     export const jupyterServerCrashed = localize('DataScience.jupyterServerCrashed', 'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}');
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
-    //tslint:disable-next-line:no-multiline-string
-    export const jupyterKernelNotSupportedOnActive = localize(
-        'DataScience.jupyterKernelNotSupportedOnActive',
-        `IPython kernel cannot be started from '{0}'. Using closest match {1} instead.`
-    );
     export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a IPython kernel spec and none are available for use');
     export const jupyterKernelSpecModuleNotFound = localize(
         'DataScience.jupyterKernelSpecModuleNotFound',
