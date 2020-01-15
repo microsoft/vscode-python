@@ -8,7 +8,7 @@ import * as vsls from 'vsls/vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../../common/types';
 import { noop } from '../../../common/utils/misc';
 import { IInterpreterService } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -29,7 +29,6 @@ export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecut
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
-        logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSys: IFileSystem,
@@ -41,19 +40,7 @@ export class HostJupyterExecution extends LiveShareParticipantHost(JupyterExecut
         jupyterOutputChannel: IOutputChannel,
         serviceContainer: IServiceContainer
     ) {
-        super(
-            liveShare,
-            interpreterService,
-            logger,
-            disposableRegistry,
-            workspace,
-            configService,
-            kernelSelector,
-            notebookStarter,
-            appShell,
-            jupyterOutputChannel,
-            serviceContainer
-        );
+        super(liveShare, interpreterService, disposableRegistry, workspace, configService, kernelSelector, notebookStarter, appShell, jupyterOutputChannel, serviceContainer);
         this.serverCache = new ServerCache(configService, workspace, fileSys);
         asyncRegistry.push(this);
     }

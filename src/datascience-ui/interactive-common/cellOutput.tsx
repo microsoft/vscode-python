@@ -6,7 +6,6 @@ import { JSONObject } from '@phosphor/coreutils';
 import ansiRegex from 'ansi-regex';
 import * as React from 'react';
 import '../../client/common/extensions';
-import { concatMultilineStringInput, concatMultilineStringOutput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState } from '../../client/datascience/types';
 import { ClassType } from '../../client/ioc/types';
@@ -23,6 +22,7 @@ const ansiToHtml = require('ansi-to-html');
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
 import { noop } from '../../client/common/utils/misc';
+import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
 
 interface ICellOutputProps {
     cellVM: ICellViewModel;

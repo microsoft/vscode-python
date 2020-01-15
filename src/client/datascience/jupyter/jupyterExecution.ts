@@ -7,17 +7,23 @@ import { CancellationToken, CancellationTokenSource, Event, EventEmitter } from 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { Cancellation } from '../../common/cancellation';
 import { traceError, traceInfo } from '../../common/logger';
-import { IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
+import { IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { Commands, JupyterCommands, Telemetry } from '../constants';
-import { IConnection, IJupyterExecution, IJupyterSessionManagerFactory, INotebookServer, INotebookServerLaunchInfo, INotebookServerOptions } from '../types';
-import { IFindCommandResult, JupyterCommandFinder } from './interpreter/jupyterCommandFinder';
-import { JupyterInstallError } from './jupyterInstallError';
+import { Commands, Telemetry } from '../constants';
+import {
+    IConnection,
+    IJupyterExecution,
+    IJupyterSessionManagerFactory,
+    IJupyterSubCommandExecutionService,
+    INotebookServer,
+    INotebookServerLaunchInfo,
+    INotebookServerOptions
+} from '../types';
 import { JupyterSelfCertsError } from './jupyterSelfCertsError';
 import { JupyterSessionStartError } from './jupyterSession';
 import { createRemoteConnectionInfo } from './jupyterUtils';
@@ -29,12 +35,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
     private disposed: boolean = false;
-    private readonly commandFinder: JupyterCommandFinder;
+    private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
 
     constructor(
         _liveShare: ILiveShareApi,
         private readonly interpreterService: IInterpreterService,
-        private readonly logger: ILogger,
         private readonly disposableRegistry: IDisposableRegistry,
         workspace: IWorkspaceService,
         private readonly configuration: IConfigurationService,
@@ -44,7 +49,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
         private readonly jupyterOutputChannel: IOutputChannel,
         private readonly serviceContainer: IServiceContainer
     ) {
-        this.commandFinder = serviceContainer.get<JupyterCommandFinder>(JupyterCommandFinder);
+        this.jupyterInterpreterService = serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService);
         this.disposableRegistry.push(this.interpreterService.onDidChangeInterpreter(() => this.onSettingsChanged()));
         this.disposableRegistry.push(this);
 
@@ -69,30 +74,29 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async refreshCommands(): Promise<void> {
-        await this.commandFinder.clearCache();
+        await this.jupyterInterpreterService.refreshCommands();
     }
 
     public isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command notebook
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.NotebookCommand, cancelToken), cancelToken);
+        return this.jupyterInterpreterService.isNotebookSupported(cancelToken);
     }
 
     public async getNotebookError(): Promise<string> {
-        const notebook = await this.findBestCommand(JupyterCommands.NotebookCommand);
-        return notebook.error ? notebook.error : localize.DataScience.notebookNotFound();
+        return this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported();
     }
 
     public async getUsableJupyterPython(cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> {
         // Only try to compute this once.
         if (!this.usablePythonInterpreter && !this.disposed) {
-            this.usablePythonInterpreter = await Cancellation.race(() => this.getUsableJupyterPythonImpl(cancelToken), cancelToken);
+            this.usablePythonInterpreter = await Cancellation.race(() => this.jupyterInterpreterService.getSelectedInterpreter(cancelToken), cancelToken);
         }
         return this.usablePythonInterpreter;
     }
 
     public isImportSupported(cancelToken?: CancellationToken): Promise<boolean> {
         // See if we can find the command nbconvert
-        return Cancellation.race(() => this.isCommandSupported(JupyterCommands.ConvertCommand), cancelToken);
+        return this.jupyterInterpreterService.isExportSupported(cancelToken);
     }
 
     public isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean> {
@@ -244,47 +248,16 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async spawnNotebook(file: string): Promise<void> {
-        // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand);
-        this.checkNotebookCommand(notebookCommand);
-
-        const args: string[] = [`--NotebookApp.file_to_run=${file}`];
-
-        // Don't wait for the exec to finish and don't dispose. It's up to the user to kill the process
-        notebookCommand.command!.exec(args, { throwOnStdErr: false, encoding: 'utf8' }).ignoreErrors();
+        return this.jupyterInterpreterService.launchNotebook(file);
     }
 
     public async importNotebook(file: string, template: string | undefined): Promise<string> {
-        // First we find a way to start a nbconvert
-        const convert = await this.findBestCommand(JupyterCommands.ConvertCommand);
-        if (!convert.command) {
-            throw new Error(localize.DataScience.jupyterNbConvertNotSupported());
-        }
-
-        // Wait for the nbconvert to finish
-        const args = template ? [file, '--to', 'python', '--stdout', '--template', template] : [file, '--to', 'python', '--stdout'];
-        const result = await convert.command.exec(args, { throwOnStdErr: false, encoding: 'utf8' });
-        if (result.stderr) {
-            // Stderr on nbconvert doesn't indicate failure. Just log the result
-            this.logger.logInformation(result.stderr);
-        }
-        return result.stdout;
+        return this.jupyterInterpreterService.exportNotebookToPython(file, template);
     }
 
     public getServer(_options?: INotebookServerOptions): Promise<INotebookServer | undefined> {
         // This is cached at the host or guest level
         return Promise.resolve(undefined);
-    }
-
-    protected async findBestCommand(command: JupyterCommands, cancelToken?: CancellationToken): Promise<IFindCommandResult> {
-        return this.commandFinder.findBestCommand(command, cancelToken);
-    }
-
-    private checkNotebookCommand(notebook: IFindCommandResult) {
-        if (!notebook.command) {
-            const errorMessage = notebook.error ? notebook.error : localize.DataScience.notebookNotFound();
-            throw new JupyterInstallError(localize.DataScience.jupyterNotSupported().format(errorMessage), localize.DataScience.pythonInteractiveHelpLink());
-        }
     }
 
     private async startOrConnect(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<IConnection> {
@@ -311,38 +284,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.StartJupyter)
     private async startNotebookServer(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
-        // First we find a way to start a notebook server
-        const notebookCommand = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
-        this.checkNotebookCommand(notebookCommand);
         return this.notebookStarter.start(useDefaultConfig, cancelToken);
     }
-
-    private getUsableJupyterPythonImpl = async (cancelToken?: CancellationToken): Promise<PythonInterpreter | undefined> => {
-        // This should be the best interpreter for notebooks
-        const found = await this.findBestCommand(JupyterCommands.NotebookCommand, cancelToken);
-        if (found && found.command) {
-            return found.command.interpreter();
-        }
-
-        return undefined;
-    };
-
     private onSettingsChanged() {
         // Clear our usableJupyterInterpreter so that we recompute our values
         this.usablePythonInterpreter = undefined;
     }
-
-    private isCommandSupported = async (command: JupyterCommands, cancelToken?: CancellationToken): Promise<boolean> => {
-        // See if we can find the command
-        try {
-            const result = await this.findBestCommand(command, cancelToken);
-
-            // Note to self, if result is undefined, check that your test is actually
-            // setting up different services correctly. Some method must be undefined.
-            return result.command !== undefined;
-        } catch (err) {
-            this.logger.logWarning(err);
-            return false;
-        }
-    };
 }

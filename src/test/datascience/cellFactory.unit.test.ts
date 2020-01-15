@@ -3,7 +3,7 @@
 'use strict';
 import { assert } from 'chai';
 import { generateCells } from '../../client/datascience/cellFactory';
-import { stripComments } from '../../client/datascience/common';
+import { stripComments } from '../../datascience-ui/common';
 
 // tslint:disable: max-func-body-length
 suite('Data Science CellFactory', () => {

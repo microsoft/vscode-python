@@ -43,6 +43,7 @@ import { EXTENSION_ROOT_DIR } from '../../client/constants';
 import { Identifiers, PythonDaemonModule } from '../../client/datascience/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
+import { JupyterCommandFinderInterpreterExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
 import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
@@ -52,6 +53,7 @@ import {
     ICell,
     IConnection,
     IJupyterKernelSpec,
+    IJupyterSubCommandExecutionService,
     INotebook,
     INotebookCompletion,
     INotebookExecutionLogger,
@@ -840,14 +842,14 @@ suite('Jupyter Execution', async () => {
             path: ''
         };
         when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
-        notebookStarter = new NotebookStarter(
-            instance(executionFactory),
+        const jupyterCmdExecutionService = new JupyterCommandFinderInterpreterExecutionService(
             commandFinder,
-            instance(fileSystem),
-            instance(serviceContainer),
             instance(interpreterService),
-            instance(jupyterOutputChannel)
+            instance(fileSystem),
+            instance(executionFactory)
         );
+        when(serviceContainer.get<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService)).thenReturn(jupyterCmdExecutionService);
+        notebookStarter = new NotebookStarter(jupyterCmdExecutionService, instance(fileSystem), instance(serviceContainer), instance(jupyterOutputChannel));
         when(serviceContainer.get<KernelSelector>(KernelSelector)).thenReturn(instance(kernelSelector));
         when(serviceContainer.get<NotebookStarter>(NotebookStarter)).thenReturn(notebookStarter);
         return {
@@ -855,7 +857,6 @@ suite('Jupyter Execution', async () => {
             jupyterExecutionFactory: new JupyterExecutionFactory(
                 instance(liveShare),
                 instance(interpreterService),
-                instance(logger),
                 disposableRegistry,
                 disposableRegistry,
                 instance(fileSystem),

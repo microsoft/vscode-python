@@ -464,7 +464,7 @@ suite('Module Installer only', () => {
                         });
                 }
                 // Test isInstalled()
-                if (product.value === Product.unittest || product.value === Product.jupyter) {
+                if (product.value === Product.unittest || product.value === Product.jupyter || product.value === Product.notebook) {
                     test(`Method isInstalled() returns true for module installer ${product.name} (${resource ? 'With a resource' : 'without a resource'})`, async () => {
                         const result = await installer.isInstalled(product.value, resource);
                         expect(result).to.equal(true, 'Should be true');

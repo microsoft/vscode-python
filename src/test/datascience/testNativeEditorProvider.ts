@@ -16,6 +16,9 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
 export class TestNativeEditorProvider implements INotebookEditorProvider {
+    public get onDidChangeActiveNotebookEditor() {
+        return this.realProvider.onDidChangeActiveNotebookEditor;
+    }
     private realProvider: NativeEditorProvider;
     private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {

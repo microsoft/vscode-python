@@ -10,6 +10,7 @@ import { PythonExecutionFactory } from '../../client/common/process/pythonExecut
 import { IPythonExecutionFactory } from '../../client/common/process/types';
 import { Activation } from '../../client/datascience/activation';
 import { PythonDaemonModule } from '../../client/datascience/constants';
+import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { NativeEditor } from '../../client/datascience/interactive-ipynb/nativeEditor';
 import { NativeEditorProvider } from '../../client/datascience/interactive-ipynb/nativeEditorProvider';
 import { INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
@@ -26,7 +27,7 @@ suite('Data Science - Activation', () => {
     let executionFactory: IPythonExecutionFactory;
     let openedEventEmitter: EventEmitter<INotebookEditor>;
     let interpreterEventEmitter: EventEmitter<void>;
-
+    let contextService: ActiveEditorContextService;
     setup(async () => {
         openedEventEmitter = new EventEmitter<INotebookEditor>();
         interpreterEventEmitter = new EventEmitter<void>();
@@ -34,16 +35,17 @@ suite('Data Science - Activation', () => {
         notebookProvider = mock(NativeEditorProvider);
         interpreterService = mock(InterpreterService);
         executionFactory = mock(PythonExecutionFactory);
+        contextService = mock(ActiveEditorContextService);
         when(notebookProvider.onDidOpenNotebookEditor).thenReturn(openedEventEmitter.event);
         when(interpreterService.onDidChangeInterpreter).thenReturn(interpreterEventEmitter.event);
         when(executionFactory.createDaemon(anything())).thenResolve();
-
-        activator = new Activation(instance(notebookProvider), instance(interpreterService), instance(executionFactory), []);
+        when(contextService.activate()).thenResolve();
+        activator = new Activation(instance(notebookProvider), instance(interpreterService), instance(executionFactory), [], instance(contextService));
         await activator.activate();
     });
 
     async function testCreatingDaemonWhenOpeningANotebook() {
-        const notebook = mock(NativeEditor);
+        const notebook: INotebookEditor = mock(NativeEditor);
         const interpreter = ({ path: 'MY_PY' } as any) as PythonInterpreter;
 
         when(interpreterService.getActiveInterpreter(undefined)).thenResolve(interpreter);

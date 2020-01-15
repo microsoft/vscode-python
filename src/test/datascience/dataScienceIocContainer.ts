@@ -21,6 +21,7 @@ import { LanguageServerFolderService } from '../../client/activation/languageSer
 import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { LanguageServerManager } from '../../client/activation/languageServer/manager';
 import {
+    IExtensionSingleActivationService,
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
@@ -121,6 +122,7 @@ import { EnvironmentVariablesProvider } from '../../client/common/variables/envi
 import { IEnvironmentVariablesProvider, IEnvironmentVariablesService } from '../../client/common/variables/types';
 import { CodeCssGenerator } from '../../client/datascience/codeCssGenerator';
 import { JUPYTER_OUTPUT_CHANNEL } from '../../client/datascience/constants';
+import { ActiveEditorContextService } from '../../client/datascience/context/activeEditorContext';
 import { DataViewer } from '../../client/datascience/data-viewing/dataViewer';
 import { DataViewerProvider } from '../../client/datascience/data-viewing/dataViewerProvider';
 import { DebugLocationTrackerFactory } from '../../client/datascience/debugLocationTrackerFactory';
@@ -139,6 +141,13 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
+import { JupyterCommandFinderInterpreterExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
+import { JupyterInterpreterConfigurationService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterConfiguration';
+import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
+import { JupyterInterpreterSelectionCommand } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSelectionCommand';
+import { JupyterInterpreterSelector } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterSelector';
+import { JupyterInterpreterService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
+import { JupyterInterpreterStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterStateStore';
 import { JupyterDebugger } from '../../client/datascience/jupyter/jupyterDebugger';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterExporter } from '../../client/datascience/jupyter/jupyterExporter';
@@ -177,6 +186,7 @@ import {
     IJupyterExecution,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
+    IJupyterSubCommandExecutionService,
     IJupyterVariables,
     INotebookEditor,
     INotebookEditorProvider,
@@ -653,6 +663,15 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const currentProcess = new CurrentProcess();
         this.serviceManager.addSingletonInstance<ICurrentProcess>(ICurrentProcess, currentProcess);
         this.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
+
+        this.serviceManager.addSingleton<JupyterInterpreterStateStore>(JupyterInterpreterStateStore, JupyterInterpreterStateStore);
+        this.serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, JupyterInterpreterSelectionCommand);
+        this.serviceManager.addSingleton<JupyterInterpreterSelector>(JupyterInterpreterSelector, JupyterInterpreterSelector);
+        this.serviceManager.addSingleton<JupyterInterpreterConfigurationService>(JupyterInterpreterConfigurationService, JupyterInterpreterConfigurationService);
+        this.serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
+        this.serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
+        this.serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
+        this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterCommandFinderInterpreterExecutionService);
 
         // Don't use conda at all during functional tests.
         const condaService = TypeMoq.Mock.ofType<ICondaService>();

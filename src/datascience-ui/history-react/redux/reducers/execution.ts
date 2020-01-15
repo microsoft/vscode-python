@@ -6,9 +6,10 @@ import cloneDeep = require('lodash/cloneDeep');
 import * as uuid from 'uuid/v4';
 
 import { CellMatcher } from '../../../../client/datascience/cellMatcher';
-import { generateMarkdownFromCodeLines } from '../../../../client/datascience/common';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';
+import { generateMarkdownFromCodeLines } from '../../../common';
+import { createCellFrom } from '../../../common/cellFactory';
 import { createCellVM, IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
@@ -90,7 +91,7 @@ export namespace Execution {
             const split = arg.payload.code.splitLines({ trim: false });
             const firstLine = split[0];
             if (matcher.isMarkdown(firstLine)) {
-                newCell.cell.data.cell_type = 'markdown';
+                newCell.cell.data = createCellFrom(newCell.cell.data, 'markdown');
                 newCell.cell.data.source = generateMarkdownFromCodeLines(split);
                 newCell.cell.state = CellState.finished;
             } else if (newCell.cell.data.cell_type === 'markdown') {

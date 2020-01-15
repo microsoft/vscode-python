@@ -10,10 +10,10 @@ import * as React from 'react';
 import { connect } from 'react-redux';
 
 import { OSType } from '../../client/common/utils/platform';
-import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { NativeCommandType } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../client/datascience/types';
+import { concatMultilineStringInput } from '../common';
 import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { ExecutionCount } from '../interactive-common/executionCount';

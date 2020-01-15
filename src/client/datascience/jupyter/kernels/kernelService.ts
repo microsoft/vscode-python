@@ -21,9 +21,8 @@ import { noop } from '../../../common/utils/misc';
 import { IEnvironmentActivationService } from '../../../interpreter/activation/types';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
-import { JupyterCommands, Telemetry } from '../../constants';
-import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
-import { JupyterCommandFinder } from '../interpreter/jupyterCommandFinder';
+import { Telemetry } from '../../constants';
+import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
 
@@ -52,7 +51,7 @@ function isInterpreter(item: nbformat.IKernelspecMetadata | PythonInterpreter): 
 @injectable()
 export class KernelService {
     constructor(
-        @inject(JupyterCommandFinder) private readonly commandFinder: JupyterCommandFinder,
+        @inject(IJupyterSubCommandExecutionService) private readonly jupyterInterpreterExecService: IJupyterSubCommandExecutionService,
         @inject(IPythonExecutionFactory) private readonly execFactory: IPythonExecutionFactory,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IInstaller) private readonly installer: IInstaller,
@@ -345,7 +344,7 @@ export class KernelService {
      * @memberof KernelService
      */
     public async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
-        const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.enumerateSpecs(cancelToken);
+        const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.jupyterInterpreterExecService.getKernelSpecs(cancelToken);
         if (Cancellation.isCanceled(cancelToken)) {
             return [];
         }
@@ -403,47 +402,5 @@ export class KernelService {
         const kernelModel = JSON.parse(await this.fileSystem.readFile(specFile));
         kernelModel.name = groups.name;
         return new JupyterKernelSpec(kernelModel as Kernel.ISpecModel, specFile);
-    }
-
-    private async enumerateSpecs(_cancelToken?: CancellationToken): Promise<JupyterKernelSpec[]> {
-        // Ignore errors if there are no kernels.
-        const kernelSpecCommand = await this.commandFinder.findBestCommand(JupyterCommands.KernelSpecCommand).catch(noop);
-
-        if (!kernelSpecCommand || !kernelSpecCommand.command) {
-            return [];
-        }
-        try {
-            traceInfo('Asking for kernelspecs from jupyter');
-
-            // Ask for our current list.
-            const output = await kernelSpecCommand.command.exec(['list', '--json'], { throwOnStdErr: true, encoding: 'utf8' });
-
-            traceInfo('Parsing kernelspecs from jupyter');
-            // This should give us back a key value pair we can parse
-            const jsOut = JSON.parse(output.stdout.trim()) as { kernelspecs: Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }> };
-            const kernelSpecs = jsOut.kernelspecs;
-            const specs = await Promise.all(
-                Object.keys(kernelSpecs).map(async kernelName => {
-                    const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
-                    const spec = kernelSpecs[kernelName].spec;
-                    // Add the missing name property.
-                    const model = {
-                        ...spec,
-                        name: kernelName
-                    };
-                    // Check if the spec file exists.
-                    if (await this.fileSystem.fileExists(specFile)) {
-                        return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
-                    } else {
-                        return;
-                    }
-                })
-            );
-            return specs.filter(item => !!item).map(item => item as JupyterKernelSpec);
-        } catch (ex) {
-            traceError('Failed to list kernels', ex);
-            // This is failing for some folks. In that case return nothing
-            return [];
-        }
     }
 }

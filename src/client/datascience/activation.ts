@@ -12,6 +12,7 @@ import { debounceAsync, swallowExceptions } from '../common/utils/decorators';
 import { IInterpreterService } from '../interpreter/contracts';
 import { sendTelemetryEvent } from '../telemetry';
 import { PythonDaemonModule, Telemetry } from './constants';
+import { ActiveEditorContextService } from './context/activeEditorContext';
 import { INotebookEditor, INotebookEditorProvider } from './types';
 
 @injectable()
@@ -21,11 +22,13 @@ export class Activation implements IExtensionSingleActivationService {
         @inject(INotebookEditorProvider) private readonly notebookProvider: INotebookEditorProvider,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(IPythonExecutionFactory) private readonly factory: IPythonExecutionFactory,
-        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry
+        @inject(IDisposableRegistry) private readonly disposables: IDisposableRegistry,
+        @inject(ActiveEditorContextService) private readonly contextService: ActiveEditorContextService
     ) {}
     public async activate(): Promise<void> {
         this.disposables.push(this.notebookProvider.onDidOpenNotebookEditor(this.onDidOpenNotebookEditor, this));
         this.disposables.push(this.interpreterService.onDidChangeInterpreter(this.onDidChangeInterpreter, this));
+        await this.contextService.activate();
     }
 
     private onDidOpenNotebookEditor(_: INotebookEditor) {

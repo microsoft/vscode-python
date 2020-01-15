@@ -7,6 +7,7 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
+import { concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { IApplicationShell, ICommandManager, IDebugService, IWorkspaceService } from '../../common/application/types';
 import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
@@ -15,7 +16,6 @@ import { IConfigurationService, IExperimentsManager, Version } from '../../commo
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
-import { concatMultilineStringOutput } from '../common';
 import { Identifiers, Telemetry } from '../constants';
 import { CellState, ICell, ICellHashListener, IConnection, IFileHashes, IJupyterDebugger, INotebook, ISourceMapRequest } from '../types';
 import { JupyterDebuggerNotInstalledError } from './jupyterDebuggerNotInstalledError';

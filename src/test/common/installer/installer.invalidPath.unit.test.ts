@@ -57,6 +57,7 @@ suite('Module Installer - Invalid Paths', () => {
                     case Product.rope:
                     case Product.unittest:
                     case Product.ipykernel:
+                    case Product.notebook:
                     case Product.jupyter: {
                         return;
                     }

@@ -137,6 +137,7 @@ suite('Installer', () => {
                 prod.value === Product.unittest ||
                 prod.value === Product.isort ||
                 prod.value === Product.jupyter ||
+                prod.value === Product.notebook ||
                 prod.value === Product.ipykernel
             ) {
                 return;
@@ -170,6 +171,7 @@ suite('Installer', () => {
                 prod.value === Product.ctags ||
                 prod.value === Product.isort ||
                 prod.value === Product.jupyter ||
+                prod.value === Product.notebook ||
                 prod.value === Product.ipykernel
             ) {
                 return;

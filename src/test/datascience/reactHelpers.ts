@@ -523,6 +523,7 @@ const keyMap: { [key: string]: { code: number; shift: boolean } } = {
     X: { code: 88, shift: false },
     Y: { code: 89, shift: false },
     Z: { code: 90, shift: false },
+    ESCAPE: { code: 27, shift: false },
     '0': { code: 48, shift: false },
     '1': { code: 49, shift: false },
     '2': { code: 50, shift: false },

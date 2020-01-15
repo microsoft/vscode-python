@@ -1,6 +1,7 @@
 import { inject, injectable } from 'inversify';
 import * as uuid from 'uuid/v4';
 import { Event, EventEmitter, Position, Uri, ViewColumn } from 'vscode';
+import { createMarkdownCell } from '../../../datascience-ui/common/cellFactory';
 import { IApplicationShell, IDocumentManager } from '../../common/application/types';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
@@ -124,13 +125,11 @@ export class GatherListener implements IInteractiveWindowListener {
                     file: '',
                     line: 0,
                     state: 0,
-                    data: {
-                        cell_type: 'markdown',
-                        source: localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(
+                    data: createMarkdownCell(
+                        localize.DataScience.gatheredNotebookDescriptionInMarkdown().format(
                             cell.file === Identifiers.EmptyFileName && this.notebookUri ? this.notebookUri.fsPath : cell.file
-                        ),
-                        metadata: {}
-                    }
+                        )
+                    )
                 }
             ];
 

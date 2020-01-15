@@ -6,7 +6,7 @@ import { CancellationToken, Event, EventEmitter } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../common/application/types';
 import { IFileSystem } from '../../common/platform/types';
-import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../common/types';
+import { IAsyncDisposable, IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../common/types';
 import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { JUPYTER_OUTPUT_CHANNEL } from '../constants';
@@ -24,7 +24,6 @@ type JupyterExecutionClassType = {
     new (
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
-        logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
@@ -47,7 +46,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
         @inject(IInterpreterService) interpreterService: IInterpreterService,
-        @inject(ILogger) logger: ILogger,
         @inject(IDisposableRegistry) disposableRegistry: IDisposableRegistry,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
         @inject(IFileSystem) fileSystem: IFileSystem,
@@ -66,7 +64,6 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
             GuestJupyterExecution,
             liveShare,
             interpreterService,
-            logger,
             disposableRegistry,
             asyncRegistry,
             fileSystem,

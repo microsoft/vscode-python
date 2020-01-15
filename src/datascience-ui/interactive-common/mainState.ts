@@ -9,9 +9,10 @@ import * as path from 'path';
 
 import { IDataScienceSettings } from '../../client/common/types';
 import { CellMatcher } from '../../client/datascience/cellMatcher';
-import { concatMultilineStringInput, splitMultilineString } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, ICell, IDataScienceExtraSettings, IMessageCell } from '../../client/datascience/types';
+import { concatMultilineStringInput, splitMultilineString } from '../common';
+import { createCodeCell } from '../common/cellFactory';
 import { getDefaultSettings } from '../react-common/settingsReactSide';
 
 export enum CursorPos {
@@ -145,14 +146,10 @@ export function generateTestState(filePath: string = '', editable: boolean = fal
 }
 
 export function createEmptyCell(id: string | undefined, executionCount: number | null): ICell {
+    const emptyCodeCell = createCodeCell();
+    emptyCodeCell.execution_count = executionCount ?? null;
     return {
-        data: {
-            cell_type: 'code', // We should eventually allow this to change to entering of markdown?
-            execution_count: executionCount,
-            metadata: {},
-            outputs: [],
-            source: ''
-        },
+        data: emptyCodeCell,
         id: id ? id : Identifiers.EditCellId,
         file: Identifiers.EmptyFileName,
         line: 0,

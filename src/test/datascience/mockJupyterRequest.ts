@@ -7,8 +7,8 @@ import { CancellationToken } from 'vscode-jsonrpc';
 
 import { createDeferred, Deferred } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
-import { concatMultilineStringInput } from '../../client/datascience/common';
 import { ICell } from '../../client/datascience/types';
+import { concatMultilineStringInput } from '../../datascience-ui/common';
 
 //tslint:disable:no-any
 interface IMessageResult {

@@ -21,7 +21,6 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
-import { CellInput } from '../../datascience-ui/interactive-common/cellInput';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
 import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
@@ -39,7 +38,7 @@ import {
     addContinuousMockData,
     addMockData,
     CellPosition,
-    createKeyboardEventForCell,
+    enterEditorKey,
     escapePath,
     findButton,
     getLastOutputCell,
@@ -653,14 +652,56 @@ for _ in range(50):
         }
 
         function simulateKeyPressOnCell(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
-            const event = { ...createKeyboardEventForCell(keyboardEvent), ...keyboardEvent };
-            const id = `NotebookImport#${cellIndex}`;
+            // Check to see if we have an active focused editor
+            const editor = getNativeFocusedEditor(wrapper);
+
+            // If we do have one, send the input there, otherwise send it to the outer cell
+            if (editor) {
+                simulateKeyPressOnEditor(editor, keyboardEvent);
+            } else {
+                simulateKeyPressOnCellInner(cellIndex, keyboardEvent);
+            }
+        }
+
+        function simulateKeyPressOnEditor(editorControl: ReactWrapper<any, Readonly<{}>, React.Component> | undefined, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
+            enterEditorKey(editorControl, keyboardEvent);
+        }
+
+        function simulateKeyPressOnCellInner(cellIndex: number, keyboardEvent: Partial<IKeyboardEvent> & { code: string }) {
             wrapper.update();
-            wrapper
-                .find(NativeCell)
-                .at(cellIndex)
-                .find(CellInput)
-                .props().keyDown!(id, event);
+            let nativeCell = wrapper.find(NativeCell).at(cellIndex);
+            if (nativeCell.exists()) {
+                nativeCell.simulate('keydown', {
+                    key: keyboardEvent.code,
+                    shiftKey: keyboardEvent.shiftKey,
+                    ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey,
+                    metaKey: keyboardEvent.metaKey
+                });
+            }
+            wrapper.update();
+            // Requery for our cell as something like a 'dd' keydown command can delete it before the press and up
+            nativeCell = wrapper.find(NativeCell).at(cellIndex);
+            if (nativeCell.exists()) {
+                nativeCell.simulate('keypress', {
+                    key: keyboardEvent.code,
+                    shiftKey: keyboardEvent.shiftKey,
+                    ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey,
+                    metaKey: keyboardEvent.metaKey
+                });
+            }
+            nativeCell = wrapper.find(NativeCell).at(cellIndex);
+            wrapper.update();
+            if (nativeCell.exists()) {
+                nativeCell.simulate('keyup', {
+                    key: keyboardEvent.code,
+                    shiftKey: keyboardEvent.shiftKey,
+                    ctrlKey: keyboardEvent.ctrlKey,
+                    altKey: keyboardEvent.altKey,
+                    metaKey: keyboardEvent.metaKey
+                });
+            }
             wrapper.update();
         }
 
@@ -917,7 +958,6 @@ for _ in range(50):
                 // Give focus
                 update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(2);
-                simulateKeyPressOnCell(3, { code: 'Enter', editorInfo: undefined });
                 await update;
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
 

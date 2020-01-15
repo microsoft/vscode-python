@@ -25,7 +25,6 @@ import { IProcessServiceFactory, IPythonExecutionFactory, Output } from '../../c
 import { createDeferred, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
-import { concatMultilineStringInput } from '../../client/datascience/common';
 import { Identifiers } from '../../client/datascience/constants';
 import { ModuleExistsStatus } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
@@ -43,6 +42,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { concatMultilineStringInput } from '../../datascience-ui/common';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
@@ -554,12 +554,10 @@ suite('DataScience notebook tests', () => {
 
         // Make sure we added in our chdir
         if (notebook) {
-            // tslint:disable-next-line:no-string-literal
-            const nbcells = notebook['cells'];
+            const nbcells = notebook.cells;
             if (nbcells) {
-                // tslint:disable-next-line:no-string-literal
-                const firstCellText: string = (nbcells as any)[0]['source'] as string;
-                assert.ok(firstCellText.includes('os.chdir'));
+                const firstCellText: string = nbcells[0].source as string;
+                assert.ok(firstCellText.includes('os.chdir'), `${firstCellText} does not include 'os.chdir`);
             }
         }
 

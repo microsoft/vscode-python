@@ -1,10 +1,10 @@
 import { inject, injectable } from 'inversify';
 // tslint:disable-next-line: no-require-imports
 import cloneDeep = require('lodash/cloneDeep');
+import { concatMultilineStringInput } from '../../../datascience-ui/common';
 import { IConfigurationService } from '../../common/types';
 import { noop } from '../../common/utils/misc';
 import { CellMatcher } from '../cellMatcher';
-import { concatMultilineStringInput } from '../common';
 import { ICell as IVscCell, IGatherExecution, INotebookExecutionLogger } from '../types';
 import { GatherExecution } from './gather';
 

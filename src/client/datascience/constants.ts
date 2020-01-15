@@ -79,10 +79,12 @@ export namespace EditorContexts {
     export const HaveInteractiveCells = 'python.datascience.haveinteractivecells';
     export const HaveRedoableCells = 'python.datascience.haveredoablecells';
     export const HaveInteractive = 'python.datascience.haveinteractive';
+    export const IsInteractive = 'python.datascience.isinteractive';
     export const OwnsSelection = 'python.datascience.ownsSelection';
     export const HaveNativeCells = 'python.datascience.havenativecells';
     export const HaveNativeRedoableCells = 'python.datascience.havenativeredoablecells';
     export const HaveNative = 'python.datascience.havenative';
+    export const IsNative = 'python.datascience.isnative';
     export const HaveCellSelected = 'python.datascience.havecellselected';
 }
 
@@ -188,6 +190,14 @@ export enum Telemetry {
     CodeLensAverageAcquisitionTime = 'DATASCIENCE.CODE_LENS_ACQ_TIME',
     ClassConstructionTime = 'DATASCIENCE.CLASS_CONSTRUCTION_TIME',
     FindJupyterCommand = 'DATASCIENCE.FIND_JUPYTER_COMMAND',
+    /**
+     * Telemetry sent when user selects an interpreter to be used for starting of Jupyter server.
+     */
+    SelectJupyterInterpreter = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER',
+    /**
+     * User used command to select an intrepreter for the jupyter server.
+     */
+    SelectJupyterInterpreterCommand = 'DATASCIENCE.SELECT_JUPYTER_INTERPRETER_Command',
     StartJupyterProcess = 'DATASCIENCE.START_JUPYTER_PROCESS',
     WaitForIdleJupyter = 'DATASCIENCE.WAIT_FOR_IDLE_JUPYTER',
     HiddenCellTime = 'DATASCIENCE.HIDDEN_EXECUTION_TIME',
@@ -202,6 +212,7 @@ export enum Telemetry {
     WebviewMonacoStyleUpdate = 'DATASCIENCE.WEBVIEW_MONACO_STYLE_UPDATE',
     DataViewerFetchTime = 'DATASCIENCE.DATAVIEWER_FETCH_TIME',
     FindJupyterKernelSpec = 'DATASCIENCE.FIND_JUPYTER_KERNEL_SPEC',
+    JupyterInstalledButNotKernelSpecModule = 'DATASCIENCE.JUPYTER_INTALLED_BUT_NO_KERNELSPEC_MODULE',
     PtvsdPromptToInstall = 'DATASCIENCE.PTVSD_PROMPT_TO_INSTALL',
     PtvsdSuccessfullyInstalled = 'DATASCIENCE.PTVSD_SUCCESSFULLY_INSTALLED',
     PtvsdInstallFailed = 'DATASCIENCE.PTVSD_INSTALL_FAILED',

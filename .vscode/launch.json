@@ -17,7 +17,9 @@
                 "${workspaceFolder}/out/**/*"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Extension inside container",
@@ -69,7 +71,9 @@
             ],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Tests (Debugger, VS Code, *.test.ts)",
@@ -92,7 +96,9 @@
             "env": {
                 "IS_CI_SERVER_TEST_DEBUGGER": "1"
             },
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             // Note, for the smoke test you want to debug, you may need to copy the file,
@@ -116,7 +122,9 @@
                 "${workspaceFolder}/out/**/*.js"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Tests (Single Workspace, VS Code, *.test.ts)",
@@ -138,7 +146,9 @@
                 "${workspaceFolder}/out/**/*.js"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Tests (Multiroot, VS Code, *.test.ts)",
@@ -158,7 +168,9 @@
                 "${workspaceFolder}/out/**/*"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Unit Tests (without VS Code, *.unit.test.ts)",
@@ -180,7 +192,9 @@
                 "${workspaceFolder}/out/**/*.js"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Unit Tests (fast, without VS Code and without react/monaco, *.unit.test.ts)",
@@ -203,7 +217,9 @@
                 "${workspaceFolder}/out/**/*.js"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Functional Tests (without VS Code, *.functional.test.ts)",
@@ -225,7 +241,9 @@
                 "${workspaceFolder}/out/**/*.js"
             ],
             "preLaunchTask": "Compile",
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "type": "node",
@@ -235,7 +253,9 @@
             "args": [
                 "watch"
             ],
-            "skipFiles": ["<node_internals>/**"]
+            "skipFiles": [
+                "<node_internals>/**"
+            ]
         },
         {
             "name": "Behave Smoke Tests",

@@ -7,7 +7,7 @@ import { nbformat } from '@jupyterlab/coreutils';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
-import { concatMultilineStringInput } from '../../client/datascience/common';
+import { concatMultilineStringInput } from '../common';
 import { IKeyboardEvent } from '../react-common/event';
 import { Code } from './code';
 import { InputHistory } from './inputHistory';

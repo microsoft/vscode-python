@@ -7,7 +7,7 @@ import { CancellationToken } from 'vscode';
 
 import { IApplicationShell, ILiveShareApi, IWorkspaceService } from '../../../common/application/types';
 import { IFileSystem } from '../../../common/platform/types';
-import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, ILogger, IOutputChannel } from '../../../common/types';
+import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, IOutputChannel } from '../../../common/types';
 import * as localize from '../../../common/utils/localize';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IServiceContainer } from '../../../ioc/types';
@@ -28,7 +28,6 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
     constructor(
         liveShare: ILiveShareApi,
         interpreterService: IInterpreterService,
-        logger: ILogger,
         disposableRegistry: IDisposableRegistry,
         asyncRegistry: IAsyncDisposableRegistry,
         fileSystem: IFileSystem,
@@ -40,19 +39,7 @@ export class GuestJupyterExecution extends LiveShareParticipantGuest(JupyterExec
         jupyterOutputChannel: IOutputChannel,
         serviceContainer: IServiceContainer
     ) {
-        super(
-            liveShare,
-            interpreterService,
-            logger,
-            disposableRegistry,
-            workspace,
-            configuration,
-            kernelSelector,
-            notebookStarter,
-            appShell,
-            jupyterOutputChannel,
-            serviceContainer
-        );
+        super(liveShare, interpreterService, disposableRegistry, workspace, configuration, kernelSelector, notebookStarter, appShell, jupyterOutputChannel, serviceContainer);
         asyncRegistry.push(this);
         this.serverCache = new ServerCache(configuration, workspace, fileSystem);
     }

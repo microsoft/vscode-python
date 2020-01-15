@@ -22,6 +22,10 @@ interface ISyncData {
 
 @injectable()
 export class InteractiveWindowProvider implements IInteractiveWindowProvider, IAsyncDisposable {
+    public get onDidChangeActiveInteractiveWindow(): Event<IInteractiveWindow | undefined> {
+        return this._onDidChangeActiveInteractiveWindow.event;
+    }
+    private readonly _onDidChangeActiveInteractiveWindow = new EventEmitter<IInteractiveWindow | undefined>();
     private activeInteractiveWindow: IInteractiveWindow | undefined;
     private postOffice: PostOffice;
     private id: string;
@@ -108,9 +112,15 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
         this.disposables.push(handler);
         this.activeInteractiveWindowExecuteHandler = this.activeInteractiveWindow.onExecutedCode(this.onInteractiveWindowExecute);
         this.disposables.push(this.activeInteractiveWindowExecuteHandler);
+        this.disposables.push(this.activeInteractiveWindow.onDidChangeViewState(() => this.raiseOnDidChangeActiveInteractiveWindow()));
+        this.raiseOnDidChangeActiveInteractiveWindow();
         return this.activeInteractiveWindow;
     }
 
+    private raiseOnDidChangeActiveInteractiveWindow() {
+        const currentWindow = this.getActive();
+        this._onDidChangeActiveInteractiveWindow.fire(currentWindow?.active && currentWindow.visible ? currentWindow : undefined);
+    }
     private onPeerCountChanged(newCount: number) {
         // If we're losing peers, resolve all syncs
         if (newCount < this.postOffice.peerCount) {
@@ -159,6 +169,7 @@ export class InteractiveWindowProvider implements IInteractiveWindowProvider, IA
                 this.activeInteractiveWindowExecuteHandler = undefined;
             }
         }
+        this.raiseOnDidChangeActiveInteractiveWindow();
     };
 
     private async synchronizeCreate(): Promise<void> {

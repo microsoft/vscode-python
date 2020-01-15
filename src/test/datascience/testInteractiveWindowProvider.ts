@@ -15,6 +15,9 @@ import { IServiceContainer } from '../../client/ioc/types';
 
 @injectable()
 export class TestInteractiveWindowProvider implements IInteractiveWindowProvider {
+    public get onDidChangeActiveInteractiveWindow() {
+        return this.realProvider.onDidChangeActiveInteractiveWindow;
+    }
     private realProvider: InteractiveWindowProvider;
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,

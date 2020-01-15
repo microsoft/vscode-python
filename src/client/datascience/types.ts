@@ -14,6 +14,8 @@ import { IAsyncDisposable, IDataScienceSettings, IDisposable } from '../common/t
 import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
+import { JupyterServerInfo } from './jupyter/jupyterConnection';
+import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { LiveKernelModel } from './jupyter/kernels/types';
 
 // Main interface
@@ -243,11 +245,12 @@ export interface INotebookImporter extends Disposable {
 
 export const INotebookExporter = Symbol('INotebookExporter');
 export interface INotebookExporter extends Disposable {
-    translateToNotebook(cells: ICell[], directoryChange?: string): Promise<JSONObject | undefined>;
+    translateToNotebook(cells: ICell[], directoryChange?: string): Promise<nbformat.INotebookContent | undefined>;
 }
 
 export const IInteractiveWindowProvider = Symbol('IInteractiveWindowProvider');
 export interface IInteractiveWindowProvider {
+    readonly onDidChangeActiveInteractiveWindow: Event<IInteractiveWindow | undefined>;
     onExecutedCode: Event<string>;
     getActive(): IInteractiveWindow | undefined;
     getOrCreateActive(): Promise<IInteractiveWindow>;
@@ -274,6 +277,9 @@ export interface IInteractiveBase extends Disposable {
 
 export const IInteractiveWindow = Symbol('IInteractiveWindow');
 export interface IInteractiveWindow extends IInteractiveBase {
+    readonly onDidChangeViewState: Event<void>;
+    readonly visible: boolean;
+    readonly active: boolean;
     closed: Event<IInteractiveWindow>;
     addCode(code: string, file: string, line: number, editor?: TextEditor, runningStopWatch?: StopWatch): Promise<boolean>;
     addMessage(message: string): Promise<void>;
@@ -290,6 +296,7 @@ export interface INotebookEditorProvider {
     readonly activeEditor: INotebookEditor | undefined;
     readonly editors: INotebookEditor[];
     readonly onDidOpenNotebookEditor: Event<INotebookEditor>;
+    readonly onDidChangeActiveNotebookEditor: Event<INotebookEditor | undefined>;
     open(file: Uri, contents: string): Promise<INotebookEditor>;
     show(file: Uri): Promise<INotebookEditor | undefined>;
     createNew(contents?: string): Promise<INotebookEditor>;
@@ -299,6 +306,7 @@ export interface INotebookEditorProvider {
 // For native editing, the INotebookEditor acts like a TextEditor and a TextDocument together
 export const INotebookEditor = Symbol('INotebookEditor');
 export interface INotebookEditor extends IInteractiveBase {
+    readonly onDidChangeViewState: Event<void>;
     readonly closed: Event<INotebookEditor>;
     readonly executed: Event<INotebookEditor>;
     readonly modified: Event<INotebookEditor>;
@@ -604,4 +612,75 @@ export const IDebugLocationTracker = Symbol('IDebugLocationTracker');
 export interface IDebugLocationTracker {
     updated: Event<void>;
     getLocation(debugSession: DebugSession): IDebugLocation | undefined;
+}
+
+export const IJupyterSubCommandExecutionService = Symbol('IJupyterSubCommandExecutionService');
+/**
+ * Responsible for execution of jupyter subcommands such as `notebook`, `nbconvert`, etc.
+ * The executed code is as follows `python -m jupyter <subcommand>`.
+ *
+ * @export
+ * @interface IJupyterSubCommandExecutionService
+ */
+export interface IJupyterSubCommandExecutionService {
+    isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    /**
+     * Error message indicating why jupyter notebook isn't supported.
+     *
+     * @returns {Promise<string>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    getReasonForJupyterNotebookNotBeingSupported(): Promise<string>;
+    /**
+     * Used to refresh the command finder.
+     *
+     * @returns {Promise<void>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    refreshCommands(): Promise<void>;
+    /**
+     * Gets the interpreter to be used for starting of jupyter server.
+     *
+     * @param {CancellationToken} [token]
+     * @returns {(Promise<PythonInterpreter | undefined>)}
+     * @memberof IJupyterInterpreterService
+     */
+    getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined>;
+    /**
+     * Starts the jupyter notebook server
+     *
+     * @param {string[]} notebookArgs
+     * @param {SpawnOptions} options
+     * @returns {Promise<ObservableExecutionResult<string>>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    startNotebook(notebookArgs: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>>;
+    /**
+     * Gets a list of all locally running jupyter notebook servers.
+     *
+     * @param {CancellationToken} [token]
+     * @returns {(Promise<JupyterServerInfo[] | undefined>)}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined>;
+    /**
+     * Exports a given notebook into a python file.
+     *
+     * @param {string} file
+     * @param {string} [template]
+     * @param {CancellationToken} [token]
+     * @returns {Promise<string>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string>;
+    /**
+     * Opens an ipynb file in a new instance of a jupyter notebook server.
+     *
+     * @param {string} notebookFile
+     * @returns {Promise<void>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
+    launchNotebook(notebookFile: string): Promise<void>;
+    getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]>;
 }
