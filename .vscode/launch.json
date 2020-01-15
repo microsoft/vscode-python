@@ -234,7 +234,7 @@
                 "--ui=tdd",
                 "--recursive",
                 "--colors",
-                "--grep", "Variable explorer - A lot of items \\(int",
+                //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
             "outFiles": [
