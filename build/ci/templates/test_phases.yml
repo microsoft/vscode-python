@@ -298,7 +298,7 @@ steps:
 
           $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
           if( '$(Agent.Os)' -match '.*Windows.*' ){
-              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+              & $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
           } else{
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
               & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
@@ -307,9 +307,9 @@ steps:
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
-          $condaExecPath create -n "test_env1" -y python
-          $condaExecPath create -p "./test_env2" -y python
-          $condaExecPath create -p "$Env:HOME/test_env3" -y python
+          & $condaExecPath create -n "test_env1" -y python
+          & $condaExecPath create -p "./test_env2" -y python
+          & $condaExecPath create -p "$Env:HOME/test_env3" -y python
 
           # Set the TEST_FILES_SUFFIX
           Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
