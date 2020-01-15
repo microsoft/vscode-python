@@ -28,6 +28,9 @@ export abstract class BaseProductPathsService implements IProductPathService {
         if (product === Product.ipykernel) {
             return true;
         }
+        if (product === Product.kernelspec) {
+            return false;
+        }
         let moduleName: string | undefined;
         try {
             moduleName = this.productInstaller.translateProductToModuleName(product, ModuleNamePurpose.run);

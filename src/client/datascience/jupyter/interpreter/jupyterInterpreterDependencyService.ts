@@ -14,23 +14,24 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { Telemetry } from '../../constants';
+import { HelpLinks, Telemetry } from '../../constants';
+import { JupyterInstallError } from '../jupyterInstallError';
 
-export enum JupyterInterpreterConfigurationResponse {
+export enum JupyterInterpreterDependencyResponse {
     ok,
     selectAnotherInterpreter,
     cancel
 }
 
 /**
- * Responsible for configuration a Python interpreter to run Jupyter.
+ * Responsible for managing depedencies of a Python interpreter required to run Jupyter.
  * If required modules aren't installed, will prompt user to install them or select another interpreter.
  *
  * @export
- * @class JupyterInterpreterConfigurationService
+ * @class JupyterInterpreterDependencyService
  */
 @injectable()
-export class JupyterInterpreterConfigurationService {
+export class JupyterInterpreterDependencyService {
     constructor(
         @inject(IApplicationShell) private readonly applicationShell: IApplicationShell,
         @inject(IInstaller) private readonly installer: IInstaller,
@@ -42,13 +43,13 @@ export class JupyterInterpreterConfigurationService {
      *
      * @param {PythonInterpreter} interpreter
      * @param {CancellationToken} [token]
-     * @returns {Promise<JupyterInterpreterConfigurationResponse>}
-     * @memberof JupyterInterpreterConfigurationService
+     * @returns {Promise<JupyterInterpreterDependencyResponse>}
+     * @memberof JupyterInterpreterDependencyService
      */
-    public async configureInterpreter(interpreter: PythonInterpreter, token?: CancellationToken): Promise<JupyterInterpreterConfigurationResponse> {
-        const productsToInstall = await this.getDependenciesNotInstalled(interpreter, token);
+    public async installMissingDependencies(interpreter: PythonInterpreter, error?: JupyterInstallError, token?: CancellationToken): Promise<JupyterInterpreterDependencyResponse> {
+        const productsToInstall = await this.getDependenciesNotInstalled(interpreter, token).then(propducts => propducts.filter(prod => prod !== Product.kernelspec));
         if (Cancellation.isCanceled(token)) {
-            return JupyterInterpreterConfigurationResponse.cancel;
+            return JupyterInterpreterDependencyResponse.cancel;
         }
         if (productsToInstall.length === 0) {
             return this.checkKernelSpecAvailability(interpreter);
@@ -60,10 +61,17 @@ export class JupyterInterpreterConfigurationService {
             .map(name => name as string);
         const message = DataScience.libraryNotInstalled().format(names.join(` ${Common.and} `));
 
-        const selection = await this.applicationShell.showErrorMessage(message, DataScience.jupyterInstall(), DataScience.selectDifferentJupyterInterpreter(), Common.cancel());
+        sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
+        const selection = await this.applicationShell.showErrorMessage(
+            // tslint:disable-next-line: messages-must-be-localized
+            `${message}\n${error?.actionTitle || DataScience.pythonInteractiveHelpLink().format(HelpLinks.PythonInteractiveHelpLink)}`,
+            DataScience.jupyterInstall(),
+            DataScience.selectDifferentJupyterInterpreter(),
+            Common.cancel()
+        );
 
         if (Cancellation.isCanceled(token)) {
-            return JupyterInterpreterConfigurationResponse.cancel;
+            return JupyterInterpreterDependencyResponse.cancel;
         }
 
         switch (selection) {
@@ -76,19 +84,21 @@ export class JupyterInterpreterConfigurationService {
                         productToInstall = productsToInstall.shift();
                         continue;
                     } else {
-                        return JupyterInterpreterConfigurationResponse.cancel;
+                        return JupyterInterpreterDependencyResponse.cancel;
                     }
                 }
-
+                sendTelemetryEvent(Telemetry.UserInstalledJupyter);
                 return this.checkKernelSpecAvailability(interpreter);
             }
 
             case DataScience.selectDifferentJupyterInterpreter(): {
-                return JupyterInterpreterConfigurationResponse.selectAnotherInterpreter;
+                sendTelemetryEvent(Telemetry.UserDidNotInstallJupyter);
+                return JupyterInterpreterDependencyResponse.selectAnotherInterpreter;
             }
 
             default:
-                return JupyterInterpreterConfigurationResponse.cancel;
+                sendTelemetryEvent(Telemetry.UserDidNotInstallJupyter);
+                return JupyterInterpreterDependencyResponse.cancel;
         }
     }
     /**
@@ -100,14 +110,31 @@ export class JupyterInterpreterConfigurationService {
      * @memberof JupyterInterpreterConfigurationService
      */
     public async areDependenciesInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<boolean> {
-        const [productsNotInstalled, kernelspecIsAvailable] = await Promise.all([
-            this.getDependenciesNotInstalled(interpreter, token),
-            this.isKernelSpecAvailable(interpreter, token)
-        ]);
-        return (productsNotInstalled || []).length === 0 && kernelspecIsAvailable;
+        return this.getDependenciesNotInstalled(interpreter, token).then(items => items.length === 0);
     }
 
-    private async getDependenciesNotInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<Product[]> {
+    /**
+     * Whether its possible to export ipynb to other formats.
+     * Basically checks whether nbconvert is installed.
+     *
+     * @param {PythonInterpreter} interpreter
+     * @param {CancellationToken} [_token]
+     * @returns {Promise<boolean>}
+     * @memberof JupyterInterpreterConfigurationService
+     */
+    public async isExportSupported(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean> {
+        return this.installer.isInstalled(Product.nbconvert, interpreter).then(installed => installed === true);
+    }
+
+    /**
+     * Gets a list of the dependencies not installed, dependencies that are required to launch the jupyter notebook server.
+     *
+     * @param {PythonInterpreter} interpreter
+     * @param {CancellationToken} [token]
+     * @returns {Promise<Product[]>}
+     * @memberof JupyterInterpreterConfigurationService
+     */
+    public async getDependenciesNotInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<Product[]> {
         const notInstalled: Product[] = [];
         await Promise.race([
             Promise.all([
@@ -117,7 +144,11 @@ export class JupyterInterpreterConfigurationService {
             createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
         ]);
 
-        return Cancellation.isCanceled(token) ? [] : notInstalled;
+        if (Cancellation.isCanceled(token) || notInstalled.length > 0) {
+            return notInstalled;
+        }
+        // Perform this check only if jupyter & notebook modules are installed.
+        return this.isKernelSpecAvailable(interpreter, token).then(installed => (installed ? [] : [Product.kernelspec]));
     }
 
     /**
@@ -149,16 +180,16 @@ export class JupyterInterpreterConfigurationService {
      * @private
      * @param {PythonInterpreter} interpreter
      * @param {CancellationToken} [token]
-     * @returns {Promise<JupyterInterpreterConfigurationResponse>}
+     * @returns {Promise<JupyterInterpreterDependencyResponse>}
      * @memberof JupyterInterpreterConfigurationService
      */
-    private async checkKernelSpecAvailability(interpreter: PythonInterpreter, token?: CancellationToken): Promise<JupyterInterpreterConfigurationResponse> {
+    private async checkKernelSpecAvailability(interpreter: PythonInterpreter, token?: CancellationToken): Promise<JupyterInterpreterDependencyResponse> {
         if (await this.isKernelSpecAvailable(interpreter)) {
             sendTelemetryEvent(Telemetry.JupyterInstalledButNotKernelSpecModule);
-            return JupyterInterpreterConfigurationResponse.ok;
+            return JupyterInterpreterDependencyResponse.ok;
         }
         if (Cancellation.isCanceled(token)) {
-            return JupyterInterpreterConfigurationResponse.cancel;
+            return JupyterInterpreterDependencyResponse.cancel;
         }
         const selectionFromError = await this.applicationShell.showErrorMessage(
             DataScience.jupyterKernelSpecModuleNotFound().format(interpreter.path),
@@ -166,7 +197,7 @@ export class JupyterInterpreterConfigurationService {
             Common.cancel()
         );
         return selectionFromError === DataScience.selectDifferentJupyterInterpreter()
-            ? JupyterInterpreterConfigurationResponse.selectAnotherInterpreter
-            : JupyterInterpreterConfigurationResponse.cancel;
+            ? JupyterInterpreterDependencyResponse.selectAnotherInterpreter
+            : JupyterInterpreterDependencyResponse.cancel;
     }
 }

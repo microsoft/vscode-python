@@ -327,6 +327,7 @@ export class ProductInstaller implements IInstaller {
     }
 }
 
+// tslint:disable-next-line: cyclomatic-complexity
 function translateProductToModule(product: Product, purpose: ModuleNamePurpose): string {
     switch (product) {
         case Product.mypy:
@@ -366,6 +367,10 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
             return 'notebook';
         case Product.ipykernel:
             return 'ipykernel';
+        case Product.nbconvert:
+            return 'ipykernel';
+        case Product.kernelspec:
+            return 'kernelspec';
         default: {
             throw new Error(`Product ${product} cannot be installed as a Python Module.`);
         }

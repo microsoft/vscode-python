@@ -207,6 +207,8 @@ export namespace DataScience {
     export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', "Don't Ask Again");
     export const libraryNotInstalled = localize('DataScience.libraryNotInstalled', 'Data Science library {0} is not installed. Install?');
+    export const libraryRequiredToLaunchJupyterNotInstalled = localize('DataScience.libraryRequiredToLaunchJupyterNotInstalled', 'Data Science library {0} is not installed.');
+    export const selectJupyterInterpreter = localize('DataScience.selectJupyterInterpreter', 'Select an Interpreter to start Jupyter');
     export const jupyterInstall = localize('DataScience.jupyterInstall', 'Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = localize('Datascience.currentlySelectedJupyterInterpreterForPlaceholder', 'current: {0}');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter cannot be started. Error attempting to locate jupyter: {0}');

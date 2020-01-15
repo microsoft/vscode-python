@@ -117,7 +117,9 @@ export enum Product {
     bandit = 17,
     jupyter = 18,
     ipykernel = 19,
-    notebook = 20
+    notebook = 20,
+    kernelspec = 21,
+    nbconvert = 22
 }
 
 export enum ModuleNamePurpose {

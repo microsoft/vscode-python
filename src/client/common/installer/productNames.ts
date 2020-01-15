@@ -22,3 +22,5 @@ ProductNames.set(Product.rope, 'rope');
 ProductNames.set(Product.jupyter, 'jupyter');
 ProductNames.set(Product.notebook, 'notebook');
 ProductNames.set(Product.ipykernel, 'ipykernel');
+ProductNames.set(Product.nbconvert, 'nbconvert');
+ProductNames.set(Product.kernelspec, 'kernelspec');

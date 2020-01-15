@@ -15,6 +15,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
+import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { LiveKernelModel } from './jupyter/kernels/types';
 
@@ -613,7 +614,21 @@ export const IJupyterSubCommandExecutionService = Symbol('IJupyterSubCommandExec
  * @interface IJupyterSubCommandExecutionService
  */
 export interface IJupyterSubCommandExecutionService {
+    /**
+     * Checks whether notebook is supported.
+     *
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<boolean>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    /**
+     * Checks whether exporting of ipynb is supported.
+     *
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<boolean>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
     isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
      * Error message indicating why jupyter notebook isn't supported.
@@ -672,5 +687,24 @@ export interface IJupyterSubCommandExecutionService {
      * @memberof IJupyterSubCommandExecutionService
      */
     launchNotebook(notebookFile: string): Promise<void>;
+    /**
+     * Gets the kernelspecs.
+     *
+     * @param {CancellationToken} [token]
+     * @returns {Promise<JupyterKernelSpec[]>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
     getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]>;
+}
+
+export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
+export interface IJupyterInterpreterDependencyManager {
+    /**
+     * Installs the dependencies required to launch jupyter.
+     *
+     * @param {JupyterInstallError} [err]
+     * @returns {Promise<void>}
+     * @memberof IJupyterInterpreterDependencyManager
+     */
+    installMissingDependencies(err?: JupyterInstallError): Promise<void>;
 }

@@ -190,6 +190,7 @@
     "Installer.noPipInstaller": "There is no Pip installer available in the selected environment.",
     "Installer.searchForHelp": "Search for help",
     "DataScience.libraryNotInstalled": "Data Science library {0} is not installed. Install?",
+    "DataScience.libraryRequiredToLaunchJupyterNotInstalled": "Data Science library {0} is not installed.",
     "DataScience.jupyterInstall": "Install",
     "DataScience.jupyterSelectURIPrompt": "Enter the URI of the running Jupyter server",
     "DataScience.jupyterSelectURIInvalidURI": "Invalid URI specified",
@@ -416,6 +417,7 @@
     "DataScience.selectKernel": "Select a Kernel",
     "DataScience.selectDifferentKernel": "Select a different Kernel",
     "DataScience.selectDifferentJupyterInterpreter": "Select a different Interpreter",
+    "DataScience.selectJupyterInterpreter": "Select an Interpreter to start Jupyter",
     "products.installingModule": "Installing {0}",
     "DataScience.switchingKernelProgress": "Switching kernel to '{0}'",
     "DataScience.sessionStartFailedWithKernel": "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
