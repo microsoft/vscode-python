@@ -26,12 +26,13 @@ suite('Python interpreter locator service', () => {
         ioc = new UnitTestIocContainer();
         ioc.registerCommonTypes();
         ioc.registerUnitTestTypes();
+        ioc.registerMockProcessTypes();
         ioc.registerVariableTypes();
         ioc.registerInterpreterTypes();
         ioc.serviceManager.addSingleton<IRegistry>(IRegistry, RegistryImplementation);
     }
 
-    test('xEnsure we are getting all conda environments', async () => {
+    test('Ensure we are getting all conda environments', async () => {
         // tslint:disable: no-console
         console.time('Time taken to run test');
         const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
