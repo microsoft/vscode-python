@@ -296,12 +296,11 @@ steps:
 
           # 1. For `terminalActivation.testvirtualenvs.test.ts`
 
+          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
           if( '$(Agent.Os)' -match '.*Windows.*' ){
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
-              $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath conda
           } else{
               $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
-              $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
               & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
           }
           & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
