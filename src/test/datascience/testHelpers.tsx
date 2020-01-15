@@ -24,7 +24,7 @@ import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { MonacoEditor } from '../../datascience-ui/react-common/monacoEditor';
 import { noop } from '../core';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
-import { createInputEvent, createKeyboardEvent, waitForUpdate } from './reactHelpers';
+import { createInputEvent, createKeyboardEvent } from './reactHelpers';
 
 //tslint:disable:trailing-comma no-any no-multiline-string
 export enum CellInputState {
@@ -404,20 +404,23 @@ export function verifyLastCellInputState(wrapper: ReactWrapper<any, Readonly<{}>
 }
 
 export async function getCellResults(
+    ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    mainClass: React.ComponentClass<any>,
     cellType: string,
-    expectedRenders: number,
-    updater: () => Promise<void>
+    updater: () => Promise<void>,
+    renderPromiseGenerator?: () => Promise<void>
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
     // Get a render promise with the expected number of renders
-    const renderPromise = waitForUpdate(wrapper, mainClass, expectedRenders);
+    const renderPromise = renderPromiseGenerator ? renderPromiseGenerator() : waitForMessage(ioc, InteractiveWindowMessages.ExecutionRendered);
 
     // Call our function to update the react control
     await updater();
 
     // Wait for all of the renders to go through
     await renderPromise;
+
+    // Update wrapper so that it gets the latest values.
+    wrapper.update();
 
     // Return the result
     return wrapper.find(cellType);

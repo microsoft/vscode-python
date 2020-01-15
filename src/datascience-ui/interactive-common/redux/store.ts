@@ -118,14 +118,14 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate variables complete
-        if (prevState.variables.variables.length !== afterState.variables.variables.length) {
+        if (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables)) {
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.VariablesComplete)));
         }
 
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
         const afterFinished = afterState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
-        if (afterFinished.length > prevFinished.length) {
+        if (afterFinished.length > prevFinished.length || (afterFinished.length !== prevFinished.length && afterState.main.cellVMs.length !== prevState.main.cellVMs.length)) {
             const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.ExecutionRendered, { ids: diff })));

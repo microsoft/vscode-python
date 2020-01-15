@@ -8,18 +8,17 @@ import { Uri } from 'vscode';
 
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
-import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, mountWebView } from './testHelpers';
 
 export function getInteractiveCellResults(
+    ioc: DataScienceIocContainer,
     // tslint:disable-next-line: no-any
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    expectedRenders: number,
     updater: () => Promise<void>
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults(wrapper, InteractivePanel, 'InteractiveCell', expectedRenders, updater);
+    return getCellResults(ioc, wrapper, 'InteractiveCell', updater);
 }
 
 export async function getOrCreateInteractiveWindow(ioc: DataScienceIocContainer): Promise<IInteractiveWindow> {
@@ -50,7 +49,6 @@ export async function addCode(
     // tslint:disable-next-line: no-any
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
     code: string,
-    expectedRenderCount: number = 4,
     expectError: boolean = false
     // tslint:disable-next-line: no-any
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
@@ -60,7 +58,7 @@ export async function addCode(
     // 3) Execute_Input message
     // 4) Output message (if there's only one)
     // 5) Status finished
-    return getInteractiveCellResults(wrapper, expectedRenderCount, async () => {
+    return getInteractiveCellResults(ioc, wrapper, async () => {
         const history = await getOrCreateInteractiveWindow(ioc);
         const success = await history.addCode(code, Uri.file('foo.py').fsPath, 2);
         if (expectError) {

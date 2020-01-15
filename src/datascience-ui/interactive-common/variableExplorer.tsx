@@ -240,7 +240,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         if (this.pageSize === -1) {
             // Based on font size and height of the main div
             if (this.divRef.current) {
-                this.pageSize = Math.round(this.divRef.current.offsetHeight / this.props.fontSize);
+                this.pageSize = Math.max(16, Math.round(this.divRef.current.offsetHeight / this.props.fontSize));
             } else {
                 this.pageSize = 50;
             }
@@ -255,6 +255,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         // Skip if already pending or already have a value
         const haveValue = this.props.variables[index]?.value;
         const newExecution = this.props.executionCount !== this.requestedPagesExecutionCount;
+        // tslint:disable-next-line: restrict-plus-operands
         const notRequested = !this.requestedPages.find(n => n <= index && index < n + pageSize);
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.

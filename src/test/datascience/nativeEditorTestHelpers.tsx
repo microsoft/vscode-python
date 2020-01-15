@@ -10,7 +10,6 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { IJupyterExecution, INotebookEditor, INotebookEditorProvider } from '../../client/datascience/types';
 import { CursorPos } from '../../datascience-ui/interactive-common/mainState';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
-import { NativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
 import { ImageButton } from '../../datascience-ui/react-common/imageButton';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, getNativeFocusedEditor, injectCode, mountWebView, simulateKey, waitForMessage } from './testHelpers';
@@ -44,11 +43,12 @@ export async function openEditor(ioc: DataScienceIocContainer, contents: string,
 
 // tslint:disable-next-line: no-any
 export function getNativeCellResults(
+    ioc: DataScienceIocContainer,
     wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
-    expectedRenders: number,
-    updater: () => Promise<void>
+    updater: () => Promise<void>,
+    renderPromiseGenerator?: () => Promise<void>
 ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-    return getCellResults(wrapper, NativeEditor, 'NativeCell', expectedRenders, updater);
+    return getCellResults(ioc, wrapper, 'NativeCell', updater, renderPromiseGenerator);
 }
 
 // tslint:disable-next-line:no-any

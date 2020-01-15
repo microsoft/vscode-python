@@ -5,20 +5,19 @@ import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
-import testUtils from 'react-dom/test-utils';
+import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Provider } from 'react-redux';
 import { Disposable } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
-import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { runDoubleTest, waitForMessage } from './testHelpers';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
+// tslint:disable: no-var-requires no-require-imports
 const rangeInclusive = require('range-inclusive');
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
@@ -63,21 +62,21 @@ suite('DataScience Interactive Window variable explorer tests', () => {
     //      asyncDump();
     //});
 
-    async function waitForVariablesUpdated(): Promise<void> {
-        return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+    async function waitForVariablesUpdated(numberOfTimes?: number): Promise<void> {
+        return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
     }
 
     async function addCodeImpartial(
         wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
         code: string,
         waitForVariables: boolean = true,
-        expectedRenderCount: number = 4,
+        waitForVariablesCount: number = 1,
         expectError: boolean = false
     ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        const variablesUpdated = waitForVariables ? waitForVariablesUpdated() : Promise.resolve();
+        const variablesUpdated = waitForVariables ? waitForVariablesUpdated(waitForVariablesCount) : Promise.resolve();
         const nodes = wrapper.find('InteractivePanel');
         if (nodes.length > 0) {
-            const result = await addCode(ioc, wrapper, code, expectedRenderCount, expectError);
+            const result = await addCode(ioc, wrapper, code, expectError);
             await variablesUpdated;
             return result;
         } else {
@@ -85,7 +84,6 @@ suite('DataScience Interactive Window variable explorer tests', () => {
             if (!createdNotebook) {
                 await createNewEditor(ioc);
                 createdNotebook = true;
-                expectedRenderCount += 1;
             }
             await addCell(wrapper, ioc, code, true);
             await variablesUpdated;
@@ -110,7 +108,7 @@ value = 'hello world'`;
             let targetVariables: IJupyterVariable[] = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
                 // tslint:disable-next-line:quotemark
-                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -147,8 +145,7 @@ value = 'hello world'`;
 
             targetVariables = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -157,10 +154,9 @@ value = 'hello world'`;
 
             targetVariables = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
                 // tslint:disable-next-line:quotemark
-                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'value2', value: "'hello world 2'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'value2', value: 'hello world 2', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -214,7 +210,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
             openVariableExplorer(wrapper);
 
             await addCodeImpartial(wrapper, 'a=1\na');
-            await addCodeImpartial(wrapper, basicCode, true);
+            await addCodeImpartial(wrapper, basicCode, true, 2);
 
             const targetVariables: IJupyterVariable[] = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
@@ -234,7 +230,6 @@ myTuple = 1,2,3,4,5,6,7,8,9
                 },
                 { name: 'myFloat', value: '9999.9999', supportsDataExplorer: false, type: 'float', size: 58, shape: '', count: 0, truncated: false },
                 { name: 'myInt', value: '99999999', supportsDataExplorer: false, type: 'int', size: 56, shape: '', count: 0, truncated: false },
-                { name: 'mynpArray', value: 'array([1., 2., 3.])', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false },
                 // tslint:disable:no-trailing-whitespace
                 {
                     name: 'mySeries',
@@ -249,7 +244,8 @@ Name: 0, dtype: float64`,
                     count: 0,
                     truncated: false
                 },
-                { name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'mynpArray', value: '[1. 2. 3.]', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -284,7 +280,9 @@ Name: 0, dtype: float64`,
     exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
             openVariableExplorer(wrapper);
-            await addCodeImpartial(wrapper, basicCode, true);
+
+            // Wait for two variable completes so we get the visible list (should be about 16 items when finished)
+            await addCodeImpartial(wrapper, basicCode, true, 2);
 
             const allVariables: IJupyterVariable[] = rangeInclusive(0, 1050)
                 .map(generateVar)
@@ -294,9 +292,18 @@ Name: 0, dtype: float64`,
             verifyVariables(wrapper, targetVariables);
 
             // Force a scroll to the bottom
-            testUtils.Simulate.scroll(wrapper.find(VariableExplorer).instance(), { deltaY: 500 });
+            const complete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes: 2 });
+            const grid = wrapper.find(AdazzleReactDataGrid);
+            const viewPort = grid.find('Viewport').instance();
+            const rowHeight = (viewPort.props as any).rowHeight as number;
+            const scrollTop = (allVariables.length - 11) * rowHeight;
+            (viewPort as any).onScroll({ scrollTop, scrollLeft: 0 });
 
-            const bottomVariables = allVariables.slice(983, 1000);
+            // Wait for a variable complete
+            await complete;
+
+            // Now we should have the bottom. For some reason only 10 come back here.
+            const bottomVariables = allVariables.slice(1041, 1051);
             verifyVariables(wrapper, bottomVariables);
         },
         () => {
