@@ -114,12 +114,16 @@ function handleRestarted(arg: VariableReducerArg): IVariableState {
 }
 
 function handleFinishCell(arg: VariableReducerArg<ICell>): IVariableState {
+    const executionCount = arg.payload.data.execution_count ? parseInt(arg.payload.data.execution_count.toString(), 10) : undefined;
+
     // If the variables are visible, refresh them
-    if (arg.prevState.visible && arg.payload.data.execution_count) {
-        const executionCount = parseInt(arg.payload.data.execution_count.toString(), 10);
+    if (arg.prevState.visible && executionCount) {
         return handleRequest({ ...arg, payload: { executionCount, sortColumn: 'name', sortAscending: true, startIndex: 0, pageSize: arg.prevState.pageSize } });
     }
-    return arg.prevState;
+    return {
+        ...arg.prevState,
+        currentExecutionCount: executionCount ? executionCount : arg.prevState.currentExecutionCount
+    };
 }
 
 // Create a mapping between message and reducer type

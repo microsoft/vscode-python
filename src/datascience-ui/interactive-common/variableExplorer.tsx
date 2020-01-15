@@ -259,7 +259,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
         if (!haveValue && (newExecution || notRequested)) {
             // Try to find a page of data around this index.
             let pageIndex = index;
-            while (pageIndex > 0 && pageIndex > index - pageSize / 2 && (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)) {
+            while (pageIndex >= 0 && pageIndex > index - pageSize / 2 && (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)) {
                 pageIndex -= 1;
             }
 
@@ -269,13 +269,13 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps> {
             }
 
             // Save in the list of requested pages
-            this.requestedPages.push(pageIndex);
+            this.requestedPages.push(pageIndex + 1);
 
             // Save the execution count for this request so we can verify we can skip it on next request.
             this.requestedPagesExecutionCount = this.props.executionCount;
 
             // Load this page.
-            this.props.pageIn(pageIndex, pageSize);
+            this.props.pageIn(pageIndex + 1, pageSize);
         }
     };
 
