@@ -11,7 +11,7 @@ import { Cancellation, createPromiseFromCancellation } from '../../../common/can
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
+import { IPythonExecutionFactory, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
 import { Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
@@ -21,7 +21,7 @@ import { PythonDaemonModule } from '../../constants';
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
-import { JupyterKernelSpec } from '../kernels/jupyterKernelSpec';
+import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
 import { JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 
@@ -163,31 +163,11 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
             // Ask for our current list.
             const output = await daemon.execModule('jupyter', ['kernelspec', 'list', '--json'], { throwOnStdErr: true, encoding: 'utf8' });
 
-            traceInfo('Parsing kernelspecs from jupyter');
-            // This should give us back a key value pair we can parse
-            const jsOut = JSON.parse(output.stdout.trim()) as { kernelspecs: Record<string, { resource_dir: string; spec: Omit<Kernel.ISpecModel, 'name'> }> };
-            const kernelSpecs = jsOut.kernelspecs;
-            const specs = await Promise.race([
-                Promise.all(
-                    Object.keys(kernelSpecs).map(async kernelName => {
-                        const specFile = path.join(kernelSpecs[kernelName].resource_dir, 'kernel.json');
-                        const spec = kernelSpecs[kernelName].spec;
-                        // Add the missing name property.
-                        const model = {
-                            ...spec,
-                            name: kernelName
-                        };
-                        // Check if the spec file exists.
-                        if (await this.fs.fileExists(specFile)) {
-                            return new JupyterKernelSpec(model as Kernel.ISpecModel, specFile);
-                        } else {
-                            return;
-                        }
-                    })
-                ),
-                createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: [], token })
-            ]);
-            return specs.filter(item => !!item).map(item => item as JupyterKernelSpec);
+            return parseKernelSpecs(output.stdout, this.fs, token).catch(parserError => {
+                traceError('Failed to parse kernelspecs', parserError);
+                // This is failing for some folks. In that case return nothing
+                return [];
+            });
         } catch (ex) {
             traceError('Failed to list kernels', ex);
             // This is failing for some folks. In that case return nothing
