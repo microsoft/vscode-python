@@ -141,6 +141,7 @@ import { InteractiveWindow } from '../../client/datascience/interactive-window/i
 import { InteractiveWindowCommandListener } from '../../client/datascience/interactive-window/interactiveWindowCommandListener';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
+import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
 import { JupyterCommandFinderInterpreterExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterOldCacheStateStore } from '../../client/datascience/jupyter/interpreter/jupyterInterpreterOldCacheStateStore';
@@ -184,6 +185,7 @@ import {
     IJupyterCommandFactory,
     IJupyterDebugger,
     IJupyterExecution,
+    IJupyterInterpreterDependencyManager,
     IJupyterPasswordConnect,
     IJupyterSessionManagerFactory,
     IJupyterSubCommandExecutionService,
@@ -672,6 +674,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
         this.serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
         this.serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterCommandFinderInterpreterExecutionService);
+        this.serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterCommandInterpreterDependencyService);
 
         // Don't use conda at all during functional tests.
         const condaService = TypeMoq.Mock.ofType<ICondaService>();
