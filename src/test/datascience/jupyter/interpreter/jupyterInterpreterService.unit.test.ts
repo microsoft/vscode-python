@@ -84,7 +84,9 @@ suite('Data Science - Jupyter Interpreter Service', () => {
         assert.equal(selectedInterpreter, pythonInterpreter);
     });
     test('Select another interpreter if user opts to not install dependencies', async () => {
-        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything(), anything())).thenResolve(JupyterInterpreterDependencyResponse.selectAnotherInterpreter);
+        when(interpreterConfiguration.installMissingDependencies(pythonInterpreter, anything(), anything())).thenResolve(
+            JupyterInterpreterDependencyResponse.selectAnotherInterpreter
+        );
         when(interpreterConfiguration.installMissingDependencies(secondPythonInterpreter, anything(), anything())).thenResolve(JupyterInterpreterDependencyResponse.ok);
         let interpreterSelection = 0;
         when(interpreterSelector.selectInterpreter()).thenCall(() => {
