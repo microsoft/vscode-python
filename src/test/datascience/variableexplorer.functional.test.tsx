@@ -5,16 +5,21 @@ import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
+import testUtils from 'react-dom/test-utils';
 import { Provider } from 'react-redux';
 import { Disposable } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
+import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { runDoubleTest, waitForMessage } from './testHelpers';
+
+// tslint:disable-next-line: no-var-requires no-require-imports
+const rangeInclusive = require('range-inclusive');
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window variable explorer tests', () => {
@@ -252,6 +257,52 @@ Name: 0, dtype: float64`,
             return ioc;
         }
     );
+
+    function generateVar(v: number): IJupyterVariable {
+        const valueEntry = Math.pow(v, 2) % 17;
+        const expectedValue =
+            valueEntry < 10
+                ? `[${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, <...> , ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}]`
+                : `[${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, <...> , ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}]`;
+        return {
+            name: `var${v}`,
+            value: expectedValue,
+            supportsDataExplorer: true,
+            type: 'list',
+            size: 54,
+            shape: '',
+            count: 100000,
+            truncated: false
+        };
+    }
+
+    // Test our limits. Create 1050 items.
+    runDoubleTest(
+        'Variable explorer - A lot of items',
+        async wrapper => {
+            const basicCode: string = `for _i in range(1050):
+    exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
+
+            openVariableExplorer(wrapper);
+            await addCodeImpartial(wrapper, basicCode, true);
+
+            const allVariables: IJupyterVariable[] = rangeInclusive(0, 1050)
+                .map(generateVar)
+                .sort((a: IJupyterVariable, b: IJupyterVariable) => a.name.localeCompare(b.name));
+
+            const targetVariables = allVariables.slice(0, 16);
+            verifyVariables(wrapper, targetVariables);
+
+            // Force a scroll to the bottom
+            testUtils.Simulate.scroll(wrapper.find(VariableExplorer).instance(), { deltaY: 500 });
+
+            const bottomVariables = allVariables.slice(983, 1000);
+            verifyVariables(wrapper, bottomVariables);
+        },
+        () => {
+            return ioc;
+        }
+    );
 });
 
 // Open up our variable explorer which also triggers a data fetch
@@ -304,11 +355,12 @@ function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
 function verifyCell(cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, value: string, targetName: string) {
     const cellHTML = parse(cellWrapper.html()) as any;
     // tslint:disable-next-line:no-string-literal
-    const rawValue = cellHTML.firstChild.rawAttributes['value'] as string;
+    const match = /value="([\s\S]+?)"\s+/.exec(cellHTML.innerHTML);
+    expect(match).to.not.be.equal(null, `${targetName} does not have a value attribute`);
 
     // Eliminate whitespace differences
-    const actualValueNormalized = rawValue.replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
+    const actualValueNormalized = match![1].replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
     const expectedValueNormalized = value.replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
 
-    expect(actualValueNormalized).to.be.equal(expectedValueNormalized, `${targetName} has an unexpected value in variable explorer cell`);
+    expect(actualValueNormalized).to.be.equal(expectedValueNormalized, `${targetName} has an unexpected value ${cellHTML.innerHTML} in variable explorer cell`);
 }
