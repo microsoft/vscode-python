@@ -3,15 +3,14 @@
 
 'use strict';
 
-import { Kernel } from '@jupyterlab/services';
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
-import { Cancellation, createPromiseFromCancellation } from '../../../common/cancellation';
+import { Cancellation } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
-import { IPythonExecutionFactory, IPythonExecutionService, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
+import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
 import { Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
