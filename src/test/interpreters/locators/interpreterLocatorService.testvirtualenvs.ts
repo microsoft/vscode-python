@@ -13,6 +13,8 @@ import { UnitTestIocContainer } from '../../testing/serviceRegistry';
 
 suite('Python interpreter locator service', () => {
     let ioc: UnitTestIocContainer;
+    // tslint:disable: no-console
+    console.time('Time taken to run test');
     suiteSetup(async () => {
         await initialize();
     });
@@ -20,6 +22,12 @@ suite('Python interpreter locator service', () => {
     setup(async () => {
         await initializeTest();
         initializeDI();
+        console.log('About to enter the test');
+    });
+
+    teardown(async () => {
+        console.timeLog('Time taken to run test');
+        console.log('Exiting the test');
     });
 
     function initializeDI() {
@@ -33,16 +41,17 @@ suite('Python interpreter locator service', () => {
     }
 
     test('Ensure we are getting all conda environments', async () => {
-        // tslint:disable: no-console
-        console.time('Time taken to run test');
+        console.log('Entered the test');
         const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         const interpreters = await locator.getInterpreters();
         interpreters.forEach(i => {
             // tslint:disable: no-console
-            console.log(`${i.path} | ${i.envName}`);
+            console.log(`lol ${i.path} || ${i.envName}`);
         });
+        console.log('Much before 1');
         // Created in CI using command `conda create -n "test_env1" -y python`
         let filteredInterpreters = interpreters.filter(i => i.envName === 'test_env1' && i.type === InterpreterType.Conda);
+        console.log('Before 1');
         filteredInterpreters.forEach(i => {
             // tslint:disable-next-line: no-console
             console.log(`1 ${i.path} | ${i.envName}`);
@@ -92,6 +101,5 @@ suite('Python interpreter locator service', () => {
             // tslint:disable-next-line: no-console
             console.log(`${i.path} | ${i.envName}`);
         });
-        console.timeEnd('Time taken to run test');
     });
 });
