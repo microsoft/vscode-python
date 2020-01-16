@@ -14,7 +14,7 @@ import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { PythonInterpreter } from '../../../interpreter/contracts';
 import { sendTelemetryEvent } from '../../../telemetry';
-import { HelpLinks, Telemetry } from '../../constants';
+import { Telemetry } from '../../constants';
 import { JupyterInstallError } from '../jupyterInstallError';
 
 export enum JupyterInterpreterDependencyResponse {
@@ -59,11 +59,16 @@ export class JupyterInterpreterDependencyService {
      * If user opts not to isntall they can opt to select another interpreter.
      *
      * @param {PythonInterpreter} interpreter
+     * @param {JupyterInstallError} [_error]
      * @param {CancellationToken} [token]
      * @returns {Promise<JupyterInterpreterDependencyResponse>}
      * @memberof JupyterInterpreterDependencyService
      */
-    public async installMissingDependencies(interpreter: PythonInterpreter, error?: JupyterInstallError, token?: CancellationToken): Promise<JupyterInterpreterDependencyResponse> {
+    public async installMissingDependencies(
+        interpreter: PythonInterpreter,
+        _error?: JupyterInstallError,
+        token?: CancellationToken
+    ): Promise<JupyterInterpreterDependencyResponse> {
         const productsToInstall = await this.getDependenciesNotInstalled(interpreter, token);
         if (Cancellation.isCanceled(token)) {
             return JupyterInterpreterDependencyResponse.cancel;
