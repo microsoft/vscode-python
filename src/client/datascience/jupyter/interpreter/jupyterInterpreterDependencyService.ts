@@ -149,23 +149,14 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterConfigurationService
      */
     public async isExportSupported(interpreter: PythonInterpreter, _token?: CancellationToken): Promise<boolean> {
-        const promise = this.installer
-            .isInstalled(Product.nbconvert, interpreter)
-            .then(installed => installed === true)
-            .then(installed => {
-                if (installed) {
-                    this.nbconvertInstalledInInterpreter.add(interpreter.path);
-                } else {
-                    this.nbconvertInstalledInInterpreter.delete(interpreter.path);
-                }
-                return installed;
-            });
-
         if (this.nbconvertInstalledInInterpreter.has(interpreter.path)) {
             return true;
         }
-
-        return promise;
+        const installed = this.installer.isInstalled(Product.nbconvert, interpreter).then(result => result === true);
+        if (installed) {
+            this.nbconvertInstalledInInterpreter.add(interpreter.path);
+        }
+        return installed;
     }
 
     /**
@@ -177,43 +168,32 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterConfigurationService
      */
     public async getDependenciesNotInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<Product[]> {
-        const getModules = async () => {
-            const notInstalled: Product[] = [];
-            await Promise.race([
-                Promise.all([
-                    this.installer.isInstalled(Product.jupyter, interpreter).then(installed => (installed ? noop() : notInstalled.push(Product.jupyter))),
-                    this.installer.isInstalled(Product.notebook, interpreter).then(installed => (installed ? noop() : notInstalled.push(Product.notebook)))
-                ]),
-                createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
-            ]);
-
-            if (notInstalled.length > 0) {
-                this.dependenciesInstalledInInterpreter.delete(interpreter.path);
-                return notInstalled;
-            }
-            if (Cancellation.isCanceled(token)) {
-                return [];
-            }
-            // Perform this check only if jupyter & notebook modules are installed.
-            const products = await this.isKernelSpecAvailable(interpreter, token).then(installed => (installed ? [] : [Product.kernelspec]));
-            if (products.length === 0) {
-                this.dependenciesInstalledInInterpreter.add(interpreter.path);
-            } else {
-                this.dependenciesInstalledInInterpreter.delete(interpreter.path);
-            }
-            return products;
-        };
-
-        // Get the list in the background.
-        const modulesPromise = getModules();
-
         // If we know that all modules were available at one point in time, then use that cache.
         if (this.dependenciesInstalledInInterpreter.has(interpreter.path)) {
-            modulesPromise.ignoreErrors();
             return [];
         }
 
-        return modulesPromise;
+        const notInstalled: Product[] = [];
+        await Promise.race([
+            Promise.all([
+                this.installer.isInstalled(Product.jupyter, interpreter).then(installed => (installed ? noop() : notInstalled.push(Product.jupyter))),
+                this.installer.isInstalled(Product.notebook, interpreter).then(installed => (installed ? noop() : notInstalled.push(Product.notebook)))
+            ]),
+            createPromiseFromCancellation<void>({ cancelAction: 'resolve', defaultValue: undefined, token })
+        ]);
+
+        if (notInstalled.length > 0) {
+            return notInstalled;
+        }
+        if (Cancellation.isCanceled(token)) {
+            return [];
+        }
+        // Perform this check only if jupyter & notebook modules are installed.
+        const products = await this.isKernelSpecAvailable(interpreter, token).then(installed => (installed ? [] : [Product.kernelspec]));
+        if (products.length === 0) {
+            this.dependenciesInstalledInInterpreter.add(interpreter.path);
+        }
+        return products;
     }
 
     /**
