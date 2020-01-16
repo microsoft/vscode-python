@@ -32,7 +32,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 use(chaiPromise);
 
 // tslint:disable-next-line: max-func-body-length
-suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
+suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interperterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;
