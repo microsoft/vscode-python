@@ -102,7 +102,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
         }
-        // this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
+        this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
         const executionService = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }

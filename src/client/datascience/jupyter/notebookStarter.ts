@@ -19,7 +19,7 @@ import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { IConnection, IJupyterSubCommandExecutionService } from '../types';
-import { JupyterConnection } from './jupyterConnection';
+import { JupyterConnectionWaiter } from './jupyterConnection';
 
 /**
  * Responsible for starting a notebook.
@@ -55,6 +55,7 @@ export class NotebookStarter implements Disposable {
         traceInfo('Starting Notebook');
         // Now actually launch it
         let exitCode: number | null = 0;
+        let starter: JupyterConnectionWaiter | undefined;
         try {
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
@@ -90,13 +91,14 @@ export class NotebookStarter implements Disposable {
 
             // Wait for the connection information on this result
             traceInfo('Waiting for Jupyter Notebook');
-            const connection = await JupyterConnection.waitForConnection(
+            starter = new JupyterConnectionWaiter(
+                launchResult,
                 tempDir.path,
                 this.jupyterInterpreterService.getRunningJupyterServers.bind(this.jupyterInterpreterService),
-                launchResult,
                 this.serviceContainer,
                 cancelToken
             );
+            const connection = starter.waitForConnection();
 
             // Fire off telemetry for the process being talkable
             sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
@@ -113,6 +115,8 @@ export class NotebookStarter implements Disposable {
             } else {
                 throw new Error(localize.DataScience.jupyterNotebookFailure().format(err));
             }
+        } finally {
+            starter?.dispose();
         }
     }
 

@@ -5,8 +5,10 @@
 
 import { assert, expect, use } from 'chai';
 import * as chaiPromise from 'chai-as-promised';
+import * as path from 'path';
 import { Subject } from 'rxjs/Subject';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
+import { PYTHON_LANGUAGE } from '../../../../client/common/constants';
 import { ProductNames } from '../../../../client/common/installer/productNames';
 import { FileSystem } from '../../../../client/common/platform/fileSystem';
 import { PathUtils } from '../../../../client/common/platform/pathUtils';
@@ -17,10 +19,12 @@ import { IPythonExecutionService, ObservableExecutionResult, Output } from '../.
 import { Product } from '../../../../client/common/types';
 import { DataScience } from '../../../../client/common/utils/localize';
 import { noop } from '../../../../client/common/utils/misc';
+import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { PythonDaemonModule } from '../../../../client/datascience/constants';
 import { JupyterInterpreterDependencyService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterService';
 import { JupyterInterpreterSubCommandExecutionService } from '../../../../client/datascience/jupyter/interpreter/jupyterInterpreterSubCommandExecutionService';
+import { JupyterServerInfo } from '../../../../client/datascience/jupyter/jupyterConnection';
 import { IInterpreterService } from '../../../../client/interpreter/contracts';
 import { InterpreterService } from '../../../../client/interpreter/interpreterService';
 import { MockOutputChannel } from '../../../mockClasses';
@@ -28,7 +32,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 use(chaiPromise);
 
 // tslint:disable-next-line: max-func-body-length
-suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
+suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interperterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;
@@ -129,7 +133,18 @@ suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
 
             await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
         });
+        test('Cannot get a list of running jupyter servers', async () => {
+            const promise = jupyterInterpreterExecutionService.getRunningJupyterServers(undefined);
+
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+        });
+        test('Cannot get kernelspecs', async () => {
+            const promise = jupyterInterpreterExecutionService.getKernelSpecs(undefined);
+
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+        });
     });
+    // tslint:disable-next-line: max-func-body-length
     suite('Interpreter is selected', () => {
         setup(() => {
             when(jupyterInterpreter.getSelectedInterpreter()).thenResolve(selectedJupyterInterpreter);
@@ -218,24 +233,63 @@ suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
 
             assert.equal(output, convertOutput);
         });
-    });
-    // test('Should return a matching spec from a jupyter process for a given kernelspec', async () => {
-    //     const kernelSpecs = {
-    //         K1: {
-    //             resource_dir: 'dir1',
-    //             spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
-    //         },
-    //         K2: {
-    //             resource_dir: 'dir2',
-    //             spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
-    //         }
-    //     };
-    //     when(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
-    //     when(fs.fileExists(path.join('dir1', 'kernel.json'))).thenResolve(false);
-    //     when(fs.fileExists(path.join('dir2', 'kernel.json'))).thenResolve(true);
-    //     const specs = await jupyterInterpreterExecutionService.getKernelSpecs();
+        test('Return list of running jupyter servers', async () => {
+            const file = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'datascience', 'getServerInfo.py');
+            const expectedServers: JupyterServerInfo[] = [
+                { base_url: '1', hostname: '111', notebook_dir: 'a', password: true, pid: 1, port: 1243, secure: false, token: 'wow', url: 'url' },
+                { base_url: '2', hostname: '22', notebook_dir: 'b', password: false, pid: 13, port: 4444, secure: true, token: 'wow2', url: 'url2' }
+            ];
+            when(execService.exec(deepEqual([file]), anything())).thenResolve({ stdout: JSON.stringify(expectedServers) });
 
-    //     assert.equal(specs.length, 1);
-    //     verify(kernelSpecCmd.exec(deepEqual(['list', '--json']), anything())).once();
-    // });
+            const servers = await jupyterInterpreterExecutionService.getRunningJupyterServers(undefined);
+
+            assert.deepEqual(servers, expectedServers);
+        });
+        test('Return list of kernelspecs (from daemon)', async () => {
+            const kernelSpecs = {
+                K1: {
+                    resource_dir: 'dir1',
+                    spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+                },
+                K2: {
+                    resource_dir: 'dir2',
+                    spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+                }
+            };
+            when(fs.fileExists(anything())).thenResolve(true);
+            when(execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
+            when(execService.exec(anything(), anything())).thenResolve({ stdout: '' });
+
+            const specs = await jupyterInterpreterExecutionService.getKernelSpecs(undefined);
+
+            assert.equal(specs.length, 2);
+            assert.equal(specs[0].name, 'K1');
+            assert.equal(specs[0].display_name, kernelSpecs.K1.spec.display_name);
+            assert.equal(specs[1].name, 'K2');
+            assert.equal(specs[1].display_name, kernelSpecs.K2.spec.display_name);
+        });
+        test('Return list of kernelspecs (from process exec)', async () => {
+            const kernelSpecs = {
+                K1: {
+                    resource_dir: 'dir1',
+                    spec: { argv: [], display_name: 'disp1', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path', envName: 'MyEnvName' } } }
+                },
+                K2: {
+                    resource_dir: 'dir2',
+                    spec: { argv: [], display_name: 'disp2', language: PYTHON_LANGUAGE, metadata: { interpreter: { path: 'Some Path2', envName: 'MyEnvName2' } } }
+                }
+            };
+            when(fs.fileExists(anything())).thenResolve(true);
+            when(execService.execModule('jupyter', deepEqual(['kernelspec', 'list', '--json']), anything())).thenReject(new Error('kaboom'));
+            when(execService.exec(anything(), anything())).thenResolve({ stdout: JSON.stringify({ kernelspecs: kernelSpecs }) });
+
+            const specs = await jupyterInterpreterExecutionService.getKernelSpecs(undefined);
+
+            assert.equal(specs.length, 2);
+            assert.equal(specs[0].name, 'K1');
+            assert.equal(specs[0].display_name, kernelSpecs.K1.spec.display_name);
+            assert.equal(specs[1].name, 'K2');
+            assert.equal(specs[1].display_name, kernelSpecs.K2.spec.display_name);
+        });
+    });
 });
