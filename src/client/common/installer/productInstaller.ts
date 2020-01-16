@@ -74,7 +74,7 @@ export abstract class BaseInstaller {
     }
 
     public async isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined> {
-        if (product === Product.unittest || product === Product.jupyter || product === Product.notebook) {
+        if (product === Product.unittest) {
             return true;
         }
         // User may have customized the module name or provided the fully qualified path.
@@ -368,7 +368,7 @@ function translateProductToModule(product: Product, purpose: ModuleNamePurpose):
         case Product.ipykernel:
             return 'ipykernel';
         case Product.nbconvert:
-            return 'ipykernel';
+            return 'nbconvert';
         case Product.kernelspec:
             return 'kernelspec';
         default: {

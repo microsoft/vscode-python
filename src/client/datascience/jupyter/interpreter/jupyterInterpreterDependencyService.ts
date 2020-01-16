@@ -83,7 +83,7 @@ export class JupyterInterpreterDependencyService {
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
             // tslint:disable-next-line: messages-must-be-localized
-            `${message}\n${error?.actionTitle || DataScience.pythonInteractiveHelpLink().format(HelpLinks.PythonInteractiveHelpLink)}`,
+            `${message}\r\n${DataScience.markdownHelpInstallingMissingDependencies()}`,
             DataScience.jupyterInstall(),
             DataScience.selectDifferentJupyterInterpreter(),
             Common.cancel()

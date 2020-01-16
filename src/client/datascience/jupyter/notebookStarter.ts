@@ -20,6 +20,7 @@ import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
 import { IConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
+import { JupyterInstallError } from './jupyterInstallError';
 
 /**
  * Responsible for starting a notebook.
@@ -98,7 +99,7 @@ export class NotebookStarter implements Disposable {
                 this.serviceContainer,
                 cancelToken
             );
-            const connection = starter.waitForConnection();
+            const connection = await starter.waitForConnection();
 
             // Fire off telemetry for the process being talkable
             sendTelemetryEvent(Telemetry.StartJupyterProcess, stopWatch.elapsedTime);
@@ -107,6 +108,14 @@ export class NotebookStarter implements Disposable {
         } catch (err) {
             if (err instanceof CancellationError) {
                 throw err;
+            }
+
+            // Its possible jupyter isn't installed. Check the errors.
+            if (!(await this.jupyterInterpreterService.isNotebookSupported())) {
+                throw new JupyterInstallError(
+                    await this.jupyterInterpreterService.getReasonForJupyterNotebookNotBeingSupported(),
+                    localize.DataScience.pythonInteractiveHelpLink()
+                );
             }
 
             // Something else went wrong. See if the local proc died or not.

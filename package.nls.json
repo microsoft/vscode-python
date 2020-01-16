@@ -124,6 +124,7 @@
     "DataScience.jupyterSelfCertClose": "No, close the connection",
     "DataScience.jupyterServerCrashed": "Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}",
     "DataScience.pythonInteractiveHelpLink": "Get more help",
+    "DataScience.markdownHelpInstallingMissingDependencies": "See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing jupyter.",
     "DataScience.importingFormat": "Importing {0}",
     "DataScience.startingJupyter": "Starting Jupyter server",
     "DataScience.connectingToJupyter": "Connecting to Jupyter server",
