@@ -6,7 +6,7 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { Cancellation, createPromiseFromCancellation } from '../../../common/cancellation';
+import { Cancellation, createPromiseFromCancellation, wrapCancellationTokens } from '../../../common/cancellation';
 import { ProductNames } from '../../../common/installer/productNames';
 import { IPythonExecutionFactory } from '../../../common/process/types';
 import { IInstaller, InstallerResponse, Product } from '../../../common/types';
@@ -21,6 +21,60 @@ export enum JupyterInterpreterDependencyResponse {
     ok,
     selectAnotherInterpreter,
     cancel
+}
+
+/**
+ * Sorts the given list of products in the order in which they need to be installed.
+ * E.g. when installing the modules `notebook` and `jupyter`, its best to first isntall `jupyter`.
+ *
+ * @param {Product[]} products
+ * @returns {Product[]}
+ */
+function sortProductsInOrderForInstallation(products: Product[]) {
+    products.sort((a, b) => {
+        if (a === Product.jupyter) {
+            return -1;
+        }
+        if (b === Product.jupyter) {
+            return 1;
+        }
+        if (a === Product.notebook) {
+            return -1;
+        }
+        if (b === Product.notebook) {
+            return 1;
+        }
+        return 0;
+    });
+}
+/**
+ * Given a list of products, this will return an error message of the form:
+ * `Data Science library jupyter not installed`
+ * `Data Science libraries, jupyter and notebook not installed`
+ * `Data Science libraries, jupyter, notebook and nbconvert not installed`
+ *
+ * @export
+ * @param {Product[]} products
+ * @returns {string}
+ */
+export function getMessageForLibrariesNotInstalled(products: Product[]): string {
+    const names = products
+        // Ignore kernelspec as it not something that can be installed.
+        .filter(product => product !== Product.kernelspec)
+        .map(product => ProductNames.get(product))
+        .filter(name => !!name)
+        .map(name => name as string);
+
+    switch (names.length) {
+        case 0:
+            return '';
+        case 1:
+            return DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(names[0]);
+        default: {
+            const lastItem = names.pop();
+            return DataScience.librariesRequiredToLaunchJupyterNotInstalled().format(`${names.join(', ')} ${Common.and()} ${lastItem}`);
+        }
+    }
 }
 
 /**
@@ -77,13 +131,7 @@ export class JupyterInterpreterDependencyService {
             return JupyterInterpreterDependencyResponse.ok;
         }
 
-        const names = productsToInstall
-            // Ignore kernelspec as it not something that can be installed.
-            .filter(product => product !== Product.kernelspec)
-            .map(product => ProductNames.get(product))
-            .filter(name => !!name)
-            .map(name => name as string);
-        const message = DataScience.libraryNotInstalled().format(names.join(` ${Common.and()} `));
+        const message = getMessageForLibrariesNotInstalled(productsToInstall);
 
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
@@ -100,10 +148,13 @@ export class JupyterInterpreterDependencyService {
 
         switch (selection) {
             case DataScience.jupyterInstall(): {
+                // Install jupyter, then notebook, then others in that order.
+                sortProductsInOrderForInstallation(productsToInstall);
                 let productToInstall = productsToInstall.shift();
                 const cancellatonPromise = createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: InstallerResponse.Ignore, token });
                 while (productToInstall) {
-                    const response = await Promise.race([this.installer.install(productToInstall, interpreter), cancellatonPromise]);
+                    // Always pass a cancellation token to `install`, to ensure it waits untill the module is installed.
+                    const response = await Promise.race([this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)), cancellatonPromise]);
                     if (response === InstallerResponse.Installed) {
                         productToInstall = productsToInstall.shift();
                         continue;

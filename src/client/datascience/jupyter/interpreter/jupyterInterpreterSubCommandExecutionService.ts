@@ -7,12 +7,11 @@ import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
-import { ProductNames } from '../../../common/installer/productNames';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
 import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
-import { Common, DataScience } from '../../../common/utils/localize';
+import { DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
@@ -21,7 +20,7 @@ import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionServic
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
 import { JupyterKernelSpec, parseKernelSpecs } from '../kernels/jupyterKernelSpec';
-import { JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService';
+import { getMessageForLibrariesNotInstalled, JupyterInterpreterDependencyResponse, JupyterInterpreterDependencyService } from './jupyterInterpreterDependencyService';
 import { JupyterInterpreterService } from './jupyterInterpreterService';
 
 /**
@@ -86,13 +85,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
             return DataScience.jupyterKernelSpecModuleNotFound();
         }
 
-        const names = productsNotInstalled
-            // kernelspec is not a module that can be installed.
-            .filter(product => product !== Product.kernelspec)
-            .map(product => ProductNames.get(product))
-            .filter(name => !!name)
-            .map(name => name as string);
-        return DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(names.join(` ${Common.and()} `));
+        return getMessageForLibrariesNotInstalled(productsNotInstalled);
     }
     public async getSelectedInterpreter(token?: CancellationToken): Promise<PythonInterpreter | undefined> {
         return this.jupyterInterpreter.getSelectedInterpreter(token);

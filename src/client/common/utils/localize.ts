@@ -208,6 +208,10 @@ export namespace DataScience {
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', "Don't Ask Again");
     export const libraryNotInstalled = localize('DataScience.libraryNotInstalled', 'Data Science library {0} is not installed. Install?');
     export const libraryRequiredToLaunchJupyterNotInstalled = localize('DataScience.libraryRequiredToLaunchJupyterNotInstalled', 'Data Science library {0} is not installed.');
+    export const librariesRequiredToLaunchJupyterNotInstalled = localize(
+        'DataScience.librariesRequiredToLaunchJupyterNotInstalled',
+        'Data Science libraries {0} are not installed.'
+    );
     export const selectJupyterInterpreter = localize('DataScience.selectJupyterInterpreter', 'Select an Interpreter to start Jupyter');
     export const jupyterInstall = localize('DataScience.jupyterInstall', 'Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = localize('Datascience.currentlySelectedJupyterInterpreterForPlaceholder', 'current: {0}');
@@ -225,7 +229,7 @@ export namespace DataScience {
     export const pythonInteractiveHelpLink = localize('DataScience.pythonInteractiveHelpLink', 'See [https://aka.ms/pyaiinstall] for help on installing jupyter.');
     export const markdownHelpInstallingMissingDependencies = localize(
         'DataScience.markdownHelpInstallingMissingDependencies',
-        'See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing jupyter.'
+        'See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing jupyter and related dependencies.'
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');

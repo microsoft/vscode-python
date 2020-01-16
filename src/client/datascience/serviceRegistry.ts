@@ -161,9 +161,8 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
 
     // Temporary code, to allow users to revert to the old behavior.
-    // Also temporarily set to `true` untill this is turned on.
     const cfg = serviceManager.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python.dataScience', undefined);
-    if (cfg.get<boolean>('useOldJupyterServer', true)) {
+    if (cfg.get<boolean>('useOldJupyterServer', false)) {
         serviceManager.addSingleton<IJupyterSubCommandExecutionService>(IJupyterSubCommandExecutionService, JupyterCommandFinderInterpreterExecutionService);
         serviceManager.addSingleton<IJupyterInterpreterDependencyManager>(IJupyterInterpreterDependencyManager, JupyterCommandInterpreterDependencyService);
     } else {
