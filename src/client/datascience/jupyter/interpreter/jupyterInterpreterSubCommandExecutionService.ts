@@ -67,9 +67,15 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         return this.jupyterDependencyService.isExportSupported(interpreter, token);
     }
     public async getReasonForJupyterNotebookNotBeingSupported(token?: CancellationToken): Promise<string> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
+        let interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
         if (!interpreter) {
-            return DataScience.selectJupyterInterpreter();
+            // Use current interpreter.
+            interpreter = await this.interpreterService.getActiveInterpreter(undefined);
+            if (!interpreter) {
+                // Unlikely scenario, user hasn't selected python, python extension will fall over.
+                // Get user to select something.
+                return DataScience.selectJupyterInterpreter();
+            }
         }
         const productsNotInstalled = await this.jupyterDependencyService.getDependenciesNotInstalled(interpreter, token);
         if (productsNotInstalled.length === 0) {
@@ -96,7 +102,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
         }
-        this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
+        // this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
         const executionService = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }
@@ -144,6 +150,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
         }
+        // Do  not use the daemon for this, its a waste resources. The user will manage the lifecycle of this process.
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({ interpreter, bypassCondaExecution: true, allowEnvironmentFetchExceptions: true });
         const args: string[] = [`--NotebookApp.file_to_run=${notebookFile}`];
 
@@ -206,7 +213,6 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
                 return;
             }
         }
-
         await this.jupyterDependencyService.installMissingDependencies(interpreter, err);
     }
 }
