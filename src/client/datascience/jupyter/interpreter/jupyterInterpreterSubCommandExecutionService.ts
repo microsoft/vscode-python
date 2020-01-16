@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable } from 'inversify';
+import { inject, injectable, named } from 'inversify';
 import * as path from 'path';
 import { CancellationToken } from 'vscode';
 import { Cancellation } from '../../../common/cancellation';
@@ -11,12 +11,12 @@ import { ProductNames } from '../../../common/installer/productNames';
 import { traceError, traceInfo, traceWarning } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IPythonExecutionFactory, ObservableExecutionResult, SpawnOptions } from '../../../common/process/types';
-import { Product } from '../../../common/types';
+import { IOutputChannel, IPathUtils, Product } from '../../../common/types';
 import { Common, DataScience } from '../../../common/utils/localize';
 import { noop } from '../../../common/utils/misc';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
-import { PythonDaemonModule } from '../../constants';
+import { JUPYTER_OUTPUT_CHANNEL, PythonDaemonModule } from '../../constants';
 import { IJupyterInterpreterDependencyManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterServerInfo } from '../jupyterConnection';
 import { JupyterInstallError } from '../jupyterInstallError';
@@ -38,7 +38,9 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
         @inject(JupyterInterpreterDependencyService) private readonly jupyterDependencyService: JupyterInterpreterDependencyService,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory
+        @inject(IPythonExecutionFactory) private readonly pythonExecutionFactory: IPythonExecutionFactory,
+        @inject(IOutputChannel) @named(JUPYTER_OUTPUT_CHANNEL) private readonly jupyterOutputChannel: IOutputChannel,
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils
     ) {}
 
     /**
@@ -94,6 +96,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (!interpreter) {
             throw new JupyterInstallError(DataScience.selectJupyterInterpreter(), DataScience.pythonInteractiveHelpLink());
         }
+        this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
         const executionService = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }

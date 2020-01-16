@@ -238,6 +238,7 @@
     "DataScience.pythonInterruptFailedHeader": "Keyboard interrupt crashed the kernel. Kernel restarted.",
     "DataScience.sysInfoURILabel": "Jupyter Server URI: ",
     "DataScience.jupyterStartTimedout": "Starting Jupyter has timedout. Please check the 'Jupyter' output panel for further details.",
+    "DataScience.startingJupyterLogMessage": "Starting Jupyter from {0}",
     "Common.loadingPythonExtension": "Python extension loading...",
     "debug.selectConfigurationTitle": "Select a debug configuration",
     "debug.selectConfigurationPlaceholder": "Debug Configuration",

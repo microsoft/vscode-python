@@ -473,6 +473,7 @@ export namespace DataScience {
         'DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel',
         "Couldn't find kernel '{0}' that the notebook was created with."
     );
+    export const startingJupyterLogMessage = localize('DataScience.startingJupyterLogMessage', 'Starting Jupyter from {0}');
     export const jupyterStartTimedout = localize('DataScience.jupyterStartTimedout', "Starting Jupyter has timedout. Please check the 'Jupyter' output panel for further details.");
     export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', "Switching Kenel to '{0}'");
 }
