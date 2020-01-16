@@ -171,17 +171,23 @@ suite('JupyterVariables', () => {
     test('getVariables fake data', async () => {
         fakeNotebook
             .setup(fs =>
-                fs.execute(
-                    typemoq.It.isValue('%who_ls'),
-                    typemoq.It.isValue(Identifiers.EmptyFileName),
-                    typemoq.It.isValue(0),
-                    typemoq.It.isAnyString(),
-                    undefined,
-                    typemoq.It.isValue(true)
-                )
+                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
             )
             .returns(() => Promise.resolve(generateCells(`['big_dataframe', 'big_dict', 'big_int', 'big_list', 'big_nparray', 'big_string']`, 'execute_result')))
             .verifiable(typemoq.Times.once());
+        fakeNotebook
+            .setup(fs => fs.inspect(typemoq.It.isAny()))
+            .returns(() =>
+                Promise.resolve({
+                    'text/plain': `\u001b[1;31mType:\u001b[0m        complex
+\u001b[1;31mString form:\u001b[0m (1+1j)
+\u001b[1;31mDocstring:\u001b[0m  
+Create a complex number from a real part and an optional imaginary part.
+                        
+This is equivalent to (real + imag*1j) where imag defaults to 0.
+                        "`
+                })
+            );
 
         const results = await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
 
@@ -202,6 +208,12 @@ suite('JupyterVariables', () => {
     // getValue failure paths are shared with getVariables, so no need to test them here
     test('getValue fake data', async () => {
         fakeNotebook
+            .setup(fs =>
+                fs.execute(typemoq.It.isAny(), typemoq.It.isValue(Identifiers.EmptyFileName), typemoq.It.isValue(0), typemoq.It.isAnyString(), undefined, typemoq.It.isValue(true))
+            )
+            .returns(() => Promise.resolve(generateCells(`['big_complex']`, 'execute_result')))
+            .verifiable(typemoq.Times.once());
+        fakeNotebook
             .setup(fs => fs.inspect(typemoq.It.isValue('big_complex')))
             .returns(() =>
                 Promise.resolve({
@@ -216,12 +228,22 @@ This is equivalent to (real + imag*1j) where imag defaults to 0.
             )
             .verifiable(typemoq.Times.once());
 
-        const testVariable: IJupyterVariable = { name: 'big_complex', type: 'complex', size: 60, truncated: false, count: 0, shape: '', value: '', supportsDataExplorer: false };
+        const testVariable: IJupyterVariable = {
+            name: 'big_complex',
+            type: 'complex',
+            size: 0,
+            truncated: true,
+            count: 0,
+            shape: '',
+            value: '(1+1j)',
+            supportsDataExplorer: false
+        };
 
-        const resultVariable = { ...testVariable, name: 'big_fail' }; //await jupyterVariables.getValue(testVariable, fakeNotebook.object);
+        const results = await jupyterVariables.getVariables(fakeNotebook.object, { startIndex: 0, pageSize: 100, sortColumn: '', sortAscending: true, executionCount: 1 });
+        const resultVariable = results.pageResponse[0];
 
         // Verify the result value should be filled out from fake server result
-        assert.deepEqual(resultVariable, { name: 'big_complex', count: 0, truncated: false, shape: '', supportsDataExplorer: false, size: 60, type: 'complex', value: '(1+1j)' });
+        assert.deepEqual(resultVariable, testVariable);
         fakeNotebook.verifyAll();
     });
 });
