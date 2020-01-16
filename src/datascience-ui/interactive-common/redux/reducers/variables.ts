@@ -59,7 +59,7 @@ function toggleVariableExplorer(arg: VariableReducerArg): IVariableState {
 }
 
 function handleResponse(arg: VariableReducerArg<IJupyterVariablesResponse>): IVariableState {
-    const response = arg.payload as IJupyterVariablesResponse;
+    const response = arg.payload;
 
     // Check to see if we have moved to a new execution count
     if (
