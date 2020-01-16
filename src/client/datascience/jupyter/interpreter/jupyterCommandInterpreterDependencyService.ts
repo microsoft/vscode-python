@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject } from 'inversify';
+import { inject, injectable } from 'inversify';
 import { IApplicationShell } from '../../../common/application/types';
 import { ProductNames } from '../../../common/installer/productNames';
 import { IInstallationChannelManager } from '../../../common/installer/types';
@@ -14,6 +14,7 @@ import { Telemetry } from '../../constants';
 import { IJupyterInterpreterDependencyManager } from '../../types';
 import { JupyterInstallError } from '../jupyterInstallError';
 
+@injectable()
 export class JupyterCommandInterpreterDependencyService implements IJupyterInterpreterDependencyManager {
     constructor(@inject(IApplicationShell) private applicationShell: IApplicationShell, @inject(IInstallationChannelManager) protected channels: IInstallationChannelManager) {}
     public async installMissingDependencies(err?: JupyterInstallError): Promise<void> {

@@ -83,7 +83,7 @@ export class JupyterInterpreterDependencyService {
             .map(product => ProductNames.get(product))
             .filter(name => !!name)
             .map(name => name as string);
-        const message = DataScience.libraryNotInstalled().format(names.join(` ${Common.and} `));
+        const message = DataScience.libraryNotInstalled().format(names.join(` ${Common.and()} `));
 
         sendTelemetryEvent(Telemetry.JupyterNotInstalledErrorShown);
         const selection = await this.applicationShell.showErrorMessage(
