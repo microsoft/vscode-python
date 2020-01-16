@@ -32,7 +32,7 @@ import { createPythonInterpreter } from '../../../utils/interpreters';
 use(chaiPromise);
 
 // tslint:disable-next-line: max-func-body-length
-suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
+suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
     let jupyterInterpreter: JupyterInterpreterService;
     let interperterService: IInterpreterService;
     let jupyterDependencyService: JupyterInterpreterDependencyService;
@@ -120,28 +120,33 @@ suite('Data Science - Jupyter InterpreterSubCommandExecutionService', () => {
         });
         test('Cannot start notebook', async () => {
             const promise = jupyterInterpreterExecutionService.startNotebook([], {});
+            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
         });
         test('Cannot launch notebook file in jupyter notebook', async () => {
             const promise = jupyterInterpreterExecutionService.launchNotebook('some.ipynb');
+            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
         });
         test('Cannot export notebook to python', async () => {
             const promise = jupyterInterpreterExecutionService.exportNotebookToPython('somefile.ipynb');
+            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
         });
         test('Cannot get a list of running jupyter servers', async () => {
             const promise = jupyterInterpreterExecutionService.getRunningJupyterServers(undefined);
+            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
         });
         test('Cannot get kernelspecs', async () => {
             const promise = jupyterInterpreterExecutionService.getKernelSpecs(undefined);
+            when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
-            await expect(promise).to.eventually.be.rejectedWith(DataScience.selectJupyterInterpreter());
+            await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
         });
     });
     // tslint:disable-next-line: max-func-body-length
