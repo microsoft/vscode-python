@@ -10,11 +10,14 @@ import { Provider } from 'react-redux';
 import { isString } from 'util';
 import { CancellationToken } from 'vscode';
 
+import { performance } from 'perf_hooks';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { traceInfo } from '../../client/common/logger';
 import { createDeferred } from '../../client/common/utils/async';
+import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterExecution } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
 import { getConnectedInteractiveEditor } from '../../datascience-ui/history-react/interactivePanel';
 import * as InteractiveStore from '../../datascience-ui/history-react/redux/store';
 import { getConnectedNativeEditor } from '../../datascience-ui/native-editor/nativeEditor';
@@ -123,10 +126,22 @@ async function testInnerLoop(
     }
 }
 
+// tslint:disable-next-line:no-any
+export function runTest(name: string, func: () => Promise<void>) {
+    const startTime = performance.now();
+    test(name, async () => func());
+    sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTime }, undefined);
+}
+
 export function runDoubleTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
     // Just run the test twice. Originally mounted twice, but too hard trying to figure out disposing.
+    const startTimeInteractive = performance.now();
     test(`${name} (interactive)`, async () => testInnerLoop(name, ioc => mountWebView(ioc, 'interactive'), testFunc, getIOC));
+    sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTimeInteractive }, undefined);
+
+    const startTimeNative = performance.now();
     test(`${name} (native)`, async () => testInnerLoop(name, ioc => mountWebView(ioc, 'native'), testFunc, getIOC));
+    sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTimeNative }, undefined);
 }
 
 export function mountWebView(ioc: DataScienceIocContainer, type: 'native' | 'interactive'): ReactWrapper<any, Readonly<{}>, React.Component> {

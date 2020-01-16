@@ -15,7 +15,7 @@ import { InteractiveWindowMessages } from '../../client/datascience/interactive-
 import { ICodeWatcher, IDataScienceCommandListener, IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { createDocument } from './editor-integration/helpers';
-import { addMockData, CellPosition, mountConnectedMainPanel, verifyHtmlOnCell, waitForMessage } from './testHelpers';
+import { addMockData, CellPosition, mountConnectedMainPanel, runTest, verifyHtmlOnCell, waitForMessage } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 //tslint:disable:trailing-comma no-any no-multiline-string
@@ -164,7 +164,7 @@ suite('DataScience LiveShare tests', () => {
         api.disableGuestChecker();
     }
 
-    test('Host alone', async () => {
+    runTest('Host alone', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
 
@@ -176,7 +176,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host & Guest Simple', async () => {
+    runTest('Host & Guest Simple', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
 
@@ -195,7 +195,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host starts LiveShare after starting Jupyter', async () => {
+    runTest('Host starts LiveShare after starting Jupyter', async () => {
         addMockData(hostContainer!, 'a=1\na', 1);
         addMockData(hostContainer!, 'b=2\nb', 2);
         await getOrCreateInteractiveWindow(vsls.Role.Host);
@@ -212,7 +212,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(guestContainer.wrapper!, 'InteractiveCell', '<span>2</span>', CellPosition.Last);
     });
 
-    test('Host Shutdown and Run', async () => {
+    runTest('Host Shutdown and Run', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
 
@@ -232,7 +232,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Host startup and guest restart', async () => {
+    runTest('Host startup and guest restart', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, 'a=1\na', 1);
 
@@ -256,7 +256,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Going through codewatcher', async () => {
+    runTest('Going through codewatcher', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 
@@ -285,7 +285,7 @@ suite('DataScience LiveShare tests', () => {
         verifyHtmlOnCell(hostContainer.wrapper!, 'InteractiveCell', '<span>1</span>', CellPosition.Last);
     });
 
-    test('Export from guest', async () => {
+    runTest('Export from guest', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 
@@ -327,7 +327,7 @@ suite('DataScience LiveShare tests', () => {
         assert.ok(outputContents!.includes('data'), 'Output is empty');
     });
 
-    test('Guest does not have extension', async () => {
+    runTest('Guest does not have extension', async () => {
         // Should only need mock data in host
         addMockData(hostContainer!, '#%%\na=1\na', 1);
 

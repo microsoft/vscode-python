@@ -10,7 +10,10 @@ import { parse } from 'node-html-parser';
 import * as React from 'react';
 import { Disposable } from 'vscode';
 
+import { performance } from 'perf_hooks';
+import { Telemetry } from '../../client/datascience/constants';
 import { IPlotViewerProvider } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
 import { MainPanel } from '../../datascience-ui/plot/mainPanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { waitForUpdate } from './reactHelpers';
@@ -71,7 +74,9 @@ suite('DataScience PlotViewer tests', () => {
         test(name, async () => {
             const wrapper = mountWebView();
             try {
+                const startTime = performance.now();
                 await testFunc(wrapper);
+                sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTime }, undefined);
             } finally {
                 // Make sure to unmount the wrapper or it will interfere with other tests
                 if (wrapper && wrapper.length) {

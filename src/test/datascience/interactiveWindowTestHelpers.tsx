@@ -6,8 +6,11 @@ import { ReactWrapper } from 'enzyme';
 import * as React from 'react';
 import { Uri } from 'vscode';
 
+import { performance } from 'perf_hooks';
+import { Telemetry } from '../../client/datascience/constants';
 import { InteractiveWindow } from '../../client/datascience/interactive-window/interactiveWindow';
 import { IInteractiveWindow, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
 import { InteractivePanel } from '../../datascience-ui/history-react/interactivePanel';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addMockData, getCellResults, mountWebView } from './testHelpers';
@@ -37,7 +40,9 @@ export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<an
         if (await jupyterExecution.isNotebookSupported()) {
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountWebView(ioc, 'interactive');
+            const startTime = performance.now();
             await testFunc(wrapper);
+            sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTime }, undefined);
         } else {
             // tslint:disable-next-line:no-console
             console.log(`${name} skipped, no Jupyter installed.`);

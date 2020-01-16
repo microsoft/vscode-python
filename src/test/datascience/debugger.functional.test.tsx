@@ -21,7 +21,7 @@ import { getConnectionInfo, getNotebookCapableInterpreter } from './jupyterHelpe
 import { MockDebuggerService } from './mockDebugService';
 import { MockDocument } from './mockDocument';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel } from './testHelpers';
+import { mountConnectedMainPanel, runTest } from './testHelpers';
 
 //import { asyncDump } from '../common/asyncDump';
 // tslint:disable-next-line:max-func-body-length no-any
@@ -204,11 +204,11 @@ suite('DataScience Debugger tests', () => {
         return [];
     }
 
-    test('Debug cell without breakpoint', async () => {
+    runTest('Debug cell without breakpoint', async () => {
         await debugCell('#%%\nprint("bar")');
     });
 
-    test('Debug remote', async () => {
+    runTest('Debug remote', async () => {
         const python = await getNotebookCapableInterpreter(ioc, processFactory);
         const procService = await processFactory.create();
 
@@ -236,7 +236,7 @@ suite('DataScience Debugger tests', () => {
         }
     });
 
-    test('Debug temporary file', async () => {
+    runTest('Debug temporary file', async () => {
         const code = '#%%\nprint("bar")';
 
         // Create a dummy document with just this code

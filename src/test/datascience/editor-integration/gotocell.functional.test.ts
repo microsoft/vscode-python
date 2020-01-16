@@ -8,12 +8,14 @@ import * as uuid from 'uuid/v4';
 import { CodeLens, Disposable, Position, Range, Uri } from 'vscode';
 import { CancellationToken } from 'vscode-jsonrpc';
 
+import { performance } from 'perf_hooks';
 import { IDocumentManager } from '../../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../../client/common/constants';
 import { traceError } from '../../../client/common/logger';
-import { Commands, Identifiers } from '../../../client/datascience/constants';
+import { Commands, Identifiers, Telemetry } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { ICell, ICodeLensFactory, IDataScienceCodeLensProvider, IInteractiveWindowListener, IJupyterExecution, INotebook } from '../../../client/datascience/types';
+import { sendTelemetryEvent } from '../../../client/telemetry';
 import { DataScienceIocContainer } from '../dataScienceIocContainer';
 import { MockDocumentManager } from '../mockDocumentManager';
 
@@ -59,7 +61,9 @@ suite('DataScience gotocell tests', () => {
         test(name, async () => {
             console.log(`Starting test ${name} ...`);
             if (await jupyterExecution.isNotebookSupported()) {
-                return func();
+                const startTime = performance.now();
+                await func();
+                sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTime }, undefined);
             } else {
                 // tslint:disable-next-line:no-console
                 console.log(`Skipping test ${name}, no jupyter installed.`);

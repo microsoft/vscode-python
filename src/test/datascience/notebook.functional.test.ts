@@ -1,6 +1,7 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+import { performance } from 'perf_hooks';
 import { nbformat } from '@jupyterlab/coreutils';
 import { assert } from 'chai';
 import { ChildProcess } from 'child_process';
@@ -26,7 +27,7 @@ import { createDeferred, waitForPromise } from '../../client/common/utils/async'
 import { noop } from '../../client/common/utils/misc';
 import { Architecture } from '../../client/common/utils/platform';
 import { concatMultilineStringInput } from '../../client/datascience/common';
-import { Identifiers } from '../../client/datascience/constants';
+import { Identifiers, Telemetry } from '../../client/datascience/constants';
 import { ModuleExistsStatus } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { JupyterKernelPromiseFailedError } from '../../client/datascience/jupyter/kernels/jupyterKernelPromiseFailedError';
@@ -43,6 +44,7 @@ import {
     InterruptResult
 } from '../../client/datascience/types';
 import { IInterpreterService, IKnownSearchPathsForInterpreters, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
+import { sendTelemetryEvent } from '../../client/telemetry';
 import { generateTestState, ICellViewModel } from '../../datascience-ui/interactive-common/mainState';
 import { asyncDump } from '../common/asyncDump';
 import { sleep } from '../core';
@@ -214,6 +216,7 @@ suite('DataScience notebook tests', () => {
     }
 
     function runTest(name: string, func: (_this: Mocha.Context) => Promise<void>, _notebookProc?: ChildProcess, rebindFunc?: () => void) {
+        const startTime = performance.now();
         test(name, async function() {
             // Give tests a chance to rebind IOC services before we fetch jupyterExecution and processFactory
             if (rebindFunc) {
@@ -230,6 +233,7 @@ suite('DataScience notebook tests', () => {
                 console.log(`Skipping test ${name}, no jupyter installed.`);
             }
         });
+        sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTime }, undefined);
     }
 
     async function createNotebook(

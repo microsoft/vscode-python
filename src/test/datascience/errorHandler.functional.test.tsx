@@ -9,7 +9,7 @@ import { IInstallationChannelManager, IModuleInstaller } from '../../client/comm
 import { ICodeWatcher, IInteractiveWindowProvider, IJupyterExecution } from '../../client/datascience/types';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
-import { mountConnectedMainPanel } from './testHelpers';
+import { mountConnectedMainPanel, runTest } from './testHelpers';
 
 suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
@@ -62,7 +62,7 @@ suite('DataScience Error Handler Functional Tests', () => {
         return result;
     }
 
-    test('Jupyter not installed', async () => {
+    runTest('Jupyter not installed', async () => {
         ioc.addDocument('#%%\ntesting', 'test.py');
 
         const cw = ioc.serviceManager.get<ICodeWatcher>(ICodeWatcher);

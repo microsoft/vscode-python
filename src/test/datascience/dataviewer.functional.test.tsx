@@ -12,9 +12,11 @@ import * as React from 'react';
 import * as uuid from 'uuid/v4';
 import { Disposable, Uri } from 'vscode';
 
-import { Identifiers } from '../../client/datascience/constants';
+import { performance } from 'perf_hooks';
+import { Identifiers, Telemetry } from '../../client/datascience/constants';
 import { DataViewerMessages } from '../../client/datascience/data-viewing/types';
 import { IDataViewer, IDataViewerProvider, IInteractiveWindowProvider, IJupyterExecution, INotebook } from '../../client/datascience/types';
+import { sendTelemetryEvent } from '../../client/telemetry';
 import { MainPanel } from '../../datascience-ui/data-explorer/mainPanel';
 import { ReactSlickGrid } from '../../datascience-ui/data-explorer/reactSlickGrid';
 import { noop } from '../core';
@@ -106,7 +108,9 @@ suite('DataScience DataViewer tests', () => {
         test(name, async () => {
             const wrapper = mountWebView();
             try {
+                const startTime = performance.now();
                 await testFunc(wrapper);
+                sendTelemetryEvent(Telemetry.TestPerformance, { name: performance.now() - startTime }, undefined);
             } finally {
                 // Make sure to unmount the wrapper or it will interfere with other tests
                 if (wrapper && wrapper.length) {
