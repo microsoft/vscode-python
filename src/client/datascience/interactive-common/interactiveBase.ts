@@ -9,7 +9,6 @@ import * as path from 'path';
 import * as uuid from 'uuid/v4';
 import { ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
-import * as vsls from 'vsls/vscode';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
 import { IApplicationShell, ICommandManager, IDocumentManager, ILiveShareApi, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
@@ -92,7 +91,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
 
     constructor(
         @unmanaged() private readonly listeners: IInteractiveWindowListener[],
-        @unmanaged() private liveShare: ILiveShareApi,
+        @unmanaged() liveShare: ILiveShareApi,
         @unmanaged() protected applicationShell: IApplicationShell,
         @unmanaged() protected documentManager: IDocumentManager,
         @unmanaged() private interpreterService: IInterpreterService,
