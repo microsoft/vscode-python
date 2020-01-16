@@ -136,24 +136,7 @@ export class JupyterInterpreterDependencyService {
      * @memberof JupyterInterpreterConfigurationService
      */
     public async areDependenciesInstalled(interpreter: PythonInterpreter, token?: CancellationToken): Promise<boolean> {
-        const installedPromise = this.getDependenciesNotInstalled(interpreter, token)
-            .then(items => items.length === 0)
-            .then(installed => {
-                if (installed) {
-                    this.dependenciesInstalledInInterpreter.add(interpreter.path);
-                } else {
-                    // If modules are not installed, then don't cache it.
-                    this.dependenciesInstalledInInterpreter.delete(interpreter.path);
-                }
-                return installed;
-            });
-
-        if (this.dependenciesInstalledInInterpreter.has(interpreter.path)) {
-            installedPromise.ignoreErrors();
-            return true;
-        }
-
-        return installedPromise;
+        return this.getDependenciesNotInstalled(interpreter, token).then(items => items.length === 0);
     }
 
     /**

@@ -98,22 +98,14 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         return this.jupyterInterpreter.getSelectedInterpreter(token);
     }
     public async startNotebook(notebookArgs: string[], options: SpawnOptions): Promise<ObservableExecutionResult<string>> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(options.token);
-        if (!interpreter) {
-            const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
-        }
+        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(options.token);
         this.jupyterOutputChannel.appendLine(DataScience.startingJupyterLogMessage().format(this.pathUtils.getDisplayName(interpreter.path)));
         const executionService = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         return executionService.execModuleObservable('jupyter', ['notebook'].concat(notebookArgs), options);
     }
 
     public async getRunningJupyterServers(token?: CancellationToken): Promise<JupyterServerInfo[] | undefined> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
-        if (!interpreter) {
-            const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
-        }
+        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
 
         // We have a small python file here that we will execute to get the server info from all running Jupyter instances
@@ -132,11 +124,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         return serverInfos;
     }
     public async exportNotebookToPython(file: string, template?: string, token?: CancellationToken): Promise<string> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
-        if (!interpreter) {
-            const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
-        }
+        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         if (!(await this.jupyterDependencyService.isExportSupported(interpreter, token))) {
             throw new Error(DataScience.jupyterNbConvertNotSupported());
         }
@@ -148,12 +136,8 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         // stdout contains the generated python code.
         return daemon.execModule('jupyter', ['nbconvert'].concat(args), { throwOnStdErr: false, encoding: 'utf8', token }).then(output => output.stdout);
     }
-    public async launchNotebook(notebookFile: string): Promise<void> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter();
-        if (!interpreter) {
-            const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
-        }
+    public async openNotebook(notebookFile: string): Promise<void> {
+        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable();
         // Do  not use the daemon for this, its a waste resources. The user will manage the lifecycle of this process.
         const executionService = await this.pythonExecutionFactory.createActivatedEnvironment({ interpreter, bypassCondaExecution: true, allowEnvironmentFetchExceptions: true });
         const args: string[] = [`--NotebookApp.file_to_run=${notebookFile}`];
@@ -163,11 +147,7 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
     }
 
     public async getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]> {
-        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
-        if (!interpreter) {
-            const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
-            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
-        }
+        const interpreter = await this.getSelectedInterpreterAndThrowIfNotAvailable(token);
         const daemon = await this.pythonExecutionFactory.createDaemon({ daemonModule: PythonDaemonModule, pythonPath: interpreter.path });
         if (Cancellation.isCanceled(token)) {
             return [];
@@ -222,5 +202,13 @@ export class JupyterInterpreterSubCommandExecutionService implements IJupyterSub
         if (response === JupyterInterpreterDependencyResponse.selectAnotherInterpreter) {
             await this.jupyterInterpreter.selectInterpreter();
         }
+    }
+    private async getSelectedInterpreterAndThrowIfNotAvailable(token?: CancellationToken): Promise<PythonInterpreter> {
+        const interpreter = await this.jupyterInterpreter.getSelectedInterpreter(token);
+        if (!interpreter) {
+            const reason = await this.getReasonForJupyterNotebookNotBeingSupported();
+            throw new JupyterInstallError(reason, DataScience.pythonInteractiveHelpLink());
+        }
+        return interpreter;
     }
 }

@@ -125,8 +125,8 @@ export class JupyterInterpreterService {
         }
     }
     private setAsSelectedInterpreter(interpreter: PythonInterpreter): void {
-        this._onDidChangeInterpreter.fire(interpreter);
         this._selectedInterpreter = interpreter;
+        this._onDidChangeInterpreter.fire(interpreter);
         this.interpreterSelectionState.updateSelectedPythonPath((this._selectedInterpreterPath = interpreter.path));
         sendTelemetryEvent(Telemetry.SelectJupyterInterpreter, undefined, { result: 'selected' });
     }

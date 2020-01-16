@@ -125,7 +125,7 @@ suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
             await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
         });
         test('Cannot launch notebook file in jupyter notebook', async () => {
-            const promise = jupyterInterpreterExecutionService.launchNotebook('some.ipynb');
+            const promise = jupyterInterpreterExecutionService.openNotebook('some.ipynb');
             when(jupyterDependencyService.getDependenciesNotInstalled(activePythonInterpreter, undefined)).thenResolve([Product.notebook]);
 
             await expect(promise).to.eventually.be.rejectedWith(DataScience.libraryRequiredToLaunchJupyterNotInstalled().format(ProductNames.get(Product.notebook)!));
@@ -216,7 +216,7 @@ suite('xData Science - Jupyter InterpreterSubCommandExecutionService', () => {
             const file = 'somefile.ipynb';
             when(execService.execModule('jupyter', anything(), anything())).thenResolve();
 
-            await jupyterInterpreterExecutionService.launchNotebook(file);
+            await jupyterInterpreterExecutionService.openNotebook(file);
 
             verify(execService.execModule('jupyter', deepEqual(['notebook', `--NotebookApp.file_to_run=${file}`]), anything())).once();
         });

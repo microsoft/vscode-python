@@ -248,7 +248,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
     }
 
     public async spawnNotebook(file: string): Promise<void> {
-        return this.jupyterInterpreterService.launchNotebook(file);
+        return this.jupyterInterpreterService.openNotebook(file);
     }
 
     public async importNotebook(file: string, template: string | undefined): Promise<string> {

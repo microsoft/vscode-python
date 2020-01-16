@@ -686,7 +686,7 @@ export interface IJupyterSubCommandExecutionService {
      * @returns {Promise<void>}
      * @memberof IJupyterSubCommandExecutionService
      */
-    launchNotebook(notebookFile: string): Promise<void>;
+    openNotebook(notebookFile: string): Promise<void>;
     /**
      * Gets the kernelspecs.
      *
