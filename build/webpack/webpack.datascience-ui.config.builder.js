@@ -40,7 +40,8 @@ function buildConfiguration(folderName) {
         entry: ['babel-polyfill', `./src/datascience-ui/${folderName}/index.tsx`],
         output: {
             path: path.join(constants.ExtensionRootDir, 'out'),
-            filename: `datascience-ui/${folderName}/index_bundle.js`,
+            filename: `datascience-ui/${folderName}/[name]_bundle.js`,
+            chunkFilename: `datascience-ui/${folderName}/[name]_chunk_bundle.js`,
             publicPath: './'
         },
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
@@ -71,9 +72,6 @@ function buildConfiguration(folderName) {
                 ],
                 { context: 'src' }
             ),
-            new MonacoWebpackPlugin({
-                languages: [] // force to empty so onigasm will be used
-            }),
             ...getPlugins(folderName)
         ],
         resolve: {
