@@ -49,7 +49,7 @@ function buildConfiguration(folderName) {
         //  this seems to prevent chrome from downloading the source maps)
         devtool: 'eval-source-map',
         optimization: {
-            minimizer: [new TerserPlugin()]
+            minimizer: [new TerserPlugin({ sourceMap: true })]
         },
         node: {
             fs: 'empty'

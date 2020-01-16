@@ -1,5 +1,6 @@
 !out/client/**/*.map
 **/*.map
+!out/datascience-ui/**/*.map
 *.vsix
 .appveyor.yml
 .editorconfig
