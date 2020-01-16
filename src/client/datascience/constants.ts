@@ -226,7 +226,7 @@ export enum Telemetry {
     UserDidNotInstallJupyter = 'DATASCIENCE.USER_DID_NOT_INSTALL_JUPYTER',
     OpenedInteractiveWindow = 'DATASCIENCE.OPENED_INTERACTIVE',
     FindKernelForLocalConnection = 'DATASCIENCE.FIND_KERNEL_FOR_LOCAL_CONNECTION',
-    TestPerformance = 'DATASCIENCE.TEST.PERFORMANCE'
+    TestPerformance = 'DS_INTERNAL.TEST.PERFORMANCE'
 }
 
 export enum NativeKeyboardCommandTelemetry {
