@@ -68,7 +68,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(true);
         // tslint:disable-next-line: no-any
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(DataScience.jupyterInstall() as any);
-        when(installer.install(anything(), anything())).thenResolve(installerResponse);
+        when(installer.install(anything(), anything(), anything())).thenResolve(installerResponse);
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
@@ -84,13 +84,13 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
         when(installer.isInstalled(Product.notebook, pythonInterpreter)).thenResolve(false);
         // tslint:disable-next-line: no-any
         when(appShell.showErrorMessage(anything(), anything(), anything(), anything())).thenResolve(DataScience.jupyterInstall() as any);
-        when(installer.install(Product.jupyter, anything())).thenResolve(jupyterInstallerResponse);
-        when(installer.install(Product.notebook, anything())).thenResolve(notebookInstallationResponse);
+        when(installer.install(Product.jupyter, anything(), anything())).thenResolve(jupyterInstallerResponse);
+        when(installer.install(Product.notebook, anything(), anything())).thenResolve(notebookInstallationResponse);
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
-        verify(installer.install(Product.jupyter, pythonInterpreter)).once();
-        verify(installer.install(Product.notebook, pythonInterpreter)).once();
+        verify(installer.install(Product.jupyter, pythonInterpreter, anything())).once();
+        verify(installer.install(Product.notebook, pythonInterpreter, anything())).once();
         assert.equal(response, expectedConfigurationReponse);
     }
     test('Install Jupyter and return ok if installed successfully', async () => testInstallationOfJupyter(InstallerResponse.Installed, JupyterInterpreterDependencyResponse.ok));
