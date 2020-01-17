@@ -476,7 +476,7 @@ suite('Module Installer only', () => {
                         const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
                         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
                         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => pythonExecutionFactory.object);
-                        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+                        pythonExecutionFactory.setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
                         pythonExecutionService
                             // tslint:disable-next-line: no-any
                             .setup(p => (p as any).then)
@@ -496,7 +496,7 @@ suite('Module Installer only', () => {
                         const pythonExecutionFactory = TypeMoq.Mock.ofType<IPythonExecutionFactory>();
                         const pythonExecutionService = TypeMoq.Mock.ofType<IPythonExecutionService>();
                         serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPythonExecutionFactory))).returns(() => pythonExecutionFactory.object);
-                        pythonExecutionFactory.setup(p => p.create(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
+                        pythonExecutionFactory.setup(p => p.createActivatedEnvironment(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonExecutionService.object));
                         pythonExecutionService
                             // tslint:disable-next-line: no-any
                             .setup(p => (p as any).then)
