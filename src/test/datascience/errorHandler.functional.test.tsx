@@ -14,7 +14,7 @@ import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { MockDocumentManager } from './mockDocumentManager';
 import { mountConnectedMainPanel } from './testHelpers';
 
-suite('xDataScience Error Handler Functional Tests', () => {
+suite('DataScience Error Handler Functional Tests', () => {
     let ioc: DataScienceIocContainer;
     let channels: TypeMoq.IMock<IInstallationChannelManager>;
     let stubbedInstallMissingDependencies: sinon.SinonStub<[(JupyterInstallError | undefined)?], Promise<void>>;
