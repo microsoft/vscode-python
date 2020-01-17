@@ -72,7 +72,7 @@ suite('Data Science - Jupyter Interpreter Configuration', () => {
 
         const response = await configuration.installMissingDependencies(pythonInterpreter);
 
-        verify(installer.install(Product.jupyter, pythonInterpreter)).once();
+        verify(installer.install(Product.jupyter, pythonInterpreter, anything())).once();
         assert.equal(response, expectedConfigurationReponse);
     }
     async function testInstallationOfJupyterAndNotebook(
