@@ -24,11 +24,10 @@ export enum JupyterInterpreterDependencyResponse {
 }
 
 /**
- * Sorts the given list of products in the order in which they need to be installed.
- * E.g. when installing the modules `notebook` and `jupyter`, its best to first isntall `jupyter`.
+ * Sorts the given list of products (in place) in the order in which they need to be installed.
+ * E.g. when installing the modules `notebook` and `Jupyter`, its best to first install `Jupyter`.
  *
  * @param {Product[]} products
- * @returns {Product[]}
  */
 function sortProductsInOrderForInstallation(products: Product[]) {
     products.sort((a, b) => {
@@ -78,7 +77,7 @@ export function getMessageForLibrariesNotInstalled(products: Product[]): string 
 }
 
 /**
- * Responsible for managing depedencies of a Python interpreter required to run Jupyter.
+ * Responsible for managing dependencies of a Python interpreter required to run Jupyter.
  * If required modules aren't installed, will prompt user to install them or select another interpreter.
  *
  * @export
@@ -89,7 +88,7 @@ export class JupyterInterpreterDependencyService {
     /**
      * Keeps track of the fact that all dependencies are available in an interpreter.
      * This cache will be cleared only after reloading VS Code or when the background code detects that modules are not available.
-     * E.g. everytime a user makes a request to get the interpreter information, we use the cache if everything is ok.
+     * E.g. every time a user makes a request to get the interpreter information, we use the cache if everything is ok.
      * However we still run the code in the background to check if the modules are available, and then update the cache with the results.
      *
      * @private
@@ -110,7 +109,7 @@ export class JupyterInterpreterDependencyService {
     ) {}
     /**
      * Configures the python interpreter to ensure it can run Jupyter server by installing any missing dependencies.
-     * If user opts not to isntall they can opt to select another interpreter.
+     * If user opts not to install they can opt to select another interpreter.
      *
      * @param {PythonInterpreter} interpreter
      * @param {JupyterInstallError} [_error]
@@ -153,7 +152,7 @@ export class JupyterInterpreterDependencyService {
                 let productToInstall = productsToInstall.shift();
                 const cancellatonPromise = createPromiseFromCancellation({ cancelAction: 'resolve', defaultValue: InstallerResponse.Ignore, token });
                 while (productToInstall) {
-                    // Always pass a cancellation token to `install`, to ensure it waits untill the module is installed.
+                    // Always pass a cancellation token to `install`, to ensure it waits until the module is installed.
                     const response = await Promise.race([this.installer.install(productToInstall, interpreter, wrapCancellationTokens(token)), cancellatonPromise]);
                     if (response === InstallerResponse.Installed) {
                         productToInstall = productsToInstall.shift();

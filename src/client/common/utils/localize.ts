@@ -229,7 +229,7 @@ export namespace DataScience {
     export const pythonInteractiveHelpLink = localize('DataScience.pythonInteractiveHelpLink', 'See [https://aka.ms/pyaiinstall] for help on installing jupyter.');
     export const markdownHelpInstallingMissingDependencies = localize(
         'DataScience.markdownHelpInstallingMissingDependencies',
-        'See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing jupyter and related dependencies.'
+        'See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing Jupyter and related dependencies.'
     );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
