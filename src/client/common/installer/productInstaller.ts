@@ -84,7 +84,9 @@ export abstract class BaseInstaller {
 
         const isModule = this.isExecutableAModule(product, uri);
         if (isModule) {
-            const pythonProcess = await this.serviceContainer.get<IPythonExecutionFactory>(IPythonExecutionFactory).create({ resource: uri, pythonPath });
+            const pythonProcess = await this.serviceContainer
+                .get<IPythonExecutionFactory>(IPythonExecutionFactory)
+                .createActivatedEnvironment({ resource: uri, pythonPath, allowEnvironmentFetchExceptions: true });
             return pythonProcess.isModuleInstalled(executableName);
         } else {
             const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);

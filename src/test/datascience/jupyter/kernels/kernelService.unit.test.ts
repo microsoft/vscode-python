@@ -51,7 +51,7 @@ suite('Data Science - KernelService', () => {
         execService = mock(PythonExecutionService);
         installer = mock(ProductInstaller);
         jupyterInterpreterExecutionService = mock(JupyterCommandFinderInterpreterExecutionService);
-        when(execFactory.create(anything())).thenResolve(instance(execService));
+        when(execFactory.createActivatedEnvironment(anything())).thenResolve(instance(execService));
         // tslint:disable-next-line: no-any
         (instance(execService) as any).then = undefined;
 
