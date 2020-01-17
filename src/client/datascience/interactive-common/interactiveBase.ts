@@ -7,7 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { CancellationToken, CancellationTokenSource, ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -734,10 +734,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async startServerImpl(): Promise<void> {
+        const cancellationToken = new CancellationTokenSource();
         // Status depends upon if we're about to connect to existing server or not.
         const progressReporter = (await this.jupyterExecution.getServer(await this.getNotebookOptions()))
-            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
-            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
+            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter(), cancellationToken.token)
+            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter(), cancellationToken.token);
 
         // Check to see if we support ipykernel or not
         try {
@@ -750,7 +751,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 );
             }
             // Then load the jupyter server
-            await this.createNotebook();
+            await this.createNotebook(cancellationToken.token);
         } catch (e) {
             progressReporter.dispose();
             if (e instanceof JupyterSelfCertsError) {
@@ -1041,7 +1042,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private async createNotebook(): Promise<void> {
+    private async createNotebook(token?: CancellationToken): Promise<void> {
         traceInfo('Getting jupyter server options ...');
 
         // Extract our options
@@ -1050,11 +1051,11 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         traceInfo('Connecting to jupyter server ...');
 
         // Now try to create a notebook server
-        const server = await this.jupyterExecution.connectToNotebookServer(options);
+        const server = await this.jupyterExecution.connectToNotebookServer(options, token);
 
         // Then create a new notebook
         if (server) {
-            this._notebook = await server.createNotebook(await this.getNotebookIdentity());
+            this._notebook = await server.createNotebook(await this.getNotebookIdentity(), token);
         }
 
         if (this._notebook) {
