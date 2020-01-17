@@ -6,7 +6,6 @@
 import { inject, injectable } from 'inversify';
 import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, ProgressLocation } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
-import { wrapCancellationTokens } from '../../common/cancellation';
 import { IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
@@ -42,10 +41,13 @@ export class ProgressReporter implements IProgressReporter {
 
         this.appShell
             .withProgress(options, async (progress, cancelToken) => {
-                // If any of the cancellations are cancelled, then close this dialog by completing what's happening inside it.
-                wrapCancellationTokens(cancellation?.token, cancelToken).onCancellationRequested(() => {
-                    // Possible user clicked cancel, hence propagate this cancellation to the cancellation we were given.
-                    cancellation.cancel();
+                cancelToken.onCancellationRequested(() => {
+                    if (!cancelToken.isCancellationRequested) {
+                        cancellation.cancel();
+                    }
+                    deferred.resolve();
+                });
+                cancellation.token.onCancellationRequested(() => {
                     deferred.resolve();
                 });
                 this.progressReporters.push(progress);
