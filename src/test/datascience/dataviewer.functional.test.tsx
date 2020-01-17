@@ -75,7 +75,7 @@ suite('DataScience DataViewer tests', () => {
     });
 
     async function createDataViewer(variable: string): Promise<IDataViewer> {
-        return dataProvider.create(variable, notebook!);
+        return dataProvider.create({ name: variable, value: '', supportsDataExplorer: true, type: 'test', size: 0, truncated: true, shape: '', count: 0 }, notebook!);
     }
 
     async function injectCode(code: string): Promise<void> {

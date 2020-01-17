@@ -1830,7 +1830,7 @@
                         [
                             {
                                 "language": "python",
-                                "query": "%who_ls",
+                                "query": "_rwho_ls = %who_ls\\nprint(_rwho_ls)",
                                 "parseExpr": "'(\\w+)'"
                             },
                             {
@@ -2826,7 +2826,7 @@
         "sudo-prompt": "^8.2.0",
         "svg-to-pdfkit": "^0.1.7",
         "tmp": "^0.0.29",
-        "tree-kill": "^1.2.0",
+        "tree-kill": "^1.2.2",
         "typescript-char": "^0.0.0",
         "uint64be": "^1.0.1",
         "unicode": "^10.0.0",
@@ -2862,6 +2862,7 @@
         "@nteract/transform-plotly": "^6.0.0",
         "@nteract/transform-vega": "^6.0.3",
         "@nteract/transforms": "^4.4.4",
+        "@testing-library/react": "^9.4.0",
         "@types/ansi-regex": "^4.0.0",
         "@types/chai": "^4.1.2",
         "@types/chai-arrays": "^1.0.2",
@@ -2980,6 +2981,7 @@
         "node-html-parser": "^1.1.13",
         "nyc": "^15.0.0",
         "prettier": "^1.19.1",
+        "range-inclusive": "^1.0.2",
         "raw-loader": "^0.5.1",
         "react": "^16.5.2",
         "react-data-grid": "^6.0.2-0",
@@ -3004,7 +3006,7 @@
         "styled-jsx": "^3.1.0",
         "svg-inline-loader": "^0.8.0",
         "svg-inline-react": "^3.1.0",
-        "terser-webpack-plugin": "^1.2.3",
+        "terser-webpack-plugin": "^2.3.2",
         "transform-loader": "^0.2.4",
         "ts-loader": "^5.3.0",
         "ts-mockito": "^2.3.1",

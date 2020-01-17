@@ -237,6 +237,13 @@
                 //"--grep", "<suite name>",
                 "--timeout=300000"
             ],
+            "env": {
+                // Remove `X` prefix to test with real python (for DS functional tests).
+                "XVSCODE_PYTHON_ROLLING": "1",
+                // Remove `X` prefix and update path to test with real python interpreter (for DS functional tests).
+                // Do not use a conda environment (as it needs to be activated and the like).
+                "XCI_PYTHON_PATH": "<Python Path>"
+            },
             "outFiles": [
                 "${workspaceFolder}/out/**/*.js"
             ],

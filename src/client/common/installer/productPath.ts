@@ -25,8 +25,8 @@ export abstract class BaseProductPathsService implements IProductPathService {
     }
     public abstract getExecutableNameFromSettings(product: Product, resource?: Uri): string;
     public isExecutableAModule(product: Product, resource?: Uri): Boolean {
-        if (product === Product.ipykernel) {
-            return true;
+        if (product === Product.kernelspec) {
+            return false;
         }
         let moduleName: string | undefined;
         try {

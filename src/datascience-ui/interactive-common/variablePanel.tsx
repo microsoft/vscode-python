@@ -14,10 +14,12 @@ export interface IVariablePanelProps {
     skipDefault?: boolean;
     testMode?: boolean;
     variables: IJupyterVariable[];
-    pendingVariableCount: number;
+    executionCount: number;
     debugging: boolean;
-    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
+    fontSize: number;
+    showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
     closeVariableExplorer(): void;
+    pageIn(startIndex: number, pageSize: number): void;
 }
 
 export class VariablePanel extends React.Component<IVariablePanelProps> {
@@ -30,13 +32,15 @@ export class VariablePanel extends React.Component<IVariablePanelProps> {
             <div id="variable-panel">
                 <div id="variable-panel-padding">
                     <VariableExplorer
-                        pendingVariableCount={this.props.pendingVariableCount}
+                        fontSize={this.props.fontSize}
                         variables={this.props.variables}
                         debugging={this.props.debugging}
                         baseTheme={this.props.baseTheme}
                         skipDefault={this.props.skipDefault}
                         showDataExplorer={this.props.showDataExplorer}
                         closeVariableExplorer={this.props.closeVariableExplorer}
+                        pageIn={this.props.pageIn}
+                        executionCount={this.props.executionCount}
                     />
                 </div>
                 <div id="variable-divider" />

@@ -8,13 +8,14 @@ import { Identifiers } from '../../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../client/datascience/types';
 import { IMainState, ServerStatus } from '../../interactive-common/mainState';
-import { generateMonacoReducer, IMonacoState } from '../../native-editor/redux/reducers/monaco';
 import { getLocString } from '../../react-common/locReactSide';
 import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
+import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
+import { generateVariableReducer, IVariableState } from './reducers/variables';
 
 function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme: string, editable: boolean): IMainState {
     if (!skipDefault) {
@@ -31,11 +32,8 @@ function generateDefaultState(skipDefault: boolean, testMode: boolean, baseTheme
             redoStack: [],
             submittedText: false,
             currentExecutionCount: 0,
-            variables: [],
-            pendingVariableCount: 0,
             debugging: false,
             knownDark: false,
-            variablesVisible: false,
             editCellVM: editable ? undefined : createEditableCellVM(0),
             isAtBottom: true,
             font: {
@@ -120,14 +118,14 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         }
 
         // Indicate variables complete
-        if (prevState.main.pendingVariableCount !== 0 && afterState.main.pendingVariableCount === 0) {
+        if (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables)) {
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.VariablesComplete)));
         }
 
         // Special case for rendering complete
         const prevFinished = prevState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
         const afterFinished = afterState.main.cellVMs.filter(c => c.cell.state === CellState.finished || c.cell.state === CellState.error).map(c => c.cell.id);
-        if (afterFinished.length > prevFinished.length) {
+        if (afterFinished.length > prevFinished.length || (afterFinished.length !== prevFinished.length && afterState.main.cellVMs.length !== prevState.main.cellVMs.length)) {
             const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
             setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.ExecutionRendered, { ids: diff })));
@@ -201,8 +199,13 @@ function createMiddleWare(testMode: boolean): Redux.Middleware<{}, IStore>[] {
 
 export interface IStore {
     main: IMainState;
+    variables: IVariableState;
     monaco: IMonacoState;
     post: {};
+}
+
+export interface IMainWithVariables extends IMainState {
+    variableState: IVariableState;
 }
 
 export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode: boolean, editable: boolean, reducerMap: M) {
@@ -219,9 +222,13 @@ export function createStore<M>(skipDefault: boolean, baseTheme: string, testMode
     // Create another reducer for handling monaco state
     const monacoReducer = generateMonacoReducer(testMode, postOffice);
 
+    // Create another reducer for handling variable state
+    const variableReducer = generateVariableReducer();
+
     // Combine these together
     const rootReducer = Redux.combineReducers<IStore>({
         main: mainReducer,
+        variables: variableReducer,
         monaco: monacoReducer,
         post: postOfficeReducer
     });

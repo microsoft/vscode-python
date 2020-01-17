@@ -42,6 +42,7 @@ export enum CommonActionType {
     EXPORT = 'action.export',
     FOCUS_CELL = 'action.focus_cell',
     GATHER_CELL = 'action.gather_cell',
+    GET_VARIABLE_DATA = 'action.get_variable_data',
     GOTO_CELL = 'action.goto_cell',
     INSERT_ABOVE = 'action.insert_above',
     INSERT_ABOVE_FIRST = 'action.insert_above_first',

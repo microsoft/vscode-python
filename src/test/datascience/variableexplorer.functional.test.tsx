@@ -1,22 +1,24 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as assert from 'assert';
 import { expect } from 'chai';
 import { ReactWrapper } from 'enzyme';
 import { parse } from 'node-html-parser';
 import * as React from 'react';
+import * as AdazzleReactDataGrid from 'react-data-grid';
 import { Provider } from 'react-redux';
 import { Disposable } from 'vscode';
 
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IJupyterVariable } from '../../client/datascience/types';
 import { CommonActionType } from '../../datascience-ui/interactive-common/redux/reducers/types';
-import { VariableExplorer } from '../../datascience-ui/interactive-common/variableExplorer';
 import { DataScienceIocContainer } from './dataScienceIocContainer';
 import { addCode } from './interactiveWindowTestHelpers';
 import { addCell, createNewEditor } from './nativeEditorTestHelpers';
 import { runDoubleTest, waitForMessage } from './testHelpers';
+
+// tslint:disable: no-var-requires no-require-imports
+const rangeInclusive = require('range-inclusive');
 
 // tslint:disable:max-func-body-length trailing-comma no-any no-multiline-string
 suite('DataScience Interactive Window variable explorer tests', () => {
@@ -60,21 +62,21 @@ suite('DataScience Interactive Window variable explorer tests', () => {
     //      asyncDump();
     //});
 
-    async function waitForVariablesUpdated(): Promise<void> {
-        return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete);
+    async function waitForVariablesUpdated(numberOfTimes?: number): Promise<void> {
+        return waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes });
     }
 
     async function addCodeImpartial(
         wrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
         code: string,
         waitForVariables: boolean = true,
-        expectedRenderCount: number = 4,
+        waitForVariablesCount: number = 1,
         expectError: boolean = false
     ): Promise<ReactWrapper<any, Readonly<{}>, React.Component>> {
-        const variablesUpdated = waitForVariables ? waitForVariablesUpdated() : Promise.resolve();
+        const variablesUpdated = waitForVariables ? waitForVariablesUpdated(waitForVariablesCount) : Promise.resolve();
         const nodes = wrapper.find('InteractivePanel');
         if (nodes.length > 0) {
-            const result = await addCode(ioc, wrapper, code, expectedRenderCount, expectError);
+            const result = await addCode(ioc, wrapper, code, expectError);
             await variablesUpdated;
             return result;
         } else {
@@ -82,7 +84,6 @@ suite('DataScience Interactive Window variable explorer tests', () => {
             if (!createdNotebook) {
                 await createNewEditor(ioc);
                 createdNotebook = true;
-                expectedRenderCount += 1;
             }
             await addCell(wrapper, ioc, code, true);
             await variablesUpdated;
@@ -107,7 +108,7 @@ value = 'hello world'`;
             let targetVariables: IJupyterVariable[] = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
                 // tslint:disable-next-line:quotemark
-                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -144,8 +145,7 @@ value = 'hello world'`;
 
             targetVariables = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
 
@@ -154,10 +154,9 @@ value = 'hello world'`;
 
             targetVariables = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'value', value: 'hello world', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
                 // tslint:disable-next-line:quotemark
-                { name: 'value', value: "'hello world'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'value2', value: "'hello world 2'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'value2', value: 'hello world 2', supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -211,7 +210,7 @@ myTuple = 1,2,3,4,5,6,7,8,9
             openVariableExplorer(wrapper);
 
             await addCodeImpartial(wrapper, 'a=1\na');
-            await addCodeImpartial(wrapper, basicCode, true);
+            await addCodeImpartial(wrapper, basicCode, true, 2);
 
             const targetVariables: IJupyterVariable[] = [
                 { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
@@ -231,7 +230,6 @@ myTuple = 1,2,3,4,5,6,7,8,9
                 },
                 { name: 'myFloat', value: '9999.9999', supportsDataExplorer: false, type: 'float', size: 58, shape: '', count: 0, truncated: false },
                 { name: 'myInt', value: '99999999', supportsDataExplorer: false, type: 'int', size: 56, shape: '', count: 0, truncated: false },
-                { name: 'mynpArray', value: 'array([1., 2., 3.])', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false },
                 // tslint:disable:no-trailing-whitespace
                 {
                     name: 'mySeries',
@@ -246,7 +244,8 @@ Name: 0, dtype: float64`,
                     count: 0,
                     truncated: false
                 },
-                { name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false }
+                { name: 'myTuple', value: '(1, 2, 3, 4, 5, 6, 7, 8, 9)', supportsDataExplorer: false, type: 'tuple', size: 54, shape: '', count: 0, truncated: false },
+                { name: 'mynpArray', value: '[1. 2. 3.]', supportsDataExplorer: true, type: 'ndarray', size: 54, shape: '', count: 0, truncated: false }
             ];
             verifyVariables(wrapper, targetVariables);
         },
@@ -255,47 +254,57 @@ Name: 0, dtype: float64`,
         }
     );
 
+    function generateVar(v: number): IJupyterVariable {
+        const valueEntry = Math.pow(v, 2) % 17;
+        const expectedValue =
+            valueEntry < 10
+                ? `[${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, <...> , ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}]`
+                : `[${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, <...> , ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}, ${valueEntry}]`;
+        return {
+            name: `var${v}`,
+            value: expectedValue,
+            supportsDataExplorer: true,
+            type: 'list',
+            size: 54,
+            shape: '',
+            count: 100000,
+            truncated: false
+        };
+    }
+
+    // Test our limits. Create 1050 items.
     runDoubleTest(
-        'Variable explorer - Sorting',
+        'Variable explorer - A lot of items',
         async wrapper => {
-            const basicCode: string = `b = 2
-c = 3
-stra = 'a'
-strb = 'b'
-strc = 'c'`;
+            const basicCode: string = `for _i in range(1050):
+    exec("var{}=[{} ** 2 % 17 for _l in range(100000)]".format(_i, _i))`;
 
             openVariableExplorer(wrapper);
 
-            await addCodeImpartial(wrapper, 'a=1\na');
-            await addCodeImpartial(wrapper, basicCode, true);
+            // Wait for two variable completes so we get the visible list (should be about 16 items when finished)
+            await addCodeImpartial(wrapper, basicCode, true, 2);
 
-            let targetVariables: IJupyterVariable[] = [
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
-            ];
+            const allVariables: IJupyterVariable[] = rangeInclusive(0, 1050)
+                .map(generateVar)
+                .sort((a: IJupyterVariable, b: IJupyterVariable) => a.name.localeCompare(b.name));
+
+            const targetVariables = allVariables.slice(0, 16);
             verifyVariables(wrapper, targetVariables);
 
-            sortVariableExplorer(wrapper, 'value', 'DESC');
+            // Force a scroll to the bottom
+            const complete = waitForMessage(ioc, InteractiveWindowMessages.VariablesComplete, { numberOfTimes: 2 });
+            const grid = wrapper.find(AdazzleReactDataGrid);
+            const viewPort = grid.find('Viewport').instance();
+            const rowHeight = (viewPort.props as any).rowHeight as number;
+            const scrollTop = (allVariables.length - 11) * rowHeight;
+            (viewPort as any).onScroll({ scrollTop, scrollLeft: 0 });
 
-            targetVariables = [
-                { name: 'c', value: '3', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'b', value: '2', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                { name: 'a', value: '1', supportsDataExplorer: false, type: 'int', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strc', value: "'c'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'strb', value: "'b'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false },
-                // tslint:disable-next-line:quotemark
-                { name: 'stra', value: "'a'", supportsDataExplorer: false, type: 'str', size: 54, shape: '', count: 0, truncated: false }
-            ];
-            verifyVariables(wrapper, targetVariables);
+            // Wait for a variable complete
+            await complete;
+
+            // Now we should have the bottom. For some reason only 10 come back here.
+            const bottomVariables = allVariables.slice(1041, 1051);
+            verifyVariables(wrapper, bottomVariables);
         },
         () => {
             return ioc;
@@ -311,16 +320,6 @@ function openVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Com
         if (store) {
             store.dispatch({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER });
         }
-    }
-}
-
-function sortVariableExplorer(wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, sortColumn: string, sortDirection: string) {
-    const varExp: VariableExplorer = wrapper.find('VariableExplorer').instance() as VariableExplorer;
-
-    assert(varExp);
-
-    if (varExp) {
-        varExp.sortRows(sortColumn, sortDirection);
     }
 }
 
@@ -363,11 +362,12 @@ function verifyRow(rowWrapper: ReactWrapper<any, Readonly<{}>, React.Component>,
 function verifyCell(cellWrapper: ReactWrapper<any, Readonly<{}>, React.Component>, value: string, targetName: string) {
     const cellHTML = parse(cellWrapper.html()) as any;
     // tslint:disable-next-line:no-string-literal
-    const rawValue = cellHTML.firstChild.rawAttributes['value'] as string;
+    const match = /value="([\s\S]+?)"\s+/.exec(cellHTML.innerHTML);
+    expect(match).to.not.be.equal(null, `${targetName} does not have a value attribute`);
 
     // Eliminate whitespace differences
-    const actualValueNormalized = rawValue.replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
+    const actualValueNormalized = match![1].replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
     const expectedValueNormalized = value.replace(/^\s*|\s(?=\s)|\s*$/g, '').replace(/\r\n/g, '\n');
 
-    expect(actualValueNormalized).to.be.equal(expectedValueNormalized, `${targetName} has an unexpected value in variable explorer cell`);
+    expect(actualValueNormalized).to.be.equal(expectedValueNormalized, `${targetName} has an unexpected value ${cellHTML.innerHTML} in variable explorer cell`);
 }

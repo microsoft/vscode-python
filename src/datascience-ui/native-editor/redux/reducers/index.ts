@@ -6,7 +6,6 @@ import { CommonEffects } from '../../../interactive-common/redux/reducers/common
 import { Kernel } from '../../../interactive-common/redux/reducers/kernel';
 import { Transfer } from '../../../interactive-common/redux/reducers/transfer';
 import { CommonActionType } from '../../../interactive-common/redux/reducers/types';
-import { Variables } from '../../../interactive-common/redux/reducers/variables';
 import { INativeEditorActionMapping } from '../mapping';
 import { Creation } from './creation';
 import { Effects } from './effects';
@@ -26,8 +25,6 @@ export const reducerMap: INativeEditorActionMapping = {
     [CommonActionType.EXECUTE_ALL_CELLS]: Execution.executeAllCells,
     [CommonActionType.EXECUTE_ABOVE]: Execution.executeAbove,
     [CommonActionType.EXECUTE_CELL_AND_BELOW]: Execution.executeCellAndBelow,
-    [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: Variables.toggleVariableExplorer,
-    [CommonActionType.REFRESH_VARIABLES]: Variables.refreshVariables,
     [CommonActionType.RESTART_KERNEL]: Kernel.restartKernel,
     [CommonActionType.INTERRUPT_KERNEL]: Kernel.interruptKernel,
     [CommonActionType.CLEAR_ALL_OUTPUTS]: Execution.clearAllOutputs,
@@ -74,8 +71,6 @@ export const reducerMap: INativeEditorActionMapping = {
     [IncomingMessageActions.STOPPROGRESS]: CommonEffects.stopProgress,
     [IncomingMessageActions.UPDATESETTINGS]: Effects.updateSettings,
     [IncomingMessageActions.ACTIVATE]: CommonEffects.activate,
-    [IncomingMessageActions.GETVARIABLESRESPONSE]: Variables.handleVariablesResponse,
-    [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: Variables.handleVariableResponse,
     [IncomingMessageActions.RESTARTKERNEL]: Kernel.handleRestarted,
     [IncomingMessageActions.GETCSSRESPONSE]: CommonEffects.handleCss,
     [IncomingMessageActions.MONACOREADY]: CommonEffects.monacoReady,

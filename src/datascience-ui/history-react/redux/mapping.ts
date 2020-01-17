@@ -1,10 +1,10 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { IRefreshVariablesRequest, IScrollToCell } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IScrollToCell } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
-import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
+import { ICell } from '../../../client/datascience/types';
 import { IMainState, IServerState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
@@ -24,8 +24,6 @@ type InteractiveReducerFunc<T> = ReducerFunc<IMainState, CommonActionType, T>;
 export type InteractiveReducerArg<T = never | undefined> = ReducerArg<IMainState, CommonActionType, T>;
 
 export class IInteractiveActionMapping {
-    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: InteractiveReducerFunc<never | undefined>;
-    public [CommonActionType.REFRESH_VARIABLES]: InteractiveReducerFunc<IRefreshVariablesRequest>;
     public [CommonActionType.RESTART_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_KERNEL]: InteractiveReducerFunc<never | undefined>;
     public [CommonActionType.SELECT_SERVER]: InteractiveReducerFunc<never | undefined>;
@@ -58,8 +56,6 @@ export class IInteractiveActionMapping {
     public [IncomingMessageActions.FINISHCELL]: InteractiveReducerFunc<ICell>;
     public [IncomingMessageActions.UPDATECELL]: InteractiveReducerFunc<ICell>;
     public [IncomingMessageActions.ACTIVATE]: InteractiveReducerFunc<never | undefined>;
-    public [IncomingMessageActions.GETVARIABLESRESPONSE]: InteractiveReducerFunc<IJupyterVariablesResponse>;
-    public [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: InteractiveReducerFunc<IJupyterVariable>;
     public [IncomingMessageActions.RESTARTKERNEL]: InteractiveReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETCSSRESPONSE]: InteractiveReducerFunc<IGetCssResponse>;
     public [IncomingMessageActions.MONACOREADY]: InteractiveReducerFunc<never | undefined>;

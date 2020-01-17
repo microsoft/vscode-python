@@ -12,7 +12,7 @@ import { noop } from '../../common/utils/misc';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
-import { IDataViewer, IDataViewerProvider, IJupyterVariables, INotebook } from '../types';
+import { IDataViewer, IDataViewerProvider, IJupyterVariable, INotebook } from '../types';
 
 @injectable()
 export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable {
@@ -20,7 +20,6 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IAsyncDisposableRegistry) asyncRegistry: IAsyncDisposableRegistry,
-        @inject(IJupyterVariables) private variables: IJupyterVariables,
         @inject(IPythonExecutionFactory) private pythonFactory: IPythonExecutionFactory
     ) {
         asyncRegistry.push(this);
@@ -30,7 +29,7 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
         await Promise.all(this.activeExplorers.map(d => d.dispose()));
     }
 
-    public async create(variable: string, notebook: INotebook): Promise<IDataViewer> {
+    public async create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer> {
         let result: IDataViewer | undefined;
 
         // Create the data explorer (this should show the window)
@@ -39,17 +38,10 @@ export class DataViewerProvider implements IDataViewerProvider, IAsyncDisposable
             // Verify this is allowed.
             await this.checkPandas(notebook);
 
-            // Make sure this is a valid variable
-            const variables = await this.variables.getVariables(notebook);
-            const index = variables.findIndex(v => v && v.name === variable);
-            if (index >= 0) {
-                // Then load the data.
-                this.activeExplorers.push(dataExplorer);
-                await dataExplorer.showVariable(variables[index], notebook);
-                result = dataExplorer;
-            } else {
-                throw new Error(localize.DataScience.dataExplorerInvalidVariableFormat().format(variable));
-            }
+            // Then load the data.
+            this.activeExplorers.push(dataExplorer);
+            await dataExplorer.showVariable(variable, notebook);
+            result = dataExplorer;
         } finally {
             if (!result) {
                 // If throw any errors, close the window we opened.

@@ -3,7 +3,6 @@
 'use strict';
 import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { assert } from 'chai';
-import { ChildProcess } from 'child_process';
 import * as fs from 'fs-extra';
 import * as os from 'os';
 import * as path from 'path';
@@ -25,7 +24,6 @@ import { PersistentState, PersistentStateFactory } from '../../client/common/per
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
-import { PythonDaemonExecutionService } from '../../client/common/process/pythonDaemon';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import {
     ExecutionResult,
@@ -903,21 +901,6 @@ suite('Jupyter Execution', async () => {
         const execution = createExecution(missingNotebookPython);
         when(interpreterService.getInterpreters()).thenResolve([missingNotebookPython, missingNotebookPython2]);
         await assert.isRejected(execution.connectToNotebookServer(), 'cant exec');
-    }).timeout(10000);
-
-    test('Slow notebook startups throws exception', async () => {
-        const daemonService = mock(PythonDaemonExecutionService);
-        const stdErr = 'Failure';
-        const proc = ({ on: noop } as any) as ChildProcess;
-        const out = new Observable<Output<string>>(s => s.next({ source: 'stderr', out: stdErr }));
-        when(daemonService.execModuleObservable(anything(), anything(), anything())).thenReturn({ dispose: noop, proc: proc, out });
-        when(executionFactory.createDaemon(deepEqual({ daemonModule: PythonDaemonModule, pythonPath: workingPython.path }))).thenResolve(instance(daemonService));
-
-        const execution = createExecution(workingPython, [stdErr]);
-        await assert.isRejected(
-            execution.connectToNotebookServer(),
-            `Jupyter notebook failed to launch. \r\nError: The Jupyter notebook server failed to launch in time\n${stdErr}`
-        );
     }).timeout(10000);
 
     test('Other than active works', async () => {

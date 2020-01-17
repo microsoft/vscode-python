@@ -105,7 +105,7 @@ suite('DataScience Interactive Window output tests', () => {
 
             // Add a cell without output, this cell should not show up at all
             addMockData(ioc, 'a=1', undefined, 'text/plain');
-            await addCode(ioc, wrapper, 'a=1', 4);
+            await addCode(ioc, wrapper, 'a=1');
 
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<span>1</span>', CellPosition.First);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', undefined, CellPosition.Last);
@@ -234,7 +234,7 @@ for _ in range(50):
                 return Promise.resolve({ result: result, haveMore: loops > 0 });
             });
 
-            await addCode(ioc, wrapper, badPanda, 4, true);
+            await addCode(ioc, wrapper, badPanda, true);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', `has no attribute 'read'`, CellPosition.Last);
 
             await addCode(ioc, wrapper, goodPanda);
@@ -243,7 +243,7 @@ for _ in range(50):
             await addCode(ioc, wrapper, matPlotLib);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', /img|Figure/, CellPosition.Last);
 
-            await addCode(ioc, wrapper, spinningCursor, 4 + (ioc.mockJupyter ? cursors.length * 3 : 0));
+            await addCode(ioc, wrapper, spinningCursor);
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '<div>', CellPosition.Last);
         },
         () => {
@@ -260,7 +260,7 @@ for _ in range(50):
             await addCode(ioc, wrapper, 'a=1\na');
 
             // Now verify if we undo, we have no cells
-            let afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            let afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.undoCells();
                 return Promise.resolve();
             });
@@ -268,7 +268,7 @@ for _ in range(50):
             assert.equal(afterUndo.length, 1, `Undo should remove cells + ${afterUndo.debug()}`);
 
             // Redo should put the cells back
-            const afterRedo = await getInteractiveCellResults(wrapper, 1, () => {
+            const afterRedo = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.redoCells();
                 return Promise.resolve();
             });
@@ -279,14 +279,14 @@ for _ in range(50):
             assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
             // Clear everything
-            const afterClear = await getInteractiveCellResults(wrapper, 1, () => {
+            const afterClear = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.removeAllCells();
                 return Promise.resolve();
             });
             assert.equal(afterClear.length, 1, "Clear didn't work");
 
             // Undo should put them back
-            afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 interactiveWindow.undoCells();
                 return Promise.resolve();
             });
@@ -324,7 +324,7 @@ for _ in range(50):
             const clear = findButton(wrapper, InteractivePanel, 0);
 
             // Now verify if we undo, we have no cells
-            let afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            let afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -332,7 +332,7 @@ for _ in range(50):
             assert.equal(afterUndo.length, 1, `Undo should remove cells`);
 
             // Redo should put the cells back
-            const afterRedo = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterRedo = await getInteractiveCellResults(ioc, wrapper, async () => {
                 redo!.simulate('click');
                 return Promise.resolve();
             });
@@ -343,14 +343,14 @@ for _ in range(50):
             assert.equal(afterAdd.length, 3, 'Second cell did not get added');
 
             // Clear everything
-            const afterClear = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterClear = await getInteractiveCellResults(ioc, wrapper, async () => {
                 clear!.simulate('click');
                 return Promise.resolve();
             });
             assert.equal(afterClear.length, 1, "Clear didn't work");
 
             // Undo should put them back
-            afterUndo = await getInteractiveCellResults(wrapper, 1, async () => {
+            afterUndo = await getInteractiveCellResults(ioc, wrapper, async () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -370,7 +370,7 @@ for _ in range(50):
             assert.ok(showedEditor.resolved, 'Goto source is not jumping to editor');
 
             // Make sure delete works
-            const afterDelete = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterDelete = await getInteractiveCellResults(ioc, wrapper, async () => {
                 deleteButton.simulate('click');
                 return Promise.resolve();
             });
@@ -420,7 +420,7 @@ for _ in range(50):
             const undo = findButton(wrapper, InteractivePanel, 2);
 
             // Now verify if we undo, we have no cells
-            const afterUndo = await getInteractiveCellResults(wrapper, 1, () => {
+            const afterUndo = await getInteractiveCellResults(ioc, wrapper, () => {
                 undo!.simulate('click');
                 return Promise.resolve();
             });
@@ -589,7 +589,7 @@ for _ in range(50):
             const deleteButton = ImageButtons.at(3);
 
             // Make sure delete works
-            const afterDelete = await getInteractiveCellResults(wrapper, 1, async () => {
+            const afterDelete = await getInteractiveCellResults(ioc, wrapper, async () => {
                 deleteButton.simulate('click');
                 return Promise.resolve();
             });
@@ -663,10 +663,10 @@ for _ in range(50):
                 assert.equal(cells.length, 2, 'Not enough cells generated');
 
                 // Run the first cell
-                await addCode(ioc, wrapper, concatMultilineStringInput(cells[0].data.source), 4);
+                await addCode(ioc, wrapper, concatMultilineStringInput(cells[0].data.source));
 
                 // Last cell should generate a series of updates. Verify we end up with a single image
-                await addCode(ioc, wrapper, concatMultilineStringInput(cells[1].data.source), 10);
+                await addCode(ioc, wrapper, concatMultilineStringInput(cells[1].data.source));
                 const cell = getLastOutputCell(wrapper, 'InteractiveCell');
 
                 const output = cell!.find('div.cell-output');
@@ -778,7 +778,7 @@ for _ in range(50):
             // Output should be trimmed to just two lines of output
             const code = `print("hello\\nworld\\nhow\\nare\\nyou")`;
             addMockData(ioc, code, 'are\nyou\n');
-            await addCode(ioc, wrapper, code, 4);
+            await addCode(ioc, wrapper, code);
 
             verifyHtmlOnCell(wrapper, 'InteractiveCell', '>are\nyou', CellPosition.Last);
         },

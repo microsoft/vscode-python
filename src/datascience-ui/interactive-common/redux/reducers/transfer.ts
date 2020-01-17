@@ -29,7 +29,7 @@ export namespace Transfer {
     }
 
     export function showDataViewer<T>(arg: CommonReducerArg<T, IShowDataViewerAction>): IMainState {
-        arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowDataViewer, { variableName: arg.payload.variableName, columnSize: arg.payload.columnSize }));
+        arg.queueAction(createPostableAction(InteractiveWindowMessages.ShowDataViewer, { variable: arg.payload.variable, columnSize: arg.payload.columnSize }));
         return arg.prevState;
     }
 

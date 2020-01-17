@@ -4,24 +4,23 @@
 import * as typemoq from 'typemoq';
 import { IApplicationShell } from '../../client/common/application/types';
 import { IInstallationChannelManager, IModuleInstaller } from '../../client/common/installer/types';
-import { ILogger } from '../../client/common/types';
 import * as localize from '../../client/common/utils/localize';
 import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
+import { JupyterCommandInterpreterDependencyService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterDependencyService';
 import { JupyterInstallError } from '../../client/datascience/jupyter/jupyterInstallError';
 import { JupyterSelfCertsError } from '../../client/datascience/jupyter/jupyterSelfCertsError';
 
 suite('DataScience Error Handler Unit Tests', () => {
     let applicationShell: typemoq.IMock<IApplicationShell>;
-    let logger: typemoq.IMock<ILogger>;
     let channels: typemoq.IMock<IInstallationChannelManager>;
+    let dependencyManager: JupyterCommandInterpreterDependencyService;
     let dataScienceErrorHandler: DataScienceErrorHandler;
 
     setup(() => {
         applicationShell = typemoq.Mock.ofType<IApplicationShell>();
-        logger = typemoq.Mock.ofType<ILogger>();
         channels = typemoq.Mock.ofType<IInstallationChannelManager>();
-
-        dataScienceErrorHandler = new DataScienceErrorHandler(applicationShell.object, logger.object, channels.object);
+        dependencyManager = new JupyterCommandInterpreterDependencyService(applicationShell.object, channels.object);
+        dataScienceErrorHandler = new DataScienceErrorHandler(applicationShell.object, dependencyManager);
     });
     const message = 'Test error message.';
 
@@ -31,22 +30,22 @@ suite('DataScience Error Handler Unit Tests', () => {
             .returns(() => Promise.resolve(message))
             .verifiable(typemoq.Times.once());
 
-        logger.setup(log => log.logError(typemoq.It.isAny())).verifiable(typemoq.Times.once());
-
         const err = new Error(message);
         await dataScienceErrorHandler.handleError(err);
 
         applicationShell.verifyAll();
-        logger.verifyAll();
     });
 
     test('Jupyter Self Certificates Error', async () => {
-        logger.setup(log => log.logError(typemoq.It.isAny())).verifiable(typemoq.Times.once());
+        applicationShell
+            .setup(app => app.showErrorMessage(typemoq.It.isAny()))
+            .returns(() => Promise.resolve(message))
+            .verifiable(typemoq.Times.never());
 
         const err = new JupyterSelfCertsError(message);
         await dataScienceErrorHandler.handleError(err);
 
-        logger.verifyAll();
+        applicationShell.verifyAll();
     });
 
     test('Jupyter Install Error', async () => {
@@ -61,8 +60,6 @@ suite('DataScience Error Handler Unit Tests', () => {
             )
             .returns(() => Promise.resolve(localize.DataScience.jupyterInstall()))
             .verifiable(typemoq.Times.once());
-
-        logger.setup(log => log.logError(typemoq.It.isAny())).verifiable(typemoq.Times.once());
 
         const installers: IModuleInstaller[] = [
             {
@@ -90,7 +87,6 @@ suite('DataScience Error Handler Unit Tests', () => {
         await dataScienceErrorHandler.handleError(err);
 
         applicationShell.verifyAll();
-        logger.verifyAll();
         channels.verifyAll();
     });
 });

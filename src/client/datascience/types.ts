@@ -15,6 +15,7 @@ import { StopWatch } from '../common/utils/stopWatch';
 import { PythonInterpreter } from '../interpreter/contracts';
 import { JupyterCommands } from './constants';
 import { JupyterServerInfo } from './jupyter/jupyterConnection';
+import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { LiveKernelModel } from './jupyter/kernels/types';
 
@@ -519,21 +520,31 @@ export interface IJupyterVariable {
 
 export const IJupyterVariables = Symbol('IJupyterVariables');
 export interface IJupyterVariables {
-    getVariables(notebook: INotebook): Promise<IJupyterVariable[]>;
-    getValue(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
+    getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse>;
     getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable>;
     getDataFrameRows(targetVariable: IJupyterVariable, notebook: INotebook, start: number, end: number): Promise<JSONObject>;
 }
 
-// Wrapper to hold an execution count for our variable requests
+// Request for variables
+export interface IJupyterVariablesRequest {
+    executionCount: number;
+    sortColumn: string;
+    sortAscending: boolean;
+    startIndex: number;
+    pageSize: number;
+}
+
+// Response to a request
 export interface IJupyterVariablesResponse {
     executionCount: number;
-    variables: IJupyterVariable[];
+    totalCount: number;
+    pageStartIndex: number;
+    pageResponse: IJupyterVariable[];
 }
 
 export const IDataViewerProvider = Symbol('IDataViewerProvider');
 export interface IDataViewerProvider {
-    create(variable: string, notebook: INotebook): Promise<IDataViewer>;
+    create(variable: IJupyterVariable, notebook: INotebook): Promise<IDataViewer>;
     getPandasVersion(notebook: INotebook): Promise<{ major: number; minor: number; build: number } | undefined>;
 }
 export const IDataViewer = Symbol('IDataViewer');
@@ -613,7 +624,21 @@ export const IJupyterSubCommandExecutionService = Symbol('IJupyterSubCommandExec
  * @interface IJupyterSubCommandExecutionService
  */
 export interface IJupyterSubCommandExecutionService {
+    /**
+     * Checks whether notebook is supported.
+     *
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<boolean>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
+    /**
+     * Checks whether exporting of ipynb is supported.
+     *
+     * @param {CancellationToken} [cancelToken]
+     * @returns {Promise<boolean>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
     isExportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     /**
      * Error message indicating why jupyter notebook isn't supported.
@@ -671,6 +696,25 @@ export interface IJupyterSubCommandExecutionService {
      * @returns {Promise<void>}
      * @memberof IJupyterSubCommandExecutionService
      */
-    launchNotebook(notebookFile: string): Promise<void>;
+    openNotebook(notebookFile: string): Promise<void>;
+    /**
+     * Gets the kernelspecs.
+     *
+     * @param {CancellationToken} [token]
+     * @returns {Promise<JupyterKernelSpec[]>}
+     * @memberof IJupyterSubCommandExecutionService
+     */
     getKernelSpecs(token?: CancellationToken): Promise<JupyterKernelSpec[]>;
+}
+
+export const IJupyterInterpreterDependencyManager = Symbol('IJupyterInterpreterDependencyManager');
+export interface IJupyterInterpreterDependencyManager {
+    /**
+     * Installs the dependencies required to launch jupyter.
+     *
+     * @param {JupyterInstallError} [err]
+     * @returns {Promise<void>}
+     * @memberof IJupyterInterpreterDependencyManager
+     */
+    installMissingDependencies(err?: JupyterInstallError): Promise<void>;
 }

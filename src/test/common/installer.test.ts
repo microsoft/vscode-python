@@ -138,6 +138,8 @@ suite('Installer', () => {
                 prod.value === Product.isort ||
                 prod.value === Product.jupyter ||
                 prod.value === Product.notebook ||
+                prod.value === Product.kernelspec ||
+                prod.value === Product.nbconvert ||
                 prod.value === Product.ipykernel
             ) {
                 return;

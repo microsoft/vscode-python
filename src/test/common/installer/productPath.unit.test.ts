@@ -84,6 +84,16 @@ suite('Product Path', () => {
                         const productPathService = new TestBaseProductPathsService(serviceContainer.object);
                         expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
                     });
+                } else if (product.value === Product.nbconvert) {
+                    test('Returns true if product is nbconvert', () => {
+                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(true, 'Should be true');
+                    });
+                } else if (product.value === Product.kernelspec) {
+                    test('Returns true if product is kernelspec', () => {
+                        const productPathService = new TestBaseProductPathsService(serviceContainer.object);
+                        expect(productPathService.isExecutableAModule(product.value)).to.equal(false, 'Should be false');
+                    });
                 } else {
                     test('Returns true if User has customized the executable name', () => {
                         productInstaller.translateProductToModuleName = () => 'moduleName';

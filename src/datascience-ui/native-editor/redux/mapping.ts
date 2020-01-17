@@ -4,7 +4,7 @@
 import { ILoadAllCells } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetCssResponse } from '../../../client/datascience/messages';
 import { IGetMonacoThemeResponse } from '../../../client/datascience/monacoMessages';
-import { ICell, IJupyterVariable, IJupyterVariablesResponse } from '../../../client/datascience/types';
+import { ICell } from '../../../client/datascience/types';
 import { IMainState, IServerState } from '../../interactive-common/mainState';
 import { IncomingMessageActions } from '../../interactive-common/redux/postOffice';
 import {
@@ -16,7 +16,6 @@ import {
     IEditCellAction,
     IExecuteAction,
     ILinkClickAction,
-    IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
     IShowPlotAction
@@ -38,8 +37,6 @@ export class INativeEditorActionMapping {
     public [CommonActionType.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.EXECUTE_ABOVE]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.EXECUTE_CELL_AND_BELOW]: NativeEditorReducerFunc<ICodeAction>;
-    public [CommonActionType.TOGGLE_VARIABLE_EXPLORER]: NativeEditorReducerFunc<never | undefined>;
-    public [CommonActionType.REFRESH_VARIABLES]: NativeEditorReducerFunc<IRefreshVariablesAction>;
     public [CommonActionType.RESTART_KERNEL]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.INTERRUPT_KERNEL]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.CLEAR_ALL_OUTPUTS]: NativeEditorReducerFunc<never | undefined>;
@@ -86,8 +83,6 @@ export class INativeEditorActionMapping {
     public [IncomingMessageActions.STOPPROGRESS]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.UPDATESETTINGS]: NativeEditorReducerFunc<string>;
     public [IncomingMessageActions.ACTIVATE]: NativeEditorReducerFunc<never | undefined>;
-    public [IncomingMessageActions.GETVARIABLESRESPONSE]: NativeEditorReducerFunc<IJupyterVariablesResponse>;
-    public [IncomingMessageActions.GETVARIABLEVALUERESPONSE]: NativeEditorReducerFunc<IJupyterVariable>;
     public [IncomingMessageActions.RESTARTKERNEL]: NativeEditorReducerFunc<never | undefined>;
     public [IncomingMessageActions.GETCSSRESPONSE]: NativeEditorReducerFunc<IGetCssResponse>;
     public [IncomingMessageActions.MONACOREADY]: NativeEditorReducerFunc<never | undefined>;

@@ -117,7 +117,9 @@ export enum Product {
     bandit = 17,
     jupyter = 18,
     ipykernel = 19,
-    notebook = 20
+    notebook = 20,
+    kernelspec = 21,
+    nbconvert = 22
 }
 
 export enum ModuleNamePurpose {
@@ -129,7 +131,7 @@ export const IInstaller = Symbol('IInstaller');
 
 export interface IInstaller {
     promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
-    install(product: Product, resource?: InterpreterUri): Promise<InstallerResponse>;
+    install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse>;
     isInstalled(product: Product, resource?: InterpreterUri): Promise<boolean | undefined>;
     translateProductToModuleName(product: Product, purpose: ModuleNamePurpose): string;
 }

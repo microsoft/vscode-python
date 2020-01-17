@@ -4,6 +4,7 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 
 import { IRefreshVariablesRequest } from '../../../client/datascience/interactive-common/interactiveWindowTypes';
+import { IJupyterVariable, IJupyterVariablesRequest } from '../../../client/datascience/types';
 import {
     CommonAction,
     CommonActionType,
@@ -43,9 +44,9 @@ export const actionCreators = {
     expandAll: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXPAND_ALL }),
     collapseAll: (): CommonAction<never | undefined> => ({ type: CommonActionType.COLLAPSE_ALL }),
     export: (): CommonAction<never | undefined> => ({ type: CommonActionType.EXPORT }),
-    showDataViewer: (variableName: string, columnSize: number): CommonAction<IShowDataViewerAction> => ({
+    showDataViewer: (variable: IJupyterVariable, columnSize: number): CommonAction<IShowDataViewerAction> => ({
         type: CommonActionType.SHOW_DATA_VIEWER,
-        payload: { variableName, columnSize }
+        payload: { variable, columnSize }
     }),
     editorLoaded: (): CommonAction<never | undefined> => ({ type: CommonActionType.EDITOR_LOADED }),
     scroll: (isAtBottom: boolean): CommonAction<IScrollAction> => ({ type: CommonActionType.SCROLL, payload: { isAtBottom } }),
@@ -53,5 +54,9 @@ export const actionCreators = {
     codeCreated: (cellId: string | undefined, modelId: string): CommonAction<ICodeCreatedAction> => ({ type: CommonActionType.CODE_CREATED, payload: { cellId, modelId } }),
     editorUnmounted: (): CommonAction<never | undefined> => ({ type: CommonActionType.UNMOUNT }),
     selectKernel: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_KERNEL }),
-    selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER })
+    selectServer: (): CommonAction<never | undefined> => ({ type: CommonActionType.SELECT_SERVER }),
+    getVariableData: (newExecutionCount: number, startIndex: number = 0, pageSize: number = 100): CommonAction<IJupyterVariablesRequest> => ({
+        type: CommonActionType.GET_VARIABLE_DATA,
+        payload: { executionCount: newExecutionCount, sortColumn: 'name', sortAscending: true, startIndex, pageSize }
+    })
 };

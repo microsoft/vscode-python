@@ -224,7 +224,7 @@ for _ in range(50):
                 let deleteButton = ImageButtons.at(5);
 
                 // Make sure delete works
-                let afterDelete = await getNativeCellResults(wrapper, 1, async () => {
+                let afterDelete = await getNativeCellResults(ioc, wrapper, async () => {
                     deleteButton.simulate('click');
                     return Promise.resolve();
                 });
@@ -237,10 +237,15 @@ for _ in range(50):
                 assert.equal(ImageButtons.length, 6, 'Cell buttons not found');
                 deleteButton = ImageButtons.at(5);
 
-                afterDelete = await getNativeCellResults(wrapper, 1, async () => {
-                    deleteButton.simulate('click');
-                    return Promise.resolve();
-                });
+                afterDelete = await getNativeCellResults(
+                    ioc,
+                    wrapper,
+                    async () => {
+                        deleteButton.simulate('click');
+                        return Promise.resolve();
+                    },
+                    () => waitForUpdate(wrapper, NativeEditor, 1)
+                );
                 assert.equal(afterDelete.length, 1, `Delete should NOT remove the last cell`);
             },
             () => {

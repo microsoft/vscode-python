@@ -10,7 +10,7 @@ import { ContentPanel, IContentPanelProps } from '../interactive-common/contentP
 import { handleLinkClick } from '../interactive-common/handlers';
 import { KernelSelection } from '../interactive-common/kernelSelection';
 import { ICellViewModel, IMainState } from '../interactive-common/mainState';
-import { IStore } from '../interactive-common/redux/store';
+import { IMainWithVariables, IStore } from '../interactive-common/redux/store';
 import { IVariablePanelProps, VariablePanel } from '../interactive-common/variablePanel';
 import { getOSType } from '../react-common/constants';
 import { ErrorBoundary } from '../react-common/errorBoundary';
@@ -23,10 +23,10 @@ import { getConnectedNativeCell } from './nativeCell';
 import './nativeEditor.less';
 import { actionCreators } from './redux/actions';
 
-type INativeEditorProps = IMainState & typeof actionCreators;
+type INativeEditorProps = IMainWithVariables & typeof actionCreators;
 
-function mapStateToProps(state: IStore): IMainState {
-    return state.main;
+function mapStateToProps(state: IStore): IMainWithVariables {
+    return { ...state.main, variableState: state.variables };
 }
 
 const ConnectedNativeCell = getConnectedNativeCell();
@@ -128,7 +128,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
             this.props.toggleVariableExplorer();
             this.props.sendCommand(NativeCommandType.ToggleVariableExplorer, 'mouse');
         };
-        const variableExplorerTooltip = this.props.variablesVisible
+        const variableExplorerTooltip = this.props.variableState.visible
             ? getLocString('DataScience.collapseVariableExplorerTooltip', 'Hide variables active in jupyter kernel')
             : getLocString('DataScience.expandVariableExplorerTooltip', 'Show variables active in jupyter kernel');
         const runAbove = () => {
@@ -247,7 +247,7 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     }
 
     private renderVariablePanel(baseTheme: string) {
-        if (this.props.variablesVisible) {
+        if (this.props.variableState.visible) {
             const variableProps = this.getVariableProps(baseTheme);
             return <VariablePanel {...variableProps} />;
         }
@@ -282,16 +282,22 @@ export class NativeEditor extends React.Component<INativeEditorProps> {
     };
     private getVariableProps = (baseTheme: string): IVariablePanelProps => {
         return {
-            variables: this.props.variables,
-            pendingVariableCount: this.props.pendingVariableCount,
+            variables: this.props.variableState.variables,
             debugging: this.props.debugging,
             busy: this.props.busy,
             showDataExplorer: this.props.showDataViewer,
             skipDefault: this.props.skipDefault,
             testMode: this.props.testMode,
             closeVariableExplorer: this.props.toggleVariableExplorer,
-            baseTheme: baseTheme
+            baseTheme: baseTheme,
+            pageIn: this.pageInVariableData,
+            fontSize: this.props.font.size,
+            executionCount: this.props.currentExecutionCount
         };
+    };
+
+    private pageInVariableData = (startIndex: number, pageSize: number) => {
+        this.props.getVariableData(this.props.currentExecutionCount, startIndex, pageSize);
     };
 
     private mainKeyDown = (event: KeyboardEvent) => {

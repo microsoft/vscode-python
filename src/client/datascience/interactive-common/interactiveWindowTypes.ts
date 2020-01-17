@@ -5,7 +5,7 @@ import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
 import { IGetMonacoThemeResponse } from '../monacoMessages';
-import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesResponse } from '../types';
+import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
 
 export enum InteractiveWindowMessages {
     StartCell = 'start_cell',
@@ -40,8 +40,6 @@ export enum InteractiveWindowMessages {
     ShowDataViewer = 'show_data_explorer',
     GetVariablesRequest = 'get_variables_request',
     GetVariablesResponse = 'get_variables_response',
-    GetVariableValueRequest = 'get_variable_value_request',
-    GetVariableValueResponse = 'get_variable_value_response',
     VariableExplorerToggle = 'variable_explorer_toggle',
     ProvideCompletionItemsRequest = 'provide_completion_items_request',
     CancelCompletionItemsRequest = 'cancel_completion_items_request',
@@ -242,7 +240,7 @@ export interface IInsertCell {
 }
 
 export interface IShowDataViewer {
-    variableName: string;
+    variable: IJupyterVariable;
     columnSize: number;
 }
 
@@ -311,10 +309,8 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.RemoteReexecuteCode]: IRemoteReexecuteCode;
     public [InteractiveWindowMessages.Activate]: never | undefined;
     public [InteractiveWindowMessages.ShowDataViewer]: IShowDataViewer;
-    public [InteractiveWindowMessages.GetVariablesRequest]: number;
+    public [InteractiveWindowMessages.GetVariablesRequest]: IJupyterVariablesRequest;
     public [InteractiveWindowMessages.GetVariablesResponse]: IJupyterVariablesResponse;
-    public [InteractiveWindowMessages.GetVariableValueRequest]: IJupyterVariable;
-    public [InteractiveWindowMessages.GetVariableValueResponse]: IJupyterVariable;
     public [InteractiveWindowMessages.VariableExplorerToggle]: boolean;
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;

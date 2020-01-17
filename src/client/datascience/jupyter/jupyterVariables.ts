@@ -8,6 +8,7 @@ import * as path from 'path';
 import stripAnsi from 'strip-ansi';
 import * as uuid from 'uuid/v4';
 
+import { Uri } from 'vscode';
 import { PYTHON_LANGUAGE } from '../../common/constants';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -15,7 +16,7 @@ import { IConfigurationService } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { Identifiers, Settings } from '../constants';
-import { ICell, IJupyterVariable, IJupyterVariables, INotebook } from '../types';
+import { ICell, IJupyterVariable, IJupyterVariables, IJupyterVariablesRequest, IJupyterVariablesResponse, INotebook } from '../types';
 import { JupyterDataRateLimitError } from './jupyterDataRateLimitError';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
@@ -31,23 +32,25 @@ const ShapeRegex = /^\s+\[(\d+) rows x (\d+) columns\]/m;
 
 const DataViewableTypes: Set<string> = new Set<string>(['DataFrame', 'list', 'dict', 'np.array', 'Series']);
 
+interface INotebookState {
+    currentExecutionCount: number;
+    variables: IJupyterVariable[];
+}
+
 @injectable()
 export class JupyterVariables implements IJupyterVariables {
     private fetchDataFrameInfoScript?: string;
     private fetchDataFrameRowsScript?: string;
     private filesLoaded: boolean = false;
     private languageToQueryMap = new Map<string, { query: string; parser: RegExp }>();
+    private notebookState = new Map<Uri, INotebookState>();
+
     constructor(@inject(IFileSystem) private fileSystem: IFileSystem, @inject(IConfigurationService) private configService: IConfigurationService) {}
 
     // IJupyterVariables implementation
-    public async getVariables(notebook: INotebook): Promise<IJupyterVariable[]> {
+    public async getVariables(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
         // Run the language appropriate variable fetch
-        return this.getVariablesBasedOnKernel(notebook);
-    }
-
-    public async getValue(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
-        // Talk to the session to get the variable value
-        return this.getVariableValueFromKernel(targetVariable, notebook);
+        return this.getVariablesBasedOnKernel(notebook, request);
     }
 
     public async getDataFrameInfo(targetVariable: IJupyterVariable, notebook: INotebook): Promise<IJupyterVariable> {
@@ -96,7 +99,7 @@ export class JupyterVariables implements IJupyterVariables {
         }
 
         // Prep our targetVariable to send over
-        const variableString = JSON.stringify(targetVariable);
+        const variableString = JSON.stringify(targetVariable).replace('\\n', '\\\\n');
 
         // Setup a regex
         const regexPattern = extraReplacements.length === 0 ? '_VSCode_JupyterTestValue' : ['_VSCode_JupyterTestValue', ...extraReplacements.map(v => v.key)].join('|');
@@ -213,7 +216,71 @@ export class JupyterVariables implements IJupyterVariables {
         return result;
     }
 
-    private async getVariablesBasedOnKernel(notebook: INotebook): Promise<IJupyterVariable[]> {
+    private async getVariablesBasedOnKernel(notebook: INotebook, request: IJupyterVariablesRequest): Promise<IJupyterVariablesResponse> {
+        // See if we already have the name list
+        let list = this.notebookState.get(notebook.resource);
+        if (!list || list.currentExecutionCount !== request.executionCount) {
+            // Refetch the list of names from the notebook. They might have changed.
+            list = {
+                currentExecutionCount: request.executionCount,
+                variables: (await this.getVariableNamesFromKernel(notebook)).map(n => {
+                    return {
+                        name: n,
+                        value: undefined,
+                        supportsDataExplorer: false,
+                        type: '',
+                        size: 0,
+                        shape: '',
+                        count: 0,
+                        truncated: true
+                    };
+                })
+            };
+        }
+
+        const exclusionList = this.configService.getSettings().datascience.variableExplorerExclude
+            ? this.configService.getSettings().datascience.variableExplorerExclude?.split(';')
+            : [];
+
+        const result: IJupyterVariablesResponse = {
+            executionCount: request.executionCount,
+            pageStartIndex: -1,
+            pageResponse: [],
+            totalCount: 0
+        };
+
+        // Use the list of names to fetch the page of data
+        if (list) {
+            const startPos = request.startIndex ? request.startIndex : 0;
+            const chunkSize = request.pageSize ? request.pageSize : 100;
+            result.pageStartIndex = startPos;
+
+            // Do one at a time. All at once doesn't work as they all have to wait for each other anyway
+            for (let i = startPos; i < startPos + chunkSize && i < list.variables.length; ) {
+                const fullVariable = list.variables[i].value ? list.variables[i] : await this.getVariableValueFromKernel(list.variables[i], notebook);
+
+                // See if this is excluded or not.
+                if (exclusionList && exclusionList.indexOf(fullVariable.type) >= 0) {
+                    // Not part of our actual list. Remove from the real list too
+                    list.variables.splice(i, 1);
+                } else {
+                    list.variables[i] = fullVariable;
+                    result.pageResponse.push(fullVariable);
+                    i += 1;
+                }
+            }
+
+            // Save in our cache
+            this.notebookState.set(notebook.resource, list);
+
+            // Update total count (exclusions will change this as types are computed)
+            result.totalCount = list.variables.length;
+        }
+
+        return result;
+    }
+
+    private async getVariableNamesFromKernel(notebook: INotebook): Promise<string[]> {
         // Get our query and parser
         const query = this.getParser(notebook);
 
@@ -225,21 +292,9 @@ export class JupyterVariables implements IJupyterVariables {
             // Apply the expression to it
             const matches = this.getAllMatches(query.parser, text);
 
-            // Turn each match into a variable
+            // Turn each match into a value
             if (matches) {
-                return matches.map(m => {
-                    // Only return the name as that's all we have at this point
-                    return {
-                        name: m,
-                        value: undefined,
-                        supportsDataExplorer: false,
-                        type: '',
-                        size: 0,
-                        shape: '',
-                        count: 0,
-                        truncated: true
-                    };
-                });
+                return matches;
             }
         }
 

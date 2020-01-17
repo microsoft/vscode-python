@@ -207,6 +207,12 @@ export namespace DataScience {
     export const notebookCheckForImportNo = localize('DataScience.notebookCheckForImportNo', 'Later');
     export const notebookCheckForImportDontAskAgain = localize('DataScience.notebookCheckForImportDontAskAgain', "Don't Ask Again");
     export const libraryNotInstalled = localize('DataScience.libraryNotInstalled', 'Data Science library {0} is not installed. Install?');
+    export const libraryRequiredToLaunchJupyterNotInstalled = localize('DataScience.libraryRequiredToLaunchJupyterNotInstalled', 'Data Science library {0} is not installed.');
+    export const librariesRequiredToLaunchJupyterNotInstalled = localize(
+        'DataScience.librariesRequiredToLaunchJupyterNotInstalled',
+        'Data Science libraries {0} are not installed.'
+    );
+    export const selectJupyterInterpreter = localize('DataScience.selectJupyterInterpreter', 'Select an Interpreter to start Jupyter');
     export const jupyterInstall = localize('DataScience.jupyterInstall', 'Install');
     export const currentlySelectedJupyterInterpreterForPlaceholder = localize('Datascience.currentlySelectedJupyterInterpreterForPlaceholder', 'current: {0}');
     export const jupyterNotSupported = localize('DataScience.jupyterNotSupported', 'Jupyter cannot be started. Error attempting to locate jupyter: {0}');
@@ -221,6 +227,10 @@ export namespace DataScience {
     export const jupyterSelfCertEnable = localize('DataScience.jupyterSelfCertEnable', 'Yes, connect anyways');
     export const jupyterSelfCertClose = localize('DataScience.jupyterSelfCertClose', 'No, close the connection');
     export const pythonInteractiveHelpLink = localize('DataScience.pythonInteractiveHelpLink', 'See [https://aka.ms/pyaiinstall] for help on installing jupyter.');
+    export const markdownHelpInstallingMissingDependencies = localize(
+        'DataScience.markdownHelpInstallingMissingDependencies',
+        'See [https://aka.ms/pyaiinstall](https://aka.ms/pyaiinstall) for help on installing Jupyter and related dependencies.'
+    );
     export const importingFormat = localize('DataScience.importingFormat', 'Importing {0}');
     export const startingJupyter = localize('DataScience.startingJupyter', 'Starting Jupyter server');
     export const connectingToJupyter = localize('DataScience.connectingToJupyter', 'Connecting to Jupyter server');
@@ -288,11 +298,6 @@ export namespace DataScience {
     );
     export const jupyterServerCrashed = localize('DataScience.jupyterServerCrashed', 'Jupyter server crashed. Unable to connect. \r\nError code from jupyter: {0}');
     export const notebookVersionFormat = localize('DataScience.notebookVersionFormat', 'Jupyter Notebook Version: {0}');
-    //tslint:disable-next-line:no-multiline-string
-    export const jupyterKernelNotSupportedOnActive = localize(
-        'DataScience.jupyterKernelNotSupportedOnActive',
-        `IPython kernel cannot be started from '{0}'. Using closest match {1} instead.`
-    );
     export const jupyterKernelSpecNotFound = localize('DataScience.jupyterKernelSpecNotFound', 'Cannot create a IPython kernel spec and none are available for use');
     export const jupyterKernelSpecModuleNotFound = localize(
         'DataScience.jupyterKernelSpecModuleNotFound',
@@ -476,6 +481,7 @@ export namespace DataScience {
         'DataScience.fallBackToPromptToUseActiveInterpreterOrSelectAKernel',
         "Couldn't find kernel '{0}' that the notebook was created with."
     );
+    export const startingJupyterLogMessage = localize('DataScience.startingJupyterLogMessage', 'Starting Jupyter from {0}');
     export const jupyterStartTimedout = localize('DataScience.jupyterStartTimedout', "Starting Jupyter has timedout. Please check the 'Jupyter' output panel for further details.");
     export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', "Switching Kenel to '{0}'");
 }

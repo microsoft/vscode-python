@@ -3,8 +3,7 @@
 'use strict';
 import './variableExplorer.css';
 
-// tslint:disable-next-line: no-var-requires no-require-imports
-const memoize = require('memoize-one');
+import * as fastDeepEqual from 'fast-deep-equal';
 import * as React from 'react';
 
 import { RegExpValues } from '../../client/datascience/constants';
@@ -26,29 +25,25 @@ interface IVariableExplorerProps {
     baseTheme: string;
     skipDefault?: boolean;
     variables: IJupyterVariable[];
-    pendingVariableCount: number;
     debugging: boolean;
-    showDataExplorer(targetVariable: string, numberOfColumns: number): void;
-    closeVariableExplorer(): void;
-}
-
-interface IVariableExplorerState {
-    gridColumns: { key: string; name: string }[];
-    gridHeight: number;
-    height: number;
     fontSize: number;
-    sortDirection: string;
-    sortColumn: string | number;
+    executionCount: number;
+    showDataExplorer(targetVariable: IJupyterVariable, numberOfColumns: number): void;
+    closeVariableExplorer(): void;
+    pageIn(startIndex: number, pageSize: number): void;
 }
 
 const defaultColumnProperties = {
     filterable: false,
-    sortable: true,
+    sortable: false,
     resizable: true
 };
 
-// Sanity check on our string comparisons
-const MaxStringCompare = 400;
+interface IFormatterArgs {
+    isScrolling?: boolean;
+    value?: string | number | object | boolean;
+    row?: IGridRow;
+}
 
 interface IGridRow {
     // tslint:disable-next-line:no-any
@@ -56,23 +51,41 @@ interface IGridRow {
     type: string;
     size: string;
     value: string | undefined;
+    index: number;
     buttons: IButtonCellValue;
 }
 
 // tslint:disable:no-any
-export class VariableExplorer extends React.Component<IVariableExplorerProps, IVariableExplorerState> {
+export class VariableExplorer extends React.Component<IVariableExplorerProps> {
     private divRef: React.RefObject<HTMLDivElement>;
-    private generateRows: any;
+    private pageSize: number = -1;
+
+    // These values keep track of variable requests so we don't make the same ones over and over again
+    // Note: This isn't in the redux state because the requests will come before the state
+    // has been updated. We don't want to force a wait for redraw to determine if a request
+    // has been sent or not.
+    private requestedPages: number[] = [];
+    private requestedPagesExecutionCount: number = 0;
+    private gridColumns: {
+        key: string;
+        name: string;
+        type: string;
+        width: number;
+        formatter: any;
+        headerRenderer?: JSX.Element;
+        sortable?: boolean;
+        resizable?: boolean;
+    }[];
 
     constructor(prop: IVariableExplorerProps) {
         super(prop);
-        const columns = [
+        this.gridColumns = [
             {
                 key: 'name',
                 name: getLocString('DataScience.variableExplorerNameColumn', 'Name'),
                 type: 'string',
                 width: 120,
-                formatter: <VariableExplorerCellFormatter cellStyle={CellStyle.variable} />,
+                formatter: this.formatNameColumn,
                 headerRenderer: <VariableExplorerHeaderCellFormatter />
             },
             {
@@ -109,29 +122,27 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
                 formatter: <VariableExplorerButtonCellFormatter showDataExplorer={this.props.showDataExplorer} baseTheme={this.props.baseTheme} />
             }
         ];
-        this.state = { gridColumns: columns, gridHeight: 200, height: 0, fontSize: 14, sortColumn: 'name', sortDirection: 'NONE' };
 
         this.divRef = React.createRef<HTMLDivElement>();
+    }
 
-        // Memoize is different between the tests running and webpack. figure out which one
-        // tslint:disable-next-line: no-any
-        let memoize_func: any | undefined;
-        if (memoize instanceof Function) {
-            memoize_func = memoize;
-        } else {
-            memoize_func = memoize.default;
+    public shouldComponentUpdate(nextProps: IVariableExplorerProps): boolean {
+        if (this.props.fontSize !== nextProps.fontSize) {
+            // Size has changed, recompute page size
+            this.pageSize = -1;
+            return true;
         }
-        this.generateRows = memoize_func((variables: IJupyterVariable[], sortColumn: string | number, sortDirection: string): IGridRow[] => {
-            const rows = !this.props.skipDefault ? this.generateDummyVariables() : this.parseVariables(variables);
-            return this.internalSortRows(rows, sortColumn, sortDirection);
-        });
+        if (!fastDeepEqual(this.props.variables, nextProps.variables)) {
+            return true;
+        }
+        return false;
     }
 
     public render() {
         const contentClassName = `variable-explorer-content`;
 
         const fontSizeStyle: React.CSSProperties = {
-            fontSize: `${this.state.fontSize.toString()}px`
+            fontSize: `${this.props.fontSize.toString()}px`
         };
 
         return (
@@ -152,38 +163,7 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         );
     }
 
-    public componentDidMount = () => {
-        // After mounting, check our computed style to see if the font size is changed
-        if (this.divRef.current) {
-            const newFontSize = parseInt(getComputedStyle(this.divRef.current).getPropertyValue('--code-font-size'), 10);
-
-            // Make sure to check for update here so we don't update loop
-            // tslint:disable-next-line: use-isnan
-            if (newFontSize && newFontSize !== NaN && this.state.fontSize !== newFontSize) {
-                this.setState({ fontSize: newFontSize });
-            }
-        }
-    };
-
-    public sortRows = (sortColumn: string | number, sortDirection: string) => {
-        this.setState({
-            sortColumn,
-            sortDirection
-        });
-    };
-
     private renderGrid() {
-        // Compute our grid rows using a memoized version of the sortColumn, sortDirection, and variables
-        // See this blog post
-        // https://reactjs.org/blog/2018/06/07/you-probably-dont-need-derived-state.html#what-about-memoization
-        const gridRows = this.generateRows(this.props.variables, this.state.sortColumn, this.state.sortDirection);
-        const getRow = (index: number) => {
-            if (index >= 0 && index < gridRows.length) {
-                return gridRows[index];
-            }
-            return { buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0 }, name: '', type: '', size: '', value: '' };
-        };
-
         if (this.props.debugging) {
             return (
                 <span className="span-debug-message">
@@ -194,17 +174,16 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
             return (
                 <div id="variable-explorer-data-grid" role="table" aria-label={getLocString('DataScience.collapseVariableExplorerLabel', 'Variables')}>
                     <AdazzleReactDataGrid
-                        columns={this.state.gridColumns.map(c => {
+                        columns={this.gridColumns.map(c => {
                             return { ...defaultColumnProperties, ...c };
                         })}
                         // tslint:disable-next-line: react-this-binding-issue
-                        rowGetter={getRow}
-                        rowsCount={gridRows.length}
-                        minHeight={this.state.gridHeight}
-                        headerRowHeight={this.state.fontSize + 9}
-                        rowHeight={this.state.fontSize + 9}
+                        rowGetter={this.getRow}
+                        rowsCount={this.props.variables.length}
+                        minHeight={200}
+                        headerRowHeight={this.props.fontSize + 9}
+                        rowHeight={this.props.fontSize + 9}
                         onRowDoubleClick={this.rowDoubleClick}
-                        onGridSort={this.sortRows}
                         emptyRowsView={VariableExplorerEmptyRowsView}
                         rowRenderer={VariableExplorerRowRenderer}
                     />
@@ -213,63 +192,93 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         }
     }
 
-    private parseVariables(newVariables: IJupyterVariable[]) {
-        return newVariables.map(newVar => {
-            let newSize = '';
-            if (newVar.shape && newVar.shape !== '') {
-                newSize = newVar.shape;
-            } else if (newVar.count) {
-                newSize = newVar.count.toString();
-            }
+    private formatNameColumn = (args: IFormatterArgs): JSX.Element => {
+        if (!args.isScrolling && args.row !== undefined && !args.value) {
+            this.ensureLoaded(args.row.index);
+        }
 
-            return {
-                buttons: {
-                    name: newVar.name,
-                    supportsDataExplorer: newVar.supportsDataExplorer,
-                    numberOfColumns: this.getColumnCountFromShape(newVar.shape)
-                },
-                name: newVar.name,
-                type: newVar.type,
-                size: newSize,
-                value: newVar.value ? newVar.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
-            };
-        });
-    }
+        return <VariableExplorerCellFormatter value={args.value} role={'cell'} cellStyle={CellStyle.variable} />;
+    };
 
-    private generateDummyVariables(): IGridRow[] {
-        return [
-            {
-                name: 'foo',
-                value: 'bar',
-                type: 'DataFrame',
-                size: '(100, 100)',
-                buttons: {
-                    supportsDataExplorer: true,
-                    name: 'foo',
-                    numberOfColumns: 100
+    private getRow = (index: number): IGridRow => {
+        if (index >= 0 && index < this.props.variables.length) {
+            const variable = this.props.variables[index];
+            if (variable && variable.value) {
+                let newSize = '';
+                if (variable.shape && variable.shape !== '') {
+                    newSize = variable.shape;
+                } else if (variable.count) {
+                    newSize = variable.count.toString();
                 }
+                return {
+                    buttons: {
+                        name: variable.name,
+                        supportsDataExplorer: variable.supportsDataExplorer,
+                        variable,
+                        numberOfColumns: this.getColumnCountFromShape(variable.shape)
+                    },
+                    name: variable.name,
+                    type: variable.type,
+                    size: newSize,
+                    index,
+                    value: variable.value ? variable.value : getLocString('DataScience.variableLoadingValue', 'Loading...')
+                };
             }
-        ];
-    }
-
-    private getColumnType(key: string | number): string | undefined {
-        let column;
-        if (typeof key === 'string') {
-            //tslint:disable-next-line:no-any
-            column = this.state.gridColumns.find(c => c.key === key) as any;
-        } else {
-            // This is the index lookup
-            column = this.state.gridColumns[key];
         }
 
-        // Special case our size column, it's displayed as a string
-        // but we will sort it like a number
-        if (column && column.key === 'size') {
-            return 'number';
-        } else if (column && column.type) {
-            return column.type;
+        return {
+            buttons: { supportsDataExplorer: false, name: '', numberOfColumns: 0, variable: undefined },
+            name: '',
+            type: '',
+            size: '',
+            index,
+            value: getLocString('DataScience.variableLoadingValue', 'Loading...')
+        };
+    };
+
+    private computePageSize(): number {
+        if (this.pageSize === -1) {
+            // Based on font size and height of the main div
+            if (this.divRef.current) {
+                this.pageSize = Math.max(16, Math.round(this.divRef.current.offsetHeight / this.props.fontSize));
+            } else {
+                this.pageSize = 50;
+            }
         }
+        return this.pageSize;
     }
+
+    private ensureLoaded = (index: number) => {
+        // Figure out how many items in a page
+        const pageSize = this.computePageSize();
+
+        // Skip if already pending or already have a value
+        const haveValue = this.props.variables[index]?.value;
+        const newExecution = this.props.executionCount !== this.requestedPagesExecutionCount;
+        // tslint:disable-next-line: restrict-plus-operands
+        const notRequested = !this.requestedPages.find(n => n <= index && index < n + pageSize);
+        if (!haveValue && (newExecution || notRequested)) {
+            // Try to find a page of data around this index.
+            let pageIndex = index;
+            while (pageIndex >= 0 && pageIndex > index - pageSize / 2 && (!this.props.variables[pageIndex] || !this.props.variables[pageIndex].value)) {
+                pageIndex -= 1;
+            }
+
+            // Clear out requested pages if new requested execution
+            if (this.requestedPagesExecutionCount !== this.props.executionCount) {
+                this.requestedPages = [];
+            }
+
+            // Save in the list of requested pages
+            this.requestedPages.push(pageIndex + 1);
+
+            // Save the execution count for this request so we can verify we can skip it on next request.
+            this.requestedPagesExecutionCount = this.props.executionCount;
+
+            // Load this page.
+            this.props.pageIn(pageIndex + 1, pageSize);
+        }
+    };
 
     private getColumnCountFromShape(shape: string | undefined): number {
         if (shape) {
@@ -282,72 +291,10 @@ export class VariableExplorer extends React.Component<IVariableExplorerProps, IV
         return 0;
     }
 
-    private internalSortRows = (gridRows: IGridRow[], sortColumn: string | number, sortDirection: string): IGridRow[] => {
-        // Default to the name column
-        if (sortDirection === 'NONE') {
-            sortColumn = 'name';
-            sortDirection = 'ASC';
-        }
-
-        const columnType = this.getColumnType(sortColumn);
-        const isStringColumn = columnType === 'string' || columnType === 'object';
-        const invert = sortDirection !== 'DESC';
-
-        // Use a special comparer for string columns as we can't compare too much of a string
-        // or it will take too long
-        const comparer = isStringColumn
-            ? //tslint:disable-next-line:no-any
-              (a: any, b: any): number => {
-                  const aVal = a[sortColumn] as string;
-                  const bVal = b[sortColumn] as string;
-                  const aStr = aVal ? aVal.substring(0, Math.min(aVal.length, MaxStringCompare)).toUpperCase() : aVal;
-                  const bStr = bVal ? bVal.substring(0, Math.min(bVal.length, MaxStringCompare)).toUpperCase() : bVal;
-                  const result = aStr > bStr ? -1 : 1;
-                  return invert ? -1 * result : result;
-              }
-            : //tslint:disable-next-line:no-any
-              (a: any, b: any): number => {
-                  const aVal = this.getComparisonValue(a, sortColumn);
-                  const bVal = this.getComparisonValue(b, sortColumn);
-                  const result = aVal > bVal ? -1 : 1;
-                  return invert ? -1 * result : result;
-              };
-
-        return gridRows.sort(comparer);
-    };
-
-    // Get the numerical comparison value for a column
-    private getComparisonValue(gridRow: IGridRow, sortColumn: string | number): number {
-        // tslint:disable-next-line: no-any
-        return sortColumn === 'size' ? this.sizeColumnComparisonValue(gridRow) : (gridRow as any)[sortColumn];
-    }
-
-    // The size column needs special casing
-    private sizeColumnComparisonValue(gridRow: IGridRow): number {
-        const sizeStr: string = gridRow.size as string;
-
-        if (!sizeStr) {
-            return -1;
-        }
-
-        let sizeNumber = -1;
-        const commaIndex = sizeStr.indexOf(',');
-        // First check the shape case like so (5000,1000) in this case we want the 5000 to compare with
-        if (sizeStr[0] === '(' && commaIndex > 0) {
-            sizeNumber = parseInt(sizeStr.substring(1, commaIndex), 10);
-        } else {
-            // If not in the shape format, assume a to i conversion
-            sizeNumber = parseInt(sizeStr, 10);
-        }
-
-        // If our parse fails we get NaN for any case that like return -1
-        return isNaN(sizeNumber) ? -1 : sizeNumber;
-    }
-
     private rowDoubleClick = (_rowIndex: number, row: IGridRow) => {
         // On row double click, see if data explorer is supported and open it if it is
-        if (row.buttons && row.buttons.supportsDataExplorer !== undefined && row.buttons.name && row.buttons.supportsDataExplorer) {
-            this.props.showDataExplorer(row.buttons.name, row.buttons.numberOfColumns);
+        if (row.buttons && row.buttons.supportsDataExplorer !== undefined && row.buttons.name && row.buttons.supportsDataExplorer && row.buttons.variable) {
+            this.props.showDataExplorer(row.buttons.variable, row.buttons.numberOfColumns);
         }
     };
 }
