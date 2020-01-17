@@ -69,14 +69,14 @@ const mimeTypeToImport: ITransformData[] = [
     {
         mimeType: 'application/vnd.dataresource+json',
         loader: async () => {
-            const module = await import(/* webpackChunkName: "geojson" */ '@nteract/transform-dataresource');
+            const module = await import(/* webpackChunkName: "dataresource" */ '@nteract/transform-dataresource');
             return module.DataResourceTransform;
         }
     },
     {
         mimeType: 'application/x-nteract-model-debug+json',
         loader: async () => {
-            const module = await import(/* webpackChunkName: "geojson" */ '@nteract/transform-model-debug');
+            const module = await import(/* webpackChunkName: "modeldebug" */ '@nteract/transform-model-debug');
             return module.default;
         }
 
@@ -84,7 +84,7 @@ const mimeTypeToImport: ITransformData[] = [
     {
         mimeType: 'text/vnd.plotly.v1+html',
         loader: async () => {
-            const module = await import(/* webpackChunkName: "geojson" */ '@nteract/transform-plotly');
+            const module = await import(/* webpackChunkName: "plotly" */ '@nteract/transform-plotly');
             return module.PlotlyNullTransform;
         }
 
@@ -92,7 +92,7 @@ const mimeTypeToImport: ITransformData[] = [
     {
         mimeType: 'application/vnd.plotly.v1+json',
         loader: async () => {
-            const module = await import(/* webpackChunkName: "geojson" */ '@nteract/transform-plotly');
+            const module = await import(/* webpackChunkName: "plotly" */ '@nteract/transform-plotly');
             return module.PlotlyTransform;
         }
 
@@ -142,7 +142,7 @@ const mimeTypeToImport: ITransformData[] = [
     { 
         mimeType: 'application/vdom.v1+json',
         loader: async () => {
-            const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transform-vdom');
+            const module = await import(/* webpackChunkName: "nteract_transforms_vsdom" */ '@nteract/transform-vdom');
             return module.VDOM;
         }
     },

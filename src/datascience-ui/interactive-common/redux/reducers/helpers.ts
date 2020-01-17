@@ -2,8 +2,8 @@
 // Licensed under the MIT License.
 'use strict';
 import { min } from 'lodash';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+// tslint:disable-next-line: no-require-imports no-var-requires
+const cloneDeep = require('lodash/cloneDeep');
 
 import { ICell, IDataScienceExtraSettings } from '../../../../client/datascience/types';
 import { arePathsSame } from '../../../react-common/arePathsSame';

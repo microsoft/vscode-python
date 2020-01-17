@@ -120,6 +120,10 @@ gulp.task('compile-webviews', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js', '--mode', 'production'], webpackEnv);
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js', '--mode', 'production'], webpackEnv);
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-interactiveWindowChunked.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditorChunked.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-dataExplorerChunked.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewerChunked.config.js', '--mode', 'production'], webpackEnv);
 });
 
 gulp.task('webpack', async () => {

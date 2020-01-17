@@ -107,6 +107,9 @@ export class WebPanelServer {
 
             // Here is where we'd likely support loading split bundles.
             default:
+                if (ctx.url.includes('_chunk_bundle.js')) {
+                    filePath = path.join(root, path.basename(ctx.url));
+                }
                 break;
         }
         ctx.body = this.fs.createReadStream(filePath);

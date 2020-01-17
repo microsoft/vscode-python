@@ -19,8 +19,8 @@ import { getRichestMimetype, getTransform } from './transforms';
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
 
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+// tslint:disable-next-line: no-require-imports no-var-requires
+const cloneDeep = require('lodash/cloneDeep');
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
 

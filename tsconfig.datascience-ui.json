@@ -1,7 +1,9 @@
 {
     "compilerOptions": {
         "baseUrl": ".",
-        "module": "commonjs",
+        "module": "esnext",
+        "moduleResolution": "node",
+        "importHelpers": true,
         "target": "es5",
         "outDir": "out",
         "lib": [
