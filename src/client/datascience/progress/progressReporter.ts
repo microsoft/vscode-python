@@ -57,7 +57,7 @@ export class ProgressReporter implements IProgressReporter {
 
         return {
             token: cancellation.token,
-            dispose: () => cancellation.cancel()
+            dispose: () => deferred.resolve()
         };
     }
 
