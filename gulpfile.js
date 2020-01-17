@@ -308,7 +308,7 @@ gulp.task('installNewPtvsd', async () => {
         'py',
         '--no-deps',
         '--upgrade',
-        'ptvsd==5.0.0a11'
+        'ptvsd==5.0.0a12'
     ];
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)
