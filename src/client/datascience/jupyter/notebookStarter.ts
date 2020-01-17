@@ -13,7 +13,6 @@ import { CancellationError, createPromiseFromCancellation } from '../../common/c
 import { traceInfo } from '../../common/logger';
 import { IFileSystem, TemporaryDirectory } from '../../common/platform/types';
 import { IDisposable, IOutputChannel } from '../../common/types';
-import { sleep } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
@@ -62,7 +61,6 @@ export class NotebookStarter implements Disposable {
         let exitCode: number | null = 0;
         let starter: JupyterConnectionWaiter | undefined;
         try {
-            await sleep(10_000);
             // Generate a temp dir with a unique GUID, both to match up our started server and to easily clean up after
             const tempDirPromise = this.generateTempDir();
             tempDirPromise.then(dir => this.disposables.push(dir)).ignoreErrors();
