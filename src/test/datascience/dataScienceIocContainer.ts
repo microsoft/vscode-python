@@ -9,7 +9,18 @@ import * as path from 'path';
 import { SemVer } from 'semver';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { ConfigurationChangeEvent, Disposable, Event, EventEmitter, FileSystemWatcher, Uri, WorkspaceConfiguration, WorkspaceFolder, WorkspaceFoldersChangeEvent } from 'vscode';
+import {
+    CancellationTokenSource,
+    ConfigurationChangeEvent,
+    Disposable,
+    Event,
+    EventEmitter,
+    FileSystemWatcher,
+    Uri,
+    WorkspaceConfiguration,
+    WorkspaceFolder,
+    WorkspaceFoldersChangeEvent
+} from 'vscode';
 import * as vsls from 'vsls/vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
@@ -496,7 +507,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
 
         // No need of reporting progress.
         const progressReporter = mock(ProgressReporter);
-        when(progressReporter.createProgressIndicator(anything(), anything())).thenReturn({ dispose: noop });
+        when(progressReporter.createProgressIndicator(anything())).thenReturn({ dispose: noop, token: new CancellationTokenSource().token });
         this.serviceManager.addSingletonInstance<ProgressReporter>(ProgressReporter, instance(progressReporter));
 
         // Don't check for dot net compatibility

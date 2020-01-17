@@ -37,7 +37,7 @@ suite('Data Science - Progress Reporter', () => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
-        reporter.createProgressIndicator('Hello World', cancel.token);
+        reporter.createProgressIndicator('Hello World');
 
         // appShell.WithProgress should not complete.
         const message = await Promise.race([callbackPromise, sleep(500).then(() => 'Timeout')]);
@@ -52,7 +52,7 @@ suite('Data Science - Progress Reporter', () => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
-        reporter.createProgressIndicator('Hello World', cancel.token);
+        reporter.createProgressIndicator('Hello World');
 
         cancel.cancel();
 
@@ -68,7 +68,7 @@ suite('Data Science - Progress Reporter', () => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
-        const disposable = reporter.createProgressIndicator('Hello World', cancel.token);
+        const disposable = reporter.createProgressIndicator('Hello World');
 
         disposable.dispose();
 
@@ -83,7 +83,7 @@ suite('Data Science - Progress Reporter', () => {
             return (callbackPromise = cb(instance(vscodeProgressReporter), cancel.token));
         });
 
-        const disposable = reporter.createProgressIndicator('Hello World', cancel.token);
+        const disposable = reporter.createProgressIndicator('Hello World');
         const progressMessages: string[] = [];
         const expectedProgressMessages: string[] = [];
 

@@ -7,7 +7,7 @@ import { injectable, unmanaged } from 'inversify';
 import * as os from 'os';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
+import { CancellationToken, ConfigurationTarget, Event, EventEmitter, Memento, Position, Range, Selection, TextEditor, Uri, ViewColumn } from 'vscode';
 import { Disposable } from 'vscode-jsonrpc';
 
 import { ServerStatus } from '../../../datascience-ui/interactive-common/mainState';
@@ -734,11 +734,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     }
 
     private async startServerImpl(): Promise<void> {
-        const cancellationToken = new CancellationTokenSource();
         // Status depends upon if we're about to connect to existing server or not.
         const progressReporter = (await this.jupyterExecution.getServer(await this.getNotebookOptions()))
-            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter(), cancellationToken.token)
-            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter(), cancellationToken.token);
+            ? this.progressReporter.createProgressIndicator(localize.DataScience.connectingToJupyter())
+            : this.progressReporter.createProgressIndicator(localize.DataScience.startingJupyter());
 
         // Check to see if we support ipykernel or not
         try {
@@ -751,9 +750,13 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 );
             }
             // Then load the jupyter server
-            await this.createNotebook(cancellationToken.token);
+            await this.createNotebook(progressReporter.token);
         } catch (e) {
             progressReporter.dispose();
+            // If user cancelled, then do nothing.
+            if (progressReporter.token.isCancellationRequested && e instanceof CancelationError) {
+                return;
+            }
             if (e instanceof JupyterSelfCertsError) {
                 // On a self cert error, warn the user and ask if they want to change the setting
                 const enableOption: string = localize.DataScience.jupyterSelfCertEnable();

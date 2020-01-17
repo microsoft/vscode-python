@@ -4,12 +4,13 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Progress as VSCProgress, ProgressLocation } from 'vscode';
+import { CancellationToken, CancellationTokenSource, Progress as VSCProgress, ProgressLocation } from 'vscode';
 import { IApplicationShell } from '../../common/application/types';
 import { wrapCancellationTokens } from '../../common/cancellation';
 import { IDisposable } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { noop } from '../../common/utils/misc';
+import { registerReporter } from './decorator';
 import { getUserMessageForAction } from './messages';
 import { IProgressReporter, Progress, ReportableAction } from './types';
 
@@ -22,7 +23,9 @@ export class ProgressReporter implements IProgressReporter {
         return this.currentActions.length === 0 ? undefined : this.currentActions[this.currentActions.length - 1];
     }
 
-    constructor(@inject(IApplicationShell) private readonly appShell: IApplicationShell) {}
+    constructor(@inject(IApplicationShell) private readonly appShell: IApplicationShell) {
+        registerReporter(this);
+    }
 
     /**
      * Create and display a progress indicator for starting of Jupyter Notebooks.
@@ -32,23 +35,27 @@ export class ProgressReporter implements IProgressReporter {
      * @returns {IDisposable}
      * @memberof JupyterStartupProgressReporter
      */
-    public createProgressIndicator(message: string, token?: CancellationToken): IDisposable {
-        if (token && token.isCancellationRequested) {
-            return { dispose: noop };
-        }
-
+    public createProgressIndicator(message: string): IDisposable & { token: CancellationToken } {
+        const cancellation = new CancellationTokenSource();
         const deferred = createDeferred();
-        const options = { location: ProgressLocation.Notification, cancellable: !!token, title: message };
+        const options = { location: ProgressLocation.Notification, cancellable: !!cancellation, title: message };
+
         this.appShell
             .withProgress(options, async (progress, cancelToken) => {
-                wrapCancellationTokens(token, cancelToken).onCancellationRequested(() => deferred.resolve());
+                // If any of the cancellations are cancelled, then close this dialog by completing what's happening inside it.
+                wrapCancellationTokens(cancellation?.token, cancelToken).onCancellationRequested(() => {
+                    // Possible user clicked cancel, hence propagate this cancellation to the cancellation we were given.
+                    cancellation.cancel();
+                    deferred.resolve();
+                });
                 this.progressReporters.push(progress);
                 await deferred.promise;
             })
             .then(noop, noop);
 
         return {
-            dispose: () => deferred.resolve()
+            token: cancellation.token,
+            dispose: () => cancellation.cancel()
         };
     }
 
