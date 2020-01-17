@@ -16,6 +16,8 @@ import { StopWatch } from '../../../common/utils/stopWatch';
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { IEventNamePropertyMapping, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
+import { reportAction } from '../../progress/decorator';
+import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager } from '../../types';
 import { KernelSelectionProvider } from './kernelSelections';
 import { KernelService } from './kernelService';
@@ -123,6 +125,7 @@ export class KernelSelector {
      * @returns {Promise<KernelSpecInterpreter>}
      * @memberof KernelSelector
      */
+    @reportAction(ReportableAction.KernelsGetKernelForLocalConnection)
     public async getKernelForLocalConnection(
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
@@ -180,6 +183,7 @@ export class KernelSelector {
      * @memberof KernelSelector
      */
     // tslint:disable-next-line: cyclomatic-complexity
+    @reportAction(ReportableAction.KernelsGetKernelForRemoteConnection)
     public async getKernelForRemoteConnection(
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,

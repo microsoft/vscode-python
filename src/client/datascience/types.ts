@@ -19,6 +19,9 @@ import { JupyterInstallError } from './jupyter/jupyterInstallError';
 import { JupyterKernelSpec } from './jupyter/kernels/jupyterKernelSpec';
 import { LiveKernelModel } from './jupyter/kernels/types';
 
+// tslint:disable-next-line:no-any
+export type PromiseFunction = (...any: any[]) => Promise<any>;
+
 // Main interface
 export const IDataScience = Symbol('IDataScience');
 export interface IDataScience extends Disposable {

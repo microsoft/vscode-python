@@ -22,6 +22,8 @@ import { IEnvironmentActivationService } from '../../../interpreter/activation/t
 import { IInterpreterService, PythonInterpreter } from '../../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../../telemetry';
 import { Telemetry } from '../../constants';
+import { reportAction } from '../../progress/decorator';
+import { ReportableAction } from '../../progress/types';
 import { IJupyterKernelSpec, IJupyterSessionManager, IJupyterSubCommandExecutionService } from '../../types';
 import { JupyterKernelSpec } from './jupyterKernelSpec';
 import { LiveKernelModel } from './types';
@@ -221,6 +223,7 @@ export class KernelService {
     // tslint:disable-next-line: max-func-body-length
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
+    @reportAction(ReportableAction.KernelsRegisterKernel)
     // tslint:disable-next-line:max-func-body-length
     public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         if (!interpreter.displayName) {
@@ -343,6 +346,7 @@ export class KernelService {
      * @returns {Promise<IJupyterKernelSpec[]>}
      * @memberof KernelService
      */
+    @reportAction(ReportableAction.KernelsGetKernelSpecs)
     public async getKernelSpecs(sessionManager?: IJupyterSessionManager, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec[]> {
         const enumerator = sessionManager ? sessionManager.getKernelSpecs() : this.jupyterInterpreterExecService.getKernelSpecs(cancelToken);
         if (Cancellation.isCanceled(cancelToken)) {

@@ -422,5 +422,11 @@
     "DataScience.selectJupyterInterpreter": "Select an Interpreter to start Jupyter",
     "products.installingModule": "Installing {0}",
     "DataScience.switchingKernelProgress": "Switching kernel to '{0}'",
-    "DataScience.sessionStartFailedWithKernel": "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details."
+    "DataScience.sessionStartFailedWithKernel": "Failed to start a session for the Kernel '{0}'. \nView Jupyter [log](command:{1}) for further details.",
+    "DataScience.waitingForJupyterSessionToBeIdle": "Waiting for Jupyter Session to be idle",
+    "DataScience.gettingListOfKernelsForLocalConnection": "Fetching Kernels",
+    "DataScience.gettingListOfKernelsForRemoteConnection": "Fetching Kernels",
+    "DataScience.gettingListOfKernelSpecs": "Fetching Kernel specs",
+    "DataScience.startingJupyterNotebook": "Starting Jupyter Notebook",
+    "DataScience.registeringKernel": "Registering Kernel"
 }

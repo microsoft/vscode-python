@@ -44,6 +44,7 @@ import { JupyterExporter } from '../../../client/datascience/jupyter/jupyterExpo
 import { JupyterImporter } from '../../../client/datascience/jupyter/jupyterImporter';
 import { JupyterVariables } from '../../../client/datascience/jupyter/jupyterVariables';
 import { LiveShareApi } from '../../../client/datascience/liveshare/liveshare';
+import { ProgressReporter } from '../../../client/datascience/progress/progressReporter';
 import { ThemeFinder } from '../../../client/datascience/themeFinder';
 import {
     ICodeCssGenerator,
@@ -124,6 +125,7 @@ suite('Data Science - Native Editor', () => {
     let wroteToFileEvent: EventEmitter<string> = new EventEmitter<string>();
     let filesConfig: MockWorkspaceConfiguration | undefined;
     let testIndex = 0;
+    let reporter: ProgressReporter;
     const baseFile = `{
  "cells": [
   {
@@ -246,6 +248,7 @@ suite('Data Science - Native Editor', () => {
         jupyterVariables = mock(JupyterVariables);
         jupyterDebugger = mock(JupyterDebugger);
         importer = mock(JupyterImporter);
+        reporter = mock(ProgressReporter);
         const settings = mock(PythonSettings);
         const settingsChangedEvent = new EventEmitter<void>();
 
@@ -337,7 +340,8 @@ suite('Data Science - Native Editor', () => {
             storage,
             localStorage,
             instance(crypto),
-            context.object
+            context.object,
+            instance(reporter)
         );
     }
 

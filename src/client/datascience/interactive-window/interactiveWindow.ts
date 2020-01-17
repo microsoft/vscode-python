@@ -17,6 +17,7 @@ import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
     ICodeCssGenerator,
@@ -79,9 +80,11 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(INotebookEditorProvider) editorProvider: INotebookEditorProvider,
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
-        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento
+        @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
+        @inject(ProgressReporter) progressReporter: ProgressReporter
     ) {
         super(
+            progressReporter,
             listeners,
             liveShare,
             applicationShell,

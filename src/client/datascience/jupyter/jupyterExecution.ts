@@ -137,7 +137,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 try {
                     // Start or connect to the process
                     [connection, kernelSpecInterpreter] = await Promise.all([this.startOrConnect(options, cancelToken), kernelSpecInterpreterPromise]);
-                    // Create a server that we will then attempt to connect to.
+                    // Create a server tha  t we will then attempt to connect to.
                     result = this.serviceContainer.get<INotebookServer>(INotebookServer);
 
                     // In a remote situation, figure out a kernel spec too.

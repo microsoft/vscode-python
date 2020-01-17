@@ -28,6 +28,7 @@ import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, Nati
 import { InteractiveBase } from '../interactive-common/interactiveBase';
 import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRemoveCell, ISaveAll, ISubmitNewCell, ISwapCells } from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
+import { ProgressReporter } from '../progress/progressReporter';
 import {
     CellState,
     ICell,
@@ -109,9 +110,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
         @inject(IMemento) @named(WORKSPACE_MEMENTO) private localStorage: Memento,
         @inject(ICryptoUtils) private crypto: ICryptoUtils,
-        @inject(IExtensionContext) private context: IExtensionContext
+        @inject(IExtensionContext) private context: IExtensionContext,
+        @inject(ProgressReporter) progressReporter: ProgressReporter
     ) {
         super(
+            progressReporter,
             listeners,
             liveShare,
             applicationShell,

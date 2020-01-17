@@ -18,6 +18,8 @@ import { StopWatch } from '../../common/utils/stopWatch';
 import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { JUPYTER_OUTPUT_CHANNEL, Telemetry } from '../constants';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
 import { IConnection, IJupyterSubCommandExecutionService } from '../types';
 import { JupyterConnectionWaiter } from './jupyterConnection';
 import { JupyterInstallError } from './jupyterInstallError';
@@ -52,6 +54,7 @@ export class NotebookStarter implements Disposable {
         }
     }
     // tslint:disable-next-line: max-func-body-length
+    @reportAction(ReportableAction.NotebookStart)
     public async start(useDefaultConfig: boolean, cancelToken?: CancellationToken): Promise<IConnection> {
         traceInfo('Starting Notebook');
         // Now actually launch it

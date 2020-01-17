@@ -483,7 +483,13 @@ export namespace DataScience {
     );
     export const startingJupyterLogMessage = localize('DataScience.startingJupyterLogMessage', 'Starting Jupyter from {0}');
     export const jupyterStartTimedout = localize('DataScience.jupyterStartTimedout', "Starting Jupyter has timedout. Please check the 'Jupyter' output panel for further details.");
-    export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', "Switching Kenel to '{0}'");
+    export const switchingKernelProgress = localize('DataScience.switchingKernelProgress', "Switching Kernel to '{0}'");
+    export const waitingForJupyterSessionToBeIdle = localize('DataScience.waitingForJupyterSessionToBeIdle', 'Waiting for Jupyter Session to be idle');
+    export const gettingListOfKernelsForLocalConnection = localize('DataScience.gettingListOfKernelsForLocalConnection', 'Fetching Kernels');
+    export const gettingListOfKernelsForRemoteConnection = localize('DataScience.gettingListOfKernelsForRemoteConnection', 'Fetching Kernels');
+    export const gettingListOfKernelSpecs = localize('DataScience.gettingListOfKernelSpecs', 'Fetching Kernel specs');
+    export const startingJupyterNotebook = localize('DataScience.startingJupyterNotebook', 'Starting Jupyter Notebook');
+    export const registeringKernel = localize('DataScience.registeringKernel', 'Registering Kernel');
 }
 
 export namespace DebugConfigStrings {

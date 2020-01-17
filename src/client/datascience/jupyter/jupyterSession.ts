@@ -16,6 +16,8 @@ import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { Telemetry } from '../constants';
+import { reportAction } from '../progress/decorator';
+import { ReportableAction } from '../progress/types';
 import { IConnection, IJupyterKernelSpec, IJupyterSession } from '../types';
 import { JupyterWaitForIdleError } from './jupyterWaitForIdleError';
 import { JupyterKernelPromiseFailedError } from './kernels/jupyterKernelPromiseFailedError';
@@ -110,6 +112,7 @@ export class JupyterSession implements IJupyterSession {
         return this.onStatusChangedEvent.event;
     }
 
+    @reportAction(ReportableAction.JupyterSessionWaitForIdleSession)
     public async waitForIdle(timeout: number): Promise<void> {
         // Wait for idle on this session
         await this.waitForIdleOnSession(this.session, timeout);

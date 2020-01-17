@@ -165,6 +165,7 @@ import { KernelService } from '../../client/datascience/jupyter/kernels/kernelSe
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { PlotViewer } from '../../client/datascience/plotting/plotViewer';
 import { PlotViewerProvider } from '../../client/datascience/plotting/plotViewerProvider';
+import { ProgressReporter } from '../../client/datascience/progress/progressReporter';
 import { StatusProvider } from '../../client/datascience/statusProvider';
 import { ThemeFinder } from '../../client/datascience/themeFinder';
 import {
@@ -492,6 +493,11 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<IProductPathService>(IProductPathService, RefactoringLibraryProductPathService, ProductType.RefactoringLibrary);
         this.serviceManager.addSingleton<IProductPathService>(IProductPathService, DataScienceProductPathService, ProductType.DataScience);
         this.serviceManager.addSingleton<IMultiStepInputFactory>(IMultiStepInputFactory, MultiStepInputFactory);
+
+        // No need of reporting progress.
+        const progressReporter = mock(ProgressReporter);
+        when(progressReporter.createProgressIndicator(anything(), anything())).thenReturn({ dispose: noop });
+        this.serviceManager.addSingletonInstance<ProgressReporter>(ProgressReporter, instance(progressReporter));
 
         // Don't check for dot net compatibility
         const dotNetCompability = mock(DotNetCompatibilityService);
