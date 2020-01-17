@@ -82,7 +82,7 @@ class PythonDaemon(MethodDispatcher):
             self.log.debug("Ignoring non-exit method during shutdown: %s", item)
             raise KeyError
 
-        self.log.info("Execute rpc method %s", item)
+        self.log.info("Execute rpc method %s from %s", item, sys.executable)
         return super().__getitem__(item)
 
     def start(self):

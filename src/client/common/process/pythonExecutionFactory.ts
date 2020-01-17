@@ -63,15 +63,15 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
         const disposables = this.serviceContainer.get<IDisposableRegistry>(IDisposableRegistry);
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
         const logger = this.serviceContainer.get<IProcessLogger>(IProcessLogger);
-        const activatedProcPromise = this.createActivatedEnvironment({
-            allowEnvironmentFetchExceptions: true,
-            pythonPath: pythonPath,
-            resource: options.resource,
-            bypassCondaExecution: true
-        });
 
         // No daemon support in Python 2.7.
         const interpreter = await interpreterService.getInterpreterDetails(pythonPath);
+        const activatedProcPromise = this.createActivatedEnvironment({
+            allowEnvironmentFetchExceptions: true,
+            interpreter: interpreter,
+            resource: options.resource,
+            bypassCondaExecution: true
+        });
         if (interpreter?.version && interpreter.version.major < 3) {
             return activatedProcPromise!;
         }
@@ -90,7 +90,7 @@ export class PythonExecutionFactory implements IPythonExecutionFactory {
             return daemon;
         };
 
-        // Ensure we do not create muliple daemon pools for the same python interpreter.
+        // Ensure we do not create multiple daemon pools for the same python interpreter.
         let promise = this.daemonsPerPythonService.get(daemonPoolKey);
         if (!promise) {
             promise = start();

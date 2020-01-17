@@ -99,7 +99,6 @@ export type DaemonExecutionFactoryCreationOptions = ExecutionFactoryCreationOpti
 };
 export type ExecutionFactoryCreateWithEnvironmentOptions = {
     resource?: Uri;
-    pythonPath?: string;
     interpreter?: PythonInterpreter;
     allowEnvironmentFetchExceptions?: boolean;
     /**
