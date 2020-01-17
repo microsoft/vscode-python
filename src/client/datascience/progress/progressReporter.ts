@@ -30,9 +30,8 @@ export class ProgressReporter implements IProgressReporter {
      * Create and display a progress indicator for starting of Jupyter Notebooks.
      *
      * @param {string} message
-     * @param {CancellationToken} [token]
-     * @returns {IDisposable}
-     * @memberof JupyterStartupProgressReporter
+     * @returns {(IDisposable & { token: CancellationToken })}
+     * @memberof ProgressReporter
      */
     public createProgressIndicator(message: string): IDisposable & { token: CancellationToken } {
         const cancellation = new CancellationTokenSource();
