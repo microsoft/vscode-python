@@ -76,6 +76,20 @@ suite('Data Science - JupyterConnection', () => {
         assert.equal(connection.hostName, expectedServerInfo.hostname);
         assert.equal(connection.token, expectedServerInfo.token);
     });
+    test('Disconnect event is fired in connection', async () => {
+        dsSettings.jupyterLaunchTimeout = 10_000;
+        const waiter = createConnectionWaiter();
+        observableOutput.next({ source: 'stderr', out: 'Jupyter listening on http://123.123.123:8888' });
+        let disconnected = false;
+
+        const connection = await waiter.waitForConnection();
+        connection.disconnected(() => (disconnected = true));
+
+        childProc.emit('exit', 999);
+
+        assert.isTrue(disconnected);
+        assert.equal(connection.localProcExitCode, 999);
+    });
     test('Throw timeout error', async () => {
         dsSettings.jupyterLaunchTimeout = 10;
         const waiter = createConnectionWaiter();
