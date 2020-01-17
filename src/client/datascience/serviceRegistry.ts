@@ -60,6 +60,7 @@ import { NotebookStarter } from './jupyter/notebookStarter';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
+import { ProgressReporter } from './progress/progressReporter';
 import { StatusProvider } from './statusProvider';
 import { ThemeFinder } from './themeFinder';
 import {
@@ -159,6 +160,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<JupyterInterpreterService>(JupyterInterpreterService, JupyterInterpreterService);
     serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
+    serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
 
     // Temporary code, to allow users to revert to the old behavior.
     const cfg = serviceManager.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python.dataScience', undefined);
