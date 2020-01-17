@@ -100,7 +100,7 @@ export class WebPanelServer {
                 filePath = path.join(EXTENSION_ROOT_DIR, 'out', ctx.url);
                 break;
 
-            case '/index_bundle.js':
+            case '/index_chunked_bundle.js':
                 // This is in the root folder
                 filePath = path.join(root, ctx.url);
                 break;
