@@ -1,6 +1,7 @@
 /* tslint:disable */
 import * as React from 'react';
 import Loadable, { LoadableComponent } from '@loadable/component';
+import { getLocString } from '../react-common/locReactSide';
 
 interface ITransformData {
     mimeType: string;
@@ -206,5 +207,5 @@ export function getTransform(mimeType: string): LoadableComponent<{ data: any }>
         }
 
         return <div>`Transform not found for mimetype ${mimeType}`</div>;
-    }, { fallback: <div>Loading ...</div> });
+    }, { fallback: <div>{getLocString('DataScience.variableLoadingValue', 'Loading...')}</div> });
 }
