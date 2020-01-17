@@ -6,10 +6,10 @@ import '../../common/extensions';
 import { ChildProcess } from 'child_process';
 import { CancellationToken, Disposable, Event, EventEmitter } from 'vscode';
 import { Cancellation, CancellationError } from '../../common/cancellation';
-import { traceWarning } from '../../common/logger';
+import { traceInfo, traceWarning } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { ObservableExecutionResult, Output } from '../../common/process/types';
-import { IConfigurationService, IDisposable, ILogger } from '../../common/types';
+import { IConfigurationService, IDisposable } from '../../common/types';
 import { createDeferred, Deferred } from '../../common/utils/async';
 import * as localize from '../../common/utils/localize';
 import { IServiceContainer } from '../../ioc/types';
@@ -37,7 +37,6 @@ export class JupyterConnectionWaiter implements IDisposable {
     private startPromise: Deferred<IConnection>;
     private launchTimeout: NodeJS.Timer | number;
     private configService: IConfigurationService;
-    private logger: ILogger;
     private fileSystem: IFileSystem;
     private stderr: string[] = [];
     private connectionDisposed = false;
@@ -50,7 +49,6 @@ export class JupyterConnectionWaiter implements IDisposable {
         private readonly cancelToken?: CancellationToken
     ) {
         this.configService = serviceContainer.get<IConfigurationService>(IConfigurationService);
-        this.logger = serviceContainer.get<ILogger>(ILogger);
         this.fileSystem = serviceContainer.get<IFileSystem>(IFileSystem);
 
         // Cancel our start promise if a cancellation occurs
@@ -107,8 +105,8 @@ export class JupyterConnectionWaiter implements IDisposable {
 
     // tslint:disable-next-line:no-any
     private output = (data: any) => {
-        if (this.logger && !this.connectionDisposed) {
-            this.logger.logInformation(data.toString('utf8'));
+        if (!this.connectionDisposed) {
+            traceInfo(data.toString('utf8'));
         }
     };
 
@@ -124,7 +122,6 @@ export class JupyterConnectionWaiter implements IDisposable {
                 this.resolveStartPromise(url, token, host);
             }
         }
-
         // At this point we failed to get the server info or a matching server via the python code, so fall back to
         // our URL parse
         if (!this.startPromise.completed) {
