@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { traceError } from '../../common/logger';
 import { PromiseFunction } from '../types';
 import { IProgressReporter, Progress, ReportableAction } from './types';
 
@@ -17,7 +18,11 @@ export function disposeRegisteredReporters() {
 }
 
 function report(progress: Progress) {
-    _reporters.forEach(item => item.report(progress));
+    try {
+        _reporters.forEach(item => item.report(progress));
+    } catch (ex) {
+        traceError('Failed to report progress', ex);
+    }
 }
 
 /**
@@ -31,9 +36,9 @@ function report(progress: Progress) {
 export function reportAction(action: ReportableAction) {
     return function(_target: Object, _propertyName: string, descriptor: TypedPropertyDescriptor<PromiseFunction>) {
         const originalMethod = descriptor.value!;
-        report({ action, phase: 'started' });
         // tslint:disable-next-line:no-any no-function-expression
         descriptor.value = async function(...args: any[]) {
+            report({ action, phase: 'started' });
             // tslint:disable-next-line:no-invalid-this
             return originalMethod.apply(this, args).finally(() => {
                 report({ action, phase: 'completed' });

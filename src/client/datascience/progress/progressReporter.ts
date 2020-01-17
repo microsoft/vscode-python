@@ -68,12 +68,18 @@ export class ProgressReporter implements IProgressReporter {
         }
         this.actionPhases.set(progress.action, progress.phase);
 
+        if (progress.phase === 'started') {
+            this.currentActions.push(progress.action);
+        }
+
         if (!this.currentAction) {
             return;
         }
 
         // If current action has been completed, then pop that item.
-        if (this.actionPhases.get(this.currentAction) === 'completed') {
+        // Until we have an action that is still in progress
+        while (this.actionPhases.get(this.currentAction) && this.actionPhases.get(this.currentAction) !== 'started') {
+            this.actionPhases.delete(this.currentAction);
             this.currentActions.pop();
         }
 
