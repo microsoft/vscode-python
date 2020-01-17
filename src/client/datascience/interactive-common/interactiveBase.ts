@@ -754,7 +754,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         } catch (e) {
             progressReporter.dispose();
             // If user cancelled, then do nothing.
-            if (progressReporter.token.isCancellationRequested && e instanceof CancelationError) {
+            if (progressReporter.token.isCancellationRequested && e instanceof CancellationError) {
                 return;
             }
             if (e instanceof JupyterSelfCertsError) {

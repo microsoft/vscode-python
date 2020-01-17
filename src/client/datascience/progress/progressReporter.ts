@@ -38,7 +38,7 @@ export class ProgressReporter implements IProgressReporter {
     public createProgressIndicator(message: string): IDisposable & { token: CancellationToken } {
         const cancellation = new CancellationTokenSource();
         const deferred = createDeferred();
-        const options = { location: ProgressLocation.Notification, cancellable: !!cancellation, title: message };
+        const options = { location: ProgressLocation.Notification, cancellable: false, title: message };
 
         this.appShell
             .withProgress(options, async (progress, cancelToken) => {
