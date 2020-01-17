@@ -227,7 +227,7 @@ export class KernelService {
             throw new Error('Interpreter does not have a display name');
         }
 
-        const execServicePromise = this.execFactory.createActivatedEnvironment({ pythonPath: interpreter.path, allowEnvironmentFetchExceptions: true, bypassCondaExecution: true });
+        const execServicePromise = this.execFactory.createActivatedEnvironment({ interpreter, allowEnvironmentFetchExceptions: true, bypassCondaExecution: true });
         // Swallow errors if we get out of here and not resolve this.
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);

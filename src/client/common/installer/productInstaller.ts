@@ -78,7 +78,7 @@ export abstract class BaseInstaller {
             return true;
         }
         // User may have customized the module name or provided the fully qualified path.
-        const pythonPath = isResource(resource) ? undefined : resource.path;
+        const interpreter = isResource(resource) ? undefined : resource;
         const uri = isResource(resource) ? resource : undefined;
         const executableName = this.getExecutableNameFromSettings(product, uri);
 
@@ -86,7 +86,7 @@ export abstract class BaseInstaller {
         if (isModule) {
             const pythonProcess = await this.serviceContainer
                 .get<IPythonExecutionFactory>(IPythonExecutionFactory)
-                .createActivatedEnvironment({ resource: uri, pythonPath, allowEnvironmentFetchExceptions: true });
+                .createActivatedEnvironment({ resource: uri, interpreter, allowEnvironmentFetchExceptions: true });
             return pythonProcess.isModuleInstalled(executableName);
         } else {
             const process = await this.serviceContainer.get<IProcessServiceFactory>(IProcessServiceFactory).create(uri);
