@@ -43,12 +43,13 @@ suite('Python interpreter locator service', () => {
     test('Ensure we are getting all conda environments', async () => {
         const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         const interpreters = await locator.getInterpreters();
-        // Created in CI using command `conda create -n "test_env1" -y python`
-        let filteredInterpreters = interpreters.filter(i => i.envName === 'test_env1' && i.type === InterpreterType.Conda);
-        expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env1 not found');
+        interpreters.forEach(i => {
+            // tslint:disable-next-line: no-console
+            console.log(`${i.path} || ${i.envName} || ${i.type} || ${i.sysPrefix} || ${i.sysVersion} || ${i.architecture}`);
+        });
 
         // Created in CI using command `conda create -p "./test_env2" -y python`
-        filteredInterpreters = interpreters.filter(i => {
+        let filteredInterpreters = interpreters.filter(i => {
             let dirName = path.dirname(i.path);
             if (dirName.endsWith('bin') || dirName.endsWith('Scripts')) {
                 dirName = path.dirname(dirName);
@@ -70,5 +71,8 @@ suite('Python interpreter locator service', () => {
         // Base conda environment in CI
         filteredInterpreters = interpreters.filter(i => (i.envName === 'base' || i.envName === 'miniconda') && i.type === InterpreterType.Conda);
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment base not found');
+        // Created in CI using command `conda create -n "test_env1" -y python`
+        filteredInterpreters = interpreters.filter(i => i.envName === 'test_env1' && i.type === InterpreterType.Conda);
+        expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env1 not found');
     }).timeout(getOSType() === OSType.Windows ? TEST_TIMEOUT * 6 : TEST_TIMEOUT);
 });
