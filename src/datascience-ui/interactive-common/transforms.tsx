@@ -3,175 +3,182 @@ import * as React from 'react';
 import Loadable, { LoadableComponent } from '@loadable/component';
 import { getLocString } from '../react-common/locReactSide';
 
-interface ITransformData {
-    mimeType: string;
-    loader: () => Promise<any>;
+class TransformData {
+    private cachedPromise: undefined | Promise<any>;
+    constructor(public mimeType: string, private importer:() => Promise<any>) {
+    }
+    public getComponent(): Promise<any> {
+        if (!this.cachedPromise) {
+            this.cachedPromise = this.importer();
+        }
+        return this.cachedPromise;
+    }
 }
 
 // Hardcode mimeType here so we can do a quick lookup without loading all of the
 // other components.
-const mimeTypeToImport: ITransformData[] = [
-    {
-        mimeType: 'application/vnd.vega.v2+json',
-        loader: async () => {
+const mimeTypeToImport: TransformData[] = [
+    new TransformData(
+        'application/vnd.vega.v2+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.Vega2;
         }
-    },
-    {
-        mimeType: 'application/vnd.vega.v3+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.vega.v3+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.Vega3;
         }
-    },
-    {
-        mimeType: 'application/vnd.vega.v4+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.vega.v4+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.Vega4;
         }
-    },
-    {
-        mimeType: 'application/vnd.vega.v5+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.vega.v5+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.Vega5;
         }
-    },
-    {
-        mimeType: 'application/vnd.vegalite.v1+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.vegalite.v1+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.VegaLite1;
         }
-    },
-    {
-        mimeType: 'application/vnd.vegalite.v2+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.vegalite.v2+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.VegaLite2;
         }
-    },
-    {
-        mimeType: 'application/vnd.vegalite.v3+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.vegalite.v3+json',
+        async () => {
             const module = await import(/* webpackChunkName: "vega" */ '@nteract/transform-vega');
             return module.VegaLite3;
         }
-    },
-    {
-        mimeType: 'application/geo+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/geo+json',
+        async () => {
             const module = await import(/* webpackChunkName: "geojson" */ '@nteract/transform-geojson');
             return module.GeoJSONTransform;
         }
-    },
-    {
-        mimeType: 'application/vnd.dataresource+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.dataresource+json',
+        async () => {
             const module = await import(/* webpackChunkName: "dataresource" */ '@nteract/transform-dataresource');
             return module.DataResourceTransform;
         }
-    },
-    {
-        mimeType: 'application/x-nteract-model-debug+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/x-nteract-model-debug+json',
+        async () => {
             const module = await import(/* webpackChunkName: "modeldebug" */ '@nteract/transform-model-debug');
             return module.default;
         }
-    },
-    {
-        mimeType: 'text/vnd.plotly.v1+html',
-        loader: async () => {
+    ),
+    new TransformData(
+        'text/vnd.plotly.v1+html',
+        async () => {
             const module = await import(/* webpackChunkName: "plotly" */ '@nteract/transform-plotly');
             return module.PlotlyNullTransform;
         }
-    },
-    {
-        mimeType: 'application/vnd.plotly.v1+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vnd.plotly.v1+json',
+        async () => {
             const module = await import(/* webpackChunkName: "plotly" */ '@nteract/transform-plotly');
             return module.PlotlyTransform;
         }
-    },
-    {
-        mimeType: 'image/svg',
-        loader: async () => {
+    ),
+    new TransformData(
+        'image/svg',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.SVGTransform;
         }
-    },
-    {
-        mimeType: 'image/png',
-        loader: async () => {
+    ),
+    new TransformData(
+        'image/png',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.PNGTransform;
         }
-    },
-    {
-        mimeType: 'image/gif',
-        loader: async () => {
+    ),
+    new TransformData(
+        'image/gif',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.GIFTransform;
         }
-    },
-    {
-        mimeType: 'image/jpeg',
-        loader: async () => {
+    ),
+    new TransformData(
+        'image/jpeg',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.JPEGTransform;
         }
-    },
-    {
-        mimeType: 'application/json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/json',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.JSONTransform;
         }
-    },
-    {
-        mimeType: 'application/javascript',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/javascript',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.JavaScriptTransform;
         }
-    },
-    {
-        mimeType: 'application/vdom.v1+json',
-        loader: async () => {
+    ),
+    new TransformData(
+        'application/vdom.v1+json',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms_vsdom" */ '@nteract/transform-vdom');
             return module.VDOM;
         }
-    },
-    {
-        mimeType: 'text/markdown',
-        loader: async () => {
+    ),
+    new TransformData(
+        'text/markdown',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.MarkdownTransform;
         }
-    },
-    {
-        mimeType: 'text/latex',
-        loader: async () => {
+    ),
+    new TransformData(
+        'text/latex',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.LaTeXTransform;
         }
-    },
-    {
-        mimeType: 'text/html',
-        loader: async () => {
+    ),
+    new TransformData(
+        'text/html',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.HTMLTransform;
         }
-    },
-    {
-        mimeType: 'text/plain',
-        loader: async () => {
+    ),
+    new TransformData(
+        'text/plain',
+        async () => {
             const module = await import(/* webpackChunkName: "nteract_transforms" */ '@nteract/transforms');
             return module.TextTransform;
         }
-    }
+    )
 ];
 
 export function getRichestMimetype(data: any): string {
@@ -200,7 +207,7 @@ export function getTransform(mimeType: string): LoadableComponent<{ data: any }>
         async () => {
             const match = mimeTypeToImport.find(m => m.mimeType === mimeType);
             if (match) {
-                const transform = await match.loader();
+                const transform = await match.getComponent();
                 return transform;
             }
 
@@ -208,4 +215,9 @@ export function getTransform(mimeType: string): LoadableComponent<{ data: any }>
         },
         { fallback: <div>{getLocString('DataScience.variableLoadingValue', 'Loading...')}</div> }
     );
+}
+
+export async function forceLoad() {
+    // Used for tests to make sure we don't end up with 'Loading ...' anywhere in a test
+    await Promise.all(mimeTypeToImport.map(m => m.getComponent()));
 }

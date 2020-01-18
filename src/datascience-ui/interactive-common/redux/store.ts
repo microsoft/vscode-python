@@ -13,6 +13,7 @@ import { PostOffice } from '../../react-common/postOffice';
 import { combineReducers, createQueueableActionMiddleware, QueuableAction } from '../../react-common/reduxUtils';
 import { computeEditorOptions, getDefaultSettings } from '../../react-common/settingsReactSide';
 import { createEditableCellVM, generateTestState } from '../mainState';
+import { forceLoad } from '../transforms';
 import { AllowedMessages, createPostableAction, generatePostOfficeSendReducer, IncomingMessageActions } from './postOffice';
 import { generateMonacoReducer, IMonacoState } from './reducers/monaco';
 import { generateVariableReducer, IVariableState } from './reducers/variables';
@@ -90,36 +91,49 @@ function createSendInfoMiddleware(): Redux.Middleware<{}, IStore> {
 }
 
 function createTestMiddleware(): Redux.Middleware<{}, IStore> {
+    // Make sure all dynamic imports are loaded.
+    const transformPromise = forceLoad();
+
     return store => next => action => {
         const prevState = store.getState();
         const res = next(action);
         const afterState = store.getState();
+        // tslint:disable-next-line: no-any
+        const sendMessage = (message: any, payload?: any) => {
+            setTimeout(() => {
+                transformPromise
+                    .then(() => {
+                        store.dispatch(createPostableAction(message, payload));
+                    })
+                    .ignoreErrors();
+            });
+        };
 
         // Special case for focusing a cell
         if (prevState.main.focusedCellId !== afterState.main.focusedCellId && afterState.main.focusedCellId) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId })));
+            sendMessage(InteractiveWindowMessages.FocusedCellEditor, { cellId: action.payload.cellId });
         }
 
         // Indicate settings updates
         if (!fastDeepEqual(prevState.main.settings, afterState.main.settings)) {
             // Send async so happens after render state changes (so our enzyme wrapper is up to date)
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.SettingsUpdated)));
+            sendMessage(InteractiveWindowMessages.SettingsUpdated);
         }
 
         // Indicate clean changes
         if (prevState.main.dirty && !afterState.main.dirty) {
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.NotebookClean)));
+            sendMessage(InteractiveWindowMessages.NotebookClean);
         }
 
         // Indicate dirty changes
         if (!prevState.main.dirty && afterState.main.dirty) {
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.NotebookDirty)));
+            sendMessage(InteractiveWindowMessages.NotebookDirty);
         }
 
         // Indicate variables complete
         if (!fastDeepEqual(prevState.variables.variables, afterState.variables.variables)) {
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.VariablesComplete)));
+            sendMessage(InteractiveWindowMessages.VariablesComplete);
         }
 
         // Special case for rendering complete
@@ -128,7 +142,7 @@ function createTestMiddleware(): Redux.Middleware<{}, IStore> {
         if (afterFinished.length > prevFinished.length || (afterFinished.length !== prevFinished.length && afterState.main.cellVMs.length !== prevState.main.cellVMs.length)) {
             const diff = afterFinished.filter(r => prevFinished.indexOf(r) < 0);
             // Send async so happens after the render is actually finished.
-            setTimeout(() => store.dispatch(createPostableAction(InteractiveWindowMessages.ExecutionRendered, { ids: diff })));
+            sendMessage(InteractiveWindowMessages.ExecutionRendered, { ids: diff });
         }
 
         return res;
