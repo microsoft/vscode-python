@@ -307,7 +307,7 @@ steps:
 
           # 2. For `interpreterLocatorService.testvirtualenvs.ts`
 
-          & $condaExecPath update -n base -c defaults conda
+          & $condaExecPath update -n base -c defaults conda -y
 
           & $condaExecPath create -n "test_env1" -y python
           & $condaExecPath create -p "./test_env2" -y python
