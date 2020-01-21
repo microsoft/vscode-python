@@ -92,6 +92,7 @@ export interface INotebookServer extends IAsyncDisposable {
 export interface INotebook extends IAsyncDisposable {
     readonly resource: Uri;
     readonly server: INotebookServer;
+    readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;
     onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel>;
     clear(id: string): void;
@@ -172,6 +173,7 @@ export interface IJupyterPasswordConnect {
 
 export const IJupyterSession = Symbol('IJupyterSession');
 export interface IJupyterSession extends IAsyncDisposable {
+    readonly status: ServerStatus;
     onSessionStatusChanged: Event<ServerStatus>;
     restart(timeout: number): Promise<void>;
     interrupt(timeout: number): Promise<void>;

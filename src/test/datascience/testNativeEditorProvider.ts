@@ -20,9 +20,8 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
         return this.realProvider.onDidChangeActiveNotebookEditor;
     }
     private realProvider: NativeEditorProvider;
-    private _onDidOpenNotebookEditor = new EventEmitter<INotebookEditor>();
     public get onDidOpenNotebookEditor(): Event<INotebookEditor> {
-        return this._onDidOpenNotebookEditor.event;
+        return this.realProvider.onDidOpenNotebookEditor;
     }
 
     constructor(
@@ -47,7 +46,6 @@ export class TestNativeEditorProvider implements INotebookEditorProvider {
             cmdManager,
             dataScienceErrorHandler
         );
-        this.realProvider.onDidOpenNotebookEditor(e => this._onDidOpenNotebookEditor.fire(e));
     }
 
     public get activeEditor(): INotebookEditor | undefined {

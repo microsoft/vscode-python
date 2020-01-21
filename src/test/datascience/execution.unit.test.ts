@@ -161,6 +161,10 @@ class MockJupyterNotebook implements INotebook {
         }
         return this.onStatusChangedEvent.event;
     }
+
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
 }
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length

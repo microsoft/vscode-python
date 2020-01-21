@@ -210,6 +210,13 @@ export class JupyterNotebookBase implements INotebook {
         return this.onStatusChangedEvent.event;
     }
 
+    public get status(): ServerStatus {
+        if (this.session) {
+            return this.session.status;
+        }
+        return ServerStatus.NotStarted;
+    }
+
     public get resource(): Uri {
         return this._resource;
     }

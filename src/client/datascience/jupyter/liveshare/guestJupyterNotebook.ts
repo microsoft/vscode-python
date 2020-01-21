@@ -74,6 +74,10 @@ export class GuestJupyterNotebook extends LiveShareParticipantGuest(LiveSharePar
         return this.onStatusChangedEvent.event;
     }
 
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+
     public async execute(code: string, file: string, line: number, id: string, cancelToken?: CancellationToken): Promise<ICell[]> {
         // Create a deferred that we'll fire when we're done
         const deferred = createDeferred<ICell[]>();

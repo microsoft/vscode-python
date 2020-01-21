@@ -396,6 +396,7 @@ export interface IDataScienceSettings {
     themeMatplotlibPlots?: boolean;
     useWebViewServer?: boolean;
     variableQueries: IVariableQuery[];
+    disableJupyterAutoStart?: boolean;
 }
 
 export const IConfigurationService = Symbol('IConfigurationService');

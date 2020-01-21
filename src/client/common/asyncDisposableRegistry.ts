@@ -7,16 +7,20 @@ import { IAsyncDisposable, IAsyncDisposableRegistry, IDisposable } from './types
 // List of disposables that need to run a promise.
 @injectable()
 export class AsyncDisposableRegistry implements IAsyncDisposableRegistry {
-    private list: (IDisposable | IAsyncDisposable)[] = [];
+    private _list: (IDisposable | IAsyncDisposable)[] = [];
 
     public async dispose(): Promise<void> {
-        const promises = this.list.map(l => l.dispose());
+        const promises = this._list.map(l => l.dispose());
         await Promise.all(promises);
     }
 
     public push(disposable?: IDisposable | IAsyncDisposable) {
         if (disposable) {
-            this.list.push(disposable);
+            this._list.push(disposable);
         }
+    }
+
+    public get list(): (IDisposable | IAsyncDisposable)[] {
+        return this._list;
     }
 }

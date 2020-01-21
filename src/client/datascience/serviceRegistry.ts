@@ -57,6 +57,7 @@ import { KernelSelector } from './jupyter/kernels/kernelSelector';
 import { KernelService } from './jupyter/kernels/kernelService';
 import { KernelSwitcher } from './jupyter/kernels/kernelSwitcher';
 import { NotebookStarter } from './jupyter/notebookStarter';
+import { ServerPreload } from './jupyter/serverPreload';
 import { JupyterServerSelector } from './jupyter/serverSelector';
 import { PlotViewer } from './plotting/plotViewer';
 import { PlotViewerProvider } from './plotting/plotViewerProvider';
@@ -161,6 +162,7 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<JupyterInterpreterOldCacheStateStore>(JupyterInterpreterOldCacheStateStore, JupyterInterpreterOldCacheStateStore);
     serviceManager.addSingleton<ActiveEditorContextService>(ActiveEditorContextService, ActiveEditorContextService);
     serviceManager.addSingleton<ProgressReporter>(ProgressReporter, ProgressReporter);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, ServerPreload);
 
     // Temporary code, to allow users to revert to the old behavior.
     const cfg = serviceManager.get<IWorkspaceService>(IWorkspaceService).getConfiguration('python.dataScience', undefined);

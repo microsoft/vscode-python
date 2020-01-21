@@ -12,13 +12,18 @@ import * as sinon from 'sinon';
 import { anything, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Disposable, TextDocument, TextEditor, Uri, WindowState } from 'vscode';
+import { IExtensionSingleActivationService } from '../../client/activation/types';
 import { IApplicationShell, IDocumentManager } from '../../client/common/application/types';
+import { AsyncDisposableRegistry } from '../../client/common/asyncDisposableRegistry';
 import { IFileSystem } from '../../client/common/platform/types';
+import { IAsyncDisposableRegistry } from '../../client/common/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
+import { HostJupyterExecution } from '../../client/datascience/jupyter/liveshare/hostJupyterExecution';
+import { ServerPreload } from '../../client/datascience/jupyter/serverPreload';
 import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
@@ -304,6 +309,42 @@ for _ in range(50):
                 // buttons!.at(4).simulate('click');
 
                 // assert.equal(selectorCalled, true, 'Kernel Selector should have been called');
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'Server already loaded',
+            async _wrapper => {
+                // Get the server preload first so that the object is created.
+                const serverPreload = ioc.getAll<IExtensionSingleActivationService>(IExtensionSingleActivationService).find(s => s instanceof ServerPreload);
+                assert.ok(serverPreload, 'No ServerPreload class');
+
+                // Create an editor so something is listening to messages
+                const editor = await createNewEditor(ioc);
+
+                // Make sure it has a server
+                assert.ok(editor.notebook, 'Notebook did not start with a server');
+
+                // Close down all servers and mock restarting
+                const asyncRegistry = ioc.get<IAsyncDisposableRegistry>(IAsyncDisposableRegistry) as AsyncDisposableRegistry;
+                const hosts = asyncRegistry.list.filter(d => d instanceof HostJupyterExecution);
+                await Promise.all(hosts.map(d => d.dispose()));
+
+                const execution = ioc.get<IJupyterExecution>(IJupyterExecution);
+                const provider = ioc.get<INotebookEditorProvider>(INotebookEditorProvider);
+                const options = await provider.getNotebookOptions();
+                let server = await execution.getServer(options);
+                // Server should be empty now as we disposed
+                assert.notOk(server, 'Server should be empty after dispose');
+
+                // Then convince the ServerPreload we restarted
+                await serverPreload?.activate();
+                await sleep(500); // Give the server time to get into the cache
+                server = await execution.getServer(options);
+                assert.ok(server, 'Server preload did not start a server on restart');
             },
             () => {
                 return ioc;

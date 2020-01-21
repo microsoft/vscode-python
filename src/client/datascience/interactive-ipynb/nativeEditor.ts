@@ -26,7 +26,17 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, NativeKeyboardCommandTelemetryLookup, NativeMouseCommandTelemetryLookup, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import { IEditCell, IInsertCell, INativeCommand, InteractiveWindowMessages, IRemoveCell, ISaveAll, ISubmitNewCell, ISwapCells } from '../interactive-common/interactiveWindowTypes';
+import {
+    IEditCell,
+    IInsertCell,
+    INativeCommand,
+    InteractiveWindowMessages,
+    IRemoveCell,
+    ISaveAll,
+    ISubmitNewCell,
+    ISwapCells,
+    SysInfoReason
+} from '../interactive-common/interactiveWindowTypes';
 import { InvalidNotebookFileError } from '../jupyter/invalidNotebookFileError';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
@@ -142,6 +152,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active
         );
+
+        // Start the server as soon as we open if allowed
+        if (!this.configService.getSettings().datascience.disableJupyterAutoStart) {
+            this.startServer().ignoreErrors();
+        }
     }
 
     public get visible(): boolean {
@@ -311,6 +326,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         // Clear our visible cells
         this.visibleCells = [];
         return this.setDirty();
+    }
+
+    protected addSysInfo(_reason: SysInfoReason): Promise<void> {
+        // These are not supported.
+        return Promise.resolve();
     }
 
     protected async reopen(cells: ICell[]): Promise<void> {
