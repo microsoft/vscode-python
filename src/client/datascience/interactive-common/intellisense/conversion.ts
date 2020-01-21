@@ -138,6 +138,12 @@ function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): mo
     }
 }
 
+function convertToVSCodeRange(range: monacoEditor.IRange | undefined): vscode.Range | undefined {
+    if (range) {
+        return new vscode.Range(new vscode.Position(range.startLineNumber - 1, range.startColumn - 1), new vscode.Position(range.endLineNumber - 1, range.endColumn - 1));
+    }
+}
+
 // Something very fishy. If the monacoEditor.languages.CompletionItemKind is included here, we get this error on startup
 // Activating extension `ms-python.python` failed:  Unexpected token {
 // extensionHostProcess.js:457
@@ -198,7 +204,13 @@ export function convertToVSCodeCompletionItem(item: monacoEditor.languages.Compl
     const result = ({ ...item } as any) as vscode.CompletionItem;
 
     // IANHU We need better conversion here
-    result.kind = convertToVSCodeCompletionItemKind(item.kind);
+    if (item.kind && result.kind) {
+        result.kind = convertToVSCodeCompletionItemKind(item.kind);
+    }
+
+    if (item.range && result.range) {
+        result.range = convertToVSCodeRange(item.range);
+    }
 
     return result;
 }

@@ -83,7 +83,8 @@ export class IntellisenseProvider
 
         this.resolveCompletionRequests.set(requestId, { promise, cancelDisposable });
         // IANHU: Getting hit, but not hitting the other side
-        this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { model, position, item, requestId, cellId: this.getCellId(model.id) });
+        //this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { model, position, item, requestId, cellId: this.getCellId(model.id) });
+        this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { position, item, requestId, cellId: this.getCellId(model.id) });
 
         return promise.promise;
     }

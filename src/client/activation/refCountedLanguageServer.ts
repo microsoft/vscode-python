@@ -89,6 +89,12 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
     ): ProviderResult<CompletionItem[] | CompletionList> {
         return this.impl.provideCompletionItems(document, position, token, context);
     }
+    public resolveCompletionItem(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem> {
+        // IANHU: Jedi uses something different here?
+        if (this.impl.resolveCompletionItem) {
+            return this.impl.resolveCompletionItem(item, token);
+        }
+    }
     public provideCodeLenses(document: TextDocument, token: CancellationToken): ProviderResult<CodeLens[]> {
         return this.impl.provideCodeLenses(document, token);
     }
