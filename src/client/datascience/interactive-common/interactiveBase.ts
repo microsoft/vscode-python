@@ -1146,6 +1146,9 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
             case SysInfoReason.Interrupt:
                 return localize.DataScience.pythonInterruptFailedHeader();
                 break;
+            case SysInfoReason.New:
+                return localize.DataScience.pythonNewHeader();
+                break;
             default:
                 traceError('Invalid SysInfoReason');
                 return '';
