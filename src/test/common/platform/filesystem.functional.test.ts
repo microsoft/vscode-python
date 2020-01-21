@@ -69,19 +69,6 @@ suite('FileSystem', () => {
                 expect(areSame).to.equal(expected);
             });
         });
-
-        suite('getRealPath', () => {
-            // tested fully in the FileSystemPathUtils tests.
-
-            test('matches wrapped object', async () => {
-                const filename = fixPath('a/b/c/spam.py');
-                const expected = await pathUtils.getRealPath(filename);
-
-                const resolved = await fileSystem.getRealPath(filename);
-
-                expect(resolved).to.equal(expected);
-            });
-        });
     });
 
     suite('raw', () => {

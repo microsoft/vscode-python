@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs-extra';
 import * as nodepath from 'path';
 import { getOSType, OSType } from '../utils/platform';
 // prettier-ignore
@@ -134,15 +133,6 @@ export class FileSystemPathUtils implements IFileSystemPathUtils {
         path1 = this.paths.normCase(path1);
         path2 = this.paths.normCase(path2);
         return path1 === path2;
-    }
-
-    public async getRealPath(filename: string): Promise<string> {
-        try {
-            return await fs.realpath(filename);
-        } catch {
-            // We ignore the error.
-            return filename;
-        }
     }
 
     public getDisplayName(filename: string, cwd?: string): string {

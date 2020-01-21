@@ -78,8 +78,6 @@ export interface IFileSystemPathUtils {
     // filesystem and false otherwise.  On Windows this is significant.
     // On non-Windows the filenames must always be exactly the same.
     arePathsSame(path1: string, path2: string): boolean;
-    // Return the canonicalized absolute filename.
-    getRealPath(filename: string): Promise<string>;
     // Return the clean (displayable) form of the given filename.
     getDisplayName(pathValue: string, cwd?: string): string;
 }
@@ -96,7 +94,6 @@ export interface IFileSystem {
     // path-related
     directorySeparatorChar: string;
     arePathsSame(path1: string, path2: string): boolean;
-    getRealPath(path: string): Promise<string>;
 
     // "raw" operations
     stat(filePath: string): Promise<FileStat>;
