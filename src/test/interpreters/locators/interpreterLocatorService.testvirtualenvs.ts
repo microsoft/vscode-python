@@ -74,7 +74,7 @@ suite('Python interpreter locator service', () => {
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Environment test_env3 not found');
     });
 
-    test('Ensure we are the base conda environment', async () => {
+    test('Ensure we are getting the base conda environment', async () => {
         // Base conda environment in CI
         const filteredInterpreters = interpreters.filter(i => (i.envName === 'base' || i.envName === 'miniconda') && i.type === InterpreterType.Conda);
         expect(filteredInterpreters.length).to.be.greaterThan(0, 'Base environment not found');
