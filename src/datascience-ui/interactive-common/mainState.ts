@@ -267,22 +267,6 @@ function generateCellData(): (nbformat.ICodeCell | nbformat.IMarkdownCell | nbfo
     return [
         {
             cell_type: 'code',
-            execution_count: 2,
-            metadata: {},
-            outputs: [
-                {
-                    data: {
-                        'text/markdown': ['[<a href="https://code.visualstudio.com/">code.visualstudio.com</a>]'],
-                        'text/plain': ['<IPython.core.display.Markdown object>']
-                    },
-                    metadata: {},
-                    output_type: 'display_data'
-                }
-            ],
-            source: ['from IPython.display import display, Markdown\n', 'display(Markdown(\'[<a href="https://code.visualstudio.com/">code.visualstudio.com</a>]\'))\n', '\n']
-        },
-        {
-            cell_type: 'code',
             execution_count: 467,
             metadata: {
                 slideshow: {
