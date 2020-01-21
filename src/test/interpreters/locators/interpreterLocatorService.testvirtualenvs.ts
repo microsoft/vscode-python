@@ -20,6 +20,7 @@ suite('Python interpreter locator service', () => {
         // tslint:disable-next-line:no-invalid-this
         this.timeout(getOSType() === OSType.Windows ? TEST_TIMEOUT * 7 : TEST_TIMEOUT * 2);
         await initialize();
+        initializeDI();
         const locator = ioc.serviceContainer.get<IInterpreterLocatorService>(IInterpreterLocatorService, INTERPRETER_LOCATOR_SERVICE);
         interpreters = await locator.getInterpreters();
     });

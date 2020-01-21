@@ -81,7 +81,7 @@ import { VirtualEnvironmentPrompt } from './virtualEnvs/virtualEnvPrompt';
 
 /**
  * Register all the new types inside this method.
- * This method is created for testing purposes. Registers all interpreter types except `IInterpreterAutoSeletionProxyService`.
+ * This method is created for testing purposes. Registers all interpreter types except `IInterpreterAutoSeletionProxyService`, `IEnvironmentActivationService`.
  * See use case in `src\test\serviceRegistry.ts` for details
  * @param serviceManager
  */
@@ -139,8 +139,6 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<IInterpreterAutoSelectionRule>(IInterpreterAutoSelectionRule, SettingsInterpretersAutoSelectionRule, AutoSelectionRule.settings);
     serviceManager.addSingleton<IInterpreterAutoSelectionService>(IInterpreterAutoSelectionService, InterpreterAutoSelectionService);
 
-    serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
-
     serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, CondaInheritEnvPrompt);
     serviceManager.addSingleton<WindowsStoreInterpreter>(WindowsStoreInterpreter, WindowsStoreInterpreter);
     serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
@@ -151,4 +149,5 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
 export function registerTypes(serviceManager: IServiceManager) {
     registerInterpreterTypes(serviceManager);
     serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, InterpreterAutoSeletionProxyService);
+    serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
 }

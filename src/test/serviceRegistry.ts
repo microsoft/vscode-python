@@ -147,7 +147,7 @@ export class IocContainer {
         platformRegisterTypes(this.serviceManager);
     }
     public registerInterpreterTypes() {
-        // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService`, as it's already registered in the constructor
+        // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
         registerInterpreterTypes(this.serviceManager);
     }
     public registerMockProcessTypes() {
