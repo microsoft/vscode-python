@@ -7,7 +7,7 @@ import { getOSType, OSType } from '../utils/platform';
 // prettier-ignore
 import {
     IExecutables,
-    IFileSystemPaths
+    IFileSystemPaths, IFileSystemPathUtils
 } from './types';
 // tslint:disable-next-line:no-var-requires no-require-imports
 const untildify = require('untildify');
@@ -22,7 +22,7 @@ interface INodePath {
 }
 
 // The file path operations used by the extension.
-export class FileSystemPaths {
+export class FileSystemPaths implements IFileSystemPaths {
     // prettier-ignore
     constructor(
         private readonly isCaseInsensitive: boolean,
@@ -109,7 +109,7 @@ interface IRawPaths {
 }
 
 // A collection of high-level utilities related to filesystem paths.
-export class FileSystemPathUtils {
+export class FileSystemPathUtils implements IFileSystemPathUtils {
     // prettier-ignore
     constructor(
         public readonly home: string,
