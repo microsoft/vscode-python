@@ -1,3 +1,13 @@
+// Copyright (c) Microsoft Corporation. All rights reserved.
+// Licensed under the MIT License.
+
+/**
+ * This file is essential to have for us to discover conda interpreters, `CondaEnvService` alone is not sufficient.
+ * CondaEnvService runs `<path/to/conda> env list` command, which requires that we know the path to conda.
+ * In cases where we're not able to figure that out, we can still use this file to discover paths to conda environments.
+ * More details: https://github.com/microsoft/vscode-python/issues/8886
+ */
+
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { Uri } from 'vscode';
