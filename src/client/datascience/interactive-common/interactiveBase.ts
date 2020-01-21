@@ -1100,7 +1100,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 }
             };
             this._notebook.onSessionStatusChanged(statusChangeHandler);
-            this._notebook.onKernelChanged(this.kernelChangeHandler);
+            this.disposables.push(this._notebook.onKernelChanged(this.kernelChangeHandler, this));
         }
 
         traceInfo('Connected to jupyter server.');
@@ -1145,9 +1145,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 break;
             case SysInfoReason.Interrupt:
                 return localize.DataScience.pythonInterruptFailedHeader();
-                break;
-            case SysInfoReason.New:
-                return localize.DataScience.pythonNewHeader();
                 break;
             default:
                 traceError('Invalid SysInfoReason');
