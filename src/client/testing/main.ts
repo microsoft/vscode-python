@@ -444,7 +444,6 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
         const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
 
         this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));
-        this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));
         this.disposableRegistry.push(
             this.workspaceService.onDidChangeConfiguration(e => {
                 if (this.configChangedTimer) {
