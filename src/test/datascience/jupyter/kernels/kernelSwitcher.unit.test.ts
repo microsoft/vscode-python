@@ -97,14 +97,14 @@ suite('Data Science - Kernel Switcher', () => {
                         verify(notebook.getKernelSpec()).once();
 
                         if (isLocalConnection) {
-                            verify(kernelSelector.selectLocalKernel(undefined, undefined, currentKernelInfo.currentKernel)).once();
+                            verify(kernelSelector.selectLocalKernel(undefined, true, undefined, currentKernelInfo.currentKernel)).once();
                         } else {
                             verify(kernelSelector.selectRemoteKernel(anything(), anything(), anything())).once();
                         }
                     });
 
                     test('Prompt to select local kernel', async () => {
-                        when(kernelSelector.selectLocalKernel(undefined, undefined, currentKernelInfo.currentKernel)).thenResolve({});
+                        when(kernelSelector.selectLocalKernel(undefined, true, undefined, currentKernelInfo.currentKernel)).thenResolve({});
 
                         const selection = await kernelSwitcher.switchKernel(instance(notebook));
 
@@ -114,7 +114,7 @@ suite('Data Science - Kernel Switcher', () => {
                     suite('Kernel Selected', () => {
                         setup(() => {
                             if (isLocalConnection) {
-                                when(kernelSelector.selectLocalKernel(undefined, undefined, currentKernelInfo.currentKernel)).thenResolve({
+                                when(kernelSelector.selectLocalKernel(undefined, true, undefined, currentKernelInfo.currentKernel)).thenResolve({
                                     kernelModel: selectedKernel,
                                     kernelSpec: undefined,
                                     interpreter: selectedInterpreter

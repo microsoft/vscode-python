@@ -759,6 +759,12 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.addInterpreter(this.workingPython, SupportedCommands.all);
     }
 
+    public async activate(): Promise<void> {
+        // Activate all of the extension activation services
+        const activationServices = this.serviceManager.getAll<IExtensionSingleActivationService>(IExtensionSingleActivationService);
+        await Promise.all(activationServices.map(a => a.activate()));
+    }
+
     // tslint:disable:any
     public createWebView(mount: () => ReactWrapper<any, Readonly<{}>, React.Component>, role: vsls.Role = vsls.Role.None) {
         // Force the container to mock actual live share if necessary

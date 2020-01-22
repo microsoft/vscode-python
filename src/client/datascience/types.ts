@@ -121,6 +121,7 @@ export interface INotebookServerOptions {
     workingDir?: string;
     purpose: string;
     metadata?: nbformat.INotebookMetadata;
+    disableUI?: boolean;
 }
 
 export const INotebookExecutionLogger = Symbol('INotebookExecutionLogger');
@@ -140,6 +141,7 @@ export interface IGatherExecution {
 export const IJupyterExecution = Symbol('IJupyterExecution');
 export interface IJupyterExecution extends IAsyncDisposable {
     sessionChanged: Event<void>;
+    serverStarted: Event<INotebookServerOptions>;
     isNotebookSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isImportSupported(cancelToken?: CancellationToken): Promise<boolean>;
     isSpawnSupported(cancelToken?: CancellationToken): Promise<boolean>;

@@ -51,13 +51,13 @@ export class KernelSwitcher {
 
     @captureTelemetry(Telemetry.SelectLocalJupyterKernel)
     private async selectLocalJupyterKernel(currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
-        return this.kernelSelector.selectLocalKernel(undefined, undefined, currentKernel);
+        return this.kernelSelector.selectLocalKernel(undefined, false, undefined, currentKernel);
     }
 
     @captureTelemetry(Telemetry.SelectRemoteJupyuterKernel)
     private async selectRemoteJupyterKernel(connInfo: IConnection, currentKernel?: IJupyterKernelSpec | LiveKernelModel): Promise<KernelSpecInterpreter> {
         const session = await this.jupyterSessionManagerFactory.create(connInfo);
-        return this.kernelSelector.selectRemoteKernel(session, undefined, currentKernel);
+        return this.kernelSelector.selectRemoteKernel(session, false, undefined, currentKernel);
     }
     private async switchKernelWithRetry(notebook: INotebook, kernel: KernelSpecInterpreter): Promise<void> {
         const settings = this.configService.getSettings();

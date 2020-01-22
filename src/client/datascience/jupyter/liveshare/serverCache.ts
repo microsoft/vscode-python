@@ -86,7 +86,8 @@ export class ServerCache implements IAsyncDisposable {
             usingDarkTheme: options ? options.usingDarkTheme : undefined,
             purpose: options ? options.purpose : uuid(),
             workingDir: options && options.workingDir ? options.workingDir : await this.calculateWorkingDirectory(),
-            metadata: options?.metadata
+            metadata: options?.metadata,
+            disableUI: options?.disableUI
         };
     }
 

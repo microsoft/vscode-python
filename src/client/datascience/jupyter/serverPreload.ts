@@ -28,13 +28,14 @@ export class ServerPreload implements IExtensionSingleActivationService {
         // 2) Notebook was opened in the past 7 days
         // 3) Interactive window was opened in the past 7 days
         // 4) Interactive window is opened
-        this.checkForServerStart();
+        // And the user has specified local server in their settings.
+        this.checkDateForServerStart();
 
         // Don't hold up activation though
         return Promise.resolve();
     }
 
-    private checkForServerStart() {
+    private checkDateForServerStart() {
         const lastTimeNumber = this.mementoStorage.get<number>(LastServerActiveTimeKey);
 
         if (lastTimeNumber) {
@@ -43,23 +44,27 @@ export class ServerPreload implements IExtensionSingleActivationService {
             const diff = currentTime.getTime() - lastTime.getTime();
             const diffInDays = Math.floor(diff / (24 * 3600 * 1000));
             if (diffInDays <= 7) {
-                this.startServer().ignoreErrors();
+                this.createServerIfNecessary().ignoreErrors();
             }
         }
     }
 
-    private async startServer() {
+    private async createServerIfNecessary() {
         try {
-            traceInfo(`Starting server because of preload conditions ...`);
+            traceInfo(`Attempting to start a server because of preload conditions ...`);
             const options = await this.interactiveProvider.getNotebookOptions();
 
+            // Turn off any UI display
+            const optionsCopy = { ...options };
+            optionsCopy.disableUI = true;
+
             // May already have this server started.
-            let server = await this.execution.getServer(options);
+            let server = await this.execution.getServer(optionsCopy);
 
             // If it didn't start, attempt for local and if allowed.
-            if (!server && !options.uri && !this.configService.getSettings().datascience.disableJupyterAutoStart) {
+            if (!server && !optionsCopy.uri && !this.configService.getSettings().datascience.disableJupyterAutoStart) {
                 // Local case, try creating one
-                server = await this.execution.connectToNotebookServer(options);
+                server = await this.execution.connectToNotebookServer(optionsCopy);
             }
 
             if (server) {
@@ -73,12 +78,12 @@ export class ServerPreload implements IExtensionSingleActivationService {
 
     private onDidOpenNotebook() {
         // Automatically start a server whenever we open a notebook
-        this.startServer().ignoreErrors();
+        this.createServerIfNecessary().ignoreErrors();
     }
 
     private onDidOpenOrCloseInteractive(interactive: IInteractiveWindow | undefined) {
         if (interactive) {
-            this.startServer().ignoreErrors();
+            this.createServerIfNecessary().ignoreErrors();
         }
     }
 }

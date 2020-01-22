@@ -197,14 +197,14 @@ export class KernelService {
             }
         }
     }
-    public async searchAndRegisterKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+    public async searchAndRegisterKernel(interpreter: PythonInterpreter, disableUI?: boolean, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         // If a kernelspec already exists for this, then use that.
         const found = await this.findMatchingKernelSpec(interpreter, undefined, cancelToken);
         if (found) {
             sendTelemetryEvent(Telemetry.UseExistingKernel);
             return found;
         }
-        return this.registerKernel(interpreter, cancelToken);
+        return this.registerKernel(interpreter, disableUI, cancelToken);
     }
 
     /**
@@ -221,11 +221,12 @@ export class KernelService {
      * @memberof KernelService
      */
     // tslint:disable-next-line: max-func-body-length
+    // tslint:disable-next-line: cyclomatic-complexity
     @captureTelemetry(Telemetry.RegisterInterpreterAsKernel, undefined, true)
     @traceDecorators.error('Failed to register an interpreter as a kernel')
     @reportAction(ReportableAction.KernelsRegisterKernel)
     // tslint:disable-next-line:max-func-body-length
-    public async registerKernel(interpreter: PythonInterpreter, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
+    public async registerKernel(interpreter: PythonInterpreter, disableUI?: boolean, cancelToken?: CancellationToken): Promise<IJupyterKernelSpec | undefined> {
         if (!interpreter.displayName) {
             throw new Error('Interpreter does not have a display name');
         }
@@ -235,7 +236,7 @@ export class KernelService {
         execServicePromise.ignoreErrors();
         const name = this.generateKernelNameForIntepreter(interpreter);
         // If ipykernel is not installed, prompt to install it.
-        if (!(await this.installer.isInstalled(Product.ipykernel, interpreter))) {
+        if (!(await this.installer.isInstalled(Product.ipykernel, interpreter)) && !disableUI) {
             // If we wish to wait for installation to complete, we must provide a cancel token.
             const token = new CancellationTokenSource();
             const response = await this.installer.promptToInstall(Product.ipykernel, interpreter, wrapCancellationTokens(cancelToken, token.token));

@@ -152,11 +152,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
             localize.DataScience.nativeEditorTitle(),
             ViewColumn.Active
         );
-
-        // Start the server as soon as we open if allowed
-        if (!this.configService.getSettings().datascience.disableJupyterAutoStart) {
-            this.startServer().ignoreErrors();
-        }
     }
 
     public get visible(): boolean {
