@@ -47,7 +47,11 @@ suite('Module Installer - Invalid Paths', () => {
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
 
                     const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(TypeMoq.Mock.ofType<PythonInterpreter>().object));
+
+                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
+                    // tslint:disable-next-line:no-any
+                    pythonInterpreter.setup(i => (i as any).then).returns(() => undefined);
+                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonInterpreter.object));
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
 
                     persistentState = TypeMoq.Mock.ofType<IPersistentStateFactory>();

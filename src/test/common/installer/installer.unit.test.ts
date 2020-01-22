@@ -43,7 +43,7 @@ import { IServiceContainer } from '../../../client/ioc/types';
 
 use(chaiAsPromised);
 
-suite('Module Installer only', () => {
+suite('xModule Installer only', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
@@ -91,7 +91,10 @@ suite('Module Installer only', () => {
                     productPathService.setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => 'xyz');
                     productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => true);
                     const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
-                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(TypeMoq.Mock.ofType<PythonInterpreter>().object));
+                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
+                    // tslint:disable-next-line:no-any
+                    pythonInterpreter.setup(i => (i as any).then).returns(() => undefined);
+                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonInterpreter.object));
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
