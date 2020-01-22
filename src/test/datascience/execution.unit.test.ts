@@ -843,7 +843,7 @@ suite('Jupyter Execution', async () => {
             name: 'hello',
             path: ''
         };
-        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
+        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything())).thenResolve({ kernelSpec });
         const jupyterCmdExecutionService = new JupyterCommandFinderInterpreterExecutionService(
             commandFinder,
             instance(interpreterService),

@@ -56,6 +56,7 @@ import {
     INotebookEditorProvider,
     INotebookExporter,
     INotebookImporter,
+    INotebookServerOptions,
     IThemeFinder
 } from '../../../client/datascience/types';
 import { IInterpreterService } from '../../../client/interpreter/contracts';
@@ -270,6 +271,9 @@ suite('Data Science - Native Editor', () => {
 
         const sessionChangedEvent = new EventEmitter<void>();
         when(executionProvider.sessionChanged).thenReturn(sessionChangedEvent.event);
+
+        const serverStartedEvent = new EventEmitter<INotebookServerOptions>();
+        when(executionProvider.serverStarted).thenReturn(serverStartedEvent.event);
 
         testIndex += 1;
         when(crypto.createHash(anything(), 'string')).thenReturn(`${testIndex}`);
