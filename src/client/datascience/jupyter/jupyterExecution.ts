@@ -153,6 +153,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(sessionManager, options?.metadata, cancelToken);
                     }
 
+                    // If no kernel and not going to pick one, exit early
+                    if (!Object.keys(kernelSpecInterpreter) && !allowUI) {
+                        return undefined;
+                    }
+
                     // Populate the launch info that we are starting our server with
                     const launchInfo: INotebookServerLaunchInfo = {
                         connectionInfo: connection!,
@@ -187,7 +192,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                                 if (selection === selectKernel) {
                                     const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
                                     const sessionManager = await sessionManagerFactory.create(connection);
-                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(sessionManager, !allowUI, cancelToken, launchInfo.kernelSpec);
+                                    const kernelInterpreter = await this.kernelSelector.selectLocalKernel(sessionManager, cancelToken, launchInfo.kernelSpec);
                                     if (Object.keys(kernelInterpreter).length > 0) {
                                         launchInfo.interpreter = kernelInterpreter.interpreter;
                                         launchInfo.kernelSpec = kernelInterpreter.kernelSpec || kernelInterpreter.kernelModel;

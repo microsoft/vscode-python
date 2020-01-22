@@ -91,13 +91,12 @@ export class KernelSelector {
      */
     public async selectRemoteKernel(
         session: IJupyterSessionManager,
-        disableUI?: boolean,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForRemoteSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, disableUI, cancelToken, currentKernel);
+        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
     }
     /**
      * Select a kernel from a local session.
@@ -109,13 +108,12 @@ export class KernelSelector {
      */
     public async selectLocalKernel(
         session?: IJupyterSessionManager,
-        disableUI?: boolean,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ): Promise<KernelSpecInterpreter> {
         let suggestions = await this.selectionProvider.getKernelSelectionsForLocalSession(session, cancelToken);
         suggestions = suggestions.filter(item => !this.kernelIdsToHide.has(item.selection.kernelModel?.id || ''));
-        return this.selectKernel(suggestions, session, disableUI, cancelToken, currentKernel);
+        return this.selectKernel(suggestions, session, cancelToken, currentKernel);
     }
     /**
      * Gets a kernel that needs to be used with a local session.
@@ -153,7 +151,7 @@ export class KernelSelector {
                     selection = await this.useInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, disableUI, cancelToken);
                 } else {
                     telemetryProps.promptedToSelect = true;
-                    selection = await this.selectLocalKernel(sessionManager, disableUI, cancelToken);
+                    selection = await this.selectLocalKernel(sessionManager, cancelToken);
                 }
             }
         } else {
@@ -243,7 +241,6 @@ export class KernelSelector {
     private async selectKernel(
         suggestions: IKernelSpecQuickPickItem[],
         session?: IJupyterSessionManager,
-        disableUI?: boolean,
         cancelToken?: CancellationToken,
         currentKernel?: IJupyterKernelSpec | LiveKernelModel
     ) {
@@ -255,7 +252,7 @@ export class KernelSelector {
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
-            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, disableUI, cancelToken);
+            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, false, cancelToken);
         } else if (selection.selection.kernelModel) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
             // tslint:disable-next-line: no-any

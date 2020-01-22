@@ -435,15 +435,8 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
     protected abstract closeBecauseOfFailure(exc: Error): Promise<void>;
 
     protected async clearResult(id: string): Promise<void> {
-        // This will get called during an execution, so we need to have
-        // a notebook ready.
-        try {
-            await this.ensureServerAndNotebook();
-            if (this._notebook) {
-                this._notebook.clear(id);
-            }
-        } catch (exc) {
-            this.errorHandler.handleError(exc).ignoreErrors();
+        if (this._notebook) {
+            this._notebook.clear(id);
         }
     }
 
@@ -546,8 +539,6 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                 await finishedAddingCode.promise;
                 traceInfo(`Finished execution for ${id}`);
             }
-        } catch (err) {
-            await this.errorHandler.handleError(err);
         } finally {
             status.dispose();
 
@@ -853,32 +844,40 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         }
     }
 
-    private onRemoteReexecuteCode(args: IRemoteReexecuteCode) {
+    private async onRemoteReexecuteCode(args: IRemoteReexecuteCode) {
         // Make sure this is valid
         if (args && args.id && args.file && args.originator !== this.id) {
-            // On a reexecute clear the previous execution
-            if (this._notebook) {
-                this._notebook.clear(args.id);
+            try {
+                // On a reexecute clear the previous execution
+                if (this._notebook) {
+                    this._notebook.clear(args.id);
+                }
+
+                // Indicate this in our telemetry.
+                // Add new telemetry type
+                sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
+
+                // Submit this item as new code.
+                this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
+            } catch (exc) {
+                this.errorHandler.handleError(exc).ignoreErrors();
             }
-
-            // Indicate this in our telemetry.
-            // Add new telemetry type
-            sendTelemetryEvent(Telemetry.RemoteReexecuteCode);
-
-            // Submit this item as new code.
-            this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
         }
     }
 
     // tslint:disable-next-line:no-any
-    private onRemoteAddedCode(args: IRemoteAddCode) {
+    private async onRemoteAddedCode(args: IRemoteAddCode) {
         // Make sure this is valid
         if (args && args.id && args.file && args.originator !== this.id) {
-            // Indicate this in our telemetry.
-            sendTelemetryEvent(Telemetry.RemoteAddCode);
+            try {
+                // Indicate this in our telemetry.
+                sendTelemetryEvent(Telemetry.RemoteAddCode);
 
-            // Submit this item as new code.
-            this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug).ignoreErrors();
+                // Submit this item as new code.
+                await this.submitCode(args.code, args.file, args.line, args.id, undefined, args.debug);
+            } catch (exc) {
+                this.errorHandler.handleError(exc).ignoreErrors();
+            }
         }
     }
 
