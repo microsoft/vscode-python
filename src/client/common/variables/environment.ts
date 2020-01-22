@@ -13,7 +13,7 @@ import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
     private _pathVariable?: 'Path' | 'PATH';
     constructor(
-        //
+        // We only use a small portion of either of these interfaces.
         @inject(IPathUtils) private readonly pathUtils: IPathUtils,
         @inject(IFileSystem) private readonly fs: IFileSystem
     ) {}

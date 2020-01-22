@@ -30,7 +30,7 @@ suite('Environment Variables Service', () => {
         pathUtils = TypeMoq.Mock.ofType<IPathUtils>(undefined, TypeMoq.MockBehavior.Strict);
         fs = TypeMoq.Mock.ofType<IFileSystem>(undefined, TypeMoq.MockBehavior.Strict);
         variablesService = new EnvironmentVariablesService(
-            //
+            // This is the only place that the mocks are used.
             pathUtils.object,
             fs.object
         );
@@ -40,14 +40,10 @@ suite('Environment Variables Service', () => {
         fs.verifyAll();
     }
     function setFile(fileName: string, text: string) {
-        fs
-            //
-            .setup(f => f.fileExists(fileName))
-            .returns(() => Promise.resolve(true));
-        fs
-            //
-            .setup(f => f.readFile(fileName))
-            .returns(() => Promise.resolve(text));
+        fs.setup(f => f.fileExists(fileName)) // Handle the specific file.
+            .returns(() => Promise.resolve(true)); // The file exists.
+        fs.setup(f => f.readFile(fileName)) // Handle the specific file.
+            .returns(() => Promise.resolve(text)); // Pretend to read from the file.
     }
 
     suite('parseFile()', () => {
@@ -59,10 +55,8 @@ suite('Environment Variables Service', () => {
         });
 
         test('Custom variables should be undefined with non-existent files', async () => {
-            fs
-                //
-                .setup(f => f.fileExists(filename))
-                .returns(() => Promise.resolve(false));
+            fs.setup(f => f.fileExists(filename)) // Handle the specific file.
+                .returns(() => Promise.resolve(false)); // The file is missing.
 
             const vars = await variablesService.parseFile(filename);
 
@@ -72,10 +66,8 @@ suite('Environment Variables Service', () => {
 
         test('Custom variables should be undefined when folder name is passed instead of a file name', async () => {
             const dirname = 'x/y/z';
-            fs
-                //
-                .setup(f => f.fileExists(dirname))
-                .returns(() => Promise.resolve(false));
+            fs.setup(f => f.fileExists(dirname)) // Handle the specific "file".
+                .returns(() => Promise.resolve(false)); // It isn't a "regular" file.
 
             const vars = await variablesService.parseFile(dirname);
 
@@ -167,9 +159,8 @@ PYTHON=${BINDIR}/python3\n\
         suite(`mergeVariables() (path var: ${pathVariable})`, () => {
             setup(() => {
                 pathUtils
-                    //
-                    .setup(pu => pu.getPathVariableName())
-                    .returns(() => pathVariable as PathVar);
+                    .setup(pu => pu.getPathVariableName()) // This always gets called.
+                    .returns(() => pathVariable as PathVar); // Pretend we're on a specific platform.
             });
 
             test('Ensure variables are merged', async () => {
@@ -226,9 +217,8 @@ PYTHON=${BINDIR}/python3\n\
         suite(`appendPath() (path var: ${pathVariable})`, () => {
             setup(() => {
                 pathUtils
-                    //
-                    .setup(pu => pu.getPathVariableName())
-                    .returns(() => pathVariable as PathVar);
+                    .setup(pu => pu.getPathVariableName()) // This always gets called.
+                    .returns(() => pathVariable as PathVar); // Pretend we're on a specific platform.
             });
 
             test('Ensure appending PATH has no effect if an undefined value or empty string is provided and PATH does not exist in vars object', async () => {
