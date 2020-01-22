@@ -2751,7 +2751,7 @@
             "test": [
                 {
                     "id": "python_tests",
-                    "name": "PYTHON",
+                    "name": "Python",
                     "when": "testsDiscovered"
                 }
             ]
