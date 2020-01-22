@@ -1112,12 +1112,6 @@ suite('FileSystem', () => {
                     ]);
                 });
             }
-
-            test('empty if the directory does not exist', async () => {
-                const entries = await fileSystem.getSubDirectories(DOES_NOT_EXIST);
-
-                expect(entries).to.deep.equal([]);
-            });
         });
 
         suite('getFiles', () => {
@@ -1176,12 +1170,6 @@ suite('FileSystem', () => {
                     ]);
                 });
             }
-
-            test('empty if the directory does not exist', async () => {
-                const entries = await fileSystem.getFiles(DOES_NOT_EXIST);
-
-                expect(entries).to.deep.equal([]);
-            });
         });
 
         suite('getFileHash', () => {
