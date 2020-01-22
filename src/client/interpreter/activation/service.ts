@@ -22,8 +22,8 @@ import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
-const cacheDuration = 10 * 60 * 1000;
-const getEnvironmentTimeout = 30000;
+export const cacheDuration = 10 * 60 * 1000;
+export const getEnvironmentTimeout = 30000;
 
 // The shell under which we'll execute activation scripts.
 const defaultShells = {
@@ -51,7 +51,6 @@ export class EnvironmentActivationService implements IEnvironmentActivationServi
     }
     @traceDecorators.verbose('getActivatedEnvironmentVariables', LogOptions.Arguments)
     @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false }, true)
-    @cacheResourceSpecificInterpreterData('ActivatedEnvironmentVariables', cacheDuration)
     public async getActivatedEnvironmentVariables(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
         const shellInfo = defaultShells[this.platform.osType];
         if (!shellInfo) {

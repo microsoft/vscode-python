@@ -6,7 +6,7 @@
 import { CancellationToken, Event, Terminal, Uri } from 'vscode';
 import { PythonInterpreter } from '../../interpreter/contracts';
 import { IEventNamePropertyMapping } from '../../telemetry/index';
-import { Resource } from '../types';
+import { IDisposable, Resource } from '../types';
 
 export enum TerminalActivationProviders {
     bashCShellFish = 'bashCShellFish',
@@ -31,7 +31,7 @@ export enum TerminalShellType {
     other = 'other'
 }
 
-export interface ITerminalService {
+export interface ITerminalService extends IDisposable {
     readonly onDidCloseTerminal: Event<void>;
     sendCommand(command: string, args: string[], cancel?: CancellationToken): Promise<void>;
     sendText(text: string): Promise<void>;
@@ -39,6 +39,33 @@ export interface ITerminalService {
 }
 
 export const ITerminalServiceFactory = Symbol('ITerminalServiceFactory');
+
+export type TerminalCreationOptions = {
+    /**
+     * Resource identifier. E.g. used to determine python interpreter that needs to be used or environment variables or the like.
+     *
+     * @type {Uri}
+     */
+    resource?: Uri;
+    /**
+     * Title.
+     *
+     * @type {string}
+     */
+    title?: string;
+    /**
+     * Associated Python Interpreter.
+     *
+     * @type {PythonInterpreter}
+     */
+    interpreter?: PythonInterpreter;
+    /**
+     * Whether hidden by default.
+     *
+     * @type {boolean}
+     */
+    hidden?: boolean;
+};
 
 export interface ITerminalServiceFactory {
     /**
@@ -50,6 +77,15 @@ export interface ITerminalServiceFactory {
      * @memberof ITerminalServiceFactory
      */
     getTerminalService(resource?: Uri, title?: string): ITerminalService;
+    /**
+     * Gets a terminal service.
+     * If one exists with the same information, that is returned else a new one is created.
+     *
+     * @param {TerminalCreationOptions} [options]
+     * @returns {ITerminalService}
+     * @memberof ITerminalServiceFactory
+     */
+    getTerminalService(options?: TerminalCreationOptions): ITerminalService;
     createTerminalService(resource?: Uri, title?: string): ITerminalService;
 }
 
@@ -59,13 +95,13 @@ export interface ITerminalHelper {
     createTerminal(title?: string): Terminal;
     identifyTerminalShell(terminal?: Terminal): TerminalShellType;
     buildCommandForTerminal(terminalShellType: TerminalShellType, command: string, args: string[]): string;
-    getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined>;
+    getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri, interpreter?: PythonInterpreter): Promise<string[] | undefined>;
     getEnvironmentActivationShellCommands(resource: Resource, shell: TerminalShellType, interpreter?: PythonInterpreter): Promise<string[] | undefined>;
 }
 
 export const ITerminalActivator = Symbol('ITerminalActivator');
 export interface ITerminalActivator {
-    activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus?: boolean): Promise<boolean>;
+    activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus?: boolean, interpreter?: PythonInterpreter): Promise<boolean>;
 }
 
 export const ITerminalActivationCommandProvider = Symbol('ITerminalActivationCommandProvider');

@@ -4,13 +4,14 @@
 'use strict';
 
 import { Terminal, Uri } from 'vscode';
+import { PythonInterpreter } from '../../../interpreter/contracts';
 import { createDeferred, sleep } from '../../utils/async';
 import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../types';
 
 export class BaseTerminalActivator implements ITerminalActivator {
     private readonly activatedTerminals: Map<Terminal, Promise<boolean>> = new Map<Terminal, Promise<boolean>>();
     constructor(private readonly helper: ITerminalHelper) {}
-    public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true) {
+    public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true, interpreter?: PythonInterpreter) {
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;
         }
@@ -18,7 +19,7 @@ export class BaseTerminalActivator implements ITerminalActivator {
         this.activatedTerminals.set(terminal, deferred.promise);
         const terminalShellType = this.helper.identifyTerminalShell(terminal);
 
-        const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
+        const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource, interpreter);
         let activated = false;
         if (activationCommamnds) {
             for (const command of activationCommamnds!) {
