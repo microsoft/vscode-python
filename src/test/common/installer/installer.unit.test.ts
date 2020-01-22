@@ -40,10 +40,11 @@ import { getNamesAndValues } from '../../../client/common/utils/enum';
 import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { sleep } from '../../common';
 
 use(chaiAsPromised);
 
-suite('xModule Installer only', () => {
+suite('Module Installer only', () => {
     [undefined, Uri.file('resource')].forEach(resource => {
         // tslint:disable-next-line: cyclomatic-complexity
         getNamesAndValues<Product>(Product)
@@ -257,12 +258,17 @@ suite('xModule Installer only', () => {
 
                                 // Display first prompt.
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
 
                                 // Display a few more prompts.
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
 
                                 app.verifyAll();
                                 workspaceService.verifyAll();

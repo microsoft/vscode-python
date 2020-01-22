@@ -26,6 +26,6 @@ suite('Linters Service Registry', () => {
         verify(serviceManager.addSingleton<ILintingEngine>(ILintingEngine, LintingEngine)).once();
         verify(serviceManager.addSingleton<ILinterManager>(ILinterManager, LinterManager)).once();
         verify(serviceManager.add<IAvailableLinterActivator>(IAvailableLinterActivator, AvailableLinterActivator)).once();
-        verify(serviceManager.add<IExtensionActivationService>(IExtensionActivationService, LinterProvider)).once();
+        verify(serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LinterProvider)).once();
     });
 });
