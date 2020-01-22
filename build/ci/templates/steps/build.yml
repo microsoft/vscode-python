@@ -29,8 +29,8 @@ steps:
     - bash: |
           python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
           python ./pythonFiles/install_ptvsd.py
-     failOnStderr: true
-     displayName: 'Install PTVSD wheels'
+      failOnStderr: true
+      displayName: 'Install PTVSD wheels'
 
     - bash: npm run clean
       displayName: 'Clean'

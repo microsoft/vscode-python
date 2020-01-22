@@ -292,18 +292,18 @@ steps:
           python -m virtualenv .virtualenv
           & ".virtualenv/$environmentExecutableFolder/python" ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) virtualEnvPath
 
-      # conda
-      if( '$(Agent.Os)' -match '.*Windows.*' ){
-          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
-      } else{
-          $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
-          $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
-          & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
-      }
-      & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
+          # conda
+          if( '$(Agent.Os)' -match '.*Windows.*' ){
+              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath python
+          } else{
+              $condaPythonPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath python
+              $condaExecPath = Join-Path -Path $Env:CONDA -ChildPath $environmentExecutableFolder | Join-Path -ChildPath conda
+              & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaExecPath $condaExecPath
+          }
+          & $condaPythonPath ./build/ci/addEnvPath.py $(PYTHON_VIRTUAL_ENVS_LOCATION) condaPath
 
-      # Set the TEST_FILES_SUFFIX
-      Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
+          # Set the TEST_FILES_SUFFIX
+          Write-Host '##vso[task.setvariable variable=TEST_FILES_SUFFIX;]testvirtualenvs'
 
       displayName: 'Prepare Venv-Test Environment'
       condition: and(succeeded(), contains(variables['TestsToRun'], 'venvTests'))
