@@ -1,0 +1,71 @@
+parameters:
+  jobs: []
+  ignorePythonVersions: ""
+  ignoreOperatingSystems: ""
+  vscodeChannels: ['stable', 'insider']
+  pythonVersions: [
+      # All scenarios tagged with `@noNeedToTestInAllPython`, will run in the latest version of Python.
+      # When using other versions of Python, ignore `@noNeedToTestInAllPython`.
+      {
+          "version": "3.7",
+          "displayName": "37",
+          "excludeTags": "not @python3.6 and not @python3.5 and not @python2"
+      },
+      {
+          "version": "3.6",
+          "displayName": "36",
+          "excludeTags": "not @python3.7 and not @python3.5 and not @python2 and not @noNeedToTestInAllPython"
+      },
+      {
+          "version": "3.5",
+          "displayName": "35",
+          "excludeTags": "not @python3.7 and not @python3.6 and not @python2 and not @noNeedToTestInAllPython"
+      },
+      {
+          "version": "2.7",
+          "displayName": "27",
+          "excludeTags": "not @python3.7 and not @python3.6 and not @python3.5 and not @python3 and not @noNeedToTestInAllPython"
+      }
+    ]
+
+
+jobs:
+- job: PerformanceTest
+  # Remember, some tests can take easily an hour (the `tests` features take just around 1 hour).
+  timeoutInMinutes: 120
+  # Build our matrix (permutations of VS Code + Tests + Pyhton + OS).
+  strategy:
+    matrix:
+      ${{ each channel in parameters.vscodeChannels }}:
+        ${{ each job in parameters.jobs }}:
+          ${{ each py in parameters.pythonVersions }}:
+            ${{ if not(contains(coalesce(job.ignorePythonVersions, ''), py.version)) }}:
+              ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'mac')) }}:
+                ${{ format('Mac{2}{0}{1}', py.displayName, job.test, channel) }}:
+                    PythonVersion: ${{ py.version }}
+                    VMImageName: "macos-latest"
+                    VSCodeChannel: ${{ channel }}
+                    Tags: ${{ format('{0} and {1} and not @win and not @linux', job.tags, py.excludeTags) }}
+
+              ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'win')) }}:
+                ${{ format('Win{2}{0}{1}', py.displayName, job.test, channel) }}:
+                    PythonVersion: ${{ py.version }}
+                    VSCodeChannel: ${{ channel }}
+                    VMImageName: "vs2017-win2016"
+                    Tags: ${{ format('{0} and {1} and not @mac and not @linux', job.tags, py.excludeTags) }}
+
+              ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'linux')) }}:
+                ${{ format('Linux{2}{0}{1}', py.displayName, job.test, channel) }}:
+                    PythonVersion: ${{ py.version }}
+                    VSCodeChannel: ${{ channel }}
+                    VMImageName: "ubuntu-latest"
+                    Tags: ${{ format('{0} and {1} and not @mac and not @win', job.tags, py.excludeTags) }}
+
+steps:
+  - bash: |
+      for i in {1..5}
+      do
+        mocha --require source-map-support/register --opts ./build/.mocha.functional.opts
+        node .\savePerformanceResults.js
+      done
+      node .\checkPerformanceResults.js

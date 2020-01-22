@@ -61,7 +61,7 @@
 # 3. ignoreOperatingSystems
 #   Comma delimited list of OS not to be tested against.
 #   E.g. = win, linux
-#   Possible values = mac, win linux
+#   Possible values = mac, win, linux
 # 4. vscodeChannels
 #   Comma delimited list of VSC Versions.
 #   Defaults include = `stable`,`insider`
