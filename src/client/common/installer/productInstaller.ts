@@ -299,7 +299,7 @@ export class ProductInstaller implements IInstaller {
     // tslint:disable-next-line:no-empty
     public dispose() {}
     public async promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
-        const currentInterpreter = await this.interpreterService.getActiveInterpreter(isResource(resource) ? resource : undefined);
+        const currentInterpreter = isResource(resource) ? await this.interpreterService.getActiveInterpreter(resource) : resource;
         if (!currentInterpreter) {
             return InstallerResponse.Ignore;
         }
