@@ -260,26 +260,31 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-dat
 gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
 
 gulp.task('installPythonRequirements', async () => {
-    const requirements = fs
-        .readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8')
-        .split('\n')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
-    await Promise.all(
-        requirements.map(async requirement => {
-            const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(requirement))
-                .then(() => true)
-                .catch(ex => {
-                    console.error("Failed to install Python Libs using 'python3'", ex);
-                    return false;
-                });
-            if (!success) {
-                console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-                await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install Python Libs using 'python'", ex));
-            }
-        })
-    );
+    const args = [
+        '-m',
+        'pip',
+        '--disable-pip-version-check',
+        'install',
+        '-t',
+        './pythonFiles/lib/python',
+        '--no-cache-dir',
+        '--implementation',
+        'py',
+        '--no-deps',
+        '--upgrade',
+        '-r',
+        './requirements.txt'
+    ];
+    success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install Python Libs using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install Python Libs using 'python'", ex));
+    }
 });
 
 // See https://github.com/microsoft/vscode-python/issues/7136
