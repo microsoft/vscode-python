@@ -203,7 +203,6 @@ export function convertToVSCodeCompletionItem(item: monacoEditor.languages.Compl
     // tslint:disable-next-line: no-object-literal-type-assertion no-any
     const result = ({ ...item } as any) as vscode.CompletionItem;
 
-    // IANHU We need better conversion here
     if (item.kind && result.kind) {
         result.kind = convertToVSCodeCompletionItemKind(item.kind);
     }

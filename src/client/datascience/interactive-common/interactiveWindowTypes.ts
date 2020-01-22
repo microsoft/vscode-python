@@ -196,7 +196,6 @@ export interface ICancelIntellisenseRequest {
 }
 
 export interface IResolveCompletionItemRequest {
-    //model: monacoEditor.editor.ITextModel;
     position: monacoEditor.Position;
     item: monacoEditor.languages.CompletionItem;
     requestId: string;

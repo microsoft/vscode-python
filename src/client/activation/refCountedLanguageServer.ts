@@ -90,7 +90,6 @@ export class RefCountedLanguageServer implements ILanguageServerActivator {
         return this.impl.provideCompletionItems(document, position, token, context);
     }
     public resolveCompletionItem(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem> {
-        // IANHU: Jedi uses something different here?
         if (this.impl.resolveCompletionItem) {
             return this.impl.resolveCompletionItem(item, token);
         }

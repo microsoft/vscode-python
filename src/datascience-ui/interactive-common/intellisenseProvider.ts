@@ -72,21 +72,22 @@ export class IntellisenseProvider
         item: monacoEditor.languages.CompletionItem,
         token: monacoEditor.CancellationToken
     ): monacoEditor.languages.ProviderResult<monacoEditor.languages.CompletionItem> {
-        // Emit a new request
-        const requestId = uuid();
-        const promise = createDeferred<monacoEditor.languages.CompletionItem>();
+        // If the item has already resolved documentation (as with MS LS) we don't need to do this
+        if (!item.documentation) {
+            // Emit a new request
+            const requestId = uuid();
+            const promise = createDeferred<monacoEditor.languages.CompletionItem>();
 
-        const cancelDisposable = token.onCancellationRequested(() => {
-            promise.resolve();
-            this.sendMessage(InteractiveWindowMessages.CancelResolveCompletionItemRequest, { requestId });
-        });
+            const cancelDisposable = token.onCancellationRequested(() => {
+                promise.resolve();
+                this.sendMessage(InteractiveWindowMessages.CancelResolveCompletionItemRequest, { requestId });
+            });
 
-        this.resolveCompletionRequests.set(requestId, { promise, cancelDisposable });
-        // IANHU: Getting hit, but not hitting the other side
-        //this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { model, position, item, requestId, cellId: this.getCellId(model.id) });
-        this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { position, item, requestId, cellId: this.getCellId(model.id) });
+            this.resolveCompletionRequests.set(requestId, { promise, cancelDisposable });
+            this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { position, item, requestId, cellId: this.getCellId(model.id) });
 
-        return promise.promise;
+            return promise.promise;
+        }
     }
 
     public provideHover(

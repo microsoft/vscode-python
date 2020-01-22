@@ -277,7 +277,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     }
 
     protected async resolveCompletionItem(
-        //model: monacoEditor.editor.ITextModel,
         position: monacoEditor.Position,
         item: monacoEditor.languages.CompletionItem,
         cellId: string,
@@ -285,20 +284,16 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
     ): Promise<monacoEditor.languages.CompletionItem> {
         const languageServer = await this.getLanguageServer();
         const document = await this.getDocument();
-        //if (languageServer && languageServer.resolveCompletionItem && document) {
         if (languageServer && languageServer.resolveCompletionItem && document) {
-            //const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
-            //const result = await languageServer.provideCompletionItems(document, docPos, token, context);
             const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
             if (vscodeCompItem.range) {
-                // IANHU: This just has the position is not a full document position
-                // IANHU: Used in Jedi in completionSource.ts
+                // Needed by Jedi in completionSource.ts to resolve the item
                 const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
                 (vscodeCompItem as any)._documentPosition = { document, position: docPos };
             }
             const result = await languageServer.resolveCompletionItem(vscodeCompItem, token);
             if (result) {
-                // IANHU: this conversion seems off, do I have vcls or vscode CI here?
+                // Convert expects vclc completion item, but takes both vclc and vscode items so just cast here
                 return convertToMonacoCompletionItem(result as vscodeLanguageClient.CompletionItem, true);
             }
         }
@@ -375,7 +370,6 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
         // Combine all of the results together.
         this.postTimedResponse(
-            //[this.resolveCompletionItem(request.model, request.position, request.item, request.cellId, cancelSource.token)],
             [this.resolveCompletionItem(request.position, request.item, request.cellId, cancelSource.token)],
             InteractiveWindowMessages.ResolveCompletionItemResponse,
             c => {

@@ -168,6 +168,7 @@ export class JediExtensionActivator implements ILanguageServerActivator {
             return this.completionProvider.provideCompletionItems(document, position, token);
         }
     }
+
     public resolveCompletionItem(item: CompletionItem, token: CancellationToken): ProviderResult<CompletionItem> {
         if (this.completionProvider) {
             return this.completionProvider.resolveCompletionItem(item, token);
