@@ -154,7 +154,10 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return this._id;
     }
 
-    public abstract show(): Promise<void>;
+    public show(): Promise<void> {
+        // Show our web panel.
+        return super.show(true);
+    }
 
     public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;

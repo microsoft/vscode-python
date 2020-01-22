@@ -222,11 +222,6 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
-    public async show(): Promise<void> {
-        // Show our web panel.
-        return super.show(true);
-    }
-
     public get closed(): Event<INotebookEditor> {
         return this.closedEvent.event;
     }

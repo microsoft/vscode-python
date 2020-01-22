@@ -148,7 +148,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         await this.addSysInfo(SysInfoReason.Start);
 
         // Then show our web panel.
-        return super.show(true);
+        return super.show();
     }
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {
