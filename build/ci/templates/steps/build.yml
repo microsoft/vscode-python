@@ -26,12 +26,11 @@ steps:
       failOnStderr: true
       displayName: 'pip install requirements'
 
-    - task: PythonScript@0
-      displayName: 'Install PTVSD wheels'
-      inputs:
-          scriptSource: 'filePath'
-          scriptPath: './pythonFiles/install_ptvsd.py'
-          failOnStderr: true
+    - bash: |
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_ptvsd.py
+     failOnStderr: true
+     displayName: 'Install PTVSD wheels'
 
     - bash: npm run clean
       displayName: 'Clean'
