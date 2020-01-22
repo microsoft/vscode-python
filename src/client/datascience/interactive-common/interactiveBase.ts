@@ -154,18 +154,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
         return this._id;
     }
 
-    public async show(): Promise<void> {
-        if (!this.isDisposed) {
-            // Make sure we're loaded first
-            await this.loadPromise;
-
-            // Make sure we have at least the initial sys info
-            await this.addSysInfo(SysInfoReason.Start);
-
-            // Then show our web panel.
-            return super.show(true);
-        }
-    }
+    public abstract show(): Promise<void>;
 
     public get onExecutedCode(): Event<string> {
         return this.executeEvent.event;

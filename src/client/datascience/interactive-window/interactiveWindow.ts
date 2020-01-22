@@ -16,7 +16,7 @@ import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, ISubmitNewCell, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
@@ -140,7 +140,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // When showing we have to load the web panel. Make sure
         // we use the last file sent through add code.
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
-        return super.show();
+
+        // Make sure we're loaded first
+        await this.startServer();
+
+        // Make sure we have at least the initial sys info
+        await this.addSysInfo(SysInfoReason.Start);
+
+        // Then show our web panel.
+        return super.show(true);
     }
 
     public async addCode(code: string, file: string, line: number, editor?: TextEditor): Promise<boolean> {

@@ -222,6 +222,11 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
         }
     }
 
+    public async show(): Promise<void> {
+        // Show our web panel.
+        return super.show(true);
+    }
+
     public get closed(): Event<INotebookEditor> {
         return this.closedEvent.event;
     }
@@ -780,11 +785,15 @@ export class NativeEditor extends InteractiveBase implements INotebookEditor {
     }
 
     private async writeToStorage(filePath: string, contents?: string): Promise<void> {
-        if (contents) {
-            await this.fileSystem.createDirectory(path.dirname(filePath));
-            return this.fileSystem.writeFile(filePath, contents);
-        } else {
-            return this.fileSystem.deleteFile(filePath);
+        try {
+            if (contents) {
+                await this.fileSystem.createDirectory(path.dirname(filePath));
+                return this.fileSystem.writeFile(filePath, contents);
+            } else {
+                return this.fileSystem.deleteFile(filePath);
+            }
+        } catch (exc) {
+            traceError(`Error writing storage for ${filePath}: `, exc);
         }
     }
 

@@ -317,13 +317,13 @@ for _ in range(50):
 
         runMountedTest(
             'Server already loaded',
-            async _wrapper => {
+            async wrapper => {
                 // Get the server preload first so that the object is created.
                 const serverPreload = ioc.getAll<IExtensionSingleActivationService>(IExtensionSingleActivationService).find(s => s instanceof ServerPreload);
                 assert.ok(serverPreload, 'No ServerPreload class');
 
                 // Create an editor so something is listening to messages
-                const editor = await createNewEditor(ioc);
+                let editor = await createNewEditor(ioc);
 
                 // Make sure it has a server
                 assert.ok(editor.notebook, 'Notebook did not start with a server');
@@ -345,6 +345,24 @@ for _ in range(50):
                 await sleep(500); // Give the server time to get into the cache
                 server = await execution.getServer(options);
                 assert.ok(server, 'Server preload did not start a server on restart');
+
+                // Do the same thing again, but disable auto start
+                ioc.getSettings().datascience.disableJupyterAutoStart = true;
+                await Promise.all(hosts.map(d => d.dispose()));
+                await closeNotebook(editor, wrapper);
+
+                // Create editor again
+                await setupWebview(ioc);
+                editor = await createNewEditor(ioc);
+
+                // Make sure it does not has a server
+                assert.notOk(editor.notebook, 'Notebook should not start with a server');
+
+                // Tell the server provider too. It should not create one.
+                await serverPreload?.activate();
+                await sleep(500); // Give the server time to get into the cache
+                server = await execution.getServer(options);
+                assert.notOk(server, 'Server preload should not start a server on restart');
             },
             () => {
                 return ioc;
