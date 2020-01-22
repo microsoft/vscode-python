@@ -223,8 +223,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionList> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideCompletionItems(document, docPos, token, context);
@@ -239,8 +238,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
     }
     protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideHover(document, docPos, token);
@@ -259,8 +257,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.SignatureHelp> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideSignatureHelp(document, docPos, token, context as SignatureHelpContext);
@@ -282,8 +279,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionItem> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && languageServer.resolveCompletionItem && document) {
             const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
 
