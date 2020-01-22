@@ -37,6 +37,7 @@ import {
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -89,7 +90,9 @@ suite('Module Installer only', () => {
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
                     productPathService.setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => 'xyz');
                     productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => true);
-
+                    const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(TypeMoq.Mock.ofType<PythonInterpreter>().object));
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
                 teardown(() => {

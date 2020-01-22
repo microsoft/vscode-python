@@ -34,7 +34,6 @@ import { MockMemento } from '../mocks/mementos';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
-    let context: TypeMoq.IMock<vscode.ExtensionContext>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let engine: TypeMoq.IMock<ILintingEngine>;
     let configService: TypeMoq.IMock<IConfigurationService>;
@@ -55,7 +54,6 @@ suite('Linting - Provider', () => {
         const serviceManager = new ServiceManager(cont);
 
         serviceContainer = new ServiceContainer(cont);
-        context = TypeMoq.Mock.ofType<vscode.ExtensionContext>();
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(
