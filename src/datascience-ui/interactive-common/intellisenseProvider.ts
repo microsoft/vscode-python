@@ -87,6 +87,8 @@ export class IntellisenseProvider
             this.sendMessage(InteractiveWindowMessages.ResolveCompletionItemRequest, { position, item, requestId, cellId: this.getCellId(model.id) });
 
             return promise.promise;
+        } else {
+            return Promise.resolve(item);
         }
     }
 
