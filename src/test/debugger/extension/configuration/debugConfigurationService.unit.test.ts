@@ -6,14 +6,10 @@
 // tslint:disable:no-any
 
 import { expect } from 'chai';
-import * as path from 'path';
-import { instance, mock, when } from 'ts-mockito';
+import { instance, mock } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
-import { FileSystem } from '../../../../client/common/platform/fileSystem';
-import { IFileSystem } from '../../../../client/common/platform/types';
 import { IMultiStepInput, IMultiStepInputFactory } from '../../../../client/common/utils/multiStepInput';
-import { EXTENSION_ROOT_DIR } from '../../../../client/constants';
 import { PythonDebugConfigurationService } from '../../../../client/debugger/extension/configuration/debugConfigurationService';
 import { DebugConfigurationProviderFactory } from '../../../../client/debugger/extension/configuration/providers/providerFactory';
 import { IDebugConfigurationResolver } from '../../../../client/debugger/extension/configuration/types';
@@ -27,7 +23,6 @@ suite('Debugging - Configuration Service', () => {
     let configService: TestPythonDebugConfigurationService;
     let multiStepFactory: typemoq.IMock<IMultiStepInputFactory>;
     let providerFactory: DebugConfigurationProviderFactory;
-    let fs: IFileSystem;
 
     class TestPythonDebugConfigurationService extends PythonDebugConfigurationService {
         // tslint:disable-next-line:no-unnecessary-override
@@ -40,8 +35,7 @@ suite('Debugging - Configuration Service', () => {
         launchResolver = typemoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         multiStepFactory = typemoq.Mock.ofType<IMultiStepInputFactory>();
         providerFactory = mock(DebugConfigurationProviderFactory);
-        fs = mock(FileSystem);
-        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory), multiStepFactory.object, instance(fs));
+        configService = new TestPythonDebugConfigurationService(attachResolver.object, launchResolver.object, instance(providerFactory), multiStepFactory.object);
     });
     test('Should use attach resolver when passing attach config', async () => {
         const config = ({
@@ -128,21 +122,19 @@ suite('Debugging - Configuration Service', () => {
         multiStepFactory.verifyAll();
         expect(config).to.deep.equal([expectedConfig]);
     });
-    test('Ensure default config is returned', async () => {
-        const expectedConfig = { yes: 'Updated' };
+    test('Ensure `undefined` is returned if QuickPick is cancelled', async () => {
         const multiStepInput = {
             run: () => Promise.resolve()
         };
+        const folder = { name: '1', index: 0, uri: Uri.parse('1234') };
         multiStepFactory
             .setup(f => f.create())
             .returns(() => multiStepInput as any)
             .verifiable(typemoq.Times.once());
-        const jsFile = path.join(EXTENSION_ROOT_DIR, 'resources', 'default.launch.json');
-        when(fs.readFile(jsFile)).thenResolve(JSON.stringify([expectedConfig]));
-        const config = await configService.provideDebugConfigurations!({} as any);
+        const config = await configService.resolveDebugConfiguration(folder, {} as any);
 
         multiStepFactory.verifyAll();
 
-        expect(config).to.deep.equal([expectedConfig]);
+        expect(config).to.equal(undefined, `Config should be undefined`);
     });
 });

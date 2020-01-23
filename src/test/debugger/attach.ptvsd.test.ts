@@ -15,7 +15,6 @@ import { IDocumentManager, IWorkspaceService } from '../../client/common/applica
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
 import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../client/common/types';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
@@ -110,9 +109,8 @@ suite('Debugging - Attach Debugger', () => {
             experiments.object
         );
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
-        const fs = mock(FileSystem);
         const multistepFactory = mock(MultiStepInputFactory);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory), instance(fs));
+        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory));
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);
