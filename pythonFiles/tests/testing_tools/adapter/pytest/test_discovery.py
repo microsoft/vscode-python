@@ -266,6 +266,7 @@ class DiscoverTests(unittest.TestCase):
                 ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
                 ("discovered.parents", None, None),
                 ("discovered.__len__", None, None),
+                ("discovered.__len__", None, None),
                 ("discovered.__getitem__", (0,), None),
             ],
         )
@@ -302,6 +303,7 @@ class DiscoverTests(unittest.TestCase):
                 ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
                 ("discovered.parents", None, None),
                 ("discovered.__len__", None, None),
+                ("discovered.__len__", None, None),
                 ("discovered.__getitem__", (0,), None),
             ],
         )
@@ -333,6 +335,7 @@ class DiscoverTests(unittest.TestCase):
                 ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
                 ("discovered.parents", None, None),
                 ("discovered.__len__", None, None),
+                ("discovered.__len__", None, None),
                 ("discovered.__getitem__", (0,), None),
             ],
         )
@@ -363,6 +366,7 @@ class DiscoverTests(unittest.TestCase):
             [
                 ("pytest.main", None, {"args": self.DEFAULT_ARGS, "plugins": [plugin]}),
                 ("discovered.parents", None, None),
+                ("discovered.__len__", None, None),
                 ("discovered.__len__", None, None),
                 ("discovered.__getitem__", (0,), None),
             ],
