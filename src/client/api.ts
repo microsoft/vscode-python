@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { DebugAdapterDescriptorFactory as DebugAdapterExperiment, DebugAdapterNewPtvsd } from './common/experimentGroups';
+import { DebugAdapterNewPtvsd } from './common/experimentGroups';
 import { traceError } from './common/logger';
 import { IExperimentsManager } from './common/types';
 import { RemoteDebuggerExternalLauncherScriptProvider } from './debugger/debugAdapter/DebugClients/launcherProvider';
@@ -45,7 +45,7 @@ export function buildApi(ready: Promise<any>, experimentsManager: IExperimentsMa
         }),
         debug: {
             async getRemoteLauncherCommand(host: string, port: number, waitUntilDebuggerAttaches: boolean = true): Promise<string[]> {
-                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
+                const useNewDAPtvsd = experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment);
 
                 if (useNewDAPtvsd) {
                     // Same logic as in RemoteDebuggerExternalLauncherScriptProvider, but eventually launcherProvider.ts will be deleted.

@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import * as path from 'path';
 import { DebugAdapterDescriptor, DebugAdapterExecutable, DebugAdapterServer, DebugSession, WorkspaceFolder } from 'vscode';
 import { IApplicationShell } from '../../../common/application/types';
-import { DebugAdapterDescriptorFactory as DebugAdapterExperiment, DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../common/experimentGroups';
 import { traceVerbose } from '../../../common/logger';
 import { IExperimentsManager } from '../../../common/types';
 import { EXTENSION_ROOT_DIR } from '../../../constants';
@@ -101,7 +101,7 @@ export class DebugAdapterDescriptorFactory implements IDebugAdapterDescriptorFac
 
     public getRemotePtvsdArgs(remoteDebugOptions: RemoteDebugOptions): string[] {
         const waitArgs = remoteDebugOptions.waitUntilDebuggerAttaches ? ['--wait'] : [];
-        if (this.experimentsManager.inExperiment(DebugAdapterExperiment.experiment) && this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             return ['--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];
         }
         return ['--default', '--host', remoteDebugOptions.host, '--port', remoteDebugOptions.port.toString(), ...waitArgs];

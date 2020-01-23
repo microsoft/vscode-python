@@ -4,7 +4,7 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd, WebAppReload } from '../../../../common/experimentGroups';
+import { DebugAdapterNewPtvsd, WebAppReload } from '../../../../common/experimentGroups';
 import { traceInfo } from '../../../../common/logger';
 import { IExperimentsManager } from '../../../../common/types';
 import { sendTelemetryEvent } from '../../../../telemetry';
@@ -17,7 +17,7 @@ export class LaunchDebugConfigurationExperiment implements ILaunchDebugConfigura
     constructor(@inject(IExperimentsManager) private readonly experimentsManager: IExperimentsManager) {}
 
     public modifyConfigurationBasedOnExperiment(debugConfiguration: LaunchRequestArguments): void {
-        if (this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) && this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+        if (this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             if (this.experimentsManager.inExperiment(WebAppReload.experiment)) {
                 if (this.isWebAppConfiguration(debugConfiguration)) {
                     traceInfo(`Configuration used for Web App Reload experiment (before):\n${JSON.stringify(debugConfiguration, undefined, 4)}`);
