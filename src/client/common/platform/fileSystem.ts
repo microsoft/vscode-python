@@ -41,42 +41,6 @@ function convertFileType(stat: fs.Stats): FileType {
     }
 }
 
-async function getFileType(filename: string): Promise<FileType> {
-    let stat: fs.Stats;
-    try {
-        // Note that we used to use stat() here instead of lstat().
-        // This shouldn't matter because the only consumers were
-        // internal methods that have been updated appropriately.
-        stat = await fs.lstat(filename);
-    } catch (err) {
-        if (isFileNotFoundError(err)) {
-            return FileType.Unknown;
-        }
-        throw err;
-    }
-    if (!stat.isSymbolicLink()) {
-        return convertFileType(stat);
-    }
-
-    // For symlinks we emulate the behavior of the vscode.workspace.fs API.
-    // See: https://code.visualstudio.com/api/references/vscode-api#FileType
-    try {
-        stat = await fs.stat(filename);
-    } catch (err) {
-        if (isFileNotFoundError(err)) {
-            return FileType.SymbolicLink;
-        }
-        throw err;
-    }
-    if (stat.isFile()) {
-        return FileType.SymbolicLink | FileType.File;
-    } else if (stat.isDirectory()) {
-        return FileType.SymbolicLink | FileType.Directory;
-    } else {
-        return FileType.SymbolicLink;
-    }
-}
-
 export function convertStat(old: fs.Stats, filetype: FileType): FileStat {
     return {
         type: filetype,
@@ -119,6 +83,7 @@ interface IVSCodeFileSystemAPI {
 
 // This is the parts of the 'fs-extra' module that we use in RawFileSystem.
 interface IRawFSExtra {
+    stat(filename: string): Promise<fs.Stats>;
     lstat(filename: string): Promise<fs.Stats>;
     readdir(dirname: string): Promise<string[]>;
     readFile(filename: string): Promise<Buffer>;
@@ -132,7 +97,6 @@ interface IRawFSExtra {
     rmdir(dirname: string): Promise<void>;
 
     // non-async
-    statSync(filename: string): fs.Stats;
     readFileSync(path: string, encoding: string): string;
     createReadStream(filename: string): ReadStream;
     createWriteStream(filename: string): WriteStream;
@@ -246,7 +210,7 @@ export class RawFileSystem implements IRawFileSystem {
             const filename = this.paths.join(dirname, basename);
             // Note that this follows symlinks (while still preserving
             // the Symlink flag).
-            const fileType = await getFileType(filename);
+            const fileType = await this.getFileType(filename);
             return [filename, fileType] as [string, FileType];
         });
         return Promise.all(promises);
@@ -265,6 +229,45 @@ export class RawFileSystem implements IRawFileSystem {
 
     public createWriteStream(filename: string): WriteStream {
         return this.fsExtra.createWriteStream(filename);
+    }
+
+    //****************************
+    // internal
+
+    private async getFileType(filename: string): Promise<FileType> {
+        let stat: fs.Stats;
+        try {
+            // Note that we used to use stat() here instead of lstat().
+            // This shouldn't matter because the only consumers were
+            // internal methods that have been updated appropriately.
+            stat = await this.fsExtra.lstat(filename);
+        } catch (err) {
+            if (isFileNotFoundError(err)) {
+                return FileType.Unknown;
+            }
+            throw err;
+        }
+        if (!stat.isSymbolicLink()) {
+            return convertFileType(stat);
+        }
+
+        // For symlinks we emulate the behavior of the vscode.workspace.fs API.
+        // See: https://code.visualstudio.com/api/references/vscode-api#FileType
+        try {
+            stat = await this.fsExtra.stat(filename);
+        } catch (err) {
+            if (isFileNotFoundError(err)) {
+                return FileType.SymbolicLink;
+            }
+            throw err;
+        }
+        if (stat.isFile()) {
+            return FileType.SymbolicLink | FileType.File;
+        } else if (stat.isDirectory()) {
+            return FileType.SymbolicLink | FileType.Directory;
+        } else {
+            return FileType.SymbolicLink;
+        }
     }
 }
 
