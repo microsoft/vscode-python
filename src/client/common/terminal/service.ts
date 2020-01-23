@@ -69,7 +69,7 @@ export class TerminalService implements ITerminalService, Disposable {
             resource: this.options?.resource,
             preserveFocus,
             interpreter: this.options?.interpreter,
-            doNotShow: this.options?.hideFromUser
+            hideFromUser: this.options?.hideFromUser
         });
 
         if (!this.options?.hideFromUser) {

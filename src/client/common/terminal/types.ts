@@ -113,7 +113,7 @@ export type TerminalActivationOptions = {
      *
      * @type {boolean}
      */
-    doNotShow?: boolean;
+    hideFromUser?: boolean;
 };
 export interface ITerminalActivator {
     activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean>;
