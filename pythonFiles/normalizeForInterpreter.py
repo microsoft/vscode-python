@@ -18,7 +18,11 @@ class Visitor(ast.NodeVisitor):
         self.line_numbers_with_statements = []
 
     def generic_visit(self, node):
-        if hasattr(node, 'col_offset') and hasattr(node, 'lineno') and node.col_offset == 0:
+        if (
+            hasattr(node, "col_offset")
+            and hasattr(node, "lineno")
+            and node.col_offset == 0
+        ):
             self.line_numbers_with_nodes.add(node.lineno)
             if isinstance(node, ast.stmt):
                 self.line_numbers_with_statements.append(node.lineno)
@@ -54,12 +58,18 @@ def _get_global_statement_blocks(source, lines):
 
     statement_ranges = []
     for index, line_number in enumerate(visitor.line_numbers_with_statements):
-        remaining_line_numbers = visitor.line_numbers_with_statements[index+1:]
-        end_line_number = len(lines) if len(remaining_line_numbers) == 0 else min(remaining_line_numbers) - 1
+        remaining_line_numbers = visitor.line_numbers_with_statements[index + 1 :]
+        end_line_number = (
+            len(lines)
+            if len(remaining_line_numbers) == 0
+            else min(remaining_line_numbers) - 1
+        )
         current_statement_is_oneline = line_number == end_line_number
 
         if len(statement_ranges) == 0:
-            statement_ranges.append((line_number, end_line_number, current_statement_is_oneline))
+            statement_ranges.append(
+                (line_number, end_line_number, current_statement_is_oneline)
+            )
             continue
 
         previous_statement = statement_ranges[-1]
@@ -67,7 +77,9 @@ def _get_global_statement_blocks(source, lines):
         if previous_statement_is_oneline and current_statement_is_oneline:
             statement_ranges[-1] = previous_statement[0], end_line_number, True
         else:
-            statement_ranges.append((line_number, end_line_number, current_statement_is_oneline))
+            statement_ranges.append(
+                (line_number, end_line_number, current_statement_is_oneline)
+            )
 
     return statement_ranges
 
@@ -86,50 +98,57 @@ def normalize_lines(source):
     # If we have two blank lines, then add two blank lines.
     # Do not trim the spaces, if we have blank lines with spaces, its possible
     # we have indented code.
-    if (len(lines) > 1 and len(''.join(lines[-2:])) == 0) \
-        or source.endswith(('\n\n', '\r\n\r\n')):
-        trailing_newline = '\n' * 2
+    if (len(lines) > 1 and len("".join(lines[-2:])) == 0) or source.endswith(
+        ("\n\n", "\r\n\r\n")
+    ):
+        trailing_newline = "\n" * 2
     # Find out if we have any trailing blank lines
-    elif len(lines[-1].strip()) == 0 or source.endswith(('\n', '\r\n')):
-        trailing_newline = '\n'
+    elif len(lines[-1].strip()) == 0 or source.endswith(("\n", "\r\n")):
+        trailing_newline = "\n"
     else:
-        trailing_newline = ''
+        trailing_newline = ""
 
     # Step 1: Remove empty lines.
     tokens = _tokenize(source)
-    newlines_indexes_to_remove = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
-                                  if len(line.strip()) == 0
-                                     and token.tok_name[toknum] == 'NL'
-                                     and spos[0] == epos[0])
+    newlines_indexes_to_remove = (
+        spos[0]
+        for (toknum, tokval, spos, epos, line) in tokens
+        if len(line.strip()) == 0
+        and token.tok_name[toknum] == "NL"
+        and spos[0] == epos[0]
+    )
 
     for line_number in reversed(list(newlines_indexes_to_remove)):
-        del lines[line_number-1]
+        del lines[line_number - 1]
 
     # Step 2: Add blank lines between each global statement block.
     # A consecutive single lines blocks of code will be treated as a single statement,
     # just to ensure we do not unnecessarily add too many blank lines.
-    source = '\n'.join(lines)
+    source = "\n".join(lines)
     tokens = _tokenize(source)
-    dedent_indexes = (spos[0] for (toknum, tokval, spos, epos, line) in tokens
-                                if toknum == token.DEDENT and _indent_size(line) == 0)
+    dedent_indexes = (
+        spos[0]
+        for (toknum, tokval, spos, epos, line) in tokens
+        if toknum == token.DEDENT and _indent_size(line) == 0
+    )
 
     global_statement_ranges = _get_global_statement_blocks(source, lines)
     start_positions = map(operator.itemgetter(0), reversed(global_statement_ranges))
     for line_number in filter(lambda x: x > 1, start_positions):
-        lines.insert(line_number-1, '')
+        lines.insert(line_number - 1, "")
 
-    sys.stdout.write('\n'.join(lines) + trailing_newline)
+    sys.stdout.write("\n".join(lines) + trailing_newline)
     sys.stdout.flush()
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     contents = sys.argv[1]
     try:
         default_encoding = sys.getdefaultencoding()
-        encoded_contents = contents.encode(default_encoding, 'surrogateescape')
-        contents = encoded_contents.decode(default_encoding, 'replace')
+        encoded_contents = contents.encode(default_encoding, "surrogateescape")
+        contents = encoded_contents.decode(default_encoding, "replace")
     except (UnicodeError, LookupError):
         pass
     if isinstance(contents, bytes):
-        contents = contents.decode('utf8')
+        contents = contents.decode("utf8")
     normalize_lines(contents)

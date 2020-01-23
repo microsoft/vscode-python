@@ -7,7 +7,9 @@ from packaging.version import parse as version_parser
 
 
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python", "new_ptvsd", "wheels")
+DEBUGGER_DEST = os.path.join(
+    EXTENSION_ROOT, "pythonFiles", "lib", "python", "new_ptvsd", "wheels"
+)
 DEBUGGER_PACKAGE = "ptvsd"
 DEBUGGER_PYTHON_VERSIONS = ("cp37",)
 

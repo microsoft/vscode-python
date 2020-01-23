@@ -7,9 +7,7 @@ import sys
 
 
 specs = jupyter_client.kernelspec.KernelSpecManager().get_all_specs()
-all_specs = {
-    "kernelspecs": specs
-}
+all_specs = {"kernelspecs": specs}
 
 sys.stdout.write(json.dumps(all_specs))
 sys.stdout.flush()

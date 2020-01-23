@@ -105,19 +105,19 @@ from ..util import fix_fileid, PATH_SEP, NORMCASE
 
 def should_never_reach_here(item, **extra):
     """Indicates a code path we should never reach."""
-    print('The Python extension has run into an unexpected situation')
-    print('while processing a pytest node during test discovery.  Please')
-    print('Please open an issue at:')
-    print('  https://github.com/microsoft/vscode-python/issues')
-    print('and paste the following output there.')
+    print("The Python extension has run into an unexpected situation")
+    print("while processing a pytest node during test discovery.  Please")
+    print("Please open an issue at:")
+    print("  https://github.com/microsoft/vscode-python/issues")
+    print("and paste the following output there.")
     print()
     for field, info in _summarize_item(item):
-        print('{}: {}'.format(field, info))
+        print("{}: {}".format(field, info))
     if extra:
         print()
-        print('extra info:')
+        print("extra info:")
         for name, info in extra.items():
-            print('{:10}'.format(name + ':'), end='')
+            print("{:10}".format(name + ":"), end="")
             if isinstance(info, str):
                 print(info)
             else:
@@ -126,22 +126,24 @@ def should_never_reach_here(item, **extra):
                 except TypeError:
                     print(info)
     print()
-    print('traceback:')
+    print("traceback:")
     import traceback
+
     traceback.print_stack()
 
-    msg = 'Unexpected pytest node (see printed output).'
+    msg = "Unexpected pytest node (see printed output)."
     exc = NotImplementedError(msg)
     exc.item = item
     return exc
 
 
-def parse_item(item, #*,
-               _get_item_kind=(lambda *a: _get_item_kind(*a)),
-               _parse_node_id=(lambda *a: _parse_node_id(*a)),
-               _split_fspath=(lambda *a: _split_fspath(*a)),
-               _get_location=(lambda *a: _get_location(*a)),
-               ):
+def parse_item(
+    item,  # *,
+    _get_item_kind=(lambda *a: _get_item_kind(*a)),
+    _parse_node_id=(lambda *a: _parse_node_id(*a)),
+    _split_fspath=(lambda *a: _split_fspath(*a)),
+    _get_location=(lambda *a: _get_location(*a)),
+):
     """Return (TestInfo, [suite ID]) for the given item.
 
     The suite IDs, if any, are in parent order with the item's direct
@@ -150,35 +152,30 @@ def parse_item(item, #*,
     to TestInfo.path.
 
     """
-    #_debug_item(item, showsummary=True)
+    # _debug_item(item, showsummary=True)
     kind, _ = _get_item_kind(item)
     # Skip plugin generated tests
     if kind is None:
         return None, None
-    (nodeid, parents, fileid, testfunc, parameterized
-     ) = _parse_node_id(item.nodeid, kind)
+    (nodeid, parents, fileid, testfunc, parameterized) = _parse_node_id(
+        item.nodeid, kind
+    )
     # Note: testfunc does not necessarily match item.function.__name__.
     # This can result from importing a test function from another module.
 
     # Figure out the file.
     testroot, relfile = _split_fspath(str(item.fspath), fileid, item)
     location, fullname = _get_location(item, testroot, relfile)
-    if kind == 'function':
+    if kind == "function":
         if testfunc and fullname != testfunc + parameterized:
             raise should_never_reach_here(
-                item,
-                fullname=fullname,
-                testfunc=testfunc,
-                parameterized=parameterized,
-                )
-    elif kind == 'doctest':
-        if (testfunc and fullname != testfunc and
-                fullname != '[doctest] ' + testfunc):
+                item, fullname=fullname, testfunc=testfunc, parameterized=parameterized,
+            )
+    elif kind == "doctest":
+        if testfunc and fullname != testfunc and fullname != "[doctest] " + testfunc:
             raise should_never_reach_here(
-                item,
-                fullname=fullname,
-                testfunc=testfunc,
-                )
+                item, fullname=fullname, testfunc=testfunc,
+            )
         testfunc = None
 
     # Sort out the parent.
@@ -190,16 +187,16 @@ def parse_item(item, #*,
     # Sort out markers.
     #  See: https://docs.pytest.org/en/latest/reference.html#marks
     markers = set()
-    for marker in getattr(item, 'own_markers', []):
-        if marker.name == 'parameterize':
+    for marker in getattr(item, "own_markers", []):
+        if marker.name == "parameterize":
             # We've already covered these.
             continue
-        elif marker.name == 'skip':
-            markers.add('skip')
-        elif marker.name == 'skipif':
-            markers.add('skip-if')
-        elif marker.name == 'xfail':
-            markers.add('expected-failure')
+        elif marker.name == "skip":
+            markers.add("skip")
+        elif marker.name == "skipif":
+            markers.add("skip-if")
+        elif marker.name == "xfail":
+            markers.add("expected-failure")
         # We can add support for other markers as we need them?
 
     test = TestInfo(
@@ -210,19 +207,19 @@ def parse_item(item, #*,
             relfile=relfile,
             func=testfunc,
             sub=[parameterized] if parameterized else None,
-            ),
+        ),
         source=location,
         markers=sorted(markers) if markers else None,
         parentid=parentid,
-        )
-    if parents and parents[-1] == ('.', None, 'folder'):  # This should always be true?
-        parents[-1] = ('.', testroot, 'folder')
+    )
+    if parents and parents[-1] == (".", None, "folder"):  # This should always be true?
+        parents[-1] = (".", testroot, "folder")
     return test, parents
 
 
-def _split_fspath(fspath, fileid, item, #*,
-                  _normcase=NORMCASE,
-                  ):
+def _split_fspath(
+    fspath, fileid, item, _normcase=NORMCASE,  # *,
+):
     """Return (testroot, relfile) for the given fspath.
 
     "relfile" will match "fileid".
@@ -233,21 +230,22 @@ def _split_fspath(fspath, fileid, item, #*,
     relsuffix = fileid[1:]  # Drop (only) the "." prefix.
     if not _normcase(fspath).endswith(_normcase(relsuffix)):
         raise should_never_reach_here(
-            item,
-            fspath=fspath,
-            fileid=fileid,
-            )
-    testroot = fspath[:-len(fileid) + 1]  # Ignore the "./" prefix.
-    relfile = '.' + fspath[-len(fileid) + 1:]  # Keep the pathsep.
+            item, fspath=fspath, fileid=fileid,
+        )
+    testroot = fspath[: -len(fileid) + 1]  # Ignore the "./" prefix.
+    relfile = "." + fspath[-len(fileid) + 1 :]  # Keep the pathsep.
     return testroot, relfile
 
 
-def _get_location(item, testroot, relfile, #*,
-                  _matches_relfile=(lambda *a: _matches_relfile(*a)),
-                  _is_legacy_wrapper=(lambda *a: _is_legacy_wrapper(*a)),
-                  _unwrap_decorator=(lambda *a: _unwrap_decorator(*a)),
-                  _pathsep=PATH_SEP,
-                  ):
+def _get_location(
+    item,
+    testroot,
+    relfile,  # *,
+    _matches_relfile=(lambda *a: _matches_relfile(*a)),
+    _is_legacy_wrapper=(lambda *a: _is_legacy_wrapper(*a)),
+    _unwrap_decorator=(lambda *a: _unwrap_decorator(*a)),
+    _pathsep=PATH_SEP,
+):
     """Return (loc str, fullname) for the given item."""
     # When it comes to normcase, we favor relfile (from item.fspath)
     # over item.location in this function.
@@ -278,28 +276,27 @@ def _get_location(item, testroot, relfile, #*,
             srcfile = relfile
         # Otherwise we just return the info from item.location as-is.
 
-        if not srcfile.startswith('.' + _pathsep):
-            srcfile = '.' + _pathsep + srcfile
+        if not srcfile.startswith("." + _pathsep):
+            srcfile = "." + _pathsep + srcfile
 
     if lineno is None:
         lineno = -1  # i.e. "unknown"
 
     # from pytest, line numbers are 0-based
-    location = '{}:{}'.format(srcfile, int(lineno) + 1)
+    location = "{}:{}".format(srcfile, int(lineno) + 1)
     return location, fullname
 
 
-def _matches_relfile(srcfile, testroot, relfile, #*,
-                     _normcase=NORMCASE,
-                     _pathsep=PATH_SEP,
-                     ):
+def _matches_relfile(
+    srcfile, testroot, relfile, _normcase=NORMCASE, _pathsep=PATH_SEP,  # *,
+):
     """Return True if "srcfile" matches the given relfile."""
     testroot = _normcase(testroot)
     srcfile = _normcase(srcfile)
     relfile = _normcase(relfile)
     if srcfile == relfile:
         return True
-    elif srcfile == relfile[len(_pathsep) + 1:]:
+    elif srcfile == relfile[len(_pathsep) + 1 :]:
         return True
     elif srcfile == testroot + relfile[1:]:
         return True
@@ -307,10 +304,9 @@ def _matches_relfile(srcfile, testroot, relfile, #*,
         return False
 
 
-def _is_legacy_wrapper(srcfile, #*,
-                       _pathsep=PATH_SEP,
-                       _pyversion=sys.version_info,
-                       ):
+def _is_legacy_wrapper(
+    srcfile, _pathsep=PATH_SEP, _pyversion=sys.version_info,  # *,
+):
     """Return True if the test might be wrapped.
 
     In Python 2 unittest's decorators (e.g. unittest.skip) do not wrap
@@ -318,7 +314,7 @@ def _is_legacy_wrapper(srcfile, #*,
     """
     if _pyversion > (3,):
         return False
-    if (_pathsep + 'unittest' + _pathsep + 'case.py') not in srcfile:
+    if (_pathsep + "unittest" + _pathsep + "case.py") not in srcfile:
         return False
     return True
 
@@ -350,79 +346,77 @@ def _unwrap_decorator(func):
                 return filename, lineno
 
 
-def _parse_node_id(testid, kind, #*,
-                   _iter_nodes=(lambda *a: _iter_nodes(*a)),
-                   ):
+def _parse_node_id(
+    testid, kind, _iter_nodes=(lambda *a: _iter_nodes(*a)),  # *,
+):
     """Return the components of the given node ID, in heirarchical order."""
     nodes = iter(_iter_nodes(testid, kind))
 
     testid, name, kind = next(nodes)
     parents = []
     parameterized = None
-    if kind == 'doctest':
+    if kind == "doctest":
         parents = list(nodes)
         fileid, _, _ = parents[0]
         return testid, parents, fileid, name, parameterized
     elif kind is None:
         fullname = None
     else:
-        if kind == 'subtest':
+        if kind == "subtest":
             node = next(nodes)
             parents.append(node)
             funcid, funcname, _ = node
-            parameterized = testid[len(funcid):]
-        elif kind == 'function':
+            parameterized = testid[len(funcid) :]
+        elif kind == "function":
             funcname = name
         else:
             raise should_never_reach_here(
-                testid,
-                kind=kind,
-                )
+                testid, kind=kind,
+            )
         fullname = funcname
 
     for node in nodes:
         parents.append(node)
         parentid, name, kind = node
-        if kind == 'file':
+        if kind == "file":
             fileid = parentid
             break
         elif fullname is None:
             # We don't guess how to interpret the node ID for these tests.
             continue
-        elif kind == 'suite':
-            fullname = name + '.' + fullname
+        elif kind == "suite":
+            fullname = name + "." + fullname
         else:
             raise should_never_reach_here(
-                testid,
-                node=node,
-                )
+                testid, node=node,
+            )
     else:
         fileid = None
-    parents.extend(nodes) # Add the rest in as-is.
+    parents.extend(nodes)  # Add the rest in as-is.
 
-    return testid, parents, fileid, fullname, parameterized or ''
+    return testid, parents, fileid, fullname, parameterized or ""
 
 
-def _iter_nodes(testid, kind, #*,
-                _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
-                _normcase=NORMCASE,
-                _pathsep=PATH_SEP,
-                ):
+def _iter_nodes(
+    testid,
+    kind,  # *,
+    _normalize_test_id=(lambda *a: _normalize_test_id(*a)),
+    _normcase=NORMCASE,
+    _pathsep=PATH_SEP,
+):
     """Yield (nodeid, name, kind) for the given node ID and its parents."""
     nodeid, testid = _normalize_test_id(testid, kind)
     if len(nodeid) > len(testid):
-        testid = '.' + _pathsep + testid
+        testid = "." + _pathsep + testid
 
-    if kind == 'function' and nodeid.endswith(']'):
-        funcid, sep, parameterized = nodeid.partition('[')
+    if kind == "function" and nodeid.endswith("]"):
+        funcid, sep, parameterized = nodeid.partition("[")
         if not sep:
-            raise should_never_reach_here(
-                nodeid,
-                )
-        yield (nodeid, sep + parameterized, 'subtest')
+            raise should_never_reach_here(nodeid,)
+        yield (nodeid, sep + parameterized, "subtest")
         nodeid = funcid
 
-    parentid, _, name = nodeid.rpartition('::')
+    parentid, _, name = nodeid.rpartition("::")
     if not parentid:
         if kind is None:
             # This assumes that plugins can generate nodes that do not
@@ -430,43 +424,40 @@ def _iter_nodes(testid, kind, #*,
             yield (nodeid, name, kind)
             return
         # We expect at least a filename and a name.
-        raise should_never_reach_here(
-            nodeid,
-            )
+        raise should_never_reach_here(nodeid,)
     yield (nodeid, name, kind)
 
     # Extract the suites.
-    while '::' in parentid:
+    while "::" in parentid:
         suiteid = parentid
-        parentid, _, name = parentid.rpartition('::')
-        yield (suiteid, name, 'suite')
+        parentid, _, name = parentid.rpartition("::")
+        yield (suiteid, name, "suite")
 
     # Extract the file and folders.
     fileid = parentid
-    raw = testid[:len(fileid)]
+    raw = testid[: len(fileid)]
     _parentid, _, filename = _normcase(fileid).rpartition(_pathsep)
-    parentid = fileid[:len(_parentid)]
-    raw, name = raw[:len(_parentid)], raw[-len(filename):]
-    yield (fileid, name, 'file')
+    parentid = fileid[: len(_parentid)]
+    raw, name = raw[: len(_parentid)], raw[-len(filename) :]
+    yield (fileid, name, "file")
     # We're guaranteed at least one (the test root).
     while _pathsep in _normcase(parentid):
         folderid = parentid
         _parentid, _, foldername = _normcase(folderid).rpartition(_pathsep)
-        parentid = folderid[:len(_parentid)]
-        raw, name = raw[:len(parentid)], raw[-len(foldername):]
-        yield (folderid, name, 'folder')
+        parentid = folderid[: len(_parentid)]
+        raw, name = raw[: len(parentid)], raw[-len(foldername) :]
+        yield (folderid, name, "folder")
     # We set the actual test root later at the bottom of parse_item().
     testroot = None
-    yield (parentid, testroot, 'folder')
+    yield (parentid, testroot, "folder")
 
 
-def _normalize_test_id(testid, kind, #*,
-                       _fix_fileid=fix_fileid,
-                       _pathsep=PATH_SEP,
-                       ):
+def _normalize_test_id(
+    testid, kind, _fix_fileid=fix_fileid, _pathsep=PATH_SEP,  # *,
+):
     """Return the canonical form for the given node ID."""
-    while '::()::' in testid:
-        testid = testid.replace('::()::', '::')
+    while "::()::" in testid:
+        testid = testid.replace("::()::", "::")
     if kind is None:
         return testid, testid
     orig = testid
@@ -475,13 +466,12 @@ def _normalize_test_id(testid, kind, #*,
     # it when we try to use it later (e.g. to run a test).  The only
     # exception is that we add a "./" prefix for relative paths.
     # Note that pytest always uses "/" as the path separator in IDs.
-    fileid, sep, remainder = testid.partition('::')
+    fileid, sep, remainder = testid.partition("::")
     fileid = _fix_fileid(fileid)
-    if not fileid.startswith('./'):  # Absolute "paths" not expected.
+    if not fileid.startswith("./"):  # Absolute "paths" not expected.
         raise should_never_reach_here(
-            testid,
-            fileid=fileid,
-            )
+            testid, fileid=fileid,
+        )
     testid = fileid + sep + remainder
 
     return testid, orig
@@ -490,12 +480,12 @@ def _normalize_test_id(testid, kind, #*,
 def _get_item_kind(item):
     """Return (kind, isunittest) for the given item."""
     if isinstance(item, _pytest.doctest.DoctestItem):
-        return 'doctest', False
+        return "doctest", False
     elif isinstance(item, _pytest.unittest.TestCaseFunction):
-        return 'function', True
+        return "function", True
     elif isinstance(item, pytest.Function):
         # We *could* be more specific, e.g. "method", "subtest".
-        return 'function', False
+        return "function", False
     else:
         return None, False
 
@@ -504,39 +494,39 @@ def _get_item_kind(item):
 # useful for debugging
 
 _FIELDS = [
-    'nodeid',
-    'kind',
-    'class',
-    'name',
-    'fspath',
-    'location',
-    'function',
-    'markers',
-    'user_properties',
-    'attrnames',
-    ]
+    "nodeid",
+    "kind",
+    "class",
+    "name",
+    "fspath",
+    "location",
+    "function",
+    "markers",
+    "user_properties",
+    "attrnames",
+]
 
 
 def _summarize_item(item):
-    if not hasattr(item, 'nodeid'):
-        yield 'nodeid', item
+    if not hasattr(item, "nodeid"):
+        yield "nodeid", item
         return
 
     for field in _FIELDS:
         try:
-            if field == 'kind':
-                yield field,_get_item_kind(item)
-            elif field == 'class':
+            if field == "kind":
+                yield field, _get_item_kind(item)
+            elif field == "class":
                 yield field, item.__class__.__name__
-            elif field == 'markers':
+            elif field == "markers":
                 yield field, item.own_markers
-                #yield field, list(item.iter_markers())
-            elif field == 'attrnames':
+                # yield field, list(item.iter_markers())
+            elif field == "attrnames":
                 yield field, dir(item)
             else:
-                yield field, getattr(item, field, '<???>')
+                yield field, getattr(item, field, "<???>")
         except Exception as exc:
-            yield field, '<error {!r}>'.format(exc)
+            yield field, "<error {!r}>".format(exc)
 
 
 def _debug_item(item, showsummary=False):
@@ -548,9 +538,17 @@ def _debug_item(item, showsummary=False):
 
     if showsummary:
         print(item.nodeid)
-        for key in ('kind', 'class', 'name', 'fspath', 'location', 'func',
-                    'markers', 'props'):
-            print('  {:12} {}'.format(key, summary[key]))
+        for key in (
+            "kind",
+            "class",
+            "name",
+            "fspath",
+            "location",
+            "func",
+            "markers",
+            "props",
+        ):
+            print("  {:12} {}".format(key, summary[key]))
         print()
 
     return summary

@@ -67,7 +67,9 @@ class PythonDaemon(MethodDispatcher):
     """
 
     def __init__(self, rx, tx):
-        self.log = logging.getLogger("{0}.{1}".format(self.__class__.__module__,self.__class__.__name__))
+        self.log = logging.getLogger(
+            "{0}.{1}".format(self.__class__.__module__, self.__class__.__name__)
+        )
         self._jsonrpc_stream_reader = JsonRpcStreamReader(rx)
         self._jsonrpc_stream_writer = JsonRpcStreamWriter(tx)
         self._endpoint = Endpoint(

@@ -3,6 +3,7 @@
 
 try:
     from notebook import notebookapp as app
+
     print("Available")
 except Exception:
     print("No")
