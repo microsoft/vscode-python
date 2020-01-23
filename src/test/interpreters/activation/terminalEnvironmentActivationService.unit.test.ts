@@ -4,8 +4,7 @@
 import { assert } from 'chai';
 import * as path from 'path';
 import { anything, capture, deepEqual, instance, mock, verify, when } from 'ts-mockito';
-import * as TypeMoq from 'typemoq';
-import { EventEmitter, Extension, Terminal, Uri } from 'vscode';
+import { Uri } from 'vscode';
 import { EXTENSION_ROOT_DIR, terminalNamePrefixNotToAutoActivate } from '../../../client/common/constants';
 import { FileSystem } from '../../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../../client/common/platform/types';
