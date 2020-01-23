@@ -51,7 +51,7 @@ export class ServerCache implements IAsyncDisposable {
         if (!data) {
             // Didn't find one, so start up our promise and cache it
             data = {
-                promise: createFunction(options, cancelToken),
+                promise: createFunction(options, cancelSource.token),
                 options: fixedOptions,
                 cancelSource
             };
