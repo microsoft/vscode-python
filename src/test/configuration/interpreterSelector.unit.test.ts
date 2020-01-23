@@ -81,7 +81,6 @@ suite('Interpreters - selector', () => {
         workspace = TypeMoq.Mock.ofType<IWorkspaceService>();
         fileSystem = TypeMoq.Mock.ofType<IFileSystem>();
         fileSystem.setup(x => x.arePathsSame(TypeMoq.It.isAnyString(), TypeMoq.It.isAnyString())).returns((a: string, b: string) => a === b);
-        fileSystem.setup(x => x.getRealPath(TypeMoq.It.isAnyString())).returns((a: string) => new Promise(resolve => resolve(a)));
         configurationService.setup(x => x.getSettings(TypeMoq.It.isAny())).returns(() => pythonSettings.object);
 
         comparer.setup(c => c.compare(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => 0);

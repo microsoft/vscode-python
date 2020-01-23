@@ -128,30 +128,6 @@ stages:
           NeedsPythonFunctionalReqs: true
           VSCODE_PYTHON_ROLLING: true
           VSC_PYTHON_LOG_TELEMETRY: true
-        'Windows-Py2.7 Functional':
-          PythonVersion: '2.7'
-          VMImageName: 'vs2017-win2016'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-          VSCODE_PYTHON_ROLLING: true
-          VSC_PYTHON_LOG_TELEMETRY: true
-        'Linux-Py2.7 Functional':
-          PythonVersion: '2.7'
-          VMImageName: 'ubuntu-16.04'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-          VSCODE_PYTHON_ROLLING: true
-          VSC_PYTHON_LOG_TELEMETRY: true
-        'Mac-Py2.7 Functional':
-          PythonVersion: '2.7'
-          VMImageName: 'macos-10.13'
-          TestsToRun: 'testfunctional'
-          NeedsPythonTestReqs: true
-          NeedsPythonFunctionalReqs: true
-          VSCODE_PYTHON_ROLLING: true
-          VSC_PYTHON_LOG_TELEMETRY: true
 
     pool:
       vmImage: $(VMImageName)

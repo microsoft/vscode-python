@@ -34,7 +34,6 @@ import { MockMemento } from '../mocks/mementos';
 
 // tslint:disable-next-line:max-func-body-length
 suite('Linting - Provider', () => {
-    let context: TypeMoq.IMock<vscode.ExtensionContext>;
     let interpreterService: TypeMoq.IMock<IInterpreterService>;
     let engine: TypeMoq.IMock<ILintingEngine>;
     let configService: TypeMoq.IMock<IConfigurationService>;
@@ -55,7 +54,6 @@ suite('Linting - Provider', () => {
         const serviceManager = new ServiceManager(cont);
 
         serviceContainer = new ServiceContainer(cont);
-        context = TypeMoq.Mock.ofType<vscode.ExtensionContext>();
 
         fs = TypeMoq.Mock.ofType<IFileSystem>();
         fs.setup(x => x.fileExists(TypeMoq.It.isAny())).returns(
@@ -102,13 +100,13 @@ suite('Linting - Provider', () => {
         document = TypeMoq.Mock.ofType<vscode.TextDocument>();
     });
 
-    test('Lint on open file', () => {
+    test('Lint on open file', async () => {
         docManager.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'auto'), TypeMoq.Times.once());
     });
@@ -118,40 +116,40 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.py'));
         document.setup(x => x.languageId).returns(() => 'python');
 
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.once());
     });
 
-    test('No lint on open other files', () => {
+    test('No lint on open other files', async () => {
         docManager.setup(x => x.onDidOpenTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
 
-    test('No lint on save other files', () => {
+    test('No lint on save other files', async () => {
         docManager.setup(x => x.onDidSaveTextDocument).returns(() => emitter.event);
         document.setup(x => x.uri).returns(() => vscode.Uri.file('test.cs'));
         document.setup(x => x.languageId).returns(() => 'csharp');
 
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
         emitter.fire(document.object);
         engine.verify(x => x.lintDocument(document.object, 'save'), TypeMoq.Times.never());
     });
 
-    test('Lint on change interpreters', () => {
+    test('Lint on change interpreters', async () => {
         const e = new vscode.EventEmitter<void>();
         interpreterService.setup(x => x.onDidChangeInterpreter).returns(() => e.event);
 
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
         e.fire();
         engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
@@ -161,8 +159,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.uri).returns(() => vscode.Uri.file('.pylintrc'));
 
         await lm.setActiveLintersAsync([Product.pylint]);
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
         emitter.fire(document.object);
 
         const deferred = createDeferred<void>();
@@ -171,10 +169,10 @@ suite('Linting - Provider', () => {
         engine.verify(x => x.lintOpenPythonFiles(), TypeMoq.Times.once());
     });
 
-    test('Diagnostic cleared on file close', () => testClearDiagnosticsOnClose(true));
-    test('Diagnostic not cleared on file opened in another tab', () => testClearDiagnosticsOnClose(false));
+    test('Diagnostic cleared on file close', async () => testClearDiagnosticsOnClose(true));
+    test('Diagnostic not cleared on file opened in another tab', async () => testClearDiagnosticsOnClose(false));
 
-    function testClearDiagnosticsOnClose(closed: boolean) {
+    async function testClearDiagnosticsOnClose(closed: boolean) {
         docManager.setup(x => x.onDidCloseTextDocument).returns(() => emitter.event);
 
         const uri = vscode.Uri.file('test.py');
@@ -182,9 +180,8 @@ suite('Linting - Provider', () => {
         document.setup(x => x.isClosed).returns(() => closed);
 
         docManager.setup(x => x.textDocuments).returns(() => (closed ? [] : [document.object]));
-        // tslint:disable-next-line:prefer-const no-unused-variable
-        // tslint:disable-next-line:no-unused-expression
-        new LinterProvider(context.object, serviceContainer);
+        const linterProvider = new LinterProvider(serviceContainer);
+        await linterProvider.activate();
 
         emitter.fire(document.object);
         const timesExpected = closed ? TypeMoq.Times.once() : TypeMoq.Times.never();

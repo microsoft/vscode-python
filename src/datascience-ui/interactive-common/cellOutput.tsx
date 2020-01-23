@@ -14,13 +14,13 @@ import { ImageButton } from '../react-common/imageButton';
 import { getLocString } from '../react-common/locReactSide';
 import { fixLatexEquations } from './latexManipulation';
 import { ICellViewModel } from './mainState';
-import { displayOrder, richestMimetype, transforms } from './transforms';
+import { getRichestMimetype, getTransform } from './transforms';
 
 // tslint:disable-next-line: no-var-requires no-require-imports
 const ansiToHtml = require('ansi-to-html');
 
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+// tslint:disable-next-line: no-require-imports no-var-requires
+const cloneDeep = require('lodash/cloneDeep');
 import { noop } from '../../client/common/utils/misc';
 import { concatMultilineStringInput, concatMultilineStringOutput } from '../common';
 
@@ -203,7 +203,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
         const markdown = this.getMarkdownCell();
         // React-markdown expects that the source is a string
         const source = fixLatexEquations(concatMultilineStringInput(markdown.source));
-        const Transform = transforms['text/markdown'];
+        const Transform = getTransform('text/markdown');
         const MarkdownClassName = 'markdown-cell-output';
 
         return [
@@ -275,7 +275,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             }
         } else if (copy.data) {
             // Compute the mime type
-            mimeType = richestMimetype(copy.data, displayOrder, transforms);
+            mimeType = getRichestMimetype(copy.data);
         }
 
         // Then parse the mime type
@@ -382,7 +382,7 @@ export class CellOutput extends React.Component<ICellOutputProps> {
             // If that worked, use the transform
             if (mimetype) {
                 // Get the matching React.Component for that mimetype
-                const Transform = transforms[mimetype];
+                const Transform = getTransform(mimetype);
 
                 let className = transformed.isText ? 'cell-output-text' : 'cell-output-html';
                 className = transformed.isError ? `${className} cell-output-error` : className;

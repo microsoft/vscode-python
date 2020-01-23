@@ -19,9 +19,7 @@ function start() {
         version: 'stable'
     }).catch(ex => {
         console.error('End Standard tests (with errors)', ex);
-        if (process.env.IS_SMOKE_TEST) {
-            process.exit(1);
-        }
+        process.exit(1);
     });
 }
 start();

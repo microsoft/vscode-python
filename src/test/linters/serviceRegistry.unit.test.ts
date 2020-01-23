@@ -4,6 +4,7 @@
 'use strict';
 
 import { instance, mock, verify } from 'ts-mockito';
+import { IExtensionActivationService } from '../../client/activation/types';
 import { ServiceManager } from '../../client/ioc/serviceManager';
 import { IServiceManager } from '../../client/ioc/types';
 import { AvailableLinterActivator } from '../../client/linters/linterAvailability';
@@ -11,6 +12,7 @@ import { LinterManager } from '../../client/linters/linterManager';
 import { LintingEngine } from '../../client/linters/lintingEngine';
 import { registerTypes } from '../../client/linters/serviceRegistry';
 import { IAvailableLinterActivator, ILinterManager, ILintingEngine } from '../../client/linters/types';
+import { LinterProvider } from '../../client/providers/linterProvider';
 
 suite('Linters Service Registry', () => {
     let serviceManager: IServiceManager;
@@ -24,5 +26,6 @@ suite('Linters Service Registry', () => {
         verify(serviceManager.addSingleton<ILintingEngine>(ILintingEngine, LintingEngine)).once();
         verify(serviceManager.addSingleton<ILinterManager>(ILinterManager, LinterManager)).once();
         verify(serviceManager.add<IAvailableLinterActivator>(IAvailableLinterActivator, AvailableLinterActivator)).once();
+        verify(serviceManager.addSingleton<IExtensionActivationService>(IExtensionActivationService, LinterProvider)).once();
     });
 });

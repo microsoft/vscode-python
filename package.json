@@ -2751,7 +2751,7 @@
             "test": [
                 {
                     "id": "python_tests",
-                    "name": "PYTHON",
+                    "name": "Python",
                     "when": "testsDiscovered"
                 }
             ]
@@ -2763,8 +2763,6 @@
         "compile-webviews-watch": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --watch",
         "checkDependencies": "gulp checkDependencies",
         "dump-datascience-webpack-stats": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
-        "compile-webviews": "gulp compile-webviews",
-        "compile-webviews-verbose": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience.config.js",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
@@ -2788,6 +2786,7 @@
         "@jupyterlab/coreutils": "^3.1.0",
         "@jupyterlab/services": "^4.2.0",
         "@koa/cors": "^3.0.0",
+        "@loadable/component": "^5.12.0",
         "@msrvida/python-program-analysis": "^0.4.1",
         "ansi-regex": "^4.1.0",
         "arch": "^2.1.0",
@@ -2887,6 +2886,7 @@
         "@types/koa-compress": "^2.0.9",
         "@types/koa-logger": "^3.1.1",
         "@types/koa__cors": "^2.2.3",
+        "@types/loadable__component": "^5.10.0",
         "@types/loader-utils": "^1.1.3",
         "@types/lodash": "^4.14.104",
         "@types/md5": "^2.1.32",
@@ -3029,11 +3029,12 @@
         "vscode-debugadapter-testsupport": "^1.27.0",
         "vscode-test": "^1.2.3",
         "webpack": "^4.33.0",
-        "webpack-bundle-analyzer": "^3.3.2",
+        "webpack-bundle-analyzer": "^3.6.0",
         "webpack-cli": "^3.1.2",
         "webpack-fix-default-import-plugin": "^1.0.3",
         "webpack-merge": "^4.1.4",
         "webpack-node-externals": "^1.7.2",
+        "webpack-require-from": "^1.8.0",
         "why-is-node-running": "^2.0.3",
         "wtfnode": "^0.8.0",
         "yargs": "^12.0.2"

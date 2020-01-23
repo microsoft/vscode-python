@@ -96,19 +96,11 @@ declare module '@nteract/transforms' {
         setState(partialState: any, callback: any): void;
         shouldComponentUpdate(nextProps: any): any;
     }
-    export class VDOMTransform {
-        static MIMETYPE: string;
-        constructor(...args: any[]);
-        forceUpdate(callback: any): void;
-        render(): any;
-        setState(partialState: any, callback: any): void;
-        shouldComponentUpdate(nextProps: any): any;
-    }
     export const displayOrder: string[];
     export function registerTransform(_ref: any, transform: any): any;
     export function richestMimetype(bundle: any, ...args: any[]): any;
     export const standardDisplayOrder: string[];
 
     export let standardTransforms: {};
-    export namespace transforms { }
+    export namespace transforms {}
 }

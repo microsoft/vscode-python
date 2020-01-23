@@ -1,8 +1,8 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-// tslint:disable-next-line: no-require-imports
-import cloneDeep = require('lodash/cloneDeep');
+// tslint:disable-next-line: no-require-imports no-var-requires
+const cloneDeep = require('lodash/cloneDeep');
 import { CellMatcher } from '../../../../client/datascience/cellMatcher';
 import { InteractiveWindowMessages } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { CellState } from '../../../../client/datascience/types';

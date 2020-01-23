@@ -59,7 +59,7 @@ import { WindowsRegistryService } from '../client/interpreter/locators/services/
 import { WindowsStoreInterpreter } from '../client/interpreter/locators/services/windowsStoreInterpreter';
 import { WorkspaceVirtualEnvService } from '../client/interpreter/locators/services/workspaceVirtualEnvService';
 import { IPipEnvServiceHelper } from '../client/interpreter/locators/types';
-import { registerTypes as interpretersRegisterTypes } from '../client/interpreter/serviceRegistry';
+import { registerInterpreterTypes } from '../client/interpreter/serviceRegistry';
 import { ServiceContainer } from '../client/ioc/container';
 import { ServiceManager } from '../client/ioc/serviceManager';
 import { IServiceContainer, IServiceManager } from '../client/ioc/types';
@@ -147,7 +147,8 @@ export class IocContainer {
         platformRegisterTypes(this.serviceManager);
     }
     public registerInterpreterTypes() {
-        interpretersRegisterTypes(this.serviceManager);
+        // This method registers all interpreter types except `IInterpreterAutoSeletionProxyService` & `IEnvironmentActivationService`, as it's already registered in the constructor & registerMockProcessTypes() respectively
+        registerInterpreterTypes(this.serviceManager);
     }
     public registerMockProcessTypes() {
         this.serviceManager.addSingleton<IBufferDecoder>(IBufferDecoder, BufferDecoder);

@@ -7,8 +7,8 @@ import { inject, injectable } from 'inversify';
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as path from 'path';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, Event, EventEmitter, SignatureHelpContext, TextDocumentContentChangeEvent, Uri } from 'vscode';
-
+import { CancellationToken, CancellationTokenSource, CompletionItem, Event, EventEmitter, SignatureHelpContext, TextDocumentContentChangeEvent, Uri } from 'vscode';
+import * as vscodeLanguageClient from 'vscode-languageclient';
 import { concatMultilineStringInput } from '../../../../datascience-ui/common';
 import { ILanguageServer, ILanguageServerCache } from '../../../activation/types';
 import { IWorkspaceService } from '../../../common/application/types';
@@ -34,9 +34,17 @@ import {
     IProvideHoverRequest,
     IProvideSignatureHelpRequest,
     IRemoveCell,
+    IResolveCompletionItemRequest,
     ISwapCells
 } from '../interactiveWindowTypes';
-import { convertStringsToSuggestions, convertToMonacoCompletionList, convertToMonacoHover, convertToMonacoSignatureHelp } from './conversion';
+import {
+    convertStringsToSuggestions,
+    convertToMonacoCompletionItem,
+    convertToMonacoCompletionList,
+    convertToMonacoHover,
+    convertToMonacoSignatureHelp,
+    convertToVSCodeCompletionItem
+} from './conversion';
 import { IntellisenseDocument } from './intellisenseDocument';
 
 // tslint:disable:no-any
@@ -93,6 +101,10 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
 
             case InteractiveWindowMessages.ProvideSignatureHelpRequest:
                 this.dispatchMessage(message, payload, this.handleSignatureHelpRequest);
+                break;
+
+            case InteractiveWindowMessages.ResolveCompletionItemRequest:
+                this.dispatchMessage(message, payload, this.handleResolveCompletionItemRequest);
                 break;
 
             case InteractiveWindowMessages.EditCell:
@@ -211,8 +223,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.CompletionList> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideCompletionItems(document, docPos, token, context);
@@ -227,8 +238,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         };
     }
     protected async provideHover(position: monacoEditor.Position, cellId: string, token: CancellationToken): Promise<monacoEditor.languages.Hover> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideHover(document, docPos, token);
@@ -247,8 +257,7 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
         cellId: string,
         token: CancellationToken
     ): Promise<monacoEditor.languages.SignatureHelp> {
-        const languageServer = await this.getLanguageServer();
-        const document = await this.getDocument();
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
         if (languageServer && document) {
             const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
             const result = await languageServer.provideSignatureHelp(document, docPos, token, context as SignatureHelpContext);
@@ -262,6 +271,31 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             activeParameter: 0,
             activeSignature: 0
         };
+    }
+
+    protected async resolveCompletionItem(
+        position: monacoEditor.Position,
+        item: monacoEditor.languages.CompletionItem,
+        cellId: string,
+        token: CancellationToken
+    ): Promise<monacoEditor.languages.CompletionItem> {
+        const [languageServer, document] = await Promise.all([this.getLanguageServer(), this.getDocument()]);
+        if (languageServer && languageServer.resolveCompletionItem && document) {
+            const vscodeCompItem: CompletionItem = convertToVSCodeCompletionItem(item);
+
+            // Needed by Jedi in completionSource.ts to resolve the item
+            const docPos = document.convertToDocumentPosition(cellId, position.lineNumber, position.column);
+            (vscodeCompItem as any)._documentPosition = { document, position: docPos };
+
+            const result = await languageServer.resolveCompletionItem(vscodeCompItem, token);
+            if (result) {
+                // Convert expects vclc completion item, but takes both vclc and vscode items so just cast here
+                return convertToMonacoCompletionItem(result as vscodeLanguageClient.CompletionItem, true);
+            }
+        }
+
+        // If we can't fill in the extra info, just return the item
+        return item;
     }
 
     protected async handleChanges(document: IntellisenseDocument, changes: TextDocumentContentChangeEvent[]): Promise<void> {
@@ -321,6 +355,25 @@ export class IntellisenseProvider implements IInteractiveWindowListener {
             c => {
                 const list = this.combineCompletions(c);
                 return { list, requestId: request.requestId };
+            }
+        );
+    }
+
+    private handleResolveCompletionItemRequest(request: IResolveCompletionItemRequest) {
+        // Create a cancellation source. We'll use this for our sub class request and a jupyter one
+        const cancelSource = new CancellationTokenSource();
+        this.cancellationSources.set(request.requestId, cancelSource);
+
+        // Combine all of the results together.
+        this.postTimedResponse(
+            [this.resolveCompletionItem(request.position, request.item, request.cellId, cancelSource.token)],
+            InteractiveWindowMessages.ResolveCompletionItemResponse,
+            c => {
+                if (c && c[0]) {
+                    return { item: c[0], requestId: request.requestId };
+                } else {
+                    return { item: request.item, requestId: request.requestId };
+                }
             }
         );
     }

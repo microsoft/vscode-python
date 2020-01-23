@@ -15,7 +15,6 @@ import { IFileSystem } from '../../platform/types';
 interface IState {
     cwd: string;
     outDir: string;
-    html: string;
 }
 
 export class WebPanelServer {
@@ -77,12 +76,11 @@ export class WebPanelServer {
         if (!state) {
             state = {
                 cwd: ctx.query.cwd,
-                outDir: ctx.query.rootPath,
-                html: this.generateReactHtml(ctx.query)
+                outDir: ctx.query.rootPath
             };
             this.state.set(id, state);
         }
-        ctx.body = state.html;
+        ctx.body = this.generateReactHtml(ctx.query);
         ctx.cookies.set('id', id);
         ctx.type = 'html';
     }
@@ -100,13 +98,16 @@ export class WebPanelServer {
                 filePath = path.join(EXTENSION_ROOT_DIR, 'out', ctx.url);
                 break;
 
-            case '/index_bundle.js':
+            case '/index_chunked_bundle.js':
                 // This is in the root folder
                 filePath = path.join(root, ctx.url);
                 break;
 
             // Here is where we'd likely support loading split bundles.
             default:
+                if (ctx.url.includes('_chunk_bundle.js')) {
+                    filePath = path.join(root, path.basename(ctx.url));
+                }
                 break;
         }
         ctx.body = this.fs.createReadStream(filePath);
@@ -118,13 +119,20 @@ export class WebPanelServer {
     // 1) If you get no output, try entering the URL of the server into Chrome on the same machine as the extension.
     //    You can then debug this code outside of a frame, but only the raw startup of the frame.
     //    Note, the URL is usually http://localhost:9000?queryparams, not http://localhost:9890 as this is the remapped URL
-    // 2) If you get the wrong output, and you think the error is in the react code, set the 'python.dataScience.useWebViewServer' to false in your settings.json.
-    //    This will switch the code to use the old way to render.
+    // 2) If you get the wrong output, and you think the error is in the react code, do the following:
+    //    a) Run the same code in the real product under the debugger
+    //    b) Find the <-- GET /e7414d50-33f7-4147-837e-4e79c5a4ec61?scripts=... entry in the debug output.
+    //    c) Copy this value but add '&testMode=true' to the end of it.
+    //    d) Paste http://localhost:9000/<value from step c> into the browser
+    //    e) Debug the rendering.
+    //       Note you might have to change generateTestState in mainState.ts to get the cells you want to show up.
+    //       One good way to do so is to open the json for the offending notebook and copy it into one of the test cells.
     // 3) If you suspect some of the code below but you do get output on startup, copy some of the code into a codepen and debug it there.
 
     // tslint:disable: no-any
     private generateReactHtml(query: any) {
         const scripts = query.scripts ? (Array.isArray(query.scripts) ? query.Scripts : [query.scripts]) : [''];
+        const testMode = query.testMode ? true : false;
 
         return `<!doctype html>
         <html lang="en">
@@ -141,6 +149,9 @@ export class WebPanelServer {
                 <div id="root"></div>
                 <script type="text/javascript">
                 ${this.getVsCodeApiScript({})}
+                </script>
+                <script type="text/javascript">
+                window.inTestMode = ${testMode};
                 </script>
                 <script type="text/javascript">
                     function resolvePath(relativePath) {

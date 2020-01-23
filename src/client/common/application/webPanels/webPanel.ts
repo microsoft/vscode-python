@@ -166,7 +166,7 @@ export class WebPanel implements IWebPanel {
     private generateServerReactHtml(webView: Webview) {
         const uriBase = webView.asWebviewUri(Uri.file(this.options.rootPath));
         const relativeScripts = this.options.scripts.map(s => `.${s.substr(this.options.rootPath.length)}`);
-        const encoded = relativeScripts.map(s => encodeURIComponent(s.replace(/\\/g, '/')));
+        const encoded = relativeScripts.map(s => encodeURIComponent(s.replace(/\\/g, '/').replace('index_bundle.js', 'index_chunked_bundle.js')));
 
         return `<!doctype html>
         <html lang="en">

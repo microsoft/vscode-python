@@ -84,7 +84,6 @@ import { LinterCommands } from './linters/linterCommands';
 import { registerTypes as lintersRegisterTypes } from './linters/serviceRegistry';
 import { PythonCodeActionProvider } from './providers/codeActionsProvider';
 import { PythonFormattingEditProvider } from './providers/formatProvider';
-import { LinterProvider } from './providers/linterProvider';
 import { ReplProvider } from './providers/replProvider';
 import { registerTypes as providersRegisterTypes } from './providers/serviceRegistry';
 import { activateSimplePythonRefactorProvider } from './providers/simpleRefactorProvider';
@@ -161,8 +160,6 @@ async function activateUnsafe(context: ExtensionContext): Promise<IExtensionApi>
     importTracker.activate().ignoreErrors();
 
     context.subscriptions.push(new LinterCommands(serviceManager));
-    const linterProvider = new LinterProvider(context, serviceManager);
-    context.subscriptions.push(linterProvider);
 
     languages.setLanguageConfiguration(PYTHON_LANGUAGE, getLanguageConfiguration());
 

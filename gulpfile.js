@@ -29,6 +29,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const argv = require('yargs').argv;
 const os = require('os');
+const rmrf = require('rimraf');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -120,6 +121,10 @@ gulp.task('compile-webviews', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js', '--mode', 'production'], webpackEnv);
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js', '--mode', 'production'], webpackEnv);
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-interactiveWindowChunked.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditorChunked.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-dataExplorerChunked.config.js', '--mode', 'production'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewerChunked.config.js', '--mode', 'production'], webpackEnv);
 });
 
 gulp.task('webpack', async () => {
@@ -131,6 +136,10 @@ gulp.task('webpack', async () => {
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-dataExplorer.config.js'], webpackEnv);
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-interactiveWindowChunked.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditorChunked.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-dataExplorerChunked.config.js'], webpackEnv);
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-plotViewerChunked.config.js'], webpackEnv);
     // Run both in parallel, for faster process on CI.
     // Yes, console would print output from both, that's ok, we have a faster CI.
     // If things fail, we can run locally separately.
@@ -275,8 +284,23 @@ gulp.task('installPythonRequirements', async () => {
 
 // See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installNewPtvsd', async () => {
+    // Install dependencies needed for 'install_ptvsd.py'
+    const depsArgs = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/temp', '-r', './build/debugger-install-requirements.txt'];
+    const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            return false;
+        });
+    if (!successWithWheelsDeps) {
+        console.info("Failed to install dependencies need by 'install_ptvsd.py' using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', depsArgs).catch(ex => console.error("Failed to install dependencies need by 'install_ptvsd.py' using 'python'", ex));
+    }
+
     // Install new PTVSD with wheels for python 3.7
-    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', ['./pythonFiles/install_ptvsd.py'])
+    const wheelsArgs = ['./pythonFiles/install_ptvsd.py'];
+    const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', wheelsArgs, wheelsEnv)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install new PTVSD wheels using 'python3'", ex);
@@ -284,8 +308,10 @@ gulp.task('installNewPtvsd', async () => {
         });
     if (!successWithWheels) {
         console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+        await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
     }
+
+    rmrf.sync('./pythonFiles/lib/temp');
 
     // Install source only version of new PTVSD for use with all other python versions.
     const args = [
@@ -300,7 +326,8 @@ gulp.task('installNewPtvsd', async () => {
         'py',
         '--no-deps',
         '--upgrade',
-        'ptvsd==5.0.0a11'
+        '--pre',
+        'ptvsd'
     ];
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)

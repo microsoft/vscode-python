@@ -34,15 +34,24 @@ function getPlugins(folderName) {
     ];
 }
 
-function buildConfiguration(folderName) {
+function buildConfiguration(folderName, supportsChunks) {
+    const output = supportsChunks
+        ? {
+              path: path.join(constants.ExtensionRootDir, 'out'),
+              filename: `datascience-ui/${folderName}/index_chunked_bundle.js`,
+              chunkFilename: `datascience-ui/${folderName}/[name]_chunk_bundle.js`,
+              publicPath: './'
+          }
+        : {
+              path: path.join(constants.ExtensionRootDir, 'out'),
+              filename: `datascience-ui/${folderName}/index_bundle.js`,
+              publicPath: './'
+          };
+    const maxChunks = supportsChunks ? 1000 : 1; // Could do this a different way but this is simpler
     return {
         context: constants.ExtensionRootDir,
         entry: ['babel-polyfill', `./src/datascience-ui/${folderName}/index.tsx`],
-        output: {
-            path: path.join(constants.ExtensionRootDir, 'out'),
-            filename: `datascience-ui/${folderName}/index_bundle.js`,
-            publicPath: './'
-        },
+        output,
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
         // Use 'eval' for release and `eval-source-map` for development.
         // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
@@ -71,8 +80,8 @@ function buildConfiguration(folderName) {
                 ],
                 { context: 'src' }
             ),
-            new MonacoWebpackPlugin({
-                languages: [] // force to empty so onigasm will be used
+            new webpack.optimize.LimitChunkCountPlugin({
+                maxChunks
             }),
             ...getPlugins(folderName)
         ],
@@ -133,7 +142,12 @@ function buildConfiguration(folderName) {
     };
 }
 
-exports.interactiveWindowConfig = buildConfiguration('history-react');
-exports.nativeEditorConfig = buildConfiguration('native-editor');
-exports.dataExplorerConfig = buildConfiguration('data-explorer');
-exports.plotViewerConfig = buildConfiguration('plot');
+exports.interactiveWindowConfigChunked = buildConfiguration('history-react', true);
+exports.nativeEditorConfigChunked = buildConfiguration('native-editor', true);
+exports.dataExplorerConfigChunked = buildConfiguration('data-explorer', true);
+exports.plotViewerConfigChunked = buildConfiguration('plot', true);
+
+exports.interactiveWindowConfig = buildConfiguration('history-react', false);
+exports.nativeEditorConfig = buildConfiguration('native-editor', false);
+exports.dataExplorerConfig = buildConfiguration('data-explorer', false);
+exports.plotViewerConfig = buildConfiguration('plot', false);
