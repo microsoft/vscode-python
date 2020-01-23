@@ -8,7 +8,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { getOSType, openFile, OSType, setAutoSaveDelayInWorkspaceRoot, setPythonPathInWorkspaceRoot, waitForCondition } from '../common';
+import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
