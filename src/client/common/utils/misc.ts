@@ -48,7 +48,7 @@ export function isResource(resource?: InterpreterUri): resource is Resource {
  *
  * @export
  * @param {InterpreterUri} [resource]
- * @returns {resource is Resource}
+ * @returns {resource is Uri}
  */
 // tslint:disable-next-line: no-any
 export function isUri(resource?: Uri | any): resource is Uri {

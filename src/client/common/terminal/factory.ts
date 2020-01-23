@@ -55,7 +55,7 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         if (!resource && !interpreter) {
             return title;
         }
-        const workspaceFolder = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource!);
-        return workspaceFolder ? `${title}:${workspaceFolder.uri.fsPath}:${interpreter?.path}` : title;
+        const workspaceFolder = this.serviceContainer.get<IWorkspaceService>(IWorkspaceService).getWorkspaceFolder(resource || undefined);
+        return `${title}:${workspaceFolder?.uri.fsPath || ''}:${interpreter?.path}`;
     }
 }
