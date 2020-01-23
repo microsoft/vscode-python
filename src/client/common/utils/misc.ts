@@ -53,7 +53,7 @@ export function isResource(resource?: InterpreterUri): resource is Resource {
 // tslint:disable-next-line: no-any
 export function isUri(resource?: Uri | any): resource is Uri {
     if (!resource) {
-        return true;
+        return false;
     }
     const uri = resource as Uri;
     return typeof uri.path === 'string' && typeof uri.scheme === 'string';
