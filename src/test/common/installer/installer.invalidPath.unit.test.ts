@@ -15,6 +15,7 @@ import { ProductService } from '../../../client/common/installer/productService'
 import { IProductPathService, IProductService } from '../../../client/common/installer/types';
 import { IPersistentState, IPersistentStateFactory, Product } from '../../../client/common/types';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { IServiceContainer } from '../../../client/ioc/types';
 
 use(chaiAsPromised);
@@ -44,6 +45,14 @@ suite('Module Installer - Invalid Paths', () => {
 
                     productPathService = TypeMoq.Mock.ofType<IProductPathService>();
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
+
+                    const interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+
+                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
+                    // tslint:disable-next-line:no-any
+                    pythonInterpreter.setup(i => (i as any).then).returns(() => undefined);
+                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonInterpreter.object));
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
 
                     persistentState = TypeMoq.Mock.ofType<IPersistentStateFactory>();
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IPersistentStateFactory), TypeMoq.It.isAny())).returns(() => persistentState.object);

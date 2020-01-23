@@ -9,7 +9,8 @@ import {
     InteractiveWindowMessages,
     IProvideCompletionItemsResponse,
     IProvideHoverResponse,
-    IProvideSignatureHelpResponse
+    IProvideSignatureHelpResponse,
+    IResolveCompletionItemResponse
 } from '../../../../client/datascience/interactive-common/interactiveWindowTypes';
 import { IGetMonacoThemeResponse } from '../../../../client/datascience/monacoMessages';
 import { logMessage } from '../../../react-common/logger';
@@ -105,6 +106,12 @@ function handleCompletionItemsResponse(arg: MonacoReducerArg<IProvideCompletionI
     return ensuredProvider;
 }
 
+function handleResolveCompletionItemResponse(arg: MonacoReducerArg<IResolveCompletionItemResponse>): IMonacoState {
+    const ensuredProvider = handleStarted(arg);
+    ensuredProvider.intellisenseProvider!.handleResolveCompletionItemResponse(arg.payload);
+    return ensuredProvider;
+}
+
 function handleSignatureHelpResponse(arg: MonacoReducerArg<IProvideSignatureHelpResponse>): IMonacoState {
     const ensuredProvider = handleStarted(arg);
     ensuredProvider.intellisenseProvider!.handleSignatureHelpResponse(arg.payload);
@@ -154,6 +161,7 @@ class IMonacoActionMapping {
     public [IncomingMessageActions.PROVIDECOMPLETIONITEMSRESPONSE]: MonacoReducerFunc<IProvideCompletionItemsResponse>;
     public [IncomingMessageActions.PROVIDESIGNATUREHELPRESPONSE]: MonacoReducerFunc<IProvideSignatureHelpResponse>;
     public [IncomingMessageActions.PROVIDEHOVERRESPONSE]: MonacoReducerFunc<IProvideHoverResponse>;
+    public [IncomingMessageActions.RESOLVECOMPLETIONITEMRESPONSE]: MonacoReducerFunc<IResolveCompletionItemResponse>;
     public [CommonActionType.CODE_CREATED]: MonacoReducerFunc<ICodeCreatedAction>;
     public [CommonActionType.EDIT_CELL]: MonacoReducerFunc<IEditCellAction>;
     public [CommonActionType.UNMOUNT]: MonacoReducerFunc<never | undefined>;
@@ -168,6 +176,7 @@ const reducerMap: IMonacoActionMapping = {
     [IncomingMessageActions.PROVIDECOMPLETIONITEMSRESPONSE]: handleCompletionItemsResponse,
     [IncomingMessageActions.PROVIDESIGNATUREHELPRESPONSE]: handleSignatureHelpResponse,
     [IncomingMessageActions.PROVIDEHOVERRESPONSE]: handleHoverResponse,
+    [IncomingMessageActions.RESOLVECOMPLETIONITEMRESPONSE]: handleResolveCompletionItemResponse,
     [CommonActionType.CODE_CREATED]: handleCodeCreated,
     [CommonActionType.EDIT_CELL]: handleEditCell,
     [CommonActionType.UNMOUNT]: handleUnmount

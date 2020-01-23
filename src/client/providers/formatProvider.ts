@@ -4,6 +4,7 @@
 import * as vscode from 'vscode';
 import { ICommandManager, IDocumentManager, IWorkspaceService } from '../common/application/types';
 import { IConfigurationService } from '../common/types';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { AutoPep8Formatter } from './../formatters/autoPep8Formatter';
 import { BaseFormatter } from './../formatters/baseFormatter';
@@ -38,7 +39,15 @@ export class PythonFormattingEditProvider implements vscode.DocumentFormattingEd
         this.workspace = serviceContainer.get<IWorkspaceService>(IWorkspaceService);
         this.documentManager = serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.config = serviceContainer.get<IConfigurationService>(IConfigurationService);
+        const interpreterService = serviceContainer.get<IInterpreterService>(IInterpreterService);
         this.disposables.push(this.documentManager.onDidSaveTextDocument(async document => this.onSaveDocument(document)));
+        this.disposables.push(
+            interpreterService.onDidChangeInterpreter(async () => {
+                if (this.documentManager.activeTextEditor) {
+                    return this.onSaveDocument(this.documentManager.activeTextEditor.document);
+                }
+            })
+        );
     }
 
     public dispose() {

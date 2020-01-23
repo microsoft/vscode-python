@@ -68,6 +68,35 @@ const mapCompletionItemKind: Map<number, number> = new Map<number, number>([
     [vscode.CompletionItemKind.TypeParameter, monacoCompletionItemKind.TypeParameter] // TypeParameter
 ]);
 
+// Left side is the monaco value.
+const reverseMapCompletionItemKind: Map<number, vscode.CompletionItemKind> = new Map<number, vscode.CompletionItemKind>([
+    [monacoCompletionItemKind.Text, vscode.CompletionItemKind.Text], // Text
+    [monacoCompletionItemKind.Method, vscode.CompletionItemKind.Method], // Method
+    [monacoCompletionItemKind.Function, vscode.CompletionItemKind.Function], // Function
+    [monacoCompletionItemKind.Constructor, vscode.CompletionItemKind.Constructor], // Constructor
+    [monacoCompletionItemKind.Field, vscode.CompletionItemKind.Field], // Field
+    [monacoCompletionItemKind.Variable, vscode.CompletionItemKind.Variable], // Variable
+    [monacoCompletionItemKind.Class, vscode.CompletionItemKind.Class], // Class
+    [monacoCompletionItemKind.Interface, vscode.CompletionItemKind.Interface], // Interface
+    [monacoCompletionItemKind.Module, vscode.CompletionItemKind.Module], // Module
+    [monacoCompletionItemKind.Property, vscode.CompletionItemKind.Property], // Property
+    [monacoCompletionItemKind.Unit, vscode.CompletionItemKind.Unit], // Unit
+    [monacoCompletionItemKind.Value, vscode.CompletionItemKind.Value], // Value
+    [monacoCompletionItemKind.Enum, vscode.CompletionItemKind.Enum], // Enum
+    [monacoCompletionItemKind.Keyword, vscode.CompletionItemKind.Keyword], // Keyword
+    [monacoCompletionItemKind.Snippet, vscode.CompletionItemKind.Snippet], // Snippet
+    [monacoCompletionItemKind.Color, vscode.CompletionItemKind.Color], // Color
+    [monacoCompletionItemKind.File, vscode.CompletionItemKind.File], // File
+    [monacoCompletionItemKind.Reference, vscode.CompletionItemKind.Reference], // Reference
+    [monacoCompletionItemKind.Folder, vscode.CompletionItemKind.Folder], // Folder
+    [monacoCompletionItemKind.EnumMember, vscode.CompletionItemKind.EnumMember], // EnumMember
+    [monacoCompletionItemKind.Constant, vscode.CompletionItemKind.Constant], // Constant
+    [monacoCompletionItemKind.Struct, vscode.CompletionItemKind.Struct], // Struct
+    [monacoCompletionItemKind.Event, vscode.CompletionItemKind.Event], // Event
+    [monacoCompletionItemKind.Operator, vscode.CompletionItemKind.Operator], // Operator
+    [monacoCompletionItemKind.TypeParameter, vscode.CompletionItemKind.TypeParameter] // TypeParameter
+]);
+
 const mapJupyterKind: Map<string, number> = new Map<string, number>([
     ['method', monacoCompletionItemKind.Method],
     ['function', monacoCompletionItemKind.Function],
@@ -109,6 +138,12 @@ function convertToMonacoRange(range: vscodeLanguageClient.Range | undefined): mo
     }
 }
 
+function convertToVSCodeRange(range: monacoEditor.IRange | undefined): vscode.Range | undefined {
+    if (range) {
+        return new vscode.Range(new vscode.Position(range.startLineNumber - 1, range.startColumn - 1), new vscode.Position(range.endLineNumber - 1, range.endColumn - 1));
+    }
+}
+
 // Something very fishy. If the monacoEditor.languages.CompletionItemKind is included here, we get this error on startup
 // Activating extension `ms-python.python` failed:  Unexpected token {
 // extensionHostProcess.js:457
@@ -123,9 +158,17 @@ function convertToMonacoCompletionItemKind(kind?: number): number {
     return monacoCompletionItemKind.Property;
 }
 
+function convertToVSCodeCompletionItemKind(kind?: number): vscode.CompletionItemKind {
+    const value = kind ? reverseMapCompletionItemKind.get(kind) : vscode.CompletionItemKind.Property;
+    if (value) {
+        return value;
+    }
+    return vscode.CompletionItemKind.Property;
+}
+
 const SnippetEscape = 4;
 
-function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean): monacoEditor.languages.CompletionItem {
+export function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem, requiresKindConversion: boolean): monacoEditor.languages.CompletionItem {
     // They should be pretty much identical? Except for ranges.
     // tslint:disable-next-line: no-object-literal-type-assertion no-any
     const result = ({ ...item } as any) as monacoEditor.languages.CompletionItem;
@@ -151,6 +194,21 @@ function convertToMonacoCompletionItem(item: vscodeLanguageClient.CompletionItem
     const resultAny = result as any;
     if (resultAny._documentPosition) {
         delete resultAny._documentPosition;
+    }
+
+    return result;
+}
+
+export function convertToVSCodeCompletionItem(item: monacoEditor.languages.CompletionItem): vscode.CompletionItem {
+    // tslint:disable-next-line: no-object-literal-type-assertion no-any
+    const result = ({ ...item } as any) as vscode.CompletionItem;
+
+    if (item.kind && result.kind) {
+        result.kind = convertToVSCodeCompletionItemKind(item.kind);
+    }
+
+    if (item.range && result.range) {
+        result.range = convertToVSCodeRange(item.range);
     }
 
     return result;

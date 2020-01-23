@@ -47,9 +47,14 @@ export interface IPlatformService {
 export type TemporaryFile = { filePath: string } & vscode.Disposable;
 export type TemporaryDirectory = { path: string } & vscode.Disposable;
 
+export interface ITempFileSystem {
+    createFile(suffix: string): Promise<TemporaryFile>;
+}
+
 //===========================
 // FS paths
 
+// The low-level file path operations used by the extension.
 export interface IFileSystemPaths {
     readonly sep: string;
     join(...filenames: string[]): string;
@@ -59,15 +64,25 @@ export interface IFileSystemPaths {
     normCase(filename: string): string;
 }
 
+// Where to fine executables.
+//
+// In particular this class provides all the tools needed to find
+// executables, including through an environment variable.
 export interface IExecutables {
     delimiter: string;
     envVar: string;
 }
 
+// A collection of high-level utilities related to filesystem paths.
 export interface IFileSystemPathUtils {
     readonly paths: IFileSystemPaths;
     readonly executables: IExecutables;
+    readonly home: string;
+    // Return true if the two paths are equivalent on the current
+    // filesystem and false otherwise.  On Windows this is significant.
+    // On non-Windows the filenames must always be exactly the same.
     arePathsSame(path1: string, path2: string): boolean;
+    // Return the clean (displayable) form of the given filename.
     getDisplayName(pathValue: string, cwd?: string): string;
 }
 
@@ -83,7 +98,6 @@ export interface IFileSystem {
     // path-related
     directorySeparatorChar: string;
     arePathsSame(path1: string, path2: string): boolean;
-    getRealPath(path: string): Promise<string>;
 
     // "raw" operations
     stat(filePath: string): Promise<FileStat>;

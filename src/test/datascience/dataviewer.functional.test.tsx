@@ -74,8 +74,8 @@ suite('DataScience DataViewer tests', () => {
         // asyncDump();
     });
 
-    async function createDataViewer(variable: string): Promise<IDataViewer> {
-        return dataProvider.create({ name: variable, value: '', supportsDataExplorer: true, type: 'test', size: 0, truncated: true, shape: '', count: 0 }, notebook!);
+    async function createDataViewer(variable: string, type: string): Promise<IDataViewer> {
+        return dataProvider.create({ name: variable, value: '', supportsDataExplorer: true, type, size: 0, truncated: true, shape: '', count: 0 }, notebook!);
     }
 
     async function injectCode(code: string): Promise<void> {
@@ -155,7 +155,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Data Frame', async wrapper => {
         await injectCode('import pandas as pd\r\ndf = pd.DataFrame([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('df');
+        const dv = await createDataViewer('df', 'DataFrame');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -165,7 +165,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('List', async wrapper => {
         await injectCode('ls = [0, 1, 2, 3]');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('ls');
+        const dv = await createDataViewer('ls', 'list');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -175,7 +175,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Series', async wrapper => {
         await injectCode('import pandas as pd\r\ns = pd.Series([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('s');
+        const dv = await createDataViewer('s', 'Series');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -185,7 +185,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('np.array', async wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('x');
+        const dv = await createDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 
@@ -195,7 +195,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Failure', async _wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         try {
-            await createDataViewer('unknown variable');
+            await createDataViewer('unknown variable', 'ndarray');
             assert.fail('Exception should have been thrown');
         } catch {
             noop();
@@ -205,7 +205,7 @@ suite('DataScience DataViewer tests', () => {
     runMountedTest('Sorting', async wrapper => {
         await injectCode('import numpy as np\r\nx = np.array([0, 1, 2, 3])');
         const gotAllRows = getCompletedPromise();
-        const dv = await createDataViewer('x');
+        const dv = await createDataViewer('x', 'ndarray');
         assert.ok(dv, 'DataViewer not created');
         await gotAllRows;
 

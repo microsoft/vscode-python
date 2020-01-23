@@ -19,7 +19,7 @@ const untildify: (value: string) => string = require('untildify');
 // ~/anaconda/bin/conda, ~/anaconda3/bin/conda, ~/miniconda/bin/conda, ~/miniconda3/bin/conda
 // /usr/share/anaconda/bin/conda, /usr/share/anaconda3/bin/conda, /usr/share/miniconda/bin/conda, /usr/share/miniconda3/bin/conda
 
-const condaGlobPathsForLinuxMac = ['/opt/*conda*/bin/conda', '/usr/share/*conda*/bin/conda', untildify('~/*conda*/bin/conda')];
+const condaGlobPathsForLinuxMac = [untildify('~/opt/*conda*/bin/conda'), '/opt/*conda*/bin/conda', '/usr/share/*conda*/bin/conda', untildify('~/*conda*/bin/conda')];
 
 export const CondaLocationsGlob = `{${condaGlobPathsForLinuxMac.join(',')}}`;
 

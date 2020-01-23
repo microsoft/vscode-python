@@ -292,12 +292,13 @@ suite('DataScience notebook tests', () => {
 
     runTest('Remote Self Certs', async (_this: Mocha.Context) => {
         const python = await getNotebookCapableInterpreter(ioc, processFactory);
-        const procService = await processFactory.create();
 
-        // We will only connect if we allow for self signed cert connections
-        ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+        if (python && python.version?.major && python.version?.major > 2) {
+            const procService = await processFactory.create();
 
-        if (procService && python && python.version?.major && python.version?.major > 2) {
+            // We will only connect if we allow for self signed cert connections
+            ioc.getSettings().datascience.allowUnauthorizedRemoteConnection = true;
+
             const connectionFound = createDeferred();
             const configFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'selfCert.py');
             const pemFile = path.join(EXTENSION_ROOT_DIR, 'src', 'test', 'datascience', 'serverConfigFiles', 'jcert.pem');

@@ -1,0 +1,2 @@
+# Requirements needed to run install_ptvsd.py
+packaging

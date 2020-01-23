@@ -14,56 +14,49 @@
 steps:
     - template: initialization.yml
       parameters:
-        PythonVersion: $(PythonVersion)
-        workingDirectory: $(Build.SourcesDirectory)
-        compile: 'false'
+          PythonVersion: $(PythonVersion)
+          workingDirectory: $(Build.SourcesDirectory)
+          compile: 'false'
 
     - bash: |
           python -m pip install -U pip
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
-          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==5.0.0a11'
+          python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/new_ptvsd/no_wheels --no-cache-dir --implementation py --no-deps --upgrade --pre ptvsd
       failOnStderr: true
-      displayName: "pip install requirements"
+      displayName: 'pip install requirements'
 
-    - task: PythonScript@0
-      displayName: "Install PTVSD wheels"
-      inputs:
-          scriptSource: "filePath"
-          scriptPath: "./pythonFiles/install_ptvsd.py"
-          failOnStderr: true
+    - bash: |
+          python -m pip --disable-pip-version-check install -r build/debugger-install-requirements.txt
+          python ./pythonFiles/install_ptvsd.py
+      failOnStderr: true
+      displayName: 'Install PTVSD wheels'
 
     - bash: npm run clean
-      displayName: "Clean"
-
-    # This is a slow process, hence do this only on master and release branches.
-    # I.e. skip on in PRs.
-    - bash: npm run checkDependencies
-      displayName: "Check Dependencies"
-      condition: and(succeeded(), or(eq(variables['Build.SourceBranchName'], 'master'), startsWith(variables['Build.SourceBranchName'], 'release')))
+      displayName: 'Clean'
 
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID
-      displayName: "Update dev Version of Extension"
+      displayName: 'Update dev Version of Extension'
       condition: and(succeeded(), eq(variables['Build.SourceBranchName'], 'master'))
 
     - bash: |
           npm run updateBuildNumber -- --buildNumber $BUILD_BUILDID --updateChangelog
-      displayName: "Update release Version of Extension"
+      displayName: 'Update release Version of Extension'
       condition: and(succeeded(), startsWith(variables['Build.SourceBranchName'], 'release'))
 
     - bash: |
           npm run package
-      displayName: "Build VSIX"
+      displayName: 'Build VSIX'
 
     - task: CopyFiles@2
       inputs:
-          contents: "*.vsix"
+          contents: '*.vsix'
           targetFolder: $(Build.ArtifactStagingDirectory)
-      displayName: "Copy VSIX"
+      displayName: 'Copy VSIX'
 
     - task: PublishBuildArtifacts@1
       inputs:
           pathtoPublish: $(Build.ArtifactStagingDirectory)
           artifactName: VSIX
-      displayName: "Publish VSIX to Artifacts"
+      displayName: 'Publish VSIX to Artifacts'

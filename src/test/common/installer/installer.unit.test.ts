@@ -37,8 +37,10 @@ import {
 } from '../../../client/common/types';
 import { createDeferred, Deferred } from '../../../client/common/utils/async';
 import { getNamesAndValues } from '../../../client/common/utils/enum';
+import { IInterpreterService, PythonInterpreter } from '../../../client/interpreter/contracts';
 import { ServiceContainer } from '../../../client/ioc/container';
 import { IServiceContainer } from '../../../client/ioc/types';
+import { sleep } from '../../common';
 
 use(chaiAsPromised);
 
@@ -60,6 +62,7 @@ suite('Module Installer only', () => {
                 let persistentStore: TypeMoq.IMock<IPersistentStateFactory>;
                 let outputChannel: TypeMoq.IMock<OutputChannel>;
                 let productPathService: TypeMoq.IMock<IProductPathService>;
+                let interpreterService: TypeMoq.IMock<IInterpreterService>;
                 const productService = new ProductService();
 
                 setup(() => {
@@ -89,7 +92,12 @@ suite('Module Installer only', () => {
                     serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IProductPathService), TypeMoq.It.isAny())).returns(() => productPathService.object);
                     productPathService.setup(p => p.getExecutableNameFromSettings(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => 'xyz');
                     productPathService.setup(p => p.isExecutableAModule(TypeMoq.It.isAny(), TypeMoq.It.isValue(resource))).returns(() => true);
-
+                    interpreterService = TypeMoq.Mock.ofType<IInterpreterService>();
+                    const pythonInterpreter = TypeMoq.Mock.ofType<PythonInterpreter>();
+                    // tslint:disable-next-line:no-any
+                    pythonInterpreter.setup(i => (i as any).then).returns(() => undefined);
+                    interpreterService.setup(i => i.getActiveInterpreter(TypeMoq.It.isAny())).returns(() => Promise.resolve(pythonInterpreter.object));
+                    serviceContainer.setup(c => c.get(TypeMoq.It.isValue(IInterpreterService), TypeMoq.It.isAny())).returns(() => interpreterService.object);
                     installer = new ProductInstaller(serviceContainer.object, outputChannel.object);
                 });
                 teardown(() => {
@@ -251,12 +259,17 @@ suite('Module Installer only', () => {
 
                                 // Display first prompt.
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
 
                                 // Display a few more prompts.
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
                                 installer.promptToInstall(product.value, resource).ignoreErrors();
+                                await sleep(1);
 
                                 app.verifyAll();
                                 workspaceService.verifyAll();
@@ -563,6 +576,45 @@ suite('Module Installer only', () => {
                         processService.verifyAll();
                     });
                 }
+
+                // Test promptToInstall() when no interpreter is selected
+                test(`If no interpreter is selected, promptToInstall() doesn't prompt for product ${product.name} (${
+                    resource ? 'With a resource' : 'without a resource'
+                })`, async () => {
+                    workspaceService
+                        .setup(w => w.getWorkspaceFolder(TypeMoq.It.isValue(resource!)))
+                        .returns(() => TypeMoq.Mock.ofType<WorkspaceFolder>().object)
+                        .verifiable(TypeMoq.Times.never());
+                    app.setup(a =>
+                        a.showErrorMessage(
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny(),
+                            TypeMoq.It.isAny()
+                        )
+                    )
+                        .returns(() => Promise.resolve(undefined))
+                        .verifiable(TypeMoq.Times.never());
+                    const persistVal = TypeMoq.Mock.ofType<IPersistentState<boolean>>();
+                    persistVal.setup(p => p.value).returns(() => false);
+                    persistVal.setup(p => p.updateValue(TypeMoq.It.isValue(true)));
+                    persistentStore.setup(ps => ps.createGlobalPersistentState<boolean>(TypeMoq.It.isAnyString(), TypeMoq.It.isValue(undefined))).returns(() => persistVal.object);
+
+                    interpreterService.reset();
+                    interpreterService
+                        .setup(i => i.getActiveInterpreter(TypeMoq.It.isAny()))
+                        .returns(() => Promise.resolve(undefined))
+                        .verifiable(TypeMoq.Times.once());
+                    await installer.promptToInstall(product.value, resource);
+
+                    app.verifyAll();
+                    interpreterService.verifyAll();
+                    workspaceService.verifyAll();
+                });
             });
 
         suite('Test LinterInstaller.promptToInstallImplementation', () => {

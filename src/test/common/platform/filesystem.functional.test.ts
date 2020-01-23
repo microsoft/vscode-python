@@ -9,7 +9,7 @@ import * as path from 'path';
 import { convertStat, FileSystem } from '../../../client/common/platform/fileSystem';
 import { FileSystemPaths, FileSystemPathUtils } from '../../../client/common/platform/fs-paths';
 import { PlatformService } from '../../../client/common/platform/platformService';
-import { FileType, TemporaryFile } from '../../../client/common/platform/types';
+import { FileType } from '../../../client/common/platform/types';
 import { sleep } from '../../../client/common/utils/async';
 // prettier-ignore
 import {
@@ -67,19 +67,6 @@ suite('FileSystem', () => {
                 const areSame = fileSystem.arePathsSame(file1, file2);
 
                 expect(areSame).to.equal(expected);
-            });
-        });
-
-        suite('getRealPath', () => {
-            // tested fully in the FileSystemPathUtils tests.
-
-            test('matches wrapped object', async () => {
-                const filename = fixPath('a/b/c/spam.py');
-                const expected = await pathUtils.getRealPath(filename);
-
-                const resolved = await fileSystem.getRealPath(filename);
-
-                expect(resolved).to.equal(expected);
             });
         });
     });
@@ -1127,63 +1114,15 @@ suite('FileSystem', () => {
             });
         });
 
-        suite('createTemporaryFile', () => {
-            async function createTemporaryFile(suffix: string): Promise<TemporaryFile> {
-                const tempfile = await fileSystem.createTemporaryFile(suffix);
-                fix.addFSCleanup(tempfile.filePath, tempfile.dispose);
-                return tempfile;
-            }
+        suite('createFile', () => {
+            // tested fully in the TemporaryFileSystem tests.
 
-            test('TemporaryFile is created properly', async () => {
+            test('calls wrapped object', async () => {
                 const tempfile = await fileSystem.createTemporaryFile('.tmp');
                 fix.addFSCleanup(tempfile.filePath, tempfile.dispose);
                 await assertExists(tempfile.filePath);
 
-                expect(tempfile.filePath.endsWith('.tmp')).to.equal(true, `bad suffix on ${tempfile.filePath}`);
-            });
-
-            test('TemporaryFile is disposed properly', async () => {
-                const tempfile = await createTemporaryFile('.tmp');
-                await assertExists(tempfile.filePath);
-
-                tempfile.dispose();
-
-                await assertDoesNotExist(tempfile.filePath);
-            });
-
-            test('Ensure creating a temporary file results in a unique temp file path', async () => {
-                const tempFile = await createTemporaryFile('.tmp');
-                const tempFile2 = await createTemporaryFile('.tmp');
-
-                const filename1 = tempFile.filePath;
-                const filename2 = tempFile2.filePath;
-
-                expect(filename1).to.not.equal(filename2);
-            });
-
-            test('Ensure writing to a temp file is supported via file stream', async function() {
-                if (WINDOWS) {
-                    // tslint:disable-next-line:no-invalid-this
-                    this.skip();
-                }
-                const tempfile = await createTemporaryFile('.tmp');
-                const stream = fileSystem.createWriteStream(tempfile.filePath);
-                fix.addCleanup(() => stream.destroy());
-                const data = '...';
-
-                stream.write(data, 'utf8');
-
-                const actual = await fs.readFile(tempfile.filePath, 'utf8');
-                expect(actual).to.equal(data);
-            });
-
-            test('Ensure chmod works against a temporary file', async () => {
-                // Note that on Windows chmod is a noop.
-                const tempfile = await createTemporaryFile('.tmp');
-
-                const promise = fs.chmod(tempfile.filePath, '7777');
-
-                await expect(promise).to.not.eventually.be.rejected;
+                expect(tempfile.filePath.endsWith('.tmp')).to.equal(true);
             });
         });
 

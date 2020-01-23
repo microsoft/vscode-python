@@ -3,12 +3,12 @@ import json
 import os
 import urllib.request as url_lib
 import zipfile
+from packaging.version import parse as version_parser
 
 
 EXTENSION_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 DEBUGGER_DEST = os.path.join(EXTENSION_ROOT, "pythonFiles", "lib", "python", "new_ptvsd", "wheels")
 DEBUGGER_PACKAGE = "ptvsd"
-DEBUGGER_VERSION = "5.0.0a11"
 DEBUGGER_PYTHON_VERSIONS = ("cp37",)
 
 
@@ -16,22 +16,25 @@ def _contains(s, parts=()):
     return any(p for p in parts if p in s)
 
 
-def _get_debugger_wheel_urls():
+def _get_package_data():
     json_uri = "https://pypi.org/pypi/{0}/json".format(DEBUGGER_PACKAGE)
     # Response format: https://warehouse.readthedocs.io/api-reference/json/#project
     # Release metadata format: https://github.com/pypa/interoperability-peps/blob/master/pep-0426-core-metadata.rst
     with url_lib.urlopen(json_uri) as response:
-        json_response = json.loads(response.read())
-        return list(
-            r["url"]
-            for r in json_response["releases"][DEBUGGER_VERSION]
-            if _contains(r["url"], DEBUGGER_PYTHON_VERSIONS)
-        )
+        return json.loads(response.read())
 
 
-def _download_and_extract(root, url):
+def _get_debugger_wheel_urls(data, version):
+    return list(
+        r["url"]
+        for r in data["releases"][version]
+        if _contains(r["url"], DEBUGGER_PYTHON_VERSIONS)
+    )
+
+
+def _download_and_extract(root, url, version):
     root = os.getcwd() if root is None or root == "." else root
-    prefix = os.path.join("ptvsd-{0}.data".format(DEBUGGER_VERSION), "purelib")
+    prefix = os.path.join("ptvsd-{0}.data".format(version), "purelib")
     with url_lib.urlopen(url) as response:
         # Extract only the contents of the purelib subfolder (parent folder of ptvsd),
         # since ptvsd files rely on the presence of a 'ptvsd' folder.
@@ -49,8 +52,11 @@ def _download_and_extract(root, url):
 
 
 def main(root):
-    for url in _get_debugger_wheel_urls():
-        _download_and_extract(root, url)
+    data = _get_package_data()
+    latest_version = max(data["releases"].keys(), key=version_parser)
+
+    for url in _get_debugger_wheel_urls(data, latest_version):
+        _download_and_extract(root, url, latest_version)
 
 
 if __name__ == "__main__":

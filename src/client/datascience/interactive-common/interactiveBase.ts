@@ -987,7 +987,7 @@ export abstract class InteractiveBase extends WebViewHost<IInteractiveWindowMapp
                     }
                 };
                 this._notebook.onSessionStatusChanged(statusChangeHandler);
-                this._notebook.onKernelChanged(this.kernelChangeHandler);
+                this.disposables.push(this._notebook.onKernelChanged(this.kernelChangeHandler.bind(this)));
 
                 // Fire the status changed handler at least once (might have already been running and so won't show a status update)
                 statusChangeHandler(this._notebook.status).ignoreErrors();

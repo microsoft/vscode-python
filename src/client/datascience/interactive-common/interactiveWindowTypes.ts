@@ -50,6 +50,9 @@ export enum InteractiveWindowMessages {
     ProvideSignatureHelpRequest = 'provide_signature_help_request',
     CancelSignatureHelpRequest = 'cancel_signature_help_request',
     ProvideSignatureHelpResponse = 'provide_signature_help_response',
+    ResolveCompletionItemRequest = 'resolve_completion_item_request',
+    CancelResolveCompletionItemRequest = 'cancel_resolve_completion_item_request',
+    ResolveCompletionItemResponse = 'resolve_completion_item_response',
     AddCell = 'add_cell',
     EditCell = 'edit_cell',
     RemoveCell = 'remove_cell',
@@ -192,6 +195,13 @@ export interface ICancelIntellisenseRequest {
     requestId: string;
 }
 
+export interface IResolveCompletionItemRequest {
+    position: monacoEditor.Position;
+    item: monacoEditor.languages.CompletionItem;
+    requestId: string;
+    cellId: string;
+}
+
 export interface IProvideCompletionItemsResponse {
     list: monacoEditor.languages.CompletionList;
     requestId: string;
@@ -204,6 +214,11 @@ export interface IProvideHoverResponse {
 
 export interface IProvideSignatureHelpResponse {
     signatureHelp: monacoEditor.languages.SignatureHelp;
+    requestId: string;
+}
+
+export interface IResolveCompletionItemResponse {
+    item: monacoEditor.languages.CompletionItem;
     requestId: string;
 }
 
@@ -325,6 +340,9 @@ export class IInteractiveWindowMapping {
     public [InteractiveWindowMessages.ProvideSignatureHelpRequest]: IProvideSignatureHelpRequest;
     public [InteractiveWindowMessages.CancelSignatureHelpRequest]: ICancelIntellisenseRequest;
     public [InteractiveWindowMessages.ProvideSignatureHelpResponse]: IProvideSignatureHelpResponse;
+    public [InteractiveWindowMessages.ResolveCompletionItemRequest]: IResolveCompletionItemRequest;
+    public [InteractiveWindowMessages.CancelResolveCompletionItemRequest]: ICancelIntellisenseRequest;
+    public [InteractiveWindowMessages.ResolveCompletionItemResponse]: IResolveCompletionItemResponse;
     public [InteractiveWindowMessages.AddCell]: IAddCell;
     public [InteractiveWindowMessages.EditCell]: IEditCell;
     public [InteractiveWindowMessages.RemoveCell]: IRemoveCell;

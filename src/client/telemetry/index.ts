@@ -107,7 +107,7 @@ export function sendTelemetryEvent<P extends IEventNamePropertyMapping, E extend
                 // If there are any errors in serializing one property, ignore that and move on.
                 // Else nothign will be sent.
                 // tslint:disable-next-line:prefer-type-cast no-any  no-unsafe-any
-                (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : data[prop].toString();
+                (customProperties as any)[prop] = typeof data[prop] === 'string' ? data[prop] : typeof data[prop] === 'object' ? 'object' : data[prop].toString();
             } catch (ex) {
                 traceError(`Failed to serialize ${prop} for ${eventName}`, ex);
             }

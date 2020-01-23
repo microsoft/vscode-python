@@ -29,6 +29,7 @@ const nativeDependencyChecker = require('node-has-native-dependencies');
 const flat = require('flat');
 const argv = require('yargs').argv;
 const os = require('os');
+const rmrf = require('rimraf');
 
 const isCI = process.env.TRAVIS === 'true' || process.env.TF_BUILD !== undefined;
 
@@ -259,32 +260,52 @@ gulp.task('checkDependencies', gulp.series('checkNativeDependencies', 'check-dat
 gulp.task('prePublishNonBundle', gulp.series('compile', 'compile-webviews'));
 
 gulp.task('installPythonRequirements', async () => {
-    const requirements = fs
-        .readFileSync(path.join(__dirname, 'requirements.txt'), 'utf8')
-        .split('\n')
-        .map(item => item.trim())
-        .filter(item => item.length > 0);
-    const args = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/python', '--no-cache-dir', '--implementation', 'py', '--no-deps', '--upgrade'];
-    await Promise.all(
-        requirements.map(async requirement => {
-            const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args.concat(requirement))
-                .then(() => true)
-                .catch(ex => {
-                    console.error("Failed to install Python Libs using 'python3'", ex);
-                    return false;
-                });
-            if (!success) {
-                console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
-                await spawnAsync('python', args.concat(requirement)).catch(ex => console.error("Failed to install Python Libs using 'python'", ex));
-            }
-        })
-    );
+    const args = [
+        '-m',
+        'pip',
+        '--disable-pip-version-check',
+        'install',
+        '-t',
+        './pythonFiles/lib/python',
+        '--no-cache-dir',
+        '--implementation',
+        'py',
+        '--no-deps',
+        '--upgrade',
+        '-r',
+        './requirements.txt'
+    ];
+    success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install Python Libs using 'python3'", ex);
+            return false;
+        });
+    if (!success) {
+        console.info("Failed to install Python Libs using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', args).catch(ex => console.error("Failed to install Python Libs using 'python'", ex));
+    }
 });
 
 // See https://github.com/microsoft/vscode-python/issues/7136
 gulp.task('installNewPtvsd', async () => {
+    // Install dependencies needed for 'install_ptvsd.py'
+    const depsArgs = ['-m', 'pip', '--disable-pip-version-check', 'install', '-t', './pythonFiles/lib/temp', '-r', './build/debugger-install-requirements.txt'];
+    const successWithWheelsDeps = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', depsArgs)
+        .then(() => true)
+        .catch(ex => {
+            console.error("Failed to install new PTVSD wheels using 'python3'", ex);
+            return false;
+        });
+    if (!successWithWheelsDeps) {
+        console.info("Failed to install dependencies need by 'install_ptvsd.py' using 'python3', attempting to install using 'python'");
+        await spawnAsync('python', depsArgs).catch(ex => console.error("Failed to install dependencies need by 'install_ptvsd.py' using 'python'", ex));
+    }
+
     // Install new PTVSD with wheels for python 3.7
-    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', ['./pythonFiles/install_ptvsd.py'])
+    const wheelsArgs = ['./pythonFiles/install_ptvsd.py'];
+    const wheelsEnv = { PYTHONPATH: './pythonFiles/lib/temp' };
+    const successWithWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', wheelsArgs, wheelsEnv)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install new PTVSD wheels using 'python3'", ex);
@@ -292,8 +313,10 @@ gulp.task('installNewPtvsd', async () => {
         });
     if (!successWithWheels) {
         console.info("Failed to install new PTVSD wheels using 'python3', attempting to install using 'python'");
-        await spawnAsync('python', args).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
+        await spawnAsync('python', wheelsArgs, wheelsEnv).catch(ex => console.error("Failed to install PTVSD 5.0 wheels using 'python'", ex));
     }
+
+    rmrf.sync('./pythonFiles/lib/temp');
 
     // Install source only version of new PTVSD for use with all other python versions.
     const args = [
@@ -308,7 +331,8 @@ gulp.task('installNewPtvsd', async () => {
         'py',
         '--no-deps',
         '--upgrade',
-        'ptvsd==5.0.0a11'
+        '--pre',
+        'ptvsd'
     ];
     const successWithoutWheels = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)

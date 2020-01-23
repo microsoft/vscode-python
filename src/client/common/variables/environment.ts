@@ -11,16 +11,20 @@ import { EnvironmentVariables, IEnvironmentVariablesService } from './types';
 
 @injectable()
 export class EnvironmentVariablesService implements IEnvironmentVariablesService {
-    private readonly pathVariable: 'PATH' | 'Path';
-    constructor(@inject(IPathUtils) pathUtils: IPathUtils, @inject(IFileSystem) private readonly fs: IFileSystem) {
-        this.pathVariable = pathUtils.getPathVariableName();
-    }
+    private _pathVariable?: 'Path' | 'PATH';
+    constructor(
+        // We only use a small portion of either of these interfaces.
+        @inject(IPathUtils) private readonly pathUtils: IPathUtils,
+        @inject(IFileSystem) private readonly fs: IFileSystem
+    ) {}
+
     public async parseFile(filePath?: string, baseVars?: EnvironmentVariables): Promise<EnvironmentVariables | undefined> {
         if (!filePath || !(await this.fs.fileExists(filePath))) {
             return;
         }
         return parseEnvFile(await this.fs.readFile(filePath), baseVars);
     }
+
     public mergeVariables(source: EnvironmentVariables, target: EnvironmentVariables) {
         if (!target) {
             return;
@@ -35,12 +39,22 @@ export class EnvironmentVariablesService implements IEnvironmentVariablesService
             }
         });
     }
+
     public appendPythonPath(vars: EnvironmentVariables, ...pythonPaths: string[]) {
         return this.appendPaths(vars, 'PYTHONPATH', ...pythonPaths);
     }
+
     public appendPath(vars: EnvironmentVariables, ...paths: string[]) {
         return this.appendPaths(vars, this.pathVariable, ...paths);
     }
+
+    private get pathVariable(): 'Path' | 'PATH' {
+        if (!this._pathVariable) {
+            this._pathVariable = this.pathUtils.getPathVariableName();
+        }
+        return this._pathVariable!;
+    }
+
     private appendPaths(vars: EnvironmentVariables, variableName: 'PATH' | 'Path' | 'PYTHONPATH', ...pathsToAppend: string[]) {
         const valueToAppend = pathsToAppend
             .filter(item => typeof item === 'string' && item.trim().length > 0)

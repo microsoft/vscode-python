@@ -1,13 +1,12 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import * as fs from 'fs-extra';
 import * as nodepath from 'path';
 import { getOSType, OSType } from '../utils/platform';
 // prettier-ignore
 import {
     IExecutables,
-    IFileSystemPaths
+    IFileSystemPaths, IFileSystemPathUtils
 } from './types';
 // tslint:disable-next-line:no-var-requires no-require-imports
 const untildify = require('untildify');
@@ -21,8 +20,7 @@ interface INodePath {
     normalize(filename: string): string;
 }
 
-// The file path operations used by the extension.
-export class FileSystemPaths {
+export class FileSystemPaths implements IFileSystemPaths {
     // prettier-ignore
     constructor(
         private readonly isCaseInsensitive: boolean,
@@ -74,10 +72,6 @@ export class FileSystemPaths {
     }
 }
 
-// Where to fine executables.
-//
-// In particular this class provides all the tools needed to find
-// executables, including through an environment variable.
 export class Executables {
     // prettier-ignore
     constructor(
@@ -108,8 +102,7 @@ interface IRawPaths {
     relative(relpath: string, rootpath: string): string;
 }
 
-// A collection of high-level utilities related to filesystem paths.
-export class FileSystemPathUtils {
+export class FileSystemPathUtils implements IFileSystemPathUtils {
     // prettier-ignore
     constructor(
         public readonly home: string,
@@ -136,26 +129,12 @@ export class FileSystemPathUtils {
         );
     }
 
-    // Return true if the two paths are equivalent on the current
-    // filesystem and false otherwise.  On Windows this is significant.
-    // On non-Windows the filenames must always be exactly the same.
     public arePathsSame(path1: string, path2: string): boolean {
         path1 = this.paths.normCase(path1);
         path2 = this.paths.normCase(path2);
         return path1 === path2;
     }
 
-    // Return the canonicalized absolute filename.
-    public async getRealPath(filename: string): Promise<string> {
-        try {
-            return await fs.realpath(filename);
-        } catch {
-            // We ignore the error.
-            return filename;
-        }
-    }
-
-    // Return the clean (displayable) form of the given filename.
     public getDisplayName(filename: string, cwd?: string): string {
         if (cwd && filename.startsWith(cwd)) {
             return `.${this.paths.sep}${this.raw.relative(cwd, filename)}`;

@@ -5,6 +5,7 @@ import * as os from 'os';
 import { CancellationToken, OutputChannel, Uri } from 'vscode';
 import '../../common/extensions';
 import * as localize from '../../common/utils/localize';
+import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
 import { LinterId } from '../../linters/types';
 import { sendTelemetryEvent } from '../../telemetry';
@@ -285,17 +286,23 @@ export class DataScienceInstaller extends BaseInstaller {
 @injectable()
 export class ProductInstaller implements IInstaller {
     private readonly productService: IProductService;
+    private interpreterService: IInterpreterService;
 
     constructor(
         @inject(IServiceContainer) private serviceContainer: IServiceContainer,
         @inject(IOutputChannel) @named(STANDARD_OUTPUT_CHANNEL) private outputChannel: OutputChannel
     ) {
         this.productService = serviceContainer.get<IProductService>(IProductService);
+        this.interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
     }
 
     // tslint:disable-next-line:no-empty
     public dispose() {}
     public async promptToInstall(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
+        const currentInterpreter = isResource(resource) ? await this.interpreterService.getActiveInterpreter(resource) : resource;
+        if (!currentInterpreter) {
+            return InstallerResponse.Ignore;
+        }
         return this.createInstaller(product).promptToInstall(product, resource, cancel);
     }
     public async install(product: Product, resource?: InterpreterUri, cancel?: CancellationToken): Promise<InstallerResponse> {
