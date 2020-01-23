@@ -5,6 +5,7 @@
 	"@emotion/memoize",
 	"@emotion/stylis",
 	"@emotion/unitless",
+	"@loadable/component",
 	"@mapbox/polylabel",
 	"@nteract/markdown",
 	"@nteract/mathjax",
