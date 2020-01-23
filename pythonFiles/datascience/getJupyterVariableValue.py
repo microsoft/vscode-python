@@ -435,7 +435,7 @@ import json as _VSCODE_json
 _VSCODE_max_len = 200
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
-_VSCODE_targetVariable = _VSCODE_json.loads("_VSCode_JupyterTestValue")
+_VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 
 _VSCODE_evalResult = eval(_VSCODE_targetVariable["name"])
 
