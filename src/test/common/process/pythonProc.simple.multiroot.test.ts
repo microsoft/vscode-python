@@ -122,6 +122,8 @@ suite('PythonExecutableService', () => {
 
         const mockEnvironmentActivationService = mock(EnvironmentActivationService);
         when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything())).thenResolve();
+        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything())).thenResolve();
+        when(mockEnvironmentActivationService.getActivatedEnvironmentVariables(anything(), anything(), anything())).thenResolve();
         serviceManager.addSingletonInstance<IEnvironmentActivationService>(IEnvironmentActivationService, instance(mockEnvironmentActivationService));
 
         configService = serviceManager.get<IConfigurationService>(IConfigurationService);

@@ -47,6 +47,8 @@ suite('Refactor Rename', () => {
         interpreterService.setup(i => i.hasInterpreters).returns(() => Promise.resolve(true));
         const envActivationService = typeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        envActivationService.setup(e => e.getActivatedEnvironmentVariables(typeMoq.It.isAny(), typeMoq.It.isAny(), typeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         serviceContainer = typeMoq.Mock.ofType<IServiceContainer>();
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IConfigurationService), typeMoq.It.isAny())).returns(() => configService.object);
         serviceContainer.setup(s => s.get(typeMoq.It.isValue(IProcessServiceFactory), typeMoq.It.isAny())).returns(() => processServiceFactory.object);

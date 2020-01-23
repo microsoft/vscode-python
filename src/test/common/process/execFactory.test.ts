@@ -37,6 +37,8 @@ suite('PythonExecutableService', () => {
 
         const envActivationService = TypeMoq.Mock.ofType<IEnvironmentActivationService>();
         envActivationService.setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        envActivationService.setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
+        envActivationService.setup(e => e.getActivatedEnvironmentVariables(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny())).returns(() => Promise.resolve(undefined));
         serviceContainer.setup(s => s.get(TypeMoq.It.isValue(IEnvironmentActivationService), TypeMoq.It.isAny())).returns(() => envActivationService.object);
     });
     test('Ensure resource is used when getting configuration service settings (undefined resource)', async () => {
