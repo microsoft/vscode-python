@@ -69,13 +69,14 @@ except NameError:
     # BaseException not defined until Python 2.5
     BaseException = Exception
 
-DEBUG = os.environ.get('DEBUG_REPL') is not None
+DEBUG = os.environ.get("DEBUG_REPL") is not None
 
 PY_ROOT = os.path.normcase(__file__)
-while os.path.basename(PY_ROOT) != 'pythonFiles':
+while os.path.basename(PY_ROOT) != "pythonFiles":
     PY_ROOT = os.path.dirname(PY_ROOT)
 
-__all__ = ['ReplBackend', 'BasicReplBackend', 'BACKEND']
+__all__ = ["ReplBackend", "BasicReplBackend", "BACKEND"]
+
 
 def _debug_write(out):
     if DEBUG:
@@ -85,6 +86,7 @@ def _debug_write(out):
 
 class SafeSendLock(object):
     """a lock which ensures we're released if we take a KeyboardInterrupt exception acquiring it"""
+
     def __init__(self):
         self.lock = thread.allocate_lock()
 
@@ -107,6 +109,7 @@ class SafeSendLock(object):
     def release(self):
         self.lock.release()
 
+
 def _command_line_to_args_list(cmdline):
     """splits a string into a list using Windows command line syntax."""
     args_list = []
@@ -115,11 +118,11 @@ def _command_line_to_args_list(cmdline):
         from ctypes import c_int, c_voidp, c_wchar_p
         from ctypes import byref, POINTER, WinDLL
 
-        clta = WinDLL('shell32').CommandLineToArgvW
+        clta = WinDLL("shell32").CommandLineToArgvW
         clta.argtypes = [c_wchar_p, POINTER(c_int)]
         clta.restype = POINTER(c_wchar_p)
 
-        lf = WinDLL('kernel32').LocalFree
+        lf = WinDLL("kernel32").LocalFree
         lf.argtypes = [c_voidp]
 
         pNumArgs = c_int()
@@ -129,12 +132,12 @@ def _command_line_to_args_list(cmdline):
                 if sys.hexversion >= 0x030000F0:
                     argval = r[index]
                 else:
-                    argval = r[index].encode('ascii', 'replace')
+                    argval = r[index].encode("ascii", "replace")
                 args_list.append(argval)
             lf(r)
         else:
-            sys.stderr.write('Error parsing script arguments:\n')
-            sys.stderr.write(cmdline + '\n')
+            sys.stderr.write("Error parsing script arguments:\n")
+            sys.stderr.write(cmdline + "\n")
 
     return args_list
 
@@ -143,33 +146,38 @@ class UnsupportedReplException(Exception):
     def __init__(self, reason):
         self.reason = reason
 
+
 # save the start_new_thread so we won't debug/break into the REPL comm thread.
 start_new_thread = thread.start_new_thread
+
+
 class ReplBackend(object):
     """back end for executing REPL code.  This base class handles all of the communication with the remote process while derived classes implement the actual inspection and introspection."""
-    _MRES = to_bytes('MRES')
-    _SRES = to_bytes('SRES')
-    _MODS = to_bytes('MODS')
-    _IMGD = to_bytes('IMGD')
-    _PRPC = to_bytes('PRPC')
-    _RDLN = to_bytes('RDLN')
-    _STDO = to_bytes('STDO')
-    _STDE = to_bytes('STDE')
-    _DBGA = to_bytes('DBGA')
-    _DETC = to_bytes('DETC')
-    _DPNG = to_bytes('DPNG')
-    _DXAM = to_bytes('DXAM')
-    _CHWD = to_bytes('CHWD')
 
-    _MERR = to_bytes('MERR')
-    _SERR = to_bytes('SERR')
-    _ERRE = to_bytes('ERRE')
-    _EXIT = to_bytes('EXIT')
-    _DONE = to_bytes('DONE')
-    _MODC = to_bytes('MODC')
+    _MRES = to_bytes("MRES")
+    _SRES = to_bytes("SRES")
+    _MODS = to_bytes("MODS")
+    _IMGD = to_bytes("IMGD")
+    _PRPC = to_bytes("PRPC")
+    _RDLN = to_bytes("RDLN")
+    _STDO = to_bytes("STDO")
+    _STDE = to_bytes("STDE")
+    _DBGA = to_bytes("DBGA")
+    _DETC = to_bytes("DETC")
+    _DPNG = to_bytes("DPNG")
+    _DXAM = to_bytes("DXAM")
+    _CHWD = to_bytes("CHWD")
+
+    _MERR = to_bytes("MERR")
+    _SERR = to_bytes("SERR")
+    _ERRE = to_bytes("ERRE")
+    _EXIT = to_bytes("EXIT")
+    _DONE = to_bytes("DONE")
+    _MODC = to_bytes("MODC")
 
     def __init__(self, *args, **kwargs):
         import threading
+
         self.conn = None
         self.send_lock = SafeSendLock()
         self.input_event = threading.Lock()
@@ -179,7 +187,7 @@ class ReplBackend(object):
 
     def connect(self, port):
         self.conn = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.conn.connect(('127.0.0.1', port))
+        self.conn.connect(("127.0.0.1", port))
 
         # start a new thread for communicating w/ the remote process
         start_new_thread(self._repl_loop, ())
@@ -218,7 +226,7 @@ class ReplBackend(object):
                     continue
 
                 self.conn.settimeout(None)
-                if inp == '':
+                if inp == "":
                     break
                 self.flush()
 
@@ -226,15 +234,16 @@ class ReplBackend(object):
                 if cmd is not None:
                     cmd(self)
         except:
-            _debug_write('error in repl loop')
+            _debug_write("error in repl loop")
             _debug_write(traceback.format_exc())
             self.exit_process()
 
-            time.sleep(2) # try and exit gracefully, then interrupt main if necessary
+            time.sleep(2)  # try and exit gracefully, then interrupt main if necessary
 
-            if sys.platform == 'cli':
+            if sys.platform == "cli":
                 # just kill us as fast as possible
                 import System
+
                 System.Environment.Exit(1)
 
             self.interrupt_main()
@@ -264,7 +273,7 @@ class ReplBackend(object):
         except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._MERR)
-            _debug_write('error in eval')
+            _debug_write("error in eval")
             _debug_write(traceback.format_exc())
         else:
             with self.send_lock:
@@ -281,7 +290,7 @@ class ReplBackend(object):
         except:
             with self.send_lock:
                 write_bytes(self.conn, ReplBackend._SERR)
-            _debug_write('error in eval')
+            _debug_write("error in eval")
             _debug_write(traceback.format_exc())
         else:
             with self.send_lock:
@@ -290,17 +299,19 @@ class ReplBackend(object):
                 write_int(self.conn, len(sigs))
                 for doc, args, vargs, varkw, defaults in sigs:
                     # write overload
-                    write_string(self.conn, (doc or '')[:4096])
+                    write_string(self.conn, (doc or "")[:4096])
                     arg_count = len(args) + (vargs is not None) + (varkw is not None)
                     write_int(self.conn, arg_count)
 
-                    def_values = [''] * (len(args) - len(defaults)) + ['=' + d for d in defaults]
+                    def_values = [""] * (len(args) - len(defaults)) + [
+                        "=" + d for d in defaults
+                    ]
                     for arg, def_value in zip(args, def_values):
-                        write_string(self.conn, (arg or '') + def_value)
+                        write_string(self.conn, (arg or "") + def_value)
                     if vargs is not None:
-                        write_string(self.conn, '*' + vargs)
+                        write_string(self.conn, "*" + vargs)
                     if varkw is not None:
-                        write_string(self.conn, '**' + varkw)
+                        write_string(self.conn, "**" + varkw)
 
     def _cmd_setm(self):
         global exec_mod
@@ -350,28 +361,30 @@ class ReplBackend(object):
 
     def _cmd_debug_attach(self):
         import visualstudio_py_debugger
+
         port = read_int(self.conn)
         id = read_string(self.conn)
-        debug_options = visualstudio_py_debugger.parse_debug_options(read_string(self.conn))
-        debug_options.setdefault('rules', []).append({
-            'path': PY_ROOT,
-            'include': False,
-            })
+        debug_options = visualstudio_py_debugger.parse_debug_options(
+            read_string(self.conn)
+        )
+        debug_options.setdefault("rules", []).append(
+            {"path": PY_ROOT, "include": False,}
+        )
         self.attach_process(port, id, debug_options)
 
     _COMMANDS = {
-        to_bytes('run '): _cmd_run,
-        to_bytes('abrt'): _cmd_abrt,
-        to_bytes('exit'): _cmd_exit,
-        to_bytes('mems'): _cmd_mems,
-        to_bytes('sigs'): _cmd_sigs,
-        to_bytes('mods'): _cmd_mods,
-        to_bytes('setm'): _cmd_setm,
-        to_bytes('sett'): _cmd_sett,
-        to_bytes('inpl'): _cmd_inpl,
-        to_bytes('excf'): _cmd_excf,
-        to_bytes('excx'): _cmd_excx,
-        to_bytes('dbga'): _cmd_debug_attach,
+        to_bytes("run "): _cmd_run,
+        to_bytes("abrt"): _cmd_abrt,
+        to_bytes("exit"): _cmd_exit,
+        to_bytes("mems"): _cmd_mems,
+        to_bytes("sigs"): _cmd_sigs,
+        to_bytes("mods"): _cmd_mods,
+        to_bytes("setm"): _cmd_setm,
+        to_bytes("sett"): _cmd_sett,
+        to_bytes("inpl"): _cmd_inpl,
+        to_bytes("excf"): _cmd_excf,
+        to_bytes("excx"): _cmd_excx,
+        to_bytes("dbga"): _cmd_debug_attach,
     }
 
     def _write_member_dict(self, mem_dict):
@@ -386,8 +399,10 @@ class ReplBackend(object):
 
     def init_debugger(self):
         from os import path
+
         sys.path.append(path.dirname(__file__))
         import visualstudio_py_debugger
+
         new_thread = visualstudio_py_debugger.new_thread()
         sys.settrace(new_thread.trace_func)
         visualstudio_py_debugger.intercept_threads(True)
@@ -474,7 +489,7 @@ class ReplBackend(object):
 
     def execute_file(self, filename, args):
         """executes the given filename as the main module"""
-        return self.execute_file_ex('script', filename, args)
+        return self.execute_file_ex("script", filename, args)
 
     def execute_file_ex(self, filetype, filename, args):
         """executes the given filename as a 'script', 'module' or 'process'."""
@@ -515,6 +530,7 @@ class ReplBackend(object):
     def attach_process(self, port, debugger_id, debug_options):
         """starts processing execution requests"""
         raise NotImplementedError
+
 
 def exit_work_item():
     sys.exit(0)

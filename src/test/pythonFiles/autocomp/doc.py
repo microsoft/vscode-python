@@ -6,6 +6,6 @@ if os.path.exists(("/etc/hosts")):
             content = line.upper()
 
 
-
 import time
+
 time.slee

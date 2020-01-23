@@ -2,12 +2,12 @@
 
 __revision__ = None
 
-class Foo(object):
 
+class Foo(object):
     def __init__(self):
         pass
 
-    def meth1(self,arg):
+    def meth1(self, arg):
         """missing a space between 'self' and 'arg'. This should trigger the
         following three line lint warning::
 
@@ -18,7 +18,7 @@ class Foo(object):
         The following three lines of tuples should also cause three-line lint
         errors due to "Exactly one space required after comma" messages.
         """
-        a = (1,2)
-        b = (1,2)
-        c = (1,2)
-        print (self)
+        a = (1, 2)
+        b = (1, 2)
+        c = (1, 2)
+        print(self)

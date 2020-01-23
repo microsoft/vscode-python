@@ -1,10 +1,8 @@
-
-
 PEP_526_style: str = "hello world"
 captain: str  # Note: no initial value!
-PEP_484_style = SOMETHING # type: str
+PEP_484_style = SOMETHING  # type: str
 
- 
+
 PEP_484_style.upper()
 PEP_526_style.upper()
 captain.upper()

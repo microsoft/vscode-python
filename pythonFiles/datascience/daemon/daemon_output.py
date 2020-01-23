@@ -128,4 +128,3 @@ def redirect_output(stdout_handler, stderr_handler):
     _stderr_redirector = sys.stderr = IORedirector(
         "stderr", sys.stderr, sys._vsc_err_buffer_, True
     )
-

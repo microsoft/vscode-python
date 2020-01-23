@@ -2,32 +2,29 @@ import unittest
 
 
 class MyTests(unittest.TestCase):
-
     def test_simple(self):
         self.assertTrue(True)
 
-    @unittest.skip('???')
+    @unittest.skip("???")
     def test_skipped(self):
         self.assertTrue(False)
 
-    @unittest.skipIf(True, '???')
+    @unittest.skipIf(True, "???")
     def test_maybe_skipped(self):
         self.assertTrue(False)
 
-    @unittest.skipUnless(False, '???')
+    @unittest.skipUnless(False, "???")
     def test_maybe_not_skipped(self):
         self.assertTrue(False)
 
     def test_skipped_inside(self):
-        raise unittest.SkipTest('???')
+        raise unittest.SkipTest("???")
 
     class TestSub1(object):
-
         def test_simple(self):
             self.assertTrue(True)
 
     class TestSub2(unittest.TestCase):
-
         def test_simple(self):
             self.assertTrue(True)
 
@@ -51,13 +48,14 @@ class MyTests(unittest.TestCase):
                         self.assertTrue(True)
 
     for i in range(3):
+
         def test_dynamic_(self, i=i):
             self.assertEqual(True)
+
         test_dynamic_.__name__ += str(i)
 
 
 class OtherTests(unittest.TestCase):
-
     def test_simple(self):
         self.assertTrue(True)
 

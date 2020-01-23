@@ -28,6 +28,7 @@ _threading = None
 
 import sys
 import ctypes
+
 try:
     import thread
 except ImportError:
@@ -86,9 +87,10 @@ try:
 except:
     xrange = range
 
-if sys.platform == 'cli':
+if sys.platform == "cli":
     import clr
     from System.Runtime.CompilerServices import ConditionalWeakTable
+
     IPY_SEEN_MODULES = ConditionalWeakTable[object, object]()
 
 # Import encodings early to avoid import on the debugger thread, which may cause deadlock
@@ -101,7 +103,9 @@ from encodings import utf_8
 
 debugger_dll_handle = None
 DETACHED = True
-def thread_creator(func, args, kwargs = {}, *extra_args):
+
+
+def thread_creator(func, args, kwargs={}, *extra_args):
     if not isinstance(args, tuple):
         # args is not a tuple. This may be because we have become bound to a
         # class, which has offset our arguments by one.
@@ -110,6 +114,7 @@ def thread_creator(func, args, kwargs = {}, *extra_args):
             kwargs = extra_args[0] if len(extra_args) > 0 else {}
 
     return _start_new_thread(new_thread_wrapper, (func, args, kwargs))
+
 
 _start_new_thread = thread.start_new_thread
 THREADS = {}
@@ -131,21 +136,24 @@ except:
 
 # A value of a synthesized child. The string is passed through to the variable list, and type is not displayed at all.
 class SynthesizedValue(object):
-    def __init__(self, repr_value='', len_value=None):
+    def __init__(self, repr_value="", len_value=None):
         self.repr_value = repr_value
         self.len_value = len_value
+
     def __repr__(self):
         return self.repr_value
+
     def __len__(self):
         return self.len_value
+
 
 # Specifies list of files not to debug. Can be extended by other modules
 # (the REPL does this for $attach support and not stepping into the REPL).
 DONT_DEBUG = [path.normcase(__file__), path.normcase(_vspu.__file__)]
 if sys.version_info >= (3, 3):
-    DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap>'))
+    DONT_DEBUG.append(path.normcase("<frozen importlib._bootstrap>"))
 if sys.version_info >= (3, 5):
-    DONT_DEBUG.append(path.normcase('<frozen importlib._bootstrap_external>'))
+    DONT_DEBUG.append(path.normcase("<frozen importlib._bootstrap_external>"))
 
 # Contains information about all breakpoints in the process. Keys are line numbers on which
 # there are breakpoints in any file, and values are dicts. For every line number, the
@@ -188,28 +196,48 @@ try:
     dict_contains = dict.has_key
 except:
     try:
-        #Py3k does not have has_key anymore, and older versions don't have __contains__
+        # Py3k does not have has_key anymore, and older versions don't have __contains__
         dict_contains = dict.__contains__
     except:
         try:
             dict_contains = dict.has_key
         except NameError:
+
             def dict_contains(d, key):
                 return d.has_key(key)
+
+
 ## End modification by Don Jayamanne
+
 
 class BreakpointInfo(object):
     __slots__ = [
-        'breakpoint_id', 'filename', 'lineno', 'condition_kind', 'condition',
-        'pass_count_kind', 'pass_count', 'is_bound', 'last_condition_value',
-        'hit_count'
+        "breakpoint_id",
+        "filename",
+        "lineno",
+        "condition_kind",
+        "condition",
+        "pass_count_kind",
+        "pass_count",
+        "is_bound",
+        "last_condition_value",
+        "hit_count",
     ]
 
     # For "when changed" breakpoints, this is used as the initial value of last_condition_value,
     # such that it is guaranteed to not compare equal to any other value that it will get later.
     _DUMMY_LAST_VALUE = object()
 
-    def __init__(self, breakpoint_id, filename, lineno, condition_kind, condition, pass_count_kind, pass_count):
+    def __init__(
+        self,
+        breakpoint_id,
+        filename,
+        lineno,
+        condition_kind,
+        condition,
+        pass_count_kind,
+        pass_count,
+    ):
         self.breakpoint_id = breakpoint_id
         self.filename = filename
         self.lineno = lineno
@@ -229,8 +257,10 @@ class BreakpointInfo(object):
                     return bp
         return None
 
+
 # lock for calling .send on the socket
 send_lock = thread.allocate_lock()
+
 
 class _SendLockContextManager(object):
     """context manager for send lock.  Handles both acquiring/releasing the
@@ -260,6 +290,7 @@ class _SendLockContextManager(object):
             # swallow the exception, we're no longer debugging
             return True
 
+
 _SendLockCtx = _SendLockContextManager()
 
 SEND_BREAK_COMPLETE = False
@@ -270,7 +301,7 @@ STEPPING_BREAK = 1
 STEPPING_LAUNCH_BREAK = 2
 STEPPING_ATTACH_BREAK = 3
 STEPPING_INTO = 4
-STEPPING_OVER = 5     # last value, we increment past this.
+STEPPING_OVER = 5  # last value, we increment past this.
 
 USER_STEPPING = (STEPPING_OUT, STEPPING_INTO, STEPPING_OVER)
 
@@ -278,11 +309,13 @@ FRAME_KIND_NONE = 0
 FRAME_KIND_PYTHON = 1
 FRAME_KIND_DJANGO = 2
 
-DJANGO_BUILTINS = {'True': True, 'False': False, 'None': None}
+DJANGO_BUILTINS = {"True": True, "False": False, "None": None}
 
-PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL = 0    # regular repr and hex repr (if applicable) for the evaluation result; length is len(result)
-PYTHON_EVALUATION_RESULT_REPR_KIND_RAW = 1       # repr is raw representation of the value - see TYPES_WITH_RAW_REPR; length is len(repr)
-PYTHON_EVALUATION_RESULT_REPR_KIND_RAWLEN = 2    # same as above, but only the length is reported, not the actual value
+PYTHON_EVALUATION_RESULT_REPR_KIND_NORMAL = 0  # regular repr and hex repr (if applicable) for the evaluation result; length is len(result)
+PYTHON_EVALUATION_RESULT_REPR_KIND_RAW = 1  # repr is raw representation of the value - see TYPES_WITH_RAW_REPR; length is len(repr)
+PYTHON_EVALUATION_RESULT_REPR_KIND_RAWLEN = (
+    2  # same as above, but only the length is reported, not the actual value
+)
 
 PYTHON_EVALUATION_RESULT_EXPANDABLE = 1
 PYTHON_EVALUATION_RESULT_METHOD_CALL = 2
@@ -295,13 +328,13 @@ METHOD_TYPES = (
     types.FunctionType,
     types.MethodType,
     types.BuiltinFunctionType,
-    type("".__repr__), # method-wrapper
+    type("".__repr__),  # method-wrapper
 )
 
 # repr() for these types can be used as input for eval() to get the original value.
 # float is intentionally not included because it is not always round-trippable (e.g inf, nan).
 TYPES_WITH_ROUND_TRIPPING_REPR = set((type(None), int, bool, str, unicode))
-if sys.version[0] == '3':
+if sys.version[0] == "3":
     TYPES_WITH_ROUND_TRIPPING_REPR.add(bytes)
 else:
     TYPES_WITH_ROUND_TRIPPING_REPR.add(long)
@@ -320,60 +353,66 @@ def eval_repr(x):
             return all((is_repr_round_tripping(item) for item in x))
         else:
             return False
+
     if is_repr_round_tripping(x):
         return x
     else:
         return eval(repr(x), {})
 
+
 # key is type, value is function producing the raw repr
-TYPES_WITH_RAW_REPR = {
-    unicode: (lambda s: s)
-}
+TYPES_WITH_RAW_REPR = {unicode: (lambda s: s)}
 
 # bytearray is 2.6+
 try:
     # getfilesystemencoding is used here because it effectively corresponds to the notion of "locale encoding":
     # current ANSI codepage on Windows, LC_CTYPE on Linux, UTF-8 on OS X - which is exactly what we want.
-    TYPES_WITH_RAW_REPR[bytearray] = lambda b: b.decode(sys.getfilesystemencoding(), 'ignore')
+    TYPES_WITH_RAW_REPR[bytearray] = lambda b: b.decode(
+        sys.getfilesystemencoding(), "ignore"
+    )
 except:
     pass
 
-if sys.version[0] == '3':
+if sys.version[0] == "3":
     TYPES_WITH_RAW_REPR[bytes] = TYPES_WITH_RAW_REPR[bytearray]
 else:
     TYPES_WITH_RAW_REPR[str] = TYPES_WITH_RAW_REPR[unicode]
 
-if sys.version[0] == '3':
-  # work around a crashing bug on CPython 3.x where they take a hard stack overflow
-  # we'll never see this exception but it'll allow us to keep our try/except handler
-  # the same across all versions of Python
-    class StackOverflowException(Exception): pass
+if sys.version[0] == "3":
+    # work around a crashing bug on CPython 3.x where they take a hard stack overflow
+    # we'll never see this exception but it'll allow us to keep our try/except handler
+    # the same across all versions of Python
+    class StackOverflowException(Exception):
+        pass
+
+
 else:
     StackOverflowException = RuntimeError
 
-ASBR = to_bytes('ASBR')
-SETL = to_bytes('SETL')
-THRF = to_bytes('THRF')
-DETC = to_bytes('DETC')
-NEWT = to_bytes('NEWT')
-EXTT = to_bytes('EXTT')
-EXIT = to_bytes('EXIT')
-EXCP = to_bytes('EXCP')
-EXC2 = to_bytes('EXC2')
-MODL = to_bytes('MODL')
-STPD = to_bytes('STPD')
-BRKS = to_bytes('BRKS')
-BRKF = to_bytes('BRKF')
-BRKH = to_bytes('BRKH')
-BRKC = to_bytes('BRKC')
-BKHC = to_bytes('BKHC')
-LOAD = to_bytes('LOAD')
-EXCE = to_bytes('EXCE')
-EXCR = to_bytes('EXCR')
-CHLD = to_bytes('CHLD')
-OUTP = to_bytes('OUTP')
-REQH = to_bytes('REQH')
-LAST = to_bytes('LAST')
+ASBR = to_bytes("ASBR")
+SETL = to_bytes("SETL")
+THRF = to_bytes("THRF")
+DETC = to_bytes("DETC")
+NEWT = to_bytes("NEWT")
+EXTT = to_bytes("EXTT")
+EXIT = to_bytes("EXIT")
+EXCP = to_bytes("EXCP")
+EXC2 = to_bytes("EXC2")
+MODL = to_bytes("MODL")
+STPD = to_bytes("STPD")
+BRKS = to_bytes("BRKS")
+BRKF = to_bytes("BRKF")
+BRKH = to_bytes("BRKH")
+BRKC = to_bytes("BRKC")
+BKHC = to_bytes("BKHC")
+LOAD = to_bytes("LOAD")
+EXCE = to_bytes("EXCE")
+EXCR = to_bytes("EXCR")
+CHLD = to_bytes("CHLD")
+OUTP = to_bytes("OUTP")
+REQH = to_bytes("REQH")
+LAST = to_bytes("LAST")
+
 
 def get_thread_from_id(id):
     THREADS_LOCK.acquire()
@@ -382,13 +421,18 @@ def get_thread_from_id(id):
     finally:
         THREADS_LOCK.release()
 
-def should_send_frame(frame):
-    return (frame is not None and
-            frame.f_code not in DEBUG_ENTRYPOINTS and
-            path.normcase(frame.f_code.co_filename) not in DONT_DEBUG)
 
-KNOWN_DIRECTORIES = set((None, ''))
+def should_send_frame(frame):
+    return (
+        frame is not None
+        and frame.f_code not in DEBUG_ENTRYPOINTS
+        and path.normcase(frame.f_code.co_filename) not in DONT_DEBUG
+    )
+
+
+KNOWN_DIRECTORIES = set((None, ""))
 KNOWN_ZIPS = set()
+
 
 def is_file_in_zip(filename):
     parent, name = path.split(path.abspath(filename))
@@ -403,34 +447,43 @@ def is_file_in_zip(filename):
         KNOWN_ZIPS.add(parent)
         return True
 
+
 def lookup_builtin(name, frame):
     try:
         return frame.f_builtins.get(bits)
     except:
         # http://ironpython.codeplex.com/workitem/30908
-        builtins = frame.f_globals['__builtins__']
+        builtins = frame.f_globals["__builtins__"]
         if not isinstance(builtins, dict):
             builtins = builtins.__dict__
         return builtins.get(name)
 
+
 def lookup_local(frame, name):
-    bits = name.split('.')
-    obj = frame.f_locals.get(bits[0]) or frame.f_globals.get(bits[0]) or lookup_builtin(bits[0], frame)
+    bits = name.split(".")
+    obj = (
+        frame.f_locals.get(bits[0])
+        or frame.f_globals.get(bits[0])
+        or lookup_builtin(bits[0], frame)
+    )
     bits.pop(0)
     while bits and obj is not None and type(obj) is types.ModuleType:
         obj = getattr(obj, bits.pop(0), None)
     return obj
 
+
 if sys.version_info[0] >= 3:
-    _EXCEPTIONS_MODULE = 'builtins'
+    _EXCEPTIONS_MODULE = "builtins"
 else:
-    _EXCEPTIONS_MODULE = 'exceptions'
+    _EXCEPTIONS_MODULE = "exceptions"
+
 
 def get_exception_name(exc_type):
     if exc_type.__module__ == _EXCEPTIONS_MODULE:
         return exc_type.__name__
     else:
-        return exc_type.__module__ + '.' + exc_type.__name__
+        return exc_type.__module__ + "." + exc_type.__name__
+
 
 # These constants come from Visual Studio - enum_EXCEPTION_STATE
 BREAK_MODE_NEVER = 0
@@ -441,28 +494,33 @@ BREAK_TYPE_NONE = 0
 BREAK_TYPE_UNHANDLED = 1
 BREAK_TYPE_HANDLED = 2
 
+
 class ExceptionBreakInfo(object):
     BUILT_IN_HANDLERS = {
-        path.normcase('<frozen importlib._bootstrap>'): ((None, None, '*'),),
-        path.normcase('build\\bdist.win32\\egg\\pkg_resources.py'): ((None, None, '*'),),
-        path.normcase('build\\bdist.win-amd64\\egg\\pkg_resources.py'): ((None, None, '*'),),
+        path.normcase("<frozen importlib._bootstrap>"): ((None, None, "*"),),
+        path.normcase("build\\bdist.win32\\egg\\pkg_resources.py"): (
+            (None, None, "*"),
+        ),
+        path.normcase("build\\bdist.win-amd64\\egg\\pkg_resources.py"): (
+            (None, None, "*"),
+        ),
     }
 
     def __init__(self):
         self.default_mode = BREAK_MODE_UNHANDLED
-        self.break_on = { }
+        self.break_on = {}
         self.handler_cache = dict(self.BUILT_IN_HANDLERS)
         self.handler_lock = thread.allocate_lock()
-        self.add_exception('exceptions.IndexError', BREAK_MODE_NEVER)
-        self.add_exception('builtins.IndexError', BREAK_MODE_NEVER)
-        self.add_exception('exceptions.KeyError', BREAK_MODE_NEVER)
-        self.add_exception('builtins.KeyError', BREAK_MODE_NEVER)
-        self.add_exception('exceptions.AttributeError', BREAK_MODE_NEVER)
-        self.add_exception('builtins.AttributeError', BREAK_MODE_NEVER)
-        self.add_exception('exceptions.StopIteration', BREAK_MODE_NEVER)
-        self.add_exception('builtins.StopIteration', BREAK_MODE_NEVER)
-        self.add_exception('exceptions.GeneratorExit', BREAK_MODE_NEVER)
-        self.add_exception('builtins.GeneratorExit', BREAK_MODE_NEVER)
+        self.add_exception("exceptions.IndexError", BREAK_MODE_NEVER)
+        self.add_exception("builtins.IndexError", BREAK_MODE_NEVER)
+        self.add_exception("exceptions.KeyError", BREAK_MODE_NEVER)
+        self.add_exception("builtins.KeyError", BREAK_MODE_NEVER)
+        self.add_exception("exceptions.AttributeError", BREAK_MODE_NEVER)
+        self.add_exception("builtins.AttributeError", BREAK_MODE_NEVER)
+        self.add_exception("exceptions.StopIteration", BREAK_MODE_NEVER)
+        self.add_exception("builtins.StopIteration", BREAK_MODE_NEVER)
+        self.add_exception("exceptions.GeneratorExit", BREAK_MODE_NEVER)
+        self.add_exception("builtins.GeneratorExit", BREAK_MODE_NEVER)
 
     def clear(self):
         self.default_mode = BREAK_MODE_UNHANDLED
@@ -479,13 +537,17 @@ class ExceptionBreakInfo(object):
                 break_type = BREAK_TYPE_HANDLED
             else:
                 break_type = BREAK_TYPE_UNHANDLED
-        elif (mode & BREAK_MODE_UNHANDLED) and not self.is_handled(thread, ex_type, ex_value, trace):
+        elif (mode & BREAK_MODE_UNHANDLED) and not self.is_handled(
+            thread, ex_type, ex_value, trace
+        ):
             break_type = BREAK_TYPE_UNHANDLED
 
         if break_type:
             if issubclass(ex_type, SystemExit):
                 if not BREAK_ON_SYSTEMEXIT_ZERO:
-                    if not ex_value or (isinstance(ex_value, SystemExit) and not ex_value.code):
+                    if not ex_value or (
+                        isinstance(ex_value, SystemExit) and not ex_value.code
+                    ):
                         break_type = BREAK_TYPE_NONE
 
         return break_type
@@ -496,14 +558,20 @@ class ExceptionBreakInfo(object):
             return False
 
         if trace.tb_next is not None:
-            if should_send_frame(trace.tb_next.tb_frame) and should_debug_code(trace.tb_next.tb_frame.f_code):
+            if should_send_frame(trace.tb_next.tb_frame) and should_debug_code(
+                trace.tb_next.tb_frame.f_code
+            ):
                 # don't break if this is not the top of the traceback,
                 # unless the previous frame was not debuggable
                 return True
 
         cur_frame = trace.tb_frame
 
-        while should_send_frame(cur_frame) and cur_frame.f_code is not None and cur_frame.f_code.co_filename is not None:
+        while (
+            should_send_frame(cur_frame)
+            and cur_frame.f_code is not None
+            and cur_frame.f_code.co_filename is not None
+        ):
             filename = path.normcase(cur_frame.f_code.co_filename)
             if is_file_in_zip(filename):
                 # File is in a zip, so assume it handles exceptions
@@ -533,7 +601,7 @@ class ExceptionBreakInfo(object):
                 line = cur_frame.f_lineno
                 for line_start, line_end, expressions in handlers:
                     if line_start is None or line_start <= line < line_end:
-                        if '*' in expressions:
+                        if "*" in expressions:
                             return True
 
                         for text in expressions:
@@ -549,25 +617,29 @@ class ExceptionBreakInfo(object):
         return False
 
     def add_exception(self, name, mode=BREAK_MODE_UNHANDLED):
-        if name.startswith(_EXCEPTIONS_MODULE + '.'):
-            name = name[len(_EXCEPTIONS_MODULE) + 1:]
+        if name.startswith(_EXCEPTIONS_MODULE + "."):
+            name = name[len(_EXCEPTIONS_MODULE) + 1 :]
         self.break_on[name] = mode
+
 
 BREAK_ON = ExceptionBreakInfo()
 
-def probe_stack(depth = 10):
-  """helper to make sure we have enough stack space to proceed w/o corrupting
+
+def probe_stack(depth=10):
+    """helper to make sure we have enough stack space to proceed w/o corrupting
      debugger state."""
-  if depth == 0:
-      return
-  probe_stack(depth - 1)
+    if depth == 0:
+        return
+    probe_stack(depth - 1)
+
 
 PREFIXES = [path.normcase(sys.prefix)]
 # If we're running in a virtual env, DEBUG_STDLIB should respect this too.
-if hasattr(sys, 'base_prefix'):
+if hasattr(sys, "base_prefix"):
     PREFIXES.append(path.normcase(sys.base_prefix))
-if hasattr(sys, 'real_prefix'):
+if hasattr(sys, "real_prefix"):
     PREFIXES.append(path.normcase(sys.real_prefix))
+
 
 def should_debug_code(code):
     if not code or not code.co_filename:
@@ -576,7 +648,7 @@ def should_debug_code(code):
     filename = path.normcase(code.co_filename)
     if not DEBUG_STDLIB:
         for prefix in PREFIXES:
-            if prefix != '' and filename.startswith(prefix):
+            if prefix != "" and filename.startswith(prefix):
                 return False
 
     for dont_debug_file in DONT_DEBUG:
@@ -589,10 +661,12 @@ def should_debug_code(code):
 
     return True
 
+
 attach_lock = thread.allocate()
 attach_sent_break = False
 
 local_path_to_vs_path = {}
+
 
 def breakpoint_path_match(vs_path, local_path):
     vs_path_norm = path.normcase(vs_path)
@@ -608,18 +682,23 @@ def breakpoint_path_match(vs_path, local_path):
         vs_path, vs_name = ntpath.split(vs_path)
         # Match the last component in the path. If one or both components are unavailable, then
         # we have reached the root on the corresponding path without successfully matching.
-        if not local_name or not vs_name or path.normcase(local_name) != path.normcase(vs_name):
+        if (
+            not local_name
+            or not vs_name
+            or path.normcase(local_name) != path.normcase(vs_name)
+        ):
             return False
         # If we have an __init__.py, this module was inside the package, and we still need to match
         # thatpackage, so walk up one level and keep matching. Otherwise, we've walked as far as we
         # needed to, and matched all names on our way, so this is a match.
-        if not path.exists(path.join(local_path, '__init__.py')):
+        if not path.exists(path.join(local_path, "__init__.py")):
             break
 
     local_path_to_vs_path[local_path_norm] = vs_path_norm
     return True
 
-def update_all_thread_stacks(blocking_thread = None, check_is_blocked = True):
+
+def update_all_thread_stacks(blocking_thread=None, check_is_blocked=True):
     THREADS_LOCK.acquire()
     all_threads = list(THREADS.values())
     THREADS_LOCK.release()

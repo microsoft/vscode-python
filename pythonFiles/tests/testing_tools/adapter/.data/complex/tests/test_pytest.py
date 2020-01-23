@@ -12,11 +12,11 @@ def test_failure():
 
 
 def test_runtime_skipped():
-    pytest.skip('???')
+    pytest.skip("???")
 
 
 def test_runtime_failed():
-    pytest.fail('???')
+    pytest.fail("???")
 
 
 def test_raises():
@@ -59,14 +59,15 @@ def test_multiple_markers():
 
 
 for i in range(3):
+
     def func():
         assert True
-    globals()['test_dynamic_{}'.format(i + 1)] = func
+
+    globals()["test_dynamic_{}".format(i + 1)] = func
 del func
 
 
 class TestSpam(object):
-
     def test_simple():
         assert True
 
@@ -75,9 +76,7 @@ class TestSpam(object):
         assert False
 
     class TestHam(object):
-
         class TestEggs(object):
-
             def test_simple():
                 assert True
 
@@ -89,7 +88,6 @@ class TestSpam(object):
 
 
 class TestEggs(object):
-
     def test_simple():
         assert True
 
@@ -100,59 +98,66 @@ class TestEggs(object):
 #  Y      - # cases
 #  [_XY]* - extra decorators
 
-@pytest.mark.parametrize('', [()])
+
+@pytest.mark.parametrize("", [()])
 def test_param_01():
     assert True
 
 
-@pytest.mark.parametrize('x', [(1,)])
+@pytest.mark.parametrize("x", [(1,)])
 def test_param_11(x):
     assert x == 1
 
 
-@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+@pytest.mark.parametrize("x", [(1,), (1.0,), (1 + 0j,)])
 def test_param_13(x):
     assert x == 1
 
 
-@pytest.mark.parametrize('x', [(1,), (1,), (1,)])
+@pytest.mark.parametrize("x", [(1,), (1,), (1,)])
 def test_param_13_repeat(x):
     assert x == 1
 
 
-@pytest.mark.parametrize('x,y,z', [(1, 1, 1), (3, 4, 5), (0, 0, 0)])
+@pytest.mark.parametrize("x,y,z", [(1, 1, 1), (3, 4, 5), (0, 0, 0)])
 def test_param_33(x, y, z):
-    assert x*x + y*y == z*z
+    assert x * x + y * y == z * z
 
 
-@pytest.mark.parametrize('x,y,z', [(1, 1, 1), (3, 4, 5), (0, 0, 0)],
-                         ids=['v1', 'v2', 'v3'])
+@pytest.mark.parametrize(
+    "x,y,z", [(1, 1, 1), (3, 4, 5), (0, 0, 0)], ids=["v1", "v2", "v3"]
+)
 def test_param_33_ids(x, y, z):
-    assert x*x + y*y == z*z
+    assert x * x + y * y == z * z
 
 
-@pytest.mark.parametrize('z', [(1,), (5,), (0,)])
-@pytest.mark.parametrize('x,y', [(1, 1), (3, 4), (0, 0)])
+@pytest.mark.parametrize("z", [(1,), (5,), (0,)])
+@pytest.mark.parametrize("x,y", [(1, 1), (3, 4), (0, 0)])
 def test_param_23_13(x, y, z):
-    assert x*x + y*y == z*z
+    assert x * x + y * y == z * z
 
 
-@pytest.mark.parametrize('x', [
-    (1,),
-    pytest.param(1.0, marks=[pytest.mark.skip, pytest.mark.spam], id='???'),
-    pytest.param(2, marks=[pytest.mark.xfail]),
-    ])
+@pytest.mark.parametrize(
+    "x",
+    [
+        (1,),
+        pytest.param(1.0, marks=[pytest.mark.skip, pytest.mark.spam], id="???"),
+        pytest.param(2, marks=[pytest.mark.xfail]),
+    ],
+)
 def test_param_13_markers(x):
     assert x == 1
 
 
 @pytest.mark.skip
-@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+@pytest.mark.parametrize("x", [(1,), (1.0,), (1 + 0j,)])
 def test_param_13_skipped(x):
     assert x == 1
 
 
-@pytest.mark.parametrize('x,catch', [(1, None), (1.0, None), (2, pytest.raises(Exception))])
+@pytest.mark.parametrize(
+    "x,catch", [(1, None), (1.0, None), (2, pytest.raises(Exception))]
+)
 def test_param_23_raises(x, catch):
     if x != 1:
         with catch:
@@ -160,18 +165,16 @@ def test_param_23_raises(x, catch):
 
 
 class TestParam(object):
-
     def test_simple():
         assert True
 
-    @pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+    @pytest.mark.parametrize("x", [(1,), (1.0,), (1 + 0j,)])
     def test_param_13(self, x):
         assert x == 1
 
 
-@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+@pytest.mark.parametrize("x", [(1,), (1.0,), (1 + 0j,)])
 class TestParamAll(object):
-
     def test_param_13(self, x):
         assert x == 1
 
@@ -181,40 +184,39 @@ class TestParamAll(object):
 
 @pytest.fixture
 def spamfix(request):
-    yield 'spam'
+    yield "spam"
 
 
-@pytest.fixture(params=['spam', 'eggs'])
+@pytest.fixture(params=["spam", "eggs"])
 def paramfix(request):
     return request.param
 
 
 def test_fixture(spamfix):
-    assert spamfix == 'spam'
+    assert spamfix == "spam"
 
 
-@pytest.mark.usefixtures('spamfix')
+@pytest.mark.usefixtures("spamfix")
 def test_mark_fixture():
     assert True
 
 
-@pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+@pytest.mark.parametrize("x", [(1,), (1.0,), (1 + 0j,)])
 def test_param_fixture(spamfix, x):
-    assert spamfix == 'spam'
+    assert spamfix == "spam"
     assert x == 1
 
 
-@pytest.mark.parametrize('x', [
-    (1,),
-    (1.0,),
-    pytest.param(1+0j, marks=[pytest.mark.usefixtures('spamfix')]),
-    ])
+@pytest.mark.parametrize(
+    "x",
+    [(1,), (1.0,), pytest.param(1 + 0j, marks=[pytest.mark.usefixtures("spamfix")]),],
+)
 def test_param_mark_fixture(x):
     assert x == 1
 
 
 def test_fixture_param(paramfix):
-    assert paramfix == 'spam'
+    assert paramfix == "spam"
 
 
 class TestNoop3(object):
@@ -222,6 +224,5 @@ class TestNoop3(object):
 
 
 class MyTests(object):  # does not match default name pattern
-
     def test_simple():
         assert True

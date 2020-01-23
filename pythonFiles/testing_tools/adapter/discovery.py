@@ -9,27 +9,30 @@ from .util import fix_fileid, DIRNAME, NORMCASE
 from .info import ParentInfo
 
 
-FILE_ID_RE = re.compile(r"""
+FILE_ID_RE = re.compile(
+    r"""
         ^
         (?:
           ( .* [.] (?: py | txt ) \b ) # .txt for doctest files
           ( [^.] .* )?
           )
         $
-        """, re.VERBOSE)
+        """,
+    re.VERBOSE,
+)
 
 
-def fix_nodeid(nodeid, kind, rootdir=None, #*,
-               _fix_fileid=fix_fileid,
-               ):
+def fix_nodeid(
+    nodeid, kind, rootdir=None, _fix_fileid=fix_fileid,  # *,
+):
     if not nodeid:
-        raise ValueError('missing nodeid')
-    if nodeid == '.':
+        raise ValueError("missing nodeid")
+    if nodeid == ".":
         return nodeid
 
     fileid = nodeid
-    remainder = ''
-    if kind not in ('folder', 'file'):
+    remainder = ""
+    if kind not in ("folder", "file"):
         m = FILE_ID_RE.match(nodeid)
         if m:
             fileid, remainder = m.groups()
@@ -37,7 +40,7 @@ def fix_nodeid(nodeid, kind, rootdir=None, #*,
             fileid = nodeid[:2]
             remainder = nodeid[2:]
     fileid = _fix_fileid(fileid, rootdir)
-    return fileid + (remainder or '')
+    return fileid + (remainder or "")
 
 
 class DiscoveredTests(object):
@@ -54,10 +57,9 @@ class DiscoveredTests(object):
 
     @property
     def parents(self):
-        return sorted(self._parents.values(),
-                      key=lambda p: (NORMCASE(p.root or p.name),
-                                     p.id),
-                      )
+        return sorted(
+            self._parents.values(), key=lambda p: (NORMCASE(p.root or p.name), p.id),
+        )
 
     def reset(self):
         """Clear out any previously discovered tests."""
@@ -71,14 +73,13 @@ class DiscoveredTests(object):
         # provided test and parents (from the test collector) are
         # properly generated.  However, we play it safe here.
         test = test._replace(
-                id=fix_nodeid(test.id, 'test', test.path.root),
-                parentid=parentid,
-                )
+            id=fix_nodeid(test.id, "test", test.path.root), parentid=parentid,
+        )
         self._tests.append(test)
 
-    def _ensure_parent(self, path, parents, #*,
-                       _dirname=DIRNAME,
-                       ):
+    def _ensure_parent(
+        self, path, parents, _dirname=DIRNAME,  # *,
+    ):
         rootdir = path.root
         relpath = path.relfile
 
@@ -90,14 +91,14 @@ class DiscoveredTests(object):
         for parentid, parentname, parentkind in _parents:
             # As in add_test(), the parent ID *should* already be correct.
             parentid = fix_nodeid(parentid, kind, rootdir)
-            if kind in ('folder', 'file'):
+            if kind in ("folder", "file"):
                 info = ParentInfo(nodeid, kind, name, rootdir, relpath, parentid)
                 relpath = _dirname(relpath)
             else:
                 info = ParentInfo(nodeid, kind, name, rootdir, None, parentid)
             self._parents[(rootdir, nodeid)] = info
             nodeid, name, kind = parentid, parentname, parentkind
-        assert nodeid == '.'
+        assert nodeid == "."
         info = ParentInfo(nodeid, kind, name=rootdir)
         self._parents[(rootdir, nodeid)] = info
 

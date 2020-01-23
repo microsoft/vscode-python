@@ -33,7 +33,10 @@ def example_data():
 
 @pytest.fixture
 def example_config():
-    return {"metadata": {}, "project": [copy.deepcopy(details) for details in PROJECT_DATA.values()]}
+    return {
+        "metadata": {},
+        "project": [copy.deepcopy(details) for details in PROJECT_DATA.values()],
+    }
 
 
 def test_get_projects(example_config, example_data):

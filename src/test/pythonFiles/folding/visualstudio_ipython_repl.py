@@ -21,12 +21,18 @@ __version__ = "3.0.0.0"
 
 import re
 import sys
-from visualstudio_py_repl import BasicReplBackend, ReplBackend, UnsupportedReplException, _command_line_to_args_list
+from visualstudio_py_repl import (
+    BasicReplBackend,
+    ReplBackend,
+    UnsupportedReplException,
+    _command_line_to_args_list,
+)
 from visualstudio_py_util import to_bytes
+
 try:
     import thread
 except:
-    import _thread as thread    # Renamed as Py3k
+    import _thread as thread  # Renamed as Py3k
 
 from base64 import decodestring
 
@@ -34,11 +40,14 @@ try:
     import IPython
 except ImportError:
     exc_value = sys.exc_info()[1]
-    raise UnsupportedReplException('IPython mode requires IPython 0.11 or later: ' + str(exc_value))
+    raise UnsupportedReplException(
+        "IPython mode requires IPython 0.11 or later: " + str(exc_value)
+    )
+
 
 def is_ipython_versionorgreater(major, minor):
     """checks if we are at least a specific IPython version"""
-    match = re.match('(\d+).(\d+)', IPython.__version__)
+    match = re.match("(\d+).(\d+)", IPython.__version__)
     if match:
         groups = match.groups()
         if int(groups[0]) > major:
@@ -48,25 +57,38 @@ def is_ipython_versionorgreater(major, minor):
 
     return False
 
-remove_escapes = re.compile(r'\x1b[^m]*m')
+
+remove_escapes = re.compile(r"\x1b[^m]*m")
 
 try:
     if is_ipython_versionorgreater(3, 0):
         from IPython.kernel import KernelManager
         from IPython.kernel.channels import HBChannel
-        from IPython.kernel.threaded import (ThreadedZMQSocketChannel, ThreadedKernelClient as KernelClient)
+        from IPython.kernel.threaded import (
+            ThreadedZMQSocketChannel,
+            ThreadedKernelClient as KernelClient,
+        )
+
         ShellChannel = StdInChannel = IOPubChannel = ThreadedZMQSocketChannel
     elif is_ipython_versionorgreater(1, 0):
         from IPython.kernel import KernelManager, KernelClient
-        from IPython.kernel.channels import ShellChannel, HBChannel, StdInChannel, IOPubChannel
+        from IPython.kernel.channels import (
+            ShellChannel,
+            HBChannel,
+            StdInChannel,
+            IOPubChannel,
+        )
     else:
         import IPython.zmq
-        KernelClient = object # was split out from KernelManager in 1.0
-        from IPython.zmq.kernelmanager import (KernelManager,
-                                               ShellSocketChannel as ShellChannel,
-                                               SubSocketChannel as IOPubChannel,
-                                               StdInSocketChannel as StdInChannel,
-                                               HBSocketChannel as HBChannel)
+
+        KernelClient = object  # was split out from KernelManager in 1.0
+        from IPython.zmq.kernelmanager import (
+            KernelManager,
+            ShellSocketChannel as ShellChannel,
+            SubSocketChannel as IOPubChannel,
+            StdInSocketChannel as StdInChannel,
+            HBSocketChannel as HBChannel,
+        )
 
     from IPython.utils.traitlets import Type
 except ImportError:
@@ -86,24 +108,25 @@ except ImportError:
 class DefaultHandler(object):
     def unknown_command(self, content):
         import pprint
-        print('unknown command ' + str(type(self)))
+
+        print("unknown command " + str(type(self)))
         pprint.pprint(content)
 
     def call_handlers(self, msg):
         # msg_type:
         #   execute_reply
-        msg_type = 'handle_' + msg['msg_type']
+        msg_type = "handle_" + msg["msg_type"]
 
-        getattr(self, msg_type, self.unknown_command)(msg['content'])
+        getattr(self, msg_type, self.unknown_command)(msg["content"])
+
 
 class VsShellChannel(DefaultHandler, ShellChannel):
-
     def handle_execute_reply(self, content):
         # we could have a payload here...
-        payload = content['payload']
+        payload = content["payload"]
 
         for item in payload:
-            data = item.get('data')
+            data = item.get("data")
             if data is not None:
                 try:
                     # Could be named km.sub_channel for very old IPython, but
@@ -115,7 +138,7 @@ class VsShellChannel(DefaultHandler, ShellChannel):
                     write_data(data)
                     continue
 
-            output = item.get('text', None)
+            output = item.get("text", None)
             if output is not None:
                 self._vs_backend.write_stdout(output)
         self._vs_backend.send_command_executed()
@@ -132,34 +155,34 @@ class VsShellChannel(DefaultHandler, ShellChannel):
         self._vs_backend.members_lock.release()
 
     def handle_kernel_info_reply(self, content):
-        self._vs_backend.write_stdout(content['banner'])
+        self._vs_backend.write_stdout(content["banner"])
 
 
 class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def call_handlers(self, msg):
         # only output events from our session or no sessions
         # https://pytools.codeplex.com/workitem/1622
-        parent = msg.get('parent_header')
-        if not parent or parent.get('session') == self.session.session:
-            msg_type = 'handle_' + msg['msg_type']
-            getattr(self, msg_type, self.unknown_command)(msg['content'])
+        parent = msg.get("parent_header")
+        if not parent or parent.get("session") == self.session.session:
+            msg_type = "handle_" + msg["msg_type"]
+            getattr(self, msg_type, self.unknown_command)(msg["content"])
 
     def handle_display_data(self, content):
         # called when user calls display()
-        data = content.get('data', None)
+        data = content.get("data", None)
 
         if data is not None:
             self.write_data(data)
 
     def handle_stream(self, content):
-        stream_name = content['name']
+        stream_name = content["name"]
         if is_ipython_versionorgreater(3, 0):
-            output = content['text']
+            output = content["text"]
         else:
-            output = content['data']
-        if stream_name == 'stdout':
+            output = content["data"]
+        if stream_name == "stdout":
             self._vs_backend.write_stdout(output)
-        elif stream_name == 'stderr':
+        elif stream_name == "stderr":
             self._vs_backend.write_stderr(output)
         # TODO: stdin can show up here, do we echo that?
 
@@ -169,65 +192,65 @@ class VsIOPubChannel(DefaultHandler, IOPubChannel):
     def handle_execute_output(self, content):
         # called when an expression statement is printed, we treat
         # identical to stream output but it always goes to stdout
-        output = content['data']
-        execution_count = content['execution_count']
+        output = content["data"]
+        execution_count = content["execution_count"]
         self._vs_backend.execution_count = execution_count + 1
         self._vs_backend.send_prompt(
-            '\r\nIn [%d]: ' % (execution_count + 1),
-            '   ' + ('.' * (len(str(execution_count + 1)) + 2)) + ': ',
-            allow_multiple_statements=True
+            "\r\nIn [%d]: " % (execution_count + 1),
+            "   " + ("." * (len(str(execution_count + 1)) + 2)) + ": ",
+            allow_multiple_statements=True,
         )
         self.write_data(output, execution_count)
 
-    def write_data(self, data, execution_count = None):
-        output_xaml = data.get('application/xaml+xml', None)
+    def write_data(self, data, execution_count=None):
+        output_xaml = data.get("application/xaml+xml", None)
         if output_xaml is not None:
             try:
                 if isinstance(output_xaml, str) and sys.version_info[0] >= 3:
-                    output_xaml = output_xaml.encode('ascii')
+                    output_xaml = output_xaml.encode("ascii")
                 self._vs_backend.write_xaml(decodestring(output_xaml))
-                self._vs_backend.write_stdout('\n')
+                self._vs_backend.write_stdout("\n")
                 return
             except:
                 pass
 
-        output_png = data.get('image/png', None)
+        output_png = data.get("image/png", None)
         if output_png is not None:
             try:
                 if isinstance(output_png, str) and sys.version_info[0] >= 3:
-                    output_png = output_png.encode('ascii')
+                    output_png = output_png.encode("ascii")
                 self._vs_backend.write_png(decodestring(output_png))
-                self._vs_backend.write_stdout('\n')
+                self._vs_backend.write_stdout("\n")
                 return
             except:
                 pass
 
-        output_str = data.get('text/plain', None)
+        output_str = data.get("text/plain", None)
         if output_str is not None:
             if execution_count is not None:
-                if '\n' in output_str:
-                    output_str = '\n' + output_str
-                output_str = 'Out[' + str(execution_count) + ']: ' + output_str
+                if "\n" in output_str:
+                    output_str = "\n" + output_str
+                output_str = "Out[" + str(execution_count) + "]: " + output_str
 
             self._vs_backend.write_stdout(output_str)
-            self._vs_backend.write_stdout('\n')
+            self._vs_backend.write_stdout("\n")
             return
 
     def handle_error(self, content):
         # TODO: this includes escape sequences w/ color, we need to unescape that
-        ename = content['ename']
-        evalue = content['evalue']
-        tb = content['traceback']
-        self._vs_backend.write_stderr('\n'.join(tb))
-        self._vs_backend.write_stdout('\n')
+        ename = content["ename"]
+        evalue = content["evalue"]
+        tb = content["traceback"]
+        self._vs_backend.write_stderr("\n".join(tb))
+        self._vs_backend.write_stdout("\n")
 
     def handle_execute_input(self, content):
         # just a rebroadcast of the command to be executed, can be ignored
         self._vs_backend.execution_count += 1
         self._vs_backend.send_prompt(
-            '\r\nIn [%d]: ' % (self._vs_backend.execution_count),
-            '   ' + ('.' * (len(str(self._vs_backend.execution_count)) + 2)) + ': ',
-            allow_multiple_statements=True
+            "\r\nIn [%d]: " % (self._vs_backend.execution_count),
+            "   " + ("." * (len(str(self._vs_backend.execution_count)) + 2)) + ": ",
+            allow_multiple_statements=True,
         )
         pass
 
@@ -266,7 +289,7 @@ class VsKernelManager(KernelManager, KernelClient):
 
 
 class IPythonBackend(ReplBackend):
-    def __init__(self, mod_name = '__main__', launch_file = None):
+    def __init__(self, mod_name="__main__", launch_file=None):
         ReplBackend.__init__(self)
         self.launch_file = launch_file
         self.mod_name = mod_name
@@ -276,12 +299,14 @@ class IPythonBackend(ReplBackend):
             # http://pytools.codeplex.com/workitem/759
             # IPython stopped accepting the ipython flag and switched to launcher, the new
             # default is what we want though.
-            self.km.start_kernel(**{'extra_arguments': self.get_extra_arguments()})
+            self.km.start_kernel(**{"extra_arguments": self.get_extra_arguments()})
         else:
-            self.km.start_kernel(**{'ipython': True, 'extra_arguments': self.get_extra_arguments()})
+            self.km.start_kernel(
+                **{"ipython": True, "extra_arguments": self.get_extra_arguments()}
+            )
         self.km.start_channels()
         self.exit_lock = thread.allocate_lock()
-        self.exit_lock.acquire()     # used as an event
+        self.exit_lock.acquire()  # used as an event
         self.members_lock = thread.allocate_lock()
         self.members_lock.acquire()
 
@@ -295,41 +320,45 @@ class IPythonBackend(ReplBackend):
         self.execution_count = 1
 
     def get_extra_arguments(self):
-        if sys.version <= '2.':
-            return [unicode('--pylab=inline')]
-        return ['--pylab=inline']
+        if sys.version <= "2.":
+            return [unicode("--pylab=inline")]
+        return ["--pylab=inline"]
 
     def execute_file_as_main(self, filename, arg_string):
-        f = open(filename, 'rb')
+        f = open(filename, "rb")
         try:
             contents = f.read().replace(to_bytes("\r\n"), to_bytes("\n"))
         finally:
             f.close()
         args = [filename] + _command_line_to_args_list(arg_string)
-        code = '''
+        code = """
 import sys
 sys.argv = %(args)r
 __file__ = %(filename)r
 del sys
 exec(compile(%(contents)r, %(filename)r, 'exec'))
-''' % {'filename' : filename, 'contents':contents, 'args': args}
+""" % {
+            "filename": filename,
+            "contents": contents,
+            "args": args,
+        }
 
         self.run_command(code, True)
 
     def execution_loop(self):
         # we've got a bunch of threads setup for communication, we just block
         # here until we're requested to exit.
-        self.send_prompt('\r\nIn [1]: ', '   ...: ', allow_multiple_statements=True)
+        self.send_prompt("\r\nIn [1]: ", "   ...: ", allow_multiple_statements=True)
         self.exit_lock.acquire()
 
-    def run_command(self, command, silent = False):
+    def run_command(self, command, silent=False):
         if is_ipython_versionorgreater(3, 0):
             self.km.execute(command, silent)
         else:
             self.km.shell_channel.execute(command, silent)
 
     def execute_file_ex(self, filetype, filename, args):
-        if filetype == 'script':
+        if filetype == "script":
             self.execute_file_as_main(filename, args)
         else:
             raise NotImplementedError("Cannot execute %s file" % filetype)
@@ -339,7 +368,7 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
 
     def get_members(self, expression):
         """returns a tuple of the type name, instance members, and type members"""
-        text = expression + '.'
+        text = expression + "."
         if is_ipython_versionorgreater(3, 0):
             self.km.complete(text)
         else:
@@ -351,10 +380,10 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
 
         res = {}
         text_len = len(text)
-        for member in reply['matches']:
-            res[member[text_len:]] = 'object'
+        for member in reply["matches"]:
+            res[member[text_len:]] = "object"
 
-        return ('unknown', res, {})
+        return ("unknown", res, {})
 
     def get_signatures(self, expression):
         """returns doc, args, vargs, varkw, defaults."""
@@ -368,18 +397,26 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
 
         reply = self.object_info_reply
         if is_ipython_versionorgreater(3, 0):
-            data = reply['data']
-            text = data['text/plain']
-            text = remove_escapes.sub('', text)
+            data = reply["data"]
+            text = data["text/plain"]
+            text = remove_escapes.sub("", text)
             return [(text, (), None, None, [])]
         else:
-            argspec = reply['argspec']
-            defaults = argspec['defaults']
+            argspec = reply["argspec"]
+            defaults = argspec["defaults"]
             if defaults is not None:
                 defaults = [repr(default) for default in defaults]
             else:
                 defaults = []
-            return [(reply['docstring'], argspec['args'], argspec['varargs'], argspec['varkw'], defaults)]
+            return [
+                (
+                    reply["docstring"],
+                    argspec["args"],
+                    argspec["varargs"],
+                    argspec["varkw"],
+                    defaults,
+                )
+            ]
 
     def interrupt_main(self):
         """aborts the current running command"""
@@ -397,10 +434,14 @@ exec(compile(%(contents)r, %(filename)r, 'exec'))
 
     def init_debugger(self):
         from os import path
-        self.run_command('''
+
+        self.run_command(
+            """
 def __visualstudio_debugger_init():
     import sys
-    sys.path.append(''' + repr(path.dirname(__file__)) + ''')
+    sys.path.append("""
+            + repr(path.dirname(__file__))
+            + """)
     import visualstudio_py_debugger
     new_thread = visualstudio_py_debugger.new_thread()
     sys.settrace(new_thread.trace_func)
@@ -408,10 +449,13 @@ def __visualstudio_debugger_init():
 
 __visualstudio_debugger_init()
 del __visualstudio_debugger_init
-''', True)
+""",
+            True,
+        )
 
     def attach_process(self, port, debugger_id):
-        self.run_command('''
+        self.run_command(
+            """
 def __visualstudio_debugger_attach():
     import visualstudio_py_debugger
 
@@ -419,11 +463,18 @@ def __visualstudio_debugger_attach():
         visualstudio_py_debugger.DETACH_CALLBACKS.remove(do_detach)
 
     visualstudio_py_debugger.DETACH_CALLBACKS.append(do_detach)
-    visualstudio_py_debugger.attach_process(''' + str(port) + ''', ''' + repr(debugger_id) + ''', report = True, block = True)
+    visualstudio_py_debugger.attach_process("""
+            + str(port)
+            + """, """
+            + repr(debugger_id)
+            + """, report = True, block = True)
 
 __visualstudio_debugger_attach()
 del __visualstudio_debugger_attach
-''', True)
+""",
+            True,
+        )
+
 
 class IPythonBackendWithoutPyLab(IPythonBackend):
     def get_extra_arguments(self):

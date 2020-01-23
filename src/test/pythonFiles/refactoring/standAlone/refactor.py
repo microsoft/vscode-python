@@ -18,29 +18,31 @@ WORKSPACE_ROOT = sys.argv[1]
 ROPE_PROJECT_FOLDER = sys.argv[2]
 
 
-class RefactorProgress():
+class RefactorProgress:
     """
     Refactor progress information
     """
 
-    def __init__(self, name='Task Name', message=None, percent=0):
+    def __init__(self, name="Task Name", message=None, percent=0):
         self.name = name
         self.message = message
         self.percent = percent
 
 
-class ChangeType():
+class ChangeType:
     """
     Change Type Enum
     """
+
     EDIT = 0
     NEW = 1
     DELETE = 2
 
 
-class Change():
+class Change:
     """
     """
+
     EDIT = 0
     NEW = 1
     DELETE = 2
@@ -99,10 +101,16 @@ class BaseRefactoring(object):
 
 
 class RenameRefactor(BaseRefactoring):
-
-    def __init__(self, project, resource, name="Rename", progressCallback=None, startOffset=None, newName="new_Name"):
-        BaseRefactoring.__init__(self, project, resource,
-                                 name, progressCallback)
+    def __init__(
+        self,
+        project,
+        resource,
+        name="Rename",
+        progressCallback=None,
+        startOffset=None,
+        newName="new_Name",
+    ):
+        BaseRefactoring.__init__(self, project, resource, name, progressCallback)
         self._newName = newName
         self.startOffset = startOffset
 
@@ -112,16 +120,28 @@ class RenameRefactor(BaseRefactoring):
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, item.get_description()))
+                    Change(
+                        item.resource.real_path, ChangeType.EDIT, item.get_description()
+                    )
+                )
             else:
-                raise Exception('Unknown Change')
+                raise Exception("Unknown Change")
 
 
 class ExtractVariableRefactor(BaseRefactoring):
-
-    def __init__(self, project, resource, name="Extract Variable", progressCallback=None, startOffset=None, endOffset=None, newName="new_Name", similar=False, global_=False):
-        BaseRefactoring.__init__(self, project, resource,
-                                                      name, progressCallback)
+    def __init__(
+        self,
+        project,
+        resource,
+        name="Extract Variable",
+        progressCallback=None,
+        startOffset=None,
+        endOffset=None,
+        newName="new_Name",
+        similar=False,
+        global_=False,
+    ):
+        BaseRefactoring.__init__(self, project, resource, name, progressCallback)
         self._newName = newName
         self._startOffset = startOffset
         self._endOffset = endOffset
@@ -130,76 +150,118 @@ class ExtractVariableRefactor(BaseRefactoring):
 
     def onRefactor(self):
         renamed = ExtractVariable(
-            self.project, self.resource, self._startOffset, self._endOffset)
-        changes = renamed.get_changes(
-            self._newName, self._similar, self._global)
+            self.project, self.resource, self._startOffset, self._endOffset
+        )
+        changes = renamed.get_changes(self._newName, self._similar, self._global)
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, item.get_description()))
+                    Change(
+                        item.resource.real_path, ChangeType.EDIT, item.get_description()
+                    )
+                )
             else:
-                raise Exception('Unknown Change')
+                raise Exception("Unknown Change")
 
 
 class ExtractMethodRefactor(ExtractVariableRefactor):
+    def __init__(
+        self,
+        project,
+        resource,
+        name="Extract Method",
+        progressCallback=None,
+        startOffset=None,
+        endOffset=None,
+        newName="new_Name",
+        similar=False,
+        global_=False,
+    ):
+        ExtractVariableRefactor.__init__(
+            self,
+            project,
+            resource,
+            name,
+            progressCallback,
+            startOffset=startOffset,
+            endOffset=endOffset,
+            newName=newName,
+            similar=similar,
+            global_=global_,
+        )
 
-    def __init__(self, project, resource, name="Extract Method", progressCallback=None, startOffset=None, endOffset=None, newName="new_Name", similar=False, global_=False):
-        ExtractVariableRefactor.__init__(self, project, resource,
-                                                    name, progressCallback, startOffset=startOffset, endOffset=endOffset, newName=newName, similar=similar, global_=global_)
     def onRefactor(self):
         renamed = ExtractMethod(
-            self.project, self.resource, self._startOffset, self._endOffset)
-        changes = renamed.get_changes(
-            self._newName, self._similar, self._global)
+            self.project, self.resource, self._startOffset, self._endOffset
+        )
+        changes = renamed.get_changes(self._newName, self._similar, self._global)
         for item in changes.changes:
             if isinstance(item, rope.base.change.ChangeContents):
                 self.changes.append(
-                    Change(item.resource.real_path, ChangeType.EDIT, item.get_description()))
+                    Change(
+                        item.resource.real_path, ChangeType.EDIT, item.get_description()
+                    )
+                )
             else:
-                raise Exception('Unknown Change')
+                raise Exception("Unknown Change")
 
 
 class RopeRefactoring(object):
-
     def __init__(self):
         self.default_sys_path = sys.path
-        self._input = io.open(sys.stdin.fileno(), encoding='utf-8')
+        self._input = io.open(sys.stdin.fileno(), encoding="utf-8")
 
     def _extractVariable(self, filePath, start, end, newName):
         """
         Extracts a variable
         """
-        project = rope.base.project.Project(WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False)
+        project = rope.base.project.Project(
+            WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False
+        )
         resourceToRefactor = libutils.path_to_resource(project, filePath)
-        refactor = ExtractVariableRefactor(project, resourceToRefactor, startOffset=start, endOffset=end, newName=newName)
+        refactor = ExtractVariableRefactor(
+            project,
+            resourceToRefactor,
+            startOffset=start,
+            endOffset=end,
+            newName=newName,
+        )
         refactor.refactor()
         changes = refactor.changes
         project.close()
         valueToReturn = []
         for change in changes:
-            valueToReturn.append({'diff':change.diff})
+            valueToReturn.append({"diff": change.diff})
         return valueToReturn
 
     def _extractMethod(self, filePath, start, end, newName):
         """
         Extracts a method
         """
-        project = rope.base.project.Project(WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False)
+        project = rope.base.project.Project(
+            WORKSPACE_ROOT, ropefolder=ROPE_PROJECT_FOLDER, save_history=False
+        )
         resourceToRefactor = libutils.path_to_resource(project, filePath)
-        refactor = ExtractMethodRefactor(project, resourceToRefactor, startOffset=start, endOffset=end, newName=newName)
+        refactor = ExtractMethodRefactor(
+            project,
+            resourceToRefactor,
+            startOffset=start,
+            endOffset=end,
+            newName=newName,
+        )
         refactor.refactor()
         changes = refactor.changes
         project.close()
         valueToReturn = []
         for change in changes:
-            valueToReturn.append({'diff':change.diff})
+            valueToReturn.append({"diff": change.diff})
         return valueToReturn
 
     def _serialize(self, identifier, results):
         """
         Serializes the refactor results
         """
-        return json.dumps({'id': identifier, 'results': results})
+        return json.dumps({"id": identifier, "results": results})
 
     def _deserialize(self, request):
         """Deserialize request from VSCode.
@@ -216,19 +278,29 @@ class RopeRefactoring(object):
         """Accept serialized request from VSCode and write response.
         """
         request = self._deserialize(request)
-        lookup = request.get('lookup', '')
+        lookup = request.get("lookup", "")
 
-        if lookup == '':
+        if lookup == "":
             pass
-        elif lookup == 'extract_variable':
-            changes = self._extractVariable(request['file'], int(request['start']), int(request['end']), request['name'])
-            return self._write_response(self._serialize(request['id'], changes))
-        elif lookup == 'extract_method':
-            changes = self._extractMethod(request['file'], int(request['start']), int(request['end']), request['name'])
-            return self._write_response(self._serialize(request['id'], changes))
+        elif lookup == "extract_variable":
+            changes = self._extractVariable(
+                request["file"],
+                int(request["start"]),
+                int(request["end"]),
+                request["name"],
+            )
+            return self._write_response(self._serialize(request["id"], changes))
+        elif lookup == "extract_method":
+            changes = self._extractMethod(
+                request["file"],
+                int(request["start"]),
+                int(request["end"]),
+                request["name"],
+            )
+            return self._write_response(self._serialize(request["id"], changes))
 
     def _write_response(self, response):
-        sys.stdout.write(response + '\n')
+        sys.stdout.write(response + "\n")
         sys.stdout.flush()
 
     def watch(self):
@@ -237,9 +309,10 @@ class RopeRefactoring(object):
             try:
                 self._process_request(self._input.readline())
             except Exception as ex:
-                message = ex.message + '  \n' + traceback.format_exc()
-                sys.stderr.write(str(len(message)) + ':' + message)
+                message = ex.message + "  \n" + traceback.format_exc()
+                sys.stderr.write(str(len(message)) + ":" + message)
                 sys.stderr.flush()
 
-if __name__ == '__main__':
+
+if __name__ == "__main__":
     RopeRefactoring().watch()

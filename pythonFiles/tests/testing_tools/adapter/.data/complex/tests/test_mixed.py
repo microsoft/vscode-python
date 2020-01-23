@@ -12,13 +12,11 @@ def test_skipped():
 
 
 class TestMySuite(object):
-
     def test_simple(self):
         assert True
 
 
 class MyTests(unittest.TestCase):
-
     def test_simple(self):
         assert True
 

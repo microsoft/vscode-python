@@ -11,220 +11,214 @@ from testing_tools.adapter.report import report_discovered
 
 
 class StubSender(StubProxy):
-
     def send(self, outstr):
-        self.add_call('send', (json.loads(outstr),), None)
+        self.add_call("send", (json.loads(outstr),), None)
 
 
 ##################################
 # tests
 
-class ReportDiscoveredTests(unittest.TestCase):
 
+class ReportDiscoveredTests(unittest.TestCase):
     def test_basic(self):
         stub = StubSender()
-        testroot = fix_path('/a/b/c')
-        relfile = 'test_spam.py'
+        testroot = fix_path("/a/b/c")
+        relfile = "test_spam.py"
         relpath = fix_relpath(relfile)
         tests = [
             TestInfo(
-                id='test#1',
-                name='test_spam',
-                path=TestPath(
-                    root=testroot,
-                    relfile=relfile,
-                    func='test_spam',
-                    ),
-                source='{}:{}'.format(relfile, 10),
+                id="test#1",
+                name="test_spam",
+                path=TestPath(root=testroot, relfile=relfile, func="test_spam",),
+                source="{}:{}".format(relfile, 10),
                 markers=[],
-                parentid='file#1',
-                ),
-            ]
+                parentid="file#1",
+            ),
+        ]
         parents = [
+            ParentInfo(id="<root>", kind="folder", name=testroot,),
             ParentInfo(
-                id='<root>',
-                kind='folder',
-                name=testroot,
-                ),
-            ParentInfo(
-                id='file#1',
-                kind='file',
+                id="file#1",
+                kind="file",
                 name=relfile,
                 root=testroot,
                 relpath=relpath,
-                parentid='<root>',
-                ),
-            ]
-        expected = [{
-            'rootid': '<root>',
-            'root': testroot,
-            'parents': [
-                {'id': 'file#1',
-                 'kind': 'file',
-                 'name': relfile,
-                 'relpath': relpath,
-                 'parentid': '<root>',
-                 },
+                parentid="<root>",
+            ),
+        ]
+        expected = [
+            {
+                "rootid": "<root>",
+                "root": testroot,
+                "parents": [
+                    {
+                        "id": "file#1",
+                        "kind": "file",
+                        "name": relfile,
+                        "relpath": relpath,
+                        "parentid": "<root>",
+                    },
                 ],
-            'tests': [{
-                'id': 'test#1',
-                'name': 'test_spam',
-                'source': '{}:{}'.format(relfile, 10),
-                'markers': [],
-                'parentid': 'file#1',
-                }],
-            }]
+                "tests": [
+                    {
+                        "id": "test#1",
+                        "name": "test_spam",
+                        "source": "{}:{}".format(relfile, 10),
+                        "markers": [],
+                        "parentid": "file#1",
+                    }
+                ],
+            }
+        ]
 
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [
-            ('send', (expected,), None),
-            ])
+        self.assertEqual(stub.calls, [("send", (expected,), None),])
 
     def test_multiroot(self):
         stub = StubSender()
         # the first root
-        testroot1 = fix_path('/a/b/c')
-        relfileid1 = './test_spam.py'
+        testroot1 = fix_path("/a/b/c")
+        relfileid1 = "./test_spam.py"
         relpath1 = fix_path(relfileid1)
         relfile1 = relpath1[2:]
         tests = [
             TestInfo(
-                id=relfileid1 + '::test_spam',
-                name='test_spam',
-                path=TestPath(
-                    root=testroot1,
-                    relfile=relfile1,
-                    func='test_spam',
-                    ),
-                source='{}:{}'.format(relfile1, 10),
+                id=relfileid1 + "::test_spam",
+                name="test_spam",
+                path=TestPath(root=testroot1, relfile=relfile1, func="test_spam",),
+                source="{}:{}".format(relfile1, 10),
                 markers=[],
                 parentid=relfileid1,
-                ),
-            ]
+            ),
+        ]
         parents = [
-            ParentInfo(
-                id='.',
-                kind='folder',
-                name=testroot1,
-                ),
+            ParentInfo(id=".", kind="folder", name=testroot1,),
             ParentInfo(
                 id=relfileid1,
-                kind='file',
-                name='test_spam.py',
+                kind="file",
+                name="test_spam.py",
                 root=testroot1,
                 relpath=relpath1,
-                parentid='.',
-                ),
-            ]
+                parentid=".",
+            ),
+        ]
         expected = [
-            {'rootid': '.',
-             'root': testroot1,
-             'parents': [
-                 {'id': relfileid1,
-                  'kind': 'file',
-                  'name': 'test_spam.py',
-                  'relpath': relpath1,
-                  'parentid': '.',
-                  },
-                 ],
-             'tests': [{
-                 'id': relfileid1 + '::test_spam',
-                 'name': 'test_spam',
-                 'source': '{}:{}'.format(relfile1, 10),
-                 'markers': [],
-                 'parentid': relfileid1,
-                 }],
-             },
-            ]
+            {
+                "rootid": ".",
+                "root": testroot1,
+                "parents": [
+                    {
+                        "id": relfileid1,
+                        "kind": "file",
+                        "name": "test_spam.py",
+                        "relpath": relpath1,
+                        "parentid": ".",
+                    },
+                ],
+                "tests": [
+                    {
+                        "id": relfileid1 + "::test_spam",
+                        "name": "test_spam",
+                        "source": "{}:{}".format(relfile1, 10),
+                        "markers": [],
+                        "parentid": relfileid1,
+                    }
+                ],
+            },
+        ]
         # the second root
-        testroot2 = fix_path('/x/y/z')
-        relfileid2 = './w/test_eggs.py'
+        testroot2 = fix_path("/x/y/z")
+        relfileid2 = "./w/test_eggs.py"
         relpath2 = fix_path(relfileid2)
         relfile2 = relpath2[2:]
-        tests.extend([
-            TestInfo(
-                id=relfileid2 + '::BasicTests::test_first',
-                name='test_first',
-                path=TestPath(
-                    root=testroot2,
-                    relfile=relfile2,
-                    func='BasicTests.test_first',
+        tests.extend(
+            [
+                TestInfo(
+                    id=relfileid2 + "::BasicTests::test_first",
+                    name="test_first",
+                    path=TestPath(
+                        root=testroot2, relfile=relfile2, func="BasicTests.test_first",
                     ),
-                source='{}:{}'.format(relfile2, 61),
-                markers=[],
-                parentid=relfileid2 + '::BasicTests',
+                    source="{}:{}".format(relfile2, 61),
+                    markers=[],
+                    parentid=relfileid2 + "::BasicTests",
                 ),
-            ])
-        parents.extend([
-            ParentInfo(
-                id='.',
-                kind='folder',
-                name=testroot2,
+            ]
+        )
+        parents.extend(
+            [
+                ParentInfo(id=".", kind="folder", name=testroot2,),
+                ParentInfo(
+                    id="./w",
+                    kind="folder",
+                    name="w",
+                    root=testroot2,
+                    relpath=fix_path("./w"),
+                    parentid=".",
                 ),
-            ParentInfo(
-                id='./w',
-                kind='folder',
-                name='w',
-                root=testroot2,
-                relpath=fix_path('./w'),
-                parentid='.',
+                ParentInfo(
+                    id=relfileid2,
+                    kind="file",
+                    name="test_eggs.py",
+                    root=testroot2,
+                    relpath=relpath2,
+                    parentid="./w",
                 ),
-            ParentInfo(
-                id=relfileid2,
-                kind='file',
-                name='test_eggs.py',
-                root=testroot2,
-                relpath=relpath2,
-                parentid='./w',
+                ParentInfo(
+                    id=relfileid2 + "::BasicTests",
+                    kind="suite",
+                    name="BasicTests",
+                    root=testroot2,
+                    parentid=relfileid2,
                 ),
-            ParentInfo(
-                id=relfileid2 + '::BasicTests',
-                kind='suite',
-                name='BasicTests',
-                root=testroot2,
-                parentid=relfileid2,
-                ),
-            ])
-        expected.extend([
-            {'rootid': '.',
-             'root': testroot2,
-             'parents': [
-                 {'id': './w',
-                  'kind': 'folder',
-                  'name': 'w',
-                  'relpath': fix_path('./w'),
-                  'parentid': '.',
-                  },
-                 {'id': relfileid2,
-                  'kind': 'file',
-                  'name': 'test_eggs.py',
-                  'relpath': relpath2,
-                  'parentid': './w',
-                  },
-                 {'id': relfileid2 + '::BasicTests',
-                  'kind': 'suite',
-                  'name': 'BasicTests',
-                  'parentid': relfileid2,
-                  },
-                 ],
-             'tests': [{
-                 'id': relfileid2 + '::BasicTests::test_first',
-                 'name': 'test_first',
-                 'source': '{}:{}'.format(relfile2, 61),
-                 'markers': [],
-                 'parentid': relfileid2 + '::BasicTests',
-                 }],
-             },
-            ])
+            ]
+        )
+        expected.extend(
+            [
+                {
+                    "rootid": ".",
+                    "root": testroot2,
+                    "parents": [
+                        {
+                            "id": "./w",
+                            "kind": "folder",
+                            "name": "w",
+                            "relpath": fix_path("./w"),
+                            "parentid": ".",
+                        },
+                        {
+                            "id": relfileid2,
+                            "kind": "file",
+                            "name": "test_eggs.py",
+                            "relpath": relpath2,
+                            "parentid": "./w",
+                        },
+                        {
+                            "id": relfileid2 + "::BasicTests",
+                            "kind": "suite",
+                            "name": "BasicTests",
+                            "parentid": relfileid2,
+                        },
+                    ],
+                    "tests": [
+                        {
+                            "id": relfileid2 + "::BasicTests::test_first",
+                            "name": "test_first",
+                            "source": "{}:{}".format(relfile2, 61),
+                            "markers": [],
+                            "parentid": relfileid2 + "::BasicTests",
+                        }
+                    ],
+                },
+            ]
+        )
 
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [
-            ('send', (expected,), None),
-            ])
+        self.assertEqual(stub.calls, [("send", (expected,), None),])
 
     def test_complex(self):
         """
@@ -263,549 +257,558 @@ class ReportDiscoveredTests(unittest.TestCase):
                 test_okay
         """
         stub = StubSender()
-        testroot = fix_path('/a/b/c')
-        relfileid1 = './test_ham.py'
-        relfileid2 = './test_spam.py'
-        relfileid3 = './w/test_ham.py'
-        relfileid4 = './w/test_eggs.py'
-        relfileid5 = './x/y/a/test_spam.py'
-        relfileid6 = './x/y/b/test_spam.py'
+        testroot = fix_path("/a/b/c")
+        relfileid1 = "./test_ham.py"
+        relfileid2 = "./test_spam.py"
+        relfileid3 = "./w/test_ham.py"
+        relfileid4 = "./w/test_eggs.py"
+        relfileid5 = "./x/y/a/test_spam.py"
+        relfileid6 = "./x/y/b/test_spam.py"
         tests = [
             TestInfo(
-                id=relfileid1 + '::MySuite::test_x1',
-                name='test_x1',
+                id=relfileid1 + "::MySuite::test_x1",
+                name="test_x1",
                 path=TestPath(
-                    root=testroot,
-                    relfile=fix_path(relfileid1),
-                    func='MySuite.test_x1',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid1), 10),
-                markers=None,
-                parentid=relfileid1 + '::MySuite',
+                    root=testroot, relfile=fix_path(relfileid1), func="MySuite.test_x1",
                 ),
+                source="{}:{}".format(fix_path(relfileid1), 10),
+                markers=None,
+                parentid=relfileid1 + "::MySuite",
+            ),
             TestInfo(
-                id=relfileid1 + '::MySuite::test_x2',
-                name='test_x2',
+                id=relfileid1 + "::MySuite::test_x2",
+                name="test_x2",
                 path=TestPath(
-                    root=testroot,
-                    relfile=fix_path(relfileid1),
-                    func='MySuite.test_x2',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid1), 21),
-                markers=None,
-                parentid=relfileid1 + '::MySuite',
+                    root=testroot, relfile=fix_path(relfileid1), func="MySuite.test_x2",
                 ),
+                source="{}:{}".format(fix_path(relfileid1), 21),
+                markers=None,
+                parentid=relfileid1 + "::MySuite",
+            ),
             TestInfo(
-                id=relfileid2 + '::SpamTests::test_okay',
-                name='test_okay',
+                id=relfileid2 + "::SpamTests::test_okay",
+                name="test_okay",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid2),
-                    func='SpamTests.test_okay',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid2), 17),
-                markers=None,
-                parentid=relfileid2 + '::SpamTests',
+                    func="SpamTests.test_okay",
                 ),
+                source="{}:{}".format(fix_path(relfileid2), 17),
+                markers=None,
+                parentid=relfileid2 + "::SpamTests",
+            ),
             TestInfo(
-                id=relfileid3 + '::test_ham1',
-                name='test_ham1',
+                id=relfileid3 + "::test_ham1",
+                name="test_ham1",
                 path=TestPath(
-                    root=testroot,
-                    relfile=fix_path(relfileid3),
-                    func='test_ham1',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid3), 8),
+                    root=testroot, relfile=fix_path(relfileid3), func="test_ham1",
+                ),
+                source="{}:{}".format(fix_path(relfileid3), 8),
                 markers=None,
                 parentid=relfileid3,
-                ),
+            ),
             TestInfo(
-                id=relfileid3 + '::HamTests::test_uh_oh',
-                name='test_uh_oh',
+                id=relfileid3 + "::HamTests::test_uh_oh",
+                name="test_uh_oh",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
-                    func='HamTests.test_uh_oh',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid3), 19),
-                markers=['expected-failure'],
-                parentid=relfileid3 + '::HamTests',
+                    func="HamTests.test_uh_oh",
                 ),
+                source="{}:{}".format(fix_path(relfileid3), 19),
+                markers=["expected-failure"],
+                parentid=relfileid3 + "::HamTests",
+            ),
             TestInfo(
-                id=relfileid3 + '::HamTests::test_whoa',
-                name='test_whoa',
+                id=relfileid3 + "::HamTests::test_whoa",
+                name="test_whoa",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
-                    func='HamTests.test_whoa',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid3), 35),
+                    func="HamTests.test_whoa",
+                ),
+                source="{}:{}".format(fix_path(relfileid3), 35),
                 markers=None,
-                parentid=relfileid3 + '::HamTests',
-                ),
+                parentid=relfileid3 + "::HamTests",
+            ),
             TestInfo(
-                id=relfileid3 + '::MoreHam::test_yay[1-2]',
-                name='test_yay[1-2]',
+                id=relfileid3 + "::MoreHam::test_yay[1-2]",
+                name="test_yay[1-2]",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
-                    func='MoreHam.test_yay',
-                    sub=['[1-2]'],
-                    ),
-                source='{}:{}'.format(fix_path(relfileid3), 57),
-                markers=None,
-                parentid=relfileid3 + '::MoreHam::test_yay',
+                    func="MoreHam.test_yay",
+                    sub=["[1-2]"],
                 ),
+                source="{}:{}".format(fix_path(relfileid3), 57),
+                markers=None,
+                parentid=relfileid3 + "::MoreHam::test_yay",
+            ),
             TestInfo(
-                id=relfileid3 + '::MoreHam::test_yay[1-2][3-4]',
-                name='test_yay[1-2][3-4]',
+                id=relfileid3 + "::MoreHam::test_yay[1-2][3-4]",
+                name="test_yay[1-2][3-4]",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid3),
-                    func='MoreHam.test_yay',
-                    sub=['[1-2]', '[3=4]'],
-                    ),
-                source='{}:{}'.format(fix_path(relfileid3), 72),
-                markers=None,
-                parentid=relfileid3 + '::MoreHam::test_yay[1-2]',
+                    func="MoreHam.test_yay",
+                    sub=["[1-2]", "[3=4]"],
                 ),
+                source="{}:{}".format(fix_path(relfileid3), 72),
+                markers=None,
+                parentid=relfileid3 + "::MoreHam::test_yay[1-2]",
+            ),
             TestInfo(
-                id=relfileid4 + '::SpamTests::test_okay',
-                name='test_okay',
+                id=relfileid4 + "::SpamTests::test_okay",
+                name="test_okay",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid4),
-                    func='SpamTests.test_okay',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid4), 15),
-                markers=None,
-                parentid=relfileid4 + '::SpamTests',
+                    func="SpamTests.test_okay",
                 ),
+                source="{}:{}".format(fix_path(relfileid4), 15),
+                markers=None,
+                parentid=relfileid4 + "::SpamTests",
+            ),
             TestInfo(
-                id=relfileid5 + '::SpamTests::test_okay',
-                name='test_okay',
+                id=relfileid5 + "::SpamTests::test_okay",
+                name="test_okay",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid5),
-                    func='SpamTests.test_okay',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid5), 12),
-                markers=None,
-                parentid=relfileid5 + '::SpamTests',
+                    func="SpamTests.test_okay",
                 ),
+                source="{}:{}".format(fix_path(relfileid5), 12),
+                markers=None,
+                parentid=relfileid5 + "::SpamTests",
+            ),
             TestInfo(
-                id=relfileid6 + '::SpamTests::test_okay',
-                name='test_okay',
+                id=relfileid6 + "::SpamTests::test_okay",
+                name="test_okay",
                 path=TestPath(
                     root=testroot,
                     relfile=fix_path(relfileid6),
-                    func='SpamTests.test_okay',
-                    ),
-                source='{}:{}'.format(fix_path(relfileid6), 27),
+                    func="SpamTests.test_okay",
+                ),
+                source="{}:{}".format(fix_path(relfileid6), 27),
                 markers=None,
-                parentid=relfileid6 + '::SpamTests',
-                ),
-            ]
+                parentid=relfileid6 + "::SpamTests",
+            ),
+        ]
         parents = [
-            ParentInfo(
-                id='.',
-                kind='folder',
-                name=testroot,
-                ),
-
+            ParentInfo(id=".", kind="folder", name=testroot,),
             ParentInfo(
                 id=relfileid1,
-                kind='file',
-                name='test_ham.py',
+                kind="file",
+                name="test_ham.py",
                 root=testroot,
                 relpath=fix_path(relfileid1),
-                parentid='.',
-                ),
+                parentid=".",
+            ),
             ParentInfo(
-                id=relfileid1 + '::MySuite',
-                kind='suite',
-                name='MySuite',
+                id=relfileid1 + "::MySuite",
+                kind="suite",
+                name="MySuite",
                 root=testroot,
                 parentid=relfileid1,
-                ),
-
+            ),
             ParentInfo(
                 id=relfileid2,
-                kind='file',
-                name='test_spam.py',
+                kind="file",
+                name="test_spam.py",
                 root=testroot,
                 relpath=fix_path(relfileid2),
-                parentid='.',
-                ),
+                parentid=".",
+            ),
             ParentInfo(
-                id=relfileid2 + '::SpamTests',
-                kind='suite',
-                name='SpamTests',
+                id=relfileid2 + "::SpamTests",
+                kind="suite",
+                name="SpamTests",
                 root=testroot,
                 parentid=relfileid2,
-                ),
-
+            ),
             ParentInfo(
-                id='./w',
-                kind='folder',
-                name='w',
+                id="./w",
+                kind="folder",
+                name="w",
                 root=testroot,
-                relpath=fix_path('./w'),
-                parentid='.',
-                ),
+                relpath=fix_path("./w"),
+                parentid=".",
+            ),
             ParentInfo(
                 id=relfileid3,
-                kind='file',
-                name='test_ham.py',
+                kind="file",
+                name="test_ham.py",
                 root=testroot,
                 relpath=fix_path(relfileid3),
-                parentid='./w',
-                ),
+                parentid="./w",
+            ),
             ParentInfo(
-                id=relfileid3 + '::HamTests',
-                kind='suite',
-                name='HamTests',
+                id=relfileid3 + "::HamTests",
+                kind="suite",
+                name="HamTests",
                 root=testroot,
                 parentid=relfileid3,
-                ),
+            ),
             ParentInfo(
-                id=relfileid3 + '::MoreHam',
-                kind='suite',
-                name='MoreHam',
+                id=relfileid3 + "::MoreHam",
+                kind="suite",
+                name="MoreHam",
                 root=testroot,
                 parentid=relfileid3,
-                ),
+            ),
             ParentInfo(
-                id=relfileid3 + '::MoreHam::test_yay',
-                kind='function',
-                name='test_yay',
+                id=relfileid3 + "::MoreHam::test_yay",
+                kind="function",
+                name="test_yay",
                 root=testroot,
-                parentid=relfileid3 + '::MoreHam',
-                ),
+                parentid=relfileid3 + "::MoreHam",
+            ),
             ParentInfo(
-                id=relfileid3 + '::MoreHam::test_yay[1-2]',
-                kind='subtest',
-                name='test_yay[1-2]',
+                id=relfileid3 + "::MoreHam::test_yay[1-2]",
+                kind="subtest",
+                name="test_yay[1-2]",
                 root=testroot,
-                parentid=relfileid3 + '::MoreHam::test_yay',
-                ),
-
+                parentid=relfileid3 + "::MoreHam::test_yay",
+            ),
             ParentInfo(
                 id=relfileid4,
-                kind='file',
-                name='test_eggs.py',
+                kind="file",
+                name="test_eggs.py",
                 root=testroot,
                 relpath=fix_path(relfileid4),
-                parentid='./w',
-                ),
+                parentid="./w",
+            ),
             ParentInfo(
-                id=relfileid4 + '::SpamTests',
-                kind='suite',
-                name='SpamTests',
+                id=relfileid4 + "::SpamTests",
+                kind="suite",
+                name="SpamTests",
                 root=testroot,
                 parentid=relfileid4,
-                ),
-
+            ),
             ParentInfo(
-                id='./x',
-                kind='folder',
-                name='x',
+                id="./x",
+                kind="folder",
+                name="x",
                 root=testroot,
-                relpath=fix_path('./x'),
-                parentid='.',
-                ),
+                relpath=fix_path("./x"),
+                parentid=".",
+            ),
             ParentInfo(
-                id='./x/y',
-                kind='folder',
-                name='y',
+                id="./x/y",
+                kind="folder",
+                name="y",
                 root=testroot,
-                relpath=fix_path('./x/y'),
-                parentid='./x',
-                ),
+                relpath=fix_path("./x/y"),
+                parentid="./x",
+            ),
             ParentInfo(
-                id='./x/y/a',
-                kind='folder',
-                name='a',
+                id="./x/y/a",
+                kind="folder",
+                name="a",
                 root=testroot,
-                relpath=fix_path('./x/y/a'),
-                parentid='./x/y',
-                ),
+                relpath=fix_path("./x/y/a"),
+                parentid="./x/y",
+            ),
             ParentInfo(
                 id=relfileid5,
-                kind='file',
-                name='test_spam.py',
+                kind="file",
+                name="test_spam.py",
                 root=testroot,
                 relpath=fix_path(relfileid5),
-                parentid='./x/y/a',
-                ),
+                parentid="./x/y/a",
+            ),
             ParentInfo(
-                id=relfileid5 + '::SpamTests',
-                kind='suite',
-                name='SpamTests',
+                id=relfileid5 + "::SpamTests",
+                kind="suite",
+                name="SpamTests",
                 root=testroot,
                 parentid=relfileid5,
-                ),
-
+            ),
             ParentInfo(
-                id='./x/y/b',
-                kind='folder',
-                name='b',
+                id="./x/y/b",
+                kind="folder",
+                name="b",
                 root=testroot,
-                relpath=fix_path('./x/y/b'),
-                parentid='./x/y',
-                ),
+                relpath=fix_path("./x/y/b"),
+                parentid="./x/y",
+            ),
             ParentInfo(
                 id=relfileid6,
-                kind='file',
-                name='test_spam.py',
+                kind="file",
+                name="test_spam.py",
                 root=testroot,
                 relpath=fix_path(relfileid6),
-                parentid='./x/y/b',
-                ),
+                parentid="./x/y/b",
+            ),
             ParentInfo(
-                id=relfileid6 + '::SpamTests',
-                kind='suite',
-                name='SpamTests',
+                id=relfileid6 + "::SpamTests",
+                kind="suite",
+                name="SpamTests",
                 root=testroot,
                 parentid=relfileid6,
-                ),
-            ]
-        expected = [{
-            'rootid': '.',
-            'root': testroot,
-            'parents': [
-                 {'id': relfileid1,
-                  'kind': 'file',
-                  'name': 'test_ham.py',
-                  'relpath': fix_path(relfileid1),
-                  'parentid': '.',
-                  },
-                 {'id': relfileid1 + '::MySuite',
-                  'kind': 'suite',
-                  'name': 'MySuite',
-                  'parentid': relfileid1,
-                  },
-
-                 {'id': relfileid2,
-                  'kind': 'file',
-                  'name': 'test_spam.py',
-                  'relpath': fix_path(relfileid2),
-                  'parentid': '.',
-                  },
-                 {'id': relfileid2 + '::SpamTests',
-                  'kind': 'suite',
-                  'name': 'SpamTests',
-                  'parentid': relfileid2,
-                  },
-
-                 {'id': './w',
-                  'kind': 'folder',
-                  'name': 'w',
-                  'relpath': fix_path('./w'),
-                  'parentid': '.',
-                  },
-                 {'id': relfileid3,
-                  'kind': 'file',
-                  'name': 'test_ham.py',
-                  'relpath': fix_path(relfileid3),
-                  'parentid': './w',
-                  },
-                 {'id': relfileid3 + '::HamTests',
-                  'kind': 'suite',
-                  'name': 'HamTests',
-                  'parentid': relfileid3,
-                  },
-                 {'id': relfileid3 + '::MoreHam',
-                  'kind': 'suite',
-                  'name': 'MoreHam',
-                  'parentid': relfileid3,
-                  },
-                 {'id': relfileid3 + '::MoreHam::test_yay',
-                  'kind': 'function',
-                  'name': 'test_yay',
-                  'parentid': relfileid3 + '::MoreHam',
-                  },
-                 {'id': relfileid3 + '::MoreHam::test_yay[1-2]',
-                  'kind': 'subtest',
-                  'name': 'test_yay[1-2]',
-                  'parentid': relfileid3 + '::MoreHam::test_yay',
-                  },
-
-                 {'id': relfileid4,
-                  'kind': 'file',
-                  'name': 'test_eggs.py',
-                  'relpath': fix_path(relfileid4),
-                  'parentid': './w',
-                  },
-                 {'id': relfileid4 + '::SpamTests',
-                  'kind': 'suite',
-                  'name': 'SpamTests',
-                  'parentid': relfileid4,
-                  },
-
-                 {'id': './x',
-                  'kind': 'folder',
-                  'name': 'x',
-                  'relpath': fix_path('./x'),
-                  'parentid': '.',
-                  },
-                 {'id': './x/y',
-                  'kind': 'folder',
-                  'name': 'y',
-                  'relpath': fix_path('./x/y'),
-                  'parentid': './x',
-                  },
-                 {'id': './x/y/a',
-                  'kind': 'folder',
-                  'name': 'a',
-                  'relpath': fix_path('./x/y/a'),
-                  'parentid': './x/y',
-                  },
-                 {'id': relfileid5,
-                  'kind': 'file',
-                  'name': 'test_spam.py',
-                  'relpath': fix_path(relfileid5),
-                  'parentid': './x/y/a',
-                  },
-                 {'id': relfileid5 + '::SpamTests',
-                  'kind': 'suite',
-                  'name': 'SpamTests',
-                  'parentid': relfileid5,
-                  },
-
-                 {'id': './x/y/b',
-                  'kind': 'folder',
-                  'name': 'b',
-                  'relpath': fix_path('./x/y/b'),
-                  'parentid': './x/y',
-                  },
-                 {'id': relfileid6,
-                  'kind': 'file',
-                  'name': 'test_spam.py',
-                  'relpath': fix_path(relfileid6),
-                  'parentid': './x/y/b',
-                  },
-                 {'id': relfileid6 + '::SpamTests',
-                  'kind': 'suite',
-                  'name': 'SpamTests',
-                  'parentid': relfileid6,
-                  },
+            ),
+        ]
+        expected = [
+            {
+                "rootid": ".",
+                "root": testroot,
+                "parents": [
+                    {
+                        "id": relfileid1,
+                        "kind": "file",
+                        "name": "test_ham.py",
+                        "relpath": fix_path(relfileid1),
+                        "parentid": ".",
+                    },
+                    {
+                        "id": relfileid1 + "::MySuite",
+                        "kind": "suite",
+                        "name": "MySuite",
+                        "parentid": relfileid1,
+                    },
+                    {
+                        "id": relfileid2,
+                        "kind": "file",
+                        "name": "test_spam.py",
+                        "relpath": fix_path(relfileid2),
+                        "parentid": ".",
+                    },
+                    {
+                        "id": relfileid2 + "::SpamTests",
+                        "kind": "suite",
+                        "name": "SpamTests",
+                        "parentid": relfileid2,
+                    },
+                    {
+                        "id": "./w",
+                        "kind": "folder",
+                        "name": "w",
+                        "relpath": fix_path("./w"),
+                        "parentid": ".",
+                    },
+                    {
+                        "id": relfileid3,
+                        "kind": "file",
+                        "name": "test_ham.py",
+                        "relpath": fix_path(relfileid3),
+                        "parentid": "./w",
+                    },
+                    {
+                        "id": relfileid3 + "::HamTests",
+                        "kind": "suite",
+                        "name": "HamTests",
+                        "parentid": relfileid3,
+                    },
+                    {
+                        "id": relfileid3 + "::MoreHam",
+                        "kind": "suite",
+                        "name": "MoreHam",
+                        "parentid": relfileid3,
+                    },
+                    {
+                        "id": relfileid3 + "::MoreHam::test_yay",
+                        "kind": "function",
+                        "name": "test_yay",
+                        "parentid": relfileid3 + "::MoreHam",
+                    },
+                    {
+                        "id": relfileid3 + "::MoreHam::test_yay[1-2]",
+                        "kind": "subtest",
+                        "name": "test_yay[1-2]",
+                        "parentid": relfileid3 + "::MoreHam::test_yay",
+                    },
+                    {
+                        "id": relfileid4,
+                        "kind": "file",
+                        "name": "test_eggs.py",
+                        "relpath": fix_path(relfileid4),
+                        "parentid": "./w",
+                    },
+                    {
+                        "id": relfileid4 + "::SpamTests",
+                        "kind": "suite",
+                        "name": "SpamTests",
+                        "parentid": relfileid4,
+                    },
+                    {
+                        "id": "./x",
+                        "kind": "folder",
+                        "name": "x",
+                        "relpath": fix_path("./x"),
+                        "parentid": ".",
+                    },
+                    {
+                        "id": "./x/y",
+                        "kind": "folder",
+                        "name": "y",
+                        "relpath": fix_path("./x/y"),
+                        "parentid": "./x",
+                    },
+                    {
+                        "id": "./x/y/a",
+                        "kind": "folder",
+                        "name": "a",
+                        "relpath": fix_path("./x/y/a"),
+                        "parentid": "./x/y",
+                    },
+                    {
+                        "id": relfileid5,
+                        "kind": "file",
+                        "name": "test_spam.py",
+                        "relpath": fix_path(relfileid5),
+                        "parentid": "./x/y/a",
+                    },
+                    {
+                        "id": relfileid5 + "::SpamTests",
+                        "kind": "suite",
+                        "name": "SpamTests",
+                        "parentid": relfileid5,
+                    },
+                    {
+                        "id": "./x/y/b",
+                        "kind": "folder",
+                        "name": "b",
+                        "relpath": fix_path("./x/y/b"),
+                        "parentid": "./x/y",
+                    },
+                    {
+                        "id": relfileid6,
+                        "kind": "file",
+                        "name": "test_spam.py",
+                        "relpath": fix_path(relfileid6),
+                        "parentid": "./x/y/b",
+                    },
+                    {
+                        "id": relfileid6 + "::SpamTests",
+                        "kind": "suite",
+                        "name": "SpamTests",
+                        "parentid": relfileid6,
+                    },
                 ],
-            'tests': [
-                {'id': relfileid1 + '::MySuite::test_x1',
-                 'name': 'test_x1',
-                 'source': '{}:{}'.format(fix_path(relfileid1), 10),
-                 'markers': [],
-                 'parentid': relfileid1 + '::MySuite',
-                 },
-                {'id': relfileid1 + '::MySuite::test_x2',
-                 'name': 'test_x2',
-                 'source': '{}:{}'.format(fix_path(relfileid1), 21),
-                 'markers': [],
-                 'parentid': relfileid1 + '::MySuite',
-                 },
-                {'id': relfileid2 + '::SpamTests::test_okay',
-                 'name': 'test_okay',
-                 'source': '{}:{}'.format(fix_path(relfileid2), 17),
-                 'markers': [],
-                 'parentid': relfileid2 + '::SpamTests',
-                 },
-                {'id': relfileid3 + '::test_ham1',
-                 'name': 'test_ham1',
-                 'source': '{}:{}'.format(fix_path(relfileid3), 8),
-                 'markers': [],
-                 'parentid': relfileid3,
-                 },
-                {'id': relfileid3 + '::HamTests::test_uh_oh',
-                 'name': 'test_uh_oh',
-                 'source': '{}:{}'.format(fix_path(relfileid3), 19),
-                 'markers': ['expected-failure'],
-                 'parentid': relfileid3 + '::HamTests',
-                 },
-                {'id': relfileid3 + '::HamTests::test_whoa',
-                 'name': 'test_whoa',
-                 'source': '{}:{}'.format(fix_path(relfileid3), 35),
-                 'markers': [],
-                 'parentid': relfileid3 + '::HamTests',
-                 },
-                {'id': relfileid3 + '::MoreHam::test_yay[1-2]',
-                 'name': 'test_yay[1-2]',
-                 'source': '{}:{}'.format(fix_path(relfileid3), 57),
-                 'markers': [],
-                 'parentid': relfileid3 + '::MoreHam::test_yay',
-                 },
-                {'id': relfileid3 + '::MoreHam::test_yay[1-2][3-4]',
-                 'name': 'test_yay[1-2][3-4]',
-                 'source': '{}:{}'.format(fix_path(relfileid3), 72),
-                 'markers': [],
-                 'parentid': relfileid3 + '::MoreHam::test_yay[1-2]',
-                 },
-                {'id': relfileid4 + '::SpamTests::test_okay',
-                 'name': 'test_okay',
-                 'source': '{}:{}'.format(fix_path(relfileid4), 15),
-                 'markers': [],
-                 'parentid': relfileid4 + '::SpamTests',
-                 },
-                {'id': relfileid5 + '::SpamTests::test_okay',
-                 'name': 'test_okay',
-                 'source': '{}:{}'.format(fix_path(relfileid5), 12),
-                 'markers': [],
-                 'parentid': relfileid5 + '::SpamTests',
-                 },
-                {'id': relfileid6 + '::SpamTests::test_okay',
-                 'name': 'test_okay',
-                 'source': '{}:{}'.format(fix_path(relfileid6), 27),
-                 'markers': [],
-                 'parentid': relfileid6 + '::SpamTests',
-                 },
+                "tests": [
+                    {
+                        "id": relfileid1 + "::MySuite::test_x1",
+                        "name": "test_x1",
+                        "source": "{}:{}".format(fix_path(relfileid1), 10),
+                        "markers": [],
+                        "parentid": relfileid1 + "::MySuite",
+                    },
+                    {
+                        "id": relfileid1 + "::MySuite::test_x2",
+                        "name": "test_x2",
+                        "source": "{}:{}".format(fix_path(relfileid1), 21),
+                        "markers": [],
+                        "parentid": relfileid1 + "::MySuite",
+                    },
+                    {
+                        "id": relfileid2 + "::SpamTests::test_okay",
+                        "name": "test_okay",
+                        "source": "{}:{}".format(fix_path(relfileid2), 17),
+                        "markers": [],
+                        "parentid": relfileid2 + "::SpamTests",
+                    },
+                    {
+                        "id": relfileid3 + "::test_ham1",
+                        "name": "test_ham1",
+                        "source": "{}:{}".format(fix_path(relfileid3), 8),
+                        "markers": [],
+                        "parentid": relfileid3,
+                    },
+                    {
+                        "id": relfileid3 + "::HamTests::test_uh_oh",
+                        "name": "test_uh_oh",
+                        "source": "{}:{}".format(fix_path(relfileid3), 19),
+                        "markers": ["expected-failure"],
+                        "parentid": relfileid3 + "::HamTests",
+                    },
+                    {
+                        "id": relfileid3 + "::HamTests::test_whoa",
+                        "name": "test_whoa",
+                        "source": "{}:{}".format(fix_path(relfileid3), 35),
+                        "markers": [],
+                        "parentid": relfileid3 + "::HamTests",
+                    },
+                    {
+                        "id": relfileid3 + "::MoreHam::test_yay[1-2]",
+                        "name": "test_yay[1-2]",
+                        "source": "{}:{}".format(fix_path(relfileid3), 57),
+                        "markers": [],
+                        "parentid": relfileid3 + "::MoreHam::test_yay",
+                    },
+                    {
+                        "id": relfileid3 + "::MoreHam::test_yay[1-2][3-4]",
+                        "name": "test_yay[1-2][3-4]",
+                        "source": "{}:{}".format(fix_path(relfileid3), 72),
+                        "markers": [],
+                        "parentid": relfileid3 + "::MoreHam::test_yay[1-2]",
+                    },
+                    {
+                        "id": relfileid4 + "::SpamTests::test_okay",
+                        "name": "test_okay",
+                        "source": "{}:{}".format(fix_path(relfileid4), 15),
+                        "markers": [],
+                        "parentid": relfileid4 + "::SpamTests",
+                    },
+                    {
+                        "id": relfileid5 + "::SpamTests::test_okay",
+                        "name": "test_okay",
+                        "source": "{}:{}".format(fix_path(relfileid5), 12),
+                        "markers": [],
+                        "parentid": relfileid5 + "::SpamTests",
+                    },
+                    {
+                        "id": relfileid6 + "::SpamTests::test_okay",
+                        "name": "test_okay",
+                        "source": "{}:{}".format(fix_path(relfileid6), 27),
+                        "markers": [],
+                        "parentid": relfileid6 + "::SpamTests",
+                    },
                 ],
-            }]
+            }
+        ]
 
         report_discovered(tests, parents, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [
-            ('send', (expected,), None),
-            ])
+        self.assertEqual(stub.calls, [("send", (expected,), None),])
 
     def test_simple_basic(self):
         stub = StubSender()
-        testroot = fix_path('/a/b/c')
-        relfile = fix_path('x/y/z/test_spam.py')
+        testroot = fix_path("/a/b/c")
+        relfile = fix_path("x/y/z/test_spam.py")
         tests = [
             TestInfo(
-                id='test#1',
-                name='test_spam_1',
+                id="test#1",
+                name="test_spam_1",
                 path=TestPath(
                     root=testroot,
                     relfile=relfile,
-                    func='MySuite.test_spam_1',
+                    func="MySuite.test_spam_1",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile, 10),
-                markers=None,
-                parentid='suite#1',
                 ),
-            ]
+                source="{}:{}".format(relfile, 10),
+                markers=None,
+                parentid="suite#1",
+            ),
+        ]
         parents = None
-        expected = [{
-            'id': 'test#1',
-            'name': 'test_spam_1',
-            'testroot': testroot,
-            'relfile': relfile,
-            'lineno': 10,
-            'testfunc': 'MySuite.test_spam_1',
-            'subtest': None,
-            'markers': [],
-            }]
+        expected = [
+            {
+                "id": "test#1",
+                "name": "test_spam_1",
+                "testroot": testroot,
+                "relfile": relfile,
+                "lineno": 10,
+                "testfunc": "MySuite.test_spam_1",
+                "subtest": None,
+                "markers": [],
+            }
+        ]
 
-        report_discovered(tests, parents, simple=True,
-                          _send=stub.send)
+        report_discovered(tests, parents, simple=True, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [
-            ('send', (expected,), None),
-            ])
+        self.assertEqual(stub.calls, [("send", (expected,), None),])
 
     def test_simple_complex(self):
         """
@@ -844,267 +847,267 @@ class ReportDiscoveredTests(unittest.TestCase):
                 test_okay
         """
         stub = StubSender()
-        testroot1 = fix_path('/a/b/c')
-        relfile1 = fix_path('./test_ham.py')
-        testroot2 = fix_path('/a/b/e/f/g')
-        relfile2 = fix_path('./test_spam.py')
-        relfile3 = fix_path('w/test_ham.py')
-        relfile4 = fix_path('w/test_eggs.py')
-        relfile5 = fix_path('x/y/a/test_spam.py')
-        relfile6 = fix_path('x/y/b/test_spam.py')
+        testroot1 = fix_path("/a/b/c")
+        relfile1 = fix_path("./test_ham.py")
+        testroot2 = fix_path("/a/b/e/f/g")
+        relfile2 = fix_path("./test_spam.py")
+        relfile3 = fix_path("w/test_ham.py")
+        relfile4 = fix_path("w/test_eggs.py")
+        relfile5 = fix_path("x/y/a/test_spam.py")
+        relfile6 = fix_path("x/y/b/test_spam.py")
         tests = [
             # under first root folder
             TestInfo(
-                id='test#1',
-                name='test_x1',
+                id="test#1",
+                name="test_x1",
                 path=TestPath(
-                    root=testroot1,
-                    relfile=relfile1,
-                    func='MySuite.test_x1',
-                    sub=None,
-                    ),
-                source='{}:{}'.format(relfile1, 10),
-                markers=None,
-                parentid='suite#1',
+                    root=testroot1, relfile=relfile1, func="MySuite.test_x1", sub=None,
                 ),
+                source="{}:{}".format(relfile1, 10),
+                markers=None,
+                parentid="suite#1",
+            ),
             TestInfo(
-                id='test#2',
-                name='test_x2',
+                id="test#2",
+                name="test_x2",
                 path=TestPath(
-                    root=testroot1,
-                    relfile=relfile1,
-                    func='MySuite.test_x2',
-                    sub=None,
-                    ),
-                source='{}:{}'.format(relfile1, 21),
-                markers=None,
-                parentid='suite#1',
+                    root=testroot1, relfile=relfile1, func="MySuite.test_x2", sub=None,
                 ),
+                source="{}:{}".format(relfile1, 21),
+                markers=None,
+                parentid="suite#1",
+            ),
             # under second root folder
             TestInfo(
-                id='test#3',
-                name='test_okay',
+                id="test#3",
+                name="test_okay",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile2,
-                    func='SpamTests.test_okay',
+                    func="SpamTests.test_okay",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile2, 17),
-                markers=None,
-                parentid='suite#2',
                 ),
+                source="{}:{}".format(relfile2, 17),
+                markers=None,
+                parentid="suite#2",
+            ),
             TestInfo(
-                id='test#4',
-                name='test_ham1',
+                id="test#4",
+                name="test_ham1",
+                path=TestPath(
+                    root=testroot2, relfile=relfile3, func="test_ham1", sub=None,
+                ),
+                source="{}:{}".format(relfile3, 8),
+                markers=None,
+                parentid="file#3",
+            ),
+            TestInfo(
+                id="test#5",
+                name="test_uh_oh",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile3,
-                    func='test_ham1',
+                    func="HamTests.test_uh_oh",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile3, 8),
-                markers=None,
-                parentid='file#3',
                 ),
+                source="{}:{}".format(relfile3, 19),
+                markers=["expected-failure"],
+                parentid="suite#3",
+            ),
             TestInfo(
-                id='test#5',
-                name='test_uh_oh',
+                id="test#6",
+                name="test_whoa",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile3,
-                    func='HamTests.test_uh_oh',
+                    func="HamTests.test_whoa",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile3, 19),
-                markers=['expected-failure'],
-                parentid='suite#3',
                 ),
+                source="{}:{}".format(relfile3, 35),
+                markers=None,
+                parentid="suite#3",
+            ),
             TestInfo(
-                id='test#6',
-                name='test_whoa',
+                id="test#7",
+                name="test_yay (sub1)",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile3,
-                    func='HamTests.test_whoa',
-                    sub=None,
-                    ),
-                source='{}:{}'.format(relfile3, 35),
-                markers=None,
-                parentid='suite#3',
+                    func="MoreHam.test_yay",
+                    sub=["sub1"],
                 ),
+                source="{}:{}".format(relfile3, 57),
+                markers=None,
+                parentid="suite#4",
+            ),
             TestInfo(
-                id='test#7',
-                name='test_yay (sub1)',
+                id="test#8",
+                name="test_yay (sub2) (sub3)",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile3,
-                    func='MoreHam.test_yay',
-                    sub=['sub1'],
-                    ),
-                source='{}:{}'.format(relfile3, 57),
-                markers=None,
-                parentid='suite#4',
+                    func="MoreHam.test_yay",
+                    sub=["sub2", "sub3"],
                 ),
-            TestInfo(
-                id='test#8',
-                name='test_yay (sub2) (sub3)',
-                path=TestPath(
-                    root=testroot2,
-                    relfile=relfile3,
-                    func='MoreHam.test_yay',
-                    sub=['sub2', 'sub3'],
-                    ),
-                source='{}:{}'.format(relfile3, 72),
+                source="{}:{}".format(relfile3, 72),
                 markers=None,
-                parentid='suite#3',
-                ),
+                parentid="suite#3",
+            ),
             TestInfo(
-                id='test#9',
-                name='test_okay',
+                id="test#9",
+                name="test_okay",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile4,
-                    func='SpamTests.test_okay',
+                    func="SpamTests.test_okay",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile4, 15),
-                markers=None,
-                parentid='suite#5',
                 ),
+                source="{}:{}".format(relfile4, 15),
+                markers=None,
+                parentid="suite#5",
+            ),
             TestInfo(
-                id='test#10',
-                name='test_okay',
+                id="test#10",
+                name="test_okay",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile5,
-                    func='SpamTests.test_okay',
+                    func="SpamTests.test_okay",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile5, 12),
-                markers=None,
-                parentid='suite#6',
                 ),
+                source="{}:{}".format(relfile5, 12),
+                markers=None,
+                parentid="suite#6",
+            ),
             TestInfo(
-                id='test#11',
-                name='test_okay',
+                id="test#11",
+                name="test_okay",
                 path=TestPath(
                     root=testroot2,
                     relfile=relfile6,
-                    func='SpamTests.test_okay',
+                    func="SpamTests.test_okay",
                     sub=None,
-                    ),
-                source='{}:{}'.format(relfile6, 27),
-                markers=None,
-                parentid='suite#7',
                 ),
-            ]
-        expected = [{
-            'id': 'test#1',
-            'name': 'test_x1',
-            'testroot': testroot1,
-            'relfile': relfile1,
-            'lineno': 10,
-            'testfunc': 'MySuite.test_x1',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#2',
-            'name': 'test_x2',
-            'testroot': testroot1,
-            'relfile': relfile1,
-            'lineno': 21,
-            'testfunc': 'MySuite.test_x2',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#3',
-            'name': 'test_okay',
-            'testroot': testroot2,
-            'relfile': relfile2,
-            'lineno': 17,
-            'testfunc': 'SpamTests.test_okay',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#4',
-            'name': 'test_ham1',
-            'testroot': testroot2,
-            'relfile': relfile3,
-            'lineno': 8,
-            'testfunc': 'test_ham1',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#5',
-            'name': 'test_uh_oh',
-            'testroot': testroot2,
-            'relfile': relfile3,
-            'lineno': 19,
-            'testfunc': 'HamTests.test_uh_oh',
-            'subtest': None,
-            'markers': ['expected-failure'],
-            }, {
-            'id': 'test#6',
-            'name': 'test_whoa',
-            'testroot': testroot2,
-            'relfile': relfile3,
-            'lineno': 35,
-            'testfunc': 'HamTests.test_whoa',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#7',
-            'name': 'test_yay (sub1)',
-            'testroot': testroot2,
-            'relfile': relfile3,
-            'lineno': 57,
-            'testfunc': 'MoreHam.test_yay',
-            'subtest': ['sub1'],
-            'markers': [],
-            }, {
-            'id': 'test#8',
-            'name': 'test_yay (sub2) (sub3)',
-            'testroot': testroot2,
-            'relfile': relfile3,
-            'lineno': 72,
-            'testfunc': 'MoreHam.test_yay',
-            'subtest': ['sub2', 'sub3'],
-            'markers': [],
-            }, {
-            'id': 'test#9',
-            'name': 'test_okay',
-            'testroot': testroot2,
-            'relfile': relfile4,
-            'lineno': 15,
-            'testfunc': 'SpamTests.test_okay',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#10',
-            'name': 'test_okay',
-            'testroot': testroot2,
-            'relfile': relfile5,
-            'lineno': 12,
-            'testfunc': 'SpamTests.test_okay',
-            'subtest': None,
-            'markers': [],
-            }, {
-            'id': 'test#11',
-            'name': 'test_okay',
-            'testroot': testroot2,
-            'relfile': relfile6,
-            'lineno': 27,
-            'testfunc': 'SpamTests.test_okay',
-            'subtest': None,
-            'markers': [],
-            }]
+                source="{}:{}".format(relfile6, 27),
+                markers=None,
+                parentid="suite#7",
+            ),
+        ]
+        expected = [
+            {
+                "id": "test#1",
+                "name": "test_x1",
+                "testroot": testroot1,
+                "relfile": relfile1,
+                "lineno": 10,
+                "testfunc": "MySuite.test_x1",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#2",
+                "name": "test_x2",
+                "testroot": testroot1,
+                "relfile": relfile1,
+                "lineno": 21,
+                "testfunc": "MySuite.test_x2",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#3",
+                "name": "test_okay",
+                "testroot": testroot2,
+                "relfile": relfile2,
+                "lineno": 17,
+                "testfunc": "SpamTests.test_okay",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#4",
+                "name": "test_ham1",
+                "testroot": testroot2,
+                "relfile": relfile3,
+                "lineno": 8,
+                "testfunc": "test_ham1",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#5",
+                "name": "test_uh_oh",
+                "testroot": testroot2,
+                "relfile": relfile3,
+                "lineno": 19,
+                "testfunc": "HamTests.test_uh_oh",
+                "subtest": None,
+                "markers": ["expected-failure"],
+            },
+            {
+                "id": "test#6",
+                "name": "test_whoa",
+                "testroot": testroot2,
+                "relfile": relfile3,
+                "lineno": 35,
+                "testfunc": "HamTests.test_whoa",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#7",
+                "name": "test_yay (sub1)",
+                "testroot": testroot2,
+                "relfile": relfile3,
+                "lineno": 57,
+                "testfunc": "MoreHam.test_yay",
+                "subtest": ["sub1"],
+                "markers": [],
+            },
+            {
+                "id": "test#8",
+                "name": "test_yay (sub2) (sub3)",
+                "testroot": testroot2,
+                "relfile": relfile3,
+                "lineno": 72,
+                "testfunc": "MoreHam.test_yay",
+                "subtest": ["sub2", "sub3"],
+                "markers": [],
+            },
+            {
+                "id": "test#9",
+                "name": "test_okay",
+                "testroot": testroot2,
+                "relfile": relfile4,
+                "lineno": 15,
+                "testfunc": "SpamTests.test_okay",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#10",
+                "name": "test_okay",
+                "testroot": testroot2,
+                "relfile": relfile5,
+                "lineno": 12,
+                "testfunc": "SpamTests.test_okay",
+                "subtest": None,
+                "markers": [],
+            },
+            {
+                "id": "test#11",
+                "name": "test_okay",
+                "testroot": testroot2,
+                "relfile": relfile6,
+                "lineno": 27,
+                "testfunc": "SpamTests.test_okay",
+                "subtest": None,
+                "markers": [],
+            },
+        ]
         parents = None
 
-        report_discovered(tests, parents, simple=True,
-                          _send=stub.send)
+        report_discovered(tests, parents, simple=True, _send=stub.send)
 
         self.maxDiff = None
-        self.assertEqual(stub.calls, [
-            ('send', (expected,), None),
-            ])
+        self.assertEqual(stub.calls, [("send", (expected,), None),])

@@ -1,7 +1,7 @@
-
 import sys
 
 print(sys.api_version)
+
 
 class Class1(object):
     """Some class
@@ -12,7 +12,7 @@ class Class1(object):
     user_options = []
 
     def __init__(self, file_path=None, file_contents=None):
-        self.prop1 = ''
+        self.prop1 = ""
         self.prop2 = 1
 
     def method1(self):
@@ -26,6 +26,7 @@ class Class1(object):
         This is method2
         """
         pass
+
 
 obj = Class1()
 obj.method1()

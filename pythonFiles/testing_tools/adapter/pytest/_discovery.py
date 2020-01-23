@@ -11,8 +11,9 @@ from .. import util, discovery
 from ._pytest_item import parse_item
 
 
-def discover(pytestargs=None, hidestdio=False,
-             _pytest_main=pytest.main, _plugin=None, **_ignored):
+def discover(
+    pytestargs=None, hidestdio=False, _pytest_main=pytest.main, _plugin=None, **_ignored
+):
     """Return the results of test discovery."""
     if _plugin is None:
         _plugin = TestCollector()
@@ -27,30 +28,36 @@ def discover(pytestargs=None, hidestdio=False,
         # No tests were discovered.
         pass
     elif ec != 0:
-        print(('equivalent command: {} -m pytest {}'
-               ).format(sys.executable, util.shlex_unsplit(pytestargs)))
-        if hidestdio:
-            print(stdio.getvalue(), file=sys.stderr)
-            sys.stdout.flush()
-        raise Exception('pytest discovery failed (exit code {})'.format(ec))
-    if not _plugin._started:
-        print(('equivalent command: {} -m pytest {}'
-               ).format(sys.executable, util.shlex_unsplit(pytestargs)))
-        if hidestdio:
-            print(stdio.getvalue(), file=sys.stderr)
-            sys.stdout.flush()
-        raise Exception('pytest discovery did not start')
-    return (
-            _plugin._tests.parents,
-            list(_plugin._tests),
+        print(
+            ("equivalent command: {} -m pytest {}").format(
+                sys.executable, util.shlex_unsplit(pytestargs)
             )
+        )
+        if hidestdio:
+            print(stdio.getvalue(), file=sys.stderr)
+            sys.stdout.flush()
+        raise Exception("pytest discovery failed (exit code {})".format(ec))
+    if not _plugin._started:
+        print(
+            ("equivalent command: {} -m pytest {}").format(
+                sys.executable, util.shlex_unsplit(pytestargs)
+            )
+        )
+        if hidestdio:
+            print(stdio.getvalue(), file=sys.stderr)
+            sys.stdout.flush()
+        raise Exception("pytest discovery did not start")
+    return (
+        _plugin._tests.parents,
+        list(_plugin._tests),
+    )
 
 
 def _adjust_pytest_args(pytestargs):
     """Return a corrected copy of the given pytest CLI args."""
     pytestargs = list(pytestargs) if pytestargs else []
     # Duplicate entries should be okay.
-    pytestargs.insert(0, '--collect-only')
+    pytestargs.insert(0, "--collect-only")
     # TODO: pull in code from:
     #  src/client/testing/pytest/services/discoveryService.ts
     #  src/client/testing/pytest/services/argsService.ts

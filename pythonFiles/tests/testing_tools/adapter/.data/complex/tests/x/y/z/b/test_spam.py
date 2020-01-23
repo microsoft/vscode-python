@@ -1,7 +1,5 @@
-
-
 # ?!?
-CHORUS = 'spamspamspamspamspam...'
+CHORUS = "spamspamspamspamspam..."
 
 
 def test_simple():

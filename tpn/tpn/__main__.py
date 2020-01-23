@@ -28,7 +28,9 @@ from . import npm
 ACCEPTABLE_PURPOSES = frozenset({"explicit", "npm", "PyPI"})
 
 
-async def handle_index(module, raw_path, config_projects, cached_projects, overrides_path=None):
+async def handle_index(
+    module, raw_path, config_projects, cached_projects, overrides_path=None
+):
     _, _, index_name = module.__name__.rpartition(".")
     with open(raw_path, encoding="utf-8") as file:
         raw_data = file.read()
@@ -66,7 +68,9 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
         cached_projects = {}
     tasks = []
     if npm_path:
-        tasks.append(handle_index(npm, npm_path, config_projects, cached_projects, npm_overrides))
+        tasks.append(
+            handle_index(npm, npm_path, config_projects, cached_projects, npm_overrides)
+        )
     if pypi_path:
         tasks.append(handle_index(pypi, pypi_path, config_projects, cached_projects))
     loop = asyncio.get_event_loop()
@@ -90,7 +94,9 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
         for name, details in failures.items():
             print(f"{name!r} {details.version} @ {details.url}: {details.error}")
             print(f"NPM URL: {details.npm}")
-            print(textwrap.dedent(f"""
+            print(
+                textwrap.dedent(
+                    f"""
             [[project]]
             name = "{name}"
             version = "{details.version}"
@@ -99,7 +105,9 @@ def main(tpn_path, *, config_path, npm_path=None, npm_overrides=None, pypi_path=
             license = \"\"\"
             TODO
             \"\"\"
-            """))
+            """
+                )
+            )
         print()
         print(f"Could not find a license for {len(failures)} projects")
     if stale or failures:

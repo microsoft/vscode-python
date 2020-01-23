@@ -18,6 +18,6 @@ from django.contrib import admin
 from django.views.generic import RedirectView
 
 urlpatterns = [
-    url(r'^home/', include('home.urls')),
-    url('', RedirectView.as_view(url='/home/')),
+    url(r"^home/", include("home.urls")),
+    url("", RedirectView.as_view(url="/home/")),
 ]

@@ -32,7 +32,7 @@ class Visitor(ast.NodeVisitor):
 
     def visitClassDef(self, node, namespace=""):
         end_position = self.getEndPosition(node)
-        self.symbols['classes'].append(self.getDataObject(node, namespace))
+        self.symbols["classes"].append(self.getDataObject(node, namespace))
 
         if len(namespace) > 0:
             namespace = "{0}::{1}".format(namespace, node.name)
@@ -46,19 +46,13 @@ class Visitor(ast.NodeVisitor):
             "namespace": namespace,
             "name": node.name,
             "range": {
-                "start": {
-                    "line": node.lineno - 1,
-                    "character": node.col_offset
-                },
-                "end": {
-                    "line": end_position[0],
-                    "character": end_position[1]
-                }
-            }
+                "start": {"line": node.lineno - 1, "character": node.col_offset},
+                "end": {"line": end_position[0], "character": end_position[1]},
+            },
         }
 
     def getEndPosition(self, node):
-        if not hasattr(node, 'body') or len(node.body) == 0:
+        if not hasattr(node, "body") or len(node.body) == 0:
             return (node.lineno - 1, node.col_offset)
         return self.getEndPosition(node.body[-1])
 
@@ -86,10 +80,10 @@ if __name__ == "__main__":
 
     try:
         default_encoding = sys.getdefaultencoding()
-        encoded_contents = contents.encode(default_encoding, 'surrogateescape')
-        contents = encoded_contents.decode(default_encoding, 'replace')
+        encoded_contents = contents.encode(default_encoding, "surrogateescape")
+        contents = encoded_contents.decode(default_encoding, "replace")
     except (UnicodeError, LookupError):
         pass
     if isinstance(contents, bytes):
-        contents = contents.decode('utf8')
+        contents = contents.decode("utf8")
     provide_symbols(contents)

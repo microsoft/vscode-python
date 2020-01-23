@@ -2,6 +2,7 @@
 
 __revision__ = None
 
+
 class Child2Class(object):
     """block-disable test"""
 
@@ -10,4 +11,4 @@ class Child2Class(object):
 
     def meth1OfChild(self, arg):
         """this issues a message"""
-        print (self)
+        print(self)

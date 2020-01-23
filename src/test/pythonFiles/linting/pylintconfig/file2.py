@@ -2,6 +2,7 @@
 
 __revision__ = None
 
+
 class Foo(object):
     """block-disable test"""
 
@@ -15,5 +16,4 @@ class Foo(object):
     def meth2(self, arg):
         """meth2"""
         # pylint: disable=unused-argument
-        print self\
-              + "foo"
+        print self + "foo"

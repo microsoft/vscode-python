@@ -2,7 +2,7 @@ import pytest
 
 
 # module-level parameterization
-pytestmark = pytest.mark.parametrize('x', [(1,), (1.0,), (1+0j,)])
+pytestmark = pytest.mark.parametrize("x", [(1,), (1.0,), (1 + 0j,)])
 
 
 def test_param_13(x):
@@ -10,7 +10,6 @@ def test_param_13(x):
 
 
 class TestParamAll(object):
-
     def test_param_13(self, x):
         assert x == 1
 

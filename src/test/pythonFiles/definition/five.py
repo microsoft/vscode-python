@@ -1,2 +1,3 @@
 import four
+
 four.showMessage()
