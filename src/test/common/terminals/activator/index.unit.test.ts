@@ -27,7 +27,7 @@ suite('Terminal Activator', () => {
     });
     async function testActivationAndHandlers(activationSuccessful: boolean) {
         baseActivator
-            .setup(b => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(b => b.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(activationSuccessful))
             .verifiable(TypeMoq.Times.once());
         handler1
@@ -40,7 +40,7 @@ suite('Terminal Activator', () => {
             .verifiable(TypeMoq.Times.once());
 
         const terminal = TypeMoq.Mock.ofType<Terminal>();
-        await activator.activateEnvironmentInTerminal(terminal.object, undefined, activationSuccessful);
+        await activator.activateEnvironmentInTerminal(terminal.object, { preserveFocus: activationSuccessful });
 
         baseActivator.verifyAll();
         handler1.verifyAll();

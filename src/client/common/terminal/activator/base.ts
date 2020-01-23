@@ -3,14 +3,14 @@
 
 'use strict';
 
-import { Terminal, Uri } from 'vscode';
+import { Terminal } from 'vscode';
 import { createDeferred, sleep } from '../../utils/async';
-import { ITerminalActivator, ITerminalHelper, TerminalShellType } from '../types';
+import { ITerminalActivator, ITerminalHelper, TerminalActivationOptions, TerminalShellType } from '../types';
 
 export class BaseTerminalActivator implements ITerminalActivator {
     private readonly activatedTerminals: Map<Terminal, Promise<boolean>> = new Map<Terminal, Promise<boolean>>();
     constructor(private readonly helper: ITerminalHelper) {}
-    public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true) {
+    public async activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean> {
         if (this.activatedTerminals.has(terminal)) {
             return this.activatedTerminals.get(terminal)!;
         }
@@ -18,11 +18,11 @@ export class BaseTerminalActivator implements ITerminalActivator {
         this.activatedTerminals.set(terminal, deferred.promise);
         const terminalShellType = this.helper.identifyTerminalShell(terminal);
 
-        const activationCommamnds = await this.helper.getEnvironmentActivationCommands(terminalShellType, resource);
+        const activationCommands = await this.helper.getEnvironmentActivationCommands(terminalShellType, options?.resource, options?.interpreter);
         let activated = false;
-        if (activationCommamnds) {
-            for (const command of activationCommamnds!) {
-                terminal.show(preserveFocus);
+        if (activationCommands) {
+            for (const command of activationCommands!) {
+                terminal.show(options?.preserveFocus);
                 terminal.sendText(command);
                 await this.waitForCommandToProcess(terminalShellType);
                 activated = true;

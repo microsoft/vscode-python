@@ -47,9 +47,9 @@ export class TerminalHelper implements ITerminalHelper {
         const commandPrefix = isPowershell ? '& ' : '';
         return `${commandPrefix}${command.fileToCommandArgument()} ${args.join(' ')}`.trim();
     }
-    public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri): Promise<string[] | undefined> {
+    public async getEnvironmentActivationCommands(terminalShellType: TerminalShellType, resource?: Uri, interpreter?: PythonInterpreter): Promise<string[] | undefined> {
         const providers = [this.pipenv, this.pyenv, this.bashCShellFish, this.commandPromptAndPowerShell];
-        const promise = this.getActivationCommands(resource || undefined, undefined, terminalShellType, providers);
+        const promise = this.getActivationCommands(resource || undefined, interpreter, terminalShellType, providers);
         this.sendTelemetry(resource, terminalShellType, EventName.PYTHON_INTERPRETER_ACTIVATION_FOR_TERMINAL, promise).ignoreErrors();
         return promise;
     }

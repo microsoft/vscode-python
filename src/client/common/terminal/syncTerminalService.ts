@@ -7,7 +7,7 @@ import { inject } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
@@ -97,7 +97,8 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
-        public readonly terminalService: TerminalService
+        public readonly terminalService: TerminalService,
+        private readonly pythonInterpreter?: PythonInterpreter
     ) {}
     public dispose() {
         this.terminalService.dispose();
@@ -121,7 +122,7 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
         const lockFile = await this.createLockFile();
         const state = new ExecutionState(lockFile.filePath, this.fs, [command, ...args]);
         try {
-            const pythonExec = await this.interpreter.getActiveInterpreter(undefined);
+            const pythonExec = this.pythonInterpreter || (await this.interpreter.getActiveInterpreter(undefined));
             await this.terminalService.sendCommand(pythonExec?.path || 'python', [
                 shellExecFile.fileToCommandArgument(),
                 command.fileToCommandArgument(),

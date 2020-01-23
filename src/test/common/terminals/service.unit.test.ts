@@ -128,7 +128,7 @@ suite('Terminal Service', () => {
     test('Ensure terminal is activated once after creation', async () => {
         service = new TerminalService(mockServiceContainer.object);
         terminalActivator
-            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         terminalManager
@@ -150,7 +150,7 @@ suite('Terminal Service', () => {
         service = new TerminalService(mockServiceContainer.object);
         const textToSend = 'Some Text';
         terminalActivator
-            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny(), TypeMoq.It.isAny()))
+            .setup(h => h.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()))
             .returns(() => Promise.resolve(true))
             .verifiable(TypeMoq.Times.once());
         terminalManager

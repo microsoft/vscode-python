@@ -2,7 +2,7 @@
 // Licensed under the MIT License.
 
 import { inject, injectable } from 'inversify';
-import { CancellationToken, Disposable, Event, EventEmitter, Terminal, Uri } from 'vscode';
+import { CancellationToken, Disposable, Event, EventEmitter, Terminal } from 'vscode';
 import '../../common/extensions';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { IServiceContainer } from '../../ioc/types';
@@ -10,7 +10,7 @@ import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ITerminalManager } from '../application/types';
 import { IConfigurationService, IDisposableRegistry } from '../types';
-import { ITerminalActivator, ITerminalHelper, ITerminalService, TerminalShellType } from './types';
+import { ITerminalActivator, ITerminalHelper, ITerminalService, TerminalCreationOptions, TerminalShellType } from './types';
 
 @injectable()
 export class TerminalService implements ITerminalService, Disposable {
@@ -23,7 +23,7 @@ export class TerminalService implements ITerminalService, Disposable {
     public get onDidCloseTerminal(): Event<void> {
         return this.terminalClosed.event.bind(this.terminalClosed);
     }
-    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, private resource?: Uri, private title: string = 'Python') {
+    constructor(@inject(IServiceContainer) private serviceContainer: IServiceContainer, private readonly options?: TerminalCreationOptions) {
         const disposableRegistry = this.serviceContainer.get<Disposable[]>(IDisposableRegistry);
         disposableRegistry.push(this);
         this.terminalHelper = this.serviceContainer.get<ITerminalHelper>(ITerminalHelper);
@@ -56,12 +56,16 @@ export class TerminalService implements ITerminalService, Disposable {
             return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
-        this.terminal = this.terminalManager.createTerminal({ name: this.title });
+        this.terminal = this.terminalManager.createTerminal({ name: this.options?.title || 'Python', env: this.options?.env });
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise(resolve => setTimeout(resolve, 100));
 
-        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, this.resource, preserveFocus);
+        await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
+            resource: this.options?.resource,
+            preserveFocus,
+            interpreter: this.options?.interpreter
+        });
 
         this.terminal!.show(preserveFocus);
 
@@ -75,8 +79,8 @@ export class TerminalService implements ITerminalService, Disposable {
     }
 
     private async sendTelemetry() {
-        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(this.resource).pythonPath;
-        const interpreterInfo = await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath);
+        const pythonPath = this.serviceContainer.get<IConfigurationService>(IConfigurationService).getSettings(this.options?.resource).pythonPath;
+        const interpreterInfo = this.options?.interpreter || (await this.serviceContainer.get<IInterpreterService>(IInterpreterService).getInterpreterDetails(pythonPath));
         const pythonVersion = interpreterInfo && interpreterInfo.version ? interpreterInfo.version.raw : undefined;
         const interpreterType = interpreterInfo ? interpreterInfo.type : undefined;
         captureTelemetry(EventName.TERMINAL_CREATE, { terminal: this.terminalShellType, pythonVersion, interpreterType });

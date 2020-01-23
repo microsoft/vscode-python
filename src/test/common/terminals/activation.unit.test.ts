@@ -41,7 +41,7 @@ suite('Terminal Auto Activation', () => {
         };
         when(activeResourceService.getActiveResource()).thenReturn(resource);
         when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
-        when(activator.activateEnvironmentInTerminal(anything(), anything(), anything())).thenResolve();
+        when(activator.activateEnvironmentInTerminal(anything(), anything())).thenResolve();
 
         terminalAutoActivation.register();
 
@@ -49,7 +49,7 @@ suite('Terminal Auto Activation', () => {
 
         handler!.bind(terminalAutoActivation)(terminal.object);
 
-        verify(activator.activateEnvironmentInTerminal(terminal.object, resource)).once();
+        verify(activator.activateEnvironmentInTerminal(terminal.object, anything())).once();
     });
     test('New Terminals should be activated with resource of single workspace', async () => {
         type EventHandler = (e: Terminal) => void;
@@ -62,7 +62,7 @@ suite('Terminal Auto Activation', () => {
         };
         when(activeResourceService.getActiveResource()).thenReturn(resource);
         when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
-        when(activator.activateEnvironmentInTerminal(anything(), anything(), anything())).thenResolve();
+        when(activator.activateEnvironmentInTerminal(anything(), anything())).thenResolve();
 
         terminalAutoActivation.register();
 
@@ -70,7 +70,7 @@ suite('Terminal Auto Activation', () => {
 
         handler!.bind(terminalAutoActivation)(terminal.object);
 
-        verify(activator.activateEnvironmentInTerminal(terminal.object, resource)).once();
+        verify(activator.activateEnvironmentInTerminal(terminal.object, anything())).once();
     });
     test('New Terminals should be activated with resource of main workspace', async () => {
         type EventHandler = (e: Terminal) => void;
@@ -83,13 +83,13 @@ suite('Terminal Auto Activation', () => {
         };
         when(activeResourceService.getActiveResource()).thenReturn(resource);
         when(terminalManager.onDidOpenTerminal).thenReturn(onDidOpenTerminal);
-        when(activator.activateEnvironmentInTerminal(anything(), anything(), anything())).thenResolve();
+        when(activator.activateEnvironmentInTerminal(anything(), anything())).thenResolve();
         terminalAutoActivation.register();
 
         expect(handler).not.to.be.an('undefined', 'event handler not initialized');
 
         handler!.bind(terminalAutoActivation)(terminal.object);
 
-        verify(activator.activateEnvironmentInTerminal(terminal.object, resource)).once();
+        verify(activator.activateEnvironmentInTerminal(terminal.object, anything())).once();
     });
 });
