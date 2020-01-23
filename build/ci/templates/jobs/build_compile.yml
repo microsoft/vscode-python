@@ -36,9 +36,13 @@ jobs:
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: npx prettier "src/**/*.ts*" --check
-      displayName: "Code Format"
+      displayName: "Code Format (TypeScript)""
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: npx prettier "build/**/*.js" --check
-      displayName: "Code Format"
+      displayName: "Code Format (JavaScript)"
       workingDirectory: $(Build.SourcesDirectory)
+
+    - bash: python -m black . --check
+      displayName: "Code Format (Python)"
+      workingDirectory: $(Build.SourcesDirectory)/pythonFiles
