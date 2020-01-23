@@ -36,7 +36,7 @@ jobs:
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: npx prettier "src/**/*.ts*" --check
-      displayName: "Code Format (TypeScript)""
+      displayName: "Code Format (TypeScript)"
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: npx prettier "build/**/*.js" --check
