@@ -12,6 +12,8 @@ import { IDisposableRegistry, IExperimentsManager, Resource } from '../../common
 import { createDeferredFromPromise, sleep } from '../../common/utils/async';
 import { InMemoryCache } from '../../common/utils/cacheUtils';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
+import { captureTelemetry } from '../../telemetry';
+import { EventName } from '../../telemetry/constants';
 import { IInterpreterService, PythonInterpreter } from '../contracts';
 import { cacheDuration, EnvironmentActivationService } from './service';
 import { TerminalEnvironmentActivationService } from './terminalEnvironmentActivationService';
@@ -38,7 +40,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         // Environment variables rely on custom variables defined by the user in `.env` files.
         disposables.push(envVarsProvider.onDidEnvironmentVariablesChange(() => this.cachePerResourceAndInterpreter.clear()));
     }
-
+    @captureTelemetry(EventName.PYTHON_INTERPRETER_ACTIVATION_ENVIRONMENT_VARIABLES, { failed: false, activatedByWrapper: true }, true)
     public async getActivatedEnvironmentVariables(
         resource: Resource,
         interpreter?: PythonInterpreter | undefined,
