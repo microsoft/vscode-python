@@ -157,3 +157,59 @@ export class InMemoryInterpreterSpecificCache<T> {
         return Date.now() + this.expiryDurationMs;
     }
 }
+
+export class InMemoryCache<T> {
+    private readonly _data: { data?: T; hasData: boolean; expiry?: number } = { hasData: false };
+    constructor(protected readonly expiryDurationMs: number) {}
+    public get hasData() {
+        if (!this._data.hasData || !this._data.expiry || this.hasExpired(this._data.expiry)) {
+            this._data.data = undefined;
+            this._data.expiry = undefined;
+            this._data.hasData = false;
+            return false;
+        }
+        return true;
+    }
+    /**
+     * Returns undefined if there is no data.
+     * Uses `hasData` to determine whether any cached data exists.
+     *
+     * @readonly
+     * @type {(T | undefined)}
+     * @memberof InMemoryCache
+     */
+    public get data(): T | undefined {
+        return this.hasData ? this._data.data : undefined;
+    }
+    public set data(value: T | undefined) {
+        this._data.expiry = this.calculateExpiry();
+        this._data.data = value;
+        this._data.hasData = true;
+    }
+    public clear() {
+        this._data.data = undefined;
+        this._data.expiry = undefined;
+        this._data.hasData = false;
+    }
+
+    /**
+     * Has this data expired?
+     * (protected class member to allow for reliable non-data-time-based testing)
+     *
+     * @param expiry The date to be tested for expiry.
+     * @returns true if the data expired, false otherwise.
+     */
+    protected hasExpired(expiry: number): boolean {
+        return expiry <= Date.now();
+    }
+
+    /**
+     * When should this data item expire?
+     * (protected class method to allow for reliable non-data-time-based testing)
+     *
+     * @returns number representing the expiry time for this item.
+     */
+    protected calculateExpiry(): number {
+        return Date.now() + this.expiryDurationMs;
+    }
+}

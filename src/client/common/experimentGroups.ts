@@ -42,6 +42,17 @@ export enum WebHostNotebook {
     experiment = 'WebHostNotebook - experiment'
 }
 
+/**
+ * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
+ *
+ * @export
+ * @enum {number}
+ */
+export enum UseTerminalToGetActivatedEnvVars {
+    control = 'UseTerminalToGetActivatedEnvVars - control',
+    experiment = 'UseTerminalToGetActivatedEnvVars - experiment'
+}
+
 // Dummy experiment added to validate metrics of A/B testing
 export enum ValidateABTesting {
     control = 'AA_testing - control',

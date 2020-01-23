@@ -832,6 +832,12 @@ export interface IEventNamePropertyMapping {
          * @type {boolean}
          */
         failed?: boolean;
+        /**
+         * Whether the environment was activated within a terminal or not.
+         *
+         * @type {boolean}
+         */
+        activatedInTerminal?: boolean;
     };
     /**
      * Telemetry event sent when getting activation commands for active interpreter

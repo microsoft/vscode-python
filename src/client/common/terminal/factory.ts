@@ -30,10 +30,12 @@ export class TerminalServiceFactory implements ITerminalServiceFactory {
         const title = isUri(arg1) ? undefined : arg1?.title || arg2;
         const terminalTitle = typeof title === 'string' && title.trim().length > 0 ? title.trim() : 'Python';
         const interpreter = isUri(arg1) ? undefined : arg1?.interpreter;
+        const hideFromUser = isUri(arg1) ? false : arg1?.hideFromUser === true;
         const env = isUri(arg1) ? undefined : arg1?.env;
 
         const options: TerminalCreationOptions = {
             env,
+            hideFromUser,
             interpreter,
             resource,
             title

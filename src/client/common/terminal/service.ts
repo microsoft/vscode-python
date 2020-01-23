@@ -39,12 +39,16 @@ export class TerminalService implements ITerminalService, Disposable {
     public async sendCommand(command: string, args: string[], _?: CancellationToken): Promise<void> {
         await this.ensureTerminal();
         const text = this.terminalHelper.buildCommandForTerminal(this.terminalShellType, command, args);
-        this.terminal!.show(true);
+        if (!this.options?.hideFromUser) {
+            this.terminal!.show(true);
+        }
         this.terminal!.sendText(text, true);
     }
     public async sendText(text: string): Promise<void> {
         await this.ensureTerminal();
-        this.terminal!.show(true);
+        if (!this.options?.hideFromUser) {
+            this.terminal!.show(true);
+        }
         this.terminal!.sendText(text);
     }
     public async show(preserveFocus: boolean = true): Promise<void> {
@@ -56,7 +60,7 @@ export class TerminalService implements ITerminalService, Disposable {
             return;
         }
         this.terminalShellType = this.terminalHelper.identifyTerminalShell(this.terminal);
-        this.terminal = this.terminalManager.createTerminal({ name: this.options?.title || 'Python', env: this.options?.env });
+        this.terminal = this.terminalManager.createTerminal({ name: this.options?.title || 'Python', env: this.options?.env, hideFromUser: this.options?.hideFromUser });
 
         // Sometimes the terminal takes some time to start up before it can start accepting input.
         await new Promise(resolve => setTimeout(resolve, 100));
@@ -64,10 +68,13 @@ export class TerminalService implements ITerminalService, Disposable {
         await this.terminalActivator.activateEnvironmentInTerminal(this.terminal!, {
             resource: this.options?.resource,
             preserveFocus,
-            interpreter: this.options?.interpreter
+            interpreter: this.options?.interpreter,
+            doNotShow: this.options?.hideFromUser
         });
 
-        this.terminal!.show(preserveFocus);
+        if (!this.options?.hideFromUser) {
+            this.terminal!.show(preserveFocus);
+        }
 
         this.sendTelemetry().ignoreErrors();
     }

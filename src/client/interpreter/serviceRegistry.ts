@@ -5,8 +5,11 @@
 
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../activation/types';
 import { IServiceManager } from '../ioc/types';
+import { PreWarmActivatedEnvironmentVariables } from './activation/preWarmVariables';
 import { EnvironmentActivationService } from './activation/service';
+import { TerminalEnvironmentActivationService } from './activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './activation/types';
+import { WrapperEnvironmentActivationService } from './activation/wrapperEnvironmentActivationService';
 import { InterpreterAutoSelectionService } from './autoSelection/index';
 import { InterpreterAutoSeletionProxyService } from './autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from './autoSelection/rules/cached';
@@ -144,10 +147,13 @@ export function registerInterpreterTypes(serviceManager: IServiceManager) {
     serviceManager.addSingleton<InterpreterHashProvider>(InterpreterHashProvider, InterpreterHashProvider);
     serviceManager.addSingleton<InterpeterHashProviderFactory>(InterpeterHashProviderFactory, InterpeterHashProviderFactory);
     serviceManager.addSingleton<InterpreterFilter>(InterpreterFilter, InterpreterFilter);
+    serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, PreWarmActivatedEnvironmentVariables);
 }
 
 export function registerTypes(serviceManager: IServiceManager) {
     registerInterpreterTypes(serviceManager);
     serviceManager.addSingleton<IInterpreterAutoSeletionProxyService>(IInterpreterAutoSeletionProxyService, InterpreterAutoSeletionProxyService);
-    serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, EnvironmentActivationService);
+    serviceManager.addSingleton<IEnvironmentActivationService>(EnvironmentActivationService, EnvironmentActivationService);
+    serviceManager.addSingleton<IEnvironmentActivationService>(TerminalEnvironmentActivationService, TerminalEnvironmentActivationService);
+    serviceManager.addSingleton<IEnvironmentActivationService>(IEnvironmentActivationService, WrapperEnvironmentActivationService);
 }

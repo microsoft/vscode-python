@@ -7,7 +7,7 @@ import { inject, injectable } from 'inversify';
 import { Terminal } from 'vscode';
 import { IExtensionSingleActivationService } from '../activation/types';
 import { IActiveResourceService, ICommandManager, ITerminalManager } from '../common/application/types';
-import { CODE_RUNNER_EXTENSION_ID } from '../common/constants';
+import { CODE_RUNNER_EXTENSION_ID, terminalNamePrefixNotToAutoActivate } from '../common/constants';
 import { ITerminalActivator } from '../common/terminal/types';
 import { IDisposable, IDisposableRegistry, IExtensions } from '../common/types';
 import { noop } from '../common/utils/misc';
@@ -62,6 +62,9 @@ export class TerminalAutoActivation implements ITerminalAutoActivation {
         this.handler = this.terminalManager.onDidOpenTerminal(this.activateTerminal, this);
     }
     private async activateTerminal(terminal: Terminal): Promise<void> {
+        if (terminal.name.startsWith(terminalNamePrefixNotToAutoActivate)) {
+            return;
+        }
         // If we have just one workspace, then pass that as the resource.
         // Until upstream VSC issue is resolved https://github.com/Microsoft/vscode/issues/63052.
         await this.activator.activateEnvironmentInTerminal(terminal, { resource: this.activeResourceService.getActiveResource() });

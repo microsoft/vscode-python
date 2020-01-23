@@ -63,6 +63,12 @@ export type TerminalCreationOptions = {
      * @type {PythonInterpreter}
      */
     interpreter?: PythonInterpreter;
+    /**
+     * Whether hidden.
+     *
+     * @type {boolean}
+     */
+    hideFromUser?: boolean;
 };
 
 export interface ITerminalServiceFactory {
@@ -102,6 +108,12 @@ export type TerminalActivationOptions = {
     resource?: Resource;
     preserveFocus?: boolean;
     interpreter?: PythonInterpreter;
+    /**
+     * When sending commands to the terminal, do not display the terminal.
+     *
+     * @type {boolean}
+     */
+    doNotShow?: boolean;
 };
 export interface ITerminalActivator {
     activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean>;
