@@ -1,15 +1,9 @@
 # -----------------------------------------------------------------------------------------------------------------------------
 # Overview:
 # -----------------------------------------------------------------------------------------------------------------------------
-# Set of steps used to compile and build the extension
+# Set of steps used to validate dependencies for the extension. In a separate pipeline because this
+# can take a long time.
 #
-# -----------------------------------------------------------------------------------------------------------------------------
-# Variables
-# -----------------------------------------------------------------------------------------------------------------------------
-# 1. build
-#   Mandatory
-#   Possible values, `true` or `false`.
-#   If `true`, means we need to build the VSIX, else just compile.
 
 steps:
     - template: initialization.yml
@@ -22,7 +16,6 @@ steps:
       displayName: "Clean"
 
     # This is a slow process, hence do this as a separate step
-    # I.e. skip on in PRs.
     - bash: npm run checkDependencies
       displayName: "Check Dependencies"
 
