@@ -14,6 +14,12 @@ jobs:
   steps:
     - template: ../steps/build.yml
 
+- job: Dependencies
+  pool:
+    vmImage: "ubuntu-16.04"
+  steps:
+    - template: ../steps/dependencies.yml
+
 - job: Hygiene
   pool:
     vmImage: "ubuntu-16.04"
