@@ -65,7 +65,7 @@ steps:
   - bash: |
       for i in {1..5}
       do
-        mocha --require source-map-support/register --opts ./build/.mocha.functional.opts
+        mocha --require source-map-support/register --opts ./build/.mocha.performance.opts
         node .\savePerformanceResults.js
       done
       node .\checkPerformanceResults.js
