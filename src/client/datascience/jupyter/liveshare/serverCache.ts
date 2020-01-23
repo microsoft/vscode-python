@@ -8,6 +8,7 @@ import * as uuid from 'uuid/v4';
 import { CancellationToken, CancellationTokenSource } from 'vscode';
 
 import { IWorkspaceService } from '../../../common/application/types';
+import { traceInfo } from '../../../common/logger';
 import { IFileSystem } from '../../../common/platform/types';
 import { IAsyncDisposable, IConfigurationService } from '../../../common/types';
 import { INotebookServer, INotebookServerOptions } from '../../types';
@@ -43,6 +44,7 @@ export class ServerCache implements IAsyncDisposable {
         // See if the old options had the same UI setting. If not,
         // cancel the old
         if (data && data.options.disableUI !== fixedOptions.disableUI) {
+            traceInfo('Cancelling server create as UI state has changed');
             data.cancelSource.cancel();
             data = undefined;
             this.cache.delete(key);
