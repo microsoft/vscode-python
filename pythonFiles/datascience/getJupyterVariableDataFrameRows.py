@@ -5,7 +5,7 @@ import pandas.io.json as _VSCODE_pd_json
 
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
-_VSCODE_targetVariable = _VSCODE_json.loads("_VSCode_JupyterTestValue")
+_VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 _VSCODE_evalResult = eval(_VSCODE_targetVariable["name"])
 
 # _VSCode_JupyterStartRow and _VSCode_JupyterEndRow should be replaced dynamically with the literals

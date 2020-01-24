@@ -8,7 +8,7 @@ _VSCode_supportsDataExplorer = "['list', 'Series', 'dict', 'ndarray', 'DataFrame
 
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
-_VSCODE_targetVariable = _VSCODE_json.loads("_VSCode_JupyterTestValue")
+_VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 
 # First check to see if we are a supported type, this prevents us from adding types that are not supported
 # and also keeps our types in sync with what the variable explorer says that we support
