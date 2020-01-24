@@ -100,7 +100,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         return this.cachePerResourceAndInterpreter.get(cacheKey)!;
     }
     private getCacheFile(cacheKey: string): string | undefined {
-        return this.context.storagePath ? path.join(this.context.storagePath, `envVariables${cacheKey}.json`) : undefined;
+        return this.context.storagePath ? path.join(this.context.storagePath, `pvscEnvVariables${cacheKey}.json`) : undefined;
     }
     private async getDataCachedInFile(cacheKey: string): Promise<EnvVariablesInCachedFile | undefined> {
         const cacheFile = this.getCacheFile(cacheKey);
