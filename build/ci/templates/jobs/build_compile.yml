@@ -43,6 +43,8 @@ jobs:
       displayName: "Code Format (JavaScript)"
       workingDirectory: $(Build.SourcesDirectory)
 
-    - bash: python -m black . --check
+    - bash: |
+            python -m pip install -U pip black
+            python -m black . --check
       displayName: "Code Format (Python)"
       workingDirectory: $(Build.SourcesDirectory)/pythonFiles
