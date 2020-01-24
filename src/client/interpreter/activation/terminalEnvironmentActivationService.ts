@@ -58,7 +58,8 @@ export class TerminalEnvironmentActivationService implements IEnvironmentActivat
 
         try {
             // Pass a cancellation token to ensure we wait until command has completed.
-            await terminal.sendCommand(command, [pyFile.fileToCommandArgument(), jsonFile.filePath.fileToCommandArgument()], new CancellationTokenSource().token);
+            // If there are any errors in executing in the terminal, throw them so they get logged and bubbled up.
+            await terminal.sendCommand(command, [pyFile.fileToCommandArgument(), jsonFile.filePath.fileToCommandArgument()], new CancellationTokenSource().token, false);
 
             const contents = await this.fs.readFile(jsonFile.filePath);
             return JSON.parse(contents);

@@ -33,7 +33,17 @@ export enum TerminalShellType {
 
 export interface ITerminalService extends IDisposable {
     readonly onDidCloseTerminal: Event<void>;
-    sendCommand(command: string, args: string[], cancel?: CancellationToken): Promise<void>;
+    /**
+     * Sends a command to the terminal.
+     *
+     * @param {string} command
+     * @param {string[]} args
+     * @param {CancellationToken} [cancel] If provided, then wait till the command is executed in the terminal.
+     * @param {boolean} [swallowExceptions] Whether to swallow exceptions raised as a result of the execution of the command. Defaults to `true`
+     * @returns {Promise<void>}
+     * @memberof ITerminalService
+     */
+    sendCommand(command: string, args: string[], cancel?: CancellationToken, swallowExceptions?: boolean): Promise<void>;
     sendText(text: string): Promise<void>;
     show(preserveFocus?: boolean): Promise<void>;
 }

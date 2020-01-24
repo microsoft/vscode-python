@@ -34,3 +34,9 @@ with open(lock_file, 'w') as fp:
         # Signal end of execution with failure state.
         fp.write('FAIL\n')
         fp.flush()
+        try:
+            # ALso log the error for use from the other side.
+            with open(lock_file + '.error', 'w') as fpError:
+                fpError.write(traceback.format_exc())
+        except Exception:
+            pass
