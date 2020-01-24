@@ -21,7 +21,7 @@ export class CryptoUtils implements ICryptoUtils {
             const fnv = require('@enonic/fnv-plus');
             hash = fnv.fast1a32hex(data) as string;
         } else if (algorithm === 'SHA256') {
-            hash = createHash('sha256   ')
+            hash = createHash('sha256')
                 .update(data)
                 .digest('hex');
         } else {
