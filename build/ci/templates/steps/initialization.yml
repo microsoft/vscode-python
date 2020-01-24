@@ -120,6 +120,10 @@ steps:
       displayName: 'Start Display Server (xvfb) to launch VS Code)'
       condition: and(succeeded(), eq(variables['Agent.Os'], 'Linux'))
 
+    - bash: python -m pip install -U pip
+      displayName: 'Install pip'
+      condition: and(succeeded())
+
     # # Show all versions installed/available on PATH if in verbose mode.
     # # Example command line (windows pwsh):
     # # > Write-Host Node ver: $(& node -v) NPM Ver: $(& npm -v) Python ver: $(& python --version)"

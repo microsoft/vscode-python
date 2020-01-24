@@ -44,7 +44,7 @@ jobs:
       workingDirectory: $(Build.SourcesDirectory)
 
     - bash: |
-            python -m pip install -U pip black
+            python -m pip install -U black
             python -m black . --check
       displayName: "Code Format (Python)"
       workingDirectory: $(Build.SourcesDirectory)/pythonFiles

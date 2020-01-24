@@ -93,7 +93,6 @@ steps:
     # > python -m pip install --upgrade -r build/test-requirements.txt
     # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
     - bash: |
-          python -m pip install -U pip
           python -m pip install --upgrade -r build/test-requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
           python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python/old_ptvsd --no-cache-dir --implementation py --no-deps --upgrade 'ptvsd==4.3.2'
@@ -119,7 +118,6 @@ steps:
     # > python -m pip install --upgrade -r build/functional-test-requirements.txt
     # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
     - bash: |
-          python -m pip install -U pip
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/functional-test-requirements.txt
       displayName: 'pip install functional requirements'
@@ -142,7 +140,6 @@ steps:
     # > python -m pip install --upgrade -r build/ipython-test-requirements.txt
     # > python -m pip --disable-pip-version-check install -t ./pythonFiles/lib/python --no-cache-dir --implementation py --no-deps --upgrade -r requirements.txt
     - bash: |
-          python -m pip install -U pip
           python -m pip install numpy
           python -m pip install --upgrade -r ./build/ipython-test-requirements.txt
       displayName: 'pip install ipython requirements'
