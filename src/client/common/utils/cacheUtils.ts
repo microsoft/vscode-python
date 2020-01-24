@@ -78,94 +78,15 @@ export function clearCache() {
     resourceSpecificCacheStores.clear();
 }
 
-export class InMemoryInterpreterSpecificCache<T> {
-    private readonly resource: Resource;
-    private readonly args: any[];
-    constructor(
-        private readonly keyPrefix: string,
-        protected readonly expiryDurationMs: number,
-        args: [Uri | undefined, ...any[]],
-        private readonly vscode: VSCodeType = require('vscode')
-    ) {
-        this.resource = args[0];
-        this.args = args.slice(1);
-    }
-    public get hasData() {
-        const store = getCacheStore(this.resource, this.vscode);
-        const key = getCacheKeyFromFunctionArgs(this.keyPrefix, this.args);
-        const data = store.get(key);
-        if (!store.has(key) || !data) {
-            return false;
-        }
-        if (this.hasExpired(data.expiry)) {
-            store.delete(key);
-            return false;
-        }
-        return true;
-    }
-    /**
-     * Returns undefined if there is no data.
-     * Uses `hasData` to determine whether any cached data exists.
-     *
-     * @type {(T | undefined)}
-     * @memberof InMemoryInterpreterSpecificCache
-     */
-    public get data(): T | undefined {
-        if (!this.hasData) {
-            return;
-        }
-        const store = getCacheStore(this.resource, this.vscode);
-        const key = getCacheKeyFromFunctionArgs(this.keyPrefix, this.args);
-        const data = store.get(key);
-        if (!store.has(key) || !data) {
-            return;
-        }
-        return data.value as T;
-    }
-    public set data(value: T | undefined) {
-        const store = getCacheStore(this.resource, this.vscode);
-        const key = getCacheKeyFromFunctionArgs(this.keyPrefix, this.args);
-        store.set(key, {
-            expiry: this.calculateExpiry(),
-            value
-        });
-    }
-    public clear() {
-        const store = getCacheStore(this.resource, this.vscode);
-        const key = getCacheKeyFromFunctionArgs(this.keyPrefix, this.args);
-        store.delete(key);
-    }
-
-    /**
-     * Has this data expired?
-     * (protected class member to allow for reliable non-data-time-based testing)
-     *
-     * @param expiry The date to be tested for expiry.
-     * @returns true if the data expired, false otherwise.
-     */
-    protected hasExpired(expiry: number): boolean {
-        return expiry < Date.now();
-    }
-
-    /**
-     * When should this data item expire?
-     * (protected class method to allow for reliable non-data-time-based testing)
-     *
-     * @returns number representing the expiry time for this item.
-     */
-    protected calculateExpiry(): number {
-        return Date.now() + this.expiryDurationMs;
-    }
-}
-
 export class InMemoryCache<T> {
-    private readonly _data: { data?: T; hasData: boolean; expiry?: number } = { hasData: false };
-    constructor(protected readonly expiryDurationMs: number) {}
+    private readonly _store = new Map<string, CacheData>();
+    protected get store(): Map<string, CacheData> {
+        return this._store;
+    }
+    constructor(protected readonly expiryDurationMs: number, protected readonly cacheKey: string = '') {}
     public get hasData() {
-        if (!this._data.hasData || !this._data.expiry || this.hasExpired(this._data.expiry)) {
-            this._data.data = undefined;
-            this._data.expiry = undefined;
-            this._data.hasData = false;
+        if (!this.store.get(this.cacheKey) || this.hasExpired(this.store.get(this.cacheKey)!.expiry)) {
+            this.store.delete(this.cacheKey);
             return false;
         }
         return true;
@@ -179,17 +100,19 @@ export class InMemoryCache<T> {
      * @memberof InMemoryCache
      */
     public get data(): T | undefined {
-        return this.hasData ? this._data.data : undefined;
+        if (!this.hasData || !this.store.has(this.cacheKey)) {
+            return;
+        }
+        return this.store.get(this.cacheKey)?.value as T;
     }
     public set data(value: T | undefined) {
-        this._data.expiry = this.calculateExpiry();
-        this._data.data = value;
-        this._data.hasData = true;
+        this.store.set(this.cacheKey, {
+            expiry: this.calculateExpiry(),
+            value
+        });
     }
     public clear() {
-        this._data.data = undefined;
-        this._data.expiry = undefined;
-        this._data.hasData = false;
+        this.store.clear();
     }
 
     /**
@@ -211,5 +134,16 @@ export class InMemoryCache<T> {
      */
     protected calculateExpiry(): number {
         return Date.now() + this.expiryDurationMs;
+    }
+}
+
+export class InMemoryInterpreterSpecificCache<T> extends InMemoryCache<T> {
+    private readonly resource: Resource;
+    protected get store() {
+        return getCacheStore(this.resource, this.vscode);
+    }
+    constructor(keyPrefix: string, expiryDurationMs: number, args: [Uri | undefined, ...any[]], private readonly vscode: VSCodeType = require('vscode')) {
+        super(expiryDurationMs, getCacheKeyFromFunctionArgs(keyPrefix, args.slice(1)));
+        this.resource = args[0];
     }
 }

@@ -48,6 +48,11 @@ class TestInMemoryInterpreterSpecificCache extends InMemoryInterpreterSpecificCa
 // tslint:disable:no-any max-func-body-length
 suite('Common Utils - CacheUtils', () => {
     suite('InMemory Cache', () => {
+        let clock: sinon.SinonFakeTimers;
+        setup(() => {
+            clock = sinon.useFakeTimers();
+        });
+        teardown(() => clock.restore());
         test('Cached item should exist', () => {
             const cache = new InMemoryCache(5_000);
             cache.data = 'Hello World';
@@ -68,7 +73,6 @@ suite('Common Utils - CacheUtils', () => {
             assert.isOk(cache.hasData);
         });
         test('Cached item should not exist after time expires', () => {
-            const clock = sinon.useFakeTimers();
             const cache = new InMemoryCache(5_000);
             cache.data = 'Hello World';
 
