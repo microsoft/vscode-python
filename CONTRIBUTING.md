@@ -38,7 +38,9 @@ npm ci
 python3 -m venv .venv
 # Activate the virtual environment as appropriate for your shell, For example ...
 source .venv/bin/activate
-# Install Python dependencies using `python3`.
+# The Python code in the extension is formatted using Black.
+python3 -m pip install black
+# Install Python dependencies for the extension using `python3`.
 # If you want to use a different interpreter then specify it in the
 # CI_PYTHON_PATH environment variable.
 npx gulp installPythonLibs
