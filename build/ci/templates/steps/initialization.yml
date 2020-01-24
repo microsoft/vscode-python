@@ -122,7 +122,6 @@ steps:
 
     - bash: python -m pip install -U pip
       displayName: 'Install pip'
-      condition: and(succeeded())
 
     # # Show all versions installed/available on PATH if in verbose mode.
     # # Example command line (windows pwsh):
