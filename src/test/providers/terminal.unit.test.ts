@@ -118,7 +118,7 @@ suite('Terminal Provider', () => {
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
 
-            terminalActivator.verify(a => a.activateEnvironmentInTerminal(terminal.object, undefined, true), TypeMoq.Times.once());
+            terminalActivator.verify(a => a.activateEnvironmentInTerminal(terminal.object, TypeMoq.It.isAny()), TypeMoq.Times.once());
             configService.verifyAll();
             activeResourceService.verifyAll();
         });
@@ -137,7 +137,7 @@ suite('Terminal Provider', () => {
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(terminal.object);
 
-            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), undefined, true), TypeMoq.Times.never());
+            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
             activeResourceService.verifyAll();
             configService.verifyAll();
         });
@@ -156,7 +156,7 @@ suite('Terminal Provider', () => {
             terminalProvider = new TerminalProvider(serviceContainer.object);
             await terminalProvider.initialize(undefined);
 
-            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), undefined, true), TypeMoq.Times.never());
+            terminalActivator.verify(a => a.activateEnvironmentInTerminal(TypeMoq.It.isAny(), TypeMoq.It.isAny()), TypeMoq.Times.never());
             activeResourceService.verifyAll();
             configService.verifyAll();
         });

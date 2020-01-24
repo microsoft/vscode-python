@@ -17,12 +17,13 @@ def _check_binaries(dir_path):
 
     assert len(binaries) == len(expected_endswith)
 
+
 @pytest.mark.skipif(
-    sys.version_info[:2] != (3, 7),
-    reason="PTVSD wheels shipped for Python 3.7 only",
+    sys.version_info[:2] != (3, 7), reason="PTVSD wheels shipped for Python 3.7 only",
 )
 def test_install_ptvsd(tmpdir):
     import install_ptvsd
+
     install_ptvsd.main(str(tmpdir))
     dir_path = os.path.join(
         str(tmpdir), "ptvsd", "_vendored", "pydevd", "_pydevd_bundle"

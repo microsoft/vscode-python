@@ -17,9 +17,10 @@ import { IFileSystem } from '../../client/common/platform/types';
 import { createDeferred, sleep, waitForPromise } from '../../client/common/utils/async';
 import { noop } from '../../client/common/utils/misc';
 import { Identifiers } from '../../client/datascience/constants';
+import { DataScienceErrorHandler } from '../../client/datascience/errorHandler/errorHandler';
 import { InteractiveWindowMessages } from '../../client/datascience/interactive-common/interactiveWindowTypes';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
-import { ICell, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
+import { ICell, IDataScienceErrorHandler, IJupyterExecution, INotebookEditorProvider, INotebookExporter } from '../../client/datascience/types';
 import { PythonInterpreter } from '../../client/interpreter/contracts';
 import { Editor } from '../../datascience-ui/interactive-common/editor';
 import { NativeCell } from '../../datascience-ui/native-editor/nativeCell';
@@ -71,7 +72,7 @@ suite('DataScience Native Editor', () => {
         const disposables: Disposable[] = [];
         let ioc: DataScienceIocContainer;
 
-        setup(() => {
+        setup(async () => {
             ioc = new DataScienceIocContainer();
             ioc.registerDataScienceTypes();
 
@@ -311,6 +312,55 @@ for _ in range(50):
         );
 
         runMountedTest(
+            'Server already loaded',
+            async (_wrapper, context) => {
+                if (ioc.mockJupyter) {
+                    await ioc.activate();
+
+                    // Create an editor so something is listening to messages
+                    const editor = await createNewEditor(ioc);
+
+                    // Wait a bit to let async activation to work
+                    await sleep(500);
+
+                    // Make sure it has a server
+                    assert.ok(editor.notebook, 'Notebook did not start with a server');
+                } else {
+                    context.skip();
+                }
+                // Do the same thing again, but disable auto start
+                ioc.getSettings().datascience.disableJupyterAutoStart = true;
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
+            'Server load skipped',
+            async (_wrapper, context) => {
+                if (ioc.mockJupyter) {
+                    ioc.getSettings().datascience.disableJupyterAutoStart = true;
+                    await ioc.activate();
+
+                    // Create an editor so something is listening to messages
+                    const editor = await createNewEditor(ioc);
+
+                    // Wait a bit to let async activation to work
+                    await sleep(500);
+
+                    // Make sure it does not have a server
+                    assert.notOk(editor.notebook, 'Notebook should not start with a server');
+                } else {
+                    context.skip();
+                }
+            },
+            () => {
+                return ioc;
+            }
+        );
+
+        runMountedTest(
             'Convert to python',
             async wrapper => {
                 // Export should cause the export dialog to come up. Remap appshell so we can check
@@ -452,6 +502,7 @@ for _ in range(50):
 
         test('Failure', async () => {
             let fail = true;
+            const errorThrownDeferred = createDeferred<Error>();
             // Make a dummy class that will fail during launch
             class FailedProcess extends JupyterExecutionFactory {
                 public getUsableJupyterPython(): Promise<PythonInterpreter | undefined> {
@@ -461,15 +512,22 @@ for _ in range(50):
                     return super.getUsableJupyterPython();
                 }
             }
+
+            class CustomErrorHandler extends DataScienceErrorHandler {
+                public handleError(exc: Error): Promise<void> {
+                    errorThrownDeferred.resolve(exc);
+                    return Promise.resolve();
+                }
+            }
             ioc.serviceManager.rebind<IJupyterExecution>(IJupyterExecution, FailedProcess);
+            ioc.serviceManager.rebind<IDataScienceErrorHandler>(IDataScienceErrorHandler, CustomErrorHandler);
             ioc.serviceManager.get<IJupyterExecution>(IJupyterExecution);
             addMockData(ioc, 'a=1\na', 1);
             const wrapper = mountNativeWebView(ioc);
             await createNewEditor(ioc);
-            await addCell(wrapper, ioc, 'a=1\na', true);
-
-            // Cell should not have the output
-            verifyHtmlOnCell(wrapper, 'NativeCell', 'Jupyter cannot be started', 1);
+            const result = await Promise.race([addCell(wrapper, ioc, 'a=1\na', true), errorThrownDeferred.promise]);
+            assert.ok(result, 'Error not found');
+            assert.ok(result instanceof Error, 'Error not found');
 
             // Fix failure and try again
             fail = false;

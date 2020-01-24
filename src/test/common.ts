@@ -114,6 +114,11 @@ export async function restorePythonPathInWorkspaceRoot() {
 
 export const resetGlobalPythonPathSetting = async () => retryAsync(restoreGlobalPythonPathSetting)();
 
+export async function setAutoSaveDelayInWorkspaceRoot(delayinMS: number) {
+    const vscode = require('vscode') as typeof import('vscode');
+    return retryAsync(setAutoSaveDelay)(undefined, vscode.ConfigurationTarget.Workspace, delayinMS);
+}
+
 function getWorkspaceRoot() {
     if (IS_SMOKE_TEST || IS_PERF_TEST) {
         return;
@@ -168,6 +173,21 @@ export function retryAsync(this: any, wrapped: Function, retryCount: number = 2)
             makeCall();
         });
     };
+}
+
+async function setAutoSaveDelay(resource: string | Uri | undefined, config: ConfigurationTarget, delayinMS: number) {
+    const vscode = require('vscode') as typeof import('vscode');
+    if (config === vscode.ConfigurationTarget.WorkspaceFolder && !IS_MULTI_ROOT_TEST) {
+        return;
+    }
+    const resourceUri = typeof resource === 'string' ? vscode.Uri.file(resource) : resource;
+    const settings = vscode.workspace.getConfiguration('files', resourceUri || null);
+    const value = settings.inspect<number>('autoSaveDelay');
+    const prop: 'workspaceFolderValue' | 'workspaceValue' = config === vscode.ConfigurationTarget.Workspace ? 'workspaceValue' : 'workspaceFolderValue';
+    if (value && value[prop] !== delayinMS) {
+        await settings.update('autoSaveDelay', delayinMS, config);
+        await settings.update('autoSave', 'afterDelay');
+    }
 }
 
 async function setPythonPathInWorkspace(resource: string | Uri | undefined, config: ConfigurationTarget, pythonPath?: string) {

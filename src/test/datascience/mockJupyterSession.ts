@@ -43,6 +43,10 @@ export class MockJupyterSession implements IJupyterSession {
         return this.onStatusChangedEvent.event;
     }
 
+    public get status(): ServerStatus {
+        return ServerStatus.Idle;
+    }
+
     public async restart(_timeout: number): Promise<void> {
         // For every outstanding request, switch them to fail mode
         const requests = [...this.outstandingRequestTokenSources];

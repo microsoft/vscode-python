@@ -31,6 +31,28 @@ export enum WebAppReload {
     experiment = 'Reload - experiment'
 }
 
+/**
+ * Slow roll out, to test use of local web server for serving content in the Native Notebook editor.
+ *
+ * @export
+ * @enum {string}
+ */
+export enum WebHostNotebook {
+    control = 'WebHostNotebook - control',
+    experiment = 'WebHostNotebook - experiment'
+}
+
+/**
+ * Experiment to check whether to to use a terminal to generate the environment variables of activated environments.
+ *
+ * @export
+ * @enum {number}
+ */
+export enum UseTerminalToGetActivatedEnvVars {
+    control = 'UseTerminalToGetActivatedEnvVars - control',
+    experiment = 'UseTerminalToGetActivatedEnvVars - experiment'
+}
+
 // Dummy experiment added to validate metrics of A/B testing
 export enum ValidateABTesting {
     control = 'AA_testing - control',

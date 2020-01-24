@@ -7,7 +7,7 @@ import { inject } from 'inversify';
 import * as path from 'path';
 import { CancellationToken, Disposable, Event } from 'vscode';
 import { EXTENSION_ROOT_DIR } from '../../constants';
-import { IInterpreterService } from '../../interpreter/contracts';
+import { IInterpreterService, PythonInterpreter } from '../../interpreter/contracts';
 import { Cancellation } from '../cancellation';
 import { traceVerbose } from '../logger';
 import { IFileSystem, TemporaryFile } from '../platform/types';
@@ -49,7 +49,8 @@ class ExecutionState implements Disposable {
             }
             this.state = state;
             if (state & State.errored) {
-                this._completed.reject(new Error(`Command failed with errors, check the terminal for details. Command: ${this.command.join(' ')}`));
+                const errorContents = await this.fs.readFile(`${this.lockFile}.error`).catch(() => '');
+                this._completed.reject(new Error(`Command failed with errors, check the terminal for details. Command: ${this.command.join(' ')}\n${errorContents}`));
             } else if (state & State.completed) {
                 this._completed.resolve();
             }
@@ -97,7 +98,8 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
     constructor(
         @inject(IFileSystem) private readonly fs: IFileSystem,
         @inject(IInterpreterService) private readonly interpreter: IInterpreterService,
-        public readonly terminalService: TerminalService
+        public readonly terminalService: TerminalService,
+        private readonly pythonInterpreter?: PythonInterpreter
     ) {}
     public dispose() {
         this.terminalService.dispose();
@@ -114,21 +116,22 @@ export class SynchronousTerminalService implements ITerminalService, Disposable 
             }
         }
     }
-    public async sendCommand(command: string, args: string[], cancel?: CancellationToken): Promise<void> {
+    public async sendCommand(command: string, args: string[], cancel?: CancellationToken, swallowExceptions: boolean = true): Promise<void> {
         if (!cancel) {
             return this.terminalService.sendCommand(command, args);
         }
         const lockFile = await this.createLockFile();
         const state = new ExecutionState(lockFile.filePath, this.fs, [command, ...args]);
         try {
-            const pythonExec = await this.interpreter.getActiveInterpreter(undefined);
+            const pythonExec = this.pythonInterpreter || (await this.interpreter.getActiveInterpreter(undefined));
             await this.terminalService.sendCommand(pythonExec?.path || 'python', [
                 shellExecFile.fileToCommandArgument(),
                 command.fileToCommandArgument(),
                 ...args,
                 lockFile.filePath.fileToCommandArgument()
             ]);
-            await Cancellation.race(() => state.completed.catch(noop), cancel);
+            const promise = swallowExceptions ? state.completed : state.completed.catch(noop);
+            await Cancellation.race(() => promise, cancel);
         } finally {
             state.dispose();
             lockFile.dispose();

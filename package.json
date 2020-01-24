@@ -1155,7 +1155,10 @@
                             "env": {
                                 "type": "object",
                                 "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
-                                "default": {}
+                                "default": {},
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
                             },
                             "envFile": {
                                 "type": "string",
@@ -1282,7 +1285,10 @@
                             "env": {
                                 "type": "object",
                                 "description": "Environment variables defined as a key value pair. Property ends up being the Environment Variable and the value of the property ends up being the value of the Env Variable.",
-                                "default": {}
+                                "default": {},
+                                "additionalProperties": {
+                                    "type": "string"
+                                }
                             },
                             "envFile": {
                                 "type": "string",
@@ -1458,6 +1464,8 @@
                             "PtvsdWheels37 - experiment",
                             "Reload - experiment",
                             "AA_testing - experiment",
+                            "WebHostNotebook - experiment",
+                            "UseTerminalToGetActivatedEnvVars - experiment",
                             "All"
                         ]
                     },
@@ -1476,6 +1484,8 @@
                             "PtvsdWheels37 - experiment",
                             "Reload - experiment",
                             "AA_testing - experiment",
+                            "WebHostNotebook - experiment",
+                            "UseTerminalToGetActivatedEnvVars - experiment",
                             "All"
                         ]
                     },
@@ -1796,6 +1806,12 @@
                     "type": "number",
                     "default": -1,
                     "description": "When debugging a cell, open this port on the remote box. If -1 is specified, a random port between 8889 and 9000 will be attempted.",
+                    "scope": "resource"
+                },
+                "python.dataScience.disableJupyterAutoStart": {
+                    "type": "boolean",
+                    "default": false,
+                    "description": "When true, disables Jupyter from being automatically started for you. You must instead run a cell to start Jupyter.",
                     "scope": "resource"
                 },
                 "python.dataScience.textOutputLimit": {

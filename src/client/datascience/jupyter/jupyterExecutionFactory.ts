@@ -42,6 +42,7 @@ type JupyterExecutionClassType = {
 export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposable {
     private executionFactory: RoleBasedFactory<IJupyterExecutionInterface, JupyterExecutionClassType>;
     private sessionChangedEventEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private serverStartedEventEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
 
     constructor(
         @inject(ILiveShareApi) liveShare: ILiveShareApi,
@@ -82,6 +83,10 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
         return this.sessionChangedEventEmitter.event;
     }
 
+    public get serverStarted(): Event<INotebookServerOptions> {
+        return this.serverStartedEventEmitter.event;
+    }
+
     public async dispose(): Promise<void> {
         // Dispose of our execution object
         const execution = await this.executionFactory.get();
@@ -113,7 +118,11 @@ export class JupyterExecutionFactory implements IJupyterExecution, IAsyncDisposa
     }
     public async connectToNotebookServer(options?: INotebookServerOptions, cancelToken?: CancellationToken): Promise<INotebookServer | undefined> {
         const execution = await this.executionFactory.get();
-        return execution.connectToNotebookServer(options, cancelToken);
+        const server = await execution.connectToNotebookServer(options, cancelToken);
+        if (server) {
+            this.serverStartedEventEmitter.fire(options);
+        }
+        return server;
     }
     public async spawnNotebook(file: string): Promise<void> {
         const execution = await this.executionFactory.get();

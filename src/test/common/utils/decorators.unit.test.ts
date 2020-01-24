@@ -20,9 +20,8 @@ suite('Common Utils - Decorators', function() {
     // tslint:disable-next-line: no-invalid-this
     this.retries(3);
     suite('Cache', () => {
-        teardown(() => {
-            clearCache();
-        });
+        setup(clearCache);
+        teardown(clearCache);
         function createMockVSC(pythonPath: string): typeof import('vscode') {
             return {
                 workspace: {

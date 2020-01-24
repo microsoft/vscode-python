@@ -11,9 +11,10 @@ import { traceInfo } from '../../../client/common/logger';
 import { createDeferred } from '../../../client/common/utils/async';
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { IConfigurationService, IDisposable } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { ICodeCssGenerator, IPlotViewer, IThemeFinder } from '../types';
 import { WebViewHost } from '../webViewHost';
@@ -33,7 +34,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IApplicationShell) private applicationShell: IApplicationShell,
-        @inject(IFileSystem) private fileSystem: IFileSystem
+        @inject(IFileSystem) private fileSystem: IFileSystem,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         super(
             configuration,
@@ -45,7 +47,8 @@ export class PlotViewer extends WebViewHost<IPlotViewerMapping> implements IPlot
             plotDir,
             [path.join(plotDir, 'index_bundle.js')],
             localize.DataScience.plotViewerTitle(),
-            ViewColumn.One
+            ViewColumn.One,
+            experimentsManager.inExperiment(WebHostNotebook.experiment)
         );
         // Load the web panel using our current directory as we don't expect to load any other files
         super.loadWebPanel(process.cwd()).catch(traceError);

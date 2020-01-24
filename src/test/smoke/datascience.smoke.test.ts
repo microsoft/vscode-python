@@ -8,7 +8,7 @@
 import * as fs from 'fs-extra';
 import * as path from 'path';
 import * as vscode from 'vscode';
-import { getOSType, openFile, OSType, waitForCondition } from '../common';
+import { openFile, setAutoSaveDelayInWorkspaceRoot, waitForCondition } from '../common';
 import { EXTENSION_ROOT_DIR_FOR_TESTS, IS_SMOKE_TEST } from '../constants';
 import { noop, sleep } from '../core';
 import { closeActiveWindows, initialize, initializeTest } from '../initialize';
@@ -20,11 +20,8 @@ suite('Smoke Test: Interactive Window', () => {
         if (!IS_SMOKE_TEST) {
             return this.skip();
         }
-        // Skip for now on windows.
-        if (getOSType() === OSType.Windows) {
-            return this.skip();
-        }
         await initialize();
+        await setAutoSaveDelayInWorkspaceRoot(1);
     });
     setup(initializeTest);
     suiteTeardown(closeActiveWindows);
@@ -49,8 +46,8 @@ suite('Smoke Test: Interactive Window', () => {
     test('Run Cell in native editor', async () => {
         const file = path.join(EXTENSION_ROOT_DIR_FOR_TESTS, 'src', 'test', 'pythonFiles', 'datascience', 'simple_nb.ipynb');
         const fileContents = await fs.readFile(file, { encoding: 'utf-8' });
-        const outputFile = path.join(path.dirname(file), 'ds.log');
-        await fs.writeFile(file, fileContents.replace("'ds.log'", `'${outputFile}'`), { encoding: 'utf-8' });
+        const outputFile = path.join(path.dirname(file), 'ds_n.log');
+        await fs.writeFile(file, fileContents.replace("'ds_n.log'", `'${outputFile.replace(/\\/g, '/')}'`), { encoding: 'utf-8' });
         if (await fs.pathExists(outputFile)) {
             await fs.unlink(outputFile);
         }
@@ -64,5 +61,8 @@ suite('Smoke Test: Interactive Window', () => {
         await vscode.commands.executeCommand<void>('python.datascience.notebookeditor.runallcells');
         const checkIfFileHasBeenCreated = () => fs.pathExists(outputFile);
         await waitForCondition(checkIfFileHasBeenCreated, timeoutForCellToRun, `"${outputFile}" file not created`);
+
+        // Give time for the file to be saved before we shutdown
+        await sleep(300);
     }).timeout(timeoutForCellToRun);
 });

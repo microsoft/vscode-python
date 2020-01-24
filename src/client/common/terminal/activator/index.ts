@@ -4,8 +4,8 @@
 'use strict';
 
 import { inject, injectable, multiInject } from 'inversify';
-import { Terminal, Uri } from 'vscode';
-import { ITerminalActivationHandler, ITerminalActivator, ITerminalHelper } from '../types';
+import { Terminal } from 'vscode';
+import { ITerminalActivationHandler, ITerminalActivator, ITerminalHelper, TerminalActivationOptions } from '../types';
 import { BaseTerminalActivator } from './base';
 
 @injectable()
@@ -14,9 +14,9 @@ export class TerminalActivator implements ITerminalActivator {
     constructor(@inject(ITerminalHelper) readonly helper: ITerminalHelper, @multiInject(ITerminalActivationHandler) private readonly handlers: ITerminalActivationHandler[]) {
         this.initialize();
     }
-    public async activateEnvironmentInTerminal(terminal: Terminal, resource: Uri | undefined, preserveFocus: boolean = true) {
-        const activated = await this.baseActivator.activateEnvironmentInTerminal(terminal, resource, preserveFocus);
-        this.handlers.forEach(handler => handler.handleActivation(terminal, resource, preserveFocus, activated).ignoreErrors());
+    public async activateEnvironmentInTerminal(terminal: Terminal, options?: TerminalActivationOptions): Promise<boolean> {
+        const activated = await this.baseActivator.activateEnvironmentInTerminal(terminal, options);
+        this.handlers.forEach(handler => handler.handleActivation(terminal, options?.resource, options?.preserveFocus === true, activated).ignoreErrors());
         return activated;
     }
     protected initialize() {

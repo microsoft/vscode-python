@@ -1,7 +1,6 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import { JSONObject } from '@phosphor/coreutils/lib/json';
 import { assert } from 'chai';
 import * as fs from 'fs-extra';
 import * as os from 'os';
@@ -12,7 +11,7 @@ import { anyString, anything, deepEqual, instance, match, mock, reset, verify, w
 import { Matcher } from 'ts-mockito/lib/matcher/type/Matcher';
 import * as TypeMoq from 'typemoq';
 import * as uuid from 'uuid/v4';
-import { CancellationToken, CancellationTokenSource, ConfigurationChangeEvent, Disposable, Event, EventEmitter, Uri } from 'vscode';
+import { CancellationTokenSource, ConfigurationChangeEvent, Disposable, EventEmitter } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { IApplicationShell, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
@@ -22,7 +21,7 @@ import { PYTHON_LANGUAGE } from '../../client/common/constants';
 import { Logger } from '../../client/common/logger';
 import { PersistentState, PersistentStateFactory } from '../../client/common/persistentState';
 import { FileSystem } from '../../client/common/platform/fileSystem';
-import { IFileSystem, TemporaryFile } from '../../client/common/platform/types';
+import { IFileSystem } from '../../client/common/platform/types';
 import { ProcessServiceFactory } from '../../client/common/process/processFactory';
 import { PythonExecutionFactory } from '../../client/common/process/pythonExecutionFactory';
 import {
@@ -38,185 +37,28 @@ import { IAsyncDisposableRegistry, IConfigurationService, IDisposableRegistry, I
 import { createDeferred } from '../../client/common/utils/async';
 import { Architecture } from '../../client/common/utils/platform';
 import { EXTENSION_ROOT_DIR } from '../../client/constants';
-import { Identifiers, PythonDaemonModule } from '../../client/datascience/constants';
+import { PythonDaemonModule } from '../../client/datascience/constants';
 import { JupyterCommandFactory } from '../../client/datascience/jupyter/interpreter/jupyterCommand';
 import { JupyterCommandFinder } from '../../client/datascience/jupyter/interpreter/jupyterCommandFinder';
 import { JupyterCommandFinderInterpreterExecutionService } from '../../client/datascience/jupyter/interpreter/jupyterCommandInterpreterExecutionService';
 import { JupyterExecutionFactory } from '../../client/datascience/jupyter/jupyterExecutionFactory';
 import { KernelSelector } from '../../client/datascience/jupyter/kernels/kernelSelector';
-import { LiveKernelModel } from '../../client/datascience/jupyter/kernels/types';
 import { NotebookStarter } from '../../client/datascience/jupyter/notebookStarter';
 import { LiveShareApi } from '../../client/datascience/liveshare/liveshare';
-import {
-    ICell,
-    IConnection,
-    IJupyterKernelSpec,
-    IJupyterSubCommandExecutionService,
-    INotebook,
-    INotebookCompletion,
-    INotebookExecutionLogger,
-    INotebookServer,
-    INotebookServerLaunchInfo,
-    InterruptResult
-} from '../../client/datascience/types';
+import { IJupyterKernelSpec, IJupyterSubCommandExecutionService, INotebookServer } from '../../client/datascience/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
 import { IInterpreterService, InterpreterType, PythonInterpreter } from '../../client/interpreter/contracts';
 import { InterpreterService } from '../../client/interpreter/interpreterService';
 import { KnownSearchPathsForInterpreters } from '../../client/interpreter/locators/services/KnownPathsService';
 import { ServiceContainer } from '../../client/ioc/container';
-import { ServerStatus } from '../../datascience-ui/interactive-common/mainState';
 import { getOSType, OSType } from '../common';
 import { noop, sleep } from '../core';
 import { MockOutputChannel } from '../mockClasses';
 import { MockAutoSelectionService } from '../mocks/autoSelector';
-
-class MockJupyterNotebook implements INotebook {
-    public onKernelChanged: Event<IJupyterKernelSpec | LiveKernelModel> = new EventEmitter<IJupyterKernelSpec | LiveKernelModel>().event;
-    private onStatusChangedEvent: EventEmitter<ServerStatus> | undefined;
-    constructor(private owner: INotebookServer) {
-        noop();
-    }
-
-    public get server(): INotebookServer {
-        return this.owner;
-    }
-
-    public get resource(): Uri {
-        return Uri.parse(Identifiers.InteractiveWindowIdentity);
-    }
-
-    public clear(_id: string): void {
-        noop();
-    }
-    public executeObservable(_code: string, _f: string, _line: number): Observable<ICell[]> {
-        throw new Error('Method not implemented');
-    }
-
-    public inspect(_code: string, _cancelToken?: CancellationToken): Promise<JSONObject> {
-        return Promise.resolve({});
-    }
-
-    public async getCompletion(_cellCode: string, _offsetInCode: number, _cancelToken?: CancellationToken): Promise<INotebookCompletion> {
-        throw new Error('Method not implemented');
-    }
-    public execute(_code: string, _f: string, _line: number): Promise<ICell[]> {
-        throw new Error('Method not implemented');
-    }
-    public restartKernel(): Promise<void> {
-        throw new Error('Method not implemented');
-    }
-    public translateToNotebook(_cells: ICell[]): Promise<JSONObject> {
-        throw new Error('Method not implemented');
-    }
-    public waitForIdle(): Promise<void> {
-        throw new Error('Method not implemented');
-    }
-    public setLaunchingFile(_file: string): Promise<void> {
-        throw new Error('Method not implemented');
-    }
-
-    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
-        noop();
-    }
-
-    public addLogger(_logger: INotebookExecutionLogger): void {
-        noop();
-    }
-
-    public getSysInfo(): Promise<ICell | undefined> {
-        return Promise.resolve(undefined);
-    }
-
-    public interruptKernel(_timeout: number): Promise<InterruptResult> {
-        throw new Error('Method not implemented');
-    }
-
-    public async dispose(): Promise<void> {
-        if (this.onStatusChangedEvent) {
-            this.onStatusChangedEvent.dispose();
-        }
-        return Promise.resolve();
-    }
-
-    public getMatchingInterpreter(): PythonInterpreter | undefined {
-        return;
-    }
-
-    public setInterpreter(_inter: PythonInterpreter) {
-        noop();
-    }
-
-    public getKernelSpec(): IJupyterKernelSpec | undefined {
-        return;
-    }
-
-    public setKernelSpec(_spec: IJupyterKernelSpec | LiveKernelModel, _timeout: number): Promise<void> {
-        return Promise.resolve();
-    }
-
-    public get onSessionStatusChanged(): Event<ServerStatus> {
-        if (!this.onStatusChangedEvent) {
-            this.onStatusChangedEvent = new EventEmitter<ServerStatus>();
-        }
-        return this.onStatusChangedEvent.event;
-    }
-}
+import { MockJupyterServer } from './mockJupyterServer';
 
 // tslint:disable:no-any no-http-string no-multiline-string max-func-body-length
-class MockJupyterServer implements INotebookServer {
-    private launchInfo: INotebookServerLaunchInfo | undefined;
-    private notebookFile: TemporaryFile | undefined;
-    private _id = uuid();
-
-    public get id(): string {
-        return this._id;
-    }
-    public connect(launchInfo: INotebookServerLaunchInfo): Promise<void> {
-        if (launchInfo && launchInfo.connectionInfo && launchInfo.kernelSpec) {
-            this.launchInfo = launchInfo;
-
-            // Validate connection info and kernel spec
-            if (launchInfo.connectionInfo.baseUrl && launchInfo.kernelSpec.name && /[a-z,A-Z,0-9,-,.,_]+/.test(launchInfo.kernelSpec.name)) {
-                return Promise.resolve();
-            }
-        }
-        return Promise.reject('invalid server startup');
-    }
-
-    public async createNotebook(_resource: Uri): Promise<INotebook> {
-        return new MockJupyterNotebook(this);
-    }
-
-    public async getNotebook(_resource: Uri): Promise<INotebook | undefined> {
-        return new MockJupyterNotebook(this);
-    }
-
-    public async setMatplotLibStyle(_useDark: boolean): Promise<void> {
-        noop();
-    }
-    public getConnectionInfo(): IConnection | undefined {
-        return this.launchInfo ? this.launchInfo.connectionInfo : undefined;
-    }
-    public waitForConnect(): Promise<INotebookServerLaunchInfo | undefined> {
-        throw new Error('Method not implemented');
-    }
-    public async shutdown() {
-        return Promise.resolve();
-    }
-
-    public async dispose(): Promise<void> {
-        if (this.launchInfo) {
-            this.launchInfo.connectionInfo.dispose(); // This should kill the process that's running
-            this.launchInfo = undefined;
-        }
-        if (this.notebookFile) {
-            this.notebookFile.dispose(); // This destroy any unwanted kernel specs if necessary
-            this.notebookFile = undefined;
-        }
-    }
-}
-
 class DisposableRegistry implements IDisposableRegistry, IAsyncDisposableRegistry {
     private disposables: Disposable[] = [];
 
@@ -839,7 +681,7 @@ suite('Jupyter Execution', async () => {
             name: 'hello',
             path: ''
         };
-        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything())).thenResolve({ kernelSpec });
+        when(kernelSelector.getKernelForLocalConnection(anything(), anything(), anything(), anything())).thenResolve({ kernelSpec });
         const jupyterCmdExecutionService = new JupyterCommandFinderInterpreterExecutionService(
             commandFinder,
             instance(interpreterService),

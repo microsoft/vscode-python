@@ -212,7 +212,7 @@ suite('Data Science - Kernel Switcher', () => {
                                         return;
                                     }
                                 });
-                                when(kernelSelector.selectLocalKernel(undefined, undefined, anything())).thenCall(() => {
+                                when(kernelSelector.selectLocalKernel(undefined, anything(), anything())).thenCall(() => {
                                     // When selecting a kernel the second time, then return a different selection.
                                     firstTimeSelectingAKernel = false;
                                     return {

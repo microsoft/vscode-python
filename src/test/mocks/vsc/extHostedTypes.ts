@@ -667,6 +667,18 @@ export namespace vscMockExtHostedTypes {
             return this;
         }
 
+        appendChoice(values: string[], number: number = this._tabstop++): SnippetString {
+            const value = SnippetString._escape(values.toString());
+
+            this.value += '${';
+            this.value += number;
+            this.value += '|';
+            this.value += value;
+            this.value += '|}';
+
+            return this;
+        }
+
         appendVariable(name: string, defaultValue?: string | ((snippet: SnippetString) => any)): SnippetString {
             if (typeof defaultValue === 'function') {
                 const nested = new SnippetString();
@@ -1072,42 +1084,51 @@ export namespace vscMockExtHostedTypes {
         TypeParameter = 24
     }
 
+    export enum CompletionItemTag {
+        Deprecated = 1
+    }
+
+    export interface CompletionItemLabel {
+        name: string;
+        signature?: string;
+        qualifier?: string;
+        type?: string;
+    }
+
     export class CompletionItem {
+        // @ts-ignore
         label: string;
-        kind: CompletionItemKind;
-        // @ts-ignore
-        detail: string;
-        // @ts-ignore
-        documentation: string | MarkdownString;
-        // @ts-ignore
-        sortText: string;
-        // @ts-ignore
-        filterText: string;
-        // @ts-ignore
-        insertText: string | SnippetString;
-        // @ts-ignore
-        range: Range;
-        // @ts-ignore
-        textEdit: TextEdit;
-        // @ts-ignore
-        additionalTextEdits: TextEdit[];
-        // @ts-ignore
-        command: vscode.Command;
+        label2?: CompletionItemLabel;
+        kind?: CompletionItemKind;
+        tags?: CompletionItemTag[];
+        detail?: string;
+        documentation?: string | MarkdownString;
+        sortText?: string;
+        filterText?: string;
+        preselect?: boolean;
+        insertText?: string | SnippetString;
+        keepWhitespace?: boolean;
+        range?: Range;
+        commitCharacters?: string[];
+        textEdit?: TextEdit;
+        additionalTextEdits?: TextEdit[];
+        command?: vscode.Command;
 
         constructor(label: string, kind?: CompletionItemKind) {
             this.label = label;
-            // @ts-ignore
             this.kind = kind;
         }
 
         toJSON(): any {
             return {
                 label: this.label,
-                kind: CompletionItemKind[this.kind],
+                label2: this.label2,
+                kind: this.kind && CompletionItemKind[this.kind],
                 detail: this.detail,
                 documentation: this.documentation,
                 sortText: this.sortText,
                 filterText: this.filterText,
+                preselect: this.preselect,
                 insertText: this.insertText,
                 textEdit: this.textEdit
             };

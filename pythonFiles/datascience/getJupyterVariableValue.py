@@ -29,18 +29,25 @@ class VC_SafeRepr(object):
     maxstring_inner = 30
     if not VC_IS_PY2:
         string_types = (str, bytes)
-        set_info = (set, '{', '}', False)
-        frozenset_info = (frozenset, 'frozenset({', '})', False)
+        set_info = (set, "{", "}", False)
+        frozenset_info = (frozenset, "frozenset({", "})", False)
         int_types = (int,)
-        long_iter_types = (list, tuple, bytearray, range,
-                           dict, set, frozenset)
+        long_iter_types = (list, tuple, bytearray, range, dict, set, frozenset)
     else:
         string_types = (str, unicode)
-        set_info = (set, 'set([', '])', False)
-        frozenset_info = (frozenset, 'frozenset([', '])', False)
+        set_info = (set, "set([", "])", False)
+        frozenset_info = (frozenset, "frozenset([", "])", False)
         int_types = (int, long)  # noqa
-        long_iter_types = (list, tuple, bytearray, xrange,
-                           dict, set, frozenset, buffer)  # noqa
+        long_iter_types = (
+            list,
+            tuple,
+            bytearray,
+            xrange,
+            dict,
+            set,
+            frozenset,
+            buffer,
+        )  # noqa
 
     # Collection types are recursively iterated for each limit in
     # maxcollection.
@@ -50,23 +57,25 @@ class VC_SafeRepr(object):
     # comma if there is only one element. (Using a sequence rather than a
     # mapping because we use isinstance() to determine the matching type.)
     collection_types = [
-        (tuple, '(', ')', True),
-        (list, '[', ']', False),
+        (tuple, "(", ")", True),
+        (list, "[", "]", False),
         frozenset_info,
         set_info,
     ]
     try:
         from collections import deque
-        collection_types.append((deque, 'deque([', '])', False))
+
+        collection_types.append((deque, "deque([", "])", False))
     except Exception:
         pass
 
     # type, prefix string, suffix string, item prefix string,
     # item key/value separator, item suffix string
-    dict_types = [(dict, '{', '}', '', ': ', '')]
+    dict_types = [(dict, "{", "}", "", ": ", "")]
     try:
         from collections import OrderedDict
-        dict_types.append((OrderedDict, 'OrderedDict([', '])', '(', ', ', ')'))
+
+        dict_types.append((OrderedDict, "OrderedDict([", "])", "(", ", ", ")"))
     except Exception:
         pass
 
@@ -81,17 +90,20 @@ class VC_SafeRepr(object):
     def __call__(self, obj):
         try:
             if VC_IS_PY2:
-                return ''.join((x.encode('utf-8') if isinstance(x, unicode) else x) for x in self._repr(obj, 0))
+                return "".join(
+                    (x.encode("utf-8") if isinstance(x, unicode) else x)
+                    for x in self._repr(obj, 0)
+                )
             else:
-                return ''.join(self._repr(obj, 0))
+                return "".join(self._repr(obj, 0))
         except Exception as e:
             try:
-                return 'An exception was raised: ' + str(e)
+                return "An exception was raised: " + str(e)
             except Exception:
-                return 'An exception was raised'
+                return "An exception was raised"
 
     def _repr(self, obj, level):
-        '''Returns an iterable of the parts in the final repr string.'''
+        """Returns an iterable of the parts in the final repr string."""
 
         try:
             obj_repr = type(obj).__repr__
@@ -109,10 +121,18 @@ class VC_SafeRepr(object):
             if isinstance(obj, t) and has_obj_repr(t):
                 return self._repr_iter(obj, level, prefix, suffix, comma)
 
-        for t, prefix, suffix, item_prefix, item_sep, item_suffix in self.dict_types:  # noqa
+        for (
+            t,
+            prefix,
+            suffix,
+            item_prefix,
+            item_sep,
+            item_suffix,
+        ) in self.dict_types:  # noqa
             if isinstance(obj, t) and has_obj_repr(t):
-                return self._repr_dict(obj, level, prefix, suffix,
-                                       item_prefix, item_sep, item_suffix)
+                return self._repr_dict(
+                    obj, level, prefix, suffix, item_prefix, item_sep, item_suffix
+                )
 
         for t in self.string_types:
             if isinstance(obj, t) and has_obj_repr(t):
@@ -134,7 +154,7 @@ class VC_SafeRepr(object):
                 return len(obj) > self.maxstring_inner
 
             # If it's not an iterable (and not a string), it's fine.
-            if not hasattr(obj, '__iter__'):
+            if not hasattr(obj, "__iter__"):
                 return False
 
             # If it's not an instance of these collection types then it
@@ -157,8 +177,8 @@ class VC_SafeRepr(object):
             # numpy and scipy collections (ndarray etc) have
             # self-truncating repr, so they're always safe.
             try:
-                module = type(obj).__module__.partition('.')[0]
-                if module in ('numpy', 'scipy'):
+                module = type(obj).__module__.partition(".")[0]
+                if module in ("numpy", "scipy"):
                     return False
             except Exception:
                 pass
@@ -169,37 +189,41 @@ class VC_SafeRepr(object):
 
             # It is too long if the length exceeds the limit, or any
             # of its elements are long iterables.
-            if hasattr(obj, '__len__'):
+            if hasattr(obj, "__len__"):
                 try:
                     size = len(obj)
                 except Exception:
                     size = None
                 if size is not None and size > self.maxcollection[level]:
                     return True
-                return any((self._is_long_iter(item, level + 1) for item in obj))  # noqa
-            return any(i > self.maxcollection[level] or self._is_long_iter(item, level + 1) for i, item in enumerate(obj))  # noqa
+                return any(
+                    (self._is_long_iter(item, level + 1) for item in obj)
+                )  # noqa
+            return any(
+                i > self.maxcollection[level] or self._is_long_iter(item, level + 1)
+                for i, item in enumerate(obj)
+            )  # noqa
 
         except Exception:
             # If anything breaks, assume the worst case.
             return True
 
-    def _repr_iter(self, obj, level, prefix, suffix,
-                   comma_after_single_element=False):
+    def _repr_iter(self, obj, level, prefix, suffix, comma_after_single_element=False):
         yield prefix
 
         if level >= len(self.maxcollection):
-            yield '...'
+            yield "..."
         else:
             count = self.maxcollection[level]
             yield_comma = False
             for item in obj:
                 if yield_comma:
-                    yield ', '
+                    yield ", "
                 yield_comma = True
 
                 count -= 1
                 if count <= 0:
-                    yield '...'
+                    yield "..."
                     break
 
                 for p in self._repr(item, 100 if item is obj else level + 1):
@@ -207,27 +231,28 @@ class VC_SafeRepr(object):
             else:
                 if comma_after_single_element:
                     if count == self.maxcollection[level] - 1:
-                        yield ','
+                        yield ","
         yield suffix
 
     def _repr_long_iter(self, obj):
         try:
             length = hex(len(obj)) if self.convert_to_hex else len(obj)
-            obj_repr = '<%s, len() = %s>' % (type(obj).__name__, length)
+            obj_repr = "<%s, len() = %s>" % (type(obj).__name__, length)
         except Exception:
             try:
-                obj_repr = '<' + type(obj).__name__ + '>'
+                obj_repr = "<" + type(obj).__name__ + ">"
             except Exception:
-                obj_repr = '<no repr available for object>'
+                obj_repr = "<no repr available for object>"
         yield obj_repr
 
-    def _repr_dict(self, obj, level, prefix, suffix,
-                   item_prefix, item_sep, item_suffix):
+    def _repr_dict(
+        self, obj, level, prefix, suffix, item_prefix, item_sep, item_suffix
+    ):
         if not obj:
             yield prefix + suffix
             return
         if level >= len(self.maxcollection):
-            yield prefix + '...' + suffix
+            yield prefix + "..." + suffix
             return
 
         yield prefix
@@ -242,12 +267,12 @@ class VC_SafeRepr(object):
 
         for key in sorted_keys:
             if yield_comma:
-                yield ', '
+                yield ", "
             yield_comma = True
 
             count -= 1
             if count <= 0:
-                yield '...'
+                yield "..."
                 break
 
             yield item_prefix
@@ -259,7 +284,7 @@ class VC_SafeRepr(object):
             try:
                 item = obj[key]
             except Exception:
-                yield '<?>'
+                yield "<?>"
             else:
                 for p in self._repr(item, 100 if item is obj else level + 1):
                     yield p
@@ -268,19 +293,17 @@ class VC_SafeRepr(object):
         yield suffix
 
     def _repr_str(self, obj, level):
-        return self._repr_obj(obj, level,
-                              self.maxstring_inner, self.maxstring_outer)
+        return self._repr_obj(obj, level, self.maxstring_inner, self.maxstring_outer)
 
     def _repr_other(self, obj, level):
-        return self._repr_obj(obj, level,
-                              self.maxother_inner, self.maxother_outer)
+        return self._repr_obj(obj, level, self.maxother_inner, self.maxother_outer)
 
     def _repr_obj(self, obj, level, limit_inner, limit_outer):
         try:
             if self.raw_value:
                 # For raw value retrieval, ignore all limits.
                 if isinstance(obj, bytes):
-                    yield obj.decode('latin-1')
+                    yield obj.decode("latin-1")
                     return
 
                 try:
@@ -290,7 +313,7 @@ class VC_SafeRepr(object):
                     return
                 else:
                     # Map bytes to Unicode codepoints with same values.
-                    yield mv.tobytes().decode('latin-1')
+                    yield mv.tobytes().decode("latin-1")
                     return
             elif self.convert_to_hex and isinstance(obj, self.int_types):
                 obj_repr = hex(obj)
@@ -301,9 +324,11 @@ class VC_SafeRepr(object):
                 obj_repr = object.__repr__(obj)
             except Exception:
                 try:
-                    obj_repr = '<no repr available for ' + type(obj).__name__ + '>'  # noqa
+                    obj_repr = (
+                        "<no repr available for " + type(obj).__name__ + ">"
+                    )  # noqa
                 except Exception:
-                    obj_repr = '<no repr available for object>'
+                    obj_repr = "<no repr available for object>"
 
         limit = limit_inner if level > 0 else limit_outer
 
@@ -314,7 +339,10 @@ class VC_SafeRepr(object):
         # Slightly imprecise calculations - we may end up with a string that is
         # up to 3 characters longer than limit. If you need precise formatting,
         # you are using the wrong class.
-        left_count, right_count = max(1, int(2 * limit / 3)), max(1, int(limit / 3))  # noqa
+        left_count, right_count = (
+            max(1, int(2 * limit / 3)),
+            max(1, int(limit / 3)),
+        )  # noqa
 
         if VC_IS_PY2 and isinstance(obj_repr, bytes):
             # If we can convert to unicode before slicing, that's better (but don't do
@@ -324,7 +352,9 @@ class VC_SafeRepr(object):
             if isinstance(obj_repr, unicode):
                 # Deal with high-surrogate leftovers on Python 2.
                 try:
-                    if left_count > 0 and unichr(0xD800) <= obj_repr[left_count - 1] <= unichr(0xDBFF):
+                    if left_count > 0 and unichr(0xD800) <= obj_repr[
+                        left_count - 1
+                    ] <= unichr(0xDBFF):
                         left_count -= 1
                 except ValueError:
                     # On Jython unichr(0xD800) will throw an error:
@@ -336,11 +366,13 @@ class VC_SafeRepr(object):
 
                 # Note: yielding unicode is fine (it'll be properly converted to utf-8 if needed).
                 yield start
-                yield '...'
+                yield "..."
 
                 # Deal with high-surrogate leftovers on Python 2.
                 try:
-                    if right_count > 0 and unichr(0xD800) <= obj_repr[-right_count - 1] <= unichr(0xDBFF):
+                    if right_count > 0 and unichr(0xD800) <= obj_repr[
+                        -right_count - 1
+                    ] <= unichr(0xDBFF):
                         right_count -= 1
                 except ValueError:
                     # On Jython unichr(0xD800) will throw an error:
@@ -355,7 +387,7 @@ class VC_SafeRepr(object):
                 obj_repr = repr(obj_repr)
 
         yield obj_repr[:left_count]
-        yield '...'
+        yield "..."
         yield obj_repr[-right_count:]
 
     def _convert_to_unicode_or_bytes_repr(self, obj_repr):
@@ -373,18 +405,20 @@ class VC_SafeRepr(object):
         # locale.getpreferredencoding() and 'utf-8). If no encoding can decode
         # the input, we return the original bytes.
         try_encodings = []
-        encoding = self.sys_stdout_encoding or getattr(VC_sys.stdout, 'encoding', '')
+        encoding = self.sys_stdout_encoding or getattr(VC_sys.stdout, "encoding", "")
         if encoding:
             try_encodings.append(encoding.lower())
 
-        preferred_encoding = self.locale_preferred_encoding or VC_locale.getpreferredencoding()
+        preferred_encoding = (
+            self.locale_preferred_encoding or VC_locale.getpreferredencoding()
+        )
         if preferred_encoding:
             preferred_encoding = preferred_encoding.lower()
             if preferred_encoding not in try_encodings:
                 try_encodings.append(preferred_encoding)
 
-        if 'utf-8' not in try_encodings:
-            try_encodings.append('utf-8')
+        if "utf-8" not in try_encodings:
+            try_encodings.append("utf-8")
 
         for encoding in try_encodings:
             try:
@@ -397,34 +431,40 @@ class VC_SafeRepr(object):
 
 # Query Jupyter server for the value of a variable
 import json as _VSCODE_json
+
 _VSCODE_max_len = 200
 # In IJupyterVariables.getValue this '_VSCode_JupyterTestValue' will be replaced with the json stringified value of the target variable
 # Indexes off of _VSCODE_targetVariable need to index types that are part of IJupyterVariable
-_VSCODE_targetVariable = _VSCODE_json.loads('_VSCode_JupyterTestValue')
+_VSCODE_targetVariable = _VSCODE_json.loads("""_VSCode_JupyterTestValue""")
 
-_VSCODE_evalResult = eval(_VSCODE_targetVariable['name'])
+_VSCODE_evalResult = eval(_VSCODE_targetVariable["name"])
 
 # Find shape and count if available
-if (hasattr(_VSCODE_evalResult, 'shape')):
+if hasattr(_VSCODE_evalResult, "shape"):
     try:
         # Get a bit more restrictive with exactly what we want to count as a shape, since anything can define it
         if isinstance(_VSCODE_evalResult.shape, tuple):
             _VSCODE_shapeStr = str(_VSCODE_evalResult.shape)
-            if len(_VSCODE_shapeStr) >= 3 and _VSCODE_shapeStr[0] == '(' and _VSCODE_shapeStr[-1] == ')' and ',' in _VSCODE_shapeStr:
-                _VSCODE_targetVariable['shape'] = _VSCODE_shapeStr
+            if (
+                len(_VSCODE_shapeStr) >= 3
+                and _VSCODE_shapeStr[0] == "("
+                and _VSCODE_shapeStr[-1] == ")"
+                and "," in _VSCODE_shapeStr
+            ):
+                _VSCODE_targetVariable["shape"] = _VSCODE_shapeStr
             del _VSCODE_shapeStr
     except TypeError:
         pass
 
-if (hasattr(_VSCODE_evalResult, '__len__')):
+if hasattr(_VSCODE_evalResult, "__len__"):
     try:
-        _VSCODE_targetVariable['count'] = len(_VSCODE_evalResult)
+        _VSCODE_targetVariable["count"] = len(_VSCODE_evalResult)
     except TypeError:
         pass
 
 # Use SafeRepr to get our short string value
 VC_sr = VC_SafeRepr()
-_VSCODE_targetVariable['value'] = VC_sr(_VSCODE_evalResult)
+_VSCODE_targetVariable["value"] = VC_sr(_VSCODE_evalResult)
 
 print(_VSCODE_json.dumps(_VSCODE_targetVariable))
 

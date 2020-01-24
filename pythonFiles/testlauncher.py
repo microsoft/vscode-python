@@ -22,11 +22,13 @@ def exclude_current_file_from_debugger():
         import ptvsd
     except:
         traceback.print_exc()
-        print('''
+        print(
+            """
 Internal error detected. Please copy the above traceback and report at
 https://github.com/Microsoft/vscode-python/issues/new
 
-Press Enter to close. . .''')
+Press Enter to close. . ."""
+        )
         try:
             raw_input()
         except NameError:
@@ -40,23 +42,25 @@ def run(cwd, testRunner, args):
     testRunner -- test runner to be used `pytest` or `nose`
     args -- arguments passed into the test runner
     """
-    
+
     sys.path[0] = os.getcwd()
     os.chdir(cwd)
 
     try:
-        if testRunner == 'pytest':
+        if testRunner == "pytest":
             import pytest
+
             pytest.main(args)
         else:
             import nose
+
             nose.run(argv=args)
         sys.exit(0)
     finally:
         pass
 
 
-if __name__ == '__main__':
+if __name__ == "__main__":
     exclude_current_file_from_debugger()
     cwd, testRunner, args = parse_argv()
     run(cwd, testRunner, args)

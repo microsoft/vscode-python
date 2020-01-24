@@ -129,6 +129,7 @@ export class KernelSelector {
     public async getKernelForLocalConnection(
         sessionManager?: IJupyterSessionManager,
         notebookMetadata?: nbformat.INotebookMetadata,
+        disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
         const stopWatch = new StopWatch();
@@ -147,7 +148,7 @@ export class KernelSelector {
                 // No kernel info, hence prmopt to use current interpreter as a kernel.
                 const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
                 if (activeInterpreter) {
-                    selection = await this.useInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, cancelToken);
+                    selection = await this.useInterpreterAsKernel(activeInterpreter, notebookMetadata.kernelspec.display_name, sessionManager, disableUI, cancelToken);
                 } else {
                     telemetryProps.promptedToSelect = true;
                     selection = await this.selectLocalKernel(sessionManager, cancelToken);
@@ -158,7 +159,7 @@ export class KernelSelector {
             const activeInterpreter = await this.interpreterService.getActiveInterpreter(undefined);
             if (activeInterpreter) {
                 selection.interpreter = activeInterpreter;
-                selection.kernelSpec = await this.kernelService.searchAndRegisterKernel(activeInterpreter, cancelToken);
+                selection.kernelSpec = await this.kernelService.searchAndRegisterKernel(activeInterpreter, disableUI, cancelToken);
             }
         }
         // If still not found, log an error (this seems possible for some people, so use the default)
@@ -251,7 +252,7 @@ export class KernelSelector {
         // Check if ipykernel is installed in this kernel.
         if (selection.selection.interpreter) {
             sendTelemetryEvent(Telemetry.SwitchToInterpreterAsKernel);
-            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, cancelToken);
+            return this.useInterpreterAsKernel(selection.selection.interpreter, undefined, session, false, cancelToken);
         } else if (selection.selection.kernelModel) {
             sendTelemetryEvent(Telemetry.SwitchToExistingKernel);
             // tslint:disable-next-line: no-any
@@ -283,6 +284,7 @@ export class KernelSelector {
         interpreter: PythonInterpreter,
         displayNameOfKernelNotFound?: string,
         session?: IJupyterSessionManager,
+        disableUI?: boolean,
         cancelToken?: CancellationToken
     ): Promise<KernelSpecInterpreter> {
         let kernelSpec: IJupyterKernelSpec | undefined;
@@ -295,7 +297,7 @@ export class KernelSelector {
                 traceVerbose(`ipykernel installed in ${interpreter.path}, and matching found.`);
                 // If we have a display name of a kernel that could not be found,
                 // then notify user that we're using current interpreter instead.
-                if (displayNameOfKernelNotFound) {
+                if (displayNameOfKernelNotFound && !disableUI) {
                     this.applicationShell.showInformationMessage(localize.DataScience.fallbackToUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound)).then(noop, noop);
                 }
 
@@ -306,11 +308,11 @@ export class KernelSelector {
         }
 
         // Try an install this interpreter as a kernel.
-        kernelSpec = await this.kernelService.registerKernel(interpreter, cancelToken);
+        kernelSpec = await this.kernelService.registerKernel(interpreter, disableUI, cancelToken);
 
         // If we have a display name of a kernel that could not be found,
         // then notify user that we're using current interpreter instead.
-        if (displayNameOfKernelNotFound) {
+        if (displayNameOfKernelNotFound && !disableUI) {
             this.applicationShell
                 .showInformationMessage(localize.DataScience.fallBackToRegisterAndUseActiveInterpeterAsKernel().format(displayNameOfKernelNotFound))
                 .then(noop, noop);

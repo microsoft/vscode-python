@@ -52,12 +52,17 @@ export function getNativeCellResults(
 }
 
 // tslint:disable-next-line:no-any
-export function runMountedTest(name: string, testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>) => Promise<void>, getIOC: () => DataScienceIocContainer) {
-    test(name, async () => {
+export function runMountedTest(
+    name: string,
+    testFunc: (wrapper: ReactWrapper<any, Readonly<{}>, React.Component>, context: Mocha.Context) => Promise<void>,
+    getIOC: () => DataScienceIocContainer
+) {
+    test(name, async function() {
         const ioc = getIOC();
         const wrapper = await setupWebview(ioc);
         if (wrapper) {
-            await testFunc(wrapper);
+            // tslint:disable-next-line: no-invalid-this
+            await testFunc(wrapper, this);
         } else {
             // tslint:disable-next-line:no-console
             console.log(`${name} skipped, no Jupyter installed.`);

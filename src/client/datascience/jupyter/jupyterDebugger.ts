@@ -343,6 +343,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
             await this.installPtvsd(notebook);
         } else {
             // If they don't want to install, throw so we exit out of debugging
+            sendTelemetryEvent(Telemetry.PtvsdInstallCancelled);
             throw new JupyterDebuggerNotInstalledError();
         }
     }

@@ -9,8 +9,9 @@ import { ViewColumn } from 'vscode';
 
 import { IApplicationShell, IWebPanelProvider, IWorkspaceService } from '../../common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
+import { WebHostNotebook } from '../../common/experimentGroups';
 import { traceError } from '../../common/logger';
-import { IConfigurationService, IDisposable } from '../../common/types';
+import { IConfigurationService, IDisposable, IExperimentsManager } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { noop } from '../../common/utils/misc';
 import { StopWatch } from '../../common/utils/stopWatch';
@@ -37,7 +38,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
         @inject(IThemeFinder) themeFinder: IThemeFinder,
         @inject(IWorkspaceService) workspaceService: IWorkspaceService,
         @inject(IJupyterVariables) private variableManager: IJupyterVariables,
-        @inject(IApplicationShell) private applicationShell: IApplicationShell
+        @inject(IApplicationShell) private applicationShell: IApplicationShell,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         super(
             configuration,
@@ -49,7 +51,8 @@ export class DataViewer extends WebViewHost<IDataViewerMapping> implements IData
             dataExplorereDir,
             [path.join(dataExplorereDir, 'index_bundle.js')],
             localize.DataScience.dataExplorerTitle(),
-            ViewColumn.One
+            ViewColumn.One,
+            experimentsManager.inExperiment(WebHostNotebook.experiment)
         );
 
         // Load the web panel using our current directory as we don't expect to load any other files

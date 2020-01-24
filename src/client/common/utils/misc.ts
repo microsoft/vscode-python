@@ -40,3 +40,21 @@ export function isResource(resource?: InterpreterUri): resource is Resource {
     const uri = resource as Uri;
     return typeof uri.path === 'string' && typeof uri.scheme === 'string';
 }
+
+/**
+ * Checking whether something is a Uri.
+ * Using `instanceof Uri` doesn't always work as the object is not an instance of Uri (at least not in tests).
+ * That's why VSC too has a helper method `URI.isUri` (though not public).
+ *
+ * @export
+ * @param {InterpreterUri} [resource]
+ * @returns {resource is Uri}
+ */
+// tslint:disable-next-line: no-any
+export function isUri(resource?: Uri | any): resource is Uri {
+    if (!resource) {
+        return false;
+    }
+    const uri = resource as Uri;
+    return typeof uri.path === 'string' && typeof uri.scheme === 'string';
+}

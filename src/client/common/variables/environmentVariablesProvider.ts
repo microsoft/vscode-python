@@ -44,11 +44,7 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
     }
     @cacheResourceSpecificInterpreterData('getEnvironmentVariables', cacheDuration)
     public async getEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables> {
-        const settings = this.configurationService.getSettings(resource);
-        const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
-        this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
-        this.createFileWatcher(settings.envFile, workspaceFolderUri);
-        let mergedVars = await this.envVarsService.parseFile(settings.envFile, this.process.env);
+        let mergedVars = await this.getCustomEnvironmentVariables(resource);
         if (!mergedVars) {
             mergedVars = {};
         }
@@ -62,6 +58,13 @@ export class EnvironmentVariablesProvider implements IEnvironmentVariablesProvid
             this.envVarsService.appendPythonPath(mergedVars!, this.process.env.PYTHONPATH);
         }
         return mergedVars;
+    }
+    public async getCustomEnvironmentVariables(resource?: Uri): Promise<EnvironmentVariables | undefined> {
+        const settings = this.configurationService.getSettings(resource);
+        const workspaceFolderUri = this.getWorkspaceFolderUri(resource);
+        this.trackedWorkspaceFolders.add(workspaceFolderUri ? workspaceFolderUri.fsPath : '');
+        this.createFileWatcher(settings.envFile, workspaceFolderUri);
+        return this.envVarsService.parseFile(settings.envFile, this.process.env);
     }
     public configurationChanged(e: ConfigurationChangeEvent) {
         this.trackedWorkspaceFolders.forEach(item => {

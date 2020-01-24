@@ -79,6 +79,18 @@
         "max": 24
     },
     {
+        "name": "UseTerminalToGetActivatedEnvVars - enabled",
+        "salt": "UseTerminalToGetActivatedEnvVars",
+        "min": 0,
+        "max": 20
+    },
+    {
+        "name": "UseTerminalToGetActivatedEnvVars - control",
+        "salt": "UseTerminalToGetActivatedEnvVars",
+        "min": 20,
+        "max": 100
+    },
+    {
         "name": "AA_testing - control",
         "salt": "AA_testing",
         "min": 0,
@@ -88,6 +100,18 @@
         "name": "AA_testing - experiment",
         "salt": "AA_testing",
         "min": 90,
+        "max": 100
+    },
+    {
+        "name": "WebHostNotebook - experiment",
+        "salt": "WebHostNotebook",
+        "max": 20,
+        "min": 0
+    },
+    {
+        "name": "WebHostNotebook - control",
+        "salt": "WebHostNotebook",
+        "min": 80,
         "max": 100
     }
 ]

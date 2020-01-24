@@ -11,6 +11,7 @@ import '../common/extensions';
 import { traceError } from '../common/logger';
 import { IConfigurationService, IDisposableRegistry, IExperimentsManager, ILogger, IOutputChannel, Resource } from '../common/types';
 import { noop } from '../common/utils/misc';
+import { IInterpreterService } from '../interpreter/contracts';
 import { IServiceContainer } from '../ioc/types';
 import { EventName } from '../telemetry/constants';
 import { captureTelemetry, sendTelemetryEvent } from '../telemetry/index';
@@ -440,6 +441,7 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
     }
     public registerHandlers() {
         const documentManager = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
+        const interpreterService = this.serviceContainer.get<IInterpreterService>(IInterpreterService);
 
         this.disposableRegistry.push(documentManager.onDidSaveTextDocument(this.onDocumentSaved.bind(this)));
         this.disposableRegistry.push(
@@ -449,6 +451,11 @@ export class UnitTestManagementService implements ITestManagementService, Dispos
                 }
                 this.configChangedTimer = setTimeout(() => this.configurationChangeHandler(e), 1000);
             })
+        );
+        this.disposableRegistry.push(
+            interpreterService.onDidChangeInterpreter(() =>
+                this.autoDiscoverTests(undefined).catch(ex => traceError('Failed to auto discover tests upon changing interpreter', ex))
+            )
         );
     }
 }

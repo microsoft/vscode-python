@@ -34,6 +34,7 @@ import { NotebookStarter } from './notebookStarter';
 export class JupyterExecutionBase implements IJupyterExecution {
     private usablePythonInterpreter: PythonInterpreter | undefined;
     private eventEmitter: EventEmitter<void> = new EventEmitter<void>();
+    private startedEmitter: EventEmitter<INotebookServerOptions> = new EventEmitter<INotebookServerOptions>();
     private disposed: boolean = false;
     private readonly jupyterInterpreterService: IJupyterSubCommandExecutionService;
 
@@ -66,6 +67,10 @@ export class JupyterExecutionBase implements IJupyterExecution {
 
     public get sessionChanged(): Event<void> {
         return this.eventEmitter.event;
+    }
+
+    public get serverStarted(): Event<INotebookServerOptions> {
+        return this.startedEmitter.event;
     }
 
     public dispose(): Promise<void> {
@@ -114,6 +119,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
             let kernelSpecInterpreter: KernelSpecInterpreter | undefined;
             let kernelSpecInterpreterPromise: Promise<KernelSpecInterpreter> = Promise.resolve({});
             traceInfo(`Connecting to ${options ? options.purpose : 'unknown type of'} server`);
+            const allowUI = !options || !options.disableUI;
             const kernelSpecCancelSource = new CancellationTokenSource();
             if (cancelToken) {
                 cancelToken.onCancellationRequested(() => {
@@ -126,7 +132,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                 // Get hold of the kernelspec and corresponding (matching) interpreter that'll be used as the spec.
                 // We can do this in parallel, while starting the server (faster).
                 traceInfo(`Getting kernel specs for ${options ? options.purpose : 'unknown type of'} server`);
-                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(undefined, options?.metadata, kernelSpecCancelSource.token);
+                kernelSpecInterpreterPromise = this.kernelSelector.getKernelForLocalConnection(undefined, options?.metadata, !allowUI, kernelSpecCancelSource.token);
             }
 
             // Try to connect to our jupyter process. Check our setting for the number of tries
@@ -145,6 +151,11 @@ export class JupyterExecutionBase implements IJupyterExecution {
                         const sessionManagerFactory = this.serviceContainer.get<IJupyterSessionManagerFactory>(IJupyterSessionManagerFactory);
                         const sessionManager = await sessionManagerFactory.create(connection);
                         kernelSpecInterpreter = await this.kernelSelector.getKernelForRemoteConnection(sessionManager, options?.metadata, cancelToken);
+                    }
+
+                    // If no kernel and not going to pick one, exit early
+                    if (!Object.keys(kernelSpecInterpreter) && !allowUI) {
+                        return undefined;
                     }
 
                     // Populate the launch info that we are starting our server with
@@ -167,7 +178,7 @@ export class JupyterExecutionBase implements IJupyterExecution {
                             break;
                         } catch (ex) {
                             traceError('Failed to connect to server', ex);
-                            if (ex instanceof JupyterSessionStartError && isLocalConnection) {
+                            if (ex instanceof JupyterSessionStartError && isLocalConnection && allowUI) {
                                 // Keep retrying, until it works or user cancels.
                                 // Sometimes if a bad kernel is selected, starting a session can fail.
                                 // In such cases we need to let the user know about this and prompt them to select another kernel.
@@ -239,11 +250,13 @@ export class JupyterExecutionBase implements IJupyterExecution {
             // Kill any existing connections.
             connection?.dispose();
             sendTelemetryEvent(Telemetry.JupyterStartTimeout, stopWatch.elapsedTime, { timeout: stopWatch.elapsedTime });
-            this.appShell.showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel()).then(selection => {
-                if (selection === localize.Common.openOutputPanel()) {
-                    this.jupyterOutputChannel.show();
-                }
-            }, noop);
+            if (allowUI) {
+                this.appShell.showErrorMessage(localize.DataScience.jupyterStartTimedout(), localize.Common.openOutputPanel()).then(selection => {
+                    if (selection === localize.Common.openOutputPanel()) {
+                        this.jupyterOutputChannel.show();
+                    }
+                }, noop);
+            }
         }, cancelToken);
     }
 

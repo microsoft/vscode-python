@@ -14,6 +14,7 @@ log = logging.getLogger(__name__)
 LOG_FORMAT = "%(asctime)s UTC - %(levelname)s - %(name)s - %(message)s"
 queue_handler = None
 
+
 def add_arguments(parser):
     parser.description = "Daemon"
 
@@ -47,16 +48,19 @@ class TemporaryQueueHandler(logging.Handler):
     Later the messages are pushed back to the RPC client as a notification.
     Once the RPC channel is up, we'll stop queuing messages and sending id directly.
     """
+
     def __init__(self):
         logging.Handler.__init__(self)
         self.queue = []
         self.server = None
+
     def set_server(self, server):
         # Send everything that has beeen queued until now.
         self.server = server
         for msg in self.queue:
             self.server._endpoint.notify("log", msg)
         self.queue = []
+
     def emit(self, record):
         data = {"level": record.levelname, "msg": self.format(record)}
         # If we don't have the server, then queue it and send it later.

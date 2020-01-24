@@ -9,14 +9,14 @@ import { ContextKey } from '../../common/contextKey';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
-import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IMemento, IPersistentStateFactory } from '../../common/types';
+import { GLOBAL_MEMENTO, IConfigurationService, IDisposableRegistry, IExperimentsManager, IMemento, IPersistentStateFactory } from '../../common/types';
 import * as localize from '../../common/utils/localize';
 import { EXTENSION_ROOT_DIR } from '../../constants';
 import { IInterpreterService } from '../../interpreter/contracts';
 import { captureTelemetry, sendTelemetryEvent } from '../../telemetry';
 import { EditorContexts, Identifiers, Telemetry } from '../constants';
 import { InteractiveBase } from '../interactive-common/interactiveBase';
-import { InteractiveWindowMessages, ISubmitNewCell } from '../interactive-common/interactiveWindowTypes';
+import { InteractiveWindowMessages, ISubmitNewCell, SysInfoReason } from '../interactive-common/interactiveWindowTypes';
 import { ProgressReporter } from '../progress/progressReporter';
 import {
     ICell,
@@ -81,7 +81,8 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         @inject(IDataScienceErrorHandler) errorHandler: IDataScienceErrorHandler,
         @inject(IPersistentStateFactory) private readonly stateFactory: IPersistentStateFactory,
         @inject(IMemento) @named(GLOBAL_MEMENTO) globalStorage: Memento,
-        @inject(ProgressReporter) progressReporter: ProgressReporter
+        @inject(ProgressReporter) progressReporter: ProgressReporter,
+        @inject(IExperimentsManager) experimentsManager: IExperimentsManager
     ) {
         super(
             progressReporter,
@@ -110,14 +111,15 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             historyReactDir,
             [path.join(historyReactDir, 'index_bundle.js')],
             localize.DataScience.historyTitle(),
-            ViewColumn.Two
+            ViewColumn.Two,
+            experimentsManager
         );
 
         // Send a telemetry event to indicate window is opening
         sendTelemetryEvent(Telemetry.OpenedInteractiveWindow);
 
         // Start the server as soon as we open
-        this.startServer().ignoreErrors();
+        this.ensureServerAndNotebook().ignoreErrors();
     }
 
     public dispose() {
@@ -140,6 +142,14 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
         // When showing we have to load the web panel. Make sure
         // we use the last file sent through add code.
         await this.loadWebPanel(this.lastFile ? path.dirname(this.lastFile) : process.cwd());
+
+        // Make sure we're loaded first. InteractiveWindow doesn't makes sense without an active server.
+        await this.ensureServerAndNotebook();
+
+        // Make sure we have at least the initial sys info
+        await this.addSysInfo(SysInfoReason.Start);
+
+        // Then show our web panel.
         return super.show();
     }
 
@@ -295,7 +305,7 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
     protected async closeBecauseOfFailure(_exc: Error): Promise<void> {
         this.dispose();
     }
-    protected startServer(): Promise<void> {
+    protected ensureServerAndNotebook(): Promise<void> {
         // Keep track of users who have used interactive window in a worksapce folder.
         // To be used if/when changing workflows related to startup of jupyter.
         if (!this.trackedJupyterStart) {
@@ -303,8 +313,9 @@ export class InteractiveWindow extends InteractiveBase implements IInteractiveWi
             const store = this.stateFactory.createGlobalPersistentState('INTERACTIVE_WINDOW_USED', false);
             store.updateValue(true).ignoreErrors();
         }
-        return super.startServer();
+        return super.ensureServerAndNotebook();
     }
+
     @captureTelemetry(Telemetry.ExportNotebook, undefined, false)
     // tslint:disable-next-line: no-any no-empty
     private async export(cells: ICell[]) {

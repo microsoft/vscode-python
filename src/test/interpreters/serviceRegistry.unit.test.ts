@@ -8,7 +8,9 @@
 import { instance, mock, verify } from 'ts-mockito';
 import { IExtensionActivationService, IExtensionSingleActivationService } from '../../client/activation/types';
 import { EnvironmentActivationService } from '../../client/interpreter/activation/service';
+import { TerminalEnvironmentActivationService } from '../../client/interpreter/activation/terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from '../../client/interpreter/activation/types';
+import { WrapperEnvironmentActivationService } from '../../client/interpreter/activation/wrapperEnvironmentActivationService';
 import { InterpreterAutoSelectionService } from '../../client/interpreter/autoSelection';
 import { InterpreterAutoSeletionProxyService } from '../../client/interpreter/autoSelection/proxy';
 import { CachedInterpretersAutoSelectionRule } from '../../client/interpreter/autoSelection/rules/cached';
@@ -142,7 +144,9 @@ suite('Interpreters - Service Registry', () => {
             [IInterpreterAutoSeletionProxyService, InterpreterAutoSeletionProxyService],
             [IInterpreterAutoSelectionService, InterpreterAutoSelectionService],
 
-            [IEnvironmentActivationService, EnvironmentActivationService],
+            [EnvironmentActivationService, EnvironmentActivationService],
+            [TerminalEnvironmentActivationService, TerminalEnvironmentActivationService],
+            [IEnvironmentActivationService, WrapperEnvironmentActivationService],
             [IExtensionActivationService, CondaInheritEnvPrompt],
 
             [WindowsStoreInterpreter, WindowsStoreInterpreter],
