@@ -82,12 +82,12 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     private async cacheCallback(cacheKey: string, implementation: () => Promise<NodeJS.ProcessEnv | undefined>): Promise<NodeJS.ProcessEnv | undefined> {
         const contents = await this.getDataCachedInFile(cacheKey);
         if (contents) {
-            // If we have it in memento cache, then blow away in memory cache, we don't need that anymore.
+            // If we have it in file cache, then blow away in memory cache, we don't need that anymore.
             this.cachePerResourceAndInterpreter.delete(cacheKey);
             return contents.env;
         }
 
-        // If we don't have this cached in memento, we need to ensure the request is cached in memory.
+        // If we don't have this cached in file, we need to ensure the request is cached in memory.
         // This way if two different parts of the extension request variables for the same resource + interpreter, they get the same result (promise).
         if (!this.cachePerResourceAndInterpreter.get(cacheKey)) {
             const promise = implementation();
