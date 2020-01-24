@@ -4,36 +4,41 @@
 'use strict';
 
 import { inject, injectable } from 'inversify';
-import { IWorkspaceService } from '../../common/application/types';
+import * as path from 'path';
 import { UseTerminalToGetActivatedEnvVars } from '../../common/experimentGroups';
 import '../../common/extensions';
 import { traceError } from '../../common/logger';
-import { IDisposableRegistry, IExperimentsManager, Resource } from '../../common/types';
-import { createDeferredFromPromise, sleep } from '../../common/utils/async';
-import { InMemoryCache } from '../../common/utils/cacheUtils';
+import { IFileSystem } from '../../common/platform/types';
+import { ICryptoUtils, IDisposableRegistry, IExperimentsManager, IExtensionContext, Resource } from '../../common/types';
+import { createDeferredFromPromise } from '../../common/utils/async';
 import { IEnvironmentVariablesProvider } from '../../common/variables/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { IInterpreterService, PythonInterpreter } from '../contracts';
-import { cacheDuration, EnvironmentActivationService } from './service';
+import { EnvironmentActivationService } from './service';
 import { TerminalEnvironmentActivationService } from './terminalEnvironmentActivationService';
 import { IEnvironmentActivationService } from './types';
 
 // We have code in terminal activation that waits for a min of 500ms.
-// Observed on a Mac that it can take upto 2.5s.
-// So, lets give it at least 3s to complete.
-const timeToWaitForTerminalActivationToComplete = 3_000;
+// Observed on a Mac that it can take up to 2.5s (the delay is caused by initialization scripts running in the shell).
+// On some other machines (windows) with Conda, this could take up to 40s.
+// To get around this we will:
+// 1. Load the variables when extension loads
+// 2. Cache variables in a file (so its available when VSC re-loads).
 
+type EnvVariablesInCachedFile = { env?: NodeJS.ProcessEnv };
 @injectable()
 export class WrapperEnvironmentActivationService implements IEnvironmentActivationService {
-    private readonly cachePerResourceAndInterpreter = new Map<string, InMemoryCache<Promise<NodeJS.ProcessEnv | undefined>>>();
+    private readonly cachePerResourceAndInterpreter = new Map<string, Promise<NodeJS.ProcessEnv | undefined>>();
     constructor(
         @inject(EnvironmentActivationService) private readonly procActivation: IEnvironmentActivationService,
         @inject(TerminalEnvironmentActivationService) private readonly terminalActivation: IEnvironmentActivationService,
         @inject(IExperimentsManager) private readonly experiment: IExperimentsManager,
         @inject(IInterpreterService) private readonly interpreterService: IInterpreterService,
-        @inject(IWorkspaceService) private readonly workspaceService: IWorkspaceService,
-        @inject(IEnvironmentVariablesProvider) envVarsProvider: IEnvironmentVariablesProvider,
+        @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
+        @inject(IExtensionContext) private readonly context: IExtensionContext,
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(ICryptoUtils) private readonly crypto: ICryptoUtils,
 
         @inject(IDisposableRegistry) disposables: IDisposableRegistry
     ) {
@@ -46,22 +51,21 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
         interpreter?: PythonInterpreter | undefined,
         allowExceptions?: boolean | undefined
     ): Promise<NodeJS.ProcessEnv | undefined> {
-        const key = this.getCacheKey(resource, interpreter);
-        interpreter = interpreter || (await this.interpreterService.getActiveInterpreter(undefined));
-        const procEnvVarsPromise = this.cacheCallback(`${key}_Process`, () => this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions));
-        const terminalEnvVarsPromise = this.cacheCallback(`${key}_Terminal`, () =>
-            this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions)
-        );
+        let key: string;
+        [key, interpreter] = await Promise.all([this.getCacheKey(resource, interpreter), interpreter || (await this.interpreterService.getActiveInterpreter(undefined))]);
+
+        const procCacheKey = `Process${key}`;
+        const terminalCacheKey = `Terminal${key}`;
+        const procEnvVarsPromise = this.cacheCallback(procCacheKey, () => this.getActivatedEnvVarsFromProc(resource, interpreter, allowExceptions));
+        const terminalEnvVarsPromise = this.cacheCallback(terminalCacheKey, () => this.getActivatedEnvVarsFromTerminal(procEnvVarsPromise, resource, interpreter, allowExceptions));
 
         const procEnvVars = createDeferredFromPromise(procEnvVarsPromise);
         const terminalEnvVars = createDeferredFromPromise(terminalEnvVarsPromise);
 
-        // If terminal activation didn't complete, wait for some time.
-        if (!terminalEnvVars.completed) {
-            await sleep(timeToWaitForTerminalActivationToComplete);
-        }
-
+        // Do not return this value, its possible both complete almost at the same time.
+        // Hence wait for another tick, then check and return.
         await Promise.race([terminalEnvVars.promise, procEnvVars.promise]);
+
         // Give preference to the terminal environment variables promise.
         return terminalEnvVars.completed ? terminalEnvVars.promise : procEnvVars.promise;
     }
@@ -75,14 +79,58 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      * @returns {(Promise<NodeJS.ProcessEnv | undefined>)}
      * @memberof WrapperEnvironmentActivationService
      */
-    private async cacheCallback(key: string, implementation: () => Promise<NodeJS.ProcessEnv | undefined>): Promise<NodeJS.ProcessEnv | undefined> {
-        if (!this.cachePerResourceAndInterpreter.get(key)?.hasData) {
-            const cache = new InMemoryCache<Promise<NodeJS.ProcessEnv | undefined>>(cacheDuration);
-            cache.data = implementation();
-            this.cachePerResourceAndInterpreter.set(key, cache);
+    private async cacheCallback(cacheKey: string, implementation: () => Promise<NodeJS.ProcessEnv | undefined>): Promise<NodeJS.ProcessEnv | undefined> {
+        const contents = await this.getDataCachedInFile(cacheKey);
+        if (contents) {
+            // If we have it in memento cache, then blow away in memory cache, we don't need that anymore.
+            this.cachePerResourceAndInterpreter.delete(cacheKey);
+            return contents.env;
         }
 
-        return this.cachePerResourceAndInterpreter.get(key)?.data!;
+        // If we don't have this cached in memento, we need to ensure the request is cached in memory.
+        // This way if two different parts of the extension request variables for the same resource + interpreter, they get the same result (promise).
+        if (!this.cachePerResourceAndInterpreter.get(cacheKey)) {
+            const promise = implementation();
+            this.cachePerResourceAndInterpreter.set(cacheKey, promise);
+
+            // What ever result we get back, store that in file (cache it for other VSC sessions).
+            promise.then(env => this.writeDataToCacheFile(cacheKey, { env })).catch(ex => traceError('Failed to write Env Vars to disc', ex));
+        }
+
+        return this.cachePerResourceAndInterpreter.get(cacheKey)!;
+    }
+    private getCacheFile(cacheKey: string): string | undefined {
+        return this.context.storagePath ? path.join(this.context.storagePath, `envVariables${cacheKey}.json`) : undefined;
+    }
+    private async getDataCachedInFile(cacheKey: string): Promise<EnvVariablesInCachedFile | undefined> {
+        const cacheFile = this.getCacheFile(cacheKey);
+        if (!cacheFile) {
+            return;
+        }
+        return this.fs
+            .readFile(cacheFile)
+            .then(data => JSON.parse(data) as EnvVariablesInCachedFile)
+            .catch(() => undefined);
+    }
+    /**
+     * Writes the environment variables to disc.
+     * This way it is available to other VSC Sessions (between VSC reloads).
+     *
+     * @private
+     * @param {string} cacheKey
+     * @param {EnvVariablesInCachedFile} data
+     * @returns {Promise<void>}
+     * @memberof WrapperEnvironmentActivationService
+     */
+    private async writeDataToCacheFile(cacheKey: string, data: EnvVariablesInCachedFile): Promise<void> {
+        const cacheFile = this.getCacheFile(cacheKey);
+        if (!cacheFile || !this.context.storagePath) {
+            return;
+        }
+        if (!(await this.fs.directoryExists(this.context.storagePath))) {
+            await this.fs.createDirectory(this.context.storagePath);
+        }
+        await this.fs.writeFile(cacheFile, JSON.stringify(data));
     }
     /**
      * Get environment variables by spawning a process (old approach).
@@ -99,7 +147,7 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     }
     /**
      * Get environment variables by activating a terminal.
-     * As a fallback use the `fallback` promise passed in.
+     * As a fallback use the `fallback` promise passed in (old approach).
      *
      * @private
      * @param {(Promise<NodeJS.ProcessEnv | undefined>)} fallback
@@ -131,7 +179,27 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
                 return fallback;
             });
     }
-    private getCacheKey(resource: Resource, interpreter?: PythonInterpreter | undefined) {
-        return `${this.workspaceService.getWorkspaceFolderIdentifier(resource)}${interpreter?.path}`;
+    /**
+     * Computes a key used to cache environment variables.
+     * 1. If resource changes, then environment variables could be different, as user could have `.env` files or similar.
+     * (this might not be necessary, if there are no custom variables, but paths such as PYTHONPATH, PATH might be different too when computed).
+     * 2. If interpreter changes, then environment variables could be different (conda has its own env variables).
+     * 3. Similarly, each workspace could have its own env variables defined in `.env` files, and these could change as well.
+     * Hence the key is computed based off of these three.
+     *
+     * @private
+     * @param {Resource} resource
+     * @param {(PythonInterpreter | undefined)} [interpreter]
+     * @returns {Promise<CacheKeyInfo>}
+     * @memberof WrapperEnvironmentActivationService
+     */
+    private async getCacheKey(resource: Resource, interpreter?: PythonInterpreter | undefined): Promise<string> {
+        // Get the custom environment variables as a string (if any errors, ignore and use empty string).
+        const customEnvVariables = await this.envVarsProvider
+            .getCustomEnvironmentVariables(resource)
+            .then(item => (item ? JSON.stringify(item) : ''))
+            .catch(() => '');
+
+        return this.crypto.createHash(`${customEnvVariables}${interpreter?.path}${interpreter?.version?.raw}`, 'string', 'SHA256');
     }
 }

@@ -21,7 +21,6 @@ import { PythonInterpreter } from '../contracts';
 import { IEnvironmentActivationService } from './types';
 
 const getEnvironmentPrefix = 'e8b39361-0157-4923-80e1-22d70d46dee6';
-export const cacheDuration = 10 * 60 * 1000;
 export const getEnvironmentTimeout = 30000;
 
 // The shell under which we'll execute activation scripts.
