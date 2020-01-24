@@ -115,12 +115,6 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     /**
      * Writes the environment variables to disc.
      * This way it is available to other VSC Sessions (between VSC reloads).
-     *
-     * @private
-     * @param {string} cacheKey
-     * @param {EnvVariablesInCachedFile} data
-     * @returns {Promise<void>}
-     * @memberof WrapperEnvironmentActivationService
      */
     private async writeDataToCacheFile(cacheKey: string, data: EnvVariablesInCachedFile): Promise<void> {
         const cacheFile = this.getCacheFile(cacheKey);
@@ -134,13 +128,6 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     }
     /**
      * Get environment variables by spawning a process (old approach).
-     *
-     * @private
-     * @param {Resource} resource
-     * @param {PythonInterpreter} [interpreter]
-     * @param {boolean} [allowExceptions]
-     * @returns {(Promise<NodeJS.ProcessEnv | undefined>)}
-     * @memberof WrapperEnvironmentActivationService
      */
     private async getActivatedEnvVarsFromProc(resource: Resource, interpreter?: PythonInterpreter, allowExceptions?: boolean): Promise<NodeJS.ProcessEnv | undefined> {
         return this.procActivation.getActivatedEnvironmentVariables(resource, interpreter, allowExceptions);
@@ -148,14 +135,6 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
     /**
      * Get environment variables by activating a terminal.
      * As a fallback use the `fallback` promise passed in (old approach).
-     *
-     * @private
-     * @param {(Promise<NodeJS.ProcessEnv | undefined>)} fallback
-     * @param {Resource} resource
-     * @param {PythonInterpreter} [interpreter]
-     * @param {boolean} [allowExceptions]
-     * @returns {(Promise<NodeJS.ProcessEnv | undefined>)}
-     * @memberof WrapperEnvironmentActivationService
      */
     private async getActivatedEnvVarsFromTerminal(
         fallback: Promise<NodeJS.ProcessEnv | undefined>,
@@ -186,12 +165,6 @@ export class WrapperEnvironmentActivationService implements IEnvironmentActivati
      * 2. If interpreter changes, then environment variables could be different (conda has its own env variables).
      * 3. Similarly, each workspace could have its own env variables defined in `.env` files, and these could change as well.
      * Hence the key is computed based off of these three.
-     *
-     * @private
-     * @param {Resource} resource
-     * @param {(PythonInterpreter | undefined)} [interpreter]
-     * @returns {Promise<CacheKeyInfo>}
-     * @memberof WrapperEnvironmentActivationService
      */
     private async getCacheKey(resource: Resource, interpreter?: PythonInterpreter | undefined): Promise<string> {
         // Get the custom environment variables as a string (if any errors, ignore and use empty string).
