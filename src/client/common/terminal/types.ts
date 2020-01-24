@@ -39,7 +39,7 @@ export interface ITerminalService extends IDisposable {
      * @param {string} command
      * @param {string[]} args
      * @param {CancellationToken} [cancel] If provided, then wait till the command is executed in the terminal.
-     * @param {boolean} [swallowExceptions] Whether to swallow exceptions raised as a result of the execution of the command. Defaults to `true`
+     * @param {boolean} [swallowExceptions] Whether to swallow exceptions raised as a result of the execution of the command. Defaults to `true`.
      * @returns {Promise<void>}
      * @memberof ITerminalService
      */
