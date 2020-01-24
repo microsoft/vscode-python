@@ -1,59 +1,67 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
+const fastXmlParser = require('fast-xml-parser');
 const fs = require('fs');
+const path = require('path');
+const constants = require('../../constants');
 
-const performanceResultsFile = './performance-results.json';
-const resultsFile = './test-results.json';
+const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
+const performanceResultsFile = path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json');
 const errorMargin = 0.01;
-let testsWereAdded = false;
 let failedTests = '';
 
-fs.readFile(resultsFile, 'utf8', (resultsFileError, resultsData) => {
-    if (resultsFileError) {
-        throw resultsFileError;
+fs.readFile(xmlFile, 'utf8', (xmlFileError, xmlData) => {
+    if (xmlFileError) {
+        throw xmlFileError;
     }
 
-    fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
-        if (performanceResultsFileError) {
-            throw performanceResultsFileError;
-        }
+    if (fastXmlParser.validate(xmlData)) {
+        const defaultOptions = {
+            attributeNamePrefix: '',
+            ignoreAttributes: false
+        };
 
-        const resultsJson = JSON.parse(resultsData);
-        const performanceJson = JSON.parse(performanceData);
-
-        performanceJson.forEach(result => {
-            const avg = result.times.reduce((a, b) => parseFloat(a) + parseFloat(b)) / result.times.length;
-            const testcase = resultsJson.find(x => x.name === result.name);
-
-            if (testcase) {
-                // compare the average result to the base JSON
-                if (avg > testcase.time + errorMargin) {
-                    failedTests += 'Performance is slow in: ' + testcase.name + ' , Benchmark time: ' + testcase.time + ' , Average test time: ' + avg + '\n';
-                }
-            } else {
-                // since there's no data, add the average result to the base JSON
-                testsWereAdded = true;
-                const newTest = {
-                    name: result.name,
-                    time: avg
-                };
-                resultsJson.push(newTest);
+        fs.readFile(performanceResultsFile, 'utf8', (performanceResultsFileError, performanceData) => {
+            if (performanceResultsFileError) {
+                throw performanceResultsFileError;
             }
-        });
 
-        if (testsWereAdded) {
-            fs.writeFile('./test-results.json', JSON.stringify(resultsJson, null, 2), writeResultsError => {
-                if (writeResultsError) {
-                    throw writeResultsError;
-                }
-                // tslint:disable-next-line: no-console
-                console.log('test-results.json was updated!');
+            const resultsJson = fastXmlParser.parse(xmlData, defaultOptions);
+            const performanceJson = JSON.parse(performanceData);
+
+            performanceJson.forEach(result => {
+                const avg = result.times.reduce((a, b) => parseFloat(a) + parseFloat(b)) / result.times.length;
+
+                resultsJson.testsuites.testsuite.forEach(suite => {
+                    if (parseInt(suite.tests, 10) > 0) {
+                        if (Array.isArray(suite.testcase)) {
+                            const testcase = suite.testcase.find(x => x.name === result.name);
+
+                            // compare the average result to the base JSON
+                            if (testcase && avg > parseFloat(testcase.time) + errorMargin) {
+                                failedTests += 'Performance is slow in: ' + testcase.name + ', Benchmark time: ' + testcase.time + ', Average test time: ' + avg + '\n';
+                            }
+                        } else {
+                            // compare the average result to the base JSON
+                            if (suite.testcase.name === result.name && avg > parseFloat(suite.testcase.time) + errorMargin) {
+                                failedTests += 'Performance is slow in: ' + testcase.name + ', Benchmark time: ' + testcase.time + ', Average test time: ' + avg + '\n';
+                            }
+                        }
+                    }
+                });
             });
-        }
 
-        if (failedTests.length > 0) {
-            throw new Error(failedTests);
-        }
-    });
+            if (failedTests.length > 0) {
+                throw new Error(failedTests);
+            }
+
+            // Delete performance-results.json
+            fs.unlink(performanceResultsFile, deleteError => {
+                if (deleteError) {
+                    throw deleteError;
+                }
+            });
+        });
+    }
 });

@@ -1,6 +1,5 @@
 ./out/test/**/*.functional.test.js
 --require=out/test/unittests.js
---exclude=out/**/*.jsx
 --ui=tdd
 --recursive
 --colors

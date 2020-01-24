@@ -3,11 +3,12 @@
 'use strict';
 const fastXmlParser = require('fast-xml-parser');
 const fs = require('fs');
+const path = require('path');
+const constants = require('../../constants');
 
-const xmlFile = '../../../test-results.xml';
-const jsonFile = './performance-results.json';
+const xmlFile = path.join(constants.ExtensionRootDir, 'test-results.xml');
+const jsonFile = path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json');
 let performanceData = [];
-const resultsData = [];
 
 fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
     if (xmlReadError) {
@@ -33,10 +34,6 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                                     times: [parseFloat(testcase.time)]
                                 };
                                 performanceData.push(test);
-                                resultsData.push({
-                                    name: testcase.name,
-                                    time: parseFloat(testcase.time)
-                                });
                             });
                         } else {
                             const test = {
@@ -44,20 +41,8 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                                 times: [parseFloat(suite.testcase.time)]
                             };
                             performanceData.push(test);
-                            resultsData.push({
-                                name: suite.testcase.name,
-                                time: parseFloat(suite.testcase.time)
-                            });
                         }
                     }
-                });
-
-                fs.writeFile('./test-results.json', JSON.stringify(resultsData, null, 2), writeResultsError => {
-                    if (writeResultsError) {
-                        throw writeResultsError;
-                    }
-                    // tslint:disable-next-line: no-console
-                    console.log('test-results.json was saved!');
                 });
             } else {
                 performanceData = JSON.parse(data);
@@ -99,13 +84,17 @@ fs.readFile(xmlFile, 'utf8', (xmlReadError, xmlData) => {
                 });
             }
 
-            fs.writeFile('./performance-results.json', JSON.stringify(performanceData, null, 2), writeResultsError => {
-                if (writeResultsError) {
-                    throw writeResultsError;
+            fs.writeFile(
+                path.join(constants.ExtensionRootDir, 'build', 'ci', 'performance', 'performance-results.json'),
+                JSON.stringify(performanceData, null, 2),
+                writeResultsError => {
+                    if (writeResultsError) {
+                        throw writeResultsError;
+                    }
+                    // tslint:disable-next-line: no-console
+                    console.log('performance-results.json was saved!');
                 }
-                // tslint:disable-next-line: no-console
-                console.log('performance-results.json was saved!');
-            });
+            );
         });
     }
 });
