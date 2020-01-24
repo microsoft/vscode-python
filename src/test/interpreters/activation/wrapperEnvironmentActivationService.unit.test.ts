@@ -48,7 +48,7 @@ suite('Interpreters Activation - Python Environment Variables (wrap terminal and
         [undefined, mockInterpreter].forEach(interpreter => {
             [undefined, path.join('a')].forEach(storagePath => {
                 // tslint:disable-next-line: max-func-body-length
-                suite(resource ? 'With a storagepath' : 'Without a storagepath', () => {
+                suite(resource ? 'With an extension storagepath' : 'Without an extension storagepath', () => {
                     suite(resource ? 'With a resource' : 'Without a resource', () => {
                         setup(() => {
                             onDidChangeEnvVars = new EventEmitter<Resource>();
