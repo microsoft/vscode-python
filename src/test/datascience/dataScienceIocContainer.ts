@@ -28,8 +28,8 @@ import { LanguageServerDownloader } from '../../client/activation/common/downloa
 import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
 import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
-import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
-import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
+import { DotNetLanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import {
@@ -525,8 +525,8 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         const downloader = mock(LanguageServerDownloader);
         this.serviceManager.addSingletonInstance<ILanguageServerDownloader>(ILanguageServerDownloader, instance(downloader));
 
-        const folderService = mock(LanguageServerFolderService);
-        const packageService = mock(LanguageServerPackageService);
+        const folderService = mock(DotNetLanguageServerFolderService);
+        const packageService = mock(DotNetLanguageServerPackageService);
         this.serviceManager.addSingletonInstance<ILanguageServerFolderService>(ILanguageServerFolderService, instance(folderService));
         this.serviceManager.addSingletonInstance<ILanguageServerPackageService>(ILanguageServerPackageService, instance(packageService));
 

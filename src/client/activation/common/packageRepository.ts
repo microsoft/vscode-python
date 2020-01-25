@@ -7,7 +7,7 @@ import { AzureBlobStoreNugetRepository } from '../../common/nuget/azureBlobStore
 import { IServiceContainer } from '../../ioc/types';
 
 export const azureBlobStorageAccount = 'https://pvsc.blob.core.windows.net';
-const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
+export const azureCDNBlobStorageAccount = 'https://pvsc.azureedge.net';
 
 export enum LanguageServerDownloadChannel {
     stable = 'stable',

@@ -8,8 +8,8 @@ import { IServiceContainer } from '../../ioc/types';
 import { LanguageServerFolderService } from '../common/languageServerFolderService';
 
 @injectable()
-export class DotNetLanguageServerFolderService extends LanguageServerFolderService {
+export class NodeLanguageServerFolderService extends LanguageServerFolderService {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
-        super(serviceContainer, 'languageServer');
+        super(serviceContainer, 'nodeLanguageServer');
     }
 }

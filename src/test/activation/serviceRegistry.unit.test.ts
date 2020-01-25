@@ -15,13 +15,13 @@ import { LanguageServerAnalysisOptions } from '../../client/activation/languageS
 import { DotNetLanguageClientFactory } from '../../client/activation/languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
-import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
     StableDotNetLanguageServerPackageRepository
 } from '../../client/activation/languageServer/languageServerPackageRepository';
-import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
+import { DotNetLanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { LanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
 import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
@@ -80,8 +80,8 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS)).once();
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY)).once();
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, InteractiveShiftEnterBanner, BANNER_NAME_INTERACTIVE_SHIFTENTER)).once();
-        verify(serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, LanguageServerFolderService)).once();
-        verify(serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, LanguageServerPackageService)).once();
+        verify(serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, DotNetLanguageServerFolderService)).once();
+        verify(serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, DotNetLanguageServerPackageService)).once();
         verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, StableDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.stable)).once();
         verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.beta)).once();
         verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.daily)).once();

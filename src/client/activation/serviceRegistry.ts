@@ -29,19 +29,21 @@ import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions'
 import { DotNetLanguageClientFactory } from './languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from './languageServer/languageServerExtension';
-import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
+import { DotNetLanguageServerFolderService } from './languageServer/languageServerFolderService';
 import {
     BetaDotNetLanguageServerPackageRepository,
     DailyDotNetLanguageServerPackageRepository,
     StableDotNetLanguageServerPackageRepository
 } from './languageServer/languageServerPackageRepository';
-import { LanguageServerPackageService } from './languageServer/languageServerPackageService';
+import { DotNetLanguageServerPackageService } from './languageServer/languageServerPackageService';
 import { LanguageServerProxy } from './languageServer/languageServerProxy';
 import { DotNetLanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
 import { NodeLanguageServerActivator } from './node/activator';
 import { NodeLanguageClientFactory } from './node/languageClientFactory';
+import { NodeLanguageServerFolderService } from './node/languageServerFolderService';
+import * as languageServerPackageService from './node/languageServerPackageService';
 import { NodeLanguageServerProxy } from './node/languageServerProxy';
 import { NodeLanguageServerManager } from './node/manager';
 import { NoLanguageServerExtensionActivator } from './none/activator';
@@ -75,12 +77,10 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.addBinding(ILanguageServerCache, IExtensionActivationService);
     serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, DotNetLanguageServerActivator, LanguageServerType.Microsoft);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NoLanguageServerExtensionActivator, LanguageServerType.None);
-    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NodeLanguageServerActivator, LanguageServerType.Node);
 
+    serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi);
     if (languageServerType === LanguageServerType.Microsoft) {
+        serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, DotNetLanguageServerActivator, LanguageServerType.Microsoft);
         serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
         serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
         serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);
@@ -94,14 +94,18 @@ export function registerTypes(serviceManager: IServiceManager) {
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager, LanguageServerType.Microsoft);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy, LanguageServerType.Microsoft);
         serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
+        serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, DotNetLanguageServerFolderService);
+        serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, DotNetLanguageServerPackageService);
     } else if (languageServerType === LanguageServerType.Node) {
+        serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NodeLanguageServerActivator, LanguageServerType.Node);
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory, LanguageServerType.Node);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager, LanguageServerType.Node);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy, LanguageServerType.Node);
+        serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, NodeLanguageServerFolderService);
+        serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, languageServerPackageService.NodeLanguageServerPackageService);
+    } else if (languageServerType === LanguageServerType.None) {
+        serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NoLanguageServerExtensionActivator, LanguageServerType.None);
     }
-
-    serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, LanguageServerFolderService);
-    serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, LanguageServerPackageService);
 
     serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadDailyChannelRule, LanguageServerDownloadChannel.daily);
     serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadBetaChannelRule, LanguageServerDownloadChannel.beta);

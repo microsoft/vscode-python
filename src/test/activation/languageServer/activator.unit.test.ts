@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
 import { DotNetLanguageServerActivator } from '../../../client/activation/languageServer/activator';
-import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
+import { DotNetLanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
@@ -38,7 +38,7 @@ suite('Language Server - Activator', () => {
         workspaceService = mock(WorkspaceService);
         fs = mock(FileSystem);
         lsDownloader = mock(LanguageServerDownloader);
-        lsFolderService = mock(LanguageServerFolderService);
+        lsFolderService = mock(DotNetLanguageServerFolderService);
         configuration = mock(ConfigurationService);
         settings = mock(PythonSettings);
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
