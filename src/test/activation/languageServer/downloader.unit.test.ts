@@ -11,7 +11,7 @@ import { SemVer } from 'semver';
 import { anything, deepEqual, instance, mock, verify, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
 import { Uri, WorkspaceConfiguration } from 'vscode';
-import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
+import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { PlatformData } from '../../../client/activation/languageServer/platformData';
 import { ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../../../client/activation/types';

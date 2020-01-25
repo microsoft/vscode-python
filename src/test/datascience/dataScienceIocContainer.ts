@@ -24,8 +24,8 @@ import {
 import * as vsls from 'vsls/vscode';
 
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
-import { LanguageServerExtensionActivator } from '../../client/activation/languageServer/activator';
-import { LanguageServerDownloader } from '../../client/activation/languageServer/downloader';
+import { LanguageServerDownloader } from '../../client/activation/common/downloader';
+import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
 import { LanguageServerCompatibilityService } from '../../client/activation/languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
@@ -460,7 +460,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         );
         this.serviceManager.addSingleton<ITerminalManager>(ITerminalManager, TerminalManager);
         this.serviceManager.addSingleton<IPipEnvServiceHelper>(IPipEnvServiceHelper, PipEnvServiceHelper);
-        this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, LanguageServerExtensionActivator, LanguageServerType.Microsoft);
+        this.serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, DotNetLanguageServerActivator, LanguageServerType.Microsoft);
         this.serviceManager.addSingleton<ILanguageServerExtension>(ILanguageServerExtension, LanguageServerExtension);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy, LanguageServerType.Microsoft);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy, LanguageServerType.Node);

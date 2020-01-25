@@ -6,8 +6,8 @@
 import * as path from 'path';
 import { anything, instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
-import { LanguageServerExtensionActivator } from '../../../client/activation/languageServer/activator';
-import { LanguageServerDownloader } from '../../../client/activation/languageServer/downloader';
+import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
+import { DotNetLanguageServerActivator } from '../../../client/activation/languageServer/activator';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';
@@ -25,7 +25,7 @@ import { sleep } from '../../core';
 // tslint:disable:max-func-body-length
 
 suite('Language Server - Activator', () => {
-    let activator: LanguageServerExtensionActivator;
+    let activator: DotNetLanguageServerActivator;
     let workspaceService: IWorkspaceService;
     let manager: ILanguageServerManager;
     let fs: IFileSystem;
@@ -42,7 +42,7 @@ suite('Language Server - Activator', () => {
         configuration = mock(ConfigurationService);
         settings = mock(PythonSettings);
         when(configuration.getSettings(anything())).thenReturn(instance(settings));
-        activator = new LanguageServerExtensionActivator(
+        activator = new DotNetLanguageServerActivator(
             instance(manager),
             instance(workspaceService),
             instance(fs),
