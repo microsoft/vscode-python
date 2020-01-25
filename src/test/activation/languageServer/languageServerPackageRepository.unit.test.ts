@@ -5,11 +5,11 @@
 
 import { expect } from 'chai';
 import * as typeMoq from 'typemoq';
+import { LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
 import {
-    BetaLanguageServerPackageRepository,
-    DailyLanguageServerPackageRepository,
-    LanguageServerDownloadChannel,
-    StableLanguageServerPackageRepository
+    BetaDotNetLanguageServerPackageRepository,
+    DailyDotNetLanguageServerPackageRepository,
+    StableDotNetLanguageServerPackageRepository
 } from '../../../client/activation/languageServer/languageServerPackageRepository';
 import { IServiceContainer } from '../../../client/ioc/types';
 
@@ -20,18 +20,18 @@ suite('Language Server Download Channels', () => {
     });
 
     function getPackageInfo(channel: LanguageServerDownloadChannel) {
-        let classToCreate = StableLanguageServerPackageRepository;
+        let classToCreate = StableDotNetLanguageServerPackageRepository;
         switch (channel) {
             case LanguageServerDownloadChannel.stable: {
-                classToCreate = StableLanguageServerPackageRepository;
+                classToCreate = StableDotNetLanguageServerPackageRepository;
                 break;
             }
             case LanguageServerDownloadChannel.beta: {
-                classToCreate = BetaLanguageServerPackageRepository;
+                classToCreate = BetaDotNetLanguageServerPackageRepository;
                 break;
             }
             case LanguageServerDownloadChannel.daily: {
-                classToCreate = DailyLanguageServerPackageRepository;
+                classToCreate = DailyDotNetLanguageServerPackageRepository;
                 break;
             }
             default: {

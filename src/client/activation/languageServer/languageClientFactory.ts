@@ -17,7 +17,7 @@ import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData } f
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 
-class DownloadedLanguageClientFactory implements ILanguageClientFactory {
+export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFactory {
     constructor(private readonly platformData: IPlatformData, private readonly languageServerFolderService: ILanguageServerFolderService) {}
 
     public async createLanguageClient(
@@ -38,7 +38,7 @@ class DownloadedLanguageClientFactory implements ILanguageClientFactory {
     }
 }
 
-class SimpleLanguageClientFactory implements ILanguageClientFactory {
+export class DotNetSimpleLanguageClientFactory implements ILanguageClientFactory {
     constructor(private readonly platformData: IPlatformData, private readonly languageServerFolderService: ILanguageServerFolderService) {}
 
     public async createLanguageClient(
@@ -72,8 +72,8 @@ export class DotNetLanguageClientFactory implements ILanguageClientFactory {
     public async createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const settings = this.configurationService.getSettings(resource);
         const factory = settings.downloadLanguageServer
-            ? new DownloadedLanguageClientFactory(this.platformData, this.languageServerFolderService)
-            : new SimpleLanguageClientFactory(this.platformData, this.languageServerFolderService);
+            ? new DotNetDownloadedLanguageClientFactory(this.platformData, this.languageServerFolderService)
+            : new DotNetSimpleLanguageClientFactory(this.platformData, this.languageServerFolderService);
 
         const env = await this.getEnvVars(resource, interpreter);
         return factory.createLanguageClient(resource, interpreter, clientOptions, env);

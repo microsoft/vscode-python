@@ -5,11 +5,10 @@ import * as chaiAsPromised from 'chai-as-promised';
 import { instance, mock, verify, when } from 'ts-mockito';
 import { Uri } from 'vscode';
 import { LanguageClientOptions } from 'vscode-languageclient';
-
 import { LanguageServerAnalysisOptions } from '../../../client/activation/languageServer/analysisOptions';
 import { LanguageServerExtension } from '../../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
-import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
+import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerProxy, LanguageServerType } from '../../../client/activation/types';
 import { IPythonExtensionBanner } from '../../../client/common/types';
 import { ServiceContainer } from '../../../client/ioc/container';
@@ -22,7 +21,7 @@ use(chaiAsPromised);
 // tslint:disable:max-func-body-length no-any chai-vague-errors no-unused-expression
 
 suite('Language Server - Manager', () => {
-    let manager: LanguageServerManager;
+    let manager: DotNetLanguageServerManager;
     let serviceContainer: IServiceContainer;
     let analysisOptions: ILanguageServerAnalysisOptions;
     let languageServer: ILanguageServerProxy;
@@ -36,7 +35,7 @@ suite('Language Server - Manager', () => {
         languageServer = mock(LanguageServerProxy);
         lsExtension = mock(LanguageServerExtension);
         surveyBanner = mock(ProposeLanguageServerBanner);
-        manager = new LanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
+        manager = new DotNetLanguageServerManager(instance(serviceContainer), instance(analysisOptions), instance(lsExtension), instance(surveyBanner));
     });
 
     [undefined, Uri.file(__filename)].forEach(resource => {

@@ -8,7 +8,7 @@ import { anything, instance, mock, verify, when } from 'ts-mockito';
 import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
-import { BaseLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
+import { DotNetLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
 import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { ILanguageClientFactory } from '../../../client/activation/types';
 import { ICommandManager } from '../../../client/common/application/types';
@@ -35,7 +35,7 @@ suite('Language Server - LanguageServer', () => {
     let commandManager: typemoq.IMock<ICommandManager>;
     setup(() => {
         client = typemoq.Mock.ofType<LanguageClient>();
-        clientFactory = mock(BaseLanguageClientFactory);
+        clientFactory = mock(DotNetLanguageClientFactory);
         testManager = mock(UnitTestManagementService);
         configService = typemoq.Mock.ofType<IConfigurationService>();
 

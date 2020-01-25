@@ -7,8 +7,8 @@ import { expect } from 'chai';
 import { SemVer } from 'semver';
 import * as typeMoq from 'typemoq';
 import { WorkspaceConfiguration } from 'vscode';
-import { LanguageServerPackageStorageContainers } from '../../../client/activation/languageServer/languageServerPackageRepository';
-import { LanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
+import { LanguageServerDownloadChannel } from '../../../client/activation/common/packageRepository';
+import { DotNetLanguageServerPackageService } from '../../../client/activation/languageServer/languageServerPackageService';
 import { IApplicationEnvironment, IWorkspaceService } from '../../../client/common/application/types';
 import { AzureBlobStoreNugetRepository } from '../../../client/common/nuget/azureBlobStoreNugetRepository';
 import { INugetService } from '../../../client/common/nuget/types';
@@ -38,7 +38,7 @@ suite('Nuget Azure Storage Repository', () => {
         const nugetService = typeMoq.Mock.ofType<INugetService>();
         nugetService.setup(n => n.getVersionFromPackageFileName(typeMoq.It.isAny())).returns(() => new SemVer('1.1.1'));
         serviceContainer.setup(c => c.get(typeMoq.It.isValue(INugetService))).returns(() => nugetService.object);
-        const defaultStorageChannel = LanguageServerPackageStorageContainers.stable;
+        const defaultStorageChannel = LanguageServerDownloadChannel.stable;
 
         repo = new AzureBlobStoreNugetRepository(serviceContainer.object, azureBlobStorageAccount, defaultStorageChannel, azureCDNBlobStorageAccount);
     });
@@ -50,7 +50,7 @@ suite('Nuget Azure Storage Repository', () => {
         const packageJson = { languageServerVersion: '0.1.0' };
         const appEnv = typeMoq.Mock.ofType<IApplicationEnvironment>();
         appEnv.setup(e => e.packageJson).returns(() => packageJson);
-        const lsPackageService = new LanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
+        const lsPackageService = new DotNetLanguageServerPackageService(serviceContainer.object, appEnv.object, platformService);
         const packageName = lsPackageService.getNugetPackageName();
         const packages = await repo.getPackages(packageName, undefined);
 
