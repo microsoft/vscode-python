@@ -26,7 +26,7 @@ import { ExtensionSurveyPrompt } from './extensionSurvey';
 import { JediExtensionActivator } from './jedi';
 import { DotNetLanguageServerActivator } from './languageServer/activator';
 import { LanguageServerAnalysisOptions } from './languageServer/analysisOptions';
-import { BaseLanguageClientFactory, DownloadedLanguageClientFactory, SimpleLanguageClientFactory } from './languageServer/languageClientFactory';
+import { DotNetLanguageClientFactory } from './languageServer/languageClientFactory';
 import { LanguageServerCompatibilityService } from './languageServer/languageServerCompatibilityService';
 import { LanguageServerExtension } from './languageServer/languageServerExtension';
 import { LanguageServerFolderService } from './languageServer/languageServerFolderService';
@@ -63,7 +63,6 @@ import {
     ILanguageServerPackageService,
     ILanguageServerProxy,
     IPlatformData,
-    LanguageClientFactory,
     LanguageServerType
 } from './types';
 
@@ -90,17 +89,12 @@ export function registerTypes(serviceManager: IServiceManager) {
         serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.beta);
         serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.daily);
         serviceManager.addSingleton<ILanagueServerCompatibilityService>(ILanagueServerCompatibilityService, LanguageServerCompatibilityService);
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, BaseLanguageClientFactory, LanguageClientFactory.base);
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DownloadedLanguageClientFactory, LanguageClientFactory.downloaded);
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, SimpleLanguageClientFactory, LanguageClientFactory.simple);
+        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory);
         serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager, LanguageServerType.Microsoft);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy, LanguageServerType.Microsoft);
         serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
     } else if (languageServerType === LanguageServerType.Node) {
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, BaseLanguageClientFactory, LanguageClientFactory.base);
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DownloadedLanguageClientFactory, LanguageClientFactory.downloaded);
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, SimpleLanguageClientFactory, LanguageClientFactory.simple);
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory, LanguageServerType.Node);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager, LanguageServerType.Node);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy, LanguageServerType.Node);
