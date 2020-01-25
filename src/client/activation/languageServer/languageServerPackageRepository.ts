@@ -9,6 +9,12 @@ import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageReposito
 
 const languageServerPackageName = 'python-language-server';
 
+export enum DotNetLanguageServerPackageStorageContainers {
+    'stable' = 'python-language-server-stable',
+    'beta' = 'python-language-server-beta',
+    'daily' = 'python-language-server-daily'
+}
+
 @injectable()
 export class StableDotNetLanguageServerPackageRepository extends StableLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {

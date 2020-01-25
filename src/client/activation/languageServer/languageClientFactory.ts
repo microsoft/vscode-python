@@ -17,8 +17,12 @@ import { ILanguageClientFactory, ILanguageServerFolderService, IPlatformData } f
 const dotNetCommand = 'dotnet';
 const languageClientName = 'Python Tools';
 
+@injectable()
 export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFactory {
-    constructor(private readonly platformData: IPlatformData, private readonly languageServerFolderService: ILanguageServerFolderService) {}
+    constructor(
+        @inject(IPlatformData) private readonly platformData: IPlatformData,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {}
 
     public async createLanguageClient(
         resource: Resource,
@@ -38,8 +42,12 @@ export class DotNetDownloadedLanguageClientFactory implements ILanguageClientFac
     }
 }
 
+@injectable()
 export class DotNetSimpleLanguageClientFactory implements ILanguageClientFactory {
-    constructor(private readonly platformData: IPlatformData, private readonly languageServerFolderService: ILanguageServerFolderService) {}
+    constructor(
+        @inject(IPlatformData) private readonly platformData: IPlatformData,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {}
 
     public async createLanguageClient(
         resource: Resource,
@@ -65,16 +73,13 @@ export class DotNetLanguageClientFactory implements ILanguageClientFactory {
         @inject(IConfigurationService) private readonly configurationService: IConfigurationService,
         @inject(IEnvironmentVariablesProvider) private readonly envVarsProvider: IEnvironmentVariablesProvider,
         @inject(IEnvironmentActivationService) private readonly environmentActivationService: IEnvironmentActivationService,
-        @inject(IPlatformData) private readonly platformData: IPlatformData,
-        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+        @inject(ILanguageClientFactory) private readonly downloadedFactory: ILanguageClientFactory,
+        @inject(ILanguageClientFactory) private readonly simpleFactory: ILanguageClientFactory
     ) {}
 
     public async createLanguageClient(resource: Resource, interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
         const settings = this.configurationService.getSettings(resource);
-        const factory = settings.downloadLanguageServer
-            ? new DotNetDownloadedLanguageClientFactory(this.platformData, this.languageServerFolderService)
-            : new DotNetSimpleLanguageClientFactory(this.platformData, this.languageServerFolderService);
-
+        const factory = settings.downloadLanguageServer ? this.downloadedFactory : this.simpleFactory;
         const env = await this.getEnvVars(resource, interpreter);
         return factory.createLanguageClient(resource, interpreter, clientOptions, env);
     }

@@ -9,6 +9,12 @@ import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageReposito
 
 const languageServerPackageName = 'pyrx';
 
+export enum NodeLanguageServerPackageStorageContainers {
+    'stable' = 'pyrx-stable',
+    'beta' = 'pyrx-beta',
+    'daily' = 'pyrx-daily'
+}
+
 @injectable()
 export class StableNodeLanguageServerPackageRepository extends StableLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {

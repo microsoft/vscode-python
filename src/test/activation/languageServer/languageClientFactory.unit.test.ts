@@ -47,11 +47,11 @@ suite('Language Server - LanguageClient Factory', () => {
         const envVarProvider = mock(EnvironmentVariablesProvider);
         const activationService = mock(EnvironmentActivationService);
         const factory = new DotNetLanguageClientFactory(
-            instance(downloadFactory),
-            instance(simpleFactory),
             instance(configurationService),
             instance(envVarProvider),
-            instance(activationService)
+            instance(activationService),
+            instance(downloadFactory),
+            instance(simpleFactory)
         );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
@@ -72,11 +72,11 @@ suite('Language Server - LanguageClient Factory', () => {
         const envVarProvider = mock(EnvironmentVariablesProvider);
         const activationService = mock(EnvironmentActivationService);
         const factory = new DotNetLanguageClientFactory(
-            instance(downloadFactory),
-            instance(simpleFactory),
             instance(configurationService),
             instance(envVarProvider),
-            instance(activationService)
+            instance(activationService),
+            instance(downloadFactory),
+            instance(simpleFactory)
         );
         const uri = Uri.file(__filename);
         const options = typemoq.Mock.ofType<LanguageClientOptions>().object;
