@@ -45,7 +45,7 @@ export class SortImportsEditingProvider implements ISortImportsEditingProvider {
         // We pass the content of the file to be sorted via stdin. This avoids
         // saving the file (as well as a potential temporary file), but does
         // mean that we need another way to tell `isort` where to look for
-        // configuration. We do that by setting the working direcotry to the
+        // configuration. We do that by setting the working directory to the
         // directory which contains the file.
         const args = ['-', '--diff'].concat(settings.sortImports.args);
         const spawnOptions = {
