@@ -7,6 +7,7 @@ import { ExtensionActivationManager } from '../../client/activation/activationMa
 import { LanguageServerExtensionActivationService } from '../../client/activation/activationService';
 import { DownloadBetaChannelRule, DownloadDailyChannelRule } from '../../client/activation/common/downloadChannelRules';
 import { LanguageServerDownloader } from '../../client/activation/common/downloader';
+import { LanguageServerDownloadChannel } from '../../client/activation/common/packageRepository';
 import { ExtensionSurveyPrompt } from '../../client/activation/extensionSurvey';
 import { JediExtensionActivator } from '../../client/activation/jedi';
 import { DotNetLanguageServerActivator } from '../../client/activation/languageServer/activator';
@@ -16,14 +17,13 @@ import { LanguageServerCompatibilityService } from '../../client/activation/lang
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
 import {
-    BetaLanguageServerPackageRepository,
-    DailyLanguageServerPackageRepository,
-    LanguageServerDownloadChannel,
-    StableLanguageServerPackageRepository
+    BetaDotNetLanguageServerPackageRepository,
+    DailyDotNetLanguageServerPackageRepository,
+    StableDotNetLanguageServerPackageRepository
 } from '../../client/activation/languageServer/languageServerPackageRepository';
 import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
 import { LanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
-import { LanguageServerManager } from '../../client/activation/languageServer/manager';
+import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
 import { NodeLanguageServerActivator } from '../../client/activation/node/activator';
@@ -83,9 +83,9 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, InteractiveShiftEnterBanner, BANNER_NAME_INTERACTIVE_SHIFTENTER)).once();
         verify(serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, LanguageServerFolderService)).once();
         verify(serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, LanguageServerPackageService)).once();
-        verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, StableLanguageServerPackageRepository, LanguageServerDownloadChannel.stable)).once();
-        verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaLanguageServerPackageRepository, LanguageServerDownloadChannel.beta)).once();
-        verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyLanguageServerPackageRepository, LanguageServerDownloadChannel.daily)).once();
+        verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, StableDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.stable)).once();
+        verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.beta)).once();
+        verify(serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.daily)).once();
         verify(serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadDailyChannelRule, LanguageServerDownloadChannel.daily)).once();
         verify(serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadBetaChannelRule, LanguageServerDownloadChannel.beta)).once();
         verify(serviceManager.addSingleton<IDownloadChannelRule>(IDownloadChannelRule, DownloadBetaChannelRule, LanguageServerDownloadChannel.stable)).once();
@@ -97,7 +97,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData)).once();
         verify(serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions)).once();
         verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy, LanguageServerType.Microsoft)).once();
-        verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager, LanguageServerType.Microsoft)).once();
+        verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager, LanguageServerType.Microsoft)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();
         verify(serviceManager.addSingleton<IActiveResourceService>(IActiveResourceService, ActiveResourceService)).once();

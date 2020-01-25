@@ -237,8 +237,8 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, unitTestOutChannel, TEST_OUTPUT_CHANNEL);
     serviceManager.addSingletonInstance<OutputChannel>(IOutputChannel, jupyterOutputChannel, JUPYTER_OUTPUT_CHANNEL);
 
-    activationRegisterTypes(serviceManager);
     commonRegisterTypes(serviceManager);
+    activationRegisterTypes(serviceManager);
     registerDotNetTypes(serviceManager);
     processRegisterTypes(serviceManager);
     variableRegisterTypes(serviceManager);

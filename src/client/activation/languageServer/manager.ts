@@ -15,7 +15,7 @@ import { LanguageClientMiddleware } from '../languageClientMiddleware';
 import { ILanguageServerAnalysisOptions, ILanguageServerExtension, ILanguageServerManager, ILanguageServerProxy, LanguageServerType } from '../types';
 
 @injectable()
-export class LanguageServerManager implements ILanguageServerManager {
+export class DotNetLanguageServerManager implements ILanguageServerManager {
     private languageServerProxy?: ILanguageServerProxy;
     private resource!: Resource;
     private interpreter: PythonInterpreter | undefined;

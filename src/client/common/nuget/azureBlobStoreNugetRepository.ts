@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { inject, injectable, unmanaged } from 'inversify';
+import { unmanaged } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -12,15 +12,15 @@ import { traceDecorators } from '../logger';
 import { Resource } from '../types';
 import { INugetRepository, INugetService, NugetPackage } from './types';
 
-@injectable()
 export class AzureBlobStoreNugetRepository implements INugetRepository {
     constructor(
-        @inject(IServiceContainer) private readonly serviceContainer: IServiceContainer,
+        @unmanaged() private readonly serviceContainer: IServiceContainer,
         @unmanaged() protected readonly azureBlobStorageAccount: string,
         @unmanaged() protected readonly azureBlobStorageContainer: string,
         @unmanaged() protected readonly azureCDNBlobStorageAccount: string,
         private getBlobStore: (uri: string) => Promise<IAZBlobStore> = _getAZBlobStore
     ) {}
+
     public async getPackages(packageName: string, resource: Resource): Promise<NugetPackage[]> {
         return this.listPackages(this.azureBlobStorageAccount, this.azureBlobStorageContainer, packageName, this.azureCDNBlobStorageAccount, resource);
     }

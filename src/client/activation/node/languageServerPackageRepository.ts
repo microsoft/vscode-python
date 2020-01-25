@@ -7,24 +7,24 @@ import { inject, injectable } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { BetaLanguageServerPackageRepository, DailyLanguageServerPackageRepository, StableLanguageServerPackageRepository } from '../common/packageRepository';
 
-const languageServerPackageName = 'python-language-server';
+const languageServerPackageName = 'pyrx';
 
 @injectable()
-export class StableDotNetLanguageServerPackageRepository extends StableLanguageServerPackageRepository {
+export class StableNodeLanguageServerPackageRepository extends StableLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer, languageServerPackageName);
     }
 }
 
 @injectable()
-export class BetaDotNetLanguageServerPackageRepository extends BetaLanguageServerPackageRepository {
+export class BetaNodeLanguageServerPackageRepository extends BetaLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer, languageServerPackageName);
     }
 }
 
 @injectable()
-export class DailyDotNetLanguageServerPackageRepository extends DailyLanguageServerPackageRepository {
+export class DailyNodeLanguageServerPackageRepository extends DailyLanguageServerPackageRepository {
     constructor(@inject(IServiceContainer) serviceContainer: IServiceContainer) {
         super(serviceContainer, languageServerPackageName);
     }

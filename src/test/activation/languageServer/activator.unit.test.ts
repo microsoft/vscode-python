@@ -9,7 +9,7 @@ import { Uri } from 'vscode';
 import { LanguageServerDownloader } from '../../../client/activation/common/downloader';
 import { DotNetLanguageServerActivator } from '../../../client/activation/languageServer/activator';
 import { LanguageServerFolderService } from '../../../client/activation/languageServer/languageServerFolderService';
-import { LanguageServerManager } from '../../../client/activation/languageServer/manager';
+import { DotNetLanguageServerManager } from '../../../client/activation/languageServer/manager';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../../../client/activation/types';
 import { IWorkspaceService } from '../../../client/common/application/types';
 import { WorkspaceService } from '../../../client/common/application/workspace';
@@ -34,7 +34,7 @@ suite('Language Server - Activator', () => {
     let configuration: IConfigurationService;
     let settings: IPythonSettings;
     setup(() => {
-        manager = mock(LanguageServerManager);
+        manager = mock(DotNetLanguageServerManager);
         workspaceService = mock(WorkspaceService);
         fs = mock(FileSystem);
         lsDownloader = mock(LanguageServerDownloader);

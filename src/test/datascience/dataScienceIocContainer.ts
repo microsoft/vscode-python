@@ -30,7 +30,7 @@ import { LanguageServerCompatibilityService } from '../../client/activation/lang
 import { LanguageServerExtension } from '../../client/activation/languageServer/languageServerExtension';
 import { LanguageServerFolderService } from '../../client/activation/languageServer/languageServerFolderService';
 import { LanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
-import { LanguageServerManager } from '../../client/activation/languageServer/manager';
+import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
 import { NodeLanguageServerManager } from '../../client/activation/node/manager';
 import {
     IExtensionSingleActivationService,
@@ -465,7 +465,7 @@ export class DataScienceIocContainer extends UnitTestIocContainer {
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy, LanguageServerType.Microsoft);
         this.serviceManager.addSingleton<ILanguageServerProxy>(ILanguageServerProxy, MockLanguageServerProxy, LanguageServerType.Node);
         this.serviceManager.addSingleton<ILanguageServerCache>(ILanguageServerCache, LanguageServerExtensionActivationService);
-        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, LanguageServerManager, LanguageServerType.Microsoft);
+        this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager, LanguageServerType.Microsoft);
         this.serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager, LanguageServerType.Node);
         this.serviceManager.addSingleton<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, MockLanguageServerAnalysisOptions);
         this.serviceManager.add<IInteractiveWindowListener>(IInteractiveWindowListener, IntellisenseProvider);
