@@ -93,9 +93,13 @@ export interface ICellAction {
     cellId: string | undefined;
 }
 
-export interface IEditCellAction extends ICellAction {
+export interface IEditCellAction extends ICodeAction {
     changes: monacoEditor.editor.IModelContentChange[];
     modelId: string;
+}
+
+export interface IUnfocusAction extends ICodeAction {
+    deselect: boolean;
 }
 
 export interface ICodeAction extends ICellAction {

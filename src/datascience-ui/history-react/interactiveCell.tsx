@@ -11,6 +11,7 @@ import { connect } from 'react-redux';
 
 import { Identifiers } from '../../client/datascience/constants';
 import { CellState, IDataScienceExtraSettings } from '../../client/datascience/types';
+import { concatMultilineStringInput } from '../common';
 import { CellInput } from '../interactive-common/cellInput';
 import { CellOutput } from '../interactive-common/cellOutput';
 import { CollapseButton } from '../interactive-common/collapseButton';
@@ -279,8 +280,15 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         this.props.unfocus(this.getCell().id);
     };
 
+    // IANHU: Common base class?
+    private getCurrentCode(): string {
+        // Input may not be open at this time. If not, then use current cell contents.
+        const contents = this.codeRef.current ? this.codeRef.current.getContents() : undefined;
+        return contents || concatMultilineStringInput(this.props.cellVM.cell.data.source);
+    }
+
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string) => {
-        this.props.editCell(cellId, changes, modelId);
+        this.props.editCell(cellId, changes, modelId, this.getCurrentCode());
     };
 
     private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {

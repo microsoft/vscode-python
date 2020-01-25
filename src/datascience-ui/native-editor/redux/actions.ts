@@ -20,7 +20,8 @@ import {
     IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
-    IShowPlotAction
+    IShowPlotAction,
+    IUnfocusAction
 } from '../../interactive-common/redux/reducers/types';
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
@@ -32,7 +33,7 @@ export const actionCreators = {
         type: CommonActionType.FOCUS_CELL,
         payload: { cellId, cursorPos }
     }),
-    unfocusCell: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId, code } }),
+    unfocusCell: (cellId: string, code: string, deselect: boolean): CommonAction<IUnfocusAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId, code, deselect } }),
     selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({
         type: CommonActionType.SELECT_CELL,
         payload: { cellId, cursorPos }
@@ -70,9 +71,9 @@ export const actionCreators = {
     redo: (): CommonAction<never | undefined> => ({ type: CommonActionType.REDO }),
     arrowUp: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.ARROW_UP, payload: { cellId, code } }),
     arrowDown: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.ARROW_DOWN, payload: { cellId, code } }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string, code: string): CommonAction<IEditCellAction> => ({
         type: CommonActionType.EDIT_CELL,
-        payload: { cellId, changes, modelId }
+        payload: { cellId, changes, modelId, code }
     }),
     linkClick: (href: string): CommonAction<ILinkClickAction> => ({ type: CommonActionType.LINK_CLICK, payload: { href } }),
     showPlot: (imageHtml: string): CommonAction<IShowPlotAction> => ({ type: CommonActionType.SHOW_PLOT, payload: { imageHtml } }),

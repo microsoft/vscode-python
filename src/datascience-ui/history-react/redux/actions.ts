@@ -35,9 +35,9 @@ export const actionCreators = {
     gatherCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.GATHER_CELL, payload: { cellId } }),
     clickCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.CLICK_CELL, payload: { cellId } }),
     doubleClickCell: (cellId: string): CommonAction<ICellAction> => ({ type: CommonActionType.DOUBLE_CLICK_CELL, payload: { cellId } }),
-    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string): CommonAction<IEditCellAction> => ({
+    editCell: (cellId: string, changes: monacoEditor.editor.IModelContentChange[], modelId: string, code: string): CommonAction<IEditCellAction> => ({
         type: CommonActionType.EDIT_CELL,
-        payload: { cellId, changes, modelId }
+        payload: { cellId, changes, modelId, code }
     }),
     submitInput: (code: string, cellId: string): CommonAction<ICodeAction> => ({ type: CommonActionType.SUBMIT_INPUT, payload: { code, cellId } }),
     toggleVariableExplorer: (): CommonAction<never | undefined> => ({ type: CommonActionType.TOGGLE_VARIABLE_EXPLORER }),

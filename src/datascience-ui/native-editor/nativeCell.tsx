@@ -610,11 +610,11 @@ export class NativeCell extends React.Component<INativeCellProps> {
 
     private onCodeUnfocused = () => {
         // Make sure to save the code from the editor into the cell
-        this.props.unfocusCell(this.cellId, this.getCurrentCode());
+        this.props.unfocusCell(this.cellId, this.getCurrentCode(), false);
     };
 
     private onCodeChange = (changes: monacoEditor.editor.IModelContentChange[], cellId: string, modelId: string) => {
-        this.props.editCell(cellId, changes, modelId);
+        this.props.editCell(cellId, changes, modelId, this.getCurrentCode());
     };
 
     private onCodeCreated = (_code: string, _file: string, cellId: string, modelId: string) => {

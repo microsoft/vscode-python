@@ -5,6 +5,7 @@ import { InteractiveWindowMessages } from '../../../../client/datascience/intera
 import { CssMessages } from '../../../../client/datascience/messages';
 import { extractInputText, IMainState } from '../../mainState';
 import { createPostableAction } from '../postOffice';
+import { Helpers } from './helpers';
 import { CommonReducerArg, ICellAction, IEditCellAction, ILinkClickAction, ISendCommandAction, IShowDataViewerAction, IShowPlotAction } from './types';
 
 // These are all reducers that don't actually change state. They merely dispatch a message to the other side.
@@ -88,9 +89,30 @@ export namespace Transfer {
         return arg.prevState;
     }
 
+    // IANHU: Move / share with unfocus cell in effects.ts?
     export function editCell<T>(arg: CommonReducerArg<T, IEditCellAction>): IMainState {
         if (arg.payload.cellId) {
             arg.queueAction(createPostableAction(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId }));
+
+            // Update the uncomitted text on the cell view model
+            // We keep this saved here so we don't rerender and we put this code into the input / code data
+            // when focus is lost
+            const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+            if (index >= 0 && arg.prevState.focusedCellId === arg.payload.cellId) {
+                const newVMs = [...arg.prevState.cellVMs];
+                const current = arg.prevState.cellVMs[index];
+                const newCell = {
+                    ...current,
+                    uncomittedText: arg.payload.code
+                };
+
+                // tslint:disable-next-line: no-any
+                newVMs[index] = Helpers.asCellViewModel(newCell); // This is because IMessageCell doesn't fit in here
+                return {
+                    ...arg.prevState,
+                    cellVMs: newVMs
+                };
+            }
         }
         return arg.prevState;
     }
