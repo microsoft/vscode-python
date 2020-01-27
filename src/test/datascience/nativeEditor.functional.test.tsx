@@ -43,7 +43,6 @@ import {
     escapePath,
     findButton,
     getLastOutputCell,
-    getNativeEditor,
     getNativeFocusedEditor,
     getOutputCell,
     injectCode,
