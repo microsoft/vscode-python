@@ -122,12 +122,8 @@ gulp.task('compile-webviews', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
 });
 
-gulp.task('wow', async () => {
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js', '--mode', 'production'], webpackEnv);
-});
-
 gulp.task('compile-webiview-dependencies', async () => {
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui.dependency.config.builder.js'], webpackEnv);
+    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui.dependency.config.builder.js', '--mode', 'production'], webpackEnv);
 });
 
 gulp.task('webpack', async () => {
@@ -135,6 +131,7 @@ gulp.task('webpack', async () => {
     await buildWebPack('production', ['--config', './build/webpack/webpack.extension.dependencies.config.js'], webpackEnv);
     // Build DS stuff (separately as it uses far too much memory and slows down CI).
     // Individually is faster on CI.
+    await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui.dependency.config.builder.js'], webpackEnv);
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
     await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js'], webpackEnv);
     // await buildWebPack('production', ['--config', './build/webpack/webpack.datascience-ui-nativeEditorChunked.config.js'], webpackEnv);

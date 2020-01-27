@@ -3,6 +3,9 @@ out/client/node_modules/*.map
 **/*.map
 **/*.analyzer.html
 !out/datascience-ui/**/*.map
+out/datascience-ui/@nteract/*.map
+out/datascience-ui/data-explorer/**
+out/datascience-ui/plot/**
 *.vsix
 .appveyor.yml
 .editorconfig

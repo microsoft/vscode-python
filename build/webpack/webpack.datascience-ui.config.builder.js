@@ -16,15 +16,11 @@ const MonacoWebpackPlugin = require('monaco-editor-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
+const isProdBuild = process.argv.includes('--mode');
 
 function getPlugins(folderName) {
     if (folderName === 'history-react' || folderName === 'native-editor') {
         return [
-            new webpack.DefinePlugin({
-                'process.env': {
-                    NODE_ENV: JSON.stringify('production')
-                }
-            }),
             new MonacoWebpackPlugin({
                 languages: [] // force to empty so onigasm will be used
             }),
@@ -132,26 +128,32 @@ function getEntry(folderName) {
 }
 
 function buildConfiguration(folderName) {
+    const productionOnlyPlugins = isProdBuild
+        ? common.getDefaultPlugins(folderName).concat([
+              new webpack.DefinePlugin({
+                  'process.env': {
+                      NODE_ENV: JSON.stringify('production')
+                  }
+              })
+          ])
+        : [];
+
     return {
         context: constants.ExtensionRootDir,
         entry: getEntry(folderName),
         output: getOutput(folderName),
         mode: 'development', // Leave as is, we'll need to see stack traces when there are errors.
-        // Use 'eval' for release and `eval-source-map` for development.
-        // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
-        //  this seems to prevent chrome from downloading the source maps)
-        // devtool: 'none',
-        devtool: 'none',
+        devtool: isProdBuild ? 'source-map' : 'eval-source-map',
         optimization: {
             // minimize: false
             minimize: true,
-            minimizer: [new TerserPlugin({ sourceMap: false })]
+            minimizer: [new TerserPlugin({ sourceMap: true })]
         },
         node: {
             fs: 'empty'
         },
         plugins: [
-            ...common.getDefaultPlugins(folderName),
+            ...productionOnlyPlugins,
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [

@@ -11,18 +11,19 @@ const CopyWebpackPlugin = require('copy-webpack-plugin');
 const TerserPlugin = require('terser-webpack-plugin');
 const constants = require('../constants');
 const configFileName = 'tsconfig.datascience-ui.json';
-
-function getPlugins() {
-    return [
-        new webpack.DefinePlugin({
-            'process.env': {
-                NODE_ENV: JSON.stringify('production')
-            }
-        })
-    ];
-}
+const isProdBuild = process.argv.includes('--mode');
 
 function buildConfiguration(moduleName, outputFileNameWithoutJsExtension) {
+    const productionOnlyPlugins = isProdBuild
+        ? common.getDefaultPlugins(moduleName).concat([
+              new webpack.DefinePlugin({
+                  'process.env': {
+                      NODE_ENV: JSON.stringify('production')
+                  }
+              })
+          ])
+        : [];
+
     return {
         context: constants.ExtensionRootDir,
         entry: [moduleName],
@@ -43,7 +44,7 @@ function buildConfiguration(moduleName, outputFileNameWithoutJsExtension) {
             fs: 'empty'
         },
         plugins: [
-            //...common.getDefaultPlugins(outputFileNameWithoutJsExtension),
+            ...productionOnlyPlugins,
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [
