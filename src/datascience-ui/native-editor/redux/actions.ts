@@ -20,8 +20,7 @@ import {
     IRefreshVariablesAction,
     ISendCommandAction,
     IShowDataViewerAction,
-    IShowPlotAction,
-    IUnfocusAction
+    IShowPlotAction
 } from '../../interactive-common/redux/reducers/types';
 
 // See https://react-redux.js.org/using-react-redux/connect-mapdispatch#defining-mapdispatchtoprops-as-an-object
@@ -33,10 +32,14 @@ export const actionCreators = {
         type: CommonActionType.FOCUS_CELL,
         payload: { cellId, cursorPos }
     }),
-    unfocusCell: (cellId: string, code: string, deselect: boolean): CommonAction<IUnfocusAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId, code, deselect } }),
+    unfocusCell: (cellId: string, code: string): CommonAction<ICodeAction> => ({ type: CommonActionType.UNFOCUS_CELL, payload: { cellId, code } }),
     selectCell: (cellId: string, cursorPos: CursorPos = CursorPos.Current): CommonAction<ICellAndCursorAction> => ({
         type: CommonActionType.SELECT_CELL,
         payload: { cellId, cursorPos }
+    }),
+    deselectCell: (cellId: string): CommonAction<ICellAction> => ({
+        type: CommonActionType.DESELECT_CELL,
+        payload: { cellId }
     }),
     addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL }),
     executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => ({

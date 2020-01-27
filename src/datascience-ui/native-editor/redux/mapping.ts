@@ -18,8 +18,7 @@ import {
     ILinkClickAction,
     ISendCommandAction,
     IShowDataViewerAction,
-    IShowPlotAction,
-    IUnfocusAction
+    IShowPlotAction
 } from '../../interactive-common/redux/reducers/types';
 import { ReducerArg, ReducerFunc } from '../../react-common/reduxUtils';
 
@@ -32,7 +31,7 @@ export class INativeEditorActionMapping {
     public [CommonActionType.INSERT_BELOW]: NativeEditorReducerFunc<ICellAction>;
     public [CommonActionType.INSERT_ABOVE_FIRST]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.FOCUS_CELL]: NativeEditorReducerFunc<ICellAndCursorAction>;
-    public [CommonActionType.UNFOCUS_CELL]: NativeEditorReducerFunc<IUnfocusAction>;
+    public [CommonActionType.UNFOCUS_CELL]: NativeEditorReducerFunc<ICodeAction>;
     public [CommonActionType.ADD_NEW_CELL]: NativeEditorReducerFunc<never | undefined>;
     public [CommonActionType.EXECUTE_CELL]: NativeEditorReducerFunc<IExecuteAction>;
     public [CommonActionType.EXECUTE_ALL_CELLS]: NativeEditorReducerFunc<never | undefined>;

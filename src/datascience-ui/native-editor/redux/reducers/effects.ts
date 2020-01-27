@@ -6,7 +6,7 @@ import { IDataScienceExtraSettings } from '../../../../client/datascience/types'
 import { IMainState } from '../../../interactive-common/mainState';
 import { createPostableAction } from '../../../interactive-common/redux/postOffice';
 import { Helpers } from '../../../interactive-common/redux/reducers/helpers';
-import { ICellAction, ICellAndCursorAction, IUnfocusAction } from '../../../interactive-common/redux/reducers/types';
+import { ICellAction, ICellAndCursorAction, ICodeAction } from '../../../interactive-common/redux/reducers/types';
 import { computeEditorOptions } from '../../../react-common/settingsReactSide';
 import { NativeEditorReducerArg } from '../mapping';
 
@@ -23,9 +23,10 @@ export namespace Effects {
             }
 
             if (removeFocusIndex >= 0) {
-                const oldFocusCell = arg.prevState.cellVMs[removeFocusIndex];
+                const oldFocusCell = prevState.cellVMs[removeFocusIndex];
                 const oldCode = oldFocusCell.uncomittedText || oldFocusCell.inputBlockText;
-                prevState = unfocusCell({ ...arg, payload: { cellId: arg.prevState.cellVMs[removeFocusIndex].cell.id, code: oldCode, deselect: true } });
+                prevState = unfocusCell({ ...arg, prevState, payload: { cellId: prevState.cellVMs[removeFocusIndex].cell.id, code: oldCode } });
+                prevState = deselectCell({ ...arg, prevState, payload: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } });
             }
 
             const newVMs = [...prevState.cellVMs];
@@ -37,7 +38,7 @@ export namespace Effects {
             }
 
             return {
-                ...arg.prevState,
+                ...prevState,
                 cellVMs: newVMs,
                 focusedCellId: arg.payload.cellId,
                 selectedCellId: arg.payload.cellId
@@ -47,7 +48,7 @@ export namespace Effects {
         return arg.prevState;
     }
 
-    export function unfocusCell(arg: NativeEditorReducerArg<IUnfocusAction>): IMainState {
+    export function unfocusCell(arg: NativeEditorReducerArg<ICodeAction>): IMainState {
         // Unfocus the cell
         const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
         if (index >= 0 && arg.prevState.focusedCellId === arg.payload.cellId) {
@@ -57,7 +58,6 @@ export namespace Effects {
                 ...current,
                 inputBlockText: arg.payload.code,
                 focused: false,
-                selected: arg.payload.deselect ? false : current.selected,
                 cell: {
                     ...current.cell,
                     data: {
@@ -73,8 +73,7 @@ export namespace Effects {
             return {
                 ...arg.prevState,
                 cellVMs: newVMs,
-                focusedCellId: undefined,
-                selectedCellId: arg.payload.deselect ? undefined : arg.prevState.selectedCellId
+                focusedCellId: undefined
             };
         } else if (index >= 0) {
             // Dont change focus state if not the focused cell. Just update the code.
@@ -104,29 +103,62 @@ export namespace Effects {
         return arg.prevState;
     }
 
+    export function deselectCell(arg: NativeEditorReducerArg<ICellAction>): IMainState {
+        const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
+        if (index >= 0 && arg.prevState.selectedCellId === arg.payload.cellId) {
+            const newVMs = [...arg.prevState.cellVMs];
+            const target = arg.prevState.cellVMs[index];
+            const newCell = {
+                ...target,
+                selected: false
+            };
+
+            // tslint:disable-next-line: no-any
+            newVMs[index] = newCell as any; // This is because IMessageCell doesn't fit in here
+
+            return {
+                ...arg.prevState,
+                cellVMs: newVMs,
+                selectedCellId: undefined
+            };
+        }
+
+        return arg.prevState;
+    }
+
     export function selectCell(arg: NativeEditorReducerArg<ICellAndCursorAction>): IMainState {
         // Skip doing anything if already selected.
         if (arg.payload.cellId !== arg.prevState.selectedCellId) {
-            const newVMs = [...arg.prevState.cellVMs];
+            let prevState = arg.prevState;
+            const addIndex = prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
 
-            // Select one cell and unselect another.
-            const addIndex = newVMs.findIndex(c => c.cell.id === arg.payload.cellId);
-            const removeIndex = newVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
-            if (addIndex >= 0 && arg.payload.cellId !== arg.prevState.selectedCellId) {
+            // First find the old focused cell and unfocus it
+            let removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.focusedCellId);
+            if (removeFocusIndex < 0) {
+                removeFocusIndex = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.prevState.selectedCellId);
+            }
+
+            if (removeFocusIndex >= 0) {
+                const oldFocusCell = prevState.cellVMs[removeFocusIndex];
+                const oldCode = oldFocusCell.uncomittedText || oldFocusCell.inputBlockText;
+                prevState = unfocusCell({ ...arg, prevState, payload: { cellId: prevState.cellVMs[removeFocusIndex].cell.id, code: oldCode } });
+                prevState = deselectCell({ ...arg, prevState, payload: { cellId: prevState.cellVMs[removeFocusIndex].cell.id } });
+            }
+
+            const newVMs = [...prevState.cellVMs];
+            if (addIndex >= 0 && arg.payload.cellId !== prevState.selectedCellId) {
                 newVMs[addIndex] = {
                     ...newVMs[addIndex],
-                    focused: arg.prevState.focusedCellId !== undefined && arg.prevState.focusedCellId === arg.prevState.selectedCellId,
+                    focused: prevState.focusedCellId !== undefined && prevState.focusedCellId === prevState.selectedCellId,
                     selected: true,
                     cursorPos: arg.payload.cursorPos
                 };
             }
-            if (removeIndex >= 0 && removeIndex !== addIndex) {
-                newVMs[removeIndex] = { ...newVMs[removeIndex], focused: false, selected: false };
-            }
+
             return {
-                ...arg.prevState,
+                ...prevState,
                 cellVMs: newVMs,
-                focusedCellId: arg.prevState.focusedCellId !== undefined ? arg.payload.cellId : undefined,
+                focusedCellId: prevState.focusedCellId !== undefined ? arg.payload.cellId : undefined,
                 selectedCellId: arg.payload.cellId
             };
         }

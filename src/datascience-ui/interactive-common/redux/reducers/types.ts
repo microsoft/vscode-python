@@ -31,6 +31,7 @@ export enum CommonActionType {
     COPY_CELL_CODE = 'action.copy_cell_code',
     DELETE_ALL_CELLS = 'action.delete_all_cells',
     DELETE_CELL = 'action.delete_cell',
+    DESELECT_CELL = 'action.deselect_cell',
     DOUBLE_CLICK_CELL = 'action.double_click_cell',
     EDITOR_LOADED = 'action.editor_loaded',
     EDIT_CELL = 'action.edit_cell',
@@ -96,10 +97,6 @@ export interface ICellAction {
 export interface IEditCellAction extends ICodeAction {
     changes: monacoEditor.editor.IModelContentChange[];
     modelId: string;
-}
-
-export interface IUnfocusAction extends ICodeAction {
-    deselect: boolean;
 }
 
 export interface ICodeAction extends ICellAction {

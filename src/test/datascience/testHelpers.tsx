@@ -242,7 +242,10 @@ export function verifyHtmlOnCell(wrapper: ReactWrapper<any, Readonly<{}>, React.
     assert.ok(targetCell!, "Target cell doesn't exist");
 
     // If html is specified, check it
-    const output = targetCell!.find('div.cell-output');
+    let output = targetCell!.find('div.cell-output');
+    if (output.length <= 0) {
+        output = targetCell!.find('div.markdown-cell-output');
+    }
     const outputHtml = output.length > 0 ? output.html() : undefined;
     if (html && isString(html)) {
         // Extract only the first 100 chars from the input string

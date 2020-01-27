@@ -80,8 +80,7 @@ export namespace Execution {
                         return Effects.selectCell({
                             ...arg,
                             prevState: {
-                                ...executeResult,
-                                focusedCellId: undefined
+                                ...executeResult
                             },
                             payload: {
                                 ...arg.payload,

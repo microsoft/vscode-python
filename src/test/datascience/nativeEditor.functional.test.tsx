@@ -43,6 +43,7 @@ import {
     escapePath,
     findButton,
     getLastOutputCell,
+    getNativeEditor,
     getNativeFocusedEditor,
     getOutputCell,
     injectCode,
@@ -798,6 +799,51 @@ for _ in range(50):
                 assert.equal(isCellSelected(wrapper, 'NativeCell', 0), false);
                 assert.equal(isCellSelected(wrapper, 'NativeCell', 1), false);
             });
+
+            test('Markdown saved when selecting another cell', async () => {
+                clickCell(0);
+
+                // Switch to markdown
+                let update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
+                simulateKeyPressOnCell(0, { code: 'm' });
+                await update;
+
+                // Monaco editor should be rendered and the cell should be markdown
+                assert.ok(isCellFocused(wrapper, 'NativeCell', 0));
+                assert.ok(isCellMarkdown(wrapper, 'NativeCell', 0));
+                assert.equal(
+                    wrapper
+                        .find(NativeCell)
+                        .at(0)
+                        .find(MonacoEditor).length,
+                    1
+                );
+
+                // Verify cell content
+                const currentEditor = getNativeFocusedEditor(wrapper);
+                const reactEditor = currentEditor!.instance() as MonacoEditor;
+                const editor = reactEditor.state.editor;
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'a=1\na', 'Incorrect editor text in markdown cell');
+                }
+
+                typeCode(currentEditor, 'world');
+
+                if (editor) {
+                    assert.equal(editor.getModel()!.getValue(), 'worlda=1\na', 'Incorrect editor text in markdown cell');
+                }
+
+                // Now get the editor for the next cell and click it
+                update = waitForUpdate(wrapper, NativeEditor, 1);
+                clickCell(1);
+                await update;
+
+                // Look back at the output for the first cell, not focused, not selected, text saved in output
+                assert.equal(isCellSelected(wrapper, 'NativeCell', 0), false);
+                assert.equal(isCellFocused(wrapper, 'NativeCell', 0), false);
+
+                verifyHtmlOnCell(wrapper, 'NativeCell', '<p>worlda=1\na</p>', 0);
+            });
         });
 
         suite('Keyboard Shortcuts', () => {
@@ -1003,6 +1049,8 @@ for _ in range(50):
                 // Give focus
                 let update = waitForUpdate(wrapper, NativeEditor, 1);
                 clickCell(1);
+                await update;
+                update = waitForMessage(ioc, InteractiveWindowMessages.FocusedCellEditor);
                 simulateKeyPressOnCell(1, { code: 'Enter', editorInfo: undefined });
                 await update;
 
@@ -1013,10 +1061,7 @@ for _ in range(50):
                 await addCell(wrapper, ioc, '', false);
                 assert.equal(wrapper.find('NativeCell').length, 4);
 
-                // Give focus
-                update = waitForUpdate(wrapper, NativeEditor, 1);
-                clickCell(2);
-                await update;
+                // New cell should have focus
                 assert.ok(isCellFocused(wrapper, 'NativeCell', 2));
 
                 const editorEnzyme = getNativeFocusedEditor(wrapper);
