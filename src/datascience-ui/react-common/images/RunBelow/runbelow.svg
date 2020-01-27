@@ -1,7 +1,13 @@
-<svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
- <g>
-   <path style="fill: #424242 !important; stroke:null; clip-rule: evenodd !important" d="m1.187344,8.466528l0,-7.785579l5.96708,3.874144l-5.96708,3.911435zm0.994663,-5.928582l3.192046,2.017147l-3.192046,2.054411l0,-4.071559z"/>
-   <path style="fill: #424242 !important; stroke-width: null; stroke-opacity: null; fill-opacity: null; transform: rotate(90 8.029751777648926,8.982452392578127); stroke:null"
-          d="m6.420426,10.75153l1.501781,-1.769509l-1.501781,-1.769522l0.858344,-1.011261l2.360307,2.780782l-2.360307,2.781645"/>
- </g>
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Generator: Adobe Illustrator 23.0.6, SVG Export Plug-In . SVG Version: 6.00 Build 0)  -->
+<svg version="1.1" id="Layer_1" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px"
+	 viewBox="0 0 16 16" style="enable-background:new 0 0 16 16;" xml:space="preserve">
+<style type="text/css">
+	.st0{fill:#424242;}
+</style>
+<g>
+	<path class="st0" d="M1.8,1.01L1.02,1.42v12l0.78,0.42l9-6V7.01L1.8,1.01z M2.02,12.49V2.36l7.6,5.07L2.02,12.49z"/>
+	<path class="st0" d="M12.85,15h-0.71l-2.5-2.5l0.71-0.71L12,13.44V8h1v5.45l1.65-1.65l0.71,0.71L12.85,15z"/>
+</g>
 </svg>
+
