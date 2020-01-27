@@ -54,8 +54,7 @@ function buildConfiguration(moduleName, outputFileNameWithoutJsExtension) {
                     { from: './src/**/*theme*.json', to: '.' }
                 ],
                 { context: 'src' }
-            ),
-            ...getPlugins()
+            )
         ],
         resolve: {
             // Add '.ts' and '.tsx' as resolvable extensions.

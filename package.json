@@ -2780,7 +2780,7 @@
         "compile-webview-dependencies": "gulp compile-webiview-dependencies",
         "compile-webviews-watch": "npm run compile-webview-dependencies && npm run compile-webviews-watch-ui",
         "checkDependencies": "gulp checkDependencies",
-        "dump-datascience-webpack-stats": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.config.js --profile --json > tmp/ds-stats.json",
+        "dump-datascience-webpack-stats": "cross-env NODE_OPTIONS=--max_old_space_size=9096 webpack --config ./build/webpack/webpack.datascience-ui.all.config.js --profile --json > tmp/ds-stats.json",
         "postinstall": "node ./build/ci/postInstall.js",
         "test": "node ./out/test/standardTest.js && node ./out/test/multiRootTest.js",
         "test:unittests": "mocha --opts ./build/.mocha.unittests.js.opts",
