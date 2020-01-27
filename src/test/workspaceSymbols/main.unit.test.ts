@@ -4,9 +4,9 @@
 'use strict';
 
 import * as assert from 'assert';
-import { use } from 'chai';
+import { expect, use } from 'chai';
 import * as chaiAsPromised from 'chai-as-promised';
-import { anyString, anything, instance, mock, when } from 'ts-mockito';
+import { anyString, anything, instance, mock, reset, verify, when } from 'ts-mockito';
 import { EventEmitter, TextDocument, Uri, WorkspaceFolder } from 'vscode';
 import { ApplicationShell } from '../../client/common/application/applicationShell';
 import { CommandManager } from '../../client/common/application/commandManager';
@@ -14,7 +14,7 @@ import { DocumentManager } from '../../client/common/application/documentManager
 import { IApplicationShell, ICommandManager, IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { WorkspaceService } from '../../client/common/application/workspace';
 import { ConfigurationService } from '../../client/common/configuration/service';
-import { STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
+import { Commands, STANDARD_OUTPUT_CHANNEL } from '../../client/common/constants';
 import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IFileSystem } from '../../client/common/platform/types';
 import { ProcessService } from '../../client/common/process/proc';
@@ -158,6 +158,56 @@ suite('Workspace symbols main', () => {
         await sleep(1);
 
         assert.equal(shellOutput, 'Generating Tags');
+    });
+
+    test('Should not show output channel when rebuilding on save', async () => {
+        when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(workspaceFolders[0]);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: {
+                ctagsPath,
+                enabled: true,
+                exclusionPatterns: [],
+                rebuildOnFileSave: true,
+                tagFilePath: 'foo'
+            }
+        } as any);
+        reset(applicationShell);
+        when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(new Error('Generating workspace tags failed with Error'));
+
+        workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
+        eventEmitter.fire({ uri: Uri.file('folder') } as any);
+        await sleep(1);
+
+        verify(outputChannel.show()).never();
+    });
+
+    test('Output channel is shown when using Command `Build Workspace symbols`', async () => {
+        let buildWorkspaceSymbolsHandler!: Function;
+        when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
+        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(workspaceFolders[0]);
+        when(configurationService.getSettings(anything())).thenReturn({
+            workspaceSymbols: {
+                ctagsPath,
+                enabled: true,
+                exclusionPatterns: [],
+                rebuildOnFileSave: true,
+                tagFilePath: 'foo'
+            }
+        } as any);
+        reset(commandManager);
+        when(commandManager.registerCommand(anything(), anything())).thenCall((commandID, cb) => {
+            expect(commandID).to.equal(Commands.Build_Workspace_Symbols);
+            buildWorkspaceSymbolsHandler = cb;
+            return mockDisposable;
+        });
+        reset(applicationShell);
+        when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(new Error('Generating workspace tags failed with Error'));
+
+        workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
+        await buildWorkspaceSymbolsHandler();
+
+        verify(outputChannel.show()).once();
     });
 
     test('Should not rebuild on save if the setting is disabled', () => {
