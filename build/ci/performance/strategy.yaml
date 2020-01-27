@@ -1,7 +1,5 @@
 parameters:
   jobs: []
-  ignorePythonVersions: ""
-  ignoreOperatingSystems: ""
   pythonVersions: [
       # All scenarios tagged with `@noNeedToTestInAllPython`, will run in the latest version of Python.
       # When using other versions of Python, ignore `@noNeedToTestInAllPython`.
@@ -30,24 +28,20 @@ parameters:
 matrix:
   ${{ each job in parameters.jobs }}:
     ${{ each py in parameters.pythonVersions }}:
-      ${{ if not(contains(coalesce(job.ignorePythonVersions, ''), py.version)) }}:
-        ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'mac')) }}:
-          ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
-            PythonVersion: ${{ py.version }}
-            VMImageName: "macos-latest"
-            VSCodeChannel: "stable"
-            Tags: ${{ format('{0} and {1} and not @win and not @linux', job.tags, py.excludeTags) }}
+      ${{ if not(contains('mac')) }}:
+        ${{ format('Mac{2}{0}{1}', py.displayName, job.test) }}:
+          PythonVersion: ${{ py.version }}
+          VSCodeChannel: "stable"
+          VMImageName: "macos-latest"
 
-          ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'win')) }}:
-            ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
-              PythonVersion: ${{ py.version }}
-              VSCodeChannel: "stable"
-              VMImageName: "vs2017-win2016"
-              Tags: ${{ format('{0} and {1} and not @mac and not @linux', job.tags, py.excludeTags) }}
+      ${{ if not(contains('win')) }}:
+        ${{ format('Win{2}{0}{1}', py.displayName, job.test) }}:
+          PythonVersion: ${{ py.version }}
+          VSCodeChannel: "stable"
+          VMImageName: "vs2017-win2016"
 
-          ${{ if not(contains(coalesce(job.ignoreOperatingSystems, ''), 'linux')) }}:
-            ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
-              PythonVersion: ${{ py.version }}
-              VSCodeChannel: "stable"
-              VMImageName: "ubuntu-latest"
-              Tags: ${{ format('{0} and {1} and not @mac and not @win', job.tags, py.excludeTags) }}
+      ${{ if not(contains('linux')) }}:
+        ${{ format('Linux{2}{0}{1}', py.displayName, job.test) }}:
+          PythonVersion: ${{ py.version }}
+          VSCodeChannel: "stable"
+          VMImageName: "ubuntu-latest"

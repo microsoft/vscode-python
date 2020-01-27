@@ -21,6 +21,8 @@ schedules:
           node .\savePerformanceResults.js
 
   - job: Testing Round 2
+    dependsOn:
+    - Testing Round 1
     timeoutInMinutes: 120
     strategy:
       - template: strategy.yaml
@@ -30,6 +32,8 @@ schedules:
           node .\savePerformanceResults.js
 
   - job: Testing Round 3
+    dependsOn:
+    - Testing Round 2
     timeoutInMinutes: 120
     strategy:
       - template: strategy.yaml
@@ -39,6 +43,8 @@ schedules:
           node .\savePerformanceResults.js
 
   - job: Testing Round 4
+    dependsOn:
+    - Testing Round 3
     timeoutInMinutes: 120
     strategy:
       - template: strategy.yaml
@@ -48,6 +54,8 @@ schedules:
           node .\savePerformanceResults.js
 
   - job: Testing Round 5
+    dependsOn:
+    - Testing Round 4
     timeoutInMinutes: 120
     strategy:
       - template: strategy.yaml
