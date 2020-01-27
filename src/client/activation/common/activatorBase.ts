@@ -24,6 +24,7 @@ import {
 } from 'vscode';
 import * as vscodeLanguageClient from 'vscode-languageclient';
 
+import { injectable } from 'inversify';
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
@@ -39,6 +40,7 @@ import { ILanguageServerActivator, ILanguageServerDownloader, ILanguageServerFol
  * @class LanguageServerActivatorBase
  * @implements {ILanguageServerActivator}
  */
+@injectable()
 export abstract class LanguageServerActivatorBase implements ILanguageServerActivator {
     protected resource?: Resource;
     constructor(

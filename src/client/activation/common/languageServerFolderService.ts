@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { inject, injectable, unmanaged } from 'inversify';
 import * as path from 'path';
 import * as semver from 'semver';
 import { EXTENSION_ROOT_DIR } from '../../common/constants';
@@ -13,8 +14,9 @@ import { IConfigurationService, Resource } from '../../common/types';
 import { IServiceContainer } from '../../ioc/types';
 import { FolderVersionPair, IDownloadChannelRule, ILanguageServerFolderService, ILanguageServerPackageService } from '../types';
 
+@injectable()
 export abstract class LanguageServerFolderService implements ILanguageServerFolderService {
-    constructor(protected readonly serviceContainer: IServiceContainer, protected readonly languageServerFolder: string) {}
+    constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer, @unmanaged() protected readonly languageServerFolder: string) {}
 
     @traceDecorators.verbose('Get language server folder name')
     public async getLanguageServerFolderName(resource: Resource): Promise<string> {

@@ -2,6 +2,7 @@
 // Licensed under the MIT License.
 import { ActiveResourceService } from '../common/application/activeResource';
 import { IActiveResourceService } from '../common/application/types';
+import { registerTypes as registerDotNetTypes } from '../common/dotnet/serviceRegistry';
 import { INugetRepository } from '../common/nuget/types';
 import {
     BANNER_NAME_DS_SURVEY,
@@ -79,28 +80,31 @@ export function registerTypes(serviceManager: IServiceManager) {
     serviceManager.add<IExtensionActivationManager>(IExtensionActivationManager, ExtensionActivationManager);
 
     serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, JediExtensionActivator, LanguageServerType.Jedi);
+    serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
+
+    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
+    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
+    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);
+    serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, InteractiveShiftEnterBanner, BANNER_NAME_INTERACTIVE_SHIFTENTER);
+
     if (languageServerType === LanguageServerType.Microsoft) {
         serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, DotNetLanguageServerActivator, LanguageServerType.Microsoft);
-        serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, LanguageServerSurveyBanner, BANNER_NAME_LS_SURVEY);
-        serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, ProposeLanguageServerBanner, BANNER_NAME_PROPOSE_LS);
-        serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, DataScienceSurveyBanner, BANNER_NAME_DS_SURVEY);
-        serviceManager.addSingleton<IPythonExtensionBanner>(IPythonExtensionBanner, InteractiveShiftEnterBanner, BANNER_NAME_INTERACTIVE_SHIFTENTER);
         serviceManager.addSingleton<INugetRepository>(INugetRepository, StableDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.stable);
         serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.beta);
         serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.daily);
         serviceManager.addSingleton<ILanagueServerCompatibilityService>(ILanagueServerCompatibilityService, LanguageServerCompatibilityService);
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory);
         serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
-        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager, LanguageServerType.Microsoft);
-        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy, LanguageServerType.Microsoft);
-        serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions);
+        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
+        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, DotNetLanguageServerFolderService);
         serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, DotNetLanguageServerPackageService);
+        registerDotNetTypes(serviceManager);
     } else if (languageServerType === LanguageServerType.Node) {
         serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NodeLanguageServerActivator, LanguageServerType.Node);
-        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory, LanguageServerType.Node);
-        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager, LanguageServerType.Node);
-        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy, LanguageServerType.Node);
+        serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
+        serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
+        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, NodeLanguageServerFolderService);
         serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, languageServerPackageService.NodeLanguageServerPackageService);
     } else if (languageServerType === LanguageServerType.None) {

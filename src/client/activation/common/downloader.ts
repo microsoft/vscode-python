@@ -13,6 +13,7 @@ import { IFileDownloader, IOutputChannel, Resource } from '../../common/types';
 import { createDeferred } from '../../common/utils/async';
 import { Common, LanguageService } from '../../common/utils/localize';
 import { StopWatch } from '../../common/utils/stopWatch';
+import { IServiceContainer } from '../../ioc/types';
 import { sendTelemetryEvent } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
 import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerOutputChannel, IPlatformData } from '../types';
@@ -25,13 +26,13 @@ const downloadFileExtension = '.nupkg';
 export class LanguageServerDownloader implements ILanguageServerDownloader {
     private output: IOutputChannel;
     constructor(
-        @inject(IPlatformData) private readonly platformData: IPlatformData,
         @inject(ILanguageServerOutputChannel) private readonly lsOutputChannel: ILanguageServerOutputChannel,
         @inject(IFileDownloader) private readonly fileDownloader: IFileDownloader,
         @inject(ILanguageServerFolderService) private readonly lsFolderService: ILanguageServerFolderService,
         @inject(IApplicationShell) private readonly appShell: IApplicationShell,
         @inject(IFileSystem) private readonly fs: IFileSystem,
-        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService
+        @inject(IWorkspaceService) private readonly workspace: IWorkspaceService,
+        @inject(IServiceContainer) private readonly services: IServiceContainer
     ) {
         this.output = this.lsOutputChannel.channel;
     }
@@ -93,6 +94,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         }
         this.output.show(true);
     }
+
     public async downloadFile(uri: string, title: string): Promise<string> {
         const downloadOptions = {
             extension: downloadFileExtension,
@@ -151,8 +153,14 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         );
 
         // Set file to executable (nothing happens in Windows, as chmod has no definition there)
-        const executablePath = path.join(destinationFolder, this.platformData.engineExecutableName);
-        await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
+        if (this.services) {
+            try {
+                const platformData = this.services.get<IPlatformData>(IPlatformData);
+                const executablePath = path.join(destinationFolder, platformData.engineExecutableName);
+                await this.fs.chmod(executablePath, '0764'); // -rwxrw-r--
+                // tslint:disable-next-line: no-empty
+            } catch {}
+        }
 
         this.output.appendLine(LanguageService.extractionDoneOutputMessage());
     }

@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { injectable } from 'inversify';
 import { AzureBlobStoreNugetRepository } from '../../common/nuget/azureBlobStoreNugetRepository';
 import { IServiceContainer } from '../../ioc/types';
 
@@ -15,18 +16,21 @@ export enum LanguageServerDownloadChannel {
     daily = 'daily'
 }
 
+@injectable()
 export abstract class StableLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
     constructor(serviceContainer: IServiceContainer, packageName: string) {
         super(serviceContainer, azureBlobStorageAccount, `${packageName}-${LanguageServerDownloadChannel.stable}}`, azureCDNBlobStorageAccount);
     }
 }
 
+@injectable()
 export abstract class BetaLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
     constructor(serviceContainer: IServiceContainer, packageName: string) {
         super(serviceContainer, azureBlobStorageAccount, `${packageName}-${LanguageServerDownloadChannel.beta}}`, azureCDNBlobStorageAccount);
     }
 }
 
+@injectable()
 export abstract class DailyLanguageServerPackageRepository extends AzureBlobStoreNugetRepository {
     constructor(serviceContainer: IServiceContainer, packageName: string) {
         super(serviceContainer, azureBlobStorageAccount, `${packageName}-${LanguageServerDownloadChannel.daily}}`, azureCDNBlobStorageAccount);

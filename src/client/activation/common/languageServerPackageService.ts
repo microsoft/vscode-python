@@ -3,6 +3,7 @@
 
 'use strict';
 
+import { injectable } from 'inversify';
 import { parse, SemVer } from 'semver';
 import { IApplicationEnvironment } from '../../common/application/types';
 import { PVSC_EXTENSION_ID } from '../../common/constants';
@@ -16,6 +17,7 @@ import { azureCDNBlobStorageAccount, LanguageServerDownloadChannel } from './pac
 
 export const maxMajorVersion = 0;
 
+@injectable()
 export abstract class LanguageServerPackageService implements ILanguageServerPackageService {
     public maxMajorVersion: number = maxMajorVersion;
     constructor(protected readonly serviceContainer: IServiceContainer, protected readonly appEnv: IApplicationEnvironment, protected readonly platform: IPlatformService) {}

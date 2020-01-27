@@ -1,13 +1,13 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
-import { inject, injectable, named } from 'inversify';
+import { inject, injectable } from 'inversify';
 
 import { IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
 import { LanguageServerActivatorBase } from '../common/activatorBase';
-import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager, LanguageServerType } from '../types';
+import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServerManager } from '../types';
 
 /**
  * Starts the Node.js-based language server managers per workspaces (currently one for first workspace).
@@ -20,7 +20,7 @@ import { ILanguageServerDownloader, ILanguageServerFolderService, ILanguageServe
 @injectable()
 export class NodeLanguageServerActivator extends LanguageServerActivatorBase {
     constructor(
-        @inject(ILanguageServerManager) @named(LanguageServerType.Microsoft) manager: ILanguageServerManager,
+        @inject(ILanguageServerManager) manager: ILanguageServerManager,
         @inject(IWorkspaceService) workspace: IWorkspaceService,
         @inject(IFileSystem) fs: IFileSystem,
         @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
