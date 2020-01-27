@@ -89,13 +89,12 @@ export namespace Transfer {
         return arg.prevState;
     }
 
-    // IANHU: Move / share with unfocus cell in effects.ts?
     export function editCell<T>(arg: CommonReducerArg<T, IEditCellAction>): IMainState {
         if (arg.payload.cellId) {
             arg.queueAction(createPostableAction(InteractiveWindowMessages.EditCell, { changes: arg.payload.changes, id: arg.payload.cellId }));
 
             // Update the uncomitted text on the cell view model
-            // We keep this saved here so we don't rerender and we put this code into the input / code data
+            // We keep this saved here so we don't re-render and we put this code into the input / code data
             // when focus is lost
             const index = arg.prevState.cellVMs.findIndex(c => c.cell.id === arg.payload.cellId);
             if (index >= 0 && arg.prevState.focusedCellId === arg.payload.cellId) {

@@ -280,9 +280,8 @@ export class InteractiveCell extends React.Component<IInteractiveCellProps> {
         this.props.unfocus(this.getCell().id);
     };
 
-    // IANHU: Common base class?
     private getCurrentCode(): string {
-        // Input may not be open at this time. If not, then use current cell contents.
+        // Get current monaco code, if not available fallback to cell data source
         const contents = this.codeRef.current ? this.codeRef.current.getContents() : undefined;
         return contents || concatMultilineStringInput(this.props.cellVM.cell.data.source);
     }

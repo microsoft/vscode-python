@@ -30,7 +30,7 @@ export namespace Effects {
 
             const newVMs = [...prevState.cellVMs];
 
-            // Focus one cell and unfocus another. Focus should always gain selection too.
+            // Add focus on new cell
             const addFocusIndex = newVMs.findIndex(c => c.cell.id === arg.payload.cellId);
             if (addFocusIndex >= 0) {
                 newVMs[addFocusIndex] = { ...newVMs[addFocusIndex], focused: true, selected: true, cursorPos: arg.payload.cursorPos };
