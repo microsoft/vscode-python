@@ -94,13 +94,13 @@ export interface ICellAction {
     cellId: string | undefined;
 }
 
+export interface ICodeAction extends ICellAction {
+    code: string;
+}
+
 export interface IEditCellAction extends ICodeAction {
     changes: monacoEditor.editor.IModelContentChange[];
     modelId: string;
-}
-
-export interface ICodeAction extends ICellAction {
-    code: string;
 }
 
 export interface IExecuteAction extends ICodeAction {

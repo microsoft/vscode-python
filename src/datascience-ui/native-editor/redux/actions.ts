@@ -37,10 +37,6 @@ export const actionCreators = {
         type: CommonActionType.SELECT_CELL,
         payload: { cellId, cursorPos }
     }),
-    deselectCell: (cellId: string): CommonAction<ICellAction> => ({
-        type: CommonActionType.DESELECT_CELL,
-        payload: { cellId }
-    }),
     addCell: (): CommonAction<never | undefined> => ({ type: CommonActionType.ADD_NEW_CELL }),
     executeCell: (cellId: string, code: string, moveOp: 'add' | 'select' | 'none'): CommonAction<IExecuteAction> => ({
         type: CommonActionType.EXECUTE_CELL,
