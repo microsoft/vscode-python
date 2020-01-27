@@ -10,7 +10,7 @@ import * as TypeMoq from 'typemoq';
 import { DebugConfiguration, DebugConfigurationProvider, TextDocument, TextEditor, Uri, WorkspaceFolder } from 'vscode';
 import { IDocumentManager, IWorkspaceService } from '../../../../../client/common/application/types';
 import { PYTHON_LANGUAGE } from '../../../../../client/common/constants';
-import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../../../../client/common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../../../../client/common/experimentGroups';
 import { IFileSystem, IPlatformService } from '../../../../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../../../../client/common/types';
 import { Diagnostics } from '../../../../../client/common/utils/localize';
@@ -60,7 +60,7 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             documentManager = TypeMoq.Mock.ofType<IDocumentManager>();
             experimentsManager = TypeMoq.Mock.ofType<IExperimentsManager>();
             experimentsManager.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
-            experimentsManager.setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment)).returns(() => true);
+
             debugProvider = new AttachConfigurationResolver(
                 workspaceService.object,
                 documentManager.object,
@@ -452,7 +452,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             experimentsManager.reset();
             experimentsManager.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
-            experimentsManager.setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment)).returns(() => true);
 
             const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ request: 'attach' } as any) as DebugConfiguration);
             await expect(promise).to.not.be.rejectedWith(Error);
@@ -466,7 +465,6 @@ getInfoPerOS().forEach(([osName, osType, path]) => {
             setupWorkspaces([defaultWorkspace]);
             experimentsManager.reset();
             experimentsManager.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => false);
-            experimentsManager.setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment)).returns(() => false);
 
             const promise = debugProvider.resolveDebugConfiguration!(workspaceFolder, ({ request: 'attach', processId: 1234 } as any) as DebugConfiguration);
             await expect(promise).to.be.rejectedWith(Diagnostics.processId());

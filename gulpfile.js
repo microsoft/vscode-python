@@ -275,7 +275,7 @@ gulp.task('installPythonRequirements', async () => {
         '-r',
         './requirements.txt'
     ];
-    success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
+    const success = await spawnAsync(process.env.CI_PYTHON_PATH || 'python3', args)
         .then(() => true)
         .catch(ex => {
             console.error("Failed to install Python Libs using 'python3'", ex);

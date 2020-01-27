@@ -9,7 +9,7 @@ import { DebugConfiguration } from 'vscode';
 import * as vsls from 'vsls/vscode';
 import { concatMultilineStringOutput } from '../../../datascience-ui/common';
 import { IApplicationShell, ICommandManager, IDebugService, IWorkspaceService } from '../../common/application/types';
-import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../common/experimentGroups';
 import { traceError, traceInfo, traceWarning } from '../../common/logger';
 import { IPlatformService } from '../../common/platform/types';
 import { IConfigurationService, IExperimentsManager, Version } from '../../common/types';
@@ -176,7 +176,7 @@ export class JupyterDebugger implements IJupyterDebugger, ICellHashListener {
      */
     private async getPtvsdPath(notebook: INotebook): Promise<string> {
         const oldPtvsd = path.join(EXTENSION_ROOT_DIR, 'pythonFiles', 'lib', 'python', 'old_ptvsd');
-        if (!this.experimentsManager.inExperiment(DebugAdapterDescriptorFactory.experiment) || !this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
+        if (!this.experimentsManager.inExperiment(DebugAdapterNewPtvsd.experiment)) {
             return oldPtvsd;
         }
         const pythonVersion = await this.getKernelPythonVersion(notebook);

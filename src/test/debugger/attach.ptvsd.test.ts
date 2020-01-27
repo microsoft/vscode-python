@@ -13,9 +13,8 @@ import { DebugClient } from 'vscode-debugadapter-testsupport';
 
 import { IDocumentManager, IWorkspaceService } from '../../client/common/application/types';
 import { EXTENSION_ROOT_DIR } from '../../client/common/constants';
-import { DebugAdapterDescriptorFactory, DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
+import { DebugAdapterNewPtvsd } from '../../client/common/experimentGroups';
 import { IS_WINDOWS } from '../../client/common/platform/constants';
-import { FileSystem } from '../../client/common/platform/fileSystem';
 import { IPlatformService } from '../../client/common/platform/types';
 import { IConfigurationService, IExperimentsManager } from '../../client/common/types';
 import { MultiStepInputFactory } from '../../client/common/utils/multiStepInput';
@@ -99,7 +98,6 @@ suite('Debugging - Attach Debugger', () => {
         const configurationService = TypeMoq.Mock.ofType<IConfigurationService>();
         const experiments = TypeMoq.Mock.ofType<IExperimentsManager>();
         experiments.setup(e => e.inExperiment(DebugAdapterNewPtvsd.experiment)).returns(() => true);
-        experiments.setup(e => e.inExperiment(DebugAdapterDescriptorFactory.experiment)).returns(() => true);
 
         const launchResolver = TypeMoq.Mock.ofType<IDebugConfigurationResolver<LaunchRequestArguments>>();
         const attachResolver = new AttachConfigurationResolver(
@@ -110,9 +108,8 @@ suite('Debugging - Attach Debugger', () => {
             experiments.object
         );
         const providerFactory = TypeMoq.Mock.ofType<IDebugConfigurationProviderFactory>().object;
-        const fs = mock(FileSystem);
         const multistepFactory = mock(MultiStepInputFactory);
-        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory), instance(fs));
+        const configProvider = new PythonDebugConfigurationService(attachResolver, launchResolver.object, providerFactory, instance(multistepFactory));
 
         await configProvider.resolveDebugConfiguration({ index: 0, name: 'root', uri: Uri.file(localRoot) }, options);
         const attachPromise = debugClient.attachRequest(options);
