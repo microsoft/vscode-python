@@ -22,7 +22,6 @@ export interface IDebugConfigurationProvider {
 }
 
 export enum DebugConfigurationType {
-    default = 'default',
     launchFile = 'launchFile',
     remoteAttach = 'remoteAttach',
     launchDjango = 'launchDjango',
