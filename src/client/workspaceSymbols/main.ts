@@ -34,8 +34,8 @@ export class WorkspaceSymbols implements Disposable {
         this.documents = this.serviceContainer.get<IDocumentManager>(IDocumentManager);
         this.disposables = [];
         this.disposables.push(this.outputChannel);
-        this.initializeGenerators();
         this.registerCommands();
+        this.initializeGenerators();
         languages.registerWorkspaceSymbolProvider(new WorkspaceSymbolProvider(this.fs, this.commandMgr, this.generators));
         this.disposables.push(this.workspace.onDidChangeWorkspaceFolders(() => this.initializeGenerators()));
         this.disposables.push(this.documents.onDidSaveTextDocument(e => this.onDocumentSaved(e)));
