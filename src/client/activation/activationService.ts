@@ -212,9 +212,8 @@ export class LanguageServerExtensionActivationService implements IExtensionActiv
         }
 
         await this.logStartup(serverType);
-        let server: ILanguageServerActivator;
+        let server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
         try {
-            server = this.serviceContainer.get<ILanguageServerActivator>(ILanguageServerActivator, serverType);
             await server.start(resource, interpreter);
         } catch (ex) {
             if (serverType === LanguageServerType.Jedi) {

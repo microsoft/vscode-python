@@ -50,6 +50,8 @@ suite('Language Server - LanguageClient Factory', () => {
             instance(configurationService),
             instance(envVarProvider),
             instance(activationService),
+            undefined as any,
+            undefined as any,
             instance(downloadFactory),
             instance(simpleFactory)
         );
@@ -75,6 +77,8 @@ suite('Language Server - LanguageClient Factory', () => {
             instance(configurationService),
             instance(envVarProvider),
             instance(activationService),
+            undefined as any,
+            undefined as any,
             instance(downloadFactory),
             instance(simpleFactory)
         );

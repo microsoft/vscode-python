@@ -30,7 +30,7 @@ import {
     StableDotNetLanguageServerPackageRepository
 } from './languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from './languageServer/languageServerPackageService';
-import { LanguageServerProxy } from './languageServer/languageServerProxy';
+import { DotNetLanguageServerProxy } from './languageServer/languageServerProxy';
 import { DotNetLanguageServerManager } from './languageServer/manager';
 import { LanguageServerOutputChannel } from './languageServer/outputChannel';
 import { PlatformData } from './languageServer/platformData';
@@ -85,7 +85,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory);
         serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
-        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy);
+        serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, DotNetLanguageServerFolderService);
         serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, DotNetLanguageServerPackageService);
         registerDotNetTypes(serviceManager);

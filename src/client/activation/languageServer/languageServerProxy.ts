@@ -19,7 +19,7 @@ import { ProgressReporting } from '../progress';
 import { ILanguageClientFactory, ILanguageServerProxy } from '../types';
 
 @injectable()
-export class LanguageServerProxy implements ILanguageServerProxy {
+export class DotNetLanguageServerProxy implements ILanguageServerProxy {
     public languageClient: LanguageClient | undefined;
     private startupCompleted: Deferred<void>;
     private readonly disposables: Disposable[] = [];

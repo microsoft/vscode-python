@@ -22,7 +22,7 @@ import {
     StableDotNetLanguageServerPackageRepository
 } from '../../client/activation/languageServer/languageServerPackageRepository';
 import { DotNetLanguageServerPackageService } from '../../client/activation/languageServer/languageServerPackageService';
-import { LanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
+import { DotNetLanguageServerProxy } from '../../client/activation/languageServer/languageServerProxy';
 import { DotNetLanguageServerManager } from '../../client/activation/languageServer/manager';
 import { LanguageServerOutputChannel } from '../../client/activation/languageServer/outputChannel';
 import { PlatformData } from '../../client/activation/languageServer/platformData';
@@ -89,7 +89,7 @@ suite('Unit Tests - Language Server Activation Service Registry', () => {
         verify(serviceManager.addSingleton<ILanguageServerDownloader>(ILanguageServerDownloader, LanguageServerDownloader)).once();
         verify(serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData)).once();
         verify(serviceManager.add<ILanguageServerAnalysisOptions>(ILanguageServerAnalysisOptions, LanguageServerAnalysisOptions)).once();
-        verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, LanguageServerProxy)).once();
+        verify(serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, DotNetLanguageServerProxy)).once();
         verify(serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager)).once();
         verify(serviceManager.addSingleton<IExtensionSingleActivationService>(IExtensionSingleActivationService, AATesting)).once();
         verify(serviceManager.addSingleton<ILanguageServerOutputChannel>(ILanguageServerOutputChannel, LanguageServerOutputChannel)).once();

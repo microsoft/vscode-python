@@ -9,7 +9,7 @@ import * as typemoq from 'typemoq';
 import { Uri } from 'vscode';
 import { Disposable, LanguageClient, LanguageClientOptions } from 'vscode-languageclient';
 import { DotNetLanguageClientFactory } from '../../../client/activation/languageServer/languageClientFactory';
-import { LanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
+import { DotNetLanguageServerProxy } from '../../../client/activation/languageServer/languageServerProxy';
 import { ILanguageClientFactory } from '../../../client/activation/types';
 import { ICommandManager } from '../../../client/common/application/types';
 import '../../../client/common/extensions';
@@ -21,7 +21,7 @@ import { ITestManagementService } from '../../../client/testing/types';
 //tslint:disable:no-require-imports no-require-imports no-var-requires no-any no-unnecessary-class max-func-body-length
 
 suite('Language Server - LanguageServer', () => {
-    class LanguageServerTest extends LanguageServerProxy {
+    class LanguageServerTest extends DotNetLanguageServerProxy {
         // tslint:disable-next-line:no-unnecessary-override
         public async registerTestServices() {
             return super.registerTestServices();
