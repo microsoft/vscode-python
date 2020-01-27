@@ -43,7 +43,7 @@ function buildConfiguration(moduleName, outputFileNameWithoutJsExtension) {
             fs: 'empty'
         },
         plugins: [
-            ...common.getDefaultPlugins(outputFileNameWithoutJsExtension),
+            //...common.getDefaultPlugins(outputFileNameWithoutJsExtension),
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [

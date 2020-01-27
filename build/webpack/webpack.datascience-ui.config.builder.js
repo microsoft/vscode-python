@@ -146,7 +146,7 @@ function buildConfiguration(folderName) {
             fs: 'empty'
         },
         plugins: [
-            ...common.getDefaultPlugins(folderName),
+            //...common.getDefaultPlugins(folderName),
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [

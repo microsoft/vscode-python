@@ -122,13 +122,6 @@ gulp.task('compile-webviews', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js', '--mode', 'production'], webpackEnv);
 });
 
-gulp.task('wow', async () => {
-    // await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
-    // await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js', '--mode', 'production'], webpackEnv);
-    await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-nativeEditor.config.js'], webpackEnv);
-    // await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui-plotViewer.config.js'], webpackEnv);
-});
-
 gulp.task('compile-webiview-dependencies', async () => {
     await spawnAsync('npm', ['run', 'webpack', '--', '--config', './build/webpack/webpack.datascience-ui.dependency.config.builder.js'], webpackEnv);
 });
