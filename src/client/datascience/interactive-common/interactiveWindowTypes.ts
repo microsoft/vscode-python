@@ -4,7 +4,6 @@
 import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import { IServerState } from '../../../datascience-ui/interactive-common/mainState';
 import { CssMessages, IGetCssRequest, IGetCssResponse, IGetMonacoThemeRequest } from '../messages';
-import { IGetMonacoThemeResponse } from '../monacoMessages';
 import { ICell, IInteractiveWindowInfo, IJupyterVariable, IJupyterVariablesRequest, IJupyterVariablesResponse } from '../types';
 
 export enum InteractiveWindowMessages {
@@ -330,7 +329,6 @@ export class IInteractiveWindowMapping {
     public [CssMessages.GetCssRequest]: IGetCssRequest;
     public [CssMessages.GetCssResponse]: IGetCssResponse;
     public [CssMessages.GetMonacoThemeRequest]: IGetMonacoThemeRequest;
-    public [CssMessages.GetMonacoThemeResponse]: IGetMonacoThemeResponse;
     public [InteractiveWindowMessages.ProvideCompletionItemsRequest]: IProvideCompletionItemsRequest;
     public [InteractiveWindowMessages.CancelCompletionItemsRequest]: ICancelIntellisenseRequest;
     public [InteractiveWindowMessages.ProvideCompletionItemsResponse]: IProvideCompletionItemsResponse;

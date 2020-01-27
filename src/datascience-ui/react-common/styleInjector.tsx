@@ -1,12 +1,9 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 'use strict';
-import * as monacoEditor from 'monaco-editor/esm/vs/editor/editor.api';
 import * as React from 'react';
 
-import { Identifiers } from '../../client/datascience/constants';
 import { CssMessages, IGetCssResponse, SharedMessages } from '../../client/datascience/messages';
-import { IGetMonacoThemeResponse } from '../../client/datascience/monacoMessages';
 import { IDataScienceExtraSettings } from '../../client/datascience/types';
 import { IMessageHandler, PostOffice } from './postOffice';
 import { detectBaseTheme } from './themeDetector';
@@ -46,7 +43,6 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             // Set to a temporary value.
             this.setState({ rootCss: ' ' });
             this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.props.expectingDark });
-            this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.props.expectingDark });
         }
     }
 
@@ -64,10 +60,6 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         switch (msg) {
             case CssMessages.GetCssResponse:
                 this.handleCssResponse(payload);
-                break;
-
-            case CssMessages.GetMonacoThemeResponse:
-                this.handleMonacoThemeResponse(payload);
                 break;
 
             case SharedMessages.UpdateSettings:
@@ -107,15 +99,6 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
         }
     }
 
-    // tslint:disable-next-line: no-any
-    private handleMonacoThemeResponse(payload?: any) {
-        const response = payload as IGetMonacoThemeResponse;
-        if (response && response.theme) {
-            // Tell monaco we have a new theme. THis is like a state update for monaco
-            monacoEditor.editor.defineTheme(Identifiers.GeneratedThemeName, response.theme);
-        }
-    }
-
     // tslint:disable-next-line:no-any
     private updateSettings(payload: any) {
         if (payload) {
@@ -124,7 +107,6 @@ export class StyleInjector extends React.Component<IStyleInjectorProps, IStyleIn
             if (dsSettings && dsSettings.extraSettings && dsSettings.extraSettings.theme !== this.state.theme) {
                 // User changed the current theme. Rerender
                 this.props.postOffice.sendUnsafeMessage(CssMessages.GetCssRequest, { isDark: this.computeKnownDark() });
-                this.props.postOffice.sendUnsafeMessage(CssMessages.GetMonacoThemeRequest, { isDark: this.computeKnownDark() });
             }
         }
     }
