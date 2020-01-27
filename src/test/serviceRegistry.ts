@@ -1,19 +1,20 @@
 // Copyright (c) Microsoft Corporation. All rights reserved.
 // Licensed under the MIT License.
 
-import { Container } from 'inversify';
+import * as fsextra from 'fs-extra';
+import { Container, inject } from 'inversify';
 import { anything, instance, mock, when } from 'ts-mockito';
 import * as TypeMoq from 'typemoq';
-import { Disposable, Memento, OutputChannel } from 'vscode';
+import { Disposable, Memento, OutputChannel, Uri } from 'vscode';
 import { STANDARD_OUTPUT_CHANNEL } from '../client/common/constants';
 import { Logger } from '../client/common/logger';
 import { IS_WINDOWS } from '../client/common/platform/constants';
-import { FileSystem } from '../client/common/platform/fileSystem';
+import { convertStat, FileSystem, RawFileSystem } from '../client/common/platform/fileSystem';
 import { PathUtils } from '../client/common/platform/pathUtils';
 import { PlatformService } from '../client/common/platform/platformService';
 import { RegistryImplementation } from '../client/common/platform/registry';
 import { registerTypes as platformRegisterTypes } from '../client/common/platform/serviceRegistry';
-import { IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
+import { FileStat, FileType, IFileSystem, IPlatformService, IRegistry } from '../client/common/platform/types';
 import { BufferDecoder } from '../client/common/process/decoder';
 import { ProcessService } from '../client/common/process/proc';
 import { PythonExecutionFactory } from '../client/common/process/pythonExecutionFactory';
@@ -72,7 +73,42 @@ import { MockMemento } from './mocks/mementos';
 import { MockProcessService } from './mocks/proc';
 import { MockProcess } from './mocks/process';
 
+// This is necessary for unit tests and functional tests, since they
+// do not run under VS Code so they do not have access to the actual
+// "vscode" namespace.
+class FakeVSCodeFileSystemAPI {
+    public async stat(uri: Uri): Promise<FileStat> {
+        const filename = uri.fsPath;
+
+        let filetype = FileType.Unknown;
+        let stat = await fsextra.lstat(filename);
+        if (stat.isSymbolicLink()) {
+            filetype = FileType.SymbolicLink;
+            stat = await fsextra.stat(filename);
+        }
+        if (stat.isFile()) {
+            filetype |= FileType.File;
+        } else if (stat.isDirectory()) {
+            filetype |= FileType.Directory;
+        }
+        return convertStat(stat, filetype);
+    }
+}
+class LegacyFileSystem extends FileSystem {
+    constructor(@inject(IPlatformService) platformService: IPlatformService) {
+        super(platformService);
+        const vscfs = new FakeVSCodeFileSystemAPI();
+        this.raw = RawFileSystem.withDefaults(undefined, vscfs);
+    }
+}
+
 export class IocContainer {
+    // This may be set (before any registration happens) to indicate
+    // whether or not IOC should depend on the VS Code API (e.g. the
+    // "vscode" module).  So in "functional" tests, this should be set
+    // to "false".
+    public useVSCodeAPI = true;
+
     public readonly serviceManager: IServiceManager;
     public readonly serviceContainer: IServiceContainer;
 
@@ -119,7 +155,11 @@ export class IocContainer {
     }
     public registerFileSystemTypes() {
         this.serviceManager.addSingleton<IPlatformService>(IPlatformService, PlatformService);
-        this.serviceManager.addSingleton<IFileSystem>(IFileSystem, FileSystem);
+        this.serviceManager.addSingleton<IFileSystem>(
+            IFileSystem,
+            // Maybe use fake vscode.workspace.filesystem API:
+            this.useVSCodeAPI ? FileSystem : LegacyFileSystem
+        );
     }
     public registerProcessTypes() {
         processRegisterTypes(this.serviceManager);

@@ -276,10 +276,12 @@ export class RawFileSystem implements IRawFileSystem {
 
 @injectable()
 export class FileSystem implements IFileSystem {
+    // We expose this for the sake of functional tests that do not have
+    // access to the actual "vscode" namespace.
+    protected raw: RawFileSystem;
     private readonly paths: IFileSystemPaths;
     private readonly pathUtils: FileSystemPathUtils;
     private readonly tmp: TemporaryFileSystem;
-    private readonly raw: RawFileSystem;
     // prettier-ignore
     constructor(
         @inject(IPlatformService) platformService: IPlatformService
