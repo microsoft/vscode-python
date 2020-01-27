@@ -110,21 +110,21 @@ export type FolderVersionPair = { path: string; version: SemVer };
 export const ILanguageServerFolderService = Symbol('ILanguageServerFolderService');
 
 export interface ILanguageServerFolderService {
-    getLanguageServerFolderName(resource: Resource): Promise<string>;
-    getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined>;
+    getLanguageServerFolderName(resource: Resource, minimumVersion?: string): Promise<string>;
+    getLatestLanguageServerVersion(resource: Resource, minimumVersion?: string): Promise<NugetPackage | undefined>;
     getCurrentLanguageServerDirectory(): Promise<FolderVersionPair | undefined>;
 }
 
 export const ILanguageServerDownloader = Symbol('ILanguageServerDownloader');
 
 export interface ILanguageServerDownloader {
-    downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void>;
+    downloadLanguageServer(destinationFolder: string, resource: Resource, minVersion?: string): Promise<void>;
 }
 
 export const ILanguageServerPackageService = Symbol('ILanguageServerPackageService');
 export interface ILanguageServerPackageService {
     getNugetPackageName(): string;
-    getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage>;
+    getLatestNugetPackageVersion(resource: Resource, minVersion?: string): Promise<NugetPackage>;
     getLanguageServerDownloadChannel(): LanguageServerDownloadChannels;
 }
 

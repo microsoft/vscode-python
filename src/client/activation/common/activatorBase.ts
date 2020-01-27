@@ -130,12 +130,12 @@ export abstract class LanguageServerActivatorBase implements ILanguageServerActi
         return this.handleProvideSignatureHelp(document, position, token, context);
     }
 
-    protected async ensureLanguageServerFileIsAvailable(resource: Resource, fileName: string): Promise<string | undefined> {
+    protected async ensureLanguageServerFileIsAvailable(resource: Resource, fileName: string, minimumVersion?: string): Promise<string | undefined> {
         const settings = this.configurationService.getSettings(resource);
         if (!settings.downloadLanguageServer) {
             return;
         }
-        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource, minimumVersion);
         const languageServerFolderPath = path.join(EXTENSION_ROOT_DIR, languageServerFolder);
         const mscorlib = path.join(languageServerFolderPath, fileName);
         if (!(await this.fs.fileExists(mscorlib))) {

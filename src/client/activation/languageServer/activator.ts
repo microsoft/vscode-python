@@ -4,7 +4,7 @@
 import { inject, injectable } from 'inversify';
 import * as path from 'path';
 
-import { IWorkspaceService } from '../../common/application/types';
+import { IApplicationEnvironment, IWorkspaceService } from '../../common/application/types';
 import { traceDecorators } from '../../common/logger';
 import { IFileSystem } from '../../common/platform/types';
 import { IConfigurationService, Resource } from '../../common/types';
@@ -27,14 +27,16 @@ export class DotNetLanguageServerActivator extends LanguageServerActivatorBase {
         @inject(IFileSystem) fs: IFileSystem,
         @inject(ILanguageServerDownloader) lsDownloader: ILanguageServerDownloader,
         @inject(ILanguageServerFolderService) languageServerFolderService: ILanguageServerFolderService,
-        @inject(IConfigurationService) configurationService: IConfigurationService
+        @inject(IConfigurationService) configurationService: IConfigurationService,
+        @inject(IApplicationEnvironment) protected readonly appEnv: IApplicationEnvironment
     ) {
         super(manager, workspace, fs, lsDownloader, languageServerFolderService, configurationService);
     }
 
     @traceDecorators.error('Failed to ensure language server is available')
     public async ensureLanguageServerIsAvailable(resource: Resource): Promise<void> {
-        const languageServerFolderPath = await this.ensureLanguageServerFileIsAvailable(resource, 'mscorlib.dll');
+        const minimumVersion = this.appEnv ? (this.appEnv.packageJson.languageServerVersion as string) : undefined;
+        const languageServerFolderPath = await this.ensureLanguageServerFileIsAvailable(resource, 'mscorlib.dll', minimumVersion);
         if (languageServerFolderPath) {
             await this.prepareLanguageServerForNoICU(languageServerFolderPath);
         }

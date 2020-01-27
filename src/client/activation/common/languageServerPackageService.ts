@@ -25,14 +25,14 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
     public abstract getNugetPackageName(): string;
 
     @traceDecorators.verbose('Get latest language server nuget package version')
-    public async getLatestNugetPackageVersion(resource: Resource): Promise<NugetPackage> {
+    public async getLatestNugetPackageVersion(resource: Resource, minVersion?: string): Promise<NugetPackage> {
         const downloadChannel = this.getLanguageServerDownloadChannel();
         const nugetRepo = this.serviceContainer.get<INugetRepository>(INugetRepository, downloadChannel);
         const packageName = this.getNugetPackageName();
         traceVerbose(`Listing packages for ${downloadChannel} for ${packageName}`);
         const packages = await nugetRepo.getPackages(packageName, resource);
 
-        return this.getValidPackage(packages);
+        return this.getValidPackage(packages, minVersion);
     }
 
     public getLanguageServerDownloadChannel(): LanguageServerDownloadChannels {
@@ -55,7 +55,8 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
         const version = parse(extension.packageJSON.version)!;
         return version.prerelease.length > 0 && version.prerelease[0] === 'alpha';
     }
-    protected getValidPackage(packages: NugetPackage[]): NugetPackage {
+
+    protected getValidPackage(packages: NugetPackage[], minimumVersion?: string): NugetPackage {
         const nugetService = this.serviceContainer.get<INugetService>(INugetService);
         const validPackages = packages
             .filter(item => item.version.major === this.maxMajorVersion)
@@ -63,7 +64,7 @@ export abstract class LanguageServerPackageService implements ILanguageServerPac
             .sort((a, b) => a.version.compare(b.version));
 
         const pkg = validPackages[validPackages.length - 1];
-        const minimumVersion = this.appEnv.packageJson.languageServerVersion as string;
+        minimumVersion = minimumVersion || '0.0.0';
         if (pkg.version.compare(minimumVersion) >= 0) {
             return validPackages[validPackages.length - 1];
         }

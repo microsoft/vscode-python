@@ -9,18 +9,22 @@ import { EXTENSION_ROOT_DIR, PYTHON_LANGUAGE } from '../../common/constants';
 import { IFileSystem } from '../../common/platform/types';
 import { Resource } from '../../common/types';
 import { PythonInterpreter } from '../../interpreter/contracts';
-import { ILanguageClientFactory } from '../types';
+import { ILanguageClientFactory, ILanguageServerFolderService } from '../types';
 
 // tslint:disable:no-require-imports no-require-imports no-var-requires max-classes-per-file
 const languageClientName = 'Python Tools';
 
 @injectable()
 export class NodeLanguageClientFactory implements ILanguageClientFactory {
-    constructor(@inject(IFileSystem) private readonly fs: IFileSystem) {}
+    constructor(
+        @inject(IFileSystem) private readonly fs: IFileSystem,
+        @inject(ILanguageServerFolderService) private readonly languageServerFolderService: ILanguageServerFolderService
+    ) {}
 
-    public async createLanguageClient(_resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
-        const bundlePath = path.join(EXTENSION_ROOT_DIR, 'nodeLanguageServer', 'server.bundle.js');
-        const nonBundlePath = path.join(EXTENSION_ROOT_DIR, 'nodeLanguageServer', 'server.js');
+    public async createLanguageClient(resource: Resource, _interpreter: PythonInterpreter | undefined, clientOptions: LanguageClientOptions): Promise<LanguageClient> {
+        const languageServerFolder = await this.languageServerFolderService.getLanguageServerFolderName(resource);
+        const bundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.bundle.js');
+        const nonBundlePath = path.join(EXTENSION_ROOT_DIR, languageServerFolder, 'server.js');
         const modulePath = (await this.fs.fileExists(nonBundlePath)) ? nonBundlePath : bundlePath;
         const debugOptions = { execArgv: ['--nolazy', '--inspect=6600'] };
         // If the extension is launched in debug mode, then the debug server options are used.

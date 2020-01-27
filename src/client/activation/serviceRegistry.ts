@@ -37,7 +37,12 @@ import { PlatformData } from './languageServer/platformData';
 import { NodeLanguageServerActivator } from './node/activator';
 import { NodeLanguageClientFactory } from './node/languageClientFactory';
 import { NodeLanguageServerFolderService } from './node/languageServerFolderService';
-import * as languageServerPackageService from './node/languageServerPackageService';
+import {
+    BetaNodeLanguageServerPackageRepository,
+    DailyNodeLanguageServerPackageRepository,
+    StableNodeLanguageServerPackageRepository
+} from './node/languageServerPackageRepository';
+import { NodeLanguageServerPackageService } from './node/languageServerPackageService';
 import { NodeLanguageServerProxy } from './node/languageServerProxy';
 import { NodeLanguageServerManager } from './node/manager';
 import { NoLanguageServerExtensionActivator } from './none/activator';
@@ -50,7 +55,7 @@ import {
     ILanguageServerActivator,
     ILanguageServerAnalysisOptions,
     ILanguageServerCache,
-    ILanguageServerCompatibilityService as ILanagueServerCompatibilityService,
+    ILanguageServerCompatibilityService,
     ILanguageServerDownloader,
     ILanguageServerExtension,
     ILanguageServerFolderService,
@@ -81,7 +86,7 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         serviceManager.addSingleton<INugetRepository>(INugetRepository, StableDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.stable);
         serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.beta);
         serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyDotNetLanguageServerPackageRepository, LanguageServerDownloadChannel.daily);
-        serviceManager.addSingleton<ILanagueServerCompatibilityService>(ILanagueServerCompatibilityService, LanguageServerCompatibilityService);
+        serviceManager.addSingleton<ILanguageServerCompatibilityService>(ILanguageServerCompatibilityService, LanguageServerCompatibilityService);
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, DotNetLanguageClientFactory);
         serviceManager.addSingleton<IPlatformData>(IPlatformData, PlatformData);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, DotNetLanguageServerManager);
@@ -91,11 +96,14 @@ export function registerTypes(serviceManager: IServiceManager, languageServerTyp
         registerDotNetTypes(serviceManager);
     } else if (languageServerType === LanguageServerType.Node) {
         serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NodeLanguageServerActivator, LanguageServerType.Node);
+        serviceManager.addSingleton<INugetRepository>(INugetRepository, StableNodeLanguageServerPackageRepository, LanguageServerDownloadChannel.stable);
+        serviceManager.addSingleton<INugetRepository>(INugetRepository, BetaNodeLanguageServerPackageRepository, LanguageServerDownloadChannel.beta);
+        serviceManager.addSingleton<INugetRepository>(INugetRepository, DailyNodeLanguageServerPackageRepository, LanguageServerDownloadChannel.daily);
         serviceManager.addSingleton<ILanguageClientFactory>(ILanguageClientFactory, NodeLanguageClientFactory);
         serviceManager.add<ILanguageServerManager>(ILanguageServerManager, NodeLanguageServerManager);
         serviceManager.add<ILanguageServerProxy>(ILanguageServerProxy, NodeLanguageServerProxy);
         serviceManager.addSingleton<ILanguageServerFolderService>(ILanguageServerFolderService, NodeLanguageServerFolderService);
-        serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, languageServerPackageService.NodeLanguageServerPackageService);
+        serviceManager.addSingleton<ILanguageServerPackageService>(ILanguageServerPackageService, NodeLanguageServerPackageService);
     } else if (languageServerType === LanguageServerType.None) {
         serviceManager.add<ILanguageServerActivator>(ILanguageServerActivator, NoLanguageServerExtensionActivator, LanguageServerType.None);
     }

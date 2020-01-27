@@ -37,8 +37,8 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
         this.output = this.lsOutputChannel.channel;
     }
 
-    public async getDownloadInfo(resource: Resource) {
-        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource).then(item => item!);
+    public async getDownloadInfo(resource: Resource, minimumVersion?: string) {
+        const info = await this.lsFolderService.getLatestLanguageServerVersion(resource, minimumVersion).then(item => item!);
 
         let uri = info.uri;
         if (uri.startsWith('https:')) {
@@ -51,6 +51,7 @@ export class LanguageServerDownloader implements ILanguageServerDownloader {
 
         return [uri, info.version.raw];
     }
+
     public async downloadLanguageServer(destinationFolder: string, resource: Resource): Promise<void> {
         const [downloadUri, lsVersion] = await this.getDownloadInfo(resource);
         const timer: StopWatch = new StopWatch();

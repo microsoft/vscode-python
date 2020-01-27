@@ -48,7 +48,9 @@ suite('Language Server - Activator', () => {
             instance(fs),
             instance(lsDownloader),
             instance(lsFolderService),
-            instance(configuration)
+            instance(configuration),
+            // tslint:disable-next-line: no-any
+            undefined as any
         );
     });
     test('Manager must be started without any workspace', async () => {

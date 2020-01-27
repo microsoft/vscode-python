@@ -3,7 +3,7 @@
 
 'use strict';
 
-import { unmanaged } from 'inversify';
+import { injectable, unmanaged } from 'inversify';
 import { IServiceContainer } from '../../ioc/types';
 import { captureTelemetry } from '../../telemetry';
 import { EventName } from '../../telemetry/constants';
@@ -12,6 +12,7 @@ import { traceDecorators } from '../logger';
 import { Resource } from '../types';
 import { INugetRepository, INugetService, NugetPackage } from './types';
 
+@injectable()
 export class AzureBlobStoreNugetRepository implements INugetRepository {
     constructor(
         @unmanaged() private readonly serviceContainer: IServiceContainer,

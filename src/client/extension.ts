@@ -248,11 +248,13 @@ function registerServices(context: ExtensionContext, serviceManager: ServiceMana
     commonRegisterTerminalTypes(serviceManager);
     dataScienceRegisterTypes(serviceManager);
     debugConfigurationRegisterTypes(serviceManager);
-    appRegisterTypes(serviceManager);
-    providersRegisterTypes(serviceManager);
 
     const configuration = serviceManager.get<IConfigurationService>(IConfigurationService);
-    activationRegisterTypes(serviceManager, configuration.getSettings().languageServer);
+    const languageServerType = configuration.getSettings().languageServer;
+
+    appRegisterTypes(serviceManager, languageServerType);
+    providersRegisterTypes(serviceManager);
+    activationRegisterTypes(serviceManager, languageServerType);
 }
 
 async function initializeServices(context: ExtensionContext, serviceManager: ServiceManager, serviceContainer: ServiceContainer) {

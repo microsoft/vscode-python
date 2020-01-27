@@ -19,7 +19,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     constructor(@inject(IServiceContainer) protected readonly serviceContainer: IServiceContainer, @unmanaged() protected readonly languageServerFolder: string) {}
 
     @traceDecorators.verbose('Get language server folder name')
-    public async getLanguageServerFolderName(resource: Resource): Promise<string> {
+    public async getLanguageServerFolderName(resource: Resource, minimumVersion?: string): Promise<string> {
         const currentFolder = await this.getCurrentLanguageServerDirectory();
         let serverVersion: NugetPackage | undefined;
 
@@ -28,7 +28,7 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
             return path.basename(currentFolder.path);
         }
 
-        serverVersion = await this.getLatestLanguageServerVersion(resource).catch(() => undefined);
+        serverVersion = await this.getLatestLanguageServerVersion(resource, minimumVersion).catch(() => undefined);
 
         if (currentFolder && (!serverVersion || serverVersion.version.compare(currentFolder.version) <= 0)) {
             return path.basename(currentFolder.path);
@@ -38,9 +38,9 @@ export abstract class LanguageServerFolderService implements ILanguageServerFold
     }
 
     @traceDecorators.verbose('Get latest version of Language Server')
-    public getLatestLanguageServerVersion(resource: Resource): Promise<NugetPackage | undefined> {
+    public getLatestLanguageServerVersion(resource: Resource, minVersion?: string): Promise<NugetPackage | undefined> {
         const lsPackageService = this.serviceContainer.get<ILanguageServerPackageService>(ILanguageServerPackageService);
-        return lsPackageService.getLatestNugetPackageVersion(resource);
+        return lsPackageService.getLatestNugetPackageVersion(resource, minVersion);
     }
     public async shouldLookForNewLanguageServer(currentFolder?: FolderVersionPair): Promise<boolean> {
         const configService = this.serviceContainer.get<IConfigurationService>(IConfigurationService);
