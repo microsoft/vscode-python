@@ -160,29 +160,7 @@ suite('Workspace symbols main', () => {
         assert.equal(shellOutput, 'Generating Tags');
     });
 
-    test('Should not show output channel when rebuilding on save', async () => {
-        when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
-        when(workspaceService.getWorkspaceFolder(anything())).thenReturn(workspaceFolders[0]);
-        when(configurationService.getSettings(anything())).thenReturn({
-            workspaceSymbols: {
-                ctagsPath,
-                enabled: true,
-                exclusionPatterns: [],
-                rebuildOnFileSave: true,
-                tagFilePath: 'foo'
-            }
-        } as any);
-        reset(applicationShell);
-        when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(new Error('Generating workspace tags failed with Error'));
-
-        workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
-        eventEmitter.fire({ uri: Uri.file('folder') } as any);
-        await sleep(1);
-
-        verify(outputChannel.show()).never();
-    });
-
-    test('Output channel is shown when using Command `Build Workspace symbols`', async () => {
+    test('Command `Build Workspace symbols` is registered with the correct callback handlers and executing it returns `undefined` list if generating workspace tags fails with error', async () => {
         let buildWorkspaceSymbolsHandler!: Function;
         when(workspaceService.workspaceFolders).thenReturn(workspaceFolders);
         when(workspaceService.getWorkspaceFolder(anything())).thenReturn(workspaceFolders[0]);
@@ -205,9 +183,11 @@ suite('Workspace symbols main', () => {
         when(applicationShell.setStatusBarMessage(anyString(), anything())).thenThrow(new Error('Generating workspace tags failed with Error'));
 
         workspaceSymbols = new WorkspaceSymbols(instance(serviceContainer));
-        await buildWorkspaceSymbolsHandler();
+        expect(buildWorkspaceSymbolsHandler).to.not.equal(undefined, 'Handler not registered');
+        const symbols = await buildWorkspaceSymbolsHandler();
 
-        verify(outputChannel.show()).once();
+        verify(commandManager.registerCommand(anything(), anything())).once();
+        assert.deepEqual(symbols, [undefined]);
     });
 
     test('Should not rebuild on save if the setting is disabled', () => {
