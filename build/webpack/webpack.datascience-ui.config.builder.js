@@ -20,6 +20,11 @@ const configFileName = 'tsconfig.datascience-ui.json';
 function getPlugins(folderName) {
     if (folderName === 'history-react' || folderName === 'native-editor') {
         return [
+            new webpack.DefinePlugin({
+                'process.env': {
+                    NODE_ENV: JSON.stringify('production')
+                }
+            }),
             new MonacoWebpackPlugin({
                 languages: [] // force to empty so onigasm will be used
             }),
@@ -136,17 +141,17 @@ function buildConfiguration(folderName) {
         // We need to use one where source is embedded, due to webviews (they restrict resources to specific schemes,
         //  this seems to prevent chrome from downloading the source maps)
         // devtool: 'none',
-        devtool: 'eval-source-map',
+        devtool: 'none',
         optimization: {
             // minimize: false
             minimize: true,
-            minimizer: [new TerserPlugin({ sourceMap: true })]
+            minimizer: [new TerserPlugin({ sourceMap: false })]
         },
         node: {
             fs: 'empty'
         },
         plugins: [
-            //...common.getDefaultPlugins(folderName),
+            ...common.getDefaultPlugins(folderName),
             new FixDefaultImportPlugin(),
             new CopyWebpackPlugin(
                 [
